@@ -11,7 +11,7 @@
 
 1. https://console.firebase.google.com 에서 팀 구글 계정으로 프로젝트를 만듭니다.
 2. **Firestore Database** 만들기 (프로덕션 모드, 지역 asia-northeast3 서울 권장).
-3. **Authentication → 로그인 방법**에서 **Google**과 **익명** 사용 설정.
+3. **Authentication → 로그인 방법**에서 **Google** 사용 설정 (질문·오류 작성과 관리자 판정에 씀).
 4. Authentication → 설정 → **승인된 도메인**에 `내아이디.github.io` 추가.
 5. 프로젝트 설정 → 내 앱 → 웹 앱 추가 → 나오는 `firebaseConfig` 값을 `js/config.js` 의 `firebase:` 에 붙여 넣습니다.
 6. `js/config.js` 의 `developers` 와 `firestore.rules` 의 `isDev()` 에 우리 팀 개발자 이메일을 넣습니다.

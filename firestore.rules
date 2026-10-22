@@ -3,10 +3,10 @@ rules_version = '2';
 // 역할: 개발자(isDev, 아래 이메일) > 관리자(meta/roles.admins 목록) > 로그인 방문자(익명 포함)
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
+    function signedIn() { return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com'; }
     function email() { return signedIn() && request.auth.token.email != null ? request.auth.token.email.lower() : ''; }
     // ▼ 개발자 이메일 (js/config.js 의 developers 와 같게)
-    function isDev() { return email() in ['개발자@gmail.com']; }
+    function isDev() { return email() in ['disguv1709@gmail.com']; }
     function isAdmin() {
       return isDev() || (email() != '' && exists(/databases/$(database)/documents/meta/roles)
         && email() in get(/databases/$(database)/documents/meta/roles).data.admins);

@@ -6,7 +6,7 @@ window.RUN2X_CONFIG = {
      null이면 공유 저장소 없이 읽기 전용("연결 안 됨")으로 동작합니다. */
   firebase: null,
   /* 개발자(플랫폼 수정·디버깅 권한) 구글 계정 이메일. firestore.rules의 isDev()에도 같은 값을 넣습니다. */
-  developers: [],
+  developers: ['disguv1709@gmail.com'],
   /* Firebase SDK 버전 (compat) */
   firebaseSdk: '10.14.1'
 };

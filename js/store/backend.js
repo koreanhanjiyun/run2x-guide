@@ -20,8 +20,8 @@ window.Backend = (function(){
       await Promise.all([loadScript(base+'firebase-auth-compat.js'), loadScript(base+'firebase-firestore-compat.js')]);
       const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(CFG.firebase);
       const auth = firebase.auth(), fs = firebase.firestore();
-      /* 로그인하지 않은 방문자는 익명 계정으로 들어와 질문을 남길 수 있음 */
-      await new Promise(res=>{ const off = auth.onAuthStateChanged(async u=>{ if(!u){ try{ await auth.signInAnonymously(); }catch(e){ off(); res(); } return; } off(); res(); }); });
+      /* 로그인 상태 복원을 기다림. 로그인하지 않은 방문자는 읽기만 (질문은 구글 로그인 필요) */
+      await new Promise(res=>{ const off = auth.onAuthStateChanged(()=>{ off(); res(); }); });
       return {app, auth, fs};
     })();
     return fbReady;
@@ -35,10 +35,10 @@ window.Backend = (function(){
       id: async()=> cur() ? cur().uid : null,
       isOwner: async()=> !!email() && devs.includes(email()),
       canEdit: async()=>{ const e=email(); if(!e) return false; if(devs.includes(e)) return true; const r=await roles(F.fs); return (r.admins||[]).map(x=>String(x).toLowerCase()).includes(e); },
-      can: async(n)=> n==='data.write' ? !!cur() : null,
+      can: async(n)=> n==='data.write' ? !!email() : null,
       me: async()=>({ id: cur()?cur().uid:null, name: cur() && cur().displayName || '' }),
       profiles: async(ids)=>{ const out={}; await Promise.all((ids||[]).map(async id=>{ try{ const sn=await F.fs.doc('profiles/'+id).get(); out[id]={ name: sn.exists ? (sn.data().name||'') : '' }; }catch(e){ out[id]={name:''}; } })); return out; },
-      signIn: async()=>{ const p=new firebase.auth.GoogleAuthProvider(); const u=cur(); try{ if(u && u.isAnonymous) await u.linkWithPopup(p); else await F.auth.signInWithPopup(p); }catch(e){ if(e && e.code==='auth/credential-already-in-use'){ await F.auth.signInWithCredential(e.credential); } else throw e; } const c=cur(); if(c && c.displayName){ try{ await F.fs.doc('profiles/'+c.uid).set({name:c.displayName},{merge:true}); }catch(_){} } location.reload(); },
+      signIn: async()=>{ await F.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); const c=cur(); if(c && c.displayName){ try{ await F.fs.doc('profiles/'+c.uid).set({name:c.displayName},{merge:true}); }catch(_){} } location.reload(); },
       signOut: async()=>{ await F.auth.signOut(); location.reload(); },
       signedIn: ()=> !!email(), email
     };

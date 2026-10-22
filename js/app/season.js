@@ -43,9 +43,15 @@ function updSeasonChip(){ let c=$('#seasonChip'); const ab=$('#admbtn'); if(!c &
     dbg:'● 디버깅: 팀과 공유되지 않습니다. 모든 버튼을 실제처럼 눌러 볼 수 있고, 바꾼 내용은 이 브라우저에만 디버깅 데이터로 남습니다. 끄려면 DBG 버튼 → 디버깅 끄기.' })[st];
   document.body.classList.toggle('conn-off', st!=='on' && st!=='dbg');
   document.body.classList.toggle('no-write', st==='on' && SH.canWrite===false);
-  document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-ro'); const ro = st==='on' && SH.canWrite===false; if(ro && !w){ w=document.createElement('p'); w.className='qa-warn qa-ro'; w.textContent='지금 권한(뷰어·댓글 작성자)으로는 글을 남길 수 없습니다. 읽기만 가능합니다.'; f.prepend(w); } else if(!ro && w) w.remove(); });
+  document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-ro'); const ro = st==='on' && SH.canWrite===false; if(ro && !w){ w=document.createElement('p'); w.className='qa-warn qa-ro'; w.dataset.k='ro'; w.textContent='지금 권한(뷰어·댓글 작성자)으로는 글을 남길 수 없습니다. 읽기만 가능합니다.'; f.prepend(w); } else if(!ro && w) w.remove(); });
   document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-warn'); if(st==='off'){ if(!w){ w=document.createElement('p'); w.className='qa-warn'; w.textContent='연결 안 됨: 글은 써 둘 수 있지만 남기기는 연결된 뒤에 됩니다.'; f.prepend(w); } } else if(w) w.remove(); const nt=f.querySelector('.qa-note'); if(nt) nt.hidden = st==='off'; });
 }
 { const _rm=refreshMode; refreshMode=function(){ const r=_rm.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
 { const _am2=applyModes; applyModes=function(){ const r=_am2.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
 { const _as=afterSeason; afterSeason=function(){ const r=_as.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
+
+/* ---------- 질문·오류: Firebase 저장소에서는 구글 로그인 후 작성 ---------- */
+{ const _u=updSeasonChip; updSeasonChip=function(){ const r=_u.apply(this,arguments);
+  try{ if(window.Backend && Backend.kind()==='firebase') document.querySelectorAll('.qa-f .qa-ro').forEach(w=>{ if(w.dataset.k==='login') return; w.dataset.k='login'; w.innerHTML='질문·오류를 남기려면 구글 로그인이 필요합니다. <button type="button" class="btn small qa-login">구글 로그인</button>'; }); }catch(e){}
+  return r; }; }
+document.addEventListener('click',async e=>{ const b=e.target.closest('.qa-login'); if(!b) return; e.preventDefault(); try{ const u=await Backend.use('user'); await u.signIn(); }catch(err){ toast('로그인하지 못했습니다.'); console.error(err); } }, true);
