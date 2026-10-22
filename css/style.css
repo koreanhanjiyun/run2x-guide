@@ -1262,3 +1262,6 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 #teamPanel .tp-fbact{display:flex;align-items:center;gap:6px;margin-top:4px}
 #teamPanel .tp-fbact select{font:inherit;font-size:12px;padding:2px 4px;border:1px solid #d6d0e3;border-radius:6px}
 #teamPanel .tp-fbrow.st-2,#teamPanel .tp-fbrow.st-3{opacity:.6}
+/* 로고 → 처음 화면 */
+.tabs .logo-mark,.tabs .wordmark{cursor:pointer}
+.tabs .wordmark:focus-visible,.tabs .logo-mark:focus-visible{outline:2px solid var(--brand-light);outline-offset:3px;border-radius:4px}
