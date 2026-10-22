@@ -1158,3 +1158,9 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 #teamPanel .tp-in{padding:0 12px 10px}
 #teamPanel .tp-more>summary{cursor:pointer;font-size:12.5px;color:#5b3fa0}
 #teamPanel .tp-sub{font-size:12px;font-weight:700;color:#58616d;margin:10px 0 2px}
+/* 관리 창: 보는 시즌 ↔ 이번 시즌 */
+#admPanel .sn-team{margin:8px 0 4px}
+#admPanel .sn-note{font-size:12px;margin:0}
+#admPanel .sn-warn{font-size:12.5px;background:#fff4e5;border:1px solid #f5c58a;color:#7a4510;border-radius:8px;padding:6px 10px;margin-bottom:6px}
+#admPanel .sn-acts{display:flex;gap:6px;flex-wrap:wrap}
+.sn-big{font-size:1.25em}

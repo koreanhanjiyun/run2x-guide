@@ -23,9 +23,10 @@
     if(!C || window.DEBUG) return; const c=document.getElementById('seasonChip'); if(!c) return;
     const k = CHIP[C.state] || CHIP.error;
     const tn = [...(C.teamName||'')]; const short = tn.length>10 ? tn.slice(0,10).join('')+'…' : C.teamName;
-    const head = C.state==='member' ? `${esc(short)} · ${esc(SEASON)}` : `${esc(SEASON)} 시즌`;
+    const vw = (typeof viewingOther==='function' && viewingOther()) ? ' 보는 중' : '';
+    const head = C.state==='member' ? `${esc(short)} · ${esc(SEASON)}${vw}` : `${esc(SEASON)} 시즌`;
     c.className = k.cls+' sc-team'; c.innerHTML = `<b>${head}</b><span class="sc-dot"></span><span>${k.txt}</span>`;
-    c.title = (C.state==='member' ? `팀: ${C.teamName}\n` : '') + `${SEASON} 시즌 (팀 관리자가 정한 이번 시즌)\n` + k.tip;
+    c.title = (C.state==='member' ? `팀: ${C.teamName}\n` : '') + (vw ? `${SEASON} 시즌을 보는 중 (팀의 이번 시즌은 ${TEAM_SEASON}). 관리 창에서 돌아갈 수 있습니다.\n` : `${SEASON} 시즌 (팀 관리자가 정한 이번 시즌)\n`) + k.tip;
     c.setAttribute('role','button'); c.tabIndex = 0;
     /* 질문·오류 입력칸 안내 */
     document.querySelectorAll('.qa-f').forEach(f=>{

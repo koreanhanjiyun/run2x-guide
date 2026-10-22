@@ -51,7 +51,7 @@ function admPlace(){ const p=$('#admPanel'); if(!p) return; const on = UMODE==='
   requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} }); }
 let ADMRAF=0;
 function renderAdm(){ if(ADMRAF) return; ADMRAF=requestAnimationFrame(()=>{ ADMRAF=0; admPlace(); const p=$('#admPanel'); if(!p || p.hidden) return;
-  const svb=p.querySelector('.sn-val'); if(svb) svb.textContent=SEASON+' 시즌'; const cf=document.querySelector('#st-confirm>span'); if(cf) cf.textContent='초기화 시 다시 복원할 수 없습니다.';
+  const svb=p.querySelector('.sn-val'); if(svb) svb.textContent=SEASON+' 시즌'; const cf=document.querySelector('#st-confirm>span'); if(cf) cf.innerHTML=`<b class="sn-big">${esc(SEASON)}</b> 시즌을 초기화합니다. 다시 복원할 수 없습니다.`;
   const cnt=ids=>{ const d=ids.filter(i=>STATUS[i]==='done').length, g=ids.filter(i=>STATUS[i]==='doing').length, k=ids.filter(i=>STATUS[i]==='skip').length; return {d,g,k,t:ids.length-d-g-k,n:ids.length}; };
   const bar=(c,lab)=>{ const n=(c.n-c.k)||1; return `<div class="adm-pr"><span class="adm-pl">${lab}</span><span class="pbar2" title="완료 ${c.d} · 진행 중 ${c.g} · 예정 ${c.t}${c.k?` · 제외 ${c.k}`:''}"><i class="d" style="width:${c.d/n*100}%"></i><i class="g" style="width:${c.g/n*100}%"></i></span><span class="adm-pv">${c.d}/${c.n-c.k}${c.k?` <em>제외 ${c.k}</em>`:''}</span></div>`; };
   const all=ITEMS.map(i=>i.id);
