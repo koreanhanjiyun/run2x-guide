@@ -1123,15 +1123,11 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 .cl-fix{display:inline-block;font-size:11.5px;font-weight:700;color:#fff;background:#d9730d;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:1px}
 .authbtn{margin-left:10px;border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer}
 
-/* 상단 상태 칩: 반투명 유리 + LED 점 (상태 색은 --c 하나로) */
+/* 상단 상태 칩: 반투명 바탕 + 빛나는 점 (상태 색은 --c 하나로) */
 #seasonChip{--c:150,146,170;display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#fff;white-space:nowrap;cursor:help;margin-right:10px;padding:4px 12px;border-radius:999px;
-  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.03) 55%),rgba(var(--c),.24);
-  border:1px solid rgba(var(--c),.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.18),0 0 10px rgba(var(--c),.18);
-  -webkit-backdrop-filter:blur(6px) saturate(140%);backdrop-filter:blur(6px) saturate(140%)}
+  background:rgba(var(--c),.22);border:1px solid rgba(var(--c),.5)}
 #seasonChip b{color:#fff;font-weight:800}#seasonChip span{color:#fff}
-#seasonChip .sc-dot{width:8px;height:8px;border-radius:50%;flex:none;
-  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.9) 0 18%,rgb(var(--c)) 45%);
-  box-shadow:0 0 4px 1px rgba(var(--c),.95),0 0 10px 2px rgba(var(--c),.55)}
+#seasonChip .sc-dot{width:8px;height:8px;border-radius:50%;flex:none;background:rgb(var(--c));box-shadow:0 0 6px rgba(var(--c),.7)}
 #seasonChip.sc-on{--c:62,214,128}
 #seasonChip.sc-off{--c:245,140,30}
 #seasonChip.sc-dbg{--c:240,60,64}
