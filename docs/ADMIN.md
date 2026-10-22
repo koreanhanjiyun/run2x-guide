@@ -1,31 +1,32 @@
 # 관리자 문서 (공개 사이트에는 링크하지 않음)
 
-## 권한 3단계
-| 역할 | 할 수 있는 것 | 설정 위치 |
+## 권한
+| 역할 | 할 수 있는 것 | 정해지는 곳 |
 |---|---|---|
-| 개발자 | 코드 수정(깃허브), 디버깅, 관리자 명단 관리, 관리자 기능 | 깃허브 저장소 권한 + `js/config.js` `developers` + `firestore.rules` `isDev()` |
-| 관리자 (예: 회장) | 관리자 모드: 진행 상태·우리 팀 값·이번 시즌·초기화, 질문 상태 변경·삭제 | Firestore `meta/roles` 문서의 `admins` 배열(이메일) |
-| 일반 (팀원·외부) | 읽기, 계산기는 로그인 없이. 질문·오류 남기기(자기 글 수정·삭제)는 구글 로그인 후 | — |
+| 개발자 | 코드 수정(깃허브), 디버깅, 플랫폼 문의 읽기, 팀 삭제 | 깃허브 저장소 권한 + `js/config.js` `developers` + `firestore.rules` `isDev()` |
+| 팀 관리자 | 자기 팀 관리자 모드(진행 상태·우리 팀 값·이번 시즌·초기화, 질문 상태 변경·삭제), 가입 승인, 관리자 지정·해제, 내보내기 | `teams/<팀>/members/<uid>.role = 'admin'` (사이트 칩 → 팀 패널에서 관리) |
+| 팀원 | 자기 팀 데이터 보기, 질문·오류 남기기(자기 글 수정·삭제) | `teams/<팀>/members/<uid>.role = 'member'` |
+| 로그인 사용자 | 가이드·계산기, 팀 만들기·가입 신청, 플랫폼 문의 | 구글 로그인 |
+| 비로그인 | 가이드·계산기 | — |
 
-관리자에게 깃허브 쓰기 권한은 주지 않습니다. 사이트 코드는 개발자만 고칩니다.
+개발자는 팀 운영에 관여하지 않습니다. 팀 인수인계는 팀 관리자끼리 사이트에서 합니다.
+
+## 데이터 구조 (Firestore)
+- `teams/<팀ID>` {name, createdBy, createdAt} — 팀 이름 목록(공개)
+- `teams/<팀ID>/members/<uid>` {role, name, email, at} — 팀원 명단
+- `teams/<팀ID>/requests/<uid>` — 가입 신청
+- `teams/<팀ID>/status/<시즌>-<항목>`, `val/<항목>`, `qa/*`, `meta/season`, `meta/state` — 팀 데이터 (팀원만)
+- `profiles/<uid>` 표시 이름, `users/<uid>` 마지막으로 고른 팀, `feedback/*` 플랫폼 문의(개발자만 읽음)
+- 보안 규칙: `firestore.rules` 를 Firebase 콘솔 → Firestore → 규칙에 붙여 넣고 게시. **규칙을 바꾸면 콘솔에서 다시 게시해야 적용됩니다.**
 
 ## 디버깅 모드
-- 주소 끝에 `#debug` 를 붙여 엽니다 (예: `https://koreanhanjiyun.github.io/run2x-guide/#debug`).
-- **개발자 계정으로 로그인한 상태**에서만 켜집니다. 그 외에는 일반 화면으로 돌아갑니다.
+- 주소 끝에 `#debug` (예: `https://koreanhanjiyun.github.io/run2x-guide/#debug`). **개발자 계정으로 로그인한 상태**에서만 켜집니다.
 - 공유 저장소에 쓰지 않고 이 브라우저에만 따로 저장(`run2x.dbg.*`). 화면 테두리 빨간 선, 상단 칩 "디버깅".
-- 오른쪽 아래 **DBG** 버블: 상태·최근 오류 확인, 디버깅 데이터 지우기, 끄기.
-- 끈 뒤 주소창의 `#debug` 를 지우지 않으면 새로고침 시 다시 켜집니다.
-
-## 공유 저장소 (Firebase)
-- 설정: `js/config.js` 의 `firebase` (공개돼도 되는 값입니다. 보호는 보안 규칙이 합니다).
-- 규칙: `firestore.rules` 를 Firebase 콘솔 → Firestore → 규칙에 게시.
-- 데이터 구조: `status/<시즌>-<항목>` 진행 상태, `val/<항목>` 우리 팀 값(시즌별), `qa/*` 질문·오류, `meta/season` 이번 시즌, `meta/roles` 관리자 명단, `profiles/<uid>` 표시 이름.
-- 백업: Firebase 콘솔에서 내보내기, 또는 NAS에 정기 보관.
+- 오른쪽 아래 **DBG** 버블: 상태·최근 오류, 디버깅 데이터 지우기, 끄기.
 
 ## 변경 이력 쓰는 법
-- 사이트(참고 탭) 변경 이력에는 **설계 내용의 추가·변경·정정만** 적습니다 (`js/data/refs.js`). 수식·그림·규정 오류를 고친 것은 `<b class="cl-fix">정정</b>` 을 붙입니다.
-- 화면·기능 변경은 깃허브 커밋 메시지로만 남깁니다. 1.0.0 이전 개발 기록: `docs/devlog.html`.
-- 하단 버전(`index.html` 의 `#verline`)은 주.부.수 규칙(참고 탭 변경 이력 맨 위)대로 올립니다.
+- 사이트(참고 탭) 변경 이력에는 **설계 내용의 추가·변경·정정만** (`js/data/refs.js`). 정정은 `<b class="cl-fix">정정</b>`.
+- 화면·기능 변경은 깃허브 커밋 메시지로만. 1.0.0 이전 개발 기록: `docs/devlog.html`.
 
-## Claude 아티팩트로 게시할 때
-`python3 tools/build_single.py` → `dist/run2x_guide.html` 을 게시합니다 (공유 저장소는 Claude 아티팩트 저장소를 씀).
+## 올리기 전에
+- `python3 tools/stamp.py` (css·js 주소에 ?v= 꼬리표 → 방문자 캐시 무효화)

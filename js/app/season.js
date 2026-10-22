@@ -49,9 +49,3 @@ function updSeasonChip(){ let c=$('#seasonChip'); const ab=$('#admbtn'); if(!c &
 { const _rm=refreshMode; refreshMode=function(){ const r=_rm.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
 { const _am2=applyModes; applyModes=function(){ const r=_am2.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
 { const _as=afterSeason; afterSeason=function(){ const r=_as.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
-
-/* ---------- 질문·오류: Firebase 저장소에서는 구글 로그인 후 작성 ---------- */
-{ const _u=updSeasonChip; updSeasonChip=function(){ const r=_u.apply(this,arguments);
-  try{ if(window.Backend && Backend.kind()==='firebase') document.querySelectorAll('.qa-f .qa-ro').forEach(w=>{ if(w.dataset.k==='login') return; w.dataset.k='login'; w.innerHTML='질문·오류를 남기려면 구글 로그인이 필요합니다. <button type="button" class="btn small qa-login">구글 로그인</button>'; }); }catch(e){}
-  return r; }; }
-document.addEventListener('click',async e=>{ const b=e.target.closest('.qa-login'); if(!b) return; e.preventDefault(); try{ const u=await Backend.use('user'); await u.signIn(); }catch(err){ toast('로그인하지 못했습니다.'); console.error(err); } }, true);

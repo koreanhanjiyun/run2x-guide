@@ -166,7 +166,7 @@ function setVM(v){ if(VMODE===v) return; VMODE=v; SETP('view',v); applyModes(); 
 function applyModes(){
   document.body.classList.toggle('vm-flow', VMODE==='flow'); document.body.classList.toggle('um-manage', UMODE==='manage');
   document.querySelectorAll('[data-vm]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.vm===VMODE)));
-  const viewer = SH.on && !SH.canAdmin; if(viewer && UMODE==='manage'){ UMODE='study'; }
+  const viewer = (SH.on || (window.Backend && Backend.kind()==='firebase')) && !SH.canAdmin; if(viewer && UMODE==='manage'){ UMODE='study'; }
   const ab=$('#admbtn'); if(ab){ ab.hidden = !(window.__shReady && !viewer); ab.setAttribute('aria-checked', String(UMODE==='manage')); ab.disabled=viewer; ab.title = viewer ? '편집자(관리자)만 쓸 수 있습니다' : '진행 상태·우리 팀 값 입력'; }
   $('#step-list').hidden = VMODE==='flow'; $('#flow-list').hidden = VMODE!=='flow';
   document.querySelectorAll('.vtabs [data-vm]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.vm===VMODE)));

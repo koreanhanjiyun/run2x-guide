@@ -1132,3 +1132,24 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 #seasonChip.sc-off{--c:245,140,30}
 #seasonChip.sc-dbg{--c:240,60,64}
 #seasonChip.sc-wait{--c:150,146,170}
+/* 팀·계정 패널 */
+#seasonChip.sc-team{cursor:pointer}
+#teamPanel{position:fixed;z-index:9000;width:min(380px,calc(100vw - 16px));max-height:calc(100vh - 80px);overflow:auto;background:#fff;color:#1d2128;border:1px solid #d9d6e4;border-radius:12px;box-shadow:0 12px 32px rgba(20,16,40,.22);padding:12px 14px;font-size:13.5px}
+#teamPanel .tp-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#teamPanel .tp-x{border:0;background:transparent;font-size:20px;line-height:1;cursor:pointer;color:#58616d}
+#teamPanel .tp-me{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0 10px;border-bottom:1px solid #eee}
+#teamPanel .tp-sec{padding:10px 0;border-bottom:1px solid #eee}
+#teamPanel .tp-sec:last-child{border-bottom:0}
+#teamPanel .tp-sec p{margin:4px 0 8px}
+#teamPanel .tp-row{display:flex;gap:6px;margin:6px 0}
+#teamPanel .tp-row select,#teamPanel .tp-row input{flex:1;min-width:0;padding:5px 8px;border:1px solid #cfcbdc;border-radius:6px;font:inherit;color:#1d2128;background:#fff;color-scheme:light}
+#teamPanel textarea{width:100%;padding:6px 8px;border:1px solid #cfcbdc;border-radius:6px;font:inherit;color:#1d2128;background:#fff;margin-bottom:6px;resize:vertical}
+#teamPanel .tp-small{font-size:12px}
+#teamPanel .tp-person{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0}
+#teamPanel .tp-person .btn{margin-left:4px}
+#teamPanel .lnk{border:0;background:transparent;color:#5b3fa0;cursor:pointer;font:inherit;font-size:12.5px;text-decoration:underline;margin-left:6px}
+#teamPanel .tp-role{font-size:11px;border:1px solid #cfcbdc;border-radius:999px;padding:0 6px;color:#58616d;margin-left:4px}
+#teamPanel .tp-role.a{border-color:#6A4294;color:#6A4294}
+#teamPanel .tp-leave{margin:8px 0 0}
+#teamPanel .tp-fbrow{padding:6px 0;border-bottom:1px dashed #eee}
+.qa-team .btn{margin-left:6px}

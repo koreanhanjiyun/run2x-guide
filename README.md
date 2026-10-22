@@ -13,7 +13,8 @@ Formula Student(전기차) 팀을 위한 차량 설계 단계·항목 가이드�
 | `index.html` | 화면 틀 |
 | `css/` | 스타일 (`base.css` 초기화, `style.css` 본 스타일) |
 | `js/config.js` | **팀별 설정** (공유 저장소 Firebase, 개발자 이메일) |
-| `js/store/backend.js` | 공유 저장소 어댑터 (Firebase / Claude 아티팩트 / 없음) |
+| `js/store/backend.js` | 공유 저장소 어댑터 (Firebase 다중 팀 / Claude 아티팩트 / 없음) |
+| `js/app/team.js` | 팀·계정 패널 (로그인, 팀 만들기·가입·승인, 플랫폼 문의) |
 | `js/data/` | **내용**: 단계·항목(`items.js`), 항목별 활동(`act.js`), 상세 카드(`cards.js`), 부품(`parts.js`), 참고·변경 이력(`refs.js`) |
 | `js/figures/` | 그림·3D·애니메이션 |
 | `js/app/` | 화면 동작 |
@@ -24,7 +25,7 @@ Formula Student(전기차) 팀을 위한 차량 설계 단계·항목 가이드�
 내용을 고칠 때는 대부분 `js/data/` 만 보면 됩니다.
 
 ## 문서
-- [다른 팀이 쓰는 법](docs/OTHER-TEAMS.md)
+- [다른 팀이 쓰는 법](docs/OTHER-TEAMS.md) — 사이트에서 바로 팀을 만들어 쓸 수 있습니다
 - 관리자 문서: [docs/ADMIN.md](docs/ADMIN.md)
 
 ## 면책

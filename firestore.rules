@@ -1,36 +1,67 @@
 rules_version = '2';
-// Run2X 설계 가이드 — Firestore 보안 규칙
-// 역할: 개발자(isDev, 아래 이메일) > 관리자(meta/roles.admins 목록) > 로그인 방문자(익명 포함)
+// Run2X 설계 가이드 — Firestore 보안 규칙 (다중 팀)
+// 역할: 개발자(isDev) / 팀 관리자(teams/{t}/members/{uid}.role == 'admin') / 팀원 / 로그인 사용자 / 비로그인
+// 팀 데이터(진행 상태·팀 값·시즌·질문)는 그 팀 팀원만 읽고 씀. 팀 이름 목록만 공개.
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com'; }
+    function uid() { return request.auth.uid; }
     function email() { return signedIn() && request.auth.token.email != null ? request.auth.token.email.lower() : ''; }
     // ▼ 개발자 이메일 (js/config.js 의 developers 와 같게)
     function isDev() { return email() in ['disguv1709@gmail.com']; }
-    function isAdmin() {
-      return isDev() || (email() != '' && exists(/databases/$(database)/documents/meta/roles)
-        && email() in get(/databases/$(database)/documents/meta/roles).data.admins);
+    function mPath(t) { return /databases/$(database)/documents/teams/$(t)/members/$(uid()); }
+    function isMember(t) { return signedIn() && exists(mPath(t)); }
+    function isTAdmin(t) { return isMember(t) && get(mPath(t)).data.role == 'admin'; }
+    function str(v, n) { return v is string && v.size() <= n; }
+
+    // 팀 목록 (이름만 공개)
+    match /teams/{t} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.createdBy == uid() && str(request.resource.data.name, 40)
+                    && request.resource.data.keys().hasOnly(['name','createdBy','createdAt']);
+      allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']) && str(request.resource.data.name, 40);
+      allow delete: if isDev();
+
+      // 팀원 명단
+      match /members/{u} {
+        allow read: if isMember(t) || (signedIn() && u == uid());
+        // 관리자가 추가(승인), 또는 팀을 만든 사람이 자기 자신을 첫 관리자로 등록(팀 만들기와 같은 일괄 작업)
+        allow create: if isTAdmin(t)
+                      || (signedIn() && u == uid() && request.resource.data.role == 'admin'
+                          && getAfter(/databases/$(database)/documents/teams/$(t)).data.createdBy == uid()
+                          && !exists(/databases/$(database)/documents/teams/$(t)));
+        allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+                      && request.resource.data.role in ['admin','member'];
+        allow delete: if isTAdmin(t) || (signedIn() && u == uid());
+      }
+      // 가입 신청
+      match /requests/{u} {
+        allow read: if isTAdmin(t) || (signedIn() && u == uid());
+        allow create: if signedIn() && u == uid() && !isMember(t);
+        allow delete: if isTAdmin(t) || (signedIn() && u == uid());
+      }
+      // 팀 데이터
+      match /status/{d} { allow read: if isMember(t); allow write: if isTAdmin(t); }
+      match /val/{d}    { allow read: if isMember(t); allow write: if isTAdmin(t); }
+      match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
+      match /qa/{id} {
+        allow read: if isMember(t);
+        allow create: if isMember(t) && request.resource.data.by == uid() && str(request.resource.data.text, 4000);
+        allow update: if isTAdmin(t) || (isMember(t) && resource.data.by == uid() && request.resource.data.by == resource.data.by);
+        allow delete: if isTAdmin(t) || (isMember(t) && resource.data.by == uid());
+      }
     }
 
-    // 관리자 명단: 개발자만 바꿈
-    match /meta/roles { allow read: if true; allow write: if isDev(); }
-    // 이번 시즌·상태 등 나머지 meta: 관리자
-    match /meta/{doc} { allow read: if true; allow write: if isAdmin(); }
-    // 진행 상태·우리 팀 값: 관리자
-    match /status/{doc} { allow read: if true; allow write: if isAdmin(); }
-    match /val/{doc}    { allow read: if true; allow write: if isAdmin(); }
-    // 질문·오류: 로그인 방문자는 자기 글 작성·수정·삭제, 관리자는 상태 변경·삭제
-    match /qa/{id} {
-      allow read: if true;
-      allow create: if signedIn() && request.resource.data.by == request.auth.uid
-                    && request.resource.data.text is string && request.resource.data.text.size() <= 4000;
-      allow update: if isAdmin() || (signedIn() && resource.data.by == request.auth.uid
-                    && request.resource.data.by == resource.data.by);
-      allow delete: if isAdmin() || (signedIn() && resource.data.by == request.auth.uid);
+    // 표시 이름 (로그인 사용자끼리), 각자 자기 것만 씀
+    match /profiles/{u} { allow read: if signedIn(); allow write: if signedIn() && u == uid(); }
+    // 마지막으로 고른 팀
+    match /users/{u}    { allow read, write: if signedIn() && u == uid(); }
+    // 플랫폼 문의: 로그인 사용자 누구나 작성, 개발자만 읽기·삭제
+    match /feedback/{id} {
+      allow create: if signedIn() && request.resource.data.by == uid() && str(request.resource.data.text, 4000);
+      allow read, delete: if isDev();
     }
-    // 이름 표시: 각자 자기 것만
-    match /profiles/{uid} { allow read: if true; allow write: if signedIn() && request.auth.uid == uid; }
-    // 그 밖은 모두 거부
+    // 그 밖은 모두 거부 (예전 단일 팀 경로 status·val·qa·meta 포함)
     match /{path=**} { allow read, write: if false; }
   }
 }
