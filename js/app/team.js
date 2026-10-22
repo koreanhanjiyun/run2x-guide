@@ -58,13 +58,16 @@
     /* 팀 */
     const form = (k, label) => `<div class="tp-row"><input class="tp-n-${k}" maxlength="40" placeholder="팀 이름 (4자 이상)" aria-label="팀 이름" autocomplete="off"></div>
       <div class="tp-row"><input class="tp-p-${k}" maxlength="64" placeholder="비밀번호 (영문·숫자 6자 이상)" aria-label="비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small${k==='join'?' pri':''}" data-tp="${k}">${label}</button></div>`;
-    h += `<div class="tp-sec"><div class="sec-label">팀</div>`;
-    if(c.state==='member') h += `<p><b>${esc(c.teamName)}</b> · ${ROLE[c.role]}</p>`;
-    else h += `<p class="muted tp-small">팀 관리자에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>` + form('join','가입');
-    h += `<details class="tp-more"${c.state==='member'?'':' open'}><summary>${c.state==='member'?'다른 팀 가입 · 새 팀 만들기':'새 팀 만들기'}</summary>`
-       + (c.state==='member' ? `<div class="tp-sub">다른 팀 가입</div>` + form('join','가입') : '')
-       + `<div class="tp-sub">새 팀 만들기</div>` + form('create','만들기')
-       + `<p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 관리자가 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p></details></div>`;
+    let mine=[]; try{ mine = await T.mine(); }catch(e){ console.error(e); }
+    if(mine.length){
+      h += `<div class="tp-sec"><div class="sec-label">내 팀 (${mine.length})</div>` + mine.map(t=>`<div class="tp-person"><span>${esc(t.name)}${t.id===c.team&&c.state==='member'?` <span class="tp-role a">${ROLE[c.role]} · 지금 팀</span>`:''}</span><span>${t.id===c.team&&c.state==='member'?'':`<button type="button" class="btn small" data-tp="switch" data-tid="${esc(t.id)}">이 팀으로</button>`}</span></div>`).join('') + `</div>`;
+    }
+    h += `<div class="tp-sec">`;
+    if(c.state!=='member') h += `<div class="sec-label">팀 가입</div><p class="muted tp-small">팀 관리자에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>` + form('join','가입');
+    h += `<details class="tp-more"><summary>${c.state==='member'?'다른 팀 가입 · 새 팀 만들기':'새 팀 만들기'}</summary><div class="tp-in">`
+       + (c.state==='member' ? `<div class="tp-sub">다른 팀 가입</div>` + form('join','가입') + `<div class="tp-sub">새 팀 만들기</div>` : '')
+       + form('create','만들기')
+       + `<p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 관리자가 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p></div></details></div>`;
     /* 관리자 */
     if(c.state==='member'){
       let ms=[]; try{ ms = await T.members(); }catch(e){ console.error(e); }
@@ -98,6 +101,7 @@
       case 'logout': return u.signOut();
       case 'join': case 'create': { const n=P.querySelector('.tp-n-'+k).value, pw=P.querySelector('.tp-p-'+k).value;
         try{ return k==='join' ? await T.join(n,pw) : await T.create(n,pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } }
+      case 'switch': return T.choose(el.dataset.tid);
       case 'pw': { const i=P.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
       case 'promote': await T.setRole(uid,'admin'); say('관리자로 지정했습니다.'); return render();
       case 'demote': { if(+P.dataset.admins<=1) return say('마지막 관리자는 내려올 수 없습니다. 다른 사람을 먼저 관리자로 지정하십시오.');
@@ -128,5 +132,5 @@
     const b=document.createElement('button'); b.type='button'; b.className='authbtn tp-open'; b.textContent = C.uid ? `${C.email} · 팀·계정` : '로그인'; vl.appendChild(b);
     const f=document.createElement('button'); f.type='button'; f.className='authbtn tp-fbopen'; f.textContent='플랫폼 문의'; vl.appendChild(f); }
 
-  Backend.Team.ctx().then(c=>{ C=c; paintChip(); foot(); }).catch(e=>{ console.error(e); C={state:'error'}; paintChip(); });
+  Backend.Team.ctx().then(c=>{ C=c; paintChip(); foot(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; paintChip(); });
 })();
