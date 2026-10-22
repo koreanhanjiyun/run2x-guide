@@ -14,9 +14,9 @@ jobs:
     if: ${{ github.event.inputs.confirm == 'DELETE' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
       - name: 서비스 계정 키 준비
         run: printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
         env:

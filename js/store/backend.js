@@ -58,6 +58,8 @@ window.Backend = (function(){
         const t = await F.fs.doc('teams/'+tid).get();
         if(!t.exists){ lsSet(TEAMKEY, null); return c; }
         c.team = tid; c.teamName = t.data().name || ''; c.teamKey = t.data().key || '';
+        const today = new Date().toISOString().slice(0,10);
+        if(String(t.data().lastActive||'').slice(0,10) !== today){ try{ await F.fs.doc('teams/'+tid).update({lastActive: new Date().toISOString()}); }catch(e){ console.warn('마지막 활동일 기록 실패', e); } }
         c.role = m.data().role === 'admin' ? 'admin' : 'member'; c.state = 'member';
         if(c.myTeams[tid] !== c.teamName) await setMyTeam(c, tid, c.teamName);
       }catch(e){ console.error('팀 정보를 읽지 못했습니다', e); c.state = 'error'; }
@@ -105,7 +107,7 @@ window.Backend = (function(){
     async create(name, pw){ const c = await teamCtx(); name = Team.check(name, pw); const lower = name.toLowerCase(), fs = c.F.fs;
       const nm = await fs.doc('teamNames/'+lower).get(); if(nm.exists) throw err('dup', '이미 있는 팀 이름입니다. 가입하려면 그 팀의 비밀번호로 가입하십시오.');
       const key = await keyOf(name, pw), ref = fs.collection('teams').doc(), now = new Date().toISOString(), b = fs.batch();
-      b.set(ref, {name, createdBy: c.uid, createdAt: now, key});
+      b.set(ref, {name, createdBy: c.uid, createdAt: now, key, lastActive: now});
       b.set(fs.doc('teamNames/'+lower), {team: ref.id});
       b.set(fs.doc('joinKeys/'+key), {team: ref.id});
       b.set(fs.doc(`teams/${ref.id}/members/${c.uid}`), {role:'admin', name: c.name, email: c.email, at: now});
@@ -134,6 +136,18 @@ window.Backend = (function(){
       await fs.doc(P).delete();
       await fs.doc(P+'/members/'+c.uid).delete();
       lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); },
+    /* 백업: 진행 상태·우리 팀 값·질문·이번 시즌을 파일 하나로 */
+    BACKUP_COLS: ['status','val','qa','meta'],
+    async exportData(){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team, data = {};
+      for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); data[col] = {}; q.docs.forEach(d=>{ data[col][d.id] = d.data(); }); }
+      return {format:'run2x-team-backup', version:1, team:c.teamName, exportedAt:new Date().toISOString(), data}; },
+    async importData(obj){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 불러올 수 있습니다.');
+      if(!obj || obj.format!=='run2x-team-backup' || !obj.data) throw err('fmt','이 사이트의 팀 백업 파일이 아닙니다.');
+      const fs = c.F.fs, P = 'teams/'+c.team, ops = [];
+      for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); q.docs.forEach(d=>ops.push(['del', P+'/'+col+'/'+d.id])); }
+      for(const col of Team.BACKUP_COLS){ Object.entries(obj.data[col]||{}).forEach(([id,d])=>{ if(/^[^/]{1,200}$/.test(id) && d && typeof d==='object') ops.push(['set', P+'/'+col+'/'+id, d]); }); }
+      for(let i=0;i<ops.length;i+=400){ const b = fs.batch(); ops.slice(i,i+400).forEach(o=> o[0]==='del' ? b.delete(fs.doc(o[1])) : b.set(fs.doc(o[1]), o[2])); await b.commit(); }
+      return ops.filter(o=>o[0]==='set').length; },
     async mine(){ const c = await teamCtx(); return Object.entries(c.myTeams||{}).map(([id,name])=>({id, name})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko')); },
     async feedback(text){ const c = await teamCtx(); await c.F.fs.collection('feedback').add({text: String(text).slice(0,4000), by: c.uid, name: c.name, email: c.email, team: c.teamName||'', at: new Date().toISOString(), url: location.href.split('#')[0]}); },
     async feedbackList(){ const c = await teamCtx(); const q = await c.F.fs.collection('feedback').orderBy('at','desc').limit(50).get(); return q.docs.map(d=>({id:d.id, ...d.data()})); },

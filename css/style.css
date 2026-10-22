@@ -1177,3 +1177,28 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 #teamPanel .tp-delbox{margin-top:8px;padding:8px 10px;border:1px solid #f1b3ab;background:#fff5f4;border-radius:8px}
 #teamPanel .tp-danger{background:#b42318;border-color:#b42318;color:#fff}
 #teamPanel .tp-danger:disabled{opacity:.45;cursor:not-allowed}
+/* 하단 한 줄 · 사이트 정보 */
+#verline .vl-ver{font-size:.9em;color:var(--muted)}
+#verline .vl-links{margin-left:6px}
+#verline .vl-links .authbtn{margin-left:10px}
+#infoPanel{position:fixed;inset:0;z-index:9100;background:rgba(20,16,40,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+#infoPanel .ip-card{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;background:#fff;color:#1d2128;border-radius:14px;box-shadow:0 20px 50px rgba(20,16,40,.35);padding:16px 22px 20px;font-size:14px;line-height:1.65}
+#infoPanel .ip-h{display:flex;justify-content:space-between;align-items:center;position:sticky;top:-16px;background:#fff;padding:8px 0;margin:-8px 0 4px;font-size:16px}
+#infoPanel .ip-x{border:0;background:transparent;font-size:22px;cursor:pointer;color:#58616d}
+#infoPanel section,#infoPanel details{border-top:1px solid #eee;padding:10px 0}
+#infoPanel h4{margin:0 0 4px;font-size:14px;color:#6A4294;display:inline}
+#infoPanel p{margin:4px 0}
+#infoPanel ul{margin:4px 0;padding-left:20px}
+#infoPanel summary{cursor:pointer}
+#infoPanel a{color:#5b3fa0}
+/* 업데이트 알림 */
+@keyframes clBreathe{0%,100%{box-shadow:0 0 0 0 rgba(245,140,30,0)}50%{box-shadow:0 0 0 4px rgba(245,140,30,.55)}}
+.cl-breathe{animation:clBreathe 2.4s ease-in-out infinite;border-radius:8px}
+.tab.cl-breathe{color:#ffb35c}
+.cl-hit{animation:clBreathe 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.cl-breathe,.cl-hit{animation:none;box-shadow:0 0 0 3px rgba(245,140,30,.7)}}
+.cl-new{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff4e5;border:1px solid #f5c58a;color:#7a4510;border-radius:8px;padding:8px 12px;margin:6px 0 10px;font-size:13.5px}
+.cl-go{margin-left:8px;padding:1px 8px}
+.adm .adm-new,#admbtn .adm-new{margin-left:6px;font-size:11px;font-weight:700;background:#d9730d;color:#fff;border-radius:999px;padding:1px 7px}
+#admPanel .qa-seen{margin:4px 0 6px}
+#teamPanel .tp-imp{margin-top:6px;padding:8px 10px;border:1px solid #f1b3ab;background:#fff5f4;border-radius:8px}

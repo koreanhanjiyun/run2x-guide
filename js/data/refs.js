@@ -57,7 +57,7 @@ const REFS = [
   ['수','고치기만 함','오탈자, 문구 다듬기, 표시 깨짐·버그 수정']])}
 <p class="muted" style="font-size:14px">이 이력에는 <b>설계 내용</b>의 추가·변경·정정만 적습니다. 화면·기능 변경은 적지 않습니다. <b class="cl-fix">정정</b>은 이미 읽은 내용이 틀렸다가 고쳐진 것이니, 그 값을 쓴 적이 있다면 다시 확인하십시오.</p>
 <div class="sec-label" style="margin-top:14px">0.31.0 · 2026-10-21</div>
-<ul class="pl"><li>제동 배분·밸런스 바: 상세 카드 추가 (목표 배분 β = (b + μh)/L과 제동검사 조건, 같은 캘리퍼로 배분 만드는 법, MC 지름 vs 밸런스 바)</li><li>마스터실린더·캘리퍼·패드 선정: "답력과 페달 행정" 추가 (답력 × 행정 = p·V)</li><li><b class="cl-fix">정정</b> 마스터실린더·캘리퍼·패드 선정 "답력에서 토크까지": 배분은 앞뒤 피스톤 면적 <b>또는 MC 지름 조합</b>으로 만든다로 수정</li></ul>
+<ul class="pl"><li data-go="b_dist">제동 배분·밸런스 바: 상세 카드 추가 (목표 배분 β = (b + μh)/L과 제동검사 조건, 같은 캘리퍼로 배분 만드는 법, MC 지름 vs 밸런스 바)</li><li data-go="p_brake">마스터실린더·캘리퍼·패드 선정: "답력과 페달 행정" 추가 (답력 × 행정 = p·V)</li><li data-go="p_brake"><b class="cl-fix">정정</b> 마스터실린더·캘리퍼·패드 선정 "답력에서 토크까지": 배분은 앞뒤 피스톤 면적 <b>또는 MC 지름 조합</b>으로 만든다로 수정</li></ul>
 <div class="sec-label" style="margin-top:14px">0.29.0 · 2026-10-21</div>
 <ul class="pl"><li>용어집 35개 추가</li><li>참고 탭 "FSK 규정 · 설계 관련 조항" 섹션 삭제 (규정은 각 항목의 제약에 표기)</li><li><b class="cl-fix">정정</b> 카드 기호의 아래첨자 표기 오류 수정</li></ul>
 <div class="sec-label" style="margin-top:14px">0.27.0 · 2026-10-21</div>

@@ -18,6 +18,7 @@
 - `teams/<팀ID>/members/<uid>` {role, name, email, at, via} — 팀원 명단
 - `teams/<팀ID>/status/<시즌>-<항목>`, `val/<항목>`, `qa/*`, `meta/season`, `meta/state` — 팀 데이터 (팀원만)
 - `profiles/<uid>` 표시 이름, `users/<uid>` 마지막으로 고른 팀, `feedback/*` 플랫폼 문의(개발자만 읽음)
+- 팀 백업: 팀 창 [내보내기]·[불러오기](덮어쓰기). 무료 요금제에는 자동 백업이 없음.
 - 보안 규칙: `firestore.rules` 를 main 에 올리면 깃허브 액션(`.github/workflows/firestore-rules.yml`)이 자동 게시합니다. 저장소 Secrets 의 `FIREBASE_SA`(서비스 계정 JSON, 역할: Firebase 규칙 관리자 + Cloud Datastore 사용자)가 필요합니다. 결과는 저장소 Actions 탭에서 확인.
 
 ## 디버깅 모드
@@ -31,3 +32,16 @@
 
 ## 올리기 전에
 - `python3 tools/stamp.py` (css·js 주소에 ?v= 꼬리표 → 방문자 캐시 무효화)
+
+## 자동 작업 (깃허브 Actions)
+| 작업 | 언제 | 내용 |
+|---|---|---|
+| Firestore 규칙 게시 | `firestore.rules` 를 올릴 때 | 보안 규칙 자동 게시 |
+| 오래 안 쓴 팀 정리 | 매달 1일 03:17 (수동 실행 시 기본은 확인만) | 2년간 팀원 접속이 없는 팀 삭제. 삭제 전 `trash/<팀ID>` 에 백업(90일 보관, 개발자만 읽기) |
+| Firestore 예전 데이터 정리 | 수동 (한 번만) | 단일 팀 시절 데이터 삭제 |
+
+- 마지막 활동일: 팀원이 접속하면 하루 한 번 `teams/<팀ID>.lastActive` 갱신.
+- 자동 삭제된 팀 복구: Firebase 콘솔 → Firestore → `trash/<팀ID>` 의 `backup` 값(JSON 문자열)을 파일로 저장 → 같은 이름으로 팀을 새로 만든 뒤 팀 창 [불러오기].
+
+## 1.0.0 조건
+팀 기능 실사용 안정 + 사이트 정보(정보 모음) 완성 + 회장 시험 사용 1회 후.

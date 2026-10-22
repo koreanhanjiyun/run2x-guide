@@ -39,10 +39,12 @@ service cloud.firestore {
       allow read: if isMember(t);
       allow create: if signedIn() && request.resource.data.createdBy == uid() && validName(request.resource.data.name)
                     && isKey(request.resource.data.key)
-                    && request.resource.data.keys().hasOnly(['name','createdBy','createdAt','key'])
+                    && request.resource.data.keys().hasOnly(['name','createdBy','createdAt','key','lastActive'])
                     && getAfter(/databases/$(database)/documents/teamNames/$(request.resource.data.name.lower())).data.team == t;
       // 비밀번호 변경(열쇠 교체)만. 이름 변경 불가(중복 관리 때문)
-      allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['key']) && isKey(request.resource.data.key);
+      allow update: if (isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['key']) && isKey(request.resource.data.key))
+                    // 팀원 접속 시 마지막 활동일 기록 (2년 미접속 자동 삭제 기준)
+                    || (isMember(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActive']) && request.resource.data.lastActive is string);
       allow delete: if isDev() || isTAdmin(t);
 
       // 팀원 명단
@@ -65,7 +67,7 @@ service cloud.firestore {
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
       match /qa/{id} {
         allow read: if isMember(t);
-        allow create: if isMember(t) && request.resource.data.by == uid() && str(request.resource.data.text, 4000);
+        allow create: if (isMember(t) && request.resource.data.by == uid() && str(request.resource.data.text, 4000)) || isTAdmin(t); // 관리자: 백업 불러오기
         allow update: if isTAdmin(t) || (isMember(t) && resource.data.by == uid() && request.resource.data.by == resource.data.by);
         allow delete: if isTAdmin(t) || (isMember(t) && resource.data.by == uid());
       }
@@ -80,6 +82,8 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.by == uid() && str(request.resource.data.text, 4000);
       allow read, delete: if isDev();
     }
+    // 자동 삭제된 팀의 백업 (깃허브 작업만 씀, 개발자만 읽기)
+    match /trash/{id} { allow read: if isDev(); }
     // 그 밖은 모두 거부 (예전 단일 팀 경로 status·val·qa·meta 포함)
     match /{path=**} { allow read, write: if false; }
   }
