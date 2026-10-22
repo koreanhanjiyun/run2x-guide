@@ -67,7 +67,7 @@ const CALC = {
       if(K<=mgh) return [['φ/a_y','롤강성이 m·g·h_r보다 작아 계산할 수 없습니다.']];
       const g=v.m*v.hr/(K-mgh)*9.81/D2R;
       return [['K_φ,축 ≈ k·t²/2', `앞 ${f1(Kf,0)} · 뒤 ${f1(Kr,0)} N·m/rad (앞 비율 <b>${f1(Kf/K*100)}%</b>)`],
-              ['φ/a_y = m·h_r / (K_φ − m·g·h_r)', `<b>${f1(g,2)} °/g</b>`]]; }},
+              ['φ/a_y = m·h_r / (K_φ − m·g·h_r)', `<b>${(Math.round(g*100)/100).toFixed(2)} °/g</b>`]]; }},
   aero:{t:'다운포스와 최대 횡가속도', ins:[['mu','μ','타이어 마찰계수','',1.5],['m','m','차량 질량','kg',330],['v','v','코너 속도','km/h',54],['cla','C_L·A','양력계수 × 면적','m²',3]],
     f:v=>{ const vs=v.v/3.6, L=0.5*1.2*vs*vs*v.cla, a0=v.mu*9.81, a=v.mu*(v.m*9.81+L)/v.m;
       return [['L = ½ρv²·C_L·A (ρ = 1.2)', `<b>${f1(L,0)} N</b> (${v.v} km/h)`],
