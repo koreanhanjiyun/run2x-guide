@@ -124,6 +124,16 @@ window.Backend = (function(){
     async members(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/members`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
     async setRole(uid, role){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role}); },
     async remove(uid){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).delete(); if(uid===c.uid){ lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); } },
+    /* 팀 삭제: 팀 데이터·팀원·열쇠·이름을 모두 지움 (관리자). 팀 문서는 내 팀원 문서보다 먼저 지워야 규칙을 통과 */
+    async deleteTeam(){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 팀을 삭제할 수 있습니다.');
+      const fs = c.F.fs, P = 'teams/'+c.team;
+      for(const col of ['status','val','qa','meta']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
+      const ms = await fs.collection(P+'/members').get(); await Promise.all(ms.docs.filter(d=>d.id!==c.uid).map(d=>fs.doc(P+'/members/'+d.id).delete()));
+      if(c.teamKey){ try{ await fs.doc('joinKeys/'+c.teamKey).delete(); }catch(e){} }
+      try{ await fs.doc('teamNames/'+norm(c.teamName).toLowerCase()).delete(); }catch(e){}
+      await fs.doc(P).delete();
+      await fs.doc(P+'/members/'+c.uid).delete();
+      lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); },
     async mine(){ const c = await teamCtx(); return Object.entries(c.myTeams||{}).map(([id,name])=>({id, name})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko')); },
     async feedback(text){ const c = await teamCtx(); await c.F.fs.collection('feedback').add({text: String(text).slice(0,4000), by: c.uid, name: c.name, email: c.email, team: c.teamName||'', at: new Date().toISOString(), url: location.href.split('#')[0]}); },
     async feedbackList(){ const c = await teamCtx(); const q = await c.F.fs.collection('feedback').orderBy('at','desc').limit(50).get(); return q.docs.map(d=>({id:d.id, ...d.data()})); },

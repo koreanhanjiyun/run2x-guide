@@ -24,6 +24,7 @@ service cloud.firestore {
       allow create: if signedIn() && !exists(tPath(request.resource.data.team))
                     && getAfter(tPath(request.resource.data.team)).data.createdBy == uid()
                     && getAfter(tPath(request.resource.data.team)).data.name.lower() == n;
+      allow delete: if isTAdmin(resource.data.team);
     }
     // 가입 열쇠: SHA-256(소문자 팀 이름 + ':' + 비밀번호) → 팀 ID. 열쇠를 알아야(=비밀번호를 알아야) 읽을 수 있음
     match /joinKeys/{k} {
@@ -42,7 +43,7 @@ service cloud.firestore {
                     && getAfter(/databases/$(database)/documents/teamNames/$(request.resource.data.name.lower())).data.team == t;
       // 비밀번호 변경(열쇠 교체)만. 이름 변경 불가(중복 관리 때문)
       allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['key']) && isKey(request.resource.data.key);
-      allow delete: if isDev();
+      allow delete: if isDev() || isTAdmin(t);
 
       // 팀원 명단
       match /members/{u} {

@@ -82,7 +82,9 @@
         if(c.role==='admin' && !me) btn = `<button type="button" class="lnk" data-tp="${isA?'demote':'promote'}">${isA?'팀원으로':'관리자로'}</button><button type="button" class="lnk" data-tp="kick">내보내기</button>`;
         if(me && isA && admins>1) btn = `<button type="button" class="lnk" data-tp="demote">관리자 내려놓기</button>`;
         return `<div class="tp-person" data-uid="${esc(m.uid)}" data-role="${isA?'admin':'member'}"><span>${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''} <span class="tp-role${isA?' a':''}">${ROLE[isA?'admin':'member']}</span></span><span>${btn}</span></div>`; }).join('');
-      h += `<button type="button" class="lnk tp-leave" data-tp="leave">이 팀 나가기</button></div>`;
+      h += `<button type="button" class="lnk tp-leave" data-tp="leave">${ms.length<=1?'이 팀 나가기 (마지막 팀원이라 팀이 삭제됩니다)':'이 팀 나가기'}</button>`;
+      if(c.role==='admin') h += `<button type="button" class="lnk tp-del" data-tp="delopen">팀 삭제</button><div class="tp-delbox" hidden><p class="tp-small">삭제하려면 팀 이름 <b>${esc(c.teamName)}</b>을(를) 그대로 입력하십시오. 모든 시즌 기록·질문·팀원 명단이 지워지며 되돌릴 수 없습니다.</p><div class="tp-row"><input class="tp-delname" autocomplete="off" aria-label="삭제 확인용 팀 이름"><button type="button" class="btn small tp-danger" data-tp="delete" disabled>영구 삭제</button></div></div>`;
+      h += `</div>`;
       P.dataset.admins = admins; P.dataset.count = ms.length;
     }
     /* 플랫폼 문의 */
@@ -110,7 +112,13 @@
       case 'kick': { if(row.dataset.role==='admin' && +P.dataset.admins<=1) return say('마지막 관리자는 내보낼 수 없습니다.');
         if(!row.dataset.confirm){ row.dataset.confirm='1'; el.textContent='한 번 더 누르면 내보냄'; return; } await T.remove(uid); say('내보냈습니다.'); return render(); }
       case 'leave': { if(C.role==='admin' && +P.dataset.admins<=1 && +P.dataset.count>1) return say('마지막 관리자는 나갈 수 없습니다. 다른 사람을 관리자로 지정한 뒤 나가십시오.');
-        if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent='한 번 더 누르면 나감'; return; } await T.remove(C.uid); return location.reload(); }
+        const last = +P.dataset.count<=1;
+        if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent = last ? '한 번 더 누르면 나가면서 팀이 삭제됩니다 (되돌릴 수 없음)' : '한 번 더 누르면 나감'; return; }
+        if(last){ await T.deleteTeam(); say('팀을 삭제했습니다.'); return setTimeout(()=>location.reload(), 800); }
+        await T.remove(C.uid); return location.reload(); }
+      case 'delopen': { const bx=P.querySelector('.tp-delbox'); bx.hidden=!bx.hidden; if(!bx.hidden) bx.querySelector('input').focus(); return; }
+      case 'delete': { const v=P.querySelector('.tp-delname').value.trim().replace(/\s+/g,' ').toLowerCase(); if(v!==String(C.teamName).toLowerCase()) return say('팀 이름이 맞지 않습니다.');
+        el.disabled=true; el.textContent='삭제 중…'; await T.deleteTeam(); say('팀을 삭제했습니다.'); return setTimeout(()=>location.reload(), 800); }
       case 'fb': { const t=P.querySelector('.tp-fb'); const v=t.value.trim(); if(!v) return say('내용을 입력하십시오.'); await T.feedback(v); t.value=''; return say('보냈습니다. 고맙습니다.'); }
       case 'fbdel': { const r=el.closest('.tp-fbrow'); await T.feedbackDelete(r.dataset.id); return render(); }
     }
@@ -127,6 +135,7 @@
   }, true);
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); if((e.key==='Enter'||e.key===' ') && document.activeElement && document.activeElement.id==='seasonChip' && document.activeElement.classList.contains('sc-team')){ e.preventDefault(); open(); } });
   addEventListener('resize', place);
+  document.addEventListener('input', e=>{ if(!e.target.matches || !e.target.matches('#teamPanel .tp-delname')) return; const b=P.querySelector('[data-tp=delete]'); if(b) b.disabled = e.target.value.trim().replace(/\s+/g,' ').toLowerCase() !== String(C.teamName).toLowerCase(); });
 
   /* ---------- 하단: 로그인 상태 ---------- */
   function foot(){ const vl=document.getElementById('verline'); if(!vl || vl.querySelector('.authbtn')) return;
