@@ -44,7 +44,7 @@ function updSeasonChip(){ let c=$('#seasonChip'); const ab=$('#admbtn'); if(!c &
   document.body.classList.toggle('conn-off', st!=='on' && st!=='dbg');
   document.body.classList.toggle('no-write', st==='on' && SH.canWrite===false);
   document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-ro'); const ro = st==='on' && SH.canWrite===false; if(ro && !w){ w=document.createElement('p'); w.className='qa-warn qa-ro'; w.dataset.k='ro'; w.textContent='지금 권한(뷰어·댓글 작성자)으로는 글을 남길 수 없습니다. 읽기만 가능합니다.'; f.prepend(w); } else if(!ro && w) w.remove(); });
-  document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-warn'); if(st==='off'){ if(!w){ w=document.createElement('p'); w.className='qa-warn'; w.textContent='연결 안 됨: 글은 써 둘 수 있지만 남기기는 연결된 뒤에 됩니다.'; f.prepend(w); } } else if(w) w.remove(); const nt=f.querySelector('.qa-note'); if(nt) nt.hidden = st==='off'; });
+  document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-warn:not(.qa-ro)'); if(st==='off'){ if(!w){ w=document.createElement('p'); w.className='qa-warn'; w.textContent='연결 안 됨: 글은 써 둘 수 있지만 남기기는 연결된 뒤에 됩니다.'; f.prepend(w); } } else if(w) w.remove(); const nt=f.querySelector('.qa-note'); if(nt) nt.hidden = st==='off'; });
 }
 { const _rm=refreshMode; refreshMode=function(){ const r=_rm.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
 { const _am2=applyModes; applyModes=function(){ const r=_am2.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }

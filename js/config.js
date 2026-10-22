@@ -4,7 +4,14 @@
 window.RUN2X_CONFIG = {
   /* 공유 저장소(Firebase) 설정. Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 설정의 firebaseConfig 값을 그대로 붙여 넣습니다.
      null이면 공유 저장소 없이 읽기 전용("연결 안 됨")으로 동작합니다. */
-  firebase: null,
+  firebase: {
+    apiKey: "AIzaSyDWQSx8mULtqTpaQmc3HkKdmOSxlYgcwdU",
+    authDomain: "run2x-guide.firebaseapp.com",
+    projectId: "run2x-guide",
+    storageBucket: "run2x-guide.firebasestorage.app",
+    messagingSenderId: "33027610895",
+    appId: "1:33027610895:web:c3895e91cd0bb8d5cc867a"
+  },
   /* 개발자(플랫폼 수정·디버깅 권한) 구글 계정 이메일. firestore.rules의 isDev()에도 같은 값을 넣습니다. */
   developers: ['disguv1709@gmail.com'],
   /* Firebase SDK 버전 (compat) */
