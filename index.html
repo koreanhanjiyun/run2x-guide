@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Run2X 설계 로드맵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Unbounded:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="tabs" aria-label="보기 전환"><div class="tabs-in" role="tablist">
+  <span class="logo-mark" aria-hidden="true"></span><span class="wordmark"><b>RUN2X</b><i>RUN TO EXTREME.</i></span>
+  <button class="tab" role="tab" data-tab="steps" aria-selected="true">설계 단계</button>
+  <button class="tab" role="tab" data-tab="graph" aria-selected="false">연결도</button>
+  <button class="tab" role="tab" data-tab="parts" aria-selected="false">부품</button>
+  <button class="tab" role="tab" data-tab="goals" aria-selected="false">목표</button>
+  <button class="tab" role="tab" data-tab="ref" aria-selected="false">참고</button>
+  <div class="gsearch"><input type="text" id="gsearch" placeholder="항목·단계 검색" aria-label="설계 항목·단계 검색" autocomplete="off"><kbd>/</kbd><div id="gsearch-list" class="aclist" hidden role="listbox"></div></div>
+  <button class="tabact" id="collapse-all" title="현재 탭의 펼친 상자를 모두 닫습니다">전체 접기</button>
+  <span class="brand">DANKOOK UNIV. · FSK E-FORMULA</span>
+  <button class="adm" id="admbtn" role="switch" aria-checked="false" hidden title="진행 상태·우리 팀 값 입력"><span class="admsw" aria-hidden="true"></span>관리자 모드</button>
+</div></nav>
+
+<button class="btn pri" id="backbtn" hidden>← 이전 위치로</button>
+<aside id="partRail" aria-label="파트 강조"></aside>
+<nav id="toc" aria-label="단계 목차"></nav>
+<div class="wrap" id="v-steps">
+  <header class="top has-wm"><div class="logo-wm" aria-hidden="true"></div>
+    <span class="eyebrow">Run2X 차량 설계 가이드</span>
+    <h1>설계 단계</h1>
+    <p class="lede">단계를 펼치면 그 단계의 설계 항목이 나오고, 항목을 펼치면 결론 한 줄 아래에 질문이 하나씩 접혀 있습니다. 궁금한 질문만 열어 보십시오. 각 항목은 연결도에서 어느 파트의 무엇을 받아 누구에게 넘기는지 바로 확인할 수 있습니다.</p>
+    <div class="legend">
+      <span><span class="badge b-card">상세</span> 상세 카드 있음</span>
+      <span><span class="badge b-assume">가정값</span> 설명용 숫자 · 팀 실측값으로 교체</span>
+      <span><span class="badge b-verify">확인 필요</span> 근거 미확정</span>
+      <span><span class="badge b-col">★</span> 동결 (이후 원칙적으로 변경 금지)</span>
+    </div>
+  </header>
+  <div id="onboard"></div>
+  <div class="vtabs" role="tablist" aria-label="읽는 깊이"><button role="tab" data-vm="full">전체 보기</button><button role="tab" data-vm="flow">흐름만 보기</button></div>
+  <div class="vpanel"><div id="step-list" class="stack"></div>
+  <div id="flow-list" class="stack" hidden></div></div>
+</div>
+
+<div class="wrap wide" id="v-graph" hidden>
+  <header class="top">
+    <span class="eyebrow">파트 간 정보 흐름</span>
+    <h1>연결도</h1>
+    <p class="lede">가로는 설계 단계, 세로는 파트입니다. 빈 곳을 잡고 끌어 이동하고, 휠로 확대·축소합니다. 항목을 누르면 <b style="color:var(--in)">받는 정보</b>와 <b style="color:var(--out)">넘기는 결과</b>가 강조되고, 오른쪽에 내용이 나옵니다.</p>
+  </header>
+  <div class="gwrap">
+    <div class="gcanvas">
+      <svg id="graph" role="img" aria-label="설계 항목 연결도"></svg>
+      <div class="gctl">
+        <button class="btn" id="z-fs" title="전체 화면">⤢</button>
+        <button class="btn" id="z-in" aria-label="확대">＋</button>
+        <button class="btn" id="z-out" aria-label="축소">－</button>
+        <button class="btn" id="z-fit">전체 보기</button>
+        <button class="btn" id="z-home">처음 위치</button>
+        <div class="stbar"><span class="sec-label">진행 상태</span><span id="stmode" class="stmode"></span><span id="stsum" class="muted"></span><span id="stnote" class="stnote" hidden></span>
+          <button class="btn" id="st-reset">초기화</button>
+          <span id="st-confirm" hidden><span>모든 항목을 예정으로 되돌릴까요?</span> <button class="btn pri" id="st-yes">초기화</button> <button class="btn" id="st-no">취소</button></span></div>
+      </div>
+    </div>
+    <aside class="gpanel" id="gpanel" aria-live="polite"></aside>
+  </div>
+</div>
+
+<div class="wrap" id="v-goals" hidden>
+  <header class="top">
+    <span class="eyebrow">왜 이렇게 설계하나</span>
+    <h1>목표</h1>
+    <p class="lede">최상위 목표는 기록이 아니라 종합점수입니다. 파생 목표를 펼치면 근거, 판단 기준, 그 목표를 실제로 다루는 설계 항목이 나옵니다.</p>
+  </header>
+  <div id="goal-tree" class="stack"></div>
+</div>
+
+<div class="wrap" id="v-parts" hidden>
+  <header class="top">
+    <span class="eyebrow">무엇을 만들려고 설계하나</span>
+    <h1>부품</h1>
+    <p class="lede">차를 만들려면 부품이 필요하고, 부품을 그리려면 설계 인자(하드포인트·치수·하중)가 필요합니다. 각 인자를 누르면 그 값을 정하는 설계 항목과 근거 카드로 이동합니다.</p>
+  </header>
+  <div id="part-tree" class="stack"></div>
+</div>
+
+<div class="wrap" id="v-ref" hidden>
+  <header class="top">
+    <span class="eyebrow">용어 · 배경 · 출처</span>
+    <h1>참고</h1>
+  </header>
+  <div id="ref-list" class="stack"></div>
+  <footer>모든 계산 예시는 설명용 가정값을 포함합니다. 설계 판단에는 팀 실측값과 타이어 데이터를 사용하십시오.<br>기준 규정: 2026 대학생 자작자동차대회 Formula 차량기술규정·경기진행규정·대회운영규정.</footer>
+</div>
+
+<div id="verline">Run2X 설계 로드맵 · 내용 버전 <b>0.32.1</b> · 갱신 2026-10-22<span class="envnote2">이 가이드는 PC 크롬 브라우저, 화면 너비 1440 px 이상(권장 1920×1080)에 최적화되어 있습니다. 다른 브라우저나 모바일에서는 일부 화면(3D 장면, 연결도, 검색 입력 등)이 다르게 동작할 수 있습니다.</span></div>
+
+<script src="js/core/debug-pre.js"></script>
+<script src="js/core/mathjax-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js"></script>
+<script src="js/config.js"></script>
+<script src="js/store/backend.js"></script>
+<script src="js/core/helpers.js"></script>
+<script src="js/figures/svg-figures.js"></script>
+<script src="js/figures/kp3d.js"></script>
+<script src="js/data/cards.js"></script>
+<script src="js/data/items.js"></script>
+<script src="js/data/refs.js"></script>
+<script src="js/app/render.js"></script>
+<script src="js/data/act.js"></script>
+<script src="js/app/step-html.js"></script>
+<script src="js/data/parts.js"></script>
+<script src="js/app/views.js"></script>
+<script src="js/figures/modes-anim.js"></script>
+<script src="js/app/status-shared.js"></script>
+<script src="js/app/tabs-nav.js"></script>
+<script src="js/app/learn.js"></script>
+<script src="js/app/ui-extra.js"></script>
+<script src="js/app/admin.js"></script>
+<script src="js/app/graph-extra.js"></script>
+<script src="js/app/qa-links.js"></script>
+<script src="js/app/season.js"></script>
+<script src="js/app/conn-debug.js"></script>
+<script src="js/app/auth-ui.js"></script>
+<script src="js/app/init.js"></script>
+</body>
+</html>

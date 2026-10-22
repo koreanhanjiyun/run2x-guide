@@ -1,0 +1,193 @@
+function renderParts(){
+  const lk = id => IT[id] ? `<button class="lnk" data-goto="${id}">${IT[id].n}</button> <span class="muted">${IT[id].s}</span>` : id;
+  $('#part-tree').innerHTML = `<div class="ptflow"><b>완성차</b> → 시스템 → <b>부품</b> → 부품을 그리는 데 필요한 <b>설계 인자</b> → 인자를 정하는 <b>설계 항목</b>(근거 카드) <span class="muted">· 설계 단계는 이 순서를 거꾸로 따라갑니다</span></div>` +
+   [...PTREE].sort((a,b)=>PARTS.findIndex(p=>p[0]===(a.c||a.sys))-PARTS.findIndex(p=>p[0]===(b.c||b.sys))).map(g=>`<section class="ptsys" data-sys="${g.c||g.sys}"><h2 class="ptsh"><span class="ptdot" style="background:${pc(g.c||g.sys)}"></span>${g.c||g.sys}</h2><div class="ptgrid">${g.parts.map(pt=>`<div class="ptcard">
+     <div class="pthd"><b>${pt.n}</b><span class="muted">${pt.why}</span></div>
+     <table class="kvt ptkv">${pt.p.map(([n,...ids])=>`<tr><th>${n}</th><td>${ids.map(lk).join('<br>')}</td></tr>`).join('')}</table>
+     <div class="ptdes">부품 설계: ${lk(pt.d)}</div></div>`).join('')}</div></section>`).join('');
+}
+
+function renderSteps(){
+  $('#step-list').innerHTML = PHASES.map((ph,i)=>`<section class="phase${i%2?' alt':''}">
+    <div class="phase-h"><span class="phase-k">${ph.k}</span><span class="phase-n">${ph.n}</span><span class="phase-r">${ph.s[0]} – ${ph.s[ph.s.length-1]}</span></div>
+    <div class="stack">${ph.s.map(id=>stepHTML(STEPS[SIDX[id]])).join('')}</div></section>`).join('');
+}
+
+const TV = rows => `<div class="tbl"><table class="kvt">${rows.map(([k,v])=>`<tr><th>${k}</th><td>${v}</td></tr>`).join('')}</table></div>`;
+function renderGoals(){
+  $('#goal-tree').innerHTML = `<div class="goaltop"><div class="phase-h" style="border:0;padding:0"><span class="phase-k">최상위</span><span class="phase-n">종합점수 최대</span></div>
+    ${T(['종목','보고서','가속','스키드패드','오토크로스','내구','효율','합계'],[['점수','200','100','100','200','350','50','1,000']])}
+    <p class="gwhy">내구는 완주 못하면 0점이고, 최고 기록의 145%를 넘으면 완주 점수만 받습니다(경기진행규정 제11조). 기록이 아무리 좋아도 완주·효율·보고서를 놓치면 종합점수는 낮습니다. 그래서 최상위 목표는 "더 빠르게"가 아니라 <b>종합점수</b>이고, 아래 네 갈래로 나뉩니다.</p></div>
+    <div class="stack">${GOALS.map(m=>`<details class="step"><summary><span class="scode" style="font-size:16px">상위</span><span class="stitle">${m.t}</span><span class="ssub">${m.s}</span></summary><div class="dbody"><p class="gwhy">${m.why}</p><div class="stack">
+      ${m.subs.map(d=>`<details class="item"><summary><span class="iname">${d.t}</span></summary><div class="dbody">
+        <p class="gwhy">${d.why}</p><p class="grel">연결 · ${d.rel}</p>
+        ${TV([['목표',d.g],['근거',d.w],['판단 기준',d.j]])}
+        <div class="sec-label">관련 설계 항목</div><div class="chips">${[...d.go].sort((a,b)=>(SIDX[IT[a].s]-SIDX[IT[b].s])||(((ACT[a]||[99])[0])-((ACT[b]||[99])[0]))).map(id=>`<button class="chip" data-goto="${id}"><span class="dot" style="background:${pc(IT[id].p)}"></span>${IT[id].s} · ${IT[id].n} →</button>`).join('')}</div>
+      </div></details>`).join('')}</div></div></details>`).join('')}</div>`;
+}
+function renderFlow(){
+  let n=0;
+  $('#flow-list').innerHTML = PHASES.map(ph=>`<section class="flow-phase"><div class="phase-h"><span class="phase-k">${ph.k}</span><span class="phase-n">${ph.n}</span></div>
+    ${ph.s.map(sid=>{ const st=STEPS[SIDX[sid]]; const its=ITEMS.filter(i=>i.s===sid).sort((a,b)=>((ACT[a.id]||[99])[0])-((ACT[b.id]||[99])[0]));
+      return `<div class="flow-step" data-fs="${sid}"><div class="flow-sh"><span class="scode">${st.fz?'★ ':''}${sid}</span><span class="stitle">${st.t.replace('★ ','')}</span></div>
+      <ol class="flow-ol">${its.map(it=>{ const a=ACT[it.id]||[0,it.d,[],[],[]]; n++;
+        return `<li data-fid="${it.id}"><span class="fnum">${n}</span><div class="fbody"><div class="fhead"><button class="lnk" data-goto="${it.id}">${it.n}</button>${chip(it.p)}</div>
+          <div class="fact">${a[1]}${a[5]?' '+V:''}</div>${a[2].length?`<div class="fdec"><span class="vlab dec">팀 결정값</span>${a[2].map(t=>`<span class="vchip dec">${t}</span>`).join('')}</div>`:''}</div></li>`; }).join('')}</ol></div>`; }).join('')}</section>`).join('');
+}
+function renderRefs(){ $('#ref-list').innerHTML = REFS.map(r=>`<details class="step"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.b}</div></details>`).join(''); }
+
+/* ============================================================
+   연결도
+   ============================================================ */
+const COLW=240, NW=184, NH=50, VG=14, LP=16, HEADH=104, LABW=130, NX=28;
+const POS = {}, LANETOP = {}, PORT = {}; let GW=0, GH=0;
+function layoutGraph(){
+  const lanes = PARTS.map(p=>p[0]).filter(p=>ITEMS.some(i=>i.p===p));
+  let y = HEADH + 8; const laneInfo = [];
+  lanes.forEach(p=>{
+    const cnt = {}; ITEMS.filter(i=>i.p===p).forEach(i=>{ cnt[i.s]=(cnt[i.s]||0)+1; });
+    const rows = Math.max(1, ...Object.values(cnt));
+    const h = rows*(NH+VG)-VG + 2*LP;
+    const idx = {};
+    ITEMS.filter(i=>i.p===p).forEach(i=>{ const k = idx[i.s]||0; idx[i.s]=k+1;
+      POS[i.id] = {x: LABW + SIDX[i.s]*COLW + NX, y: y + LP + k*(NH+VG)}; });
+    LANETOP[p] = y; laneInfo.push({p,y,h}); y += h + 4;
+  });
+  GW = LABW + STEPS.length*COLW + 30; GH = y + 20;
+  computePorts();
+  return laneInfo;
+}
+/* 입출력 포트: 한 변에 들어오는 선과 나가는 선이 함께 있으면 위 절반 = 들어옴, 아래 절반 = 나감 */
+function edgeKind(e){ const ca=SIDX[IT[e[0]].s], cb=SIDX[IT[e[1]].s]; return cb>ca?'fwd':(cb===ca?'same':'back'); }
+function computePorts(){
+  const sides = {}; const add = (id,side,obj) => { const k=id+'|'+side; (sides[k]=sides[k]||[]).push(obj); };
+  EDGES.forEach((e,i)=>{ const k=edgeKind(e);
+    const so = k==='back' ? 'L' : 'R', ti = k==='fwd' ? 'L' : 'R';
+    add(e[0], so, {i, role:'out', oy: POS[e[1]].y});
+    add(e[1], ti, {i, role:'in',  oy: POS[e[0]].y}); });
+  Object.entries(sides).forEach(([k,list])=>{
+    const [id,side] = k.split('|'); const P = POS[id];
+    const ins = list.filter(o=>o.role==='in').sort((a,b)=>a.oy-b.oy), outs = list.filter(o=>o.role==='out').sort((a,b)=>a.oy-b.oy);
+    const place = (arr,yy) => arr.forEach(o=>{ const x = side==='R' ? P.x+NW : P.x; PORT[o.i] = PORT[o.i]||{}; PORT[o.i][o.role] = {x, y:P.y+yy, side}; });
+    if(ins.length && outs.length){ place(ins, NH*0.3); place(outs, NH*0.7); }
+    else { place(ins, NH/2); place(outs, NH/2); }
+  });
+}
+function edgePath(e,i){
+  const k = edgeKind(e), S = PORT[i].out, T = PORT[i].in;
+  const sdir = S.side==='R'?1:-1, tdir = T.side==='R'?1:-1;      // 변 바깥쪽 방향
+  const s1 = [S.x+sdir*8, S.y], t1 = [T.x+tdir*14, T.y], tip = [T.x+tdir*1, T.y];
+  let c1, c2;
+  if(k==='fwd'){ const dx = Math.max(40,(t1[0]-s1[0])*0.45); c1=[s1[0]+dx,s1[1]]; c2=[t1[0]-dx,t1[1]]; }
+  else if(k==='same'){ const dx = 46 + Math.abs(T.y-S.y)*0.12; c1=[s1[0]+dx,s1[1]]; c2=[t1[0]+dx,t1[1]]; }
+  else { const dx = 110; c1=[s1[0]-dx,s1[1]+50]; c2=[t1[0]+dx,t1[1]+50]; }
+  return `M${S.x} ${S.y} L${s1[0]} ${s1[1]} C${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${t1[0]} ${t1[1]} L${tip[0]} ${tip[1]}`;
+}
+function wrap2(t, n){ if(t.length<=n) return [t]; let cut = t.lastIndexOf(' ', n); if(cut<4) cut = n; return [t.slice(0,cut).trim(), t.slice(cut).trim()]; }
+function renderGraph(){
+  const lanes = layoutGraph();
+  const svg = $('#graph');
+  let h = `<defs>${[['d','#9c9482'],['i','var(--in)'],['o','var(--out)']].map(([k,c])=>`<marker id="g${k}" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="userSpaceOnUse" markerWidth="${k==='d'?8:11}" markerHeight="${k==='d'?8:11}" orient="auto"><path d="M0 0.8L10 5L0 9.2z" style="fill:${c}"/></marker>`).join('')}</defs><g id="world">`;
+  lanes.forEach((L,i)=>{ h += `<rect class="lane${i%2?' alt':''}" x="0" y="${L.y}" width="${GW}" height="${L.h}"/>
+    <rect x="0" y="${L.y}" width="6" height="${L.h}" style="fill:${pc(L.p)}"/>
+    <text class="lanelbl" x="16" y="${L.y+L.h/2+5}">${L.p}</text>`; });
+  PHASES.forEach((ph,pi)=>{ const c0=SIDX[ph.s[0]], c1=SIDX[ph.s[ph.s.length-1]]; const x0=LABW+c0*COLW, x1=LABW+(c1+1)*COLW;
+    h += `<rect class="phband${pi%2?' alt':''}" x="${x0+4}" y="6" width="${x1-x0-8}" height="28" rx="5"/>
+    <text class="phtext" x="${x0+14}" y="25">${ph.k} ${ph.n}</text>
+    <line class="phsep" x1="${x0}" y1="6" x2="${x0}" y2="${GH}"/>`; });
+  STEPS.forEach((s,i)=>{ const x = LABW + i*COLW;
+    h += `<line class="colsep${s.fz?' fz':''}" x1="${x}" y1="${HEADH}" x2="${x}" y2="${GH}"/>
+    <rect class="colh${s.fz?' fz':''}" x="${x+4}" y="40" width="${COLW-8}" height="${HEADH-46}" rx="6"/>
+    <text class="colcode" x="${x+14}" y="66">${s.fz?'★ ':''}${s.id}</text>
+    <text class="colname" x="${x+14}" y="86">${s.t.replace('★ ','')}</text>`; });
+  h += `<g id="edges">` + EDGES.map((e,i)=>`<path class="e${edgeKind(e)==='back'?' back':''}" data-i="${i}" d="${edgePath(e,i)}" marker-end="url(#gd)"><title>${IT[e[0]].n} → ${IT[e[1]].n}: ${e[2]}</title></path>`).join('') + `</g>`;
+  h += ITEMS.map(it=>{ const P = POS[it.id]; const L = wrap2(it.n, 12);
+    return `<g class="node" data-id="${it.id}" tabindex="0" role="button" aria-label="${it.n}" transform="translate(${P.x},${P.y})">
+      <rect class="nb" width="${NW}" height="${NH}" rx="6"/><rect class="pbar" x="0" y="0" width="5" height="${NH}" rx="2" style="fill:${pc(it.p)}"/>
+      ${it.c?`<circle class="cardmark" cx="${NW-10}" cy="10" r="4"/>`:''}<g class="stbadge" transform="translate(${NW-12},${NH-11})"><circle r="8"/><text y="4" text-anchor="middle"></text></g>
+      ${L.length===1?`<text x="14" y="${NH/2+4.5}">${L[0]}</text>`:`<text x="14" y="21">${L[0]}</text><text x="14" y="38">${L[1]}</text>`}</g>`; }).join('');
+  h += `</g>`;
+  svg.innerHTML = h;
+  svg.querySelectorAll('.node').forEach(n=>n.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); if(n.dataset.id===SEL) clearSel(); else selectItem(n.dataset.id, false); } }));
+}
+
+/* 이동·확대 */
+const view = {x:0,y:0,k:0.9}; let world, anim=null;
+function applyView(){ world = world || $('#world'); if(world) world.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.k})`); }
+function zoomAt(px,py,f){ if(anim){cancelAnimationFrame(anim);anim=null;} const k2 = Math.min(2.2, Math.max(0.16, view.k*f)); view.x = px - (px-view.x)*(k2/view.k); view.y = py - (py-view.y)*(k2/view.k); view.k = k2; applyView(); }
+function animateTo(tx,ty,tk,ms){
+  if(anim) cancelAnimationFrame(anim);
+  const sx=view.x, sy=view.y, sk=view.k, t0=performance.now(), dur=ms||600;
+  const ease = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+  const step = now => { const t=Math.min(1,(now-t0)/dur), e=ease(t);
+    view.x=sx+(tx-sx)*e; view.y=sy+(ty-sy)*e; view.k=sk+(tk-sk)*e; applyView();
+    if(t<1) anim=requestAnimationFrame(step); else anim=null; };
+  anim = requestAnimationFrame(step);
+}
+function fitAll(){ const r = $('#graph').getBoundingClientRect(); const k = Math.min(r.width/GW, r.height/GH)*0.97; animateTo((r.width-GW*k)/2,(r.height-GH*k)/2,k); }
+function home(){ animateTo(10,56,0.9); }
+function centerOn(id){ const r = $('#graph').getBoundingClientRect(); const P = POS[id]; if(!P) return; const k = Math.max(view.k,0.85);
+  animateTo(r.width/2-(P.x+NW/2)*k, r.height/2-(P.y+NH/2)*k, k, 700); }
+function initPanZoom(){
+  const svg = $('#graph'); const ptrs = new Map(); let moved=0, downNode=null, last=null, pinch=null;
+  svg.addEventListener('pointerdown',e=>{ if(anim){cancelAnimationFrame(anim);anim=null;} svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved=0; downNode=e.target.closest('.node'); last={x:e.clientX,y:e.clientY};
+    if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y)}; } });
+  svg.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size===1){ const dx=e.clientX-last.x, dy=e.clientY-last.y; moved+=Math.abs(dx)+Math.abs(dy); if(moved>4){ svg.classList.add('dragging'); view.x+=dx; view.y+=dy; applyView(); } last={x:e.clientX,y:e.clientY}; }
+    else if(ptrs.size===2 && pinch){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); const r=svg.getBoundingClientRect(); zoomAt((a.x+b.x)/2-r.left,(a.y+b.y)/2-r.top,d/pinch.d); pinch.d=d; moved=99; } });
+  const up = e=>{ if(!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null;
+    if(ptrs.size===0){ svg.classList.remove('dragging'); if(moved<=4){ if(downNode && downNode.dataset.id!==SEL) selectItem(downNode.dataset.id,false); else clearSel(); } last=null; } else { const v=[...ptrs.values()][0]; last={x:v.x,y:v.y}; } };
+  svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',up);
+  svg.addEventListener('wheel',e=>{ e.preventDefault(); const r=svg.getBoundingClientRect(); zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*0.0015)); },{passive:false});
+  $('#z-in').onclick=()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,1.25); };
+  $('#z-out').onclick=()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,0.8); };
+  $('#z-fit').onclick=fitAll; $('#z-home').onclick=home;
+  
+}
+/* 선택 */
+let SEL=null, PSEL=null, SHOWALL=true; let PSET=new Set();
+function applySel(){
+  const svg=$('#graph'); const src=new Set(), dst=new Set();
+  svg.querySelectorAll('path.e').forEach(p=>{ const e=EDGES[+p.dataset.i]; p.classList.remove('in','out','dim','hide'); let m='url(#gd)';
+    if(SEL){ if(e[1]===SEL){p.classList.add('in');m='url(#gi)';src.add(e[0]);} else if(e[0]===SEL){p.classList.add('out');m='url(#go)';dst.add(e[1]);} else p.classList.add(SHOWALL?'dim':'hide'); }
+    else if(PSET.size){ const a=PSET.has(IT[e[0]].p), b=PSET.has(IT[e[1]].p); if(PSET.size>1 ? !(a&&b) : !(a||b)) p.classList.add(SHOWALL?'dim':'hide'); }
+    else if(!SHOWALL) p.classList.add('hide');
+    p.setAttribute('marker-end',m); });
+  svg.querySelectorAll('.node').forEach(n=>{ const id=n.dataset.id;
+    n.classList.toggle('sel',id===SEL); n.classList.toggle('srcN',src.has(id)); n.classList.toggle('dstN',dst.has(id));
+    const dim = SEL ? (id!==SEL && !src.has(id) && !dst.has(id)) : (PSET.size ? !PSET.has(IT[id].p) : false);
+    n.classList.toggle('dim',dim); });
+  if(SEL){ const eg=$('#edges'); eg.querySelectorAll('path.in,path.out').forEach(p=>eg.appendChild(p)); }
+  if(typeof updateGraphHint==='function') updateGraphHint();
+}
+function panelHTML(id){ const it=IT[id]; const st=STEPS[SIDX[it.s]];
+  const ins=(IN[id]||[]).map(i=>EDGES[i]), outs=(OUT[id]||[]).map(i=>EDGES[i]);
+  const li=(oid,lbl,cls)=>`<li class="${cls}"><button class="lnk" data-sel="${oid}">${IT[oid].n}</button><span class="lbl">${IT[oid].s} · ${IT[oid].p} — ${lbl}</span></li>`;
+  return `<div class="chips"><span class="chip" style="font-family:var(--f-display);font-weight:700;color:var(--accent)">${it.s}</span>${chip(it.p)}${it.c?'<span class="badge b-card">상세</span>':''}</div>
+  <h3>${it.n}</h3><div class="strow">${stCtl(id)}</div><p class="muted" style="font-size:14px">${PHASES[PHASE_OF[it.s]].k} ${st.t.replace('★ ','')} 단계</p>
+  ${actHTML(id,true)}
+  ${it.c?`<div class="concl" style="font-size:14px"><b class="tag">참고</b>${CARD[it.c].c}</div>`:''}
+  <div><button class="btn pri" data-open="${id}">${it.c?'상세 카드 열기':'설계 단계에서 보기'}</button></div>
+  <div><div class="ih">받는 정보 ${ins.length}</div>${ins.length?`<ul>${ins.map(e=>li(e[0],e[2],'i')).join('')}</ul>`:'<p class="muted" style="font-size:13.5px">없음</p>'}</div>
+  <div><div class="oh">넘기는 결과 ${outs.length}</div>${outs.length?`<ul>${outs.map(e=>li(e[1],e[2],'o')).join('')}</ul>`:'<p class="muted" style="font-size:13.5px">없음</p>'}</div>`; }
+function emptyPanel(){ return `<h3>항목을 선택하십시오</h3><p class="muted" style="font-size:14.5px">상자를 누르면 그 항목이 받는 선(파랑)과 넘기는 선(초록)이 강조되고, 여기에 내용이 정리됩니다.</p>
+  <div class="note">보라 점 = 상세 카드 있음<br>점선 = 뒤 단계 결과로 앞 단계 값을 다시 계산하는 되돌림</div>
+  <div class="sec-label">규모</div><p style="font-size:14px">항목 ${ITEMS.length}개 · 연결 ${EDGES.length}개 · 단계 ${STEPS.length}개</p>`; }
+function setPanel(html){ const p=$('#gpanel'); p.hidden=!SEL; p.innerHTML=(SEL?'<button class="gp-x" data-gclose aria-label="닫기" title="닫기">×</button>':'')+html; subify(p); p.scrollTop=0; refreshStatus(); }
+function selectItem(id, center){ SEL=id; applySel(); setPanel(panelHTML(id)); if(center){ centerOn(id); setTimeout(()=>graphFlash(id),450); } }
+function clearSel(){ SEL=null; applySel(); setPanel(emptyPanel()); }
+function renderPartFilter(){
+  const rail=$('#partRail'); let coll=false; try{ coll = localStorage.getItem('run2x.rail')==='1'; const _pv = localStorage.getItem('run2x.part'); let _pa=[]; try{ _pa = JSON.parse(_pv); }catch(_){ _pa = _pv ? [_pv] : []; } if(!Array.isArray(_pa)) _pa = _pa ? [String(_pa)] : []; PSET = new Set(_pa.filter(p=>PCOL[p])); PSEL = PSET.size ? [...PSET].pop() : null; }catch(e){}
+  rail.innerHTML = `<button class="rail-h" id="railToggle" title="파트 패널 접기/펼치기"><span>파트</span><i></i></button><div class="rail-b">${PARTS.map(([p])=>`<button class="rchip" aria-pressed="false" data-part="${p}"><span class="dot" style="background:${pc(p)}"></span>${p}</button>`).join('')}<button class="rclr" id="railClear" hidden>선택 해제</button></div>`;
+  rail.classList.toggle('coll', coll);
+  rail.addEventListener('click', e=>{
+    if(e.target.closest('#railToggle')){ rail.classList.toggle('coll'); try{ localStorage.setItem('run2x.rail', rail.classList.contains('coll')?'1':'0'); }catch(_){} applyPart(); return; }
+    if(TAB==='parts' && e.target.closest('[data-part]')){ const p=e.target.closest('[data-part]').dataset.part, sec=document.querySelector(`.ptsys[data-sys="${p}"]`);
+      const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50;
+      if(sec) smoothScrollTo(()=>sec.getBoundingClientRect().top+window.scrollY-tabh-30, ()=>{ sec.classList.remove('ptflash'); void sec.offsetWidth; sec.classList.add('ptflash'); }); else smoothScrollTo(()=>0); return; }
+    if(e.target.closest('#railClear')){ PSET.clear(); PSEL=null; try{ localStorage.removeItem('run2x.part'); }catch(_){} applyPart(); return; }
+    const b=e.target.closest('[data-part]'); if(!b) return;
+    const _p=b.dataset.part; if(PSET.has(_p)) PSET.delete(_p); else PSET.add(_p); PSEL = PSET.size ? [...PSET].pop() : null; try{ PSET.size ? localStorage.setItem('run2x.part',JSON.stringify([...PSET])) : localStorage.removeItem('run2x.part'); }catch(_){}
+    if(SEL){ SEL=null; setPanel(emptyPanel()); } applyPart();
+  });
+}

@@ -1,0 +1,36 @@
+rules_version = '2';
+// Run2X 설계 가이드 — Firestore 보안 규칙
+// 역할: 개발자(isDev, 아래 이메일) > 관리자(meta/roles.admins 목록) > 로그인 방문자(익명 포함)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function email() { return signedIn() && request.auth.token.email != null ? request.auth.token.email.lower() : ''; }
+    // ▼ 개발자 이메일 (js/config.js 의 developers 와 같게)
+    function isDev() { return email() in ['개발자@gmail.com']; }
+    function isAdmin() {
+      return isDev() || (email() != '' && exists(/databases/$(database)/documents/meta/roles)
+        && email() in get(/databases/$(database)/documents/meta/roles).data.admins);
+    }
+
+    // 관리자 명단: 개발자만 바꿈
+    match /meta/roles { allow read: if true; allow write: if isDev(); }
+    // 이번 시즌·상태 등 나머지 meta: 관리자
+    match /meta/{doc} { allow read: if true; allow write: if isAdmin(); }
+    // 진행 상태·우리 팀 값: 관리자
+    match /status/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /val/{doc}    { allow read: if true; allow write: if isAdmin(); }
+    // 질문·오류: 로그인 방문자는 자기 글 작성·수정·삭제, 관리자는 상태 변경·삭제
+    match /qa/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.by == request.auth.uid
+                    && request.resource.data.text is string && request.resource.data.text.size() <= 4000;
+      allow update: if isAdmin() || (signedIn() && resource.data.by == request.auth.uid
+                    && request.resource.data.by == resource.data.by);
+      allow delete: if isAdmin() || (signedIn() && resource.data.by == request.auth.uid);
+    }
+    // 이름 표시: 각자 자기 것만
+    match /profiles/{uid} { allow read: if true; allow write: if signedIn() && request.auth.uid == uid; }
+    // 그 밖은 모두 거부
+    match /{path=**} { allow read, write: if false; }
+  }
+}
