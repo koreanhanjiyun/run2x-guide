@@ -57,7 +57,7 @@ window.Backend = (function(){
         if(!m.exists){ lsSet(TEAMKEY, null); if(c.myTeams[tid]!==undefined){ c.notice = '이 팀의 팀원이 아닙니다. 내 팀 목록에서 뺐습니다.'; await setMyTeam(c, tid, null); } return c; }
         const t = await F.fs.doc('teams/'+tid).get();
         if(!t.exists){ lsSet(TEAMKEY, null); return c; }
-        c.team = tid; c.teamName = t.data().name || ''; c.teamKey = t.data().key || '';
+        c.team = tid; window.__teamId = tid; c.teamName = t.data().name || ''; c.teamKey = t.data().key || '';
         const today = new Date().toISOString().slice(0,10);
         if(String(t.data().lastActive||'').slice(0,10) !== today){ try{ await F.fs.doc('teams/'+tid).update({lastActive: new Date().toISOString()}); }catch(e){ console.warn('마지막 활동일 기록 실패', e); } }
         c.role = m.data().role === 'admin' ? 'admin' : 'member'; c.state = 'member';
@@ -116,6 +116,7 @@ window.Backend = (function(){
       let jk; try{ jk = await fs.doc('joinKeys/'+key).get(); }catch(e){ jk = null; }
       if(!jk || !jk.exists) throw err('nomatch', '팀 이름 또는 비밀번호가 맞지 않습니다.');
       const tid = jk.data().team, mref = fs.doc(`teams/${tid}/members/${c.uid}`), m = await mref.get();
+      if(!m.exists){ let bk = null; try{ bk = await fs.doc(`teams/${tid}/blocked/${c.uid}`).get(); }catch(e){} if(bk && bk.exists) throw err('blocked', '이 팀에서 차단되어 가입할 수 없습니다. 팀 관리자에게 문의하십시오.'); }
       if(!m.exists) await mref.set({role:'member', name: c.name, email: c.email, at: new Date().toISOString(), via: key});
       let tn = name; try{ const t = await fs.doc('teams/'+tid).get(); if(t.exists) tn = t.data().name || name; }catch(e){}
       await setMyTeam(c, tid, tn); return Team.choose(tid); },
@@ -125,18 +126,23 @@ window.Backend = (function(){
       if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); await b.commit(); c.teamKey = key; },
     async members(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/members`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
     async setRole(uid, role){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role}); },
+    /* 팀원 차단: 내보내고 다시 가입하지 못하게 (관리자). 차단한 사람은 댓글도 쓸 수 없음 */
+    async block(uid){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team; const m = await fs.doc(P+'/members/'+uid).get(); const d = m.exists ? m.data() : {};
+      const b = fs.batch(); b.set(fs.doc(P+'/blocked/'+uid), {name: d.name||'', email: d.email||'', at: new Date().toISOString(), by: c.uid}); if(m.exists) b.delete(fs.doc(P+'/members/'+uid)); await b.commit(); },
+    async unblock(uid){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/blocked/${uid}`).delete(); },
+    async blockedList(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/blocked`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
     async remove(uid){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).delete(); if(uid===c.uid){ lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); } },
     /* 팀 삭제: 팀 데이터·팀원·열쇠·이름을 모두 지움 (관리자). 팀 문서는 내 팀원 문서보다 먼저 지워야 규칙을 통과 */
     async deleteTeam(){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 팀을 삭제할 수 있습니다.');
       const fs = c.F.fs, P = 'teams/'+c.team;
-      for(const col of ['status','val','qa','meta']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
+      for(const col of ['status','val','qa','meta','blocked']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
       const ms = await fs.collection(P+'/members').get(); await Promise.all(ms.docs.filter(d=>d.id!==c.uid).map(d=>fs.doc(P+'/members/'+d.id).delete()));
       if(c.teamKey){ try{ await fs.doc('joinKeys/'+c.teamKey).delete(); }catch(e){} }
       try{ await fs.doc('teamNames/'+norm(c.teamName).toLowerCase()).delete(); }catch(e){}
       await fs.doc(P).delete();
       await fs.doc(P+'/members/'+c.uid).delete();
       lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); },
-    /* 백업: 진행 상태·우리 팀 값·질문·이번 시즌을 파일 하나로 */
+    /* 백업: 진행 상태·우리 팀 값·논의·이번 시즌을 파일 하나로 (차단 목록은 넣지 않음) */
     BACKUP_COLS: ['status','val','qa','meta'],
     async exportData(){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team, data = {};
       for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); data[col] = {}; q.docs.forEach(d=>{ data[col][d.id] = d.data(); }); }
@@ -149,9 +155,19 @@ window.Backend = (function(){
       for(let i=0;i<ops.length;i+=400){ const b = fs.batch(); ops.slice(i,i+400).forEach(o=> o[0]==='del' ? b.delete(fs.doc(o[1])) : b.set(fs.doc(o[1]), o[2])); await b.commit(); }
       return ops.filter(o=>o[0]==='set').length; },
     async mine(){ const c = await teamCtx(); return Object.entries(c.myTeams||{}).map(([id,name])=>({id, name})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko')); },
-    async feedback(text){ const c = await teamCtx(); await c.F.fs.collection('feedback').add({text: String(text).slice(0,4000), by: c.uid, name: c.name, email: c.email, team: c.teamName||'', at: new Date().toISOString(), url: location.href.split('#')[0]}); },
-    async feedbackList(){ const c = await teamCtx(); const q = await c.F.fs.collection('feedback').orderBy('at','desc').limit(50).get(); return q.docs.map(d=>({id:d.id, ...d.data()})); },
-    async feedbackDelete(id){ const c = await teamCtx(); await c.F.fs.doc('feedback/'+id).delete(); }
+    /* 플랫폼 문의: 종류·위치(탭·단계·항목)와 함께. 개발자는 처리 상태를 바꾸고, 반복해서 부적절한 문의를 보내는 계정을 차단 */
+    FB_ST: ['접수','검토 중','반영됨','반영 안 함'],
+    async fbBlockedMe(){ const c = await teamCtx(); if(!c.uid) return false; try{ const d = await c.F.fs.doc('fbBlocked/'+c.uid).get(); return d.exists; }catch(e){ return false; } },
+    async feedback(text, meta){ const c = await teamCtx(); meta = meta || {};
+      if(await Team.fbBlockedMe()) throw err('blocked', '이 계정은 플랫폼 문의를 보낼 수 없습니다.');
+      await c.F.fs.collection('feedback').add({text: String(text).slice(0,4000), kind: String(meta.kind||'').slice(0,10), where: String(meta.where||'').slice(0,40), item: String(meta.item||'').slice(0,40), label: String(meta.label||'').slice(0,200),
+        status: '접수', by: c.uid, name: c.name, email: c.email, team: c.teamName||'', at: new Date().toISOString(), url: location.href.split('#')[0]}); },
+    async feedbackList(){ const c = await teamCtx(); const q = await c.F.fs.collection('feedback').orderBy('at','desc').limit(100).get(); return q.docs.map(d=>({id:d.id, ...d.data()})); },
+    async feedbackStatus(id, status){ const c = await teamCtx(); await c.F.fs.doc('feedback/'+id).update({status}); },
+    async feedbackDelete(id){ const c = await teamCtx(); await c.F.fs.doc('feedback/'+id).delete(); },
+    async fbBlock(uid, name, email){ const c = await teamCtx(); await c.F.fs.doc('fbBlocked/'+uid).set({name: name||'', email: email||'', at: new Date().toISOString()}); },
+    async fbUnblock(uid){ const c = await teamCtx(); await c.F.fs.doc('fbBlocked/'+uid).delete(); },
+    async fbBlockedList(){ const c = await teamCtx(); const q = await c.F.fs.collection('fbBlocked').get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); }
   };
 
   /* ---------- 공통 ---------- */

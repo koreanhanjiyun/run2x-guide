@@ -1,5 +1,7 @@
 /* 0.32.0 디버깅(시험) 모드: 주소 #debug 로 켬. 시험 데이터는 run2x.dbg.* 에 따로 저장 */
-(function(){ var on=false; try{ on = location.hash==='#debug'; }catch(e){} window.DEBUG=on; if(!on) return;
+/* 개발자 확인을 마친 탭(sessionStorage 표시)만 바로 디버깅. 아니면 일반 화면으로 띄우고 conn-debug.js 가 확인 */
+(function(){ var on=false, ok=false; try{ on = location.hash==='#debug'; ok = sessionStorage.getItem('run2x.dbgOk')==='1'; }catch(e){}
+  window.__dbgPending = on && !ok; on = on && ok; window.DEBUG=on; if(!on) return;
   var P='run2x.dbg.', D=/^run2x\.(status|qa|val)\.|^run2x\.season$/, S=Storage.prototype, g=S.getItem, s=S.setItem, r=S.removeItem;
   function isLS(o){ try{ return o===window.localStorage; }catch(e){ return false; } }
   function mk(o,k){ return (isLS(o) && D.test(String(k))) ? P+k : k; }

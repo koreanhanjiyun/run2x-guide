@@ -14,6 +14,8 @@ window.RUN2X_CONFIG = {
   },
   /* 개발자(플랫폼 수정·디버깅 권한) 구글 계정 이메일. firestore.rules의 isDev()에도 같은 값을 넣습니다. */
   developers: ['disguv1709@gmail.com'],
+  /* 공개 주소 (링크 복사가 웹 주소를 알 수 없을 때 — 아티팩트·파일로 열었을 때 — 씀). 자기 팀 버전이면 자기 주소로 */
+  siteUrl: 'https://koreanhanjiyun.github.io/run2x-guide/',
   /* Firebase SDK 버전 (compat) */
   firebaseSdk: '10.14.1'
 };

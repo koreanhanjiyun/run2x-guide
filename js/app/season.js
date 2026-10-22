@@ -43,8 +43,8 @@ function updSeasonChip(){ let c=$('#seasonChip'); const ab=$('#admbtn'); if(!c &
   const st = window.DEBUG ? 'dbg' : (!window.__shReady ? 'wait' : (SH.on ? 'on' : 'off'));
   c.className='sc-'+st; c.innerHTML=`<b>${esc(SEASON)} 시즌${viewingOther()?' 보는 중':''}</b><span class="sc-dot"></span><span>${st==='on'?'연결됨':st==='off'?'연결 안 됨':st==='dbg'?'디버깅':'연결 확인 중'}</span>`;
   c.title = `${SEASON} 시즌 (관리자가 정한 이번 시즌)\n` + ({
-    on:'● 연결됨: 팀과 공유 중입니다. 내가 바꾼 진행 상태·팀 값·질문이 팀원 모두에게 바로 보입니다.',
-    off:'● 연결 안 됨: 팀과 공유되지 않습니다. 진행 상태·팀 값·질문은 저장할 수 없어 저장·변경 버튼이 잠깁니다. 읽기와 계산기는 그대로 쓸 수 있고, 연결되면 다시 켜집니다.',
+    on:'● 연결됨: 팀과 공유 중입니다. 내가 바꾼 진행 상태·팀 값·논의가 팀원 모두에게 바로 보입니다.',
+    off:'● 연결 안 됨: 팀과 공유되지 않습니다. 진행 상태·팀 값·논의는 저장할 수 없어 저장·변경 버튼이 잠깁니다. 읽기와 계산기는 그대로 쓸 수 있고, 연결되면 다시 켜집니다.',
     wait:'● 연결 확인 중: 팀 공유 저장소에 연결하고 있습니다. 연결될 때까지 저장·변경 버튼이 잠깁니다.',
     dbg:'● 디버깅: 팀과 공유되지 않습니다. 모든 버튼을 실제처럼 눌러 볼 수 있고, 바꾼 내용은 이 브라우저에만 디버깅 데이터로 남습니다. 끄려면 DBG 버튼 → 디버깅 끄기.' })[st];
   document.body.classList.toggle('conn-off', st!=='on' && st!=='dbg');

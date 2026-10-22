@@ -12,6 +12,7 @@ service cloud.firestore {
     function mPath(t) { return /databases/$(database)/documents/teams/$(t)/members/$(uid()); }
     function isMember(t) { return signedIn() && exists(mPath(t)); }
     function isTAdmin(t) { return isMember(t) && get(mPath(t)).data.role == 'admin'; }
+    function isBlocked(t) { return exists(/databases/$(database)/documents/teams/$(t)/blocked/$(uid())); }
     function str(v, n) { return v is string && v.size() <= n; }
 
     function tPath(t) { return /databases/$(database)/documents/teams/$(t); }
@@ -54,7 +55,7 @@ service cloud.firestore {
              // 팀을 만든 사람 = 첫 관리자 (팀 만들기와 같은 일괄 작업)
              (request.resource.data.role == 'admin' && !exists(tPath(t)) && getAfter(tPath(t)).data.createdBy == uid())
              // 비밀번호로 가입: 지금 유효한 열쇠를 가진 사람만
-          || (request.resource.data.role == 'member' && isKey(request.resource.data.via)
+          || (request.resource.data.role == 'member' && isKey(request.resource.data.via) && !isBlocked(t)
               && exists(/databases/$(database)/documents/joinKeys/$(request.resource.data.via))
               && get(/databases/$(database)/documents/joinKeys/$(request.resource.data.via)).data.team == t) );
         allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
@@ -65,10 +66,21 @@ service cloud.firestore {
       match /status/{d} { allow read: if isMember(t); allow write: if isTAdmin(t); }
       match /val/{d}    { allow read: if isMember(t); allow write: if isTAdmin(t); }
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
+      // 차단한 사람: 다시 가입할 수 없음 (관리자가 관리, 본인은 자기 것만 확인)
+      match /blocked/{u} {
+        allow read: if isTAdmin(t) || (signedIn() && u == uid());
+        allow create, delete: if isTAdmin(t);
+      }
+      // 항목별 논의 (댓글·답글). 작성자: 내용 수정·자기 글 삭제 표시 / 관리자: 부적절한 글 삭제
       match /qa/{id} {
         allow read: if isMember(t);
-        allow create: if (isMember(t) && request.resource.data.by == uid() && str(request.resource.data.text, 4000)) || isTAdmin(t); // 관리자: 백업 불러오기
-        allow update: if isTAdmin(t) || (isMember(t) && resource.data.by == uid() && request.resource.data.by == resource.data.by);
+        allow create: if (isMember(t) && !isBlocked(t) && request.resource.data.by == uid() && str(request.resource.data.text, 4000)
+                          && str(request.resource.data.item, 40)) || isTAdmin(t); // 관리자: 백업 불러오기
+        allow update: if (isMember(t) && resource.data.by == uid() && !isBlocked(t)
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','editedAt','removed'])
+                          && str(request.resource.data.text, 4000) && (!('removed' in request.resource.data) || request.resource.data.removed == 'self'))
+                      || (isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','removed'])
+                          && request.resource.data.removed == 'admin' && request.resource.data.text == '');
         allow delete: if isTAdmin(t) || (isMember(t) && resource.data.by == uid());
       }
     }
@@ -77,10 +89,19 @@ service cloud.firestore {
     match /profiles/{u} { allow read: if signedIn(); allow write: if signedIn() && u == uid(); }
     // 마지막으로 고른 팀
     match /users/{u}    { allow read, write: if signedIn() && u == uid(); }
-    // 플랫폼 문의: 로그인 사용자 누구나 작성, 개발자만 읽기·삭제
+    // 플랫폼 문의: 로그인 사용자 누구나 작성(차단된 계정 제외), 개발자만 읽기·처리 상태 변경·삭제
     match /feedback/{id} {
-      allow create: if signedIn() && request.resource.data.by == uid() && str(request.resource.data.text, 4000);
+      allow create: if signedIn() && request.resource.data.by == uid() && str(request.resource.data.text, 4000)
+                    && request.resource.data.status == '접수'
+                    && !exists(/databases/$(database)/documents/fbBlocked/$(uid()));
       allow read, delete: if isDev();
+      allow update: if isDev() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                    && request.resource.data.status in ['접수','검토 중','반영됨','반영 안 함'];
+    }
+    // 플랫폼 문의 차단 (개발자만 관리, 본인은 자기 것만 확인)
+    match /fbBlocked/{u} {
+      allow read: if isDev() || (signedIn() && u == uid());
+      allow write: if isDev();
     }
     // 자동 삭제된 팀의 백업 (깃허브 작업만 씀, 개발자만 읽기)
     match /trash/{id} { allow read: if isDev(); }

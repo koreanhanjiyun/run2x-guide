@@ -18,7 +18,7 @@ for (const t of (await db.collection('teams').get()).docs) {
   console.log(`${DRY ? '[확인만] ' : ''}삭제 대상: ${d.name} (${t.id}) · 마지막 활동 ${last}`);
   if (DRY) continue;
   const backup = { format: 'run2x-team-backup', version: 1, team: d.name, exportedAt: new Date().toISOString(), teamDoc: d, data: {} };
-  for (const col of ['status', 'val', 'qa', 'meta', 'members']) {
+  for (const col of ['status', 'val', 'qa', 'meta', 'blocked', 'members']) {
     backup.data[col] = {}; (await t.ref.collection(col).get()).docs.forEach(x => { backup.data[col][x.id] = x.data(); });
   }
   await db.doc('trash/' + t.id).set({ team: d.name || '', deletedAt: new Date().toISOString(), reason: `${YEARS}년 미접속`, backup: JSON.stringify(backup) });

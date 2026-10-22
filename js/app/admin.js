@@ -24,12 +24,12 @@ function initAdm(){ if($('#admPanel')) return;
   b.innerHTML=`<section class="adm-s adm-season"><div class="sn-h"><h4>시즌 · 진행 상태</h4></div>
      <div class="sn-nav"><button type="button" class="sn-prev" aria-label="이전 시즌" title="이전 시즌">◀</button><button type="button" class="sn-val" title="눌러서 연도 직접 입력"></button><input type="number" class="sn-in" min="2000" max="2100" hidden aria-label="시즌 연도 입력"><button type="button" class="sn-next" aria-label="다음 시즌" title="다음 시즌">▶</button></div>
      <div class="adm-st"></div><div class="adm-reset"></div>
-     <p class="adm-hint sn-help">초기화는 질문·오류 글을 제외하고 <b>지금 고른 시즌</b>의 모든 것을 초기 상태로 되돌립니다.</p></section>
+     <p class="adm-hint sn-help">초기화는 논의 글을 제외하고 <b>지금 고른 시즌</b>의 모든 것을 초기 상태로 되돌립니다.</p></section>
    <section class="adm-s"><h4>진행 요약</h4><div class="adm-sum"></div></section>
    <details class="adm-s" open><summary><h4>착수 가능 <span class="adm-n" data-n="ready"></span></h4></summary><p class="adm-hint">받는 정보(선행 항목)가 모두 완료·제외인데 아직 예정인 항목</p><div data-l="ready"></div></details>
    <details class="adm-s" open><summary><h4>선행 미완료 경고 <span class="adm-n" data-n="warn"></span></h4></summary><p class="adm-hint">진행 중인데 선행 항목이 아직 끝나지 않은 항목</p><div data-l="warn"></div></details>
    <details class="adm-s"><summary><h4>제외 영향 <span class="adm-n" data-n="skip"></span></h4></summary><p class="adm-hint">제외한 항목과, 그 결과를 받는 항목</p><div data-l="skip"></div></details>
-   <details class="adm-s" open><summary><h4>질문·오류 <span class="adm-n" data-n="qa"></span></h4></summary><p class="adm-hint">접수·검토 중인 글. 누르면 그 단계로 이동</p><div data-l="qa"></div></details>
+   <details class="adm-s" open><summary><h4>최근 논의 <span class="adm-n" data-n="qa"></span></h4></summary><p class="adm-hint">항목별 논의의 최근 글 10개. 누르면 그 글로 이동. 부적절한 글은 관리자 모드에서 [삭제 (관리)]</p><div data-l="qa"></div></details>
    <details class="adm-s"><summary><h4>최근 변경</h4></summary><div data-l="recent"></div></details>
    <details class="adm-s"><summary><h4>팀 값 입력 현황 <span class="adm-n" data-n="val"></span></h4></summary><p class="adm-hint">이번 시즌 '우리 팀 값'이 비어 있는 항목</p><div data-l="val"></div></details>
 `;
@@ -66,8 +66,9 @@ function renderAdm(){ if(ADMRAF) return; ADMRAF=requestAnimationFrame(()=>{ ADMR
   const vids=all.filter(id=>ACT[id] && ACT[id][2] && ACT[id][2].length), miss=vids.filter(id=>!(VAL[id]&&VAL[id].s&&valFilled(VAL[id].s[SEASON])));
   set('val', `<p class="adm-hint">입력 ${vids.length-miss.length} / ${vids.length}</p>`+admList(miss,'모두 입력했습니다.'), miss.length);
   admRecent(p.querySelector('[data-l="recent"]'));
-  const qs=Object.entries(QA||{}).filter(([k,q])=>q && qaOpen(q)).sort((x,y)=>String(y[1].at).localeCompare(String(x[1].at)));
-  set('qa', qs.length? `<div class="adm-list">${qs.map(([k,q])=>`<button class="lnk adm-it adm-qa" data-qago="${q.step}" data-qid="${k}" title="${esc((q.text||'').slice(0,80))}"><span class="adm-code">${q.step}</span><span class="adm-qk">${esc(q.kind||'질문')}</span><span class="adm-qt">${q.item&&IT[q.item]?esc(IT[q.item].n):esc((q.text||'').slice(0,20))}</span></button>`).join('')}</div>` : '<p class="adm-empty">없습니다.</p>', qs.length||'');
+  const qs=Object.entries(QA||{}).filter(([k,q])=>isTalk(q) && !q.removed && IT[q.item]).sort((x,y)=>String(y[1].at).localeCompare(String(x[1].at))).slice(0,10);
+  const nw=(typeof tkNewTotal==='function')?tkNewTotal():0;
+  set('qa', qs.length? `<div class="adm-list">${qs.map(([k,q])=>`<button class="lnk adm-it adm-qa" data-tkgo="${q.item}" data-qid="${esc(k)}" title="${esc((q.text||'').slice(0,120))}"><span class="adm-code">${IT[q.item].s}</span><span class="adm-qk">${esc(IT[q.item].n)}</span><span class="adm-qt">${q.parent?'↳ ':''}${esc((q.text||'').slice(0,40))}</span></button>`).join('')}</div>` : '<p class="adm-empty">없습니다.</p>', nw?`새 ${nw}`:'');
 }); }
 async function admRecent(el){ if(!el) return;
   if(!SH.on){ el.innerHTML='<p class="adm-empty">팀 공유 모드에서만 표시됩니다.</p>'; return; }
