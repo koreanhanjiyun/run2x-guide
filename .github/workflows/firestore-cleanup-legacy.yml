@@ -1,0 +1,31 @@
+# 한 번만 쓰는 정리 작업: 예전(단일 팀·승인 방식) 구조로 만들어진 최상위 데이터를 지웁니다.
+# Actions 탭 → "Firestore 예전 데이터 정리" → Run workflow → 확인란에 DELETE 입력.
+# 새 구조로 팀을 만들기 "전에" 실행하십시오 (teams 컬렉션을 통째로 지움).
+# 필요: FIREBASE_SA 서비스 계정에 "Cloud Datastore 사용자" 역할.
+name: Firestore 예전 데이터 정리
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '지우려면 DELETE 입력'
+        required: true
+jobs:
+  cleanup:
+    if: ${{ github.event.inputs.confirm == 'DELETE' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 서비스 계정 키 준비
+        run: printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+      - name: 예전 컬렉션 삭제 (teams, meta, status, qa, users)
+        run: |
+          for c in teams meta status qa users; do
+            echo "== $c"
+            npx --yes firebase-tools@13 firestore:delete "$c" --recursive --force --project run2x-guide --non-interactive || true
+          done
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json

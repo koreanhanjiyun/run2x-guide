@@ -18,7 +18,7 @@
 - `teams/<팀ID>/members/<uid>` {role, name, email, at, via} — 팀원 명단
 - `teams/<팀ID>/status/<시즌>-<항목>`, `val/<항목>`, `qa/*`, `meta/season`, `meta/state` — 팀 데이터 (팀원만)
 - `profiles/<uid>` 표시 이름, `users/<uid>` 마지막으로 고른 팀, `feedback/*` 플랫폼 문의(개발자만 읽음)
-- 보안 규칙: `firestore.rules` 를 Firebase 콘솔 → Firestore → 규칙에 붙여 넣고 게시. **규칙을 바꾸면 콘솔에서 다시 게시해야 적용됩니다.**
+- 보안 규칙: `firestore.rules` 를 main 에 올리면 깃허브 액션(`.github/workflows/firestore-rules.yml`)이 자동 게시합니다. 저장소 Secrets 의 `FIREBASE_SA`(서비스 계정 JSON, 역할: Firebase 규칙 관리자 + Cloud Datastore 사용자)가 필요합니다. 결과는 저장소 Actions 탭에서 확인.
 
 ## 디버깅 모드
 - 주소 끝에 `#debug` (예: `https://koreanhanjiyun.github.io/run2x-guide/#debug`). **개발자 계정으로 로그인한 상태**에서만 켜집니다.

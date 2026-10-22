@@ -1,0 +1,24 @@
+# firestore.rules 가 바뀌어 main 에 올라오면 Firebase 에 보안 규칙을 자동 게시합니다.
+# 필요: 저장소 Settings → Secrets and variables → Actions → FIREBASE_SA (서비스 계정 JSON 키 전체)
+name: Firestore 규칙 게시
+on:
+  push:
+    branches: [main]
+    paths: [firestore.rules, firebase.json, .github/workflows/firestore-rules.yml]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 서비스 계정 키 준비
+        run: printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+      - name: 규칙 게시
+        run: npx --yes firebase-tools@13 deploy --only firestore:rules --project run2x-guide --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
