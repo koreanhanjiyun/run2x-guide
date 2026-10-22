@@ -1,7 +1,7 @@
 /* ============================================================
    팀·계정 (Firebase 저장소일 때만)
-   - 상단 칩: 로그인 안 됨 / 팀 없음 / 승인 대기 / <팀> 연결됨 / 연결 안 됨
-   - 칩을 누르면 팀 패널: 로그인, 팀 선택·만들기·가입 신청, 관리자(가입 승인·역할·내보내기), 플랫폼 문의
+   - 상단 칩: 로그인 안 됨 / 팀 없음 / <팀> 연결됨 / 연결 안 됨
+   - 칩을 누르면 팀 패널: 로그인, 팀 가입(이름+비밀번호)·만들기, 관리자(비밀번호 변경·역할·내보내기), 플랫폼 문의
    - 질문·오류 입력칸: 팀원이 아니면 안내 + 버튼
    ============================================================ */
 (function(){
@@ -15,17 +15,17 @@
   /* ---------- 칩 ---------- */
   const CHIP = {
     anon:   {cls:'sc-wait', txt:'로그인 안 됨', tip:'● 로그인 안 됨: 가이드와 계산기는 그대로 쓸 수 있습니다. 팀 데이터(진행 상태·팀 값·질문)는 로그인하고 팀원이 되면 보입니다. 눌러서 로그인.'},
-    noteam: {cls:'sc-wait', txt:'팀 없음',     tip:'● 팀 없음: 팀을 고르고 가입 신청하거나 새 팀을 만들면 팀 데이터를 쓸 수 있습니다. 눌러서 팀 선택.'},
-    pending:{cls:'sc-off',  txt:'승인 대기',   tip:'● 승인 대기: 팀 관리자가 가입을 승인하면 팀 데이터가 보입니다.'},
+    noteam: {cls:'sc-wait', txt:'팀 없음',     tip:'● 팀 없음: 팀 이름과 비밀번호로 가입하거나 새 팀을 만들면 팀 데이터를 쓸 수 있습니다. 눌러서 팀 가입.'},
     member: {cls:'sc-on',   txt:'연결됨',      tip:'● 연결됨: 팀과 공유 중입니다. 내가 바꾼 진행 상태·팀 값·질문이 팀원 모두에게 바로 보입니다. 눌러서 팀 관리.'},
     error:  {cls:'sc-off',  txt:'연결 안 됨',  tip:'● 연결 안 됨: 팀 저장소에 연결하지 못했습니다. 읽기와 계산기는 그대로 쓸 수 있습니다.'}
   };
   function paintChip(){
     if(!C || window.DEBUG) return; const c=document.getElementById('seasonChip'); if(!c) return;
     const k = CHIP[C.state] || CHIP.error;
-    const head = C.state==='member' ? `${esc(C.teamName)} · ${esc(SEASON)}` : `${esc(SEASON)} 시즌`;
+    const tn = [...(C.teamName||'')]; const short = tn.length>10 ? tn.slice(0,10).join('')+'…' : C.teamName;
+    const head = C.state==='member' ? `${esc(short)} · ${esc(SEASON)}` : `${esc(SEASON)} 시즌`;
     c.className = k.cls+' sc-team'; c.innerHTML = `<b>${head}</b><span class="sc-dot"></span><span>${k.txt}</span>`;
-    c.title = `${SEASON} 시즌 (팀 관리자가 정한 이번 시즌)\n` + k.tip;
+    c.title = (C.state==='member' ? `팀: ${C.teamName}\n` : '') + `${SEASON} 시즌 (팀 관리자가 정한 이번 시즌)\n` + k.tip;
     c.setAttribute('role','button'); c.tabIndex = 0;
     /* 질문·오류 입력칸 안내 */
     document.querySelectorAll('.qa-f').forEach(f=>{
@@ -34,8 +34,7 @@
       if(C.state==='member'){ if(w) w.remove(); const nt=f.querySelector('.qa-note'); if(nt) nt.hidden=false; return; }
       if(!w){ w=document.createElement('p'); w.className='qa-warn qa-team'; f.prepend(w); }
       const msg = C.state==='anon' ? ['질문·오류는 로그인한 팀원만 남길 수 있습니다.','로그인'] :
-                  C.state==='pending' ? ['가입 승인 후 남길 수 있습니다.','팀 보기'] :
-                  C.state==='error' ? ['팀 저장소에 연결하지 못했습니다.',''] : ['질문·오류는 팀원만 남길 수 있습니다.','팀 선택·가입'];
+                  C.state==='error' ? ['팀 저장소에 연결하지 못했습니다.',''] : ['질문·오류는 팀원만 남길 수 있습니다.','팀 가입'];
       w.innerHTML = msg[0] + (msg[1] ? ` <button type="button" class="btn small tp-open">${msg[1]}</button>` : '');
       const nt=f.querySelector('.qa-note'); if(nt) nt.hidden=true;
     });
@@ -57,22 +56,21 @@
     }
     h += `<div class="tp-me"><span>${esc(c.name||'')} <span class="muted">${esc(c.email)}</span></span><button type="button" class="lnk" data-tp="logout">로그아웃</button></div>`;
     /* 팀 */
+    const form = (k, label) => `<div class="tp-row"><input class="tp-n-${k}" maxlength="40" placeholder="팀 이름 (4자 이상)" aria-label="팀 이름" autocomplete="off"></div>
+      <div class="tp-row"><input class="tp-p-${k}" maxlength="64" placeholder="비밀번호 (영문·숫자 6자 이상)" aria-label="비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small${k==='join'?' pri':''}" data-tp="${k}">${label}</button></div>`;
     h += `<div class="tp-sec"><div class="sec-label">팀</div>`;
-    if(c.team){
-      if(c.state==='member') h += `<p><b>${esc(c.teamName)}</b> · ${ROLE[c.role]}</p>`;
-      else if(c.state==='pending') h += `<p><b>${esc(c.teamName)}</b> 가입 신청 중 · 관리자 승인 대기</p><button type="button" class="btn small" data-tp="cancel">신청 취소</button>`;
-      else h += `<p><b>${esc(c.teamName)}</b> 팀원이 아닙니다.</p><button type="button" class="btn small pri" data-tp="request">가입 신청</button>`;
-    } else h += `<p class="muted">고른 팀이 없습니다.</p>`;
-    let teams=[]; try{ teams = await T.list(); }catch(e){ console.error(e); }
-    h += `<div class="tp-row"><select class="tp-sel" aria-label="팀 선택"><option value="">다른 팀 보기…</option>${teams.map(t=>`<option value="${esc(t.id)}"${t.id===c.team?' selected':''}>${esc(t.name)}</option>`).join('')}</select><button type="button" class="btn small" data-tp="choose">이동</button></div>`;
-    h += `<div class="tp-row"><input class="tp-new" maxlength="40" placeholder="새 팀 이름 (예: Run2X)" aria-label="새 팀 이름"><button type="button" class="btn small" data-tp="create">팀 만들기</button></div>`;
-    h += `<p class="muted tp-small">팀을 만든 사람이 첫 관리자가 됩니다. 팀 이름은 모두에게 보이고, 팀 데이터는 팀원만 봅니다.</p></div>`;
+    if(c.state==='member') h += `<p><b>${esc(c.teamName)}</b> · ${ROLE[c.role]}</p>`;
+    else h += `<p class="muted tp-small">팀 관리자에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>` + form('join','가입');
+    h += `<details class="tp-more"${c.state==='member'?'':' open'}><summary>${c.state==='member'?'다른 팀 가입 · 새 팀 만들기':'새 팀 만들기'}</summary>`
+       + (c.state==='member' ? `<div class="tp-sub">다른 팀 가입</div>` + form('join','가입') : '')
+       + `<div class="tp-sub">새 팀 만들기</div>` + form('create','만들기')
+       + `<p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 관리자가 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p></details></div>`;
     /* 관리자 */
     if(c.state==='member'){
-      let ms=[], rq=[]; try{ ms = await T.members(); if(c.role==='admin') rq = await T.requests(); }catch(e){ console.error(e); }
+      let ms=[]; try{ ms = await T.members(); }catch(e){ console.error(e); }
       const admins = ms.filter(m=>m.role==='admin').length;
       if(c.role==='admin'){
-        h += `<div class="tp-sec"><div class="sec-label">가입 신청 (${rq.length})</div>` + (rq.length ? rq.map(r=>`<div class="tp-person" data-uid="${esc(r.uid)}" data-name="${esc(r.name||'')}" data-email="${esc(r.email||'')}"><span>${esc(r.name||'(이름 없음)')} <span class="muted">${esc(r.email||'')}</span></span><span><button type="button" class="btn small pri" data-tp="approve">승인</button><button type="button" class="btn small" data-tp="reject">거절</button></span></div>`).join('') : `<p class="muted tp-small">없음</p>`) + `</div>`;
+        h += `<div class="tp-sec"><div class="sec-label">팀 비밀번호 변경</div><div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div><p class="muted tp-small">바꿔도 기존 팀원은 그대로입니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오.</p></div>`;
       }
       h += `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + ms.sort((a,b)=>(a.role==='admin'?0:1)-(b.role==='admin'?0:1)||String(a.name).localeCompare(String(b.name),'ko')).map(m=>{
         const me = m.uid===c.uid, isA = m.role==='admin';
@@ -98,12 +96,9 @@
     switch(k){
       case 'login': return u.signIn();
       case 'logout': return u.signOut();
-      case 'request': return T.request();
-      case 'cancel': return T.cancelRequest();
-      case 'choose': { const v=P.querySelector('.tp-sel').value; if(!v) return say('팀을 고르십시오.'); return T.choose(v); }
-      case 'create': { const v=P.querySelector('.tp-new').value.trim(); if(!v) return say('팀 이름을 입력하십시오.'); return T.create(v); }
-      case 'approve': await T.approve({uid, name: row.dataset.name, email: row.dataset.email}); say('승인했습니다.'); return render();
-      case 'reject': await T.reject(uid); say('거절했습니다.'); return render();
+      case 'join': case 'create': { const n=P.querySelector('.tp-n-'+k).value, pw=P.querySelector('.tp-p-'+k).value;
+        try{ return k==='join' ? await T.join(n,pw) : await T.create(n,pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } }
+      case 'pw': { const i=P.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
       case 'promote': await T.setRole(uid,'admin'); say('관리자로 지정했습니다.'); return render();
       case 'demote': { if(+P.dataset.admins<=1) return say('마지막 관리자는 내려올 수 없습니다. 다른 사람을 먼저 관리자로 지정하십시오.');
         await T.setRole(uid,'member'); if(uid===C.uid) return location.reload(); say('팀원으로 바꿨습니다.'); return render(); }
@@ -117,6 +112,7 @@
   }
 
   document.addEventListener('click', e=>{
+    if(e.target.closest('.tp-fbopen')){ e.preventDefault(); e.stopPropagation(); open().then(()=>{ const t=P.querySelector('.tp-fb'); if(t){ t.scrollIntoView({block:'center'}); t.focus(); } else { const s=P.querySelector('[data-tp=login]'); if(s) s.insertAdjacentHTML('beforebegin','<p class="tp-small"><b>플랫폼 문의</b>는 로그인 후 보낼 수 있습니다.</p>'); } }); return; }
     if(e.target.closest('#seasonChip.sc-team') || e.target.closest('.tp-open')){ e.preventDefault(); e.stopPropagation(); (P && !P.hidden) ? close() : open(); return; }
     if(!P || P.hidden) return;
     if(e.target.closest('.tp-x')){ close(); return; }
@@ -129,7 +125,8 @@
 
   /* ---------- 하단: 로그인 상태 ---------- */
   function foot(){ const vl=document.getElementById('verline'); if(!vl || vl.querySelector('.authbtn')) return;
-    const b=document.createElement('button'); b.type='button'; b.className='authbtn tp-open'; b.textContent = C.uid ? `${C.email} · 팀·계정` : '로그인'; vl.appendChild(b); }
+    const b=document.createElement('button'); b.type='button'; b.className='authbtn tp-open'; b.textContent = C.uid ? `${C.email} · 팀·계정` : '로그인'; vl.appendChild(b);
+    const f=document.createElement('button'); f.type='button'; f.className='authbtn tp-fbopen'; f.textContent='플랫폼 문의'; vl.appendChild(f); }
 
   Backend.Team.ctx().then(c=>{ C=c; paintChip(); foot(); }).catch(e=>{ console.error(e); C={state:'error'}; paintChip(); });
 })();

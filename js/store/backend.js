@@ -35,7 +35,7 @@ window.Backend = (function(){
   }
   const devs = () => (CFG.developers||[]).map(x=>String(x).toLowerCase());
 
-  /* 현재 사람·팀 상태: state = anon | noteam | pending | member | error */
+  /* 현재 사람·팀 상태: state = anon | noteam | member | error */
   function teamCtx(){
     if(ctxReady) return ctxReady;
     ctxReady = (async()=>{
@@ -49,12 +49,12 @@ window.Backend = (function(){
       try{ if(!tid){ const us = await F.fs.doc('users/'+c.uid).get(); if(us.exists) tid = us.data().active || null; } }catch(e){}
       if(!tid) return c;
       try{
+        const m = await F.fs.doc(`teams/${tid}/members/${c.uid}`).get();
+        if(!m.exists){ lsSet(TEAMKEY, null); return c; }
         const t = await F.fs.doc('teams/'+tid).get();
         if(!t.exists){ lsSet(TEAMKEY, null); return c; }
-        c.team = tid; c.teamName = t.data().name || '';
-        const m = await F.fs.doc(`teams/${tid}/members/${c.uid}`).get();
-        if(m.exists){ c.role = m.data().role === 'admin' ? 'admin' : 'member'; c.state = 'member'; }
-        else { const r = await F.fs.doc(`teams/${tid}/requests/${c.uid}`).get(); c.state = r.exists ? 'pending' : 'noteam'; }
+        c.team = tid; c.teamName = t.data().name || ''; c.teamKey = t.data().key || '';
+        c.role = m.data().role === 'admin' ? 'admin' : 'member'; c.state = 'member';
       }catch(e){ console.error('팀 정보를 읽지 못했습니다', e); c.state = 'error'; }
       return c;
     })();
@@ -82,24 +82,40 @@ window.Backend = (function(){
     };
   }
 
-  /* ---------- 팀 관리 (팀 패널에서 사용) ---------- */
+  /* ---------- 팀 관리 (팀 패널에서 사용) ----------
+     팀 이름: 4~40자, 중복 불가(대소문자 무시) → teamNames/<소문자 이름>
+     비밀번호: 영문 대소문자·숫자 6자 이상(대소문자 구분). 원문은 저장하지 않고
+     열쇠 = SHA-256(소문자 이름 + ':' + 비밀번호) → joinKeys/<열쇠> = {team}. 열쇠를 아는(=비밀번호를 아는) 사람만 가입 */
+  const NAME_RE = /^[가-힣A-Za-z0-9 _-]{4,40}$/, PW_RE = /^[A-Za-z0-9]{6,64}$/;
+  const norm = n => String(n||'').trim().replace(/\s+/g,' ');
+  async function sha(t){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  const keyOf = (name, pw) => sha(norm(name).toLowerCase() + ':' + pw);
+  const err = (code, msg) => { const e = new Error(msg); e.code = code; return e; };
   const Team = {
-    ctx: teamCtx,
-    async list(){ const {F} = await teamCtx(); const q = await F.fs.collection('teams').orderBy('name').get(); return q.docs.map(d=>({id:d.id, name:d.data().name||d.id})); },
+    ctx: teamCtx, NAME_RE, PW_RE,
+    check(name, pw){ name = norm(name);
+      if(!NAME_RE.test(name)) throw err('name', '팀 이름은 4~40자, 한글·영문·숫자·공백·-·_ 만 쓸 수 있습니다.');
+      if(!PW_RE.test(pw||'')) throw err('pw', '비밀번호는 영문 대소문자·숫자만, 6자 이상입니다.'); return name; },
     async choose(tid){ const c = await teamCtx(); lsSet(TEAMKEY, tid); if(c.uid){ try{ await c.F.fs.doc('users/'+c.uid).set({active: tid||null},{merge:true}); }catch(e){} } location.reload(); },
-    async create(name){ const c = await teamCtx(); name = String(name||'').trim().slice(0,40); if(!c.uid || !name) throw new Error('name');
-      const fs = c.F.fs, ref = fs.collection('teams').doc(), now = new Date().toISOString(), b = fs.batch();
-      b.set(ref, {name, createdBy: c.uid, createdAt: now});
+    async create(name, pw){ const c = await teamCtx(); name = Team.check(name, pw); const lower = name.toLowerCase(), fs = c.F.fs;
+      const nm = await fs.doc('teamNames/'+lower).get(); if(nm.exists) throw err('dup', '이미 있는 팀 이름입니다. 가입하려면 그 팀의 비밀번호로 가입하십시오.');
+      const key = await keyOf(name, pw), ref = fs.collection('teams').doc(), now = new Date().toISOString(), b = fs.batch();
+      b.set(ref, {name, createdBy: c.uid, createdAt: now, key});
+      b.set(fs.doc('teamNames/'+lower), {team: ref.id});
+      b.set(fs.doc('joinKeys/'+key), {team: ref.id});
       b.set(fs.doc(`teams/${ref.id}/members/${c.uid}`), {role:'admin', name: c.name, email: c.email, at: now});
       await b.commit(); return Team.choose(ref.id); },
-    async request(){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/requests/${c.uid}`).set({name: c.name, email: c.email, at: new Date().toISOString()}); location.reload(); },
-    async cancelRequest(){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/requests/${c.uid}`).delete(); location.reload(); },
+    async join(name, pw){ const c = await teamCtx(); name = Team.check(name, pw); const fs = c.F.fs, key = await keyOf(name, pw);
+      let jk; try{ jk = await fs.doc('joinKeys/'+key).get(); }catch(e){ jk = null; }
+      if(!jk || !jk.exists) throw err('nomatch', '팀 이름 또는 비밀번호가 맞지 않습니다.');
+      const tid = jk.data().team, mref = fs.doc(`teams/${tid}/members/${c.uid}`), m = await mref.get();
+      if(!m.exists) await mref.set({role:'member', name: c.name, email: c.email, at: new Date().toISOString(), via: key});
+      return Team.choose(tid); },
+    async changePassword(pw){ const c = await teamCtx(); if(!PW_RE.test(pw||'')) throw err('pw', '비밀번호는 영문 대소문자·숫자만, 6자 이상입니다.');
+      const fs = c.F.fs, key = await keyOf(c.teamName, pw); if(key === c.teamKey) throw err('same', '지금 비밀번호와 같습니다.');
+      const b = fs.batch(); b.set(fs.doc('joinKeys/'+key), {team: c.team}); b.update(fs.doc('teams/'+c.team), {key});
+      if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); await b.commit(); c.teamKey = key; },
     async members(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/members`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
-    async requests(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/requests`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
-    async approve(r){ const c = await teamCtx(); const fs = c.F.fs, b = fs.batch();
-      b.set(fs.doc(`teams/${c.team}/members/${r.uid}`), {role:'member', name: r.name||'', email: r.email||'', at: new Date().toISOString()});
-      b.delete(fs.doc(`teams/${c.team}/requests/${r.uid}`)); await b.commit(); },
-    async reject(uid){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/requests/${uid}`).delete(); },
     async setRole(uid, role){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role}); },
     async remove(uid){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).delete(); },
     async feedback(text){ const c = await teamCtx(); await c.F.fs.collection('feedback').add({text: String(text).slice(0,4000), by: c.uid, name: c.name, email: c.email, team: c.teamName||'', at: new Date().toISOString(), url: location.href.split('#')[0]}); },
