@@ -157,18 +157,44 @@ window.Backend = (function(){
       await fs.doc(P).delete();
       await fs.doc(P+'/members/'+c.uid).delete();
       lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); },
-    /* 백업: 진행 상태·우리 팀 값·논의·이번 시즌을 파일 하나로 (차단 목록은 넣지 않음) */
+    /* 백업: 모든 시즌의 진행 상태·우리 팀 값, 논의, 이번 시즌 설정을 파일 하나로 (차단 목록·비밀번호는 넣지 않음) */
     BACKUP_COLS: ['status','val','qa','meta'],
     async exportData(){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team, data = {};
       for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); data[col] = {}; q.docs.forEach(d=>{ data[col][d.id] = d.data(); }); }
       return {format:'run2x-team-backup', version:1, team:c.teamName, exportedAt:new Date().toISOString(), data}; },
-    async importData(obj){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 불러올 수 있습니다.');
+    /* 백업 파일의 시즌 목록과 시즌별 개수 {시즌: {status, val}} */
+    backupSeasons(obj){ const LS = typeof LEGACY_SEASON!=='undefined' ? String(LEGACY_SEASON) : '', out = {};
+      const add = (se, k) => { if(!se) return; out[se] = out[se] || {status:0, val:0}; out[se][k]++; };
+      Object.values((obj.data||{}).status||{}).forEach(d=>{ if(d && typeof d==='object') add(String(d.season||LS), 'status'); });
+      Object.values((obj.data||{}).val||{}).forEach(d=>{ Object.keys((d&&d.s)||{}).forEach(se=>add(String(se), 'val')); });
+      return out; },
+    /* 불러오기 = 시즌 골라 복구 + 합치기
+       - 고른 시즌: 그 시즌의 진행 상태·우리 팀 값을 파일 내용으로 바꿈 (다른 시즌은 그대로)
+       - 논의: 파일에 있고 지금 없는 글만 되살림 (지금 글은 그대로)
+       - 이번 시즌 설정(meta)은 바꾸지 않음 */
+    async importData(obj, seasons){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 불러올 수 있습니다.');
       if(!obj || obj.format!=='run2x-team-backup' || !obj.data) throw err('fmt','이 사이트의 팀 백업 파일이 아닙니다.');
-      const fs = c.F.fs, P = 'teams/'+c.team, ops = [];
-      for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); q.docs.forEach(d=>ops.push(['del', P+'/'+col+'/'+d.id])); }
-      for(const col of Team.BACKUP_COLS){ Object.entries(obj.data[col]||{}).forEach(([id,d])=>{ if(/^[^/]{1,200}$/.test(id) && d && typeof d==='object') ops.push(['set', P+'/'+col+'/'+id, d]); }); }
+      const LS = typeof LEGACY_SEASON!=='undefined' ? String(LEGACY_SEASON) : '', SE = new Set((seasons||[]).map(String)), sOf = d => String((d && d.season) || LS);
+      const okId = id => /^[^/]{1,200}$/.test(id), fs = c.F.fs, P = 'teams/'+c.team, ops = [], n = {status:0, val:0, qa:0}, now = new Date().toISOString();
+      /* 진행 상태 */
+      const fileSt = Object.entries(obj.data.status||{}).filter(([id,d])=>okId(id) && d && typeof d==='object' && SE.has(sOf(d)));
+      const setIds = new Set(fileSt.map(([id])=>id));
+      (await fs.collection(P+'/status').get()).docs.forEach(d=>{ if(SE.has(sOf(d.data())) && !setIds.has(d.id)) ops.push(['del', P+'/status/'+d.id]); });
+      fileSt.forEach(([id,d])=>{ ops.push(['set', P+'/status/'+id, d]); n.status++; });
+      /* 우리 팀 값 (항목 문서 안의 시즌별 값) */
+      const curV = {}; (await fs.collection(P+'/val').get()).docs.forEach(d=>{ curV[d.id] = d.data(); });
+      const fileV = obj.data.val || {};
+      new Set([...Object.keys(curV), ...Object.keys(fileV)]).forEach(id=>{ if(!okId(id)) return;
+        const cur = curV[id] || {}, s = Object.assign({}, cur.s || {}); let ch = false;
+        SE.forEach(se=>{ const fv = fileV[id] && fileV[id].s && fileV[id].s[se];
+          if(fv && typeof fv==='object'){ s[se] = fv; ch = true; n.val++; } else if(se in s){ delete s[se]; ch = true; } });
+        if(!ch) return;
+        if(Object.keys(s).length) ops.push(['set', P+'/val/'+id, Object.assign({}, cur, {s, by: c.uid, at: now})]); else if(curV[id]) ops.push(['del', P+'/val/'+id]); });
+      /* 논의: 지금 없는 글만 */
+      const curQ = new Set((await fs.collection(P+'/qa').get()).docs.map(d=>d.id));
+      Object.entries(obj.data.qa||{}).forEach(([id,d])=>{ if(okId(id) && d && d.v===2 && !curQ.has(id)){ ops.push(['set', P+'/qa/'+id, d]); n.qa++; } });
       for(let i=0;i<ops.length;i+=400){ const b = fs.batch(); ops.slice(i,i+400).forEach(o=> o[0]==='del' ? b.delete(fs.doc(o[1])) : b.set(fs.doc(o[1]), o[2])); await b.commit(); }
-      return ops.filter(o=>o[0]==='set').length; },
+      return n; },
     async mine(){ const c = await teamCtx(); return Object.entries(c.myTeams||{}).map(([id,name])=>({id, name})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko')); },
     /* 플랫폼 문의: 종류·위치(탭·단계·항목)와 함께. 개발자는 처리 상태를 바꾸고, 반복해서 부적절한 문의를 보내는 계정을 차단 */
     FB_ST: ['접수','검토 중','반영됨','반영 안 함'],

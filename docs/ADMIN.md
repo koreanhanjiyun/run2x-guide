@@ -19,7 +19,7 @@
 - `teams/<팀ID>/status/<시즌>-<항목>`, `val/<항목>`, `qa/*`(항목별 논의), `meta/season`, `meta/state` — 팀 데이터 (팀원만)
 - `teams/<팀ID>/blocked/<uid>` 팀에서 차단한 사람 (관리자만, 재가입 막음)
 - `profiles/<uid>` 표시 이름, `users/<uid>` 마지막으로 고른 팀, `feedback/*` 플랫폼 문의(개발자만 읽고 처리 상태 변경), `fbBlocked/<uid>` 문의 차단한 계정(개발자만)
-- 팀 백업: 관리자 모드 → 관리 창 "팀 관리" [내보내기]·[불러오기](덮어쓰기). 무료 요금제에는 자동 백업이 없음.
+- 팀 백업: 관리자 모드 → 관리 창 "팀 관리" [내보내기](모든 시즌)·[불러오기](고른 시즌만 덮어쓰기, 논의는 없는 글만 되살림). 무료 요금제에는 자동 백업이 없음.
 - 보안 규칙: `firestore.rules` 를 main 에 올리면 깃허브 액션(`.github/workflows/firestore-rules.yml`)이 자동 게시합니다. 저장소 Secrets 의 `FIREBASE_SA`(서비스 계정 JSON, 역할: Firebase 규칙 관리자 + Cloud Datastore 사용자)가 필요합니다. 결과는 저장소 Actions 탭에서 확인.
 
 ## 디버깅 모드

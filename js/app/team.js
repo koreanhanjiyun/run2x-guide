@@ -81,7 +81,7 @@
       <p class="muted tp-small">기존 팀원은 그대로이고, 새로 가입할 사람은 바뀐 이름·비밀번호로 가입합니다. 비밀번호는 팀 관리자와 사이트 운영자가 볼 수 있으니 다른 곳에서 쓰는 비밀번호는 쓰지 마십시오.</p></div>`;
     h += `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + memberRows(ms, true)
       + (bl.length ? `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} <span class="muted">${esc(b.email||'')}</span></span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>` : '') + `</div>`;
-    h += `<div class="tp-sec"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 진행 상태·우리 팀 값·논의·이번 시즌을 파일로 저장(시즌이 끝날 때마다 권장).<br>불러오기: 그 파일로 이 팀 데이터를 <b>덮어씁니다</b>.</p><div class="tp-imp" hidden></div></div>`;
+    h += `<div class="tp-sec"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 모든 시즌의 진행 상태·우리 팀 값과 논의를 파일로 저장(시즌이 끝날 때마다 권장).<br>불러오기: <b>고른 시즌만</b> 그 시즌 자리에 덮어쓰고, 논의는 지금 없는 글만 되살립니다.</p><div class="tp-imp" hidden></div></div>`;
     h += `<div class="tp-sec"><button type="button" class="lnk tp-del" data-tp="delopen">팀 삭제</button><div class="tp-delbox" hidden><p class="tp-small">삭제하려면 팀 이름 <b>${esc(c.teamName)}</b>을(를) 그대로 입력하십시오. 모든 시즌 기록·논의·팀원 명단이 지워지며 되돌릴 수 없습니다.</p><div class="tp-row"><input class="tp-delname" autocomplete="off" aria-label="삭제 확인용 팀 이름"><button type="button" class="btn small tp-danger" data-tp="delete" disabled>영구 삭제</button></div></div></div>`;
     R.innerHTML = h; R.dataset.admins = admins; R.dataset.count = ms.length; }
 
@@ -164,8 +164,11 @@
         a.download = `run2x-backup-${C.teamName.replace(/[^가-힣A-Za-z0-9_-]+/g,'_')}-${new Date().toLocaleDateString('sv-SE')}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
         return say(`내보냈습니다 · 문서 ${n}개`); }
       case 'importpick': { R.querySelector('.tp-file').click(); return; }
-      case 'importgo': { if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent='한 번 더 누르면 덮어씀 (되돌릴 수 없음)'; return; }
-        el.disabled=true; el.textContent='불러오는 중…'; const n = await T.importData(window.__r2xImport); window.__r2xImport=null; say(`불러왔습니다 · 문서 ${n}개`); return setTimeout(()=>location.reload(), 900); }
+      case 'importgo': { const box=el.closest('.tp-imp'), ses=[...box.querySelectorAll('.tp-ise:checked')].map(x=>x.value), rq=box.querySelector('.tp-iqa');
+        if(!ses.length && !(rq && rq.checked)) return say('복구할 시즌을 고르십시오.');
+        if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent = ses.length ? `한 번 더 누르면 ${ses.join('·')} 시즌을 덮어씀 (되돌릴 수 없음)` : '한 번 더 누르면 논의만 되살림'; return; }
+        el.disabled=true; el.textContent='불러오는 중…'; const n = await T.importData(window.__r2xImport, ses); window.__r2xImport=null;
+        say(`복구했습니다 · ${ses.length?ses.join('·')+' 시즌 · ':''}진행 상태 ${n.status} · 우리 팀 값 ${n.val} · 되살린 논의 ${n.qa}`); return setTimeout(()=>location.reload(), 1400); }
       case 'rename': { const n=R.querySelector('.tp-rn').value, pi=R.querySelector('.tp-rnpw'), pw=pi ? pi.value : '';
         try{ await T.rename(n, pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; }
         if(TMP) TMP.querySelector('.adm-sub').textContent = C.teamName; paintChip(); say('팀 이름을 바꿨습니다. 초대 문구를 다시 복사해 공유하십시오.'); return again(); }
@@ -219,8 +222,13 @@
   document.addEventListener('change', e=>{ if(!e.target.matches || !e.target.matches('.adm-tm .tp-file')) return; const f=e.target.files[0]; if(!f) return; const box=e.target.closest('.adm-tm').querySelector('.tp-imp');
     f.text().then(t=>{ let o; try{ o=JSON.parse(t); }catch(_){ o=null; }
       if(!o || o.format!=='run2x-team-backup' || !o.data){ box.hidden=false; box.innerHTML='<p class="tp-small">이 사이트의 팀 백업 파일이 아닙니다.</p>'; return; }
-      window.__r2xImport=o; const cnt=k=>Object.keys(o.data[k]||{}).length; const seasons=[...new Set(Object.values(o.data.status||{}).map(d=>d.season).filter(Boolean))].sort().join(', ')||'-';
-      box.hidden=false; box.innerHTML=`<p class="tp-small"><b>${esc(o.team||'')}</b> 백업 · ${esc(o.exportedAt ? new Date(o.exportedAt).toLocaleString('ko-KR') : '')}<br>진행 상태 ${cnt('status')} · 우리 팀 값 ${cnt('val')} · 논의 ${cnt('qa')} · 시즌 ${esc(seasons)}<br>지금 팀(<b>${esc(C.teamName)}</b>)의 진행 상태·팀 값·논의·이번 시즌이 모두 이 파일 내용으로 바뀝니다.</p><button type="button" class="btn small tp-danger" data-tp="importgo">덮어쓰기</button>`; });
+      window.__r2xImport=o; const SS=T.backupSeasons(o), keys=Object.keys(SS).sort(), nq=Object.values(o.data.qa||{}).filter(d=>d && d.v===2).length;
+      box.hidden=false; box.innerHTML=`<p class="tp-small"><b>${esc(o.team||'')}</b> 백업 · ${esc(o.exportedAt ? new Date(o.exportedAt).toLocaleString('ko-KR') : '')}</p>
+        <div class="tp-small"><b>복구할 시즌</b> (고른 시즌만 지금 팀의 그 시즌 기록을 이 파일 내용으로 바꿉니다. 고르지 않은 시즌은 그대로)</div>
+        <div class="tp-ises">${keys.length ? keys.map(k=>`<label><input type="checkbox" class="tp-ise" value="${esc(k)}"> <b>${esc(k)}</b> <span class="muted">진행 상태 ${SS[k].status} · 팀 값 ${SS[k].val}</span></label>`).join('') : '<span class="muted tp-small">시즌 기록 없음</span>'}</div>
+        <label class="tp-small"><input type="checkbox" class="tp-iqa" checked disabled> 논의 ${nq}개 중 지금 없는 글 되살리기 (지금 글은 그대로)</label>
+        <p class="tp-small muted">이번 시즌 설정(${esc(TEAM_SEASON)})은 바뀌지 않습니다.</p>
+        <button type="button" class="btn small tp-danger" data-tp="importgo">선택한 시즌 복구</button>`; });
     e.target.value=''; });
   document.addEventListener('change', e=>{ if(!e.target.matches) return;
     if(e.target.matches('#teamPanel .tp-fbwhere')) return fillItems();

@@ -1283,3 +1283,6 @@ body.adm-coll #tmPanel{right:34px}
 :is(#teamPanel,.adm-tm) .tp-pwv{font-size:14px;font-weight:700;letter-spacing:.04em;color:var(--ink);user-select:all}
 body.adm-on.tm-on #partRail,body.adm-on.tm-on #figRail{right:calc(var(--admw,290px) + 340px)}
 body.adm-on.adm-coll.tm-on #partRail,body.adm-on.adm-coll.tm-on #figRail{right:374px}
+:is(#teamPanel,.adm-tm) .tp-ises{display:flex;flex-direction:column;gap:4px;margin:6px 0 8px}
+:is(#teamPanel,.adm-tm) .tp-ises label{font-size:12.5px;display:flex;gap:6px;align-items:baseline}
+:is(#teamPanel,.adm-tm) .tp-imp label.tp-small{display:block;margin:4px 0}
