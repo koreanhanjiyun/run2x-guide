@@ -1,5 +1,5 @@
 /* ---------- 0.31.1 연결 안 됨: 저장·변경 버튼만 잠금 (입력·읽기·계산기는 그대로) ---------- */
-const CONN_LOCK='.stbtn,[data-tvsave],.qa-f button[type=submit],.qa-esave,.qa-del,.tk-reply,.sn-prev,.sn-next,.sn-val,#st-reset,#st-yes';
+const CONN_LOCK='.stbtn,[data-draft=save],.qa-f button[type=submit],.qa-esave,.qa-del,.tk-reply,.sn-prev,.sn-next,.sn-val,#st-reset,#st-yes';
 const connOff=()=>document.body.classList.contains('conn-off');
 const NOWRITE_LOCK='.qa-f button[type=submit],.qa-esave,.qa-del,.tk-reply';
 document.addEventListener('click',e=>{ if(!document.body.classList.contains('no-write')) return; const b=e.target.closest(NOWRITE_LOCK); if(!b) return; e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); toast('지금 권한으로는 글을 남길 수 없습니다.'); }, true);

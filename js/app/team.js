@@ -3,7 +3,8 @@
    - 상단 칩: 로그인 안 됨 / 팀 없음 / <팀> 연결됨 / 연결 안 됨
    - 칩을 누르면 팀 패널: 로그인, 팀 가입(이름+비밀번호)·만들기, 관리자(비밀번호 변경·역할·내보내기), 플랫폼 문의
    - 항목별 논의 입력칸: 팀원이 아니면 안내 + 버튼
-   - 팀 관리자: 초대 문구 복사, 팀원 차단 / 개발자: 플랫폼 문의 처리 상태·문의 차단
+   - 초대 문구 복사(팀원 모두) / 팀 관리(팀원 관리·차단·비밀번호·백업·삭제)는 관리 창 "팀 관리" 칸
+   - 개발자: 플랫폼 문의 처리 상태·문의 차단 (팀·계정 창)
    ============================================================ */
 (function(){
   if(!window.Backend || Backend.kind()!=='firebase') return;
@@ -50,6 +51,27 @@
   async function open(){ panel(); P.hidden=false; place(); P.innerHTML='<p class="muted">불러오는 중…</p>'; try{ await render(); }catch(e){ fail(e); } }
   function close(){ if(P) P.hidden=true; }
 
+  function memberRows(ms, manage){ const c=C, admins=ms.filter(m=>m.role==='admin').length;
+    return ms.sort((a,b)=>(a.role==='admin'?0:1)-(b.role==='admin'?0:1)||String(a.name).localeCompare(String(b.name),'ko')).map(m=>{
+      const me = m.uid===c.uid, isA = m.role==='admin'; let btn = '';
+      if(manage && !me) btn = `<button type="button" class="lnk" data-tp="${isA?'demote':'promote'}">${isA?'팀원으로':'관리자로'}</button><button type="button" class="lnk" data-tp="kick">내보내기</button><button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button>`;
+      if(manage && me && isA && admins>1) btn = `<button type="button" class="lnk" data-tp="demote">관리자 내려놓기</button>`;
+      return `<div class="tp-person" data-uid="${esc(m.uid)}" data-role="${isA?'admin':'member'}"><span>${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''} <span class="tp-role${isA?' a':''}">${ROLE[isA?'admin':'member']}</span></span><span>${btn}</span></div>`; }).join(''); }
+
+  /* ---------- 관리 창 "팀 관리" (팀 관리자, 관리자 모드) ---------- */
+  const TM = () => document.querySelector('#admPanel .adm-tm');
+  function tmShow(){ const sec=document.querySelector('#admPanel .adm-team'); if(sec) sec.hidden = !(C && C.state==='member' && C.role==='admin'); }
+  async function renderTM(){ const R=TM(); if(!R || !C || C.role!=='admin') return; const c=C;
+    let ms=[], bl=[]; try{ [ms, bl] = await Promise.all([T.members(), T.blockedList()]); }catch(e){ console.error(e); }
+    const admins = ms.filter(m=>m.role==='admin').length;
+    let h = `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + memberRows(ms, true)
+      + (bl.length ? `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} <span class="muted">${esc(b.email||'')}</span></span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>` : '') + `</div>`;
+    h += `<div class="tp-sec"><div class="sec-label">팀 비밀번호 변경</div><div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div><p class="muted tp-small">바꿔도 기존 팀원은 그대로입니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오.</p></div>`;
+    h += `<div class="tp-sec"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 진행 상태·우리 팀 값·논의·이번 시즌을 파일로 저장(시즌이 끝날 때마다 권장). 불러오기: 그 파일로 이 팀 데이터를 <b>덮어씁니다</b>.</p><div class="tp-imp" hidden></div></div>`;
+    h += `<div class="tp-sec"><button type="button" class="lnk tp-del" data-tp="delopen">팀 삭제</button><div class="tp-delbox" hidden><p class="tp-small">삭제하려면 팀 이름 <b>${esc(c.teamName)}</b>을(를) 그대로 입력하십시오. 모든 시즌 기록·논의·팀원 명단이 지워지며 되돌릴 수 없습니다.</p><div class="tp-row"><input class="tp-delname" autocomplete="off" aria-label="삭제 확인용 팀 이름"><button type="button" class="btn small tp-danger" data-tp="delete" disabled>영구 삭제</button></div></div></div>`;
+    R.innerHTML = h; R.dataset.admins = admins; R.dataset.count = ms.length; }
+  document.addEventListener('toggle', e=>{ if(e.target.classList && e.target.classList.contains('adm-team') && e.target.open) renderTM().catch(err=>fail(err)); }, true);
+
   async function render(){
     const c = C; let h = `<div class="tp-h"><b>팀 · 계정</b><button type="button" class="tp-x" aria-label="닫기">×</button></div>`;
     if(!c.uid){
@@ -70,26 +92,14 @@
        + (c.state==='member' ? `<div class="tp-sub">다른 팀 가입</div>` + form('join','가입') + `<div class="tp-sub">새 팀 만들기</div>` : '')
        + form('create','만들기')
        + `<p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 관리자가 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p></div></details></div>`;
-    /* 관리자 */
+    /* 팀원 초대 · 팀원(보기만) · 나가기. 관리 기능은 관리 창(관리자 모드) "팀 관리" 칸 */
     if(c.state==='member'){
       h += `<div class="tp-sec"><div class="sec-label">팀원 초대</div><div class="tp-row"><button type="button" class="btn small" data-tp="invite">초대 문구 복사</button></div><p class="muted tp-small">사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 톡방에 붙여 넣고, 비밀번호는 따로 알려 주십시오.</p></div>`;
       let ms=[]; try{ ms = await T.members(); }catch(e){ console.error(e); }
       const admins = ms.filter(m=>m.role==='admin').length;
-      if(c.role==='admin'){
-        h += `<div class="tp-sec"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 진행 상태·우리 팀 값·논의·이번 시즌을 파일로 저장(시즌이 끝날 때마다 권장). 불러오기: 그 파일로 이 팀 데이터를 <b>덮어씁니다</b>.</p><div class="tp-imp" hidden></div></div>`;
-        h += `<div class="tp-sec"><div class="sec-label">팀 비밀번호 변경</div><div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div><p class="muted tp-small">바꿔도 기존 팀원은 그대로입니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오.</p></div>`;
-      }
-      h += `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + ms.sort((a,b)=>(a.role==='admin'?0:1)-(b.role==='admin'?0:1)||String(a.name).localeCompare(String(b.name),'ko')).map(m=>{
-        const me = m.uid===c.uid, isA = m.role==='admin';
-        let btn = '';
-        if(c.role==='admin' && !me) btn = `<button type="button" class="lnk" data-tp="${isA?'demote':'promote'}">${isA?'팀원으로':'관리자로'}</button><button type="button" class="lnk" data-tp="kick">내보내기</button><button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button>`;
-        if(me && isA && admins>1) btn = `<button type="button" class="lnk" data-tp="demote">관리자 내려놓기</button>`;
-        return `<div class="tp-person" data-uid="${esc(m.uid)}" data-role="${isA?'admin':'member'}"><span>${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''} <span class="tp-role${isA?' a':''}">${ROLE[isA?'admin':'member']}</span></span><span>${btn}</span></div>`; }).join('');
-      if(c.role==='admin'){ let bl=[]; try{ bl = await T.blockedList(); }catch(e){ console.error(e); }
-        if(bl.length) h += `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} <span class="muted">${esc(b.email||'')}</span></span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>`; }
-      h += `<button type="button" class="lnk tp-leave" data-tp="leave">${ms.length<=1?'이 팀 나가기 (마지막 팀원이라 팀이 삭제됩니다)':'이 팀 나가기'}</button>`;
-      if(c.role==='admin') h += `<button type="button" class="lnk tp-del" data-tp="delopen">팀 삭제</button><div class="tp-delbox" hidden><p class="tp-small">삭제하려면 팀 이름 <b>${esc(c.teamName)}</b>을(를) 그대로 입력하십시오. 모든 시즌 기록·논의·팀원 명단이 지워지며 되돌릴 수 없습니다.</p><div class="tp-row"><input class="tp-delname" autocomplete="off" aria-label="삭제 확인용 팀 이름"><button type="button" class="btn small tp-danger" data-tp="delete" disabled>영구 삭제</button></div></div>`;
-      h += `</div>`;
+      h += `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + memberRows(ms, false);
+      if(c.role==='admin') h += `<p class="muted tp-small">팀원 관리·차단·비밀번호·백업·팀 삭제는 <b>관리자 모드</b>를 켜면 오른쪽 관리 창의 <b>팀 관리</b>에 있습니다.</p>`;
+      h += `<button type="button" class="lnk tp-leave" data-tp="leave">${ms.length<=1?'이 팀 나가기 (마지막 팀원이라 팀이 삭제됩니다)':'이 팀 나가기'}</button></div>`;
       P.dataset.admins = admins; P.dataset.count = ms.length;
     }
     /* 플랫폼 문의 */
@@ -127,6 +137,7 @@
   const inviteText = () => `[Run2X 설계 가이드] ${C.teamName} 팀 초대\n\n1. 접속: ${siteUrl()}\n2. 오른쪽 위 상태 칩 → 구글 로그인\n3. 팀 가입: 팀 이름 「${C.teamName}」 + 비밀번호 (따로 안내)\n\n가이드와 계산기는 로그인 없이도 볼 수 있습니다.`;
 
   async function act(k, el){
+    const R = el.closest('.adm-tm') || P, again = () => R===P ? render() : renderTM();
     const row = el.closest('.tp-person'), uid = row && row.dataset.uid;
     const u = await Backend.use('user');
     switch(k){
@@ -139,22 +150,22 @@
         const blob = new Blob([JSON.stringify(o,null,1)],{type:'application/json'}), a=document.createElement('a'); a.href=URL.createObjectURL(blob);
         a.download = `run2x-backup-${C.teamName.replace(/[^가-힣A-Za-z0-9_-]+/g,'_')}-${new Date().toLocaleDateString('sv-SE')}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
         return say(`내보냈습니다 · 문서 ${n}개`); }
-      case 'importpick': { P.querySelector('.tp-file').click(); return; }
+      case 'importpick': { R.querySelector('.tp-file').click(); return; }
       case 'importgo': { if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent='한 번 더 누르면 덮어씀 (되돌릴 수 없음)'; return; }
         el.disabled=true; el.textContent='불러오는 중…'; const n = await T.importData(window.__r2xImport); window.__r2xImport=null; say(`불러왔습니다 · 문서 ${n}개`); return setTimeout(()=>location.reload(), 900); }
-      case 'pw': { const i=P.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
-      case 'promote': await T.setRole(uid,'admin'); say('관리자로 지정했습니다.'); return render();
-      case 'demote': { if(+P.dataset.admins<=1) return say('마지막 관리자는 내려올 수 없습니다. 다른 사람을 먼저 관리자로 지정하십시오.');
-        await T.setRole(uid,'member'); if(uid===C.uid) return location.reload(); say('팀원으로 바꿨습니다.'); return render(); }
-      case 'kick': { if(row.dataset.role==='admin' && +P.dataset.admins<=1) return say('마지막 관리자는 내보낼 수 없습니다.');
-        if(!row.dataset.confirm){ row.dataset.confirm='1'; el.textContent='한 번 더 누르면 내보냄'; return; } await T.remove(uid); say('내보냈습니다.'); return render(); }
+      case 'pw': { const i=R.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
+      case 'promote': await T.setRole(uid,'admin'); say('관리자로 지정했습니다.'); return again();
+      case 'demote': { if(+R.dataset.admins<=1) return say('마지막 관리자는 내려올 수 없습니다. 다른 사람을 먼저 관리자로 지정하십시오.');
+        await T.setRole(uid,'member'); if(uid===C.uid) return location.reload(); say('팀원으로 바꿨습니다.'); return again(); }
+      case 'kick': { if(row.dataset.role==='admin' && +R.dataset.admins<=1) return say('마지막 관리자는 내보낼 수 없습니다.');
+        if(!row.dataset.confirm){ row.dataset.confirm='1'; el.textContent='한 번 더 누르면 내보냄'; return; } await T.remove(uid); say('내보냈습니다.'); return again(); }
       case 'leave': { if(C.role==='admin' && +P.dataset.admins<=1 && +P.dataset.count>1) return say('마지막 관리자는 나갈 수 없습니다. 다른 사람을 관리자로 지정한 뒤 나가십시오.');
         const last = +P.dataset.count<=1;
         if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent = last ? '한 번 더 누르면 나가면서 팀이 삭제됩니다 (되돌릴 수 없음)' : '한 번 더 누르면 나감'; return; }
         if(last){ await T.deleteTeam(); say('팀을 삭제했습니다.'); return setTimeout(()=>location.reload(), 800); }
         await T.remove(C.uid); return location.reload(); }
-      case 'delopen': { const bx=P.querySelector('.tp-delbox'); bx.hidden=!bx.hidden; if(!bx.hidden) bx.querySelector('input').focus(); return; }
-      case 'delete': { const v=P.querySelector('.tp-delname').value.trim().replace(/\s+/g,' ').toLowerCase(); if(v!==String(C.teamName).toLowerCase()) return say('팀 이름이 맞지 않습니다.');
+      case 'delopen': { const bx=R.querySelector('.tp-delbox'); bx.hidden=!bx.hidden; if(!bx.hidden) bx.querySelector('input').focus(); return; }
+      case 'delete': { const v=R.querySelector('.tp-delname').value.trim().replace(/\s+/g,' ').toLowerCase(); if(v!==String(C.teamName).toLowerCase()) return say('팀 이름이 맞지 않습니다.');
         el.disabled=true; el.textContent='삭제 중…'; await T.deleteTeam(); say('팀을 삭제했습니다.'); return setTimeout(()=>location.reload(), 800); }
       case 'fb': { const t=P.querySelector('.tp-fb'); const v=t.value.trim(); if(!v) return say('내용을 입력하십시오.');
         const where=P.querySelector('.tp-fbwhere').value, item=P.querySelector('.tp-fbitem').hidden ? '' : P.querySelector('.tp-fbitem').value;
@@ -164,9 +175,9 @@
       case 'fbblock': { const r=el.closest('.tp-fbrow'); if(!r.dataset.by) return say('보낸 사람 정보가 없습니다.'); if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent='한 번 더 누르면 차단'; return; }
         await T.fbBlock(r.dataset.by, r.dataset.name, r.dataset.email); say('이 계정은 이제 플랫폼 문의를 보낼 수 없습니다.'); return render(); }
       case 'fbunblock': await T.fbUnblock(uid); say('문의 차단을 해제했습니다.'); return render();
-      case 'block': { if(row.dataset.role==='admin' && +P.dataset.admins<=1) return say('마지막 관리자는 차단할 수 없습니다.');
-        if(!row.dataset.confirm){ row.dataset.confirm='1'; el.textContent='한 번 더 누르면 차단 (내보내고 재가입 막음)'; return; } await T.block(uid); say('차단했습니다. 이 사람은 다시 가입할 수 없습니다.'); return render(); }
-      case 'unblock': await T.unblock(uid); say('차단을 해제했습니다. 비밀번호로 다시 가입할 수 있습니다.'); return render();
+      case 'block': { if(row.dataset.role==='admin' && +R.dataset.admins<=1) return say('마지막 관리자는 차단할 수 없습니다.');
+        if(!row.dataset.confirm){ row.dataset.confirm='1'; el.textContent='한 번 더 누르면 차단 (내보내고 재가입 막음)'; return; } await T.block(uid); say('차단했습니다. 이 사람은 다시 가입할 수 없습니다.'); return again(); }
+      case 'unblock': await T.unblock(uid); say('차단을 해제했습니다. 비밀번호로 다시 가입할 수 있습니다.'); return again();
     }
   }
 
@@ -177,6 +188,7 @@
           t.scrollIntoView({block:'center'}); t.focus(); }
         else { const sc=P.querySelector('.tp-fbsec'); if(sc){ sc.scrollIntoView({block:'center'}); } else { const s=P.querySelector('[data-tp=login]'); if(s) s.insertAdjacentHTML('beforebegin','<p class="tp-small"><b>플랫폼 문의</b>는 로그인 후 보낼 수 있습니다.</p>'); } } }); return; }
     if(e.target.closest('#seasonChip.sc-team') || e.target.closest('.tp-open')){ e.preventDefault(); e.stopPropagation(); (P && !P.hidden) ? close() : open(); return; }
+    const tb = e.target.closest('.adm-tm [data-tp]'); if(tb){ e.preventDefault(); act(tb.dataset.tp, tb).catch(err=>fail(err)); return; }
     if(!P || P.hidden) return;
     if(e.target.closest('.tp-x')){ close(); return; }
     const b = e.target.closest('[data-tp]');
@@ -185,7 +197,7 @@
   }, true);
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); if((e.key==='Enter'||e.key===' ') && document.activeElement && document.activeElement.id==='seasonChip' && document.activeElement.classList.contains('sc-team')){ e.preventDefault(); open(); } });
   addEventListener('resize', place);
-  document.addEventListener('change', e=>{ if(!e.target.matches || !e.target.matches('#teamPanel .tp-file')) return; const f=e.target.files[0]; if(!f) return; const box=P.querySelector('.tp-imp');
+  document.addEventListener('change', e=>{ if(!e.target.matches || !e.target.matches('.adm-tm .tp-file')) return; const f=e.target.files[0]; if(!f) return; const box=e.target.closest('.adm-tm').querySelector('.tp-imp');
     f.text().then(t=>{ let o; try{ o=JSON.parse(t); }catch(_){ o=null; }
       if(!o || o.format!=='run2x-team-backup' || !o.data){ box.hidden=false; box.innerHTML='<p class="tp-small">이 사이트의 팀 백업 파일이 아닙니다.</p>'; return; }
       window.__r2xImport=o; const cnt=k=>Object.keys(o.data[k]||{}).length; const seasons=[...new Set(Object.values(o.data.status||{}).map(d=>d.season).filter(Boolean))].sort().join(', ')||'-';
@@ -194,7 +206,7 @@
   document.addEventListener('change', e=>{ if(!e.target.matches) return;
     if(e.target.matches('#teamPanel .tp-fbwhere')) return fillItems();
     if(e.target.matches('#teamPanel .tp-fbst')){ const r=e.target.closest('.tp-fbrow'), v=e.target.value; T.feedbackStatus(r.dataset.id, v).then(()=>{ r.className='tp-fbrow st-'+T.FB_ST.indexOf(v); say('처리 상태: '+v); }).catch(err=>fail(err)); } });
-  document.addEventListener('input', e=>{ if(!e.target.matches || !e.target.matches('#teamPanel .tp-delname')) return; const b=P.querySelector('[data-tp=delete]'); if(b) b.disabled = e.target.value.trim().replace(/\s+/g,' ').toLowerCase() !== String(C.teamName).toLowerCase(); });
+  document.addEventListener('input', e=>{ if(!e.target.matches || !e.target.matches('.adm-tm .tp-delname')) return; const b=e.target.closest('.adm-tm').querySelector('[data-tp=delete]'); if(b) b.disabled = e.target.value.trim().replace(/\s+/g,' ').toLowerCase() !== String(C.teamName).toLowerCase(); });
 
   /* ---------- 하단: 로그인 상태 ---------- */
   function foot(){ const vl=document.querySelector('#verline .vl-links') || document.getElementById('verline'); if(!vl || vl.querySelector('.tp-open')) return;
@@ -207,6 +219,6 @@
     const hd=document.querySelector('#admPanel [data-l="qa"]'); if(hd){ let k=hd.parentElement.querySelector('.qa-seen'); if(n && !k){ k=document.createElement('button'); k.type='button'; k.className='btn small qa-seen'; hd.before(k); } if(k){ if(n) k.textContent=`새 댓글 ${n}건 · 모두 읽음으로`; else k.remove(); } } }
   document.addEventListener('click', e=>{ if(!e.target.closest('.qa-seen')) return; e.preventDefault(); tkSeenAll(); paintQ(); });
   { const _rq = renderQA; renderQA = async function(){ const r = await _rq.apply(this, arguments); try{ paintQ(); }catch(e){} return r; }; }
-  { const _ra = renderAdm; renderAdm = function(){ const r=_ra.apply(this, arguments); try{ paintQ(); }catch(e){} return r; }; }
-  Backend.Team.ctx().then(c=>{ C=c; setTimeout(paintQ, 1500); paintChip(); foot(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; paintChip(); });
+  { const _ra = renderAdm; renderAdm = function(){ const r=_ra.apply(this, arguments); try{ paintQ(); tmShow(); }catch(e){} return r; }; }
+  Backend.Team.ctx().then(c=>{ C=c; tmShow(); setTimeout(paintQ, 1500); paintChip(); foot(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; paintChip(); });
 })();

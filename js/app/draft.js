@@ -1,7 +1,7 @@
 /* ============================================================
    관리자 모드 편집은 "저장해야 반영"
    - 진행 상태: 누르면 화면에만 표시(점선), 아래 막대의 [모두 저장]을 눌러야 팀에 저장
-   - 우리 팀 값: 입력만 하고 저장 안 한 칸도 함께 집계, [모두 저장]이 각 칸의 저장을 실행
+   - 우리 팀 값: 칸별 저장 버튼 없음. 입력한 칸을 함께 집계하고 [모두 저장]이 한꺼번에 저장
    - 저장 안 한 변경이 있으면 관리자 모드 끄기·시즌 넘기기·팀 전환·페이지 닫기 전에 막고 안내
    ============================================================ */
 (function(){
@@ -34,7 +34,6 @@
   document.addEventListener('input', e=>{ const box = e.target.closest('.tval'); if(!box || UMODE!=='manage' || !e.target.matches('input')) return; box.dataset.dirty='1'; paint(); });
   const _rv = refreshVals;
   refreshVals = function(){ document.querySelectorAll('.tval').forEach(el=>{ if(el.dataset.dirty || el.contains(document.activeElement)) return; renderTV(el); }); };
-  document.addEventListener('click', e=>{ const t = e.target.closest('[data-tvsave]'); if(!t) return; const box = t.closest('.tval'); setTimeout(()=>{ if(box){ delete box.dataset.dirty; } paint(); }, 0); });
 
   /* 아래 막대 */
   let BAR = null;
@@ -50,7 +49,7 @@
     const ids = Object.keys(PENDING), n = ids.length, d = dirtyBoxes();
     ids.forEach(id=>{ const v = PENDING[id]; delete PENDING[id]; _set(id, v); });
     await Promise.all(ids.map(id=>SH.q[id]).filter(Boolean)).catch(()=>{});
-    d.forEach(box=>{ const b = box.querySelector('[data-tvsave]'); if(b) b.click(); });
+    await Promise.all(d.map(box=>{ delete box.dataset.dirty; return tvSaveBox(box); })).catch(()=>{});
     COMMITTED = {...STATUS}; mark(); paint();
     toast(`저장했습니다 · ${[n?`진행 상태 ${n}건`:'', d.length?`우리 팀 값 ${d.length}항목`:''].filter(Boolean).join(' · ')}`);
   }

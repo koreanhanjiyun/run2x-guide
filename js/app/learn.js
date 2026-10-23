@@ -143,13 +143,16 @@ async function saveVal(id, vals, msgEl){
   if(!SH.canAdmin){ msgEl.textContent='우리 팀 값은 편집자(관리자)만 저장할 수 있습니다.'; return; }
   try{ await SH.db.doc('val/'+id).set(doc); msgEl.textContent= had && !valFilled(vals) ? `${SEASON} 시즌 값을 지웠습니다` : '저장했습니다'; }catch(e){ msgEl.textContent='저장하지 못했습니다.'; }
 }
+/* 우리 팀 값 한 칸 저장 (아래 막대 [모두 저장]이 부름) */
+function tvSaveBox(box){ const vals={}; box.querySelectorAll('[data-tl]').forEach(i=>{ const l=i.dataset.tl; vals[l]=vals[l]||{}; vals[l][i.dataset.tk]=i.value.trim(); });
+  return saveVal(box.dataset.tv, vals, box.querySelector('.pmsg')); }
 function tvHTML(id){ const a=ACT[id]; if(!a || !a[2].length) return ''; return `<div class="tval" data-tv="${id}"></div>`; }
 function renderTV(el){ const id=el.dataset.tv, labs=ACT[id][2], rec=VAL[id]; const man=UMODE==='manage'; const view = man ? SEASON : (el.dataset.view||SEASON);
   const data = rec&&rec.s&&valFilled(rec.s[view]) ? rec.s[view] : null;
   let h=`<div class="tv-h"><span class="sec-label">우리 팀 값</span>${man?`<span class="tv-s">${SEASON} 시즌 입력 중</span>`:`<span class="tv-yr"><button type="button" class="tv-yb" title="눌러서 연도 입력">${esc(view)} 시즌</button><input type="number" class="tv-yi" min="2000" max="2100" hidden aria-label="볼 시즌 연도"></span>${view!==SEASON?`<span class="muted tv-o">이번 시즌 ${SEASON}</span>`:''}`}</div>`;
   if(man){ const d=(rec&&rec.s&&rec.s[SEASON])||{};
     h+=`<div class="tv-edit">${labs.map(l=>`<label><span class="vchip dec">${l}</span><input type="text" data-tl="${esc(l)}" data-tk="v" placeholder="값 (단위 포함)" value="${esc((d[l]||{}).v||'')}"><input type="text" data-tl="${esc(l)}" data-tk="why" placeholder="근거 한 줄" value="${esc((d[l]||{}).why||'')}"></label>`).join('')}
-      <div><button class="btn small" data-tvsave>${SEASON} 시즌 값 저장</button> <span class="pmsg muted"></span></div></div>`;
+      <div class="tv-foot"><span class="pmsg muted">입력하면 아래 막대의 [모두 저장]으로 함께 저장됩니다.</span></div></div>`;
   } else if(data){ h+=`<table class="kvt tv-t">${labs.map(l=>{ const r=data[l]||{}; return `<tr><th>${l}</th><td>${r.v?`<b>${esc(r.v)}</b>`:'<span class="muted">—</span>'}${r.why?`<span class="tv-why">${esc(r.why)}</span>`:''}</td></tr>`; }).join('')}</table>`;
   } else h+=`<p class="muted tv-empty">아직 기록된 팀 값이 없습니다. 관리 모드에서 회장이 입력합니다.</p>`;
   el.innerHTML=h; }
@@ -215,9 +218,6 @@ document.addEventListener('click',e=>{
   const gg=e.target.closest('[data-goal]'); if(gg){ const [mi,di]=gg.dataset.goal.split('.').map(Number); openGoal(mi,di); return; }
   const qg=e.target.closest('[data-qgo]'); if(qg){ const [id,k]=qg.dataset.qgo.split('|'); openQ(id,+k); return; }
   const cr=e.target.closest('[data-creset]'); if(cr){ const box=cr.closest('details.calc'); const c=CALC[box.dataset.calc]; c.ins.forEach(([k,,,,d])=>{ box.querySelector(`[data-ck="${k}"]`).value=d; }); runCalc(box); return; }
-  const tv=e.target.closest('[data-tvsave]'); if(tv){ const box=tv.closest('.tval'); const vals={};
-    box.querySelectorAll('[data-tl]').forEach(i=>{ const l=i.dataset.tl; vals[l]=vals[l]||{}; vals[l][i.dataset.tk]=i.value.trim(); });
-    saveVal(box.dataset.tv, vals, box.querySelector('.pmsg')); return; }
 });
 document.addEventListener('input',e=>{ const c=e.target.closest('details.calc'); if(c && e.target.matches('[data-ck]')) runCalc(c);
   if(e.target.classList.contains('season-in')){ const v=e.target.value.trim(); if(/^\d{4}$/.test(v)){ SEASON=v; SETP('season',v); document.querySelectorAll('.season-in').forEach(x=>{ if(x!==e.target) x.value=v; }); refreshValsExcept(e.target); } } });
