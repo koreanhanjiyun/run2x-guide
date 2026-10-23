@@ -59,18 +59,27 @@
       return `<div class="tp-person" data-uid="${esc(m.uid)}" data-role="${isA?'admin':'member'}"><span>${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''} <span class="tp-role${isA?' a':''}">${ROLE[isA?'admin':'member']}</span></span><span>${btn}</span></div>`; }).join(''); }
 
   /* ---------- 관리 창 "팀 관리" (팀 관리자, 관리자 모드) ---------- */
-  const TM = () => document.querySelector('#admPanel .adm-tm');
-  function tmShow(){ const sec=document.querySelector('#admPanel .adm-team'); if(sec) sec.hidden = !(C && C.state==='member' && C.role==='admin'); }
+  const TM = () => document.querySelector('#tmPanel .adm-tm');
+  /* 관리 창 옆에 한 단 더 펼쳐지는 팀 관리 창 */
+  let TMP = null;
+  function tmPanel(){ if(TMP) return TMP; TMP=document.createElement('aside'); TMP.id='tmPanel'; TMP.hidden=true; TMP.setAttribute('aria-label','팀 관리');
+    TMP.innerHTML=`<div class="adm-h"><b>팀 관리</b><span class="adm-sub"></span><button type="button" class="tm-x" aria-label="닫기" title="닫기">×</button></div><div class="adm-b"><p class="adm-hint">여기 버튼은 누르면 바로 반영됩니다(아래 [모두 저장]과 무관).</p><div class="adm-tm"></div></div>`;
+    document.body.appendChild(TMP); return TMP; }
+  function tmSync(){ const on = !!TMP && !TMP.hidden; document.body.classList.toggle('tm-on', on); const b=document.querySelector('#admPanel .adm-tmopen'); if(b){ b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); } }
+  function tmOpen(){ tmPanel(); TMP.hidden=false; TMP.querySelector('.adm-sub').textContent = C.teamName||''; tmSync(); renderTM().catch(err=>fail(err)); }
+  function tmClose(){ if(TMP) TMP.hidden=true; tmSync(); }
+  function tmShow(){ const ok = C && C.state==='member' && C.role==='admin'; const sec=document.querySelector('#admPanel .adm-team'); if(sec) sec.hidden = !ok;
+    const ap=document.getElementById('admPanel'); if(TMP && !TMP.hidden && (!ok || !ap || ap.hidden)) tmClose(); }
   async function renderTM(){ const R=TM(); if(!R || !C || C.role!=='admin') return; const c=C;
     let ms=[], bl=[]; try{ [ms, bl] = await Promise.all([T.members(), T.blockedList()]); }catch(e){ console.error(e); }
     const admins = ms.filter(m=>m.role==='admin').length;
-    let h = `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + memberRows(ms, true)
+    let h = `<div class="tp-sec"><div class="sec-label">팀 이름</div><p class="tp-small">지금: <b>${esc(c.teamName)}</b></p><div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off"></div><div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (지금 것 또는 새것)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">변경</button></div><p class="muted tp-small">가입 열쇠가 이름과 비밀번호로 만들어져서 비밀번호를 함께 입력합니다. 기존 팀원은 그대로이고, 새로 가입할 사람은 새 이름으로 가입합니다. 이전 이름은 바로 비어 다른 팀이 쓸 수 있습니다.</p></div>`;
+    h += `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + memberRows(ms, true)
       + (bl.length ? `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} <span class="muted">${esc(b.email||'')}</span></span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>` : '') + `</div>`;
     h += `<div class="tp-sec"><div class="sec-label">팀 비밀번호 변경</div><div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div><p class="muted tp-small">바꿔도 기존 팀원은 그대로입니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오.</p></div>`;
     h += `<div class="tp-sec"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 진행 상태·우리 팀 값·논의·이번 시즌을 파일로 저장(시즌이 끝날 때마다 권장). 불러오기: 그 파일로 이 팀 데이터를 <b>덮어씁니다</b>.</p><div class="tp-imp" hidden></div></div>`;
     h += `<div class="tp-sec"><button type="button" class="lnk tp-del" data-tp="delopen">팀 삭제</button><div class="tp-delbox" hidden><p class="tp-small">삭제하려면 팀 이름 <b>${esc(c.teamName)}</b>을(를) 그대로 입력하십시오. 모든 시즌 기록·논의·팀원 명단이 지워지며 되돌릴 수 없습니다.</p><div class="tp-row"><input class="tp-delname" autocomplete="off" aria-label="삭제 확인용 팀 이름"><button type="button" class="btn small tp-danger" data-tp="delete" disabled>영구 삭제</button></div></div></div>`;
     R.innerHTML = h; R.dataset.admins = admins; R.dataset.count = ms.length; }
-  document.addEventListener('toggle', e=>{ if(e.target.classList && e.target.classList.contains('adm-team') && e.target.open) renderTM().catch(err=>fail(err)); }, true);
 
   async function render(){
     const c = C; let h = `<div class="tp-h"><b>팀 · 계정</b><button type="button" class="tp-x" aria-label="닫기">×</button></div>`;
@@ -153,6 +162,9 @@
       case 'importpick': { R.querySelector('.tp-file').click(); return; }
       case 'importgo': { if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent='한 번 더 누르면 덮어씀 (되돌릴 수 없음)'; return; }
         el.disabled=true; el.textContent='불러오는 중…'; const n = await T.importData(window.__r2xImport); window.__r2xImport=null; say(`불러왔습니다 · 문서 ${n}개`); return setTimeout(()=>location.reload(), 900); }
+      case 'rename': { const n=R.querySelector('.tp-rn').value, pw=R.querySelector('.tp-rnpw').value;
+        try{ await T.rename(n, pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; }
+        if(TMP) TMP.querySelector('.adm-sub').textContent = C.teamName; paintChip(); say('팀 이름을 바꿨습니다. 초대 문구를 다시 복사해 공유하십시오.'); return again(); }
       case 'pw': { const i=R.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
       case 'promote': await T.setRole(uid,'admin'); say('관리자로 지정했습니다.'); return again();
       case 'demote': { if(+R.dataset.admins<=1) return say('마지막 관리자는 내려올 수 없습니다. 다른 사람을 먼저 관리자로 지정하십시오.');
@@ -188,6 +200,8 @@
           t.scrollIntoView({block:'center'}); t.focus(); }
         else { const sc=P.querySelector('.tp-fbsec'); if(sc){ sc.scrollIntoView({block:'center'}); } else { const s=P.querySelector('[data-tp=login]'); if(s) s.insertAdjacentHTML('beforebegin','<p class="tp-small"><b>플랫폼 문의</b>는 로그인 후 보낼 수 있습니다.</p>'); } } }); return; }
     if(e.target.closest('#seasonChip.sc-team') || e.target.closest('.tp-open')){ e.preventDefault(); e.stopPropagation(); (P && !P.hidden) ? close() : open(); return; }
+    if(e.target.closest('#admPanel .adm-tmopen')){ e.preventDefault(); (TMP && !TMP.hidden) ? tmClose() : tmOpen(); return; }
+    if(e.target.closest('#tmPanel .tm-x')){ e.preventDefault(); tmClose(); return; }
     const tb = e.target.closest('.adm-tm [data-tp]'); if(tb){ e.preventDefault(); act(tb.dataset.tp, tb).catch(err=>fail(err)); return; }
     if(!P || P.hidden) return;
     if(e.target.closest('.tp-x')){ close(); return; }
@@ -219,6 +233,6 @@
     const hd=document.querySelector('#admPanel [data-l="qa"]'); if(hd){ let k=hd.parentElement.querySelector('.qa-seen'); if(n && !k){ k=document.createElement('button'); k.type='button'; k.className='btn small qa-seen'; hd.before(k); } if(k){ if(n) k.textContent=`새 댓글 ${n}건 · 모두 읽음으로`; else k.remove(); } } }
   document.addEventListener('click', e=>{ if(!e.target.closest('.qa-seen')) return; e.preventDefault(); tkSeenAll(); paintQ(); });
   { const _rq = renderQA; renderQA = async function(){ const r = await _rq.apply(this, arguments); try{ paintQ(); }catch(e){} return r; }; }
-  { const _ra = renderAdm; renderAdm = function(){ const r=_ra.apply(this, arguments); try{ paintQ(); tmShow(); }catch(e){} return r; }; }
+  { const _ra = renderAdm; renderAdm = function(){ const r=_ra.apply(this, arguments); try{ paintQ(); requestAnimationFrame(tmShow); }catch(e){} return r; }; }
   Backend.Team.ctx().then(c=>{ C=c; tmShow(); setTimeout(paintQ, 1500); paintChip(); foot(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; paintChip(); });
 })();

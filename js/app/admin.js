@@ -21,7 +21,7 @@ function initAdm(){ if($('#admPanel')) return;
   if(PREF('admcoll','0')==='1') document.body.classList.add('adm-coll');
   document.documentElement.style.setProperty('--admw', (parseInt(PREF('admw',String(ADMW)))||ADMW)+'px');
   const b=p.querySelector('.adm-b');
-  b.innerHTML=`<details class="adm-s adm-team" hidden><summary><h4>팀 관리</h4></summary><p class="adm-hint">팀원 관리·차단, 비밀번호, 백업, 팀 삭제. 누르면 바로 반영됩니다(아래 [모두 저장]과 무관).</p><div class="adm-tm"></div></details>
+  b.innerHTML=`<section class="adm-s adm-team" hidden><button type="button" class="btn small adm-tmopen" aria-expanded="false">팀 관리 <span aria-hidden="true">‹</span></button><p class="adm-hint">팀원 관리·차단, 팀 이름·비밀번호, 백업, 팀 삭제 (옆에 따로 열림)</p></section>
    <section class="adm-s adm-season"><div class="sn-h"><h4>시즌 · 진행 상태</h4></div>
      <div class="sn-nav"><button type="button" class="sn-prev" aria-label="이전 시즌" title="이전 시즌">◀</button><button type="button" class="sn-val" title="눌러서 연도 직접 입력"></button><input type="number" class="sn-in" min="2000" max="2100" hidden aria-label="시즌 연도 입력"><button type="button" class="sn-next" aria-label="다음 시즌" title="다음 시즌">▶</button></div>
      <div class="adm-st"></div><div class="adm-reset"></div>

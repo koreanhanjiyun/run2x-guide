@@ -22,9 +22,9 @@ service cloud.firestore {
     // 팀 이름 중복 방지: 소문자 이름 → 팀 ID. 존재 여부 확인(get)만 허용, 목록 조회 불가
     match /teamNames/{n} {
       allow get: if signedIn();
-      allow create: if signedIn() && !exists(tPath(request.resource.data.team))
-                    && getAfter(tPath(request.resource.data.team)).data.createdBy == uid()
-                    && getAfter(tPath(request.resource.data.team)).data.name.lower() == n;
+      allow create: if signedIn() && getAfter(tPath(request.resource.data.team)).data.name.lower() == n
+                    && ( (!exists(tPath(request.resource.data.team)) && getAfter(tPath(request.resource.data.team)).data.createdBy == uid())
+                         || isTAdmin(request.resource.data.team) );   // 팀 만들기 / 팀 이름 변경
       allow delete: if isTAdmin(resource.data.team);
     }
     // 가입 열쇠: SHA-256(소문자 팀 이름 + ':' + 비밀번호) → 팀 ID. 열쇠를 알아야(=비밀번호를 알아야) 읽을 수 있음
@@ -42,8 +42,10 @@ service cloud.firestore {
                     && isKey(request.resource.data.key)
                     && request.resource.data.keys().hasOnly(['name','createdBy','createdAt','key','lastActive'])
                     && getAfter(/databases/$(database)/documents/teamNames/$(request.resource.data.name.lower())).data.team == t;
-      // 비밀번호 변경(열쇠 교체)만. 이름 변경 불가(중복 관리 때문)
-      allow update: if (isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['key']) && isKey(request.resource.data.key))
+      // 관리자: 비밀번호 변경(열쇠 교체)·팀 이름 변경(새 이름이 teamNames 에 이 팀으로 등록돼 있어야 함)
+      allow update: if (isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['key','name']) && isKey(request.resource.data.key)
+                        && validName(request.resource.data.name)
+                        && getAfter(/databases/$(database)/documents/teamNames/$(request.resource.data.name.lower())).data.team == t)
                     // 팀원 접속 시 마지막 활동일 기록 (2년 미접속 자동 삭제 기준)
                     || (isMember(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActive']) && request.resource.data.lastActive is string);
       allow delete: if isDev() || isTAdmin(t);

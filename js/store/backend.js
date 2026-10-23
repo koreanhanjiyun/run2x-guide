@@ -124,6 +124,16 @@ window.Backend = (function(){
       const fs = c.F.fs, key = await keyOf(c.teamName, pw); if(key === c.teamKey) throw err('same', '지금 비밀번호와 같습니다.');
       const b = fs.batch(); b.set(fs.doc('joinKeys/'+key), {team: c.team}); b.update(fs.doc('teams/'+c.team), {key});
       if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); await b.commit(); c.teamKey = key; },
+    /* 팀 이름 변경 (관리자): 열쇠가 이름+비밀번호라 비밀번호를 함께 받아 열쇠도 다시 만듦. 기존 팀원은 그대로 */
+    async rename(name, pw){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 팀 이름을 바꿀 수 있습니다.');
+      name = Team.check(name, pw); if(name === c.teamName) throw err('same','지금 팀 이름과 같습니다.');
+      const fs = c.F.fs, lower = name.toLowerCase(), oldLower = norm(c.teamName).toLowerCase();
+      if(lower !== oldLower){ const nm = await fs.doc('teamNames/'+lower).get(); if(nm.exists) throw err('dup','이미 있는 팀 이름입니다.'); }
+      const key = await keyOf(name, pw), b = fs.batch();
+      b.update(fs.doc('teams/'+c.team), {name, key});
+      if(lower !== oldLower){ b.set(fs.doc('teamNames/'+lower), {team: c.team}); b.delete(fs.doc('teamNames/'+oldLower)); }
+      if(key !== c.teamKey){ b.set(fs.doc('joinKeys/'+key), {team: c.team}); if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); }
+      await b.commit(); c.teamName = name; c.teamKey = key; await setMyTeam(c, c.team, name); },
     async members(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/members`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
     async setRole(uid, role){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role}); },
     /* 팀원 차단: 내보내고 다시 가입하지 못하게 (관리자). 차단한 사람은 댓글도 쓸 수 없음 */
