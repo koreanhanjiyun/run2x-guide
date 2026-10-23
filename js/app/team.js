@@ -63,7 +63,7 @@
   /* 관리 창 옆에 한 단 더 펼쳐지는 팀 관리 창 */
   let TMP = null;
   function tmPanel(){ if(TMP) return TMP; TMP=document.createElement('aside'); TMP.id='tmPanel'; TMP.hidden=true; TMP.setAttribute('aria-label','팀 관리');
-    TMP.innerHTML=`<div class="adm-h"><b>팀 관리</b><span class="adm-sub"></span><button type="button" class="tm-x" aria-label="닫기" title="닫기">×</button></div><div class="adm-b"><p class="adm-hint">여기 버튼은 누르면 바로 반영됩니다(아래 [모두 저장]과 무관).</p><div class="adm-tm"></div></div>`;
+    TMP.innerHTML=`<div class="adm-h"><b>팀 관리</b><span class="adm-sub"></span><button type="button" class="tm-x" aria-label="닫기" title="닫기">×</button></div><div class="adm-b"><div class="adm-tm"></div></div>`;
     document.body.appendChild(TMP); return TMP; }
   function tmSync(){ const on = !!TMP && !TMP.hidden; document.body.classList.toggle('tm-on', on); const b=document.querySelector('#admPanel .adm-tmopen'); if(b){ b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); const a=b.querySelector('.tmo-a'); if(a) a.textContent = on ? '닫기 ›' : '‹ 열기'; } }
   function tmOpen(){ tmPanel(); TMP.hidden=false; TMP.querySelector('.adm-sub').textContent = C.teamName||''; tmSync(); renderTM().catch(err=>fail(err)); }
@@ -73,14 +73,12 @@
   async function renderTM(){ const R=TM(); if(!R || !C || C.role!=='admin') return; const c=C;
     let ms=[], bl=[], pw=''; try{ [ms, bl, pw] = await Promise.all([T.members(), T.blockedList(), T.secretPw()]); }catch(e){ console.error(e); }
     const admins = ms.filter(m=>m.role==='admin').length;
-    let h = `<div class="tp-sec"><div class="sec-label">팀 이름</div><p class="tp-small">지금: <b>${esc(c.teamName)}</b></p><div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off">${pw?'<button type="button" class="btn small" data-tp="rename">변경</button>':''}</div>`
-      + (pw ? '' : `<div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (저장된 것이 없어 한 번 입력)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">변경</button></div>`)
-      + `<p class="muted tp-small">기존 팀원은 그대로이고, 새로 가입할 사람은 새 이름으로 가입합니다. 이전 이름은 바로 비어 다른 팀이 쓸 수 있습니다.</p></div>`;
-    h += `<div class="tp-sec"><div class="sec-label">팀 비밀번호</div>`
+    let h = `<div class="tp-sec"><div class="sec-label">팀 이름 · 비밀번호</div><p class="tp-small">지금 이름: <b>${esc(c.teamName)}</b></p>
+      <div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off">${pw?'<button type="button" class="btn small" data-tp="rename">변경</button>':''}</div>`
       + (pw ? `<div class="tp-row tp-pwnow"><span class="tp-small">현재 비밀번호</span><code class="tp-pwv">${esc(pw)}</code><button type="button" class="lnk" data-tp="pwcopy">복사</button></div>`
-            : `<p class="tp-small muted">저장된 비밀번호가 없습니다(이 기능 전에 만든 팀). 아래에서 한 번 바꾸면 여기 표시됩니다.</p>`)
+            : `<div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (저장된 것이 없어 이름 변경 때 한 번 입력)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">변경</button></div>`)
       + `<div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div>
-      <p class="muted tp-small">바꿔도 기존 팀원은 그대로입니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오. 팀 관리자와 사이트 운영자가 볼 수 있으니 다른 곳에서 쓰는 비밀번호는 쓰지 마십시오.</p></div>`;
+      <p class="muted tp-small">기존 팀원은 그대로이고, 새로 가입할 사람은 바뀐 이름·비밀번호로 가입합니다. 이전 이름은 바로 비어 다른 팀이 쓸 수 있습니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오. 비밀번호는 팀 관리자와 사이트 운영자가 볼 수 있으니 다른 곳에서 쓰는 비밀번호는 쓰지 마십시오.${pw?'':' (이 기능 전에 만든 팀은 비밀번호를 한 번 바꾸면 현재 비밀번호가 표시됩니다.)'}</p></div>`;
     h += `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + memberRows(ms, true)
       + (bl.length ? `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} <span class="muted">${esc(b.email||'')}</span></span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>` : '') + `</div>`;
     h += `<div class="tp-sec"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 진행 상태·우리 팀 값·논의·이번 시즌을 파일로 저장(시즌이 끝날 때마다 권장). 불러오기: 그 파일로 이 팀 데이터를 <b>덮어씁니다</b>.</p><div class="tp-imp" hidden></div></div>`;
