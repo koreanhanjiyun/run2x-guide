@@ -1274,6 +1274,12 @@ body.adm-coll #tmPanel{right:34px}
 #tmPanel .tm-x:hover{opacity:1}
 #tmPanel .adm-b{flex:1;overflow:auto;padding:8px 14px 16px;scrollbar-width:thin}
 #tmPanel .adm-hint{margin:0 0 4px;font-size:11.5px;color:var(--muted);line-height:1.45}
+#admPanel .adm-tmopen{display:flex;align-items:center;justify-content:space-between;width:100%;height:42px;padding:0 14px;border:1px solid var(--accent);border-radius:10px;background:var(--accent-soft);color:var(--accent);font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
+#admPanel .adm-tmopen:hover{background:var(--accent);color:#fff}
+#admPanel .adm-tmopen .tmo-a{font-size:12px;font-weight:600;opacity:.85}
 #admPanel .adm-tmopen.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#admPanel .tmo-hint{margin:8px 0 0}
+:is(#teamPanel,.adm-tm) .tp-pwnow{align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+:is(#teamPanel,.adm-tm) .tp-pwv{font-size:14px;font-weight:700;letter-spacing:.04em;color:var(--ink);user-select:all}
 body.adm-on.tm-on #partRail,body.adm-on.tm-on #figRail{right:calc(var(--admw,290px) + 340px)}
 body.adm-on.adm-coll.tm-on #partRail,body.adm-on.adm-coll.tm-on #figRail{right:374px}

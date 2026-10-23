@@ -65,18 +65,24 @@
   function tmPanel(){ if(TMP) return TMP; TMP=document.createElement('aside'); TMP.id='tmPanel'; TMP.hidden=true; TMP.setAttribute('aria-label','팀 관리');
     TMP.innerHTML=`<div class="adm-h"><b>팀 관리</b><span class="adm-sub"></span><button type="button" class="tm-x" aria-label="닫기" title="닫기">×</button></div><div class="adm-b"><p class="adm-hint">여기 버튼은 누르면 바로 반영됩니다(아래 [모두 저장]과 무관).</p><div class="adm-tm"></div></div>`;
     document.body.appendChild(TMP); return TMP; }
-  function tmSync(){ const on = !!TMP && !TMP.hidden; document.body.classList.toggle('tm-on', on); const b=document.querySelector('#admPanel .adm-tmopen'); if(b){ b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); } }
+  function tmSync(){ const on = !!TMP && !TMP.hidden; document.body.classList.toggle('tm-on', on); const b=document.querySelector('#admPanel .adm-tmopen'); if(b){ b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); const a=b.querySelector('.tmo-a'); if(a) a.textContent = on ? '닫기 ›' : '‹ 열기'; } }
   function tmOpen(){ tmPanel(); TMP.hidden=false; TMP.querySelector('.adm-sub').textContent = C.teamName||''; tmSync(); renderTM().catch(err=>fail(err)); }
   function tmClose(){ if(TMP) TMP.hidden=true; tmSync(); }
   function tmShow(){ const ok = C && C.state==='member' && C.role==='admin'; const sec=document.querySelector('#admPanel .adm-team'); if(sec) sec.hidden = !ok;
     const ap=document.getElementById('admPanel'); if(TMP && !TMP.hidden && (!ok || !ap || ap.hidden)) tmClose(); }
   async function renderTM(){ const R=TM(); if(!R || !C || C.role!=='admin') return; const c=C;
-    let ms=[], bl=[]; try{ [ms, bl] = await Promise.all([T.members(), T.blockedList()]); }catch(e){ console.error(e); }
+    let ms=[], bl=[], pw=''; try{ [ms, bl, pw] = await Promise.all([T.members(), T.blockedList(), T.secretPw()]); }catch(e){ console.error(e); }
     const admins = ms.filter(m=>m.role==='admin').length;
-    let h = `<div class="tp-sec"><div class="sec-label">팀 이름</div><p class="tp-small">지금: <b>${esc(c.teamName)}</b></p><div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off"></div><div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (지금 것 또는 새것)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">변경</button></div><p class="muted tp-small">가입 열쇠가 이름과 비밀번호로 만들어져서 비밀번호를 함께 입력합니다. 기존 팀원은 그대로이고, 새로 가입할 사람은 새 이름으로 가입합니다. 이전 이름은 바로 비어 다른 팀이 쓸 수 있습니다.</p></div>`;
+    let h = `<div class="tp-sec"><div class="sec-label">팀 이름</div><p class="tp-small">지금: <b>${esc(c.teamName)}</b></p><div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off">${pw?'<button type="button" class="btn small" data-tp="rename">변경</button>':''}</div>`
+      + (pw ? '' : `<div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (저장된 것이 없어 한 번 입력)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">변경</button></div>`)
+      + `<p class="muted tp-small">기존 팀원은 그대로이고, 새로 가입할 사람은 새 이름으로 가입합니다. 이전 이름은 바로 비어 다른 팀이 쓸 수 있습니다.</p></div>`;
+    h += `<div class="tp-sec"><div class="sec-label">팀 비밀번호</div>`
+      + (pw ? `<div class="tp-row tp-pwnow"><span class="tp-small">현재 비밀번호</span><code class="tp-pwv">${esc(pw)}</code><button type="button" class="lnk" data-tp="pwcopy">복사</button></div>`
+            : `<p class="tp-small muted">저장된 비밀번호가 없습니다(이 기능 전에 만든 팀). 아래에서 한 번 바꾸면 여기 표시됩니다.</p>`)
+      + `<div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div>
+      <p class="muted tp-small">바꿔도 기존 팀원은 그대로입니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오. 팀 관리자와 사이트 운영자가 볼 수 있으니 다른 곳에서 쓰는 비밀번호는 쓰지 마십시오.</p></div>`;
     h += `<div class="tp-sec"><div class="sec-label">팀원 (${ms.length})</div>` + memberRows(ms, true)
       + (bl.length ? `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} <span class="muted">${esc(b.email||'')}</span></span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>` : '') + `</div>`;
-    h += `<div class="tp-sec"><div class="sec-label">팀 비밀번호 변경</div><div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div><p class="muted tp-small">바꿔도 기존 팀원은 그대로입니다. 팀원을 내보낸 뒤에는 비밀번호를 바꾸십시오.</p></div>`;
     h += `<div class="tp-sec"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 진행 상태·우리 팀 값·논의·이번 시즌을 파일로 저장(시즌이 끝날 때마다 권장). 불러오기: 그 파일로 이 팀 데이터를 <b>덮어씁니다</b>.</p><div class="tp-imp" hidden></div></div>`;
     h += `<div class="tp-sec"><button type="button" class="lnk tp-del" data-tp="delopen">팀 삭제</button><div class="tp-delbox" hidden><p class="tp-small">삭제하려면 팀 이름 <b>${esc(c.teamName)}</b>을(를) 그대로 입력하십시오. 모든 시즌 기록·논의·팀원 명단이 지워지며 되돌릴 수 없습니다.</p><div class="tp-row"><input class="tp-delname" autocomplete="off" aria-label="삭제 확인용 팀 이름"><button type="button" class="btn small tp-danger" data-tp="delete" disabled>영구 삭제</button></div></div></div>`;
     R.innerHTML = h; R.dataset.admins = admins; R.dataset.count = ms.length; }
@@ -162,10 +168,10 @@
       case 'importpick': { R.querySelector('.tp-file').click(); return; }
       case 'importgo': { if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent='한 번 더 누르면 덮어씀 (되돌릴 수 없음)'; return; }
         el.disabled=true; el.textContent='불러오는 중…'; const n = await T.importData(window.__r2xImport); window.__r2xImport=null; say(`불러왔습니다 · 문서 ${n}개`); return setTimeout(()=>location.reload(), 900); }
-      case 'rename': { const n=R.querySelector('.tp-rn').value, pw=R.querySelector('.tp-rnpw').value;
+      case 'rename': { const n=R.querySelector('.tp-rn').value, pi=R.querySelector('.tp-rnpw'), pw=pi ? pi.value : '';
         try{ await T.rename(n, pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; }
         if(TMP) TMP.querySelector('.adm-sub').textContent = C.teamName; paintChip(); say('팀 이름을 바꿨습니다. 초대 문구를 다시 복사해 공유하십시오.'); return again(); }
-      case 'pw': { const i=R.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
+      case 'pw': { const i=R.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; again(); return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
       case 'promote': await T.setRole(uid,'admin'); say('관리자로 지정했습니다.'); return again();
       case 'demote': { if(+R.dataset.admins<=1) return say('마지막 관리자는 내려올 수 없습니다. 다른 사람을 먼저 관리자로 지정하십시오.');
         await T.setRole(uid,'member'); if(uid===C.uid) return location.reload(); say('팀원으로 바꿨습니다.'); return again(); }
@@ -202,7 +208,8 @@
     if(e.target.closest('#seasonChip.sc-team') || e.target.closest('.tp-open')){ e.preventDefault(); e.stopPropagation(); (P && !P.hidden) ? close() : open(); return; }
     if(e.target.closest('#admPanel .adm-tmopen')){ e.preventDefault(); (TMP && !TMP.hidden) ? tmClose() : tmOpen(); return; }
     if(e.target.closest('#tmPanel .tm-x')){ e.preventDefault(); tmClose(); return; }
-    const tb = e.target.closest('.adm-tm [data-tp]'); if(tb){ e.preventDefault(); act(tb.dataset.tp, tb).catch(err=>fail(err)); return; }
+    const tb = e.target.closest('.adm-tm [data-tp]'); if(tb && tb.dataset.tp==='pwcopy'){ e.preventDefault(); const v=tb.closest('.tp-pwnow').querySelector('.tp-pwv').textContent; copyText(v, '비밀번호를 복사했습니다'); return; }
+    if(tb){ e.preventDefault(); act(tb.dataset.tp, tb).catch(err=>fail(err)); return; }
     if(!P || P.hidden) return;
     if(e.target.closest('.tp-x')){ close(); return; }
     const b = e.target.closest('[data-tp]');

@@ -68,6 +68,8 @@ service cloud.firestore {
       match /status/{d} { allow read: if isMember(t); allow write: if isTAdmin(t); }
       match /val/{d}    { allow read: if isMember(t); allow write: if isTAdmin(t); }
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
+      // 팀 비밀번호 원문 (관리자만 보기·쓰기. 오픈채팅 입장 코드 수준으로 취급)
+      match /secret/{d} { allow read, write: if isTAdmin(t); }
       // 차단한 사람: 다시 가입할 수 없음 (관리자가 관리, 본인은 자기 것만 확인)
       match /blocked/{u} {
         allow read: if isTAdmin(t) || (signedIn() && u == uid());

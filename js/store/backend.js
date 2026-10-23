@@ -111,7 +111,8 @@ window.Backend = (function(){
       b.set(fs.doc('teamNames/'+lower), {team: ref.id});
       b.set(fs.doc('joinKeys/'+key), {team: ref.id});
       b.set(fs.doc(`teams/${ref.id}/members/${c.uid}`), {role:'admin', name: c.name, email: c.email, at: now});
-      await b.commit(); await setMyTeam(c, ref.id, name); return Team.choose(ref.id); },
+      await b.commit(); try{ await fs.doc(`teams/${ref.id}/secret/pw`).set({pw}); }catch(e){ console.warn('비밀번호 저장 실패', e); }
+      await setMyTeam(c, ref.id, name); return Team.choose(ref.id); },
     async join(name, pw){ const c = await teamCtx(); name = Team.check(name, pw); const fs = c.F.fs, key = await keyOf(name, pw);
       let jk; try{ jk = await fs.doc('joinKeys/'+key).get(); }catch(e){ jk = null; }
       if(!jk || !jk.exists) throw err('nomatch', '팀 이름 또는 비밀번호가 맞지 않습니다.');
@@ -123,9 +124,12 @@ window.Backend = (function(){
     async changePassword(pw){ const c = await teamCtx(); if(!PW_RE.test(pw||'')) throw err('pw', '비밀번호는 영문 대소문자·숫자만, 6자 이상입니다.');
       const fs = c.F.fs, key = await keyOf(c.teamName, pw); if(key === c.teamKey) throw err('same', '지금 비밀번호와 같습니다.');
       const b = fs.batch(); b.set(fs.doc('joinKeys/'+key), {team: c.team}); b.update(fs.doc('teams/'+c.team), {key});
-      if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); await b.commit(); c.teamKey = key; },
+      if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); b.set(fs.doc(`teams/${c.team}/secret/pw`), {pw}); await b.commit(); c.teamKey = key; },
+    /* 현재 팀 비밀번호 (팀 관리자만 읽음). 이 기능 전에 만든 팀은 한 번 바꾸기 전까지 없음 */
+    async secretPw(){ const c = await teamCtx(); try{ const d = await c.F.fs.doc(`teams/${c.team}/secret/pw`).get(); return d.exists ? (d.data().pw || '') : ''; }catch(e){ return ''; } },
     /* 팀 이름 변경 (관리자): 열쇠가 이름+비밀번호라 비밀번호를 함께 받아 열쇠도 다시 만듦. 기존 팀원은 그대로 */
     async rename(name, pw){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 팀 이름을 바꿀 수 있습니다.');
+      if(!pw) pw = await Team.secretPw(); if(!pw) throw err('nopw','저장된 비밀번호가 없습니다. 비밀번호를 함께 입력하십시오.');
       name = Team.check(name, pw); if(name === c.teamName) throw err('same','지금 팀 이름과 같습니다.');
       const fs = c.F.fs, lower = name.toLowerCase(), oldLower = norm(c.teamName).toLowerCase();
       if(lower !== oldLower){ const nm = await fs.doc('teamNames/'+lower).get(); if(nm.exists) throw err('dup','이미 있는 팀 이름입니다.'); }
@@ -133,6 +137,7 @@ window.Backend = (function(){
       b.update(fs.doc('teams/'+c.team), {name, key});
       if(lower !== oldLower){ b.set(fs.doc('teamNames/'+lower), {team: c.team}); b.delete(fs.doc('teamNames/'+oldLower)); }
       if(key !== c.teamKey){ b.set(fs.doc('joinKeys/'+key), {team: c.team}); if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); }
+      b.set(fs.doc(`teams/${c.team}/secret/pw`), {pw});
       await b.commit(); c.teamName = name; c.teamKey = key; await setMyTeam(c, c.team, name); },
     async members(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/members`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
     async setRole(uid, role){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role}); },
@@ -145,7 +150,7 @@ window.Backend = (function(){
     /* 팀 삭제: 팀 데이터·팀원·열쇠·이름을 모두 지움 (관리자). 팀 문서는 내 팀원 문서보다 먼저 지워야 규칙을 통과 */
     async deleteTeam(){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 팀을 삭제할 수 있습니다.');
       const fs = c.F.fs, P = 'teams/'+c.team;
-      for(const col of ['status','val','qa','meta','blocked']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
+      for(const col of ['status','val','qa','meta','blocked','secret']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
       const ms = await fs.collection(P+'/members').get(); await Promise.all(ms.docs.filter(d=>d.id!==c.uid).map(d=>fs.doc(P+'/members/'+d.id).delete()));
       if(c.teamKey){ try{ await fs.doc('joinKeys/'+c.teamKey).delete(); }catch(e){} }
       try{ await fs.doc('teamNames/'+norm(c.teamName).toLowerCase()).delete(); }catch(e){}
