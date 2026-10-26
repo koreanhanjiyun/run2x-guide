@@ -17,10 +17,10 @@ rebuildShared=function(){ STATUS={}; SH.meta={};
   refreshStatus(); };
 setStatus=function(id,v){
   if(!SH.on){ if(v==='todo') delete STATUS[id]; else STATUS[id]=v; saveStatus(); refreshStatus(); return; }
-  if(!SH.canAdmin){ stNote('진행 상태는 편집자(관리자)만 바꿀 수 있습니다.'); return; }
+  if(!canEditItem(id)){ toast('이 항목의 진행 상태는 팀 관리자나 담당 파트장만 바꿀 수 있습니다.'); return; }
   if(v==='todo') delete STATUS[id]; else STATUS[id]=v; refreshStatus();
   const se=SEASON, ref=SH.db.doc('status/'+se+'-'+id), legacy = se===LEGACY_SEASON && SH.raw && SH.raw[id] && !SH.raw[id].season;
-  const run=async()=>{ if(legacy){ try{ await SH.db.doc('status/'+id).delete(); }catch(e){} } if(v==='todo') await ref.delete(); else await ref.set({v, by:SH.me, at:new Date().toISOString(), season:se, item:id, epoch:SH.epoch}); };
+  const run=async()=>{ if(legacy){ try{ await SH.db.doc('status/'+id).delete(); }catch(e){} } if(v==='todo') await ref.delete(); else await ref.set({v, by:SH.me, at:new Date().toISOString(), season:se, item:id, part:IT[id].p, epoch:SH.epoch}); };
   SH.q[id]=(SH.q[id]||Promise.resolve()).then(run).catch(e=>{ stNote('저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); rebuildShared(); });
 };
 resetShared=async function(){ const se=SEASON;
@@ -32,7 +32,8 @@ resetShared=async function(){ const se=SEASON;
 };
 function afterSeason(){ if(SH.on) rebuildShared(); else { loadLocalStatus(); refreshStatus(); } document.querySelectorAll('.tval[data-view]').forEach(el=>delete el.dataset.view); refreshVals(); try{ renderAdm(); }catch(e){}
   const c=document.querySelector('#st-confirm>span'); if(c) c.innerHTML=`<b class="sn-big">${esc(SEASON)}</b> 시즌을 초기화합니다. 다시 복원할 수 없습니다.`; }
-{ const _ss=setSeason; setSeason=function(v,dir){ if(!/^\d{4}$/.test(v)) return; if(SH.on && !SH.canAdmin) return; _ss(v,dir); afterSeason(); }; }
+/* 보는 시즌은 누구나 바꿀 수 있음 (내 화면만). 팀의 이번 시즌 지정은 관리자만 (H3) */
+{ const _ss=setSeason; setSeason=function(v,dir){ if(!/^\d{4}$/.test(v)) return; _ss(v,dir); afterSeason(); try{ renderTeamTab && renderTeamTab(true); }catch(e){} try{ paintSeasonBanner(); }catch(e){} }; }
 { const _osr=onSharedReady; onSharedReady=function(db){ _osr(db); db.doc('meta/season').onSnapshot(sn=>{ const d=sn.exists?sn.data():null; const v=d&&String(d.season||''); if(!/^\d{4}$/.test(v)) { TEAM_SEASON_FIRST=false; return; }
     const follow = TEAM_SEASON_FIRST || !viewingOther(); TEAM_SEASON=v; TEAM_SEASON_FIRST=false;
     if(follow && v!==SEASON){ SEASON=v; SETP('season',v); afterSeason(); } else { try{ renderAdm(); }catch(e){} try{ updSeasonChip(); }catch(e){} } }, ()=>{}); }; }

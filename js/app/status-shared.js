@@ -7,7 +7,10 @@ function saveStatus(){ try{ localStorage.setItem(STKEY, JSON.stringify(STATUS));
 const ST_LABEL={todo:'예정',doing:'진행 중',done:'완료',skip:'제외'};
 function stCtl(id){ const v=STATUS[id]||'todo'; return `<span class="stmeta" data-id="${id}"></span><span class="stctl" data-stid="${id}">${['todo','doing','done','skip'].map(k=>`<button class="stbtn st-${k}" data-st="${k}" aria-pressed="${v===k}">${ST_LABEL[k]}</button>`).join('')}</span>`; }
 /* 팀 공유 모드: db 'status/<항목>' = {v, by, at, epoch}, 'meta/state' = {epoch} (초기화는 편집 권한자만) */
-const SH = {on:false, db:null, user:null, me:null, epoch:0, raw:{}, meta:{}, canWrite:true, canAdmin:false, q:{}};
+const SH = {on:false, db:null, user:null, me:null, epoch:0, raw:{}, meta:{}, canWrite:true, canAdmin:false, role:null, parts:[], q:{}};
+/* 이 항목의 진행 상태·우리 팀 값을 바꿀 수 있나: 관리자 전부, 파트장은 담당 파트만 (H10). 팀 저장소가 없으면 이 브라우저에서 자유롭게 */
+const canEditItem = id => !SH.on ? true : (SH.canAdmin || (SH.role==='lead' && !!IT[id] && (SH.parts||[]).includes(IT[id].p)));
+const canEditAny = () => !SH.on ? true : (SH.canAdmin || (SH.role==='lead' && (SH.parts||[]).length>0));
 function rebuildShared(){ STATUS={}; SH.meta={};
   Object.entries(SH.raw).forEach(([id,d])=>{ if(!d || (d.epoch||0)!==SH.epoch) return; if(d.v==='doing'||d.v==='done'||d.v==='skip'){ STATUS[id]=d.v; SH.meta[id]={by:d.by,at:d.at}; } });
   refreshStatus(); }
@@ -50,7 +53,8 @@ async function initShared(){
     const [db,user] = await Promise.all([Backend.use('db'), Backend.use('user')]);
     if(!db){ refreshMode(); return; }
     SH.db=db; SH.user=user; SH.on=true;
-    if(user){ SH.me = await user.id(); SH.canAdmin = await user.canEdit(); const cw = await user.can('data.write'); SH.canWrite = cw!==false; }
+    if(user){ SH.me = await user.id(); SH.canAdmin = await user.canEdit(); const cw = await user.can('data.write'); SH.canWrite = cw!==false;
+      if(user.role){ SH.role = await user.role(); SH.parts = await user.parts(); } }
     STATUS={}; refreshMode(); refreshStatus();
     db.doc('meta/state').onSnapshot(sn=>{ const d = sn.exists ? sn.data() : null; SH.epoch = d && typeof d.epoch==='number' ? d.epoch : 0; rebuildShared(); }, ()=>{});
     onSharedReady(db);

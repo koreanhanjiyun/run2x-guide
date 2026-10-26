@@ -23,7 +23,7 @@ function stepHTML(s){
   const itemHTML = items.map(i=>`<details class="item" id="it-${i.id}" data-item="${i.id}"><summary>
       <span class="iname">${i.n}</span>${chip(i.p)}${i.c?'<span class="badge b-card">상세</span>':''}${CHIP[i.id]?`<span class="ptchip" title="이 항목을 마치면 확정되는 것 · 좌표: ISO 8855 (파트 패널 아래 좌표계·거동 참고)${PART_OF[i.id]?' · 쓰이는 부품: '+PART_OF[i.id].join(', '):''}">${chipTxt(CHIP[i.id])}</span>`:''}
       <span class="sright"><span class="ipill" data-id="${i.id}" hidden></span>${stCtl(i.id)}<button class="btn gbtn" data-graph="${i.id}">연결도</button></span></summary>
-      <div class="dbody">${goalHTML(i.id)}${actHTML(i.id)}${tvHTML(i.id)}
+      <div class="dbody"><div class="st-edit" data-id="${i.id}" hidden><span class="sec-label">진행 상태</span>${stCtl(i.id)}</div>${goalHTML(i.id)}${actHTML(i.id)}${tvHTML(i.id)}
       ${i.c?renderCard(i.c):'<p class="muted" style="font-size:14px">상세 카드는 대화를 이어가며 추가합니다.</p>'}</div></details>`).join('');
   return `<details class="step${s.fz?' fz':''}" id="st-${s.id}" data-step="${s.id}"><summary>
     <span class="scode">${s.fz?'★ ':''}${s.id}</span><span class="stitle">${s.t.replace('★ ','')}</span>

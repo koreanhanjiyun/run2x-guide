@@ -1283,3 +1283,129 @@ body.adm-on.adm-coll.tm-on #partRail,body.adm-on.adm-coll.tm-on #figRail{right:3
 :is(#teamPanel,.adm-tm) .tp-ises{display:flex;flex-direction:column;gap:4px;margin:6px 0 8px}
 :is(#teamPanel,.adm-tm) .tp-ises label{font-size:12.5px;display:flex;gap:6px;align-items:baseline}
 :is(#teamPanel,.adm-tm) .tp-imp label.tp-small{display:block;margin:4px 0}
+/* ===== 시안 1차 (redesign-v1): 구조 ===== */
+#backbtn{display:none!important}
+.tabs .tab-team{margin-left:6px;position:relative}
+.tabs .tab-team::before{content:"";position:absolute;left:-4px;top:12px;bottom:12px;width:1px;background:rgba(255,255,255,.18)}
+#tourBtn{width:28px;height:28px;flex:none;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:transparent;color:#e9e5f3;font:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-right:10px;align-self:center}
+#tourBtn:hover{background:rgba(255,255,255,.12)}
+/* 시작 탭 */
+#v-start{max-width:1240px}
+.st-hero .lede{max-width:880px}
+.st-entry{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+.st-go{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;padding:14px 16px;border:1px solid var(--line-2);border-radius:12px;background:var(--panel);font:inherit;cursor:pointer;color:var(--ink)}
+.st-go b{font-size:16px}.st-go span{font-size:13px;color:var(--muted)}
+.st-go:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(70,40,120,.10)}
+.st-go.st-tour{background:var(--accent-soft);border-color:var(--accent)}
+.st-draft{font-size:13px;color:var(--muted);margin:10px 0 0}
+.st-sys{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.st-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.st-card h2{margin:0;font-size:19px;display:flex;align-items:center;gap:8px}
+.st-card .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.st-card dl{margin:0;display:flex;flex-direction:column;gap:6px}
+.st-card dt{font-size:12.5px;font-weight:700;color:var(--accent);letter-spacing:.02em}
+.st-card dd{margin:0 0 4px;font-size:15px;line-height:1.65;color:var(--ink)}
+.st-links{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line)}
+.st-f1{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.st-f1 h2{margin:0 0 10px;font-size:19px}
+/* 항목 '배경' 칸 */
+.bgbox{border:1px solid #d9cdee;background:#f8f5fd;border-radius:10px}
+.bgbox>summary{padding:8px 14px;font-size:14px;gap:10px}
+.bgbox>summary .muted{font-size:12.5px}
+.bgbox .bgb{padding:0 16px 12px 40px;font-size:15px;line-height:1.7}
+/* 항목 본문 진행 상태 (편집 권한자만) */
+.st-edit{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+body:not(.um-manage) .st-edit .stctl,body:not(.um-manage) .st-edit .stmeta{display:inline-flex!important}
+.tv-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tv-h .tv-sp{flex:1}
+/* 지난 시즌을 보는 중 (주의 = 주황) */
+#seasonBanner{position:sticky;top:var(--tabh,50px);z-index:4;display:flex;justify-content:center;align-items:center;gap:12px;background:#fff1de;border-bottom:1px solid #f0c48b;color:#7a4510;font-size:14px;padding:6px 16px}
+#seasonBanner[hidden]{display:none}
+/* 팀 탭 */
+#v-team{gap:18px}
+.tt-nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0}
+.tt-nav button{font:inherit;font-size:15px;font-weight:600;padding:10px 16px;border:0;border-bottom:3px solid transparent;background:none;color:var(--muted);cursor:pointer}
+.tt-nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tt-season{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
+.tt-season .sn-nav{display:inline-flex;align-items:center;gap:8px}
+.tt-season .tt-sn{width:30px;height:30px;border:1px solid var(--line-2);border-radius:8px;background:#fff;cursor:pointer}
+.tt-sv{font-size:16px;min-width:88px;text-align:center}
+.tt-hint{font-size:12.5px}
+.tt-top{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;align-items:start}
+.tt-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.tt-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.tt-card h3{margin:0 0 8px;font-size:15px;color:var(--accent);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tt-card h3 .muted{font-size:12.5px;font-weight:500}
+.tt-bars{display:flex;flex-direction:column;gap:6px}
+.tt-bars .adm-pr{display:grid;grid-template-columns:110px 1fr 52px;align-items:center;gap:8px;font-size:13px}
+.tt-bars .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.tt-matw{overflow-x:auto}
+.tt-mat{border-collapse:collapse;width:100%;font-size:13px}
+.tt-mat th,.tt-mat td{border:1px solid var(--line);padding:5px 6px;text-align:center;white-space:nowrap}
+.tt-mat thead th{background:var(--panel-2);font-weight:600;position:sticky;top:0}
+.tt-mat thead .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.tt-mat .tt-sc{text-align:left;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.tt-mat td.tt-e{background:repeating-linear-gradient(135deg,transparent 0 4px,rgba(0,0,0,.025) 4px 8px)}
+.tt-mat td.tt-c{cursor:pointer}
+.tt-mat td.tt-c:hover{outline:2px solid var(--accent);outline-offset:-2px}
+.tt-mat td.doing{background:#fff4e2}
+.tt-mat td.done{background:var(--out-soft);color:var(--out)}
+.tt-mat td.sel{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.tt-mat td i{font-style:normal;font-size:11px;color:var(--muted);margin-left:2px}
+.tt-mat .tt-rt{font-weight:600}
+.tt-filter{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px}
+.tt-filter select{font:inherit;font-size:13.5px;padding:5px 8px;border:1px solid var(--line-2);border-radius:8px;background:#fff}
+.tt-chip{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 10px;font-weight:600}
+.tt-list{display:flex;flex-direction:column}
+.tt-row{display:grid;grid-template-columns:56px minmax(0,1fr) 120px 280px 80px;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid var(--line);font-size:14px}
+.tt-row .tt-code{font-weight:700;color:var(--accent);font-size:12.5px}
+.tt-row .tt-name{text-align:left;justify-self:start}
+.tt-row .tt-part{font-size:12.5px;color:var(--ink-2)}
+.tt-row .tt-part .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.tt-row .tt-meta{font-size:12px;text-align:right}
+.tt-row .stctl{display:inline-flex!important}
+/* 팀원·계정을 탭 안에 (예전 떠 있는 창 스타일 해제) */
+#v-team #teamPanel{position:static;width:auto;max-width:760px;max-height:none;overflow:visible;box-shadow:none;border-radius:12px;padding:16px 20px;font-size:14.5px}
+#v-team .adm-tm{max-width:760px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;font-size:14.5px}
+.tp-pact{display:inline-flex;gap:8px;align-items:center}
+.tp-rolesel{font:inherit;font-size:13px;padding:3px 6px;border:1px solid #d6d0e3;border-radius:6px;background:#fff}
+.tp-parts{flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0 2px}
+.tp-pchip{font:inherit;font-size:12.5px;padding:2px 10px;border:1px solid #d6d0e3;border-radius:999px;background:#fff;cursor:pointer;color:#58616d}
+.tp-pchip.on{background:#6A4294;border-color:#6A4294;color:#fff}
+:is(#teamPanel,.adm-tm) .tp-person{flex-wrap:wrap}
+.tp-dz{border:1px solid #f1b3ab!important;border-radius:10px;padding:10px 12px!important;background:#fff8f7}
+.tp-dz .sec-label{color:#b42318}
+.tp-dzbtn{border-color:#b42318;color:#b42318}
+/* 시즌 요약 */
+.tt-sumbar{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px}
+.tt-report{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 24px}
+.tt-report h2{margin:0 0 4px}.tt-report h3{margin:18px 0 6px;font-size:15px;color:var(--accent)}
+.tt-rep{width:100%;font-size:13px}.tt-rep td{vertical-align:top}
+.tt-rep td.st-done{color:var(--out);font-weight:600}.tt-rep td.st-doing{color:#b45309;font-weight:600}.tt-rep td.st-skip{color:var(--muted)}
+.tt-rep-q{font-size:12px;color:var(--ink-2);margin-top:2px}
+@media print{body.print-report>*:not(#v-team){display:none!important}body.print-report #v-team>*:not([data-ttp=summary]){display:none!important}body.print-report .tt-sumbar{display:none}body.print-report #v-team{max-width:none;padding:0}body.print-report .tt-report{border:0}}
+/* 사용법 튜토리얼 */
+#tour{position:fixed;inset:0;z-index:9800}
+#tour .tour-hole{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(14,10,24,.62);outline:2px solid #fff;transition:all .18s ease;pointer-events:none}
+#tour .tour-card{position:fixed;background:#fff;color:#1d2128;border-radius:12px;padding:14px 16px;box-shadow:0 14px 36px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px}
+#tour .tour-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+#tour .tour-t{font-size:16px;color:#6A4294}
+#tour .tour-x{margin:0;font-size:14.5px;line-height:1.6}
+#tour .tour-b{display:flex;gap:6px;align-items:center}#tour .tour-b span{flex:1}
+@media (prefers-reduced-motion:reduce){#tour .tour-hole{transition:none}}
+/* 팀 탭: 관리 창의 목록 스타일을 넓은 화면용으로 */
+.tt-card .adm-n{font-size:11.5px;font-weight:700;color:#fff;background:var(--accent);border-radius:999px;padding:0 8px;min-width:18px;text-align:center}
+.tt-card .adm-n:empty{display:none}
+.tt-card .adm-hint{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.tt-card .adm-empty{margin:2px 0;font-size:13px;color:var(--muted)}
+.tt-card .adm-list{display:flex;flex-direction:column;gap:2px;max-height:300px;overflow:auto;scrollbar-width:thin}
+.tt-card .adm-it{display:flex;gap:8px;align-items:baseline;text-align:left;font-size:14px;padding:4px 6px;border-radius:6px;width:100%;text-decoration:none}
+.tt-card .adm-it:hover{background:var(--accent-soft)}
+.tt-card .adm-code{flex:none;min-width:40px;font-size:12px;font-weight:700;color:var(--accent)}
+.tt-card .adm-why{font-size:12.5px;color:var(--muted);padding:0 6px 6px 54px;line-height:1.5}
+.tt-card .adm-qa{white-space:nowrap;overflow:hidden}
+.tt-card .adm-qk{flex:none;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.tt-card .adm-qt{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.tt-bars .pbar2{width:100%}
+.tt-bars .adm-pl{display:flex;align-items:center;white-space:nowrap}
+.tt-bars .adm-pv{font-size:12.5px;color:var(--muted);text-align:right}

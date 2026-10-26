@@ -5,7 +5,7 @@
 const PREF = (k,d)=>{ try{ const v=localStorage.getItem('run2x.'+k); return v===null?d:v; }catch(e){ return d; } };
 const SETP = (k,v)=>{ try{ localStorage.setItem('run2x.'+k,v); }catch(e){} };
 let VMODE = PREF('view','full');      // flow | full
-let UMODE = PREF('mode','study');     // study | manage
+let UMODE = 'study';     // 관리자 모드는 없앰 (C11). 편집은 항목별 [편집]과 팀 탭에서
 let SEASON = PREF('season', String(new Date().getFullYear()));
 const D2R = Math.PI/180;
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -140,22 +140,26 @@ async function saveVal(id, vals, msgEl){
   if(!valFilled(vals)){ if(!had){ msgEl.textContent='입력한 값이 없습니다.'; return; } delete s[SEASON]; } else s[SEASON]=vals;
   const doc={s, by:SH.me||null, at:new Date().toISOString()};
   if(!SH.on){ VAL[id]=doc; try{ localStorage.setItem('run2x.val.v1', JSON.stringify(VAL)); }catch(e){} refreshVals(); msgEl.textContent= had && !valFilled(vals) ? `${SEASON} 시즌 값을 지웠습니다 (이 브라우저)` : '저장했습니다 (이 브라우저)'; return; }
-  if(!SH.canAdmin){ msgEl.textContent='우리 팀 값은 편집자(관리자)만 저장할 수 있습니다.'; return; }
+  if(!canEditItem(id)){ msgEl.textContent='우리 팀 값은 팀 관리자나 담당 파트장만 저장할 수 있습니다.'; return; }
+  doc.part = IT[id].p;
   try{ await SH.db.doc('val/'+id).set(doc); msgEl.textContent= had && !valFilled(vals) ? `${SEASON} 시즌 값을 지웠습니다` : '저장했습니다'; }catch(e){ msgEl.textContent='저장하지 못했습니다.'; }
 }
 /* 우리 팀 값 한 칸 저장 (아래 막대 [모두 저장]이 부름) */
 function tvSaveBox(box){ const vals={}; box.querySelectorAll('[data-tl]').forEach(i=>{ const l=i.dataset.tl; vals[l]=vals[l]||{}; vals[l][i.dataset.tk]=i.value.trim(); });
   return saveVal(box.dataset.tv, vals, box.querySelector('.pmsg')); }
 function tvHTML(id){ const a=ACT[id]; if(!a || !a[2].length) return ''; return `<div class="tval" data-tv="${id}"></div>`; }
-function renderTV(el){ const id=el.dataset.tv, labs=ACT[id][2], rec=VAL[id]; const man=UMODE==='manage'; const view = man ? SEASON : (el.dataset.view||SEASON);
+function renderTV(el){ const id=el.dataset.tv, labs=ACT[id][2], rec=VAL[id]; const can=canEditItem(id); const man=can && el.dataset.edit==='1'; const view = man ? SEASON : (el.dataset.view||SEASON);
   const data = rec&&rec.s&&valFilled(rec.s[view]) ? rec.s[view] : null;
-  let h=`<div class="tv-h"><span class="sec-label">우리 팀 값</span>${man?`<span class="tv-s">${SEASON} 시즌 입력 중</span>`:`<span class="tv-yr"><button type="button" class="tv-yb" title="눌러서 연도 입력">${esc(view)} 시즌</button><input type="number" class="tv-yi" min="2000" max="2100" hidden aria-label="볼 시즌 연도"></span>${view!==SEASON?`<span class="muted tv-o">이번 시즌 ${SEASON}</span>`:''}`}</div>`;
+  const btn = man ? `<button type="button" class="btn small tv-done" data-tvdone>편집 끝</button>` : (can ? `<button type="button" class="btn small tv-edit" data-tvedit>편집</button>` : '');
+  let h=`<div class="tv-h"><span class="sec-label">우리 팀 값</span>${man?`<span class="tv-s">${SEASON} 시즌 입력 중</span>`:`<span class="tv-yr"><button type="button" class="tv-yb" title="눌러서 연도 입력">${esc(view)} 시즌</button><input type="number" class="tv-yi" min="2000" max="2100" hidden aria-label="볼 시즌 연도"></span>${view!==SEASON?`<span class="muted tv-o">이번 시즌 ${SEASON}</span>`:''}`}<span class="tv-sp"></span>${btn}</div>`;
   if(man){ const d=(rec&&rec.s&&rec.s[SEASON])||{};
     h+=`<div class="tv-edit">${labs.map(l=>`<label><span class="vchip dec">${l}</span><input type="text" data-tl="${esc(l)}" data-tk="v" placeholder="값 (단위 포함)" value="${esc((d[l]||{}).v||'')}"><input type="text" data-tl="${esc(l)}" data-tk="why" placeholder="근거 한 줄" value="${esc((d[l]||{}).why||'')}"></label>`).join('')}
       <div class="tv-foot"><span class="pmsg muted">입력하면 아래 막대의 [모두 저장]으로 함께 저장됩니다.</span></div></div>`;
   } else if(data){ h+=`<table class="kvt tv-t">${labs.map(l=>{ const r=data[l]||{}; return `<tr><th>${l}</th><td>${r.v?`<b>${esc(r.v)}</b>`:'<span class="muted">—</span>'}${r.why?`<span class="tv-why">${esc(r.why)}</span>`:''}</td></tr>`; }).join('')}</table>`;
-  } else h+=`<p class="muted tv-empty">아직 기록된 팀 값이 없습니다. 관리 모드에서 회장이 입력합니다.</p>`;
+  } else h+=`<p class="muted tv-empty">${SH.on ? '아직 기록된 팀 값이 없습니다.' + (can ? ' [편집]을 눌러 입력하십시오.' : ' 팀 관리자나 담당 파트장이 입력하면 여기에 표시됩니다.') : '아직 기록된 팀 값이 없습니다.'}</p>`;
   el.innerHTML=h; }
+document.addEventListener('click',e=>{ const ed=e.target.closest('[data-tvedit]'); if(ed){ const box=ed.closest('.tval'); box.dataset.edit='1'; renderTV(box); const i=box.querySelector('input[data-tl]'); if(i) i.focus(); return; }
+  const dn=e.target.closest('[data-tvdone]'); if(dn){ const box=dn.closest('.tval'); if(box.dataset.dirty){ toast('저장하지 않은 입력이 있습니다. 아래 막대에서 저장하거나 되돌리십시오.'); return; } delete box.dataset.edit; renderTV(box); } });
 document.addEventListener('click',e=>{ const yb=e.target.closest('.tv-yb'); if(!yb) return; const w=yb.parentElement, i=w.querySelector('.tv-yi'); yb.hidden=true; i.hidden=false; i.value=yb.textContent.replace(/\D/g,''); i.focus(); i.select(); });
 { const fin=(i,ok)=>{ if(i.hidden) return; const el=i.closest('.tval'); const v=i.value.trim(); i.hidden=true; i.previousElementSibling.hidden=false; if(ok && /^\d{4}$/.test(v)){ if(v===SEASON) delete el.dataset.view; else el.dataset.view=v; } renderTV(el); };
   document.addEventListener('keydown',e=>{ const i=e.target.closest&&e.target.closest('.tv-yi'); if(!i) return; if(e.key==='Enter'){ e.preventDefault(); fin(i,true); } else if(e.key==='Escape'){ fin(i,false); } });
@@ -169,12 +173,12 @@ function setVM(v){ if(VMODE===v) return; VMODE=v; SETP('view',v); applyModes(); 
 function applyModes(){
   document.body.classList.toggle('vm-flow', VMODE==='flow'); document.body.classList.toggle('um-manage', UMODE==='manage');
   document.querySelectorAll('[data-vm]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.vm===VMODE)));
-  const viewer = (SH.on || (window.Backend && Backend.kind()==='firebase')) && !SH.canAdmin; if(viewer && UMODE==='manage'){ UMODE='study'; }
-  const ab=$('#admbtn'); if(ab){ ab.hidden = !(window.__shReady && !viewer); ab.setAttribute('aria-checked', String(UMODE==='manage')); ab.disabled=viewer; ab.title = viewer ? '편집자(관리자)만 쓸 수 있습니다' : '진행 상태·우리 팀 값 입력'; }
+  UMODE='study'; const ab=$('#admbtn'); if(ab) ab.hidden=true;
+  document.querySelectorAll('.st-edit[data-id]').forEach(el=>{ el.hidden = !canEditItem(el.dataset.id); });
   $('#step-list').hidden = VMODE==='flow'; $('#flow-list').hidden = VMODE!=='flow';
   document.querySelectorAll('.vtabs [data-vm]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.vm===VMODE)));
   refreshVals(); updateToc(); try{ admPlace(); renderAdm(); }catch(e){} }
-function renderOnboard(){ const el=$('#onboard');
+function renderOnboard(){ const el=$('#onboard'); if(!el) return;
   if(PREF('onboard','1')==='0'){ el.innerHTML=`<button class="lnk" id="ob-show" style="font-size:13.5px">처음 왔다면: 읽는 순서 보기</button>`; return; }
   el.innerHTML=`<div class="onb"><div class="onb-h"><b>처음 왔다면 이 순서로 읽으십시오</b><button class="lnk" id="ob-hide" style="font-size:13px">접기</button></div><ol class="onb-steps">
     <li><span class="onb-n">1</span><div><b>왜 만드나</b><p>목표 탭에서 종합점수가 어떤 목표로 나뉘고, 각 목표를 어떤 설계 항목이 맡는지 봅니다.</p><button class="btn" data-ob="goals">목표 열기</button></div></li>

@@ -48,7 +48,7 @@ function initAdm(){ if($('#admPanel')) return;
   si.addEventListener('blur',()=>done(true));
   admPlace(); renderAdm();
 }
-function admPlace(){ const p=$('#admPanel'); if(!p) return; const on = UMODE==='manage' && TAB!=='ref'; p.hidden=!on; document.body.classList.toggle('adm-on',on);
+function admPlace(){ const p=$('#admPanel'); if(!p) return; const on = false;   /* 관리 창은 없앰 (C11): 내용은 팀 탭으로 */ p.hidden=!on; document.body.classList.toggle('adm-on',on);
   requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} }); }
 let ADMRAF=0;
 function renderAdm(){ if(ADMRAF) return; ADMRAF=requestAnimationFrame(()=>{ ADMRAF=0; admPlace(); const p=$('#admPanel'); if(!p || p.hidden) return;

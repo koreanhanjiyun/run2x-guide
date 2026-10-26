@@ -24,10 +24,13 @@ window.Backend = (function(){
     if(fbReady) return fbReady;
     const v = CFG.firebaseSdk || '10.14.1', base = 'https://www.gstatic.com/firebasejs/'+v+'/';
     fbReady = (async()=>{
-      await loadScript(base+'firebase-app-compat.js');
-      await Promise.all([loadScript(base+'firebase-auth-compat.js'), loadScript(base+'firebase-firestore-compat.js')]);
+      if(!window.firebase){   // 시안(데모) 빌드는 firebase 대역을 미리 넣어 둠
+        await loadScript(base+'firebase-app-compat.js');
+        await Promise.all([loadScript(base+'firebase-auth-compat.js'), loadScript(base+'firebase-firestore-compat.js')]); }
       const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(CFG.firebase);
       const auth = firebase.auth(), fs = firebase.firestore();
+      /* 로그인 유지 범위 = 브라우저 세션 (브라우저를 닫으면 로그아웃, H11) */
+      try{ if(auth.setPersistence && firebase.auth.Auth && firebase.auth.Auth.Persistence) await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION); }catch(e){ console.warn('로그인 유지 범위 설정 실패', e); }
       await new Promise(res=>{ const off = auth.onAuthStateChanged(()=>{ off(); res(); }); });
       return {app, auth, fs};
     })();
@@ -50,7 +53,7 @@ window.Backend = (function(){
       if(!u) return c;
       c.state = 'noteam';
       let tid = lsGet(TEAMKEY);
-      try{ const us = await F.fs.doc('users/'+c.uid).get(); c.myTeams = us.exists ? (us.data().teams || {}) : {}; if(!tid && us.exists) tid = us.data().active || null; }catch(e){ c.myTeams = {}; }
+      try{ const us = await F.fs.doc('users/'+c.uid).get(); c.myTeams = us.exists ? (us.data().teams || {}) : {}; c.last = us.exists ? (us.data().last || null) : null; if(!tid && us.exists) tid = us.data().active || null; }catch(e){ c.myTeams = {}; }
       if(!tid) return c;
       try{
         const m = await F.fs.doc(`teams/${tid}/members/${c.uid}`).get();
@@ -60,7 +63,7 @@ window.Backend = (function(){
         c.team = tid; window.__teamId = tid; c.teamName = t.data().name || ''; c.teamKey = t.data().key || '';
         const today = new Date().toISOString().slice(0,10);
         if(String(t.data().lastActive||'').slice(0,10) !== today){ try{ await F.fs.doc('teams/'+tid).update({lastActive: new Date().toISOString()}); }catch(e){ console.warn('마지막 활동일 기록 실패', e); } }
-        c.role = m.data().role === 'admin' ? 'admin' : 'member'; c.state = 'member';
+        const rl = m.data().role; c.role = (rl==='admin'||rl==='lead') ? rl : 'member'; c.parts = Array.isArray(m.data().parts) ? m.data().parts : []; c.state = 'member';
         if(c.myTeams[tid] !== c.teamName) await setMyTeam(c, tid, c.teamName);
       }catch(e){ console.error('팀 정보를 읽지 못했습니다', e); c.state = 'error'; }
       return c;
@@ -76,6 +79,7 @@ window.Backend = (function(){
       id: async()=> c.uid,
       isOwner: async()=> c.isDev,
       canEdit: async()=> c.role === 'admin',
+      role: async()=> c.role || null, parts: async()=> c.parts || [],
       can: async(n)=> n==='data.write' ? c.state === 'member' : null,
       me: async()=>({ id: c.uid, name: c.name }),
       profiles: async(ids)=>{ const out={}; await Promise.all((ids||[]).map(async id=>{ try{
@@ -140,7 +144,8 @@ window.Backend = (function(){
       b.set(fs.doc(`teams/${c.team}/secret/pw`), {pw});
       await b.commit(); c.teamName = name; c.teamKey = key; await setMyTeam(c, c.team, name); },
     async members(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/members`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
-    async setRole(uid, role){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role}); },
+    /* 역할: admin(팀 관리자) / lead(파트장, parts=담당 파트) / member(팀원) */
+    async setRole(uid, role, parts){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role, parts: role==='lead' ? (parts||[]) : []}); },
     /* 팀원 차단: 내보내고 다시 가입하지 못하게 (관리자). 차단한 사람은 댓글도 쓸 수 없음 */
     async block(uid){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team; const m = await fs.doc(P+'/members/'+uid).get(); const d = m.exists ? m.data() : {};
       const b = fs.batch(); b.set(fs.doc(P+'/blocked/'+uid), {name: d.name||'', email: d.email||'', at: new Date().toISOString(), by: c.uid}); if(m.exists) b.delete(fs.doc(P+'/members/'+uid)); await b.commit(); },
@@ -195,6 +200,8 @@ window.Backend = (function(){
       Object.entries(obj.data.qa||{}).forEach(([id,d])=>{ if(okId(id) && d && d.v===2 && !curQ.has(id)){ ops.push(['set', P+'/qa/'+id, d]); n.qa++; } });
       for(let i=0;i<ops.length;i+=400){ const b = fs.batch(); ops.slice(i,i+400).forEach(o=> o[0]==='del' ? b.delete(fs.doc(o[1])) : b.set(fs.doc(o[1]), o[2])); await b.commit(); }
       return n; },
+    /* 마지막으로 보던 위치를 계정에도 저장 (다른 기기에서 이어 보기, A2) */
+    async saveLast(json){ const c = await teamCtx(); if(!c.uid) return; await c.F.fs.doc('users/'+c.uid).set({last: String(json).slice(0,4000)}, {merge:true}); },
     async mine(){ const c = await teamCtx(); return Object.entries(c.myTeams||{}).map(([id,name])=>({id, name})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko')); },
     /* 플랫폼 문의: 종류·위치(탭·단계·항목)와 함께. 개발자는 처리 상태를 바꾸고, 반복해서 부적절한 문의를 보내는 계정을 차단 */
     FB_ST: ['접수','검토 중','반영됨','반영 안 함'],

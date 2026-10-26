@@ -18,6 +18,6 @@ document.addEventListener('toggle', e=>{ const d=e.target; if(d.tagName==='DETAI
 $('#collapse-all').addEventListener('click', ()=>{ const v=$('#v-'+TAB); v.querySelectorAll('details[open]').forEach(d=>d.open=false); document.querySelectorAll('.here').forEach(x=>x.classList.remove('here')); smoothScrollTo(()=>0); });
 (()=>{ const r=document.documentElement; const tb=$('.tabs'); const setH=()=>{ const h=tb.offsetHeight; if(h>0) r.style.setProperty('--tabh', h+'px'); }; setH(); try{ new ResizeObserver(setH).observe(tb); }catch(e){} window.addEventListener('resize',setH); document.addEventListener('visibilitychange',setH); window.addEventListener('focus',setH);
   const s=document.querySelector('details.step>summary'); r.style.setProperty('--sth', (s?s.offsetHeight:58)+'px'); })();
-(()=>{ const h=(location.hash||'').slice(1); if(['steps','graph','goals','parts','ref'].includes(h)) showTab(h); })();
+(()=>{ const h=(location.hash||'').slice(1); if(['start','steps','graph','goals','parts','ref','team'].includes(h)) showTab(h); })();
 
 try{ CALC.trail.ins.find(r=>r[0]==='e')[2]='캐스터 오프셋 (휠 중심이 축보다 앞 +)'; }catch(e){}

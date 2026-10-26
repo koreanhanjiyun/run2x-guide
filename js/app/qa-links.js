@@ -26,7 +26,7 @@ function initLinks(){
 let QA={}; const QAKEY='run2x.qa.v2';
 try{ QA=JSON.parse(localStorage.getItem(QAKEY)||'{}')||{}; }catch(e){ QA={}; }
 const isTalk=q=> !!q && q.v===2 && !!q.item;
-const qaAdmin=()=> UMODE==='manage' && (SH.on ? !!SH.canAdmin : true);
+const qaAdmin=()=> SH.on ? !!SH.canAdmin : false;   // 관리자 모드 없이 관리자에게 [삭제 (관리)] 표시
 const qaMine=q=> SH.on ? (!!SH.me && q.by===SH.me) : true;
 const notMe=q=> (q.by||'')!==(SH.me||'');
 function qaFmt(at){ const d=new Date(at); return isNaN(d)?'':`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }

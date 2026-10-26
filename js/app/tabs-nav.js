@@ -4,7 +4,8 @@
 const $ = s => document.querySelector(s);
 let graphInit=false, TAB='steps'; const HIST=[];
 function showTab(t, keep){
-  ['steps','graph','goals','parts','ref'].forEach(k=>{ $('#v-'+k).hidden = k!==t; }); if(t==='parts' && !$('#part-tree').innerHTML) renderParts();
+  ['start','goals','parts','steps','graph','ref','team'].forEach(k=>{ const v=$('#v-'+k); if(v) v.hidden = k!==t; }); if(t==='parts' && !$('#part-tree').innerHTML) renderParts();
+  if(t==='start' && typeof renderStart==='function') renderStart(); if(t==='team' && typeof renderTeamTab==='function') renderTeamTab();
   const rail=$('#partRail'); if(rail) rail.hidden = !(t==='steps'||t==='graph'||t==='parts'); requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} });
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
   try{ history.replaceState(null,'','#'+t); }catch(e){}
@@ -12,11 +13,15 @@ function showTab(t, keep){
   if(!keep && t!==TAB) window.scrollTo(0,0);
   TAB=t;
 }
-function pushHist(){ HIST.push({tab:TAB, y:window.scrollY, sel:SEL, v:{...view}}); if(HIST.length>30) HIST.shift(); $('#backbtn').hidden=false; }
-function goBack(){ const h=HIST.pop(); if(!h) return; $('#backbtn').hidden = HIST.length===0;
-  showTab(h.tab, true);
-  if(h.tab==='graph'){ animateTo(h.v.x,h.v.y,h.v.k,500); if(h.sel) selectItem(h.sel,false); else clearSel(); }
-  requestAnimationFrame(()=>smoothScrollTo(()=>h.y)); }
+/* 이동 기록: 브라우저 뒤로·앞으로 버튼으로 이동 (A9). 지금 위치를 현재 기록에 저장하고 새 기록을 하나 쌓음 */
+const navState = () => ({tab:TAB, y:window.scrollY, sel:(typeof SEL!=='undefined'?SEL:null), v:(typeof view!=='undefined'?{...view}:null)});
+function pushHist(){ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
+function goBack(){ try{ history.back(); }catch(e){} }
+window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; showTab(h.tab, true);
+  if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
+  requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
+/* 스크롤이 멈추면 지금 위치를 현재 기록에 덮어써 둠 (앞으로 가기에도 위치 유지) */
+{ let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
 let SCR=null;
 function smoothScrollTo(getY, done){
   if(SCR) cancelAnimationFrame(SCR);
@@ -43,7 +48,7 @@ function openItem(id){
     smoothScrollTo(()=>el.getBoundingClientRect().top + window.scrollY - stickyOffset(), ()=>markHere(el)); });
 }
 document.addEventListener('click',ev=>{
-  const tb=ev.target.closest('.tab'); if(tb){ showTab(tb.dataset.tab); return; }
+  const tb=ev.target.closest('.tab'); if(tb){ if(tb.dataset.tab!==TAB) pushHist(); showTab(tb.dataset.tab); return; }
   const g=ev.target.closest('[data-goto]'); if(g){ ev.preventDefault(); openItem(g.dataset.goto); return; }
   const gr=ev.target.closest('[data-graph]'); if(gr){ ev.preventDefault(); ev.stopPropagation(); pushHist(); showTab('graph'); requestAnimationFrame(()=>selectItem(gr.dataset.graph,true)); return; }
   const op=ev.target.closest('[data-open]'); if(op){ openItem(op.dataset.open); return; }
@@ -52,7 +57,7 @@ document.addEventListener('click',ev=>{
   if(ev.target.closest('.tabs .logo-mark, .tabs .wordmark')){ ev.preventDefault(); goHome(); }
 });
 /* 로고 → 처음 화면 (설계 단계 탭 맨 위, 주소의 #항목 지움). 뒤로 가기로 돌아올 수 있음 */
-function goHome(){ if(TAB!=='steps' || window.scrollY>10) pushHist(); showTab('steps', true);
+function goHome(){ if(TAB!=='start' || window.scrollY>10) pushHist(); showTab('start', true);
   if(!window.DEBUG){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
   requestAnimationFrame(()=>smoothScrollTo(()=>0)); }
 document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='처음 화면으로'; el.setAttribute('aria-label','처음 화면으로');

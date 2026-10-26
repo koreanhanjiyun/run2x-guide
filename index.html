@@ -13,25 +13,30 @@
 <body>
 <nav class="tabs" aria-label="보기 전환"><div class="tabs-in" role="tablist">
   <span class="logo-mark" aria-hidden="true"></span><span class="wordmark"><b>RUN2X</b><i>RUN TO EXTREME.</i></span>
+  <button class="tab" role="tab" data-tab="start" aria-selected="false">시작</button>
+  <button class="tab" role="tab" data-tab="goals" aria-selected="false">목표</button>
+  <button class="tab" role="tab" data-tab="parts" aria-selected="false">부품</button>
   <button class="tab" role="tab" data-tab="steps" aria-selected="true">설계 단계</button>
   <button class="tab" role="tab" data-tab="graph" aria-selected="false">연결도</button>
-  <button class="tab" role="tab" data-tab="parts" aria-selected="false">부품</button>
-  <button class="tab" role="tab" data-tab="goals" aria-selected="false">목표</button>
   <button class="tab" role="tab" data-tab="ref" aria-selected="false">참고</button>
+  <button class="tab tab-team" role="tab" data-tab="team" aria-selected="false">팀</button>
   <div class="gsearch"><input type="text" id="gsearch" placeholder="항목·단계 검색" aria-label="설계 항목·단계 검색" autocomplete="off"><kbd>/</kbd><div id="gsearch-list" class="aclist" hidden role="listbox"></div></div>
   <button class="tabact" id="collapse-all" title="현재 탭의 펼친 상자를 모두 닫습니다">전체 접기</button>
   <span class="brand" aria-hidden="true"></span>
+  <button class="tourbtn" id="tourBtn" type="button" title="이 화면의 버튼 위치와 기능 둘러보기" aria-label="사용법">?</button>
   <button class="adm" id="admbtn" role="switch" aria-checked="false" hidden title="진행 상태·우리 팀 값 입력"><span class="admsw" aria-hidden="true"></span>관리자 모드</button>
 </div></nav>
 
 <button class="btn pri" id="backbtn" hidden>← 이전 위치로</button>
 <aside id="partRail" aria-label="파트 강조"></aside>
 <nav id="toc" aria-label="단계 목차"></nav>
+<div class="wrap" id="v-start" hidden></div>
+<div class="wrap wide" id="v-team" hidden></div>
 <div class="wrap" id="v-steps">
   <header class="top has-wm"><div class="logo-wm" aria-hidden="true"></div>
     <span class="eyebrow">Run2X 차량 설계 가이드</span>
     <h1>설계 단계</h1>
-    <p class="lede">단계를 펼치면 그 단계의 설계 항목이 나오고, 항목을 펼치면 결론 한 줄 아래에 질문이 하나씩 접혀 있습니다. 궁금한 질문만 열어 보십시오. 각 항목은 연결도에서 어느 파트의 무엇을 받아 누구에게 넘기는지 바로 확인할 수 있습니다.</p>
+    <p class="lede">P0부터 P10까지 차를 설계하는 순서입니다. 단계를 펼치면 설계 항목이, 항목을 펼치면 결론과 질문이 나옵니다.</p>
     <div class="legend">
       <span><span class="badge b-card">상세</span> 상세 카드 있음</span>
       <span><span class="badge b-assume">가정값</span> 설명용 숫자 · 팀 실측값으로 교체</span>
@@ -39,7 +44,6 @@
       <span><span class="badge b-col">★</span> 동결 (이후 원칙적으로 변경 금지)</span>
     </div>
   </header>
-  <div id="onboard"></div>
   <div class="vtabs" role="tablist" aria-label="읽는 깊이"><button role="tab" data-vm="full">전체 보기</button><button role="tab" data-vm="flow">흐름만 보기</button></div>
   <div class="vpanel"><div id="step-list" class="stack"></div>
   <div id="flow-list" class="stack" hidden></div></div>
@@ -108,6 +112,7 @@
 <script src="js/figures/kp3d.js?v=202610231657"></script>
 <script src="js/data/cards.js?v=202610231657"></script>
 <script src="js/data/items.js?v=202610231657"></script>
+<script src="js/data/background.js"></script>
 <script src="js/data/refs.js?v=202610231657"></script>
 <script src="js/app/render.js?v=202610231657"></script>
 <script src="js/data/act.js?v=202610231657"></script>
@@ -128,6 +133,10 @@
 <script src="js/app/team.js?v=202610231657"></script>
 <script src="js/app/info.js?v=202610231657"></script>
 <script src="js/app/clnotice.js?v=202610231657"></script>
+<script src="js/app/start.js"></script>
+<script src="js/app/teamtab.js"></script>
+<script src="js/app/tour.js"></script>
 <script src="js/app/init.js?v=202610231657"></script>
+<script src="js/app/nav2.js"></script>
 </body>
 </html>
