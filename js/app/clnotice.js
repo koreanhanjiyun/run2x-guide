@@ -1,7 +1,7 @@
 /* ============================================================
    업데이트 알림 (이 브라우저 기준)
    - 변경 이력의 최신 버전이 마지막으로 확인한 버전과 다르면:
-     참고 탭 버튼 숨쉬기 → 변경 이력 칸 숨쉬기 → 최신 버전의 항목 줄마다 [이동] (data-go="항목ID") → 이동한 항목 숨쉬기
+     참고 탭 버튼·변경 이력 칸 머리의 배경을 연한 주황으로 → 변경 이력 맨 위에 안내와 [확인]
    - [확인]을 누르면 꺼짐. 기한 없음(다음 업데이트 전까지). 처음 방문한 브라우저는 알림 없이 최신으로 기록
    ============================================================ */
 (function(){
@@ -18,10 +18,8 @@
     d.querySelector(':scope>summary').classList.add('cl-breathe');
     const body = d.querySelector('.dbody'); if(!body || body.querySelector('.cl-new')) return;
     const box = document.createElement('div'); box.className='cl-new';
-    box.innerHTML = `<span><b>새 업데이트 v${L}</b> · 아래 항목을 눌러 바뀐 곳으로 이동할 수 있습니다.</span><button type="button" class="btn small pri cl-ok">확인</button>`;
+    box.innerHTML = `<span><b>새 업데이트 v${L}</b> · 아래 바뀐 내용을 읽어 보십시오.</span><button type="button" class="btn small pri cl-ok">확인</button>`;
     body.prepend(box);
-    const first = body.querySelector('.clv') || body; const ul = first.querySelector('ul');
-    if(ul) ul.querySelectorAll('li[data-go]').forEach(li=>{ if(li.querySelector('.cl-go') || !IT[li.dataset.go]) return; const b=document.createElement('button'); b.type='button'; b.className='btn small cl-go'; b.textContent='이동'; li.appendChild(b); });
   }
   function done(){ ON=false; put(L);
     document.querySelectorAll('.cl-breathe').forEach(e=>e.classList.remove('cl-breathe'));

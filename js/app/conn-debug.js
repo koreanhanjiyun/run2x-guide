@@ -35,7 +35,7 @@ function initDebug(){ if(!window.DEBUG) return; document.body.classList.add('dbg
   function render(){ if(pop.hidden) return; const c=cnt(), er=window.__dbgErr||[];
     pop.innerHTML=`<div class="dbg-h">디버깅 <span>팀 데이터에 저장되지 않음</span></div>
       <table><tr><th>공유 저장소</th><td>사용 안 함 (디버깅 데이터는 이 브라우저에만)</td></tr>
-      <tr><th>시즌</th><td>${esc(SEASON)}</td></tr><tr><th>화면 모드</th><td>${UMODE==='manage'?'관리자':'보기'}</td></tr>
+      <tr><th>시즌</th><td>${esc(SEASON)}</td></tr><tr><th>화면 모드</th><td>${UMODE==='manage'?'회장':'보기'}</td></tr>
       <tr><th>디버깅 데이터</th><td>논의 ${c.q} · 진행 상태 ${c.st} · 팀 값 ${c.tv}</td></tr>
       <tr><th>내용 버전</th><td>${esc(ver())}</td></tr>
       <tr><th>오류</th><td>${er.length? er.map(x=>`<div class="dbg-er"><b>${x.t}</b> ${esc(x.m)}</div>`).join('') : '<span class="muted">없음</span>'}</td></tr></table>

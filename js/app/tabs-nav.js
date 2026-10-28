@@ -4,9 +4,10 @@
 const $ = s => document.querySelector(s);
 let graphInit=false, TAB='steps'; const HIST=[];
 function showTab(t, keep){
-  ['start','goals','parts','steps','graph','ref','team'].forEach(k=>{ const v=$('#v-'+k); if(v) v.hidden = k!==t; }); if(t==='parts' && !$('#part-tree').innerHTML) renderParts();
+  if(t==='parts' || t==='goals') t='start';   // 목표 탭은 시작 탭으로 합침
+  ['start','goals','steps','graph','ref','team'].forEach(k=>{ const v=$('#v-'+k); if(v) v.hidden = k!==t; });
   if(t==='start' && typeof renderStart==='function') renderStart(); if(t==='team' && typeof renderTeamTab==='function') renderTeamTab();
-  const rail=$('#partRail'); if(rail) rail.hidden = !(t==='steps'||t==='graph'||t==='parts'); requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} });
+  const rail=$('#partRail'); if(rail) rail.hidden = !(t==='steps'||t==='graph'); requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} });
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
   try{ history.replaceState(null,'','#'+t); }catch(e){}
   if(t==='graph' && !graphInit){ graphInit=true; requestAnimationFrame(()=>{ view.x=10; view.y=56; view.k=0.9; applyView(); }); }
@@ -14,10 +15,10 @@ function showTab(t, keep){
   TAB=t;
 }
 /* 이동 기록: 브라우저 뒤로·앞으로 버튼으로 이동 (A9). 지금 위치를 현재 기록에 저장하고 새 기록을 하나 쌓음 */
-const navState = () => ({tab:TAB, y:window.scrollY, sel:(typeof SEL!=='undefined'?SEL:null), v:(typeof view!=='undefined'?{...view}:null)});
+const navState = () => ({tab:TAB, sys:(typeof START!=='undefined'?START.sys:''), y:window.scrollY, sel:(typeof SEL!=='undefined'?SEL:null), v:(typeof view!=='undefined'?{...view}:null)});
 function pushHist(){ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
 function goBack(){ try{ history.back(); }catch(e){} }
-window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; showTab(h.tab, true);
+window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true);
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
   requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
 /* 스크롤이 멈추면 지금 위치를 현재 기록에 덮어써 둠 (앞으로 가기에도 위치 유지) */
@@ -43,7 +44,7 @@ function openItem(id){
   pushHist(); setVM('full');
   const fromOther = TAB!=='steps'; showTab('steps', true);
   const it=IT[id]; const st=$('#st-'+it.s); if(!st) return; st.open=true;
-  const el=$('#it-'+id); if(!el) return; el.open=true;
+  const el=$('#it-'+id); if(!el) return; fillItem(el); el.open=true;
   requestAnimationFrame(()=>{ const y = el.getBoundingClientRect().top + window.scrollY - stickyOffset();
     smoothScrollTo(()=>el.getBoundingClientRect().top + window.scrollY - stickyOffset(), ()=>markHere(el)); });
 }
@@ -53,7 +54,6 @@ document.addEventListener('click',ev=>{
   const gr=ev.target.closest('[data-graph]'); if(gr){ ev.preventDefault(); ev.stopPropagation(); pushHist(); showTab('graph'); requestAnimationFrame(()=>selectItem(gr.dataset.graph,true)); return; }
   const op=ev.target.closest('[data-open]'); if(op){ openItem(op.dataset.open); return; }
   const sl=ev.target.closest('[data-sel]'); if(sl){ selectItem(sl.dataset.sel,true); return; }
-  if(ev.target.closest('#backbtn')) goBack();
   if(ev.target.closest('.tabs .logo-mark, .tabs .wordmark')){ ev.preventDefault(); goHome(); }
 });
 /* 로고 → 처음 화면 (설계 단계 탭 맨 위, 주소의 #항목 지움). 뒤로 가기로 돌아올 수 있음 */
@@ -72,17 +72,27 @@ const isCho = q => q.length>0 && [...q].every(c=>CHO.includes(c)||/[a-z0-9]/.tes
 function mscore(text, q, base){ const n=norm(text); if(!n||!q) return 0;
   if(isCho(q) && /[ㄱ-ㅎ]/.test(q)){ const c=cho(n); const i=c.indexOf(q); return i<0?0:(i===0?base*0.9:base*0.75); }
   const i=n.indexOf(q); return i<0?0:(i===0?base:base*0.8); }
+/* A8: 단계·항목·부품·용어를 함께 찾고 종류별로 묶어 보여 줌 */
 const SIDX_ALL = [
   ...STEPS.map(s=>({k:'step', id:s.id, name:stripT(s.t).replace('★ ',''), code:s.id, extra:[]})),
   ...ITEMS.map(i=>{ const a=ACT[i.id]||[]; return {k:'item', id:i.id, name:stripT(i.n), code:i.s, part:i.p,
-     extra:[['활동',a[1]],...(a[2]||[]).map(v=>['팀 결정값',v]),...(a[3]||[]).map(v=>['계산값',v]),...(a[4]||[]).map(v=>['제약',v])].filter(x=>x[1])}; })
+     extra:[['핵심',a[1]],...(a[2]||[]).map(v=>['우리 팀 값',v]),...(a[3]||[]).map(v=>['계산값',v]),...(a[4]||[]).map(v=>['제약',v])].filter(x=>x[1])}; })
 ];
-function searchAll(raw){ const q=norm(raw); if(!q) return [];
+let SIDX_MORE = false;
+function searchMore(){ if(SIDX_MORE) return; SIDX_MORE = true;
+  if(typeof COMP!=='undefined') Object.entries(COMP).forEach(([sys,cs])=>cs.forEach(c=>SIDX_ALL.push({k:'comp', id:c.id, sys, name:stripT(c.n), code:sys, part:sys, extra:[['영문',c.en||''],['설명',c.what||(c.desc?String(c.desc[0]).replace(/<[^>]+>/g,''):'')]].filter(x=>x[1])})));
+  const gl=[...document.querySelectorAll('#ref-list tr[id^="gl-"]')]; gl.forEach(tr=>SIDX_ALL.push({k:'term', id:tr.id, name:tr.cells[0].textContent.trim(), code:'용어', extra:[['뜻',tr.cells[1].textContent.trim()]]})); }
+const SKIND = {step:'단계', item:'설계 항목', comp:'부품', term:'용어'}, SORDER = ['item','step','comp','term'];
+function searchAll(raw){ searchMore(); const q=norm(raw); if(!q) return [];
   const out=[]; for(const e of SIDX_ALL){
     let s=Math.max(mscore(e.name,q,100), mscore(e.code,q,90)), why=null;
-    if(s===0){ for(const [lab,t] of e.extra){ const v=mscore(t,q,40); if(v>s){ s=v; why=[lab,stripT(t)]; } } }
-    if(s>0){ const on = !PSET.size || e.k==='step' || PSET.has(e.part); out.push({...e, s:s+(e.k==='item'?2:0), on, why}); } }
-  out.sort((a,b)=>(b.on-a.on)||(b.s-a.s)); return out.slice(0,14); }
+    if(s===0){ for(const [lab,t] of e.extra){ const v=mscore(t,q,40); if(v>s){ s=v; why=[lab,stripT(t).slice(0,80)]; } } }
+    if(s>0){ const on = !PSET.size || e.k==='step' || e.k==='term' || PSET.has(e.part); out.push({...e, s:s+(e.k==='item'?2:0), on, why}); } }
+  out.sort((a,b)=>(b.on-a.on)||(b.s-a.s));
+  const best = {}; out.forEach(r=>{ best[r.k] = Math.max(best[r.k]||0, r.s); });
+  const kinds = SORDER.filter(k=>best[k]).sort((a,b)=>best[b]-best[a]);
+  const res=[]; kinds.forEach(k=>{ out.filter(r=>r.k===k).slice(0, k==='item'?10:6).forEach((r,i)=>res.push({...r, head: i===0 ? SKIND[k] : ''})); });
+  return res; }
 function hlName(name, raw){
   const q=norm(raw); const wrap=h=>`<span class="acn">${h}</span>`; if(!q) return wrap(name);
   const ch=[...name], keep=[]; let n='';
@@ -94,12 +104,13 @@ function hlName(name, raw){
   return wrap(h); }
 function makeAC(input, list, getRes, rowHTML, onPick, onType){
   let res=[], cur=-1;
-  const close=()=>{ list.hidden=true; cur=-1; };
+  const lid = list.id || ('acl'+Math.random().toString(36).slice(2,7)); list.id = lid; list.setAttribute('role','listbox'); input.setAttribute('aria-controls', lid);
+  const close=()=>{ list.hidden=true; cur=-1; input.setAttribute('aria-expanded','false'); input.removeAttribute('aria-activedescendant'); };
   const draw=()=>{ res=getRes(input.value); cur=res.length?0:-1;
     if(!input.value.trim()){ close(); return; }
-    list.innerHTML = res.length ? res.map((r,i)=>`<div class="acrow${r.on===false?' off':''}${i===cur?' cur':''}" data-i="${i}" role="option">${rowHTML(r,input.value)}</div>`).join('') : `<div class="acnone">결과 없음 · 초성(예: ㅅㅋㄹ)이나 영문 약어(예: KPI)로도 찾을 수 있습니다. 용어는 참고 › 용어집에서 찾아보십시오.</div>`;
-    list.hidden=false; };
-  const mark=()=>list.querySelectorAll('.acrow').forEach((x,i)=>{ x.classList.toggle('cur',i===cur); if(i===cur) x.scrollIntoView({block:'nearest'}); });
+    list.innerHTML = res.length ? res.map((r,i)=>`<div class="acrow${r.on===false?' off':''}${i===cur?' cur':''}" data-i="${i}" id="${lid}-${i}" role="option" aria-selected="${i===cur}">${rowHTML(r,input.value)}</div>`).join('') : `<div class="acnone">결과 없음 · 초성(예: ㅅㅋㄹ)이나 영문 약어(예: KPI)로도 찾을 수 있습니다.</div>`;
+    list.hidden=false; input.setAttribute('aria-expanded','true'); if(cur>=0) input.setAttribute('aria-activedescendant', lid+'-'+cur); };
+  const mark=()=>{ list.querySelectorAll('.acrow').forEach((x,i)=>{ x.classList.toggle('cur',i===cur); x.setAttribute('aria-selected', String(i===cur)); if(i===cur) x.scrollIntoView({block:'nearest'}); }); if(cur>=0) input.setAttribute('aria-activedescendant', lid+'-'+cur); };
   const pick=i=>{ const r=res[i]; if(!r) return; close(); input.value=''; input.blur(); onPick(r); };
   input.addEventListener('input',()=>{ draw(); if(onType) onType(input.value); });
   input.addEventListener('focus',()=>{ if(input.value.trim()) draw(); });
@@ -122,10 +133,14 @@ function openStep(sid){ pushHist(); setVM('full'); showTab('steps', true); const
 function initSearch(){
   const inp=$('#gsearch'), list=$('#gsearch-list');
   makeAC(inp, list, searchAll,
-    (r,raw)=> r.k==='step'
-      ? `<span class="accode st">${r.code}</span><span class="acname">${hlName(r.name,raw)}</span><span class="ackind">단계</span>`
-      : `<span class="accode">${r.code}</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span>${chip(r.part)}`,
+    (r,raw)=> (r.head?`<span class="achead">${r.head}</span>`:'') + (r.k==='step'
+      ? `<span class="accode st">${r.code}</span><span class="acname">${hlName(r.name,raw)}</span>`
+      : r.k==='comp' ? `<span class="accode cp">부품</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span><span class="ackind">${r.sys}</span>`
+      : r.k==='term' ? `<span class="accode tm">용어</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small>${r.why[1]}</small>`:''}</span>`
+      : `<span class="accode">${r.code}</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span>${chip(r.part)}`),
     r=>{ if(r.k==='step'){ openStep(r.id); return; }
+      if(r.k==='comp'){ openSys(r.sys, r.id); return; }
+      if(r.k==='term'){ pushHist(); showTab('ref'); const tr=document.getElementById(r.id); const d=tr&&tr.closest('details'); if(d) d.open=true; requestAnimationFrame(()=>{ if(tr){ smoothScrollTo(()=>tr.getBoundingClientRect().top+scrollY-innerHeight/3, ()=>markHere(tr)); } }); return; }
       if(TAB==='graph'){ pushHist(); selectItem(r.id,true); } else openItem(r.id); });
   document.addEventListener('keydown',e=>{ if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey) return; const a=document.activeElement;
     if(a && (a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable)) return; e.preventDefault(); inp.focus(); inp.select(); });

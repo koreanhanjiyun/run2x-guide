@@ -9,8 +9,9 @@ function initNext(){
 function updateGraphHint(){ const h=$('#gstart'); if(h) h.hidden = !!(((typeof PSET!=='undefined')&&PSET.size)||SEL||SHOWALL); }
 
 /* ---------- 연결도: 내용 카드 닫기 · 전체 화면 ---------- */
-function fsUI(on){ const rail=$('#partRail'), w=document.querySelector('.gwrap'), b=$('#z-fs');
-  if(on){ if(rail.parentElement!==w) w.appendChild(rail); } else if(rail.parentElement!==document.body) document.body.insertBefore(rail, $('#toc'));
+function fsUI(on){ const rail=$('#partRail'), fr=$('#figRail'), fm=$('#figModal'), w=document.querySelector('.gwrap'), b=$('#z-fs');
+  if(on){ if(rail.parentElement!==w) w.appendChild(rail); if(fr && fr.parentElement!==w) w.appendChild(fr); if(fm && fm.parentElement!==w) w.appendChild(fm); }   // 전체 화면에서도 파트 강조·좌표계 거동 배너가 보이게
+  else { if(rail.parentElement!==document.body) document.body.insertBefore(rail, $('#toc')); if(fr && fr.parentElement!==document.body) document.body.insertBefore(fr, $('#toc')); if(fm && fm.parentElement!==document.body) document.body.appendChild(fm); }
   document.body.classList.toggle('gfs', on);
   if(b){ b.innerHTML = on?FS_IN:FS_OUT; b.title = on?'전체 화면 끝내기 (Esc)':'전체 화면'; } }
 function setMax(on){ document.body.classList.toggle('gmax', on); fsUI(on); }
@@ -31,26 +32,6 @@ document.addEventListener('pointerdown',e=>{ const h=e.target.closest('.toc-rs')
   const mv=ev=>{ setTocW(ev.clientX-left); tocFx(); };
   const up=ev=>{ h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up); document.body.classList.remove('toc-drag'); SETP('tocw', String(Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tocw'))))); };
   h.addEventListener('pointermove',mv); h.addEventListener('pointerup',up); });
-
-/* ---------- 이전 위치로: 도착한 카드를 떠날 때만 지움 ---------- */
-let LAND=null;
-function clearHist(){ LAND=null; if(!HIST.length && $('#backbtn').hidden) return; HIST.length=0; $('#backbtn').hidden=true; }
-{ const _mh=markHere; markHere=function(el){ _mh(el); if(HIST.length) LAND=el; }; }
-{ const _ph=pushHist; pushHist=function(){ HIST.length=0; LAND=null; _ph(); }; }
-{ const _gb=goBack; goBack=function(){ LAND=null; _gb(); }; }
-{ const _si=selectItem; selectItem=function(id,center){ if(!center && TAB==='graph' && HIST.length) clearHist(); _si(id,center); if(center && HIST.length) LAND='graph:'+id; }; }
-{ const _cs=clearSel; clearSel=function(){ if(TAB==='graph' && HIST.length && !window.__inBack) clearHist(); _cs(); }; }
-document.addEventListener('click', e=>{
-  if(e.target.closest('.tab')){ clearHist(); return; }
-  const sm=e.target.closest('summary'); if(!sm || !HIST.length || !LAND || typeof LAND==='string') return;
-  const d=sm.parentElement; if(!d || d.tagName!=='DETAILS') return;
-  if(d===LAND || d.contains(LAND)){ if(d.open) clearHist(); return; }      // 도착한 카드(또는 그 바깥 단계)를 닫음
-  if(LAND.contains(d)) return;                                            // 카드 안의 질문 등은 유지
-  if(!d.open) clearHist();                                                // 다른 항목·단계를 펼침
-}, true);
-window.addEventListener('scroll', ()=>{ if(SCR || !HIST.length || !LAND || typeof LAND==='string') return;
-  const r=LAND.getBoundingClientRect(), tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50;
-  if(r.bottom < tabh || r.top > window.innerHeight) clearHist(); }, {passive:true});
 
 /* ---------- 변경 이력: 버전 선택 ---------- */
 function initChangelog(){
@@ -139,3 +120,15 @@ function raiseSymLabels(){ document.querySelectorAll('.fig figure>svg').forEach(
   svg.querySelectorAll(':scope > g').forEach(g=>{ if(g.querySelector(':scope > rect.mjbg')) svg.appendChild(g); }); }); }
 
 { const _rm=renderMath; renderMath=function(root){ _rm(root); try{ raiseSymLabels(); }catch(e){} }; }
+
+/* ---------- 항목 본문을 펼쳐 그린 뒤 (K2) ---------- */
+ITEM_HOOKS.push((d,b)=>{
+  b.querySelectorAll('details.calc').forEach(runCalc);
+  b.querySelectorAll('.stbox[data-id]').forEach(el=>renderSB(el));
+  b.querySelectorAll('.tval').forEach(el=>renderTV(el));
+  subify(b); try{ if(window.MathJax && MathJax.tex2svg) renderMath(b); }catch(e){} try{ subifySvg(b); }catch(e){}
+  try{ refreshStatus(); }catch(e){}
+});
+
+/* ---------- 참고 탭: 칸을 펼치고 접을 때 문서 높이를 다시 계산 (용어집을 접은 뒤 아래까지 못 내려가는 문제 대비) ---------- */
+document.addEventListener('toggle', e=>{ const d=e.target; if(!(d && d.closest && d.closest('#ref-list'))) return; requestAnimationFrame(()=>{ void document.body.offsetHeight; try{ window.dispatchEvent(new Event('resize')); }catch(_){} }); }, true);

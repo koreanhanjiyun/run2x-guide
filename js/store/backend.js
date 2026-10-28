@@ -6,7 +6,7 @@
    - 팀 데이터는 teams/<팀ID>/ 아래에 팀별로 저장. 화면 코드가 부르는 'status/..', 'qa', 'meta/season' 등은
      자동으로 현재 팀 경로 아래로 붙음 (scoped db).
    - 로그인하지 않았거나, 고른 팀의 팀원이 아니면 db는 null → 팀 데이터는 보이지 않고 저장 버튼은 잠김.
-   - 역할: 개발자(config.developers) / 팀 관리자(members/<uid>.role='admin') / 팀원(role='member')
+   - 역할: 개발자(config.developers) / 회장(members/<uid>.role='admin') / 팀원(role='member')
    ============================================================ */
 window.Backend = (function(){
   const CFG = window.RUN2X_CONFIG || {};
@@ -63,7 +63,7 @@ window.Backend = (function(){
         c.team = tid; window.__teamId = tid; c.teamName = t.data().name || ''; c.teamKey = t.data().key || '';
         const today = new Date().toISOString().slice(0,10);
         if(String(t.data().lastActive||'').slice(0,10) !== today){ try{ await F.fs.doc('teams/'+tid).update({lastActive: new Date().toISOString()}); }catch(e){ console.warn('마지막 활동일 기록 실패', e); } }
-        const rl = m.data().role; c.role = (rl==='admin'||rl==='lead') ? rl : 'member'; c.parts = Array.isArray(m.data().parts) ? m.data().parts : []; c.state = 'member';
+        const rl = m.data().role; c.role = (rl==='admin'||rl==='head'||rl==='lead') ? rl : 'member'; c.parts = Array.isArray(m.data().parts) ? m.data().parts : []; c.state = 'member';
         if(c.myTeams[tid] !== c.teamName) await setMyTeam(c, tid, c.teamName);
       }catch(e){ console.error('팀 정보를 읽지 못했습니다', e); c.state = 'error'; }
       return c;
@@ -102,6 +102,14 @@ window.Backend = (function(){
   async function sha(t){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
   const keyOf = (name, pw) => sha(norm(name).toLowerCase() + ':' + pw);
   const err = (code, msg) => { const e = new Error(msg); e.code = code; return e; };
+  /* 팀 데이터·팀원·열쇠·이름을 모두 지움. 팀 문서는 내 팀원 문서보다 먼저 지워야 규칙을 통과 */
+  async function delTeam(c, tid, name, key){ const fs = c.F.fs, P = 'teams/'+tid;
+    for(const col of ['status','val','qa','meta','blocked','secret']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
+    const ms = await fs.collection(P+'/members').get(); await Promise.all(ms.docs.filter(d=>d.id!==c.uid).map(d=>fs.doc(P+'/members/'+d.id).delete()));
+    if(key){ try{ await fs.doc('joinKeys/'+key).delete(); }catch(e){} }
+    if(name){ try{ await fs.doc('teamNames/'+norm(name).toLowerCase()).delete(); }catch(e){} }
+    await fs.doc(P).delete();
+    await fs.doc(P+'/members/'+c.uid).delete(); }
   const Team = {
     ctx: teamCtx, NAME_RE, PW_RE,
     check(name, pw){ name = norm(name);
@@ -121,7 +129,7 @@ window.Backend = (function(){
       let jk; try{ jk = await fs.doc('joinKeys/'+key).get(); }catch(e){ jk = null; }
       if(!jk || !jk.exists) throw err('nomatch', '팀 이름 또는 비밀번호가 맞지 않습니다.');
       const tid = jk.data().team, mref = fs.doc(`teams/${tid}/members/${c.uid}`), m = await mref.get();
-      if(!m.exists){ let bk = null; try{ bk = await fs.doc(`teams/${tid}/blocked/${c.uid}`).get(); }catch(e){} if(bk && bk.exists) throw err('blocked', '이 팀에서 차단되어 가입할 수 없습니다. 팀 관리자에게 문의하십시오.'); }
+      if(!m.exists){ let bk = null; try{ bk = await fs.doc(`teams/${tid}/blocked/${c.uid}`).get(); }catch(e){} if(bk && bk.exists) throw err('blocked', '이 팀에서 차단되어 가입할 수 없습니다. 회장에게 문의하십시오.'); }
       if(!m.exists) await mref.set({role:'member', name: c.name, email: c.email, at: new Date().toISOString(), via: key});
       let tn = name; try{ const t = await fs.doc('teams/'+tid).get(); if(t.exists) tn = t.data().name || name; }catch(e){}
       await setMyTeam(c, tid, tn); return Team.choose(tid); },
@@ -129,10 +137,10 @@ window.Backend = (function(){
       const fs = c.F.fs, key = await keyOf(c.teamName, pw); if(key === c.teamKey) throw err('same', '지금 비밀번호와 같습니다.');
       const b = fs.batch(); b.set(fs.doc('joinKeys/'+key), {team: c.team}); b.update(fs.doc('teams/'+c.team), {key});
       if(c.teamKey) b.delete(fs.doc('joinKeys/'+c.teamKey)); b.set(fs.doc(`teams/${c.team}/secret/pw`), {pw}); await b.commit(); c.teamKey = key; },
-    /* 현재 팀 비밀번호 (팀 관리자만 읽음). 이 기능 전에 만든 팀은 한 번 바꾸기 전까지 없음 */
+    /* 현재 팀 비밀번호 (회장만 읽음). 이 기능 전에 만든 팀은 한 번 바꾸기 전까지 없음 */
     async secretPw(){ const c = await teamCtx(); try{ const d = await c.F.fs.doc(`teams/${c.team}/secret/pw`).get(); return d.exists ? (d.data().pw || '') : ''; }catch(e){ return ''; } },
-    /* 팀 이름 변경 (관리자): 열쇠가 이름+비밀번호라 비밀번호를 함께 받아 열쇠도 다시 만듦. 기존 팀원은 그대로 */
-    async rename(name, pw){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 팀 이름을 바꿀 수 있습니다.');
+    /* 팀 이름 변경 (회장): 열쇠가 이름+비밀번호라 비밀번호를 함께 받아 열쇠도 다시 만듦. 기존 팀원은 그대로 */
+    async rename(name, pw){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','회장만 팀 이름을 바꿀 수 있습니다.');
       if(!pw) pw = await Team.secretPw(); if(!pw) throw err('nopw','저장된 비밀번호가 없습니다. 비밀번호를 함께 입력하십시오.');
       name = Team.check(name, pw); if(name === c.teamName) throw err('same','지금 팀 이름과 같습니다.');
       const fs = c.F.fs, lower = name.toLowerCase(), oldLower = norm(c.teamName).toLowerCase();
@@ -144,24 +152,45 @@ window.Backend = (function(){
       b.set(fs.doc(`teams/${c.team}/secret/pw`), {pw});
       await b.commit(); c.teamName = name; c.teamKey = key; await setMyTeam(c, c.team, name); },
     async members(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/members`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
-    /* 역할: admin(팀 관리자) / lead(파트장, parts=담당 파트) / member(팀원) */
-    async setRole(uid, role, parts){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role, parts: role==='lead' ? (parts||[]) : []}); },
-    /* 팀원 차단: 내보내고 다시 가입하지 못하게 (관리자). 차단한 사람은 댓글도 쓸 수 없음 */
+    /* 역할: admin(회장) / head(팀장)·lead(파트장), parts=담당 파트(팀장 묶음은 아래 파트까지 풀어 저장) / member(팀원) */
+    async setRole(uid, role, parts){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role, parts: (role==='lead'||role==='head') ? (parts||[]) : []}); },
+    /* 팀원 한 명의 역할·담당·시즌 명단을 한꺼번에 바꿈 (회장, 팀원 관리 [모두 저장]) */
+    async updateMember(uid, d){ const c = await teamCtx(); const o = {}; ['role','parts','seasons'].forEach(k=>{ if(k in d) o[k]=d[k]; }); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update(o); },
+    /* 새 시즌으로 넘길 때: 시즌 명단이 없는 팀원은 지난 시즌 명단에 지금 역할로 기록, 회장은 새 시즌에도 그대로 (H13) */
+    async rollSeason(from, to){ const c = await teamCtx(); if(c.role!=='admin') return; const ms = await Team.members();
+      await Promise.all(ms.map(m=>{ const s = Object.assign({}, m.seasons || {}), rl = m.role||'member', pt = Array.isArray(m.parts)?m.parts:[];
+        if(!m.seasons && Team.inSeason(m, from)) s[from] = {role:rl, parts:pt};
+        const upd = {seasons: s};
+        if(rl==='admin') s[to] = {role:'admin', parts:[]};
+        else if(!(to in s)){ upd.role='member'; upd.parts=[]; }
+        return c.F.fs.doc(`teams/${c.team}/members/${m.uid}`).update(upd); })); },
+    /* 이 팀원이 그 시즌 명단에 있나: 시즌 명단이 있으면 그대로, 없으면(예전 팀원) 가입한 해부터 */
+    inSeason(m, S){ if(m.seasons) return Object.prototype.hasOwnProperty.call(m.seasons, String(S)); const y = m.at ? String(new Date(m.at).getFullYear()) : ''; return !y || +S >= +y; },
+    /* 팀원 차단: 내보내고 다시 가입하지 못하게 (회장). 차단한 사람은 댓글도 쓸 수 없음 */
     async block(uid){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team; const m = await fs.doc(P+'/members/'+uid).get(); const d = m.exists ? m.data() : {};
       const b = fs.batch(); b.set(fs.doc(P+'/blocked/'+uid), {name: d.name||'', email: d.email||'', at: new Date().toISOString(), by: c.uid}); if(m.exists) b.delete(fs.doc(P+'/members/'+uid)); await b.commit(); },
     async unblock(uid){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/blocked/${uid}`).delete(); },
     async blockedList(){ const c = await teamCtx(); const q = await c.F.fs.collection(`teams/${c.team}/blocked`).get(); return q.docs.map(d=>({uid:d.id, ...d.data()})); },
     async remove(uid){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).delete(); if(uid===c.uid){ lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); } },
-    /* 팀 삭제: 팀 데이터·팀원·열쇠·이름을 모두 지움 (관리자). 팀 문서는 내 팀원 문서보다 먼저 지워야 규칙을 통과 */
-    async deleteTeam(){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 팀을 삭제할 수 있습니다.');
-      const fs = c.F.fs, P = 'teams/'+c.team;
-      for(const col of ['status','val','qa','meta','blocked','secret']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
-      const ms = await fs.collection(P+'/members').get(); await Promise.all(ms.docs.filter(d=>d.id!==c.uid).map(d=>fs.doc(P+'/members/'+d.id).delete()));
-      if(c.teamKey){ try{ await fs.doc('joinKeys/'+c.teamKey).delete(); }catch(e){} }
-      try{ await fs.doc('teamNames/'+norm(c.teamName).toLowerCase()).delete(); }catch(e){}
-      await fs.doc(P).delete();
-      await fs.doc(P+'/members/'+c.uid).delete();
-      lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); },
+    /* 팀 삭제: 팀 데이터·팀원·열쇠·이름을 모두 지움 (회장). 팀 문서는 내 팀원 문서보다 먼저 지워야 규칙을 통과 */
+    async deleteTeam(){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','회장만 팀을 삭제할 수 있습니다.');
+      await delTeam(c, c.team, c.teamName, c.teamKey); if(lsGet(TEAMKEY)===c.team) lsSet(TEAMKEY, null); await setMyTeam(c, c.team, null); },
+    /* 팀 하나의 요약 (내가 그 팀원일 때): 이름·팀원 수·회장 수·내 역할 */
+    async teamInfo(tid){ const c = await teamCtx(); const fs = c.F.fs;
+      const [t, ms] = await Promise.all([fs.doc('teams/'+tid).get(), fs.collection(`teams/${tid}/members`).get()]);
+      const me = ms.docs.find(d=>d.id===c.uid), d = t.exists ? t.data() : {};
+      return { id: tid, exists: t.exists, name: d.name||'', key: d.key||'', count: ms.size, admins: ms.docs.filter(x=>x.data().role==='admin').length, myRole: me ? (me.data().role||'member') : null }; },
+    /* 팀 나가기: 지금 팀이 아니어도 됨. 회장은 나갈 수 없음 */
+    async leave(tid){ const c = await teamCtx(); tid = tid || c.team; if(!tid) throw err('noteam','팀이 없습니다.');
+      let info; try{ info = await Team.teamInfo(tid); }catch(e){ info = null; }
+      if(!info || !info.myRole){ await setMyTeam(c, tid, null); if(tid===c.team || lsGet(TEAMKEY)===tid) lsSet(TEAMKEY, null); return {current: tid===c.team, deleted:false, gone:true}; }
+      /* 회장은 나갈 수 없음: 팀을 삭제하거나, 다른 사람을 회장으로 지정하고 내 역할을 내린 뒤 나감 (그래서 팀에는 항상 회장이 있음) */
+      if(info.myRole==='admin') throw err('admin', `${info.name||'이 팀'}의 회장은 나갈 수 없습니다. 팀 설정에서 팀을 삭제하거나, 다른 사람을 회장으로 지정하고 내 역할을 내린 뒤 나가십시오.`);
+      const deleted=false;
+      await c.F.fs.doc(`teams/${tid}/members/${c.uid}`).delete();
+      if(tid===c.team || lsGet(TEAMKEY)===tid) lsSet(TEAMKEY, null);
+      await setMyTeam(c, tid, null);
+      return {current: tid===c.team, deleted}; },
     /* 백업: 모든 시즌의 진행 상태·우리 팀 값, 논의, 이번 시즌 설정을 파일 하나로 (차단 목록·비밀번호는 넣지 않음) */
     BACKUP_COLS: ['status','val','qa','meta'],
     async exportData(){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team, data = {};
@@ -177,7 +206,7 @@ window.Backend = (function(){
        - 고른 시즌: 그 시즌의 진행 상태·우리 팀 값을 파일 내용으로 바꿈 (다른 시즌은 그대로)
        - 논의: 파일에 있고 지금 없는 글만 되살림 (지금 글은 그대로)
        - 이번 시즌 설정(meta)은 바꾸지 않음 */
-    async importData(obj, seasons){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','관리자만 불러올 수 있습니다.');
+    async importData(obj, seasons){ const c = await teamCtx(); if(c.role!=='admin') throw err('perm','회장만 불러올 수 있습니다.');
       if(!obj || obj.format!=='run2x-team-backup' || !obj.data) throw err('fmt','이 사이트의 팀 백업 파일이 아닙니다.');
       const LS = typeof LEGACY_SEASON!=='undefined' ? String(LEGACY_SEASON) : '', SE = new Set((seasons||[]).map(String)), sOf = d => String((d && d.season) || LS);
       const okId = id => /^[^/]{1,200}$/.test(id), fs = c.F.fs, P = 'teams/'+c.team, ops = [], n = {status:0, val:0, qa:0}, now = new Date().toISOString();

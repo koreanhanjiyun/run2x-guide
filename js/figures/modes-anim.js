@@ -47,25 +47,29 @@ function build(el){
     grid.appendChild(d); panels.push({m,g:d.querySelector('.body'),gh:d.querySelector('.ghost')});
   });
   pb=el.querySelector('.ma-play');
-  pb.onclick=()=>{ playing=!playing; t=0; setBtn(); draw(); };
+  pb.onclick=()=>{ playing=!playing; t=0; setBtn(); draw(); if(playing && !raf){ last=performance.now(); raf=requestAnimationFrame(frame); } };
   el.querySelector('.ma-spd').oninput=e=>spd=+e.target.value;
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) playing=false;
   built=el;
 }
-function frame(now){ const dt=Math.min(0.1,(now-last)/1000); last=now; if(playing) t+=dt*spd; draw(); raf=requestAnimationFrame(frame); }
+/* K6: 정지 중에는 화면을 다시 그리지 않음 (재생할 때만 프레임 반복) */
+function frame(now){ const dt=Math.min(0.1,(now-last)/1000); last=now; if(playing) t+=dt*spd; draw(); raf = playing ? requestAnimationFrame(frame) : 0; }
 return {
   start(el){ if(!el) return; if(built!==el) build(el); setBtn(); cancelAnimationFrame(raf); last=performance.now(); draw(); raf=requestAnimationFrame(frame); },
   stop(){ cancelAnimationFrame(raf); raf=0; playing=false; t=0; }   /* 닫으면 일시정지로: 다음에 열 때 정지 장면부터 */
 };
 })();
 
+/* 좌표계 그림 파일은 처음 열 때 불러옴 (K5) */
+function loadCoord(cb){ if(typeof COORD_SVG!=='undefined') return cb(); const sc=document.createElement('script'); const me=[...document.scripts].find(x=>/modes-anim\.js/.test(x.src)); const v=me&&me.src.match(/\?v=[^&]+/);
+  sc.src='js/figures/coord-figs.js'+(v?v[0]:''); sc.onload=cb; sc.onerror=()=>toast('그림을 불러오지 못했습니다. 새로고침해 주십시오.'); document.head.appendChild(sc); }
 function initFigRail(){ if($('#figRail')) return;
   const fr=document.createElement('aside'); fr.id='figRail';
   fr.innerHTML=`<button class="rail-h" id="figToggle" title="차량 좌표계·차체 거동 그림 보기"><span>좌표계·거동</span></button>`;
   const md=document.createElement('div'); md.id='figModal'; md.hidden=true;
-  md.innerHTML=`<div class="fm-panel" role="dialog" aria-label="좌표계·거동"><div class="fm-h"><b>좌표계·거동</b><button class="fm-x" aria-label="닫기" title="닫기 (Esc)">×</button></div><div class="fm-b"><div class="figrow"><figure class="coordfig"><div class="fm-fh"><b>ISO 8855 차량 좌표계</b><span>원점 O = 앞바퀴 중심선(주황 점선) × 차량 중심면(보라 점선) × 지면, 정적 상태</span><span>오른쪽 바퀴의 점은 y &lt; 0 · 볼조인트 y = −(t/2 − d<sub>l</sub>)</span></div>${COORD_SVG}</figure><figure class="coordfig"><div class="fm-fh"><b>차체 회전 (오른손 법칙)</b><span>이동(서지·스웨이·히브)의 +는 왼쪽 그림의 x·y·z와 같음</span></div>${MOTION_SVG}</figure></div><figure class="coordfig" id="modeAnimFig"></figure></div></div>`;
+  const build=()=>{ if(md.dataset.built) return; md.dataset.built='1'; md.innerHTML=`<div class="fm-panel" role="dialog" aria-label="좌표계·거동"><div class="fm-h"><b>좌표계·거동</b><button class="fm-x" aria-label="닫기" title="닫기 (Esc)">×</button></div><div class="fm-b"><div class="figrow"><figure class="coordfig"><div class="fm-fh"><b>ISO 8855 차량 좌표계</b><span>원점 O = 앞바퀴 중심선(주황 점선) × 차량 중심면(보라 점선) × 지면, 정적 상태</span><span>오른쪽 바퀴의 점은 y &lt; 0 · 볼조인트 y = −(t/2 − d<sub>l</sub>)</span></div>${COORD_SVG}</figure><figure class="coordfig"><div class="fm-fh"><b>차체 회전 (오른손 법칙)</b><span>이동(서지·스웨이·히브)의 +는 왼쪽 그림의 x·y·z와 같음</span></div>${MOTION_SVG}</figure></div><figure class="coordfig" id="modeAnimFig"></figure></div></div>`; };
   document.body.appendChild(fr); document.body.appendChild(md);
-  const close=()=>{ md.hidden=true; fr.classList.remove('open'); try{ window.__modeAnim.stop(); }catch(e){} }, open=()=>{ md.hidden=false; fr.classList.add('open'); try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} };
+  const close=()=>{ md.hidden=true; fr.classList.remove('open'); try{ window.__modeAnim.stop(); }catch(e){} }, open=()=>{ loadCoord(()=>{ build(); md.hidden=false; fr.classList.add('open'); try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} }); };
   fr.querySelector('#figToggle').addEventListener('click',()=>{ md.hidden?open():close(); });
   md.addEventListener('click',e=>{ if(e.target===md || e.target.closest('.fm-x')) close(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !md.hidden) close(); });

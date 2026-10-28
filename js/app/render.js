@@ -6,7 +6,7 @@ function renderMath(root){
   const MJ = window.MathJax && typeof MathJax.tex2svg === 'function';
   root.querySelectorAll('.eq[data-k]').forEach(el=>{ if(MJ && !mVis(el)) return; const t = TEX[+el.dataset.k]; el.removeAttribute('data-k');
     if(MJ){ try{ const c = MathJax.tex2svg(t,{display:true}); el.innerHTML=''; el.appendChild(c); return; }catch(e){} }
-    el.textContent = texFallback(t); });
+    el.textContent = t; el.classList.add('tex-raw'); el.title='수식 표시 도구를 불러오지 못해 TeX 원문을 그대로 보여 줍니다'; });
   root.querySelectorAll('.mi[data-tex]').forEach(el=>{ if(MJ && !mVis(el)) return; const t = el.dataset.tex; el.removeAttribute('data-tex');
     if(MJ){ try{ const c = MathJax.tex2svg(t,{display:false}); el.innerHTML=''; el.appendChild(c); return; }catch(e){} } });
   if(MJ) root.querySelectorAll('svg text.mjt:not([data-done])').forEach(t=>{ if(!mVis(t)) return; t.setAttribute('data-done','1'); try{ svgMath(t); }catch(e){} });

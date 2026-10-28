@@ -3,7 +3,7 @@
    ============================================================ */
 const FIG = {};
 const escA = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-function texFallback(t){ return t.replace(/\\text\{([^}]*)\}/g,'$1').replace(/\\mathrm\{([^}]*)\}/g,'$1')
+function texFallback(t){ return t.replace(/\\sqrt\{([^}]*)\}/g,'√($1)').replace(/\\pi\b/g,'π').replace(/\\mu\b/g,'μ').replace(/\\omega\b/g,'ω').replace(/\\theta\b/g,'θ').replace(/\\psi\b/g,'ψ').replace(/\\kappa\b/g,'κ').replace(/\\beta\b/g,'β').replace(/\\lambda\b/g,'λ').replace(/\\le\b|\\leq\b/g,'≤').replace(/\\ge\b|\\geq\b/g,'≥').replace(/\\pm/g,'±').replace(/\^\{([^}]*)\}/g,'^($1)').replace(/\\text\{([^}]*)\}/g,'$1').replace(/\\mathrm\{([^}]*)\}/g,'$1')
   .replace(/\\sigma/g,'σ').replace(/\\nu/g,'ν').replace(/\\delta/g,'δ').replace(/\\Delta/g,'Δ').replace(/\\phi/g,'φ').replace(/\\alpha/g,'α').replace(/\\gamma/g,'γ')
   .replace(/\\approx/g,'≈').replace(/\\cdot/g,'·').replace(/\\times/g,'×').replace(/\\rightarrow/g,'→').replace(/\\tan/g,'tan').replace(/\\arctan/g,'arctan')
   .replace(/\\dfrac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)').replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)').replace(/\\,|\\;|\\quad|\\ /g,' ').replace(/\\[a-zA-Z]+/g,'').replace(/[{}]/g,''); }

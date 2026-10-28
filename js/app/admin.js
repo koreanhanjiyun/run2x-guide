@@ -1,4 +1,4 @@
-/* ---------- 0.26.0 관리 창 (관리자 모드에서만, 오른쪽 전체 높이) ---------- */
+/* ---------- 0.26.0 관리 창 (회장 모드에서만, 오른쪽 전체 높이) ---------- */
 const ADMW=290;
 function admPreds(id){ return [...new Set(EDGES.filter(e=>e[1]===id).map(e=>e[0]))].filter(x=>IT[x]); }
 function admSuccs(id){ return [...new Set(EDGES.filter(e=>e[0]===id).map(e=>e[1]))].filter(x=>IT[x]); }
@@ -8,7 +8,7 @@ const admLnk = id => `<button class="lnk adm-it" data-goto="${id}"><span class="
 function admList(ids, empty, max=60){ if(!ids.length) return `<p class="adm-empty">${empty}</p>`; ids=[...ids].sort(admOrd); return `<div class="adm-list">${ids.slice(0,max).map(admLnk).join('')}</div>`; }
 function initAdm(){ if($('#admPanel')) return;
   const p=document.createElement('aside'); p.id='admPanel'; p.setAttribute('aria-label','관리');
-  p.innerHTML=`<div class="adm-h"><b>관리</b><span class="adm-sub">관리자 모드에서만 보입니다</span><span class="adm-fold" aria-hidden="true"></span></div><div class="adm-b"></div>`;
+  p.innerHTML=`<div class="adm-h"><b>관리</b><span class="adm-sub">회장 모드에서만 보입니다</span><span class="adm-fold" aria-hidden="true"></span></div><div class="adm-b"></div>`;
   document.body.appendChild(p);
   const fold=()=>{ const c=!document.body.classList.contains('adm-coll'); document.body.classList.toggle('adm-coll',c); SETP('admcoll',c?'1':'0'); requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} }); };
   p.querySelector('.adm-h').addEventListener('click',fold);   /* 머리 줄 아무 곳이나 눌러 접기·펼치기 */
@@ -30,7 +30,7 @@ function initAdm(){ if($('#admPanel')) return;
    <details class="adm-s" open><summary><h4>착수 가능 <span class="adm-n" data-n="ready"></span></h4></summary><p class="adm-hint">받는 정보(선행 항목)가 모두 완료·제외인데 아직 예정인 항목</p><div data-l="ready"></div></details>
    <details class="adm-s" open><summary><h4>선행 미완료 경고 <span class="adm-n" data-n="warn"></span></h4></summary><p class="adm-hint">진행 중인데 선행 항목이 아직 끝나지 않은 항목</p><div data-l="warn"></div></details>
    <details class="adm-s"><summary><h4>제외 영향 <span class="adm-n" data-n="skip"></span></h4></summary><p class="adm-hint">제외한 항목과, 그 결과를 받는 항목</p><div data-l="skip"></div></details>
-   <details class="adm-s" open><summary><h4>최근 논의 <span class="adm-n" data-n="qa"></span></h4></summary><p class="adm-hint">항목별 논의의 최근 글 10개. 누르면 그 글로 이동. 부적절한 글은 관리자 모드에서 [삭제 (관리)]</p><div data-l="qa"></div></details>
+   <details class="adm-s" open><summary><h4>최근 논의 <span class="adm-n" data-n="qa"></span></h4></summary><p class="adm-hint">항목별 논의의 최근 글 10개. 누르면 그 글로 이동. 부적절한 글은 회장 모드에서 [삭제 (관리)]</p><div data-l="qa"></div></details>
    <details class="adm-s"><summary><h4>최근 변경</h4></summary><div data-l="recent"></div></details>
    <details class="adm-s"><summary><h4>팀 값 입력 현황 <span class="adm-n" data-n="val"></span></h4></summary><p class="adm-hint">이번 시즌 '우리 팀 값'이 비어 있는 항목</p><div data-l="val"></div></details>
 `;

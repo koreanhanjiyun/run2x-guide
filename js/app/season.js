@@ -17,7 +17,7 @@ rebuildShared=function(){ STATUS={}; SH.meta={};
   refreshStatus(); };
 setStatus=function(id,v){
   if(!SH.on){ if(v==='todo') delete STATUS[id]; else STATUS[id]=v; saveStatus(); refreshStatus(); return; }
-  if(!canEditItem(id)){ toast('이 항목의 진행 상태는 팀 관리자나 담당 파트장만 바꿀 수 있습니다.'); return; }
+  if(!canEditItem(id)){ toast('이 항목의 진행 상태는 회장이나 담당 팀장·파트장만 바꿀 수 있습니다.'); return; }
   if(v==='todo') delete STATUS[id]; else STATUS[id]=v; refreshStatus();
   const se=SEASON, ref=SH.db.doc('status/'+se+'-'+id), legacy = se===LEGACY_SEASON && SH.raw && SH.raw[id] && !SH.raw[id].season;
   const run=async()=>{ if(legacy){ try{ await SH.db.doc('status/'+id).delete(); }catch(e){} } if(v==='todo') await ref.delete(); else await ref.set({v, by:SH.me, at:new Date().toISOString(), season:se, item:id, part:IT[id].p, epoch:SH.epoch}); };
@@ -32,7 +32,7 @@ resetShared=async function(){ const se=SEASON;
 };
 function afterSeason(){ if(SH.on) rebuildShared(); else { loadLocalStatus(); refreshStatus(); } document.querySelectorAll('.tval[data-view]').forEach(el=>delete el.dataset.view); refreshVals(); try{ renderAdm(); }catch(e){}
   const c=document.querySelector('#st-confirm>span'); if(c) c.innerHTML=`<b class="sn-big">${esc(SEASON)}</b> 시즌을 초기화합니다. 다시 복원할 수 없습니다.`; }
-/* 보는 시즌은 누구나 바꿀 수 있음 (내 화면만). 팀의 이번 시즌 지정은 관리자만 (H3) */
+/* 보는 시즌은 누구나 바꿀 수 있음 (내 화면만). 팀의 이번 시즌 지정은 회장만 (H3) */
 { const _ss=setSeason; setSeason=function(v,dir){ if(!/^\d{4}$/.test(v)) return; _ss(v,dir); afterSeason(); try{ renderTeamTab && renderTeamTab(true); }catch(e){} try{ paintSeasonBanner(); }catch(e){} }; }
 { const _osr=onSharedReady; onSharedReady=function(db){ _osr(db); db.doc('meta/season').onSnapshot(sn=>{ const d=sn.exists?sn.data():null; const v=d&&String(d.season||''); if(!/^\d{4}$/.test(v)) { TEAM_SEASON_FIRST=false; return; }
     const follow = TEAM_SEASON_FIRST || !viewingOther(); TEAM_SEASON=v; TEAM_SEASON_FIRST=false;
@@ -43,7 +43,7 @@ loadLocalStatus();
 function updSeasonChip(){ let c=$('#seasonChip'); const ab=$('#admbtn'); if(!c && ab){ c=document.createElement('span'); c.id='seasonChip'; c.setAttribute('role','status'); ab.before(c); } if(!c) return;
   const st = window.DEBUG ? 'dbg' : (!window.__shReady ? 'wait' : (SH.on ? 'on' : 'off'));
   c.className='sc-'+st; c.innerHTML=`<b>${esc(SEASON)} 시즌${viewingOther()?' 보는 중':''}</b><span class="sc-dot"></span><span>${st==='on'?'연결됨':st==='off'?'연결 안 됨':st==='dbg'?'디버깅':'연결 확인 중'}</span>`;
-  c.title = `${SEASON} 시즌 (관리자가 정한 이번 시즌)\n` + ({
+  c.title = `${SEASON} 시즌 (회장이 정한 이번 시즌)\n` + ({
     on:'● 연결됨: 팀과 공유 중입니다. 내가 바꾼 진행 상태·팀 값·논의가 팀원 모두에게 바로 보입니다.',
     off:'● 연결 안 됨: 팀과 공유되지 않습니다. 진행 상태·팀 값·논의는 저장할 수 없어 저장·변경 버튼이 잠깁니다. 읽기와 계산기는 그대로 쓸 수 있고, 연결되면 다시 켜집니다.',
     wait:'● 연결 확인 중: 팀 공유 저장소에 연결하고 있습니다. 연결될 때까지 저장·변경 버튼이 잠깁니다.',
@@ -58,9 +58,10 @@ function updSeasonChip(){ let c=$('#seasonChip'); const ab=$('#admbtn'); if(!c &
 { const _as=afterSeason; afterSeason=function(){ const r=_as.apply(this,arguments); try{ updSeasonChip(); }catch(e){} return r; }; }
 
 /* ---------- 관리 창: 이번 시즌(팀 공통) 지정은 버튼으로만 ---------- */
-async function setTeamSeason(){ if(SH.on && !SH.canAdmin) return; const v=SEASON;
-  if(SH.on && SH.db){ try{ await SH.db.doc('meta/season').set({season:v, by:SH.me, at:new Date().toISOString()}); }catch(e){ stNote('이번 시즌을 저장하지 못했습니다.'); return; } }
-  TEAM_SEASON=v; SETP('season',v); try{ renderAdm(); }catch(e){} try{ updSeasonChip(); }catch(e){} toast(`팀의 이번 시즌을 <b>${esc(v)} 시즌</b>으로 정했습니다`); }
+async function setTeamSeason(arg){ if(SH.on && !SH.canAdmin) return; const v=String(arg||SEASON), from=TEAM_SEASON; if(v===String(from)) return;
+  if(SH.on && SH.db){ try{ await SH.db.doc('meta/season').set({season:v, by:SH.me, at:new Date().toISOString()}); }catch(e){ stNote('이번 시즌을 저장하지 못했습니다.'); return; }
+    try{ if(window.Backend && Backend.Team && Backend.Team.rollSeason) await Backend.Team.rollSeason(from, v); }catch(e){ console.error(e); } }
+  TEAM_SEASON=v; SETP('season',v); try{ renderAdm(); }catch(e){} try{ updSeasonChip(); }catch(e){} toast(`팀의 이번 시즌을 <b>${esc(v)} 시즌</b>으로 정했습니다. 팀 설정에서 이번 시즌 팀원 명단을 확인하십시오`); try{ if(TAB==='team') renderTeamTab(); }catch(e){} }
 { const _ra=renderAdm; renderAdm=function(){ const r=_ra.apply(this,arguments);
   try{ const nav=document.querySelector('#admPanel .sn-nav'); if(nav){ let t=nav.parentElement.querySelector('.sn-team'); if(!t){ t=document.createElement('div'); t.className='sn-team'; nav.after(t); }
     t.innerHTML = viewingOther()

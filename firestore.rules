@@ -12,6 +12,15 @@ service cloud.firestore {
     function mPath(t) { return /databases/$(database)/documents/teams/$(t)/members/$(uid()); }
     function isMember(t) { return signedIn() && exists(mPath(t)); }
     function isTAdmin(t) { return isMember(t) && get(mPath(t)).data.role == 'admin'; }
+    // 파트 → 묶음. ※ js/app/status-shared.js 의 PGROUP 과 같게 (파트를 새로 만들면 두 곳 모두)
+    function grpOf(part) { return part in ['프레임','서스','조향','제동','구동계','에어로','냉각'] ? '샤시'
+                                : (part in ['모터컨트롤러','배터리','회로','데이터로거'] ? '전기' : ''); }
+    // 팀장·파트장(같은 권한): 담당 파트(parts) 항목의 진행 상태·우리 팀 값만 편집.
+    // 담당에 묶음(샤시·전기)이 있으면 그 묶음의 모든 파트, 팀장은 공통 항목도 편집
+    function isLeadOf(t, part) { let m = get(mPath(t)).data; let ps = m.get('parts', []);
+                                  return isMember(t) && m.role in ['head','lead'] && part is string
+                                  && (ps.hasAny([part]) || ps.hasAny([grpOf(part)]) || (m.role == 'head' && part == '공통')); }
+    function canEditPart(t, part) { return isTAdmin(t) || isLeadOf(t, part); }
     function isBlocked(t) { return exists(/databases/$(database)/documents/teams/$(t)/blocked/$(uid())); }
     function str(v, n) { return v is string && v.size() <= n; }
 
@@ -60,13 +69,24 @@ service cloud.firestore {
           || (request.resource.data.role == 'member' && isKey(request.resource.data.via) && !isBlocked(t)
               && exists(/databases/$(database)/documents/joinKeys/$(request.resource.data.via))
               && get(/databases/$(database)/documents/joinKeys/$(request.resource.data.via)).data.team == t) );
-        allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
-                      && request.resource.data.role in ['admin','member'];
-        allow delete: if isTAdmin(t) || (signedIn() && u == uid());
+        // 회장: 역할(회장·팀장·파트장·팀원)·담당 파트·시즌 명단 변경
+        allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role','parts','seasons'])
+                      && request.resource.data.role in ['admin','head','lead','member']
+                      && request.resource.data.get('parts', []) is list && request.resource.data.get('parts', []).size() <= 16
+                      && request.resource.data.get('seasons', {}) is map;
+        // 회장은 다른 팀원을 내보낼 수 있고, 팀원·파트장은 스스로 나갈 수 있음. 회장 자신은 나갈 수 없음(팀 삭제 마지막 단계에서 팀 문서를 지운 뒤에만 자기 기록 삭제)
+        allow delete: if (isTAdmin(t) && u != uid()) || (signedIn() && u == uid() && (resource.data.role != 'admin' || !exists(tPath(t))));
       }
       // 팀 데이터
-      match /status/{d} { allow read: if isMember(t); allow write: if isTAdmin(t); }
-      match /val/{d}    { allow read: if isMember(t); allow write: if isTAdmin(t); }
+      // 진행 상태·우리 팀 값: 관리자 전부, 파트장은 문서의 part 가 담당 파트일 때 (쓰기 전·후 모두)
+      match /status/{d} { allow read: if isMember(t);
+        allow create: if canEditPart(t, request.resource.data.get('part', null)) || isTAdmin(t);
+        allow update: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && canEditPart(t, resource.data.get('part', null)));
+        allow delete: if isTAdmin(t) || canEditPart(t, resource.data.get('part', null)); }
+      match /val/{d}    { allow read: if isMember(t);
+        allow create: if canEditPart(t, request.resource.data.get('part', null)) || isTAdmin(t);
+        allow update: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && (canEditPart(t, resource.data.get('part', null)) || !('part' in resource.data)));
+        allow delete: if isTAdmin(t); }
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
       // 팀 비밀번호 원문 (관리자만 보기·쓰기. 오픈채팅 입장 코드 수준으로 취급)
       match /secret/{d} { allow read, write: if isTAdmin(t); }

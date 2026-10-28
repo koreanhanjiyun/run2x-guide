@@ -4,7 +4,10 @@ function initRefFold(){ let prev=TAB; const _st=showTab; showTab=function(t,k){ 
 /* ---------- 항목 바로가기 링크 (제목 줄에 마우스를 올리면 🔗) · 사이트 링크 복사 ---------- */
 /* 사이트 주소: 웹에 올라가 있으면 지금 주소, 아니면(아티팩트·파일) config 의 siteUrl */
 function siteUrl(){ try{ if(/^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent|anthropic/.test(location.hostname)) return location.origin+location.pathname; }catch(e){} return (window.RUN2X_CONFIG||{}).siteUrl || ''; }
-function toast(html, ms){ let t=$('#toast'); if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t); } t.innerHTML=html; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'), ms||2600); }
+/* G2: 글 길이에 비례해 보여 주고(최소 3초), 화면 낭독기에도 알림. 마우스를 올리면 사라지지 않음 */
+function toast(html, ms){ let t=$('#toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.setAttribute('role','status'); t.setAttribute('aria-live','polite'); t.setAttribute('aria-atomic','true'); document.body.appendChild(t);
+    t.addEventListener('mouseenter',()=>clearTimeout(t._h)); t.addEventListener('mouseleave',()=>{ t._h=setTimeout(()=>t.classList.remove('on'), 1500); }); }
+  t.innerHTML=html; t.classList.add('on'); clearTimeout(t._h); const n=String(html).replace(/<[^>]+>/g,'').length; t._h=setTimeout(()=>t.classList.remove('on'), ms || Math.min(10000, Math.max(3000, 1500 + n*70))); }
 function copyText(text, okHtml){
   const fail=()=>{ toast(`복사하지 못했습니다. 아래 내용을 선택해 복사하십시오<textarea class="tlink" readonly rows="${Math.min(7, String(text).split('\n').length)}"></textarea>`, 12000);
     const i=$('#toast .tlink'); if(i){ i.value=text; setTimeout(()=>{ i.focus(); i.select(); },30); } };
@@ -19,14 +22,14 @@ function initLinks(){
 }
 
 /* ---------- 0.34.0 항목별 논의: 각 항목 카드 맨 아래, 댓글 + 답글(한 단계)
-   - 팀원 누구나 쓰고, 자기 글은 수정·삭제. 관리자는 관리자 모드에서 부적절한 글 삭제
+   - 팀원 누구나 쓰고, 자기 글은 수정·삭제. 회장은 회장 모드에서 부적절한 글 삭제
    - 답글이 달린 글을 지우면 "삭제한 댓글입니다"로 남겨 흐름 유지
    - 처리 상태(접수·반영 등)는 없음. 내용 오류 신고는 플랫폼 문의로
    - 저장: qa/<id> = {v:2, item, parent('' 또는 원글 id), text, by, at, editedAt?, removed?('self'|'admin')} ---------- */
 let QA={}; const QAKEY='run2x.qa.v2';
 try{ QA=JSON.parse(localStorage.getItem(QAKEY)||'{}')||{}; }catch(e){ QA={}; }
 const isTalk=q=> !!q && q.v===2 && !!q.item;
-const qaAdmin=()=> SH.on ? !!SH.canAdmin : false;   // 관리자 모드 없이 관리자에게 [삭제 (관리)] 표시
+const qaAdmin=()=> SH.on ? !!SH.canAdmin : false;   // 회장 모드 없이 회장에게 [삭제 (관리)] 표시
 const qaMine=q=> SH.on ? (!!SH.me && q.by===SH.me) : true;
 const notMe=q=> (q.by||'')!==(SH.me||'');
 function qaFmt(at){ const d=new Date(at); return isNaN(d)?'':`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
@@ -46,7 +49,7 @@ function tkThreads(id){ const all=Object.entries(QA).filter(([k,q])=>isTalk(q) &
   const tops=all.filter(([k,q])=>!q.parent || !isTalk(QA[q.parent])).sort(by);
   return tops.map(([k,q])=>[k,q,all.filter(([k2,r])=>r.parent===k).sort(by)]); }
 function tkRow(k,q,nm,adm,isReply,since){ const rm=!!q.removed, mine=qaMine(q), who=nm(q.by);
-  const acts = rm ? '' : `<button class="lnk tk-reply" type="button">답글</button>${mine?'<button class="lnk qa-edit" type="button">수정</button>':''}${mine?'<button class="lnk qa-del" type="button">삭제</button>':(adm?'<button class="lnk qa-del tk-mod" type="button" title="관리자: 부적절한 글 삭제">삭제 (관리)</button>':'')}`;
+  const acts = rm ? '' : `<button class="lnk tk-reply" type="button">답글</button>${mine?'<button class="lnk qa-edit" type="button">수정</button>':''}${mine?'<button class="lnk qa-del" type="button">삭제</button>':(adm?'<button class="lnk qa-del tk-mod" type="button" title="회장: 부적절한 글 삭제">삭제 (관리)</button>':'')}`;
   const isNew = !rm && notMe(q) && String(q.at)>since;
   return `<div class="tk-c${isReply?' tk-r':''}${isNew?' tk-isnew':''}" data-qid="${esc(k)}">
     <div class="tk-h"><span class="tk-av" aria-hidden="true">${esc(rm?'–':[...String(who)][0]||'?')}</span><b class="tk-who">${rm?'':esc(who)}</b><span class="muted">${qaFmt(q.at)}${q.editedAt&&!rm?' · 수정됨':''}</span>${isNew?'<span class="tk-newtag">새 글</span>':''}<span class="qa-act">${acts}</span></div>
@@ -65,7 +68,7 @@ async function renderQA(){ const ps=await qaNames(); const nm=id=>(id && ps[id] 
     L.innerHTML = th.length ? th.map(([k,q,rs])=>`<div class="tk-th" data-top="${esc(k)}">${tkRow(k,q,nm,adm,false,since)}${rs.length?`<div class="tk-rs">${rs.map(([k2,r])=>tkRow(k2,r,nm,adm,true,since)).join('')}</div>`:''}<div class="tk-rfslot"></div></div>`).join('')
                         : '<p class="muted tk-empty">아직 논의가 없습니다.</p>';
     L.querySelectorAll('.tk-c').forEach(r=>{ const q=QA[r.dataset.qid]; if(!q) return; const t=r.querySelector('.qa-t');
-      t.textContent = q.removed ? (q.removed==='admin' ? '관리자가 삭제한 댓글입니다.' : '작성자가 삭제한 댓글입니다.') : (q.text||'');
+      t.textContent = q.removed ? (q.removed==='admin' ? '회장이 삭제한 댓글입니다.' : '작성자가 삭제한 댓글입니다.') : (q.text||'');
       requestAnimationFrame(()=>{ const mb=r.querySelector('.qa-more'); if(mb && t.scrollHeight>t.clientHeight+2) mb.hidden=false; }); });
   });
   try{ renderAdm(); }catch(e){}
@@ -80,18 +83,21 @@ async function tkDelete(k){ const q=QA[k]; if(!q) return; const mine=qaMine(q);
   if(p && QA[p] && QA[p].removed && !Object.entries(QA).some(([k2,r])=>k2!==k && isTalk(r) && r.parent===p) && (qaMine(QA[p]) || qaAdmin())) await qaDel(p, true); }
 function tkPost(item, parent, text){ qaSave(null,{v:2, item, parent:parent||'', text:String(text).slice(0,4000), by:SH.me||'', at:new Date().toISOString()}); tkMark(item); }
 
-function initQA(){
-  const fbOK = window.Backend && Backend.kind()==='firebase';
-  document.querySelectorAll('details.item[data-item]').forEach(d=>{ const id=d.dataset.item; const body=d.querySelector(':scope>.dbody'); if(!body || body.querySelector(':scope>.tk')) return;
+function tkBox(d){ const fbOK = window.Backend && Backend.kind()==='firebase'; const id=d.dataset.item; const body=d.querySelector(':scope>.dbody'); if(!body || body.querySelector(':scope>.tk')) return;
     const box=document.createElement('div'); box.className='tk'; box.dataset.titem=id;
     box.innerHTML=`<details class="tk-d"><summary><b>💬 논의</b><span class="tk-n muted"></span></summary><div class="tk-b">
       <div class="tk-list"></div>
-      <form class="qa-f tk-f"><textarea class="qa-text" rows="2" maxlength="4000" placeholder="이 항목에 대해 팀원과 나눌 이야기" required></textarea>
+      <form class="qa-f tk-f"><textarea class="qa-text" rows="2" maxlength="4000" placeholder="이 항목에 대해 팀원과 나눌 이야기" aria-label="새 논의 글" required></textarea>
         <div class="qa-r3"><span class="muted qa-note">팀원 모두에게 보입니다.</span><button class="btn pri small" type="submit">남기기</button></div></form>
       ${fbOK?`<p class="muted tk-fbline">내용이 틀렸거나 고쳐야 할 점은 <button type="button" class="lnk tp-fbopen" data-item="${id}">플랫폼 문의</button>로 개발자에게 알려 주십시오.</p>`:''}
       </div></details>`;
     body.appendChild(box);
-    const sm=d.querySelector(':scope>summary'); if(sm && !sm.querySelector('.tk-cnt')){ const b=document.createElement('button'); b.type='button'; b.className='tk-cnt'; b.hidden=true; const sr=sm.querySelector('.sright'); if(sr) sr.before(b); else sm.appendChild(b); } });
+  try{ updSeasonChip(); }catch(e){} }
+function initQA(){
+  const fbOK = window.Backend && Backend.kind()==='firebase';
+  document.querySelectorAll('details.item[data-item]').forEach(d=>{ const sm=d.querySelector(':scope>summary'); if(sm && !sm.querySelector('.tk-cnt')){ const b=document.createElement('button'); b.type='button'; b.className='tk-cnt'; b.hidden=true; const sr=sm.querySelector('.sright'); if(sr) sr.before(b); else sm.appendChild(b); } });
+  ITEM_HOOKS.push(d=>{ tkBox(d); try{ renderQA(); }catch(e){} });
+  document.querySelectorAll('details.item[data-item]').forEach(d=>{ if(!d.querySelector(':scope>.dbody[data-lazy]')) tkBox(d); });
   document.addEventListener('toggle',e=>{ const d=e.target; if(!d.classList || !d.classList.contains('tk-d') || !d.open) return; tkMark(d.closest('.tk').dataset.titem); renderQA(); }, true);
   document.addEventListener('submit',e=>{ const f=e.target.closest('.tk-f,.tk-rf'); if(!f) return; e.preventDefault(); const t=f.querySelector('textarea'), text=t.value.trim(); if(!text) return;
     const item=f.closest('.tk').dataset.titem; if(f.classList.contains('tk-rf')){ const top=f.closest('.tk-th').dataset.top; f.remove(); tkPost(item, top, text); } else { t.value=''; tkPost(item, '', text); } });
@@ -100,7 +106,7 @@ function initQA(){
     if(!e.target.closest('.tk')) return;
     const mo=e.target.closest('.qa-more'); if(mo){ const r=mo.closest('.tk-c'); const o=r.classList.toggle('open'); mo.textContent=o?'접기':'더 보기'; return; }
     const rp=e.target.closest('.tk-reply'); if(rp){ const th=rp.closest('.tk-th'), slot=th.querySelector('.tk-rfslot'); let f=slot.querySelector('.tk-rf');
-      if(!f){ slot.innerHTML=`<form class="qa-f tk-rf"><textarea rows="2" maxlength="4000" placeholder="답글" required></textarea><div class="qa-r3"><span class="muted qa-note"></span><span class="tk-btns"><button class="btn small tk-rcancel" type="button">취소</button><button class="btn pri small" type="submit">답글 남기기</button></span></div></form>`; f=slot.querySelector('.tk-rf'); try{ updSeasonChip(); }catch(_){} }
+      if(!f){ slot.innerHTML=`<form class="qa-f tk-rf"><textarea rows="2" maxlength="4000" placeholder="답글" aria-label="답글 내용" required></textarea><div class="qa-r3"><span class="muted qa-note"></span><span class="tk-btns"><button class="btn small tk-rcancel" type="button">취소</button><button class="btn pri small" type="submit">답글 남기기</button></span></div></form>`; f=slot.querySelector('.tk-rf'); try{ updSeasonChip(); }catch(_){} }
       f.querySelector('textarea').focus(); return; }
     const rc=e.target.closest('.tk-rcancel'); if(rc){ rc.closest('.tk-rf').remove(); renderQA(); return; }
     const ed=e.target.closest('.qa-edit'); if(ed){ const r=ed.closest('.tk-c'); const q=QA[r.dataset.qid]; if(!q) return; r.classList.add('editing'); const t=r.querySelector('.qa-t');
@@ -108,7 +114,7 @@ function initQA(){
     const es=e.target.closest('.qa-esave'); if(es){ const r=es.closest('.tk-c'); const v=r.querySelector('.qa-t textarea').value.trim(); if(!v) return; r.classList.remove('editing'); document.activeElement.blur(); qaSave(r.dataset.qid,{text:v, editedAt:new Date().toISOString()}); return; }
     const ec=e.target.closest('.qa-ecancel'); if(ec){ ec.closest('.tk-c').classList.remove('editing'); document.activeElement.blur(); renderQA(); return; }
     const x=e.target.closest('.qa-del'); if(x){ const r=x.closest('.tk-c'); if(r.dataset.confirm){ tkDelete(r.dataset.qid); } else { r.dataset.confirm='1'; const lb=x.textContent; x.textContent='한 번 더 누르면 삭제'; setTimeout(()=>{ delete r.dataset.confirm; x.textContent=lb; },3000); } } });
-  /* 팀 공유: 예전 단계별 질문·오류 글(v 없음)은 보이지 않고, 관리자가 접속하면 한 번 정리 */
+  /* 팀 공유: 예전 단계별 질문·오류 글(v 없음)은 보이지 않고, 회장이 접속하면 한 번 정리 */
   const sub=()=>{ SH.db.collection('qa').onSnapshot(q=>{ const r={}, old=[]; q.docs.forEach(d=>{ const x=d.data(); if(isTalk(x)) r[d.id]=x; else old.push(d.id); }); QA=r; renderQA();
       if(old.length && SH.canAdmin && !window.__qaLegacy){ window.__qaLegacy=1; old.forEach(id=>qaDel(id, true)); } }, ()=>{}); };
   let tries=0; const wait=()=>{ if(SH.on && SH.db) sub(); else if(++tries<40) setTimeout(wait,500); }; renderQA(); wait();

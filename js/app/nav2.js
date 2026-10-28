@@ -5,18 +5,18 @@
    - 주소에 #항목·#탭이 있으면 그쪽이 우선
    ============================================================ */
 (function(){
-  try{ initItemBg(); }catch(e){}
   const snap = () => ({ tab: TAB, y: Math.round(window.scrollY),
     open: [...document.querySelectorAll('#step-list details.step[open], #step-list details.item[open]')].map(d=>d.id).slice(0, 40),
-    ttsub: (typeof TT!=='undefined' ? TT.sub : ''), at: Date.now() });
+    ttsub: (typeof TT!=='undefined' ? TT.sub : ''), sys: (typeof START!=='undefined' ? START.sys : ''), at: Date.now() });
   const read = j => { try{ const o = typeof j==='string' ? JSON.parse(j) : j; return o && o.tab ? o : null; }catch(e){ return null; } };
   let restoring = false;
   function restore(o){ if(!o) return;
     if(o.ttsub && typeof TT!=='undefined') TT.sub = o.ttsub;
+    if(typeof START!=='undefined'){ START.sys = o.sys||''; SETP('startsys', START.sys); }
     showTab(o.tab, true);
     restoring = true;
     const ids = (o.open||[]).slice().sort((a,b)=>(a.startsWith('st-')?0:1)-(b.startsWith('st-')?0:1));
-    ids.forEach(id=>{ const d=document.getElementById(id); if(d) d.open = true; });
+    ids.forEach(id=>{ const d=document.getElementById(id); if(d){ if(d.classList.contains('item')) fillItem(d); d.open = true; } });
     setTimeout(()=>{ restoring = false; }, 1500);
     const go = () => window.scrollTo({top: o.y||0, behavior:'instant'});
     requestAnimationFrame(go); setTimeout(go, 350); setTimeout(go, 1200); }
@@ -25,7 +25,7 @@
     if(j===lastJson) return; lastJson = j;
     const now = Date.now(); if(!force && now - acctAt < 20000) return; acctAt = now;
     if(window.Backend && Backend.kind()==='firebase') Backend.Team.ctx().then(c=>{ if(c.uid) Backend.Team.saveLast(j).catch(()=>{}); }).catch(()=>{}); }
-  const h = (location.hash||'').slice(1), TABS=['start','goals','parts','steps','graph','ref','team'];
+  const h = (location.hash||'').slice(1), TABS=['start','goals','steps','graph','ref','team'];
   /* #항목 링크는 항상 우선. #탭만 있으면(새로고침 등) 저장된 위치가 같은 탭일 때 그대로 복원 */
   const local0 = read(PREF('lastpos',''));
   const hasHash = /^it-/.test(h) || (TABS.includes(h) && !(local0 && local0.tab===h));
