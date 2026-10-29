@@ -195,14 +195,14 @@
       h += `<div class="tp-login"><p>가이드와 계산기는 로그인 없이 쓸 수 있습니다. 팀 데이터(진행 상태·팀 값·논의)는 로그인하고 팀원이 되면 보입니다.</p><button type="button" class="btn pri" data-tp="login">구글 로그인</button></div>`;
       P.innerHTML = h; return;
     }
-    let L = `<div class="tp-sec"><div class="sec-label">내 계정</div><div class="tp-me"><span>${esc(c.name||'')} ${secretSpan(c.email, maskMail(c.email))}</span><button type="button" class="lnk" data-tp="logout">로그아웃</button></div></div>`, Rt = '';
+    let L = `<div class="tp-sec tp-s-me"><div class="sec-label">내 계정</div><div class="tp-me"><span>${esc(c.name||'')} ${secretSpan(c.email, maskMail(c.email))}</span><button type="button" class="lnk" data-tp="logout">로그아웃</button></div></div>`, Rt = '';
     /* 팀 */
     const form = (k, label) => `<div class="tp-row"><input class="tp-n-${k}" maxlength="40" placeholder="팀 이름 (4자 이상)" aria-label="팀 이름" autocomplete="off"></div>
       <div class="tp-row"><input class="tp-p-${k}" maxlength="64" placeholder="비밀번호 (영문·숫자 6자 이상)" aria-label="비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small${k==='join'?' pri':''}" data-tp="${k}">${label}</button></div>`;
     let mine=[]; try{ mine = await T.mine(); }catch(e){ console.error(e); }
     if(mine.length){
       /* 내 팀: 팀마다 [이동]·[나가기] (지금 팀이 아니어도 바로 나감) */
-      L += `<div class="tp-sec"><div class="sec-label">내 팀 (${mine.length})</div>` + mine.map(t=>{ const cur = t.id===c.team && c.state==='member';
+      L += `<div class="tp-sec tp-s-teams"><div class="sec-label">내 팀 (${mine.length})</div>` + mine.map(t=>{ const cur = t.id===c.team && c.state==='member';
         return `<div class="tp-person tp-myteam" data-tid="${esc(t.id)}"><span>${esc(t.name)}${cur?` <span class="tp-role a">${ROLE[c.role]} · 지금 팀</span>`:''}</span><span class="tp-tacts">${cur?'':`<button type="button" class="btn small" data-tp="switch" data-tid="${esc(t.id)}">이동</button>`}<button type="button" class="btn small tp-leavebtn" data-tp="leaveteam" data-tid="${esc(t.id)}"${cur?' data-cur="1"':''}>나가기</button></span></div>`; }).join('')
         + `<p class="muted tp-small">나가기는 한 번 더 눌러 확인합니다. 회장은 나갈 수 없습니다. 팀을 삭제하거나, 다른 사람을 회장으로 지정하고 내 역할을 내린 뒤 나가십시오.</p></div>`;
     }
@@ -210,11 +210,11 @@
     if(c.state==='member'){
       try{ ms = await T.members(); }catch(e){ console.error(e); }
       const meM = ms.find(m=>m.uid===c.uid);
-      L += `<div class="tp-sec"><div class="sec-label">팀에 보이는 이름</div><div class="tp-row"><input class="tp-myname" maxlength="20" value="${esc(meM&&meM.name||c.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="myname">저장</button></div><p class="muted tp-small">팀원 명단·검토 기록·논의에 보이는 이름입니다. 구글 계정 이름과 따로 정하며, 회장도 팀 설정에서 바꿀 수 있습니다. 서로 알아볼 수 있게 실명을 권장합니다.</p></div>`;
-      L += `<div class="tp-sec"><div class="sec-label">팀원 초대</div><div class="tp-row"><button type="button" class="btn small" data-tp="invite">초대 문구 복사</button></div><p class="muted tp-small">사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 톡방에 붙여 넣고, 비밀번호는 따로 알려 주십시오.</p></div>`;
+      L += `<div class="tp-sec tp-s-dname"><div class="sec-label">팀에 보이는 이름</div><div class="tp-row"><input class="tp-myname" maxlength="20" value="${esc(meM&&meM.name||c.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="myname">저장</button></div><p class="muted tp-small">팀원 명단·검토 기록·논의에 보이는 이름입니다. 구글 계정 이름과 따로 정하며, 회장도 팀 설정에서 바꿀 수 있습니다. 서로 알아볼 수 있게 실명을 권장합니다.</p></div>`;
+      L += `<div class="tp-sec tp-s-invite"><div class="sec-label">팀원 초대</div><div class="tp-row"><button type="button" class="btn small" data-tp="invite">초대 문구 복사</button></div><p class="muted tp-small">사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 톡방에 붙여 넣고, 비밀번호는 따로 알려 주십시오.</p></div>`;
     }
-    L += `<div class="tp-sec"><div class="sec-label">${c.state==='member'?'다른 팀 가입':'팀 가입'}</div><p class="muted tp-small">회장에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>${form('join','가입')}</div>`;
-    L += `<div class="tp-sec"><div class="sec-label">새 팀 만들기</div><p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 회장이 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p>${form('create','만들기')}</div>`;
+    L += `<div class="tp-sec tp-s-join"><div class="sec-label">${c.state==='member'?'다른 팀 가입':'팀 가입'}</div><p class="muted tp-small">회장에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>${form('join','가입')}</div>`;
+    L += `<div class="tp-sec tp-s-create"><div class="sec-label">새 팀 만들기</div><p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 회장이 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p>${form('create','만들기')}</div>`;
     if(c.state==='member'){
       const admins = ms.filter(m=>m.role==='admin').length, nIn = ms.filter(m=>T.inSeason(m,SEASON)).length;
       Rt = `<div class="tp-sec tp-fill"><div class="sec-label">팀원 ${ms.length}명 · ${esc(SEASON)} 시즌 명단 ${nIn}명</div>${memberTable(ms, SEASON)}`
