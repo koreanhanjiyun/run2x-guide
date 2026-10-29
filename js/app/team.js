@@ -87,26 +87,29 @@
   const byName = (a,b) => String(a.name||'').localeCompare(String(b.name||''),'ko');
   const byRoleName = S => (a,b) => (ord[roleIn(a,S).role]-ord[roleIn(b,S).role]) || byName(a,b);   /* 회장 → 팀장 → 파트장 → 팀원, 같은 역할은 가나다 */
   const mKey = (m, r) => { const t=[m.name||'', ROLE[r.role]||'', partsShow(r.parts).join(' '), (r.parts||[]).join(' ')].join(' '); return (t+' '+(typeof cho==='function'?cho(t):'')).toLowerCase(); };
-  function mBar(kind){ const MF=MFS[kind]; return `<div class="tp-mbar"><input type="search" class="tp-mq" placeholder="이름·역할·파트 검색 (초성 가능)" aria-label="팀원 검색" value="${esc(MF.q)}" autocomplete="off">
+  function mBar(kind, nb){ const MF=MFS[kind]; return `<div class="tp-mbar"><input type="search" class="tp-mq" placeholder="이름·역할·파트 검색 (초성 가능)" aria-label="팀원 검색" value="${esc(MF.q)}" autocomplete="off">
       <select class="tp-mrole" aria-label="역할"><option value="">역할 전체</option>${RL.map(r=>`<option value="${r}"${MF.role===r?' selected':''}>${ROLE[r]}</option>`).join('')}</select>
-      <select class="tp-mscope" aria-label="명단"><option value="now"${MF.scope==='now'?' selected':''}>이 시즌 명단</option><option value="all"${MF.scope==='all'?' selected':''}>전체 팀원</option></select>
+      <select class="tp-mscope" aria-label="명단"><option value="now"${MF.scope==='now'?' selected':''}>이 시즌 명단</option><option value="all"${MF.scope==='all'?' selected':''}>전체 팀원</option>${kind==='manage'?`<option value="blocked"${MF.scope==='blocked'?' selected':''}>차단한 사람 (${nb||0})</option>`:''}</select>
       <span class="muted tp-mcnt"></span></div>`; }
-  function mFilter(box){ if(!box) return; const MF=MFS[box.dataset.kind||'view']; const q=MF.q.trim().toLowerCase(); let n=0, t=0;
-    box.querySelectorAll('tr[data-q]').forEach(tr=>{ t++; const ok=(!q || tr.dataset.q.includes(q)) && (!MF.role || tr.dataset.r===MF.role) && (MF.scope==='all' || tr.dataset.in==='1'); tr.hidden=!ok; if(ok) n++; });
-    const c=box.querySelector('.tp-mcnt'); if(c) c.textContent=`${n}명`; const e=box.querySelector('.tp-mnone'); if(e) e.hidden=n>0; }
+  function mFilter(box){ if(!box) return; const MF=MFS[box.dataset.kind||'view']; const q=MF.q.trim().toLowerCase(); let n=0, t=0; const blk=MF.scope==='blocked';
+    const mt=box.querySelector('table.tp-mt:not(.tp-blt)'), bt=box.querySelector('table.tp-blt'); if(mt) mt.hidden=blk; if(bt) bt.hidden=!blk;
+    const rs=box.querySelector('.tp-mrole'); if(rs) rs.disabled=blk;
+    box.querySelectorAll(blk ? 'table.tp-blt tr[data-q]' : 'table.tp-mt:not(.tp-blt) tr[data-q]').forEach(tr=>{ t++; const ok=(!q || tr.dataset.q.includes(q)) && (blk || !MF.role || tr.dataset.r===MF.role) && (blk || MF.scope==='all' || tr.dataset.in==='1'); tr.hidden=!ok; if(ok) n++; });
+    const c=box.querySelector('.tp-mcnt'); if(c) c.textContent=`${n}명`; const e=box.querySelector('.tp-mnone'); if(e){ e.hidden=n>0; e.textContent = blk ? '차단한 사람이 없습니다.' : '해당하는 팀원이 없습니다.'; } }
   /* 보기 전용 표 (팀원·계정) */
   function memberTable(ms, S){ const rows=[...ms].sort(byRoleName(S)).map(m=>{ const r=roleIn(m,S), me=m.uid===C.uid, inS=T.inSeason(m,S);
       return `<tr data-uid="${esc(m.uid)}" data-r="${r.role}" data-in="${inS?1:0}" data-q="${esc(mKey(m,r))}"><td class="tp-mn">${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''}</td><td><span class="tp-role${r.role!=='member'?' a':''}">${ROLE[r.role]}</span></td><td class="tp-mp">${isLeadRole(r.role)?(r.parts.length?esc(partsShow(r.parts).join(' · ')):'<span class="muted">담당 없음</span>'):'<span class="muted">—</span>'}</td></tr>`; }).join('');
     return `<div class="tp-mtw" data-kind="view">${mBar('view')}<div class="tp-mscroll"><table class="tp-mt"><thead><tr><th>이름</th><th>역할</th><th>담당 파트</th></tr></thead><tbody>${rows}</tbody></table><p class="muted tp-small tp-mnone" hidden>해당하는 팀원이 없습니다.</p></div></div>`; }
   /* 관리 표 (팀 설정): 표에서 바로 명단·역할·담당 파트를 바꿈 → 아래 막대 [모두 저장] */
-  function manageTable(ms){ const rows=[...ms].sort(byRoleName(TEAM_SEASON)).map(m=>{ const e=eff(m), me=m.uid===C.uid, pend=!!MP[m.uid];
+  function manageTable(ms, bl){ const rows=[...ms].sort(byRoleName(TEAM_SEASON)).map(m=>{ const e=eff(m), me=m.uid===C.uid, pend=!!MP[m.uid];
       return `<tr class="tp-card tp-person${pend?' pend':''}" data-uid="${esc(m.uid)}" data-role="${rlOf(m)}" data-r="${e.role}" data-in="${e.active?1:0}" data-q="${esc(mKey(m,e))}">
         <td class="tp-mn">${NMOPEN[m.uid]?`<span class="tp-nmed"><input class="tp-nmi" maxlength="20" value="${esc(m.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="nameset">저장</button><button type="button" class="lnk" data-tp="nameclose">취소</button></span>`:`${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''} <button type="button" class="lnk tp-nmbtn" data-tp="nameopen" aria-label="${esc(m.name||'')} 이름 바꾸기">이름</button>`}${pend?' <span class="pend-tag">저장 전</span>':''}</td>
         <td><label class="tp-small"><input type="checkbox" data-tmact${e.active?' checked':''} aria-label="${esc(TEAM_SEASON)} 시즌 명단"> 명단</label></td>
         <td><select data-tmrole aria-label="역할"${e.active?'':' disabled'}>${RL.map(r=>`<option value="${r}"${r===e.role?' selected':''}>${ROLE[r]}</option>`).join('')}</select></td>
         <td class="tp-mp">${isLeadRole(e.role)&&e.active?(CHIPOPEN[m.uid]?`<div class="tp-parts">${chipHtml(e)}<button type="button" class="lnk tp-chipt" data-tmchips>접기</button></div>`:`<div class="tp-parts tp-parts-ro">${e.parts.length?partsShow(e.parts).map(p=>`<span class="tp-pchip on ro${PGROUP[p]?' grp':''}">${esc(p)}</span>`).join(''):'<span class="muted tp-small">담당 없음</span>'}<button type="button" class="lnk tp-chipt" data-tmchips>${e.parts.length?'바꾸기':'고르기'}</button></div>`):'<span class="muted">—</span>'}</td>
         <td class="tp-mx">${me?'':`<button type="button" class="lnk" data-tp="kick">내보내기</button> <button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button>`}</td></tr>`; }).join('');
-    return `<div class="tp-mtw" data-kind="manage">${mBar('manage')}<div class="tp-mscroll"><table class="tp-mt tp-mtm"><thead><tr><th>이름</th><th>${esc(TEAM_SEASON)} 명단</th><th>역할</th><th>담당 파트</th><th></th></tr></thead><tbody>${rows}</tbody></table><p class="muted tp-small tp-mnone" hidden>해당하는 팀원이 없습니다.</p></div></div>`; }
+    const brows=(bl||[]).slice().sort(byName).map(b=>{ const q=[b.name||'', b.email||''].join(' '); return `<tr class="tp-person" data-uid="${esc(b.uid)}" data-q="${esc((q+' '+(typeof cho==='function'?cho(q):'')).toLowerCase())}"><td class="tp-mn">${esc(b.name||'(이름 없음)')}</td><td>${secretSpan(b.email||'', maskMail(b.email||''))}</td><td class="tp-small muted">${esc((b.at||'').slice(0,10))}</td><td class="tp-mx"><button type="button" class="lnk" data-tp="unblock">차단 해제</button></td></tr>`; }).join('');
+    return `<div class="tp-mtw" data-kind="manage">${mBar('manage',(bl||[]).length)}<div class="tp-mscroll"><table class="tp-mt tp-mtm"><thead><tr><th>이름</th><th>${esc(TEAM_SEASON)} 명단</th><th>역할</th><th>담당 파트</th><th></th></tr></thead><tbody>${rows}</tbody></table><table class="tp-mt tp-blt" hidden><thead><tr><th>이름</th><th>이메일</th><th>차단한 날</th><th></th></tr></thead><tbody>${brows}</tbody></table><p class="muted tp-small tp-mnone" hidden>해당하는 팀원이 없습니다.</p></div></div>`; }
   document.addEventListener('input', e=>{ if(!e.target.matches || !e.target.matches('.tp-mq')) return; MFS[e.target.closest('.tp-mtw').dataset.kind].q=e.target.value; mFilter(e.target.closest('.tp-mtw')); });
   document.addEventListener('change', e=>{ if(!e.target.matches) return; if(e.target.matches('.tp-mrole')){ MFS[e.target.closest('.tp-mtw').dataset.kind].role=e.target.value; mFilter(e.target.closest('.tp-mtw')); } if(e.target.matches('.tp-mscope')){ MFS[e.target.closest('.tp-mtw').dataset.kind].scope=e.target.value; mFilter(e.target.closest('.tp-mtw')); } });
 
@@ -178,12 +181,11 @@
       <div class="tp-dzg"><div class="tp-dzi"><button type="button" class="btn small tp-dzbtn" data-tp="seasonreset">${esc(SEASON)} 시즌 초기화</button><span class="muted tp-small">이 시즌의 진행 상태·우리 팀 값을 지웁니다. 논의는 남습니다.</span></div>
       <div class="tp-dzi"><button type="button" class="btn small tp-dzbtn" data-tp="delopen">팀 삭제</button><span class="muted tp-small">모든 시즌 기록·논의·팀원 명단을 지웁니다.</span></div></div>
       <div class="tp-delbox" hidden><p class="tp-small">삭제하려면 팀 이름 <b>${esc(c.teamName)}</b>을(를) 그대로 입력하십시오.</p><div class="tp-row"><input class="tp-delname" autocomplete="off" aria-label="삭제 확인용 팀 이름"><button type="button" class="btn small tp-danger" data-tp="delete" disabled>영구 삭제</button></div></div></div>`;
-    const blk = (bl.length ? `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} ${secretSpan(b.email||'', maskMail(b.email||''))}</span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>` : '');
+
     const h = `<div class="tp-2col"><div class="tp-left">${season}${namepw}${backup}</div>
       <div class="tp-right"><div class="tp-sec tp-fill"><div class="sec-label">팀원 ${ms.length}명 · ${esc(TEAM_SEASON)} 시즌 명단 ${nNow}명</div>
-        <p class="muted tp-small">표에서 바로 명단·역할·담당 파트를 바꿉니다. 이름 옆 [이름]으로 팀에 보이는 이름을 고치면 바로 저장됩니다. 팀장은 샤시·전기 칩 하나로 그 묶음의 모든 파트와 공통 항목을 편집합니다. 파트장을 겸하면 그 파트 칩을 더 켜 두면 담당 칸에 함께 보입니다. 바꾼 내용은 아래 막대의 [모두 저장]을 눌러야 반영됩니다. 내보내기·차단은 한 번 더 눌러 확인하면 바로 실행됩니다.${viewingOther()?` <b>지금 ${esc(SEASON)} 시즌을 보는 중이어도 여기서는 팀의 이번 시즌(${esc(TEAM_SEASON)}) 명단을 관리합니다.</b>`:''}</p>
-        ${manageTable(ms)}
-        ${blk}</div></div></div>${danger}`;
+        <p class="muted tp-small">표에서 바로 명단·역할·담당 파트를 바꿉니다. 이름 옆 [이름]으로 팀에 보이는 이름을 고치면 바로 저장됩니다. 팀장은 샤시·전기 칩 하나로 그 묶음의 모든 파트와 공통 항목을 편집합니다. 파트장을 겸하면 그 파트 칩을 더 켜 두면 담당 칸에 함께 보입니다. 바꾼 내용은 아래 막대의 [모두 저장]을 눌러야 반영됩니다. 내보내기·차단은 한 번 더 눌러 확인하면 바로 실행됩니다. 차단한 사람은 비밀번호를 알아도 다시 가입할 수 없고, 명단 선택의 [차단한 사람]에서 보고 [차단 해제]합니다.${viewingOther()?` <b>지금 ${esc(SEASON)} 시즌을 보는 중이어도 여기서는 팀의 이번 시즌(${esc(TEAM_SEASON)}) 명단을 관리합니다.</b>`:''}</p>
+        ${manageTable(ms, bl)}</div></div></div>${danger}`;
     /* 다시 그려도 팀원 표·설정 칸의 스크롤 위치 유지 */
     const keep = ['.tp-mscroll', '.tp-mtw', '.tp-fill', '.tp-left'].map(s=>{ const n=R.querySelector(s); return [s, n ? n.scrollTop : 0]; });
     R.innerHTML = h; R.dataset.admins = admins; R.dataset.count = ms.length; mFilter(R.querySelector('.tp-mtw'));

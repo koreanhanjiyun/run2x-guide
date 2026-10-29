@@ -2047,3 +2047,5 @@ html:not(.booted) body::after{content:"";position:fixed;top:var(--tabh);left:-40
 .tp-nmbtn{font-size:12px;margin-left:4px}
 /* 변경 이력: 화면·기능만 바뀐 버전 표시 */
 .cl-ui-tag{display:inline-block;font-size:11.5px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-left:4px;vertical-align:1px}
+/* 차단한 사람 표 (팀 설정 명단 선택 → 차단한 사람) */
+:is(#teamPanel,.adm-tm) .tp-mt.tp-blt tr.tp-person{display:table-row;padding:0}

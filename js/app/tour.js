@@ -123,7 +123,7 @@ const TOUR = {
   ['#v-team .adm-tm .tp-mtm tbody tr td:nth-child(3)','역할 (회장)','회장·팀장·파트장·팀원 중 고릅니다. 회장은 한 명 이상 남아야 저장됩니다. 명단·역할·담당 파트를 바꾼 줄은 "저장 전"으로 표시되고, 아래 막대 [모두 저장]을 눌러야 반영됩니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-mtm tbody tr[data-r="head"] td.tp-mp, #v-team .adm-tm .tp-mtm tbody tr[data-r="lead"] td.tp-mp','담당 파트 칩 (회장)','팀장·파트장만 나옵니다. 고른 칩만 보이다가 [바꾸기]로 펼쳐 켜고 끄고, [접기]로 닫습니다. 팀장은 샤시·전기 묶음 칩 하나로 그 묶음 전체와 공통 항목을 편집하고, 파트장을 겸하면 그 파트 칩을 더 켜 둡니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-mtm tbody .tp-nmbtn','이름 바꾸기 (회장)','이름 옆 [이름]으로 그 사람의 팀에 보이는 이름을 고칩니다. 이것은 [저장]을 누르면 바로 저장됩니다.',{tab:'team',sub:'settings'}],
-  ['#v-team .adm-tm .tp-mtm tbody td.tp-mx button','내보내기 · 차단 (회장)','한 번 더 눌러 확인하면 바로 실행됩니다. 차단한 사람은 비밀번호를 알아도 다시 가입할 수 없고, 표 아래 목록에서 [차단 해제]합니다.',{tab:'team',sub:'settings'}],
+  ['#v-team .adm-tm .tp-mtm tbody td.tp-mx button','내보내기 · 차단 (회장)','한 번 더 눌러 확인하면 바로 실행됩니다. 차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다. 표 위 명단 선택을 [차단한 사람]으로 바꾸면 같은 자리에 차단 목록이 나오고, 여기서 [차단 해제]합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-s-name','팀 이름·비밀번호 (회장)','팀 이름과 가입 비밀번호를 바꿉니다. 현재 비밀번호는 [보기]로 확인하고 [복사]로 공유합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-s-backup','백업 (회장)','시즌이 끝날 때마다 [내보내기]로 파일을 저장해 두십시오. [불러오기]는 고른 시즌만 복구합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-dz','위험 구역 (회장)','시즌 초기화·팀 삭제처럼 되돌릴 수 없는 작업입니다. 두 번 확인한 뒤 실행됩니다.',{tab:'team',sub:'settings'}],
