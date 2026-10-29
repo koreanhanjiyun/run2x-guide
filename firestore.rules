@@ -30,6 +30,7 @@ service cloud.firestore {
     function str(v, n) { return v is string && v.size() <= n; }
 
     function tPath(t) { return /databases/$(database)/documents/teams/$(t); }
+    function validDName(n) { return n is string && n.size() >= 1 && n.size() <= 20; }
     function validName(n) { return n is string && n.matches('^[가-힣A-Za-z0-9 _-]{4,40}$'); }
     function isKey(k) { return k is string && k.matches('^[0-9a-f]{64}$'); }
 
@@ -75,10 +76,14 @@ service cloud.firestore {
               && exists(/databases/$(database)/documents/joinKeys/$(request.resource.data.via))
               && get(/databases/$(database)/documents/joinKeys/$(request.resource.data.via)).data.team == t) );
         // 회장: 역할(회장·팀장·파트장·팀원)·담당 파트·시즌 명단 변경
-        allow update: if isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role','parts','seasons'])
+        // 팀에 보이는 이름: 본인 또는 회장이 바꿀 수 있음 (1~20자)
+        allow update: if (isTAdmin(t) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role','parts','seasons','name'])
                       && request.resource.data.role in ['admin','head','lead','member']
                       && request.resource.data.get('parts', []) is list && request.resource.data.get('parts', []).size() <= 16
-                      && request.resource.data.get('seasons', {}) is map;
+                      && request.resource.data.get('seasons', {}) is map
+                      && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['name']) || validDName(request.resource.data.name)))
+                    || (signedIn() && u == uid() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+                      && validDName(request.resource.data.name));
         // 회장은 다른 팀원을 내보낼 수 있고, 팀원·파트장은 스스로 나갈 수 있음. 회장 자신은 나갈 수 없음(팀 삭제 마지막 단계에서 팀 문서를 지운 뒤에만 자기 기록 삭제)
         allow delete: if (isTAdmin(t) && u != uid()) || (signedIn() && u == uid() && (resource.data.role != 'admin' || !exists(tPath(t))));
       }

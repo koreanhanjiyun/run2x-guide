@@ -2040,3 +2040,8 @@ html:not(.booted) body::after{content:"";position:fixed;top:var(--tabh);left:-40
 .fig figure.anim .an-play:hover{filter:brightness(1.25)}
 .fig figure.anim .an-play:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fig figure.anim .an-play[aria-pressed="true"]{background:#fff;color:var(--char)}
+/* 팀에 보이는 이름 고치기 */
+.tp-myname{flex:1;min-width:0;max-width:16em}
+.tp-nmed{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tp-nmi{width:9em;font:inherit;font-size:13px;padding:3px 6px}
+.tp-nmbtn{font-size:12px;margin-left:4px}

@@ -155,6 +155,7 @@ window.Backend = (function(){
     /* 역할: admin(회장) / head(팀장)·lead(파트장), parts=담당 파트(팀장 묶음은 아래 파트까지 풀어 저장) / member(팀원) */
     async setRole(uid, role, parts){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({role, parts: (role==='lead'||role==='head') ? (parts||[]) : []}); },
     /* 팀원 한 명의 역할·담당·시즌 명단을 한꺼번에 바꿈 (회장, 팀원 관리 [모두 저장]) */
+    async setName(uid, name){ const c = await teamCtx(); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update({name}); },
     async updateMember(uid, d){ const c = await teamCtx(); const o = {}; ['role','parts','seasons'].forEach(k=>{ if(k in d) o[k]=d[k]; }); await c.F.fs.doc(`teams/${c.team}/members/${uid}`).update(o); },
     /* 새 시즌으로 넘길 때: 시즌 명단이 없는 팀원은 지난 시즌 명단에 지금 역할로 기록, 회장은 새 시즌에도 그대로 (H13) */
     async rollSeason(from, to){ const c = await teamCtx(); if(c.role!=='admin') return; const ms = await Team.members();

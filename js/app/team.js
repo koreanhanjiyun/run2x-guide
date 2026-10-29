@@ -101,7 +101,7 @@
   /* 관리 표 (팀 설정): 표에서 바로 명단·역할·담당 파트를 바꿈 → 아래 막대 [모두 저장] */
   function manageTable(ms){ const rows=[...ms].sort(byRoleName(TEAM_SEASON)).map(m=>{ const e=eff(m), me=m.uid===C.uid, pend=!!MP[m.uid];
       return `<tr class="tp-card tp-person${pend?' pend':''}" data-uid="${esc(m.uid)}" data-role="${rlOf(m)}" data-r="${e.role}" data-in="${e.active?1:0}" data-q="${esc(mKey(m,e))}">
-        <td class="tp-mn">${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''}${pend?' <span class="pend-tag">저장 전</span>':''}</td>
+        <td class="tp-mn">${NMOPEN[m.uid]?`<span class="tp-nmed"><input class="tp-nmi" maxlength="20" value="${esc(m.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="nameset">저장</button><button type="button" class="lnk" data-tp="nameclose">취소</button></span>`:`${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''} <button type="button" class="lnk tp-nmbtn" data-tp="nameopen" aria-label="${esc(m.name||'')} 이름 바꾸기">이름</button>`}${pend?' <span class="pend-tag">저장 전</span>':''}</td>
         <td><label class="tp-small"><input type="checkbox" data-tmact${e.active?' checked':''} aria-label="${esc(TEAM_SEASON)} 시즌 명단"> 명단</label></td>
         <td><select data-tmrole aria-label="역할"${e.active?'':' disabled'}>${RL.map(r=>`<option value="${r}"${r===e.role?' selected':''}>${ROLE[r]}</option>`).join('')}</select></td>
         <td class="tp-mp">${isLeadRole(e.role)&&e.active?(CHIPOPEN[m.uid]?`<div class="tp-parts">${chipHtml(e)}<button type="button" class="lnk tp-chipt" data-tmchips>접기</button></div>`:`<div class="tp-parts tp-parts-ro">${e.parts.length?partsShow(e.parts).map(p=>`<span class="tp-pchip on ro${PGROUP[p]?' grp':''}">${esc(p)}</span>`).join(''):'<span class="muted tp-small">담당 없음</span>'}<button type="button" class="lnk tp-chipt" data-tmchips>${e.parts.length?'바꾸기':'고르기'}</button></div>`):'<span class="muted">—</span>'}</td>
@@ -141,6 +141,8 @@
         ${me?'':`<div class="tp-row tp-danger-row"><button type="button" class="lnk" data-tp="kick">팀에서 내보내기</button><button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button></div>`}
       </div>`:''}</div>`; }
   const TMOPEN = {};
+  const NMOPEN = {};   /* 팀원 표: 이름 고치는 줄 */
+  const cleanName = v => String(v||'').replace(/\s+/g,' ').trim();
   const CHIPOPEN = {};   /* 팀원 표: 담당 칩을 펼쳐 고르는 줄 (기본은 고른 칩만 보임) */
 
   /* ---------- 관리 창 "팀 관리" (회장, 회장 모드) ---------- */
@@ -179,7 +181,7 @@
     const blk = (bl.length ? `<div class="sec-label tp-bl">차단한 사람 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'(이름 없음)')} ${secretSpan(b.email||'', maskMail(b.email||''))}</span><span><button type="button" class="lnk" data-tp="unblock">차단 해제</button></span></div>`).join('') + `<p class="muted tp-small">차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다.</p>` : '');
     const h = `<div class="tp-2col"><div class="tp-left">${season}${namepw}${backup}</div>
       <div class="tp-right"><div class="tp-sec tp-fill"><div class="sec-label">팀원 ${ms.length}명 · ${esc(TEAM_SEASON)} 시즌 명단 ${nNow}명</div>
-        <p class="muted tp-small">표에서 바로 명단·역할·담당 파트를 바꿉니다. 팀장은 샤시·전기 칩 하나로 그 묶음의 모든 파트와 공통 항목을 편집합니다. 파트장을 겸하면 그 파트 칩을 더 켜 두면 담당 칸에 함께 보입니다. 바꾼 내용은 아래 막대의 [모두 저장]을 눌러야 반영됩니다. 내보내기·차단은 한 번 더 눌러 확인하면 바로 실행됩니다.${viewingOther()?` <b>지금 ${esc(SEASON)} 시즌을 보는 중이어도 여기서는 팀의 이번 시즌(${esc(TEAM_SEASON)}) 명단을 관리합니다.</b>`:''}</p>
+        <p class="muted tp-small">표에서 바로 명단·역할·담당 파트를 바꿉니다. 이름 옆 [이름]으로 팀에 보이는 이름을 고치면 바로 저장됩니다. 팀장은 샤시·전기 칩 하나로 그 묶음의 모든 파트와 공통 항목을 편집합니다. 파트장을 겸하면 그 파트 칩을 더 켜 두면 담당 칸에 함께 보입니다. 바꾼 내용은 아래 막대의 [모두 저장]을 눌러야 반영됩니다. 내보내기·차단은 한 번 더 눌러 확인하면 바로 실행됩니다.${viewingOther()?` <b>지금 ${esc(SEASON)} 시즌을 보는 중이어도 여기서는 팀의 이번 시즌(${esc(TEAM_SEASON)}) 명단을 관리합니다.</b>`:''}</p>
         ${manageTable(ms)}
         ${blk}</div></div></div>${danger}`;
     /* 다시 그려도 팀원 표·설정 칸의 스크롤 위치 유지 */
@@ -206,8 +208,10 @@
     }
     let ms=[];
     if(c.state==='member'){
-      L += `<div class="tp-sec"><div class="sec-label">팀원 초대</div><div class="tp-row"><button type="button" class="btn small" data-tp="invite">초대 문구 복사</button></div><p class="muted tp-small">사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 톡방에 붙여 넣고, 비밀번호는 따로 알려 주십시오.</p></div>`;
       try{ ms = await T.members(); }catch(e){ console.error(e); }
+      const meM = ms.find(m=>m.uid===c.uid);
+      L += `<div class="tp-sec"><div class="sec-label">팀에 보이는 이름</div><div class="tp-row"><input class="tp-myname" maxlength="20" value="${esc(meM&&meM.name||c.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="myname">저장</button></div><p class="muted tp-small">팀원 명단·검토 기록·논의에 보이는 이름입니다. 구글 계정 이름과 따로 정하며, 회장도 팀 설정에서 바꿀 수 있습니다. 서로 알아볼 수 있게 실명을 권장합니다.</p></div>`;
+      L += `<div class="tp-sec"><div class="sec-label">팀원 초대</div><div class="tp-row"><button type="button" class="btn small" data-tp="invite">초대 문구 복사</button></div><p class="muted tp-small">사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 톡방에 붙여 넣고, 비밀번호는 따로 알려 주십시오.</p></div>`;
     }
     L += `<div class="tp-sec"><div class="sec-label">${c.state==='member'?'다른 팀 가입':'팀 가입'}</div><p class="muted tp-small">회장에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>${form('join','가입')}</div>`;
     L += `<div class="tp-sec"><div class="sec-label">새 팀 만들기</div><p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 회장이 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p>${form('create','만들기')}</div>`;
@@ -276,6 +280,12 @@
       case 'join': case 'create': { const n=P.querySelector('.tp-n-'+k).value, pw=P.querySelector('.tp-p-'+k).value;
         try{ return k==='join' ? await T.join(n,pw) : await T.create(n,pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } }
       case 'switch': return T.choose(el.dataset.tid);
+      case 'myname': { const n=cleanName(P.querySelector('.tp-myname').value); if(!n || n.length>20) return say('이름은 1~20자로 입력하십시오.');
+        await T.setName(C.uid, n); say('팀에 보이는 이름을 바꿨습니다.'); return again(); }
+      case 'nameopen': NMOPEN[uid]=1; return renderTM().then(()=>{ const i=TM() && TM().querySelector(`tr[data-uid="${CSS.escape(uid)}"] .tp-nmi`); if(i){ i.focus(); i.select(); } });
+      case 'nameclose': delete NMOPEN[uid]; return renderTM();
+      case 'nameset': { const n=cleanName(row.querySelector('.tp-nmi').value); if(!n || n.length>20) return say('이름은 1~20자로 입력하십시오.');
+        await T.setName(uid, n); delete NMOPEN[uid]; say('이름을 바꿨습니다.'); render().catch(()=>{}); return renderTM(); }
       case 'export': { const o = await T.exportData(); const n = Object.values(o.data).reduce((a,x)=>a+Object.keys(x).length,0);
         const blob = new Blob([JSON.stringify(o,null,1)],{type:'application/json'}), a=document.createElement('a'); a.href=URL.createObjectURL(blob);
         a.download = `run2x-backup-${C.teamName.replace(/[^가-힣A-Za-z0-9_-]+/g,'_')}-${new Date().toLocaleDateString('sv-SE')}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
