@@ -56,6 +56,8 @@ const REFS = [
 <p class="muted" style="font-size:14px">모든 버전을 적습니다. <b>설계 내용</b>의 추가·변경·정정은 자세히 적고, 화면·기능만 바뀐 버전은 <span class="cl-ui-tag">화면·기능</span>으로 표시해 짧게 적습니다. 업데이트 알림(참고 탭 주황 표시)은 설계 내용이 바뀐 버전에만 뜹니다. <b class="cl-fix">정정</b>은 이미 읽은 내용이 틀렸다가 고쳐진 것이니, 그 값을 쓴 적이 있다면 다시 확인하십시오.</p>
 <div class="sec-label" style="margin-top:14px">예정</div>
 <ul class="pl"><li>애커먼 계산기 v1.2.1: 안티 기능 삭제, 조건 검사 보강, 3D 킹핀축(2단계) 추가</li><li>기어비 계산기 v2.2.1: J/r² 등가질량, 구름저항 mg, trapz(Time,P), 회생·효율·드라이버 계수</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.3.5 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>팀 설정 사용법: 팀장·파트장이 없거나 회장 혼자인 팀에서도 담당 파트 칩·내보내기·차단 단계가 나오도록, 사용법 동안만 "사용법 예시" 줄을 보여 줌</li></ul>
 <div class="sec-label cl-ui" style="margin-top:14px">1.3.4 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
 <ul class="pl"><li>팀 설정: 차단한 사람 목록을 팀원 표 아래에서 빼고, 명단 선택의 [차단한 사람]으로 같은 자리에서 봄 (차단이 늘어도 팀원 표 높이 유지)</li></ul>
 <div class="sec-label cl-ui" style="margin-top:14px">1.3.3 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>

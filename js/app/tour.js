@@ -121,15 +121,26 @@ const TOUR = {
   ['#v-team .adm-tm .tp-mtw','팀원 관리 (회장)','전체 팀원 표에서 이번 시즌 명단·역할·담당 파트·이름을 바꾸고, 내보내기·차단을 합니다. 칸마다 차례로 봅니다.',{tab:'team',sub:'settings',pic:PIC.roles}],
   ['#v-team .adm-tm .tp-mtm tbody tr td:nth-child(2)','명단 체크 (회장)','체크한 사람만 이번 시즌 명단입니다. 새 시즌에는 이어 가는 사람을 체크하십시오. 빼도 지난 시즌 기록은 남습니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-mtm tbody tr td:nth-child(3)','역할 (회장)','회장·팀장·파트장·팀원 중 고릅니다. 회장은 한 명 이상 남아야 저장됩니다. 명단·역할·담당 파트를 바꾼 줄은 "저장 전"으로 표시되고, 아래 막대 [모두 저장]을 눌러야 반영됩니다.',{tab:'team',sub:'settings'}],
-  ['#v-team .adm-tm .tp-mtm tbody tr[data-r="head"] td.tp-mp, #v-team .adm-tm .tp-mtm tbody tr[data-r="lead"] td.tp-mp','담당 파트 칩 (회장)','팀장·파트장만 나옵니다. 고른 칩만 보이다가 [바꾸기]로 펼쳐 켜고 끄고, [접기]로 닫습니다. 팀장은 샤시·전기 묶음 칩 하나로 그 묶음 전체와 공통 항목을 편집하고, 파트장을 겸하면 그 파트 칩을 더 켜 둡니다.',{tab:'team',sub:'settings'}],
+  ['#v-team .adm-tm .tp-mtm tbody tr[data-r="head"] td.tp-mp, #v-team .adm-tm .tp-mtm tbody tr[data-r="lead"] td.tp-mp','담당 파트 칩 (회장)','팀장·파트장만 나옵니다. 고른 칩만 보이다가 [바꾸기]로 펼쳐 켜고 끄고, [접기]로 닫습니다. 팀장은 샤시·전기 묶음 칩 하나로 그 묶음 전체와 공통 항목을 편집하고, 파트장을 겸하면 그 파트 칩을 더 켜 둡니다.',{tab:'team',sub:'settings',prep:tmDemoRow}],
   ['#v-team .adm-tm .tp-mtm tbody .tp-nmbtn','이름 바꾸기 (회장)','이름 옆 [이름]으로 그 사람의 팀에 보이는 이름을 고칩니다. 이것은 [저장]을 누르면 바로 저장됩니다.',{tab:'team',sub:'settings'}],
-  ['#v-team .adm-tm .tp-mtm tbody td.tp-mx button','내보내기 · 차단 (회장)','한 번 더 눌러 확인하면 바로 실행됩니다. 차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다. 표 위 명단 선택을 [차단한 사람]으로 바꾸면 같은 자리에 차단 목록이 나오고, 여기서 [차단 해제]합니다.',{tab:'team',sub:'settings'}],
+  ['#v-team .adm-tm .tp-mtm tbody td.tp-mx button','내보내기 · 차단 (회장)','한 번 더 눌러 확인하면 바로 실행됩니다. 차단한 사람은 비밀번호를 알아도 다시 가입할 수 없습니다. 표 위 명단 선택을 [차단한 사람]으로 바꾸면 같은 자리에 차단 목록이 나오고, 여기서 [차단 해제]합니다.',{tab:'team',sub:'settings',prep:tmDemoRow}],
   ['#v-team .adm-tm .tp-s-name','팀 이름·비밀번호 (회장)','팀 이름과 가입 비밀번호를 바꿉니다. 현재 비밀번호는 [보기]로 확인하고 [복사]로 공유합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-s-backup','백업 (회장)','시즌이 끝날 때마다 [내보내기]로 파일을 저장해 두십시오. [불러오기]는 고른 시즌만 복구합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-dz','위험 구역 (회장)','시즌 초기화·팀 삭제처럼 되돌릴 수 없는 작업입니다. 두 번 확인한 뒤 실행됩니다.',{tab:'team',sub:'settings'}],
  ],
  end: [['#tourBtn','언제든 다시','이 안내는 오른쪽 위 [이 탭 사용법]으로 언제든 다시 볼 수 있습니다. 지금 보고 있는 탭(시작 탭은 지금 보는 화면)의 안내가 나옵니다.']],
 };
+/* 팀 설정 사용법: 팀장·파트장이 없거나 회장 혼자인 팀에서도 칩·내보내기·차단 단계를 보이도록, 표 맨 위에 "사용법 예시" 줄을 잠깐 넣음 (화면에만, 저장 안 됨, 사용법이 끝나면 지움) */
+function tmDemoRow(){ const tb=document.querySelector('#v-team .adm-tm .tp-mtm tbody'); if(!tb || tb.querySelector('tr.tg-demo')) return;
+  const hasLead = tb.querySelector('tr[data-r="head"] td.tp-mp, tr[data-r="lead"] td.tp-mp'), hasMx = tb.querySelector('td.tp-mx button');
+  if(hasLead && hasMx) return;
+  const tr=document.createElement('tr'); tr.className='tp-card tp-person tg-demo'; tr.dataset.r='head'; tr.dataset.in='1';
+  tr.innerHTML=`<td class="tp-mn">예시 팀장 <span class="pend-tag">사용법 예시</span> <button type="button" class="lnk tp-nmbtn" tabindex="-1">이름</button></td>
+    <td><label class="tp-small"><input type="checkbox" checked disabled> 명단</label></td>
+    <td><select disabled><option>팀장</option></select></td>
+    <td class="tp-mp"><div class="tp-parts tp-parts-ro"><span class="tp-pchip on ro grp">샤시</span><span class="tp-pchip on ro">서스</span><button type="button" class="lnk tp-chipt" tabindex="-1">바꾸기</button></div></td>
+    <td class="tp-mx"><button type="button" class="lnk" tabindex="-1">내보내기</button> <button type="button" class="lnk tp-warnlnk" tabindex="-1">차단</button></td>`;
+  tb.prepend(tr); tgUndo(()=>tr.remove()); }
 const teamNolog = () => !SH.on && !!(window.Backend && Backend.kind()==='firebase') && !(typeof TT!=='undefined' && TT.ctx && TT.ctx.state==='member');
 const teamCourse = () => teamNolog() ? [...TOUR.team_nolog] : [...TOUR.team_common];
 /* 팀 설정 화면에서 [이 탭 사용법]을 누르면 팀 설정 사용법만 */
