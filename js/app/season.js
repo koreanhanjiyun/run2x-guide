@@ -17,7 +17,7 @@ rebuildShared=function(){ STATUS={}; SH.meta={};
   refreshStatus(); };
 setStatus=function(id,v){
   if(!SH.on){ if(v==='todo') delete STATUS[id]; else STATUS[id]=v; saveStatus(); refreshStatus(); return; }
-  if(!canEditItem(id)){ toast('이 항목의 진행 상태는 회장이나 담당 팀장·파트장만 바꿀 수 있습니다.'); return; }
+  if(!canEditItem(id)){ toast(pastLock() ? '지난 시즌 기록은 회장만 고칠 수 있습니다.' : '이 항목의 진행 상태는 회장이나 담당 팀장·파트장만 바꿀 수 있습니다.'); return; }
   if(v==='todo') delete STATUS[id]; else STATUS[id]=v; refreshStatus();
   const se=SEASON, ref=SH.db.doc('status/'+se+'-'+id), legacy = se===LEGACY_SEASON && SH.raw && SH.raw[id] && !SH.raw[id].season;
   const run=async()=>{ if(legacy){ try{ await SH.db.doc('status/'+id).delete(); }catch(e){} } if(v==='todo') await ref.delete(); else await ref.set({v, by:SH.me, at:new Date().toISOString(), season:se, item:id, part:IT[id].p, epoch:SH.epoch}); };
@@ -66,7 +66,7 @@ async function setTeamSeason(arg){ if(SH.on && !SH.canAdmin) return; const v=Str
   try{ const nav=document.querySelector('#admPanel .sn-nav'); if(nav){ let t=nav.parentElement.querySelector('.sn-team'); if(!t){ t=document.createElement('div'); t.className='sn-team'; nav.after(t); }
     t.innerHTML = viewingOther()
       ? `<div class="sn-warn">지금 <b>${esc(SEASON)}</b> 시즌을 보는 중 · 팀의 이번 시즌은 <b>${esc(TEAM_SEASON)}</b></div><div class="sn-acts"><button type="button" class="btn small" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button><button type="button" class="btn small" data-sn="set">${esc(SEASON)} 시즌을 이번 시즌으로 지정</button></div>`
-      : `<p class="muted sn-note">이번 시즌(팀 공통): <b>${esc(TEAM_SEASON)}</b> · ◀ ▶는 내 화면에서만 바뀝니다.</p>`; } }catch(e){}
+      : `<p class="muted sn-note">이번 시즌(팀 공통): <b>${esc(TEAM_SEASON)}</b> · ‹ ›는 내 화면에서만 바뀝니다.</p>`; } }catch(e){}
   return r; }; }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-sn]'); if(!b) return; e.preventDefault();
   if(b.dataset.sn==='back'){ setSeason(TEAM_SEASON, +TEAM_SEASON>+SEASON?1:-1); return; }

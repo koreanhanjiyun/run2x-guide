@@ -46,3 +46,5 @@
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') save(true); });
   addEventListener('pagehide', ()=>save(true));
 })();
+/* 첫 화면: 보일 탭이 정해진 뒤에 본문을 보임 (그 전에는 숨기고 진행 막대) → 설계 탭이 잠깐 보였다가 바뀌며 밀리던 현상 없앰 */
+requestAnimationFrame(()=>document.documentElement.classList.add('booted'));

@@ -15,3 +15,5 @@
   var ce=console.error; console.error=function(){ try{ pushErr([].slice.call(arguments).join(' ')); }catch(e){} return ce.apply(console,arguments); };
   var rs=history.replaceState; history.replaceState=function(st,t,u){ if(typeof u==='string' && u.indexOf('#')===0) u='#debug'; return rs.call(history,st,t,u); };
 })();
+/* 안전장치: 어떤 이유로 nav2.js 가 첫 탭을 못 정해도 페이지가 다 불러와지면 본문을 보임 (style.css html:not(.booted)) */
+addEventListener('load', ()=>setTimeout(()=>document.documentElement.classList.add('booted'), 300));

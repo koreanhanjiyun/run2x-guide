@@ -21,6 +21,11 @@ service cloud.firestore {
                                   return isMember(t) && m.role in ['head','lead'] && part is string
                                   && (ps.hasAny([part]) || ps.hasAny([grpOf(part)]) || (m.role == 'head' && part == '공통')); }
     function canEditPart(t, part) { return isTAdmin(t) || isLeadOf(t, part); }
+    // 팀의 이번 시즌(meta/season). 지난 시즌 기록은 회장만 고침. 시즌을 정한 적이 없으면 제한 없음
+    function sznPath(t) { return /databases/$(database)/documents/teams/$(t)/meta/season; }
+    function isCurSeason(t, s) { return !exists(sznPath(t)) || string(get(sznPath(t)).data.season) == string(s); }
+    function onlyCurKey(t, m) { return !exists(sznPath(t)) || m.keys().hasOnly([string(get(sznPath(t)).data.season)]); }
+    function curKeyChange(t, a, b) { return !exists(sznPath(t)) || a.diff(b).affectedKeys().hasOnly([string(get(sznPath(t)).data.season)]); }
     function isBlocked(t) { return exists(/databases/$(database)/documents/teams/$(t)/blocked/$(uid())); }
     function str(v, n) { return v is string && v.size() <= n; }
 
@@ -78,14 +83,16 @@ service cloud.firestore {
         allow delete: if (isTAdmin(t) && u != uid()) || (signedIn() && u == uid() && (resource.data.role != 'admin' || !exists(tPath(t))));
       }
       // 팀 데이터
-      // 진행 상태·우리 팀 값: 관리자 전부, 파트장은 문서의 part 가 담당 파트일 때 (쓰기 전·후 모두)
+      // 진행 상태·우리 팀 값: 회장 전부, 팀장·파트장은 문서의 part 가 담당 파트이고 팀의 이번 시즌 기록일 때 (쓰기 전·후 모두)
       match /status/{d} { allow read: if isMember(t);
-        allow create: if canEditPart(t, request.resource.data.get('part', null)) || isTAdmin(t);
-        allow update: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && canEditPart(t, resource.data.get('part', null)));
-        allow delete: if isTAdmin(t) || canEditPart(t, resource.data.get('part', null)); }
+        allow create: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && isCurSeason(t, request.resource.data.get('season', '')));
+        allow update: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && canEditPart(t, resource.data.get('part', null))
+                                         && isCurSeason(t, request.resource.data.get('season', '')) && isCurSeason(t, resource.data.get('season', '2026')));
+        allow delete: if isTAdmin(t) || (canEditPart(t, resource.data.get('part', null)) && isCurSeason(t, resource.data.get('season', '2026'))); }
       match /val/{d}    { allow read: if isMember(t);
-        allow create: if canEditPart(t, request.resource.data.get('part', null)) || isTAdmin(t);
-        allow update: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && (canEditPart(t, resource.data.get('part', null)) || !('part' in resource.data)));
+        allow create: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && onlyCurKey(t, request.resource.data.get('s', {})));
+        allow update: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && (canEditPart(t, resource.data.get('part', null)) || !('part' in resource.data))
+                                         && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
         allow delete: if isTAdmin(t); }
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
       // 팀 비밀번호 원문 (관리자만 보기·쓰기. 오픈채팅 입장 코드 수준으로 취급)

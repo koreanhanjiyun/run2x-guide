@@ -1,7 +1,11 @@
 renderSteps(); renderGoals(); renderRefs(); renderFlow(); renderGraph(); renderPartFilter(); initPanZoom(); applyView(); setPanel(emptyPanel()); refreshStatus(); refreshMode(); initShared(); applyPart(); initSearch(); initGlossary(); initNext(); window.__nextReady=true;
 subify(document.body);
-(window.MathJax && MathJax.startup && MathJax.startup.promise ? MathJax.startup.promise : Promise.resolve())
-  .then(()=>{ try{ document.head.appendChild(MathJax.svgStylesheet()); }catch(e){} renderMath(document); }).catch(()=>renderMath(document)).finally(()=>subifySvg(document));
+/* 수식: 도구가 준비되면 그림. 못 오면(파일 오류·20초 초과) TeX 원문으로 */
+{ const mjGo=()=>{ try{ document.head.appendChild(MathJax.svgStylesheet()); }catch(e){} renderMath(document); try{ subifySvg(document); }catch(e){} };
+  try{ subifySvg(document); }catch(e){}
+  if(window.__mjReadyFlag) mjGo(); else window.__mjReady=mjGo;
+  const fb=()=>{ if(window.__mjReadyFlag) return; window.__mjFailed=1; renderMath(document); };
+  if(window.__mjFailed) fb(); else { addEventListener('error', e=>{ if(e.target && e.target.src && /mathjax/.test(e.target.src)) fb(); }, true); setTimeout(fb, 20000); } }
 /* 고정(따라 내려온) 제목줄을 눌러 접으면, 접은 뒤 그 제목줄이 화면 맨 위로 오도록 스크롤 */
 document.addEventListener('click', e=>{
   const sm = e.target.closest('summary'); if(!sm || e.target.closest('button')) return;

@@ -4,6 +4,8 @@
 const mVis = el => el.getClientRects().length > 0;
 function renderMath(root){
   const MJ = window.MathJax && typeof MathJax.tex2svg === 'function';
+  /* 수식 도구가 아직 오는 중이면 그대로 두었다가(준비되면 다시 부름), 못 불러온 것이 확실할 때만 TeX 원문으로 */
+  if(!MJ && !window.__mjFailed) return;
   root.querySelectorAll('.eq[data-k]').forEach(el=>{ if(MJ && !mVis(el)) return; const t = TEX[+el.dataset.k]; el.removeAttribute('data-k');
     if(MJ){ try{ const c = MathJax.tex2svg(t,{display:true}); el.innerHTML=''; el.appendChild(c); return; }catch(e){} }
     el.textContent = t; el.classList.add('tex-raw'); el.title='수식 표시 도구를 불러오지 못해 TeX 원문을 그대로 보여 줍니다'; });

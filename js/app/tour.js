@@ -98,7 +98,7 @@ const TOUR = {
  ],
  team_common: [
   ['#v-team .tt-nav','팀 메뉴',()=>'진행 현황 · 시즌 요약 · 대회 점수 · 팀원·계정'+((SH.on&&SH.canAdmin)?', 회장은 팀 설정까지 있습니다. 팀 설정 사용법은 팀 설정 화면에서 [이 탭 사용법]을 누르면 따로 나옵니다.':'입니다.'),{tab:'team',sub:'progress',union:'button:not([hidden])',pic:PIC.roles}],
-  ['#v-team .tt-season','보는 시즌','◀ ▶로 지난 시즌을 봅니다. 내 화면만 바뀌고, 진행 현황·시즌 요약·팀원 명단이 모두 그 시즌으로 바뀝니다. 지난 시즌을 보는 동안은 주황 띠가 뜹니다.',{tab:'team',sub:'progress'}],
+  ['#v-team .tt-season','보는 시즌','‹ ›로 지난 시즌을 봅니다. 내 화면만 바뀌고, 진행 현황·시즌 요약·팀원 명단이 모두 그 시즌으로 바뀝니다. 지난 시즌을 보는 동안은 주황 띠가 뜹니다.',{tab:'team',sub:'progress'}],
   ['#v-team .tt-sum','진행 요약','파트별 완료 비율입니다.',{tab:'team',sub:'progress'}],
   ['#v-team .tt-cards','바로 볼 것','착수 가능(앞 항목이 끝나 시작해도 되는 것) · 선행 미완료 경고 · 제외 영향 · 최근 변경 · 최근 논의 · 우리 팀 값 입력 현황입니다.',{tab:'team',sub:'progress'}],
   ['#v-team .tt-card:has(.tt-mat)','단계 × 파트','칸마다 완료/전체 항목 수입니다. 칸을 누르면 아래 목록이 그 칸의 항목으로 바뀝니다.',{tab:'team',sub:'progress'}],
@@ -285,7 +285,7 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     if(dir>0) tourStop();
   } finally { if(TR===tk){ TR.busy=false; TR.el.classList.remove('tg-busy'); const q=TR.queue; TR.queue=null; TR.fast=false; if(q && q.n){ const n=TR.i+q.n; if(n<0) return tourGo(0,-1); if(n>=TR.steps.length) return tourStop(); tourGo(n, q.n>0?1:-1); } } } }
 async function tgRefresh(){ if(!TR || TR.busy) return; const st=TR.steps[TR.i]; if(!st) return; const o=st[3]||{}; await tgRebuild(o.fx); const el=tourVis(st[0]); if(!el) return; const g=tgGeom(el,o); TR.off=g.off; tgApply(); const gg=tgGeom(el,o); tgHole(gg); tgCard(gg); }
-function tourStop(){ if(!TR) return; const s=TR.snap; TR.el.remove(); TR=null; removeEventListener('resize', tgOnResize); tgRestore(s); }
+function tourStop(){ if(!TR) return; const s=TR.snap; (TR.inert||[]).forEach(n=>n.inert=false); TR.el.remove(); TR=null; removeEventListener('resize', tgOnResize); tgRestore(s); }
 let tgRT=0; function tgOnResize(){ clearTimeout(tgRT); tgRT=setTimeout(tgRefresh, 200); }
 function tourStart(name){ tourStop(); const steps=courseOf(name); if(!steps.length) return;
   const el=document.createElement('div'); el.id='tour'; el.className='tg tg-wait'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label','사용법 안내');
@@ -295,8 +295,13 @@ function tourStart(name){ tourStop(); const steps=courseOf(name); if(!steps.leng
   const snap=tgSnap();
   /* 설계 탭 사용법은 접힌 상태 기준: [모두 접기]와 같게 닫고 맨 위에서 시작(끝나면 snap으로 원래대로) */
   if(name==='steps'){ const v=$('#v-steps'); if(v) v.querySelectorAll('details[open]').forEach(d=>d.open=false); if(TAB==='steps') window.scrollTo({top:0,behavior:'instant'}); }
+  /* 문의 칸이 열려 있으면 안내 동안 닫았다가 끝나면 다시 엶 (쓰던 글은 fbOpen 이 유지) */
+  { const f=$('#fbPanel'); if(f && !f.hidden){ const x=f.querySelector('.fbp-x'); if(x) x.click(); snap.undo.push(()=>{ const g=$('#fbPanel'); if(g && g.hidden){ const a=document.querySelector('.topask'); if(a) a.click(); } }); } }
   document.body.appendChild(el); TR={el, steps, i:0, cur:null, off:scrollY, snap, busy:false, hn:0};
-  addEventListener('resize', tgOnResize); tgRebuild().then(()=>tourGo(0,1)); SETP('tourdone','1'); }
+  /* 안내 중에는 뒤 화면을 키보드·마우스로 조작할 수 없게 (Tab은 안내 카드 안에서만 돎) */
+  TR.inert=[...document.body.children].filter(n=>n!==el && n.id!=='demoBar' && n.id!=='demoDiag' && !n.inert && n.tagName!=='SCRIPT'); TR.inert.forEach(n=>n.inert=true);
+  try{ if(document.activeElement && document.activeElement!==document.body) document.activeElement.blur(); }catch(e){}
+  addEventListener('resize', tgOnResize); tgRebuild().then(()=>{ tourGo(0,1); const nb=el.querySelector('[data-tour-next]'); if(nb) nb.focus({preventScroll:true}); }); SETP('tourdone','1'); }
 document.addEventListener('click', e=>{
   const s=e.target.closest('[data-tour]'); if(s && !e.target.closest('#tour')){ e.preventDefault(); tourStart(s.dataset.tour); return; }
   if(e.target.closest('#tourBtn')){ e.preventDefault(); tourStart(TAB==='team' ? 'team' : (TAB==='start' ? 'start' : (TOUR[TAB] ? TAB : 'top'))); return; }

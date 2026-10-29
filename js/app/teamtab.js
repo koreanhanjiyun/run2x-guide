@@ -53,7 +53,7 @@ function ttSeasonBar(){ return `<div class="tt-season" data-ttseason>
       <span class="sec-label">보는 시즌</span>
       <span class="sn-nav"><button type="button" class="sn-prev tt-sn" data-ttsn="-1" aria-label="이전 시즌" title="이전 시즌">${SN_SVG[0]}</button><b class="tt-sv">${esc(SEASON)} 시즌</b><button type="button" class="sn-next tt-sn" data-ttsn="1" aria-label="다음 시즌" title="다음 시즌">${SN_SVG[1]}</button></span>
       <span class="muted">팀의 이번 시즌: <b>${esc(TEAM_SEASON)}</b>${viewingOther()?` · <button type="button" class="lnk" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button>`:''}</span>
-      <span class="muted tt-hint">◀ ▶는 내 화면에서만 바뀌고, 진행 현황·시즌 요약·팀원 명단이 모두 그 시즌으로 바뀝니다.${SH.on && SH.canAdmin ? ' 팀의 이번 시즌을 바꾸는 것은 팀 설정에서 합니다.' : ''}</span>
+      <span class="muted tt-hint">‹ ›는 내 화면에서만 바뀌고, 진행 현황·시즌 요약·팀원 명단이 모두 그 시즌으로 바뀝니다.${SH.on && SH.canAdmin ? ' 팀의 이번 시즌을 바꾸는 것은 팀 설정에서 합니다.' : ''}</span>
     </div>`; }
 
 /* ---------- 진행 현황 ---------- */
@@ -109,7 +109,7 @@ function ttProgress(el){
 function ttSummary(el){ const c=TT.ctx, all=ITEMS.map(i=>i.id), tot=ttCnt(all), parts=PARTS.map(p=>p[0]).filter(p=>ITEMS.some(i=>i.p===p));
   const talk=id=>Object.values(QA||{}).filter(q=>isTalk(q) && q.item===id && !q.removed);
   const valTxt=id=>{ const r=VAL[id], d=r&&r.s&&r.s[SEASON]; if(!d || !valFilled(d)) return ''; return Object.entries(d).filter(([l,o])=>o&&(o.v||o.why)).map(([l,o])=>`<div><b>${esc(l)}</b> ${esc(o.v||'—')}${o.why?` <span class="muted">(${esc(o.why)})</span>`:''}</div>`).join(''); };
-  el.innerHTML = `<div class="tt-sumbar"><span class="muted">이 시즌의 진행 상태·우리 팀 값·논의를 자동으로 모은 읽기 전용 페이지입니다. 시즌은 위 ◀ ▶로 바꿉니다. 논의는 항목마다 한 줄로 줄여 보이고, 눌러서 펼칩니다.</span><button type="button" class="btn small" data-ttprint>인쇄 · PDF 저장</button></div>
+  el.innerHTML = `<div class="tt-sumbar"><span class="muted">이 시즌의 진행 상태·우리 팀 값·논의를 자동으로 모은 읽기 전용 페이지입니다. 시즌은 위 ‹ ›로 바꿉니다. 논의는 항목마다 한 줄로 줄여 보이고, 눌러서 펼칩니다.</span><button type="button" class="btn small" data-ttprint>인쇄 · PDF 저장</button></div>
     <article class="tt-report">
       <h2>${c&&c.teamName?esc(c.teamName)+' · ':''}${esc(SEASON)} 시즌 요약</h2>
       <p class="muted">만든 날 ${new Date().toLocaleDateString('ko-KR')} · 완료 ${tot.d} / ${tot.n-tot.k}${tot.g?` · 진행 중 ${tot.g}`:''}${tot.k?` · 제외 ${tot.k}`:''}</p>
@@ -128,7 +128,7 @@ function ttTalkCell(t){ const s=[...t].sort((a,b)=>String(a.at).localeCompare(St
 function paintSeasonBanner(){ let b=$('#seasonBanner'); const on = viewingOther();
   if(!b){ b=document.createElement('div'); b.id='seasonBanner'; b.setAttribute('role','status'); document.body.appendChild(b); }
   b.hidden=!on; if(!on) return;
-  b.innerHTML=`<b>${esc(SEASON)} 시즌</b>을 보는 중입니다 · 팀의 이번 시즌은 ${esc(TEAM_SEASON)} <button type="button" class="btn small" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button>`; }
+  b.innerHTML=`<b>${esc(SEASON)} 시즌</b>을 보는 중입니다 · 팀의 이번 시즌은 ${esc(TEAM_SEASON)}${(SH.on && !SH.canAdmin)?' · 지난 시즌 기록은 회장만 고칠 수 있습니다':''} <button type="button" class="btn small" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button>`; }
 { const _as=afterSeason; afterSeason=function(){ const r=_as.apply(this,arguments); try{ paintSeasonBanner(); if(TAB==='team') renderTeamTab(true); }catch(e){} return r; }; }
 { const _uc=updSeasonChip; updSeasonChip=function(){ const r=_uc.apply(this,arguments); try{ paintSeasonBanner(); }catch(e){} return r; }; }
 

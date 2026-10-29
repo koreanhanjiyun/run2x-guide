@@ -88,7 +88,9 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
     toast(`저장하지 않은 변경 ${nAll()}건이 있습니다. 아래 막대에서 저장하거나 되돌린 뒤 진행하십시오.`);
     if(BAR){ BAR.classList.remove('db-flash'); void BAR.offsetWidth; BAR.classList.add('db-flash'); } }, true);
-  addEventListener('beforeunload', e=>{ if(!nAll()) return; e.preventDefault(); e.returnValue = ''; });
+  /* 쓰다 만 논의·답글·문의 글도 새로고침·창 닫기 전에 경고 */
+  const typing = () => [...document.querySelectorAll('.qa-text, .tk-rf textarea, .tk-c.editing textarea, #fbPanel .tp-fb')].some(t=>t.value.trim());
+  addEventListener('beforeunload', e=>{ if(!nAll() && !typing()) return; e.preventDefault(); e.returnValue = ''; });
 
   const _am = applyModes; applyModes = function(){ const r = _am.apply(this, arguments); try{ paint(); }catch(e){} return r; };
 })();

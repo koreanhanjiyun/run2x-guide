@@ -99,7 +99,7 @@ function initQA(){
   ITEM_HOOKS.push(d=>{ tkBox(d); try{ renderQA(); }catch(e){} });
   document.querySelectorAll('details.item[data-item]').forEach(d=>{ if(!d.querySelector(':scope>.dbody[data-lazy]')) tkBox(d); });
   document.addEventListener('toggle',e=>{ const d=e.target; if(!d.classList || !d.classList.contains('tk-d') || !d.open) return; tkMark(d.closest('.tk').dataset.titem); renderQA(); }, true);
-  document.addEventListener('submit',e=>{ const f=e.target.closest('.tk-f,.tk-rf'); if(!f) return; e.preventDefault(); const t=f.querySelector('textarea'), text=t.value.trim(); if(!text) return;
+  document.addEventListener('submit',e=>{ const f=e.target.closest('.tk-f,.tk-rf'); if(!f) return; e.preventDefault(); const t=f.querySelector('textarea'), text=t.value.trim(); if(!text){ toast('내용을 입력하십시오.'); t.focus(); return; }
     const item=f.closest('.tk').dataset.titem; if(f.classList.contains('tk-rf')){ const top=f.closest('.tk-th').dataset.top; f.remove(); tkPost(item, top, text); } else { t.value=''; tkPost(item, '', text); } });
   document.addEventListener('click',e=>{
     const cn=e.target.closest('.tk-cnt'); if(cn){ e.preventDefault(); e.stopPropagation(); tkGo(cn.closest('details.item').dataset.item); return; }
@@ -111,7 +111,7 @@ function initQA(){
     const rc=e.target.closest('.tk-rcancel'); if(rc){ rc.closest('.tk-rf').remove(); renderQA(); return; }
     const ed=e.target.closest('.qa-edit'); if(ed){ const r=ed.closest('.tk-c'); const q=QA[r.dataset.qid]; if(!q) return; r.classList.add('editing'); const t=r.querySelector('.qa-t');
       t.innerHTML=`<textarea rows="3" maxlength="4000"></textarea><div class="qa-er"><button class="btn small qa-esave" type="button">저장</button><button class="btn small qa-ecancel" type="button">취소</button></div>`; t.querySelector('textarea').value=q.text||''; t.querySelector('textarea').focus(); r.querySelector('.qa-more').hidden=true; return; }
-    const es=e.target.closest('.qa-esave'); if(es){ const r=es.closest('.tk-c'); const v=r.querySelector('.qa-t textarea').value.trim(); if(!v) return; r.classList.remove('editing'); document.activeElement.blur(); qaSave(r.dataset.qid,{text:v, editedAt:new Date().toISOString()}); return; }
+    const es=e.target.closest('.qa-esave'); if(es){ const r=es.closest('.tk-c'); const v=r.querySelector('.qa-t textarea').value.trim(); if(!v){ toast('내용을 입력하십시오.'); return; } r.classList.remove('editing'); document.activeElement.blur(); qaSave(r.dataset.qid,{text:v, editedAt:new Date().toISOString()}); return; }
     const ec=e.target.closest('.qa-ecancel'); if(ec){ ec.closest('.tk-c').classList.remove('editing'); document.activeElement.blur(); renderQA(); return; }
     const x=e.target.closest('.qa-del'); if(x){ const r=x.closest('.tk-c'); if(r.dataset.confirm){ tkDelete(r.dataset.qid); } else { r.dataset.confirm='1'; const lb=x.textContent; x.textContent='한 번 더 누르면 삭제'; setTimeout(()=>{ delete r.dataset.confirm; x.textContent=lb; },3000); } } });
   /* 팀 공유: 예전 단계별 질문·오류 글(v 없음)은 보이지 않고, 회장이 접속하면 한 번 정리 */

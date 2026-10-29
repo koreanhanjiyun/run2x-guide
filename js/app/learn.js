@@ -75,7 +75,7 @@ const CALC = {
 };
 function calcHTML(key){ const c=CALC[key]; if(!c) return '';
   return `<details class="calc" data-calc="${key}"><summary><b>직접 계산해 보기</b><span class="muted"> · ${c.t} · 예시값은 가정값입니다. 우리 팀 값으로 바꿔 보십시오.</span></summary>
-    <div class="calc-b"><div class="calc-in">${c.ins.map(([k,sym,lab,u,d])=>`<label><span class="cs">${sym}</span><span class="cl">${lab}</span><input type="number" step="any" data-ck="${k}" value="${d}"><span class="cu">${u}</span></label>`).join('')}</div>
+    <div class="calc-b"><div class="calc-in">${c.ins.map(([k,sym,lab,u,d])=>`<label><span class="cs">${sym}</span><span class="cl">${lab}</span><input type="number" step="any" data-ck="${k}" value="${d}" aria-label="${String(lab||sym).replace(/<[^>]+>/g,'').replace(/"/g,'')}${u?` (${String(u).replace(/<[^>]+>/g,'').replace(/"/g,'')})`:''}"><span class="cu">${u}</span></label>`).join('')}</div>
     <div class="calc-out" role="status" aria-live="polite" aria-atomic="true"></div><button class="btn small" data-creset>예시값으로</button></div></details>`; }
 function runCalc(box){ const c=CALC[box.dataset.calc]; const v={};
   box.querySelectorAll('[data-ck]').forEach(i=>{ v[i.dataset.ck]=parseFloat(i.value); });
@@ -152,7 +152,7 @@ async function saveVal(id, vals, msgEl){
   if(!valFilled(vals)){ if(!had){ msgEl.textContent='입력한 값이 없습니다.'; return; } delete s[SEASON]; } else s[SEASON]=vals;
   const doc={s, by:SH.me||null, at:new Date().toISOString()};
   if(!SH.on){ VAL[id]=doc; try{ localStorage.setItem('run2x.val.v1', JSON.stringify(VAL)); }catch(e){} refreshVals(); msgEl.textContent= had && !valFilled(vals) ? `${SEASON} 시즌 값을 지웠습니다 (이 브라우저)` : '저장했습니다 (이 브라우저)'; return; }
-  if(!canEditItem(id)){ msgEl.textContent='우리 팀 값은 회장이나 담당 팀장·파트장만 저장할 수 있습니다.'; return; }
+  if(!canEditItem(id)){ msgEl.textContent= pastLock() ? '지난 시즌 기록은 회장만 고칠 수 있습니다.' : '우리 팀 값은 회장이나 담당 팀장·파트장만 저장할 수 있습니다.'; return; }
   doc.part = IT[id].p;
   try{ await SH.db.doc('val/'+id).set(doc); msgEl.textContent= had && !valFilled(vals) ? `${SEASON} 시즌 값을 지웠습니다` : '저장했습니다'; }catch(e){ msgEl.textContent='저장하지 못했습니다.'; }
 }
@@ -175,7 +175,7 @@ document.addEventListener('click',e=>{ const ed=e.target.closest('[data-tvedit]'
   const ok=e.target.closest('[data-tvok]'); if(ok){ const box=ok.closest('.tval'); delete box.dataset.edit; renderTV(box); return; }
   const no=e.target.closest('[data-tvno]'); if(no){ const box=no.closest('.tval'), id=box.dataset.tv; if(box.dataset.was) TVSTAGE[id]=JSON.parse(box.dataset.was); else delete TVSTAGE[id]; delete box.dataset.edit; renderTV(box); try{ DRAFT.paint(); }catch(_){} } });
 document.addEventListener('click',e=>{ const yb=e.target.closest('.tv-yb'); if(!yb) return; const w=yb.parentElement, i=w.querySelector('.tv-yi'); yb.hidden=true; i.hidden=false; i.value=yb.textContent.replace(/\D/g,''); i.focus(); i.select(); });
-{ const fin=(i,ok)=>{ if(i.hidden) return; const el=i.closest('.tval'); const v=i.value.trim(); i.hidden=true; i.previousElementSibling.hidden=false; if(ok && /^\d{4}$/.test(v)){ if(v===SEASON) delete el.dataset.view; else el.dataset.view=v; } renderTV(el); };
+{ const fin=(i,ok)=>{ if(i.hidden || !i.isConnected) return; const el=i.closest('.tval'); if(!el) return; const v=i.value.trim(); i.hidden=true; i.previousElementSibling.hidden=false; if(ok && /^\d{4}$/.test(v)){ if(v===SEASON) delete el.dataset.view; else el.dataset.view=v; } renderTV(el); };
   document.addEventListener('keydown',e=>{ const i=e.target.closest&&e.target.closest('.tv-yi'); if(!i) return; if(e.key==='Enter'){ e.preventDefault(); fin(i,true); } else if(e.key==='Escape'){ fin(i,false); } });
   document.addEventListener('focusout',e=>{ const i=e.target.closest&&e.target.closest('.tv-yi'); if(i) setTimeout(()=>fin(i,true),0); }); }
 document.addEventListener('toggle',e=>{ const d=e.target; if(d.tagName==='DETAILS' && d.classList.contains('item') && !d.open){ d.querySelectorAll('.tval[data-view]').forEach(el=>{ delete el.dataset.view; renderTV(el); }); } }, true);

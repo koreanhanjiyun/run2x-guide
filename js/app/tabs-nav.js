@@ -57,10 +57,12 @@ document.addEventListener('click',ev=>{
   if(ev.target.closest('.tabs .logo-mark, .tabs .wordmark')){ ev.preventDefault(); goHome(); }
 });
 /* 로고 → 처음 화면 (설계 단계 탭 맨 위, 주소의 #항목 지움). 뒤로 가기로 돌아올 수 있음 */
-function goHome(){ if(TAB!=='start' || window.scrollY>10) pushHist(); showTab('start', true);
+function goHome(){ const inSub = typeof START!=='undefined' && !!START.sys; if(TAB!=='start' || window.scrollY>10 || inSub) pushHist(); showTab('start', true);
+  /* 시작 탭 안의 세부 목표·시스템 화면을 보고 있었으면 시작 탭 첫 화면으로 */
+  if(inSub){ try{ renderStart(''); window.scrollTo({top:0, behavior:'instant'}); }catch(e){} }
   if(!window.DEBUG){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
   requestAnimationFrame(()=>smoothScrollTo(()=>0)); }
-document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='처음 화면으로'; el.setAttribute('aria-label','처음 화면으로');
+document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='처음 화면으로'; el.setAttribute('aria-label', el.classList.contains('wordmark') ? 'RUN2X 처음 화면으로' : '처음 화면으로');
   el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goHome(); } }); });
 
 /* ---- v24 검색 + 자동완성 ---- */

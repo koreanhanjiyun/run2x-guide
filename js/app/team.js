@@ -104,7 +104,7 @@
         <td class="tp-mn">${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''}${pend?' <span class="pend-tag">저장 전</span>':''}</td>
         <td><label class="tp-small"><input type="checkbox" data-tmact${e.active?' checked':''} aria-label="${esc(TEAM_SEASON)} 시즌 명단"> 명단</label></td>
         <td><select data-tmrole aria-label="역할"${e.active?'':' disabled'}>${RL.map(r=>`<option value="${r}"${r===e.role?' selected':''}>${ROLE[r]}</option>`).join('')}</select></td>
-        <td class="tp-mp">${isLeadRole(e.role)&&e.active?`<div class="tp-parts">${chipHtml(e)}</div>`:'<span class="muted">—</span>'}</td>
+        <td class="tp-mp">${isLeadRole(e.role)&&e.active?(CHIPOPEN[m.uid]?`<div class="tp-parts">${chipHtml(e)}<button type="button" class="lnk tp-chipt" data-tmchips>접기</button></div>`:`<div class="tp-parts tp-parts-ro">${e.parts.length?partsShow(e.parts).map(p=>`<span class="tp-pchip on ro${PGROUP[p]?' grp':''}">${esc(p)}</span>`).join(''):'<span class="muted tp-small">담당 없음</span>'}<button type="button" class="lnk tp-chipt" data-tmchips>${e.parts.length?'바꾸기':'고르기'}</button></div>`):'<span class="muted">—</span>'}</td>
         <td class="tp-mx">${me?'':`<button type="button" class="lnk" data-tp="kick">내보내기</button> <button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button>`}</td></tr>`; }).join('');
     return `<div class="tp-mtw" data-kind="manage">${mBar('manage')}<div class="tp-mscroll"><table class="tp-mt tp-mtm"><thead><tr><th>이름</th><th>${esc(TEAM_SEASON)} 명단</th><th>역할</th><th>담당 파트</th><th></th></tr></thead><tbody>${rows}</tbody></table><p class="muted tp-small tp-mnone" hidden>해당하는 팀원이 없습니다.</p></div></div>`; }
   document.addEventListener('input', e=>{ if(!e.target.matches || !e.target.matches('.tp-mq')) return; MFS[e.target.closest('.tp-mtw').dataset.kind].q=e.target.value; mFilter(e.target.closest('.tp-mtw')); });
@@ -141,6 +141,7 @@
         ${me?'':`<div class="tp-row tp-danger-row"><button type="button" class="lnk" data-tp="kick">팀에서 내보내기</button><button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button></div>`}
       </div>`:''}</div>`; }
   const TMOPEN = {};
+  const CHIPOPEN = {};   /* 팀원 표: 담당 칩을 펼쳐 고르는 줄 (기본은 고른 칩만 보임) */
 
   /* ---------- 관리 창 "팀 관리" (회장, 회장 모드) ---------- */
   const TM = () => document.querySelector('#v-team .adm-tm');
@@ -169,7 +170,7 @@
     const season = `<div class="tp-sec tp-s-season"><div class="sec-label">팀의 이번 시즌</div><p class="tp-small">지금 팀의 이번 시즌: <b>${esc(TEAM_SEASON)}</b></p>
       <div class="tp-row"><span class="sn-nav"><button type="button" class="tt-sn" data-tss="-1" aria-label="이전 해">${SN_SVG[0]}</button><b class="tt-sv">${esc(SSEL)}</b><button type="button" class="tt-sn" data-tss="1" aria-label="다음 해">${SN_SVG[1]}</button></span>
       <button type="button" class="btn small pri" data-tsset${same?' disabled':''}>${esc(SSEL)} 시즌을 이번 시즌으로 정하기</button></div>
-      <p class="muted tp-small">${same?'고른 해가 지금 이번 시즌과 같습니다. ‹ ›로 바꿀 해를 고르십시오.':'두 번 눌러 확인하면 팀 전체의 이번 시즌이 바뀝니다. 지난 시즌 기록은 그대로 남습니다. 새 시즌 명단에는 회장만 들어가므로, 이어 가는 팀원은 오른쪽 전체 팀원 표에서 [명단]을 체크하고 저장하십시오.'} 여기의 ‹ ›는 위쪽 "보는 시즌"과 따로 움직입니다.</p></div>`;
+      <p class="muted tp-small">${same?'고른 해가 지금 이번 시즌과 같습니다. ‹ ›로 바꿀 해를 고르십시오.':'두 번 눌러 확인하면 팀 전체의 이번 시즌이 바뀝니다. 지난 시즌 기록은 그대로 남습니다. 새 시즌 명단에는 회장만 들어가므로, 이어 가는 팀원은 오른쪽 전체 팀원 표에서 [명단]을 체크하고 저장하십시오. 넘긴 뒤에는 이전 시즌 기록을 회장만 고칠 수 있으니, 팀장·파트장이 마무리할 값은 넘기기 전에 정리하십시오.'} 여기의 ‹ ›는 위쪽 "보는 시즌"과 따로 움직입니다.</p></div>`;
     const backup = `<div class="tp-sec tp-s-backup"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 모든 시즌의 진행 상태·우리 팀 값과 논의를 파일로 저장(시즌이 끝날 때마다 권장).<br>불러오기: <b>고른 시즌만</b> 그 시즌 자리에 덮어쓰고, 논의는 지금 없는 글만 되살립니다.</p><div class="tp-imp" hidden></div></div>`;
     const danger = `<div class="tp-sec tp-dz"><div class="sec-label">위험 구역 <span class="muted">되돌릴 수 없는 작업입니다. 모두 두 번 확인한 뒤 실행됩니다.</span></div>
       <div class="tp-dzg"><div class="tp-dzi"><button type="button" class="btn small tp-dzbtn" data-tp="seasonreset">${esc(SEASON)} 시즌 초기화</button><span class="muted tp-small">이 시즌의 진행 상태·우리 팀 값을 지웁니다. 논의는 남습니다.</span></div>
@@ -247,7 +248,10 @@
     }
     B.innerHTML = h; }
   async function fbOpen(pre){ fbPanel(); FBP.hidden=false; const b=document.querySelector('.topask'); if(b) b.setAttribute('aria-expanded','true');
+    /* 닫았다 다시 열어도 쓰던 문의(종류·위치·항목·내용)는 그대로 */
+    const q=s=>FBP.querySelector(s), old={kind:q('.tp-fbkind')?.value, where:q('.tp-fbwhere')?.value, item:q('.tp-fbitem')?.value, text:q('.tp-fb')?.value||''};
     FBP.querySelector('.fbp-b').innerHTML='<p class="muted tp-small">불러오는 중…</p>'; try{ await fbRender(); }catch(e){ fail(e); }
+    if(old.text.trim()){ if(!pre){ try{ if(q('.tp-fbkind') && old.kind) q('.tp-fbkind').value=old.kind; if(q('.tp-fbwhere') && old.where){ q('.tp-fbwhere').value=old.where; fillItems(); } if(q('.tp-fbitem') && old.item) q('.tp-fbitem').value=old.item; }catch(e){} } if(q('.tp-fb')) q('.tp-fb').value=old.text; }
     const t=FBP.querySelector('.tp-fb'); if(t){ if(pre && IT[pre]){ FBP.querySelector('.tp-fbkind').value='오류'; const w=FBP.querySelector('.tp-fbwhere'); w.value='step:'+IT[pre].s; fillItems(); FBP.querySelector('.tp-fbitem').value=pre; } t.focus(); } }
   function fbClose(){ if(FBP) FBP.hidden=true; const b=document.querySelector('.topask'); if(b) b.setAttribute('aria-expanded','false'); }
   /* 플랫폼 문의 위치: 사이트 전체 / 탭 / 설계 단계 › 항목 */
@@ -326,9 +330,10 @@
     const fo=e.target.closest('.tp-fbopen'); if(fo){ e.preventDefault(); e.stopPropagation(); if(FBP && !FBP.hidden && fo.classList.contains('topask')) return fbClose(); fbOpen(fo.dataset.item); return; }
     if(FBP && !FBP.hidden){ if(e.target.closest('.fbp-x')){ e.preventDefault(); fbClose(); return; }
       const fb = e.target.closest('#fbPanel [data-tp]'); if(fb){ e.preventDefault(); act(fb.dataset.tp, fb).catch(err=>fail(err)); return; }
-      if(!FBP.contains(e.target)) fbClose(); }
+      /* 바깥 클릭으로는 닫지 않음 (글자를 끌어 고르다 칸 밖에서 손을 떼도 닫히지 않게). 닫기는 ×·[문의] 버튼 */ }
     if(e.target.closest('#seasonChip.sc-team')){ e.preventDefault(); e.stopPropagation(); open(C && C.state==='member' ? 'progress' : 'account'); return; }
     if(e.target.closest('.tp-open')){ e.preventDefault(); e.stopPropagation(); open('account'); return; }
+    const tmc = e.target.closest('.adm-tm [data-tmchips]'); if(tmc){ e.preventDefault(); const u=tmc.closest('.tp-card').dataset.uid; CHIPOPEN[u]=!CHIPOPEN[u]; renderTM().catch(err=>fail(err)); return; }
     const tmo = e.target.closest('.adm-tm [data-tmopen]'); if(tmo){ e.preventDefault(); const u=tmo.closest('.tp-card').dataset.uid; TMOPEN[u]=!TMOPEN[u]; renderTM().catch(err=>fail(err)); return; }
     const tpp = e.target.closest('.adm-tm [data-tmpart]'); if(tpp){ e.preventDefault(); const u=tpp.closest('.tp-card').dataset.uid, m=MS.find(x=>x.uid===u), p=tpp.dataset.tmpart, ps=eff(m).parts;
       stage(u, {parts: togglePart(ps, p)}); renderTM().catch(err=>fail(err)); return; }

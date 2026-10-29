@@ -30,7 +30,7 @@ function renderRecords(){ const el=$('#fsRec'); if(!el) return;
     const r = data[String(Y)]; const me = Y===sel ? ' rec-me' : '';
     if(!r) return `<div class="rec-row rec-none${me}"><span class="rec-s">${Y}</span><div class="rec-empty">${Y} 시즌 기록 없음</div><span></span></div>`;
     return `<div class="rec-row${me}"><span class="rec-s">${Y}</span><div class="fs-bar rec-bar" role="img" aria-label="${Y} 시즌 종목별 점수 ${cols.map(c=>c+' '+(r[c]??'-')).join(', ')}">${FS_SCORE.map(([n,v],i)=>{ const x=r[n]; const f=x===''||x==null?0:Math.min(100,Math.max(0,(+x||0)/v*100)); return `<span class="fsb-${i}" style="flex:${v};--f:${f}%" title="${esc(n)} ${x??'-'} / ${v}"><i>${x===''||x==null?'—':esc(x)}</i></span>`; }).join('')}</div><span class="rec-sum" title="${esc(sum(r).toLocaleString()+(r['순위']?' · '+r['순위']:''))}"><b>${sum(r).toLocaleString()}</b>${r['순위']?` · ${esc(recRank(r['순위']))}`:''}</span></div>`; };
-  h += `<div class="rec-bars">${rows.map(row).join('')}</div><p class="muted tp-small">위의 ◀ ▶로 보는 시즌을 바꾸면 그 시즌을 가운데에 두고 앞뒤 시즌과 비교합니다.</p>`;
+  h += `<div class="rec-bars">${rows.map(row).join('')}</div><p class="muted tp-small">위의 ‹ ›로 보는 시즌을 바꾸면 그 시즌을 가운데에 두고 앞뒤 시즌과 비교합니다.</p>`;
   el.innerHTML = h; }
 function recRead(){ const o={}; document.querySelectorAll('#fsRec [data-rc]').forEach(i=>{ const v=i.value.trim(); if(v!=='') o[i.dataset.rc] = i.type==='number' ? +v : v; }); return o; }
 async function recSave(){ if(!RECSTAGE) return; const next = RECSTAGE; RECSTAGE = null;
