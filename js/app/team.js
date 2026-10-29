@@ -20,7 +20,7 @@
   const CHIP = {
     anon:   {cls:'sc-wait', txt:'로그인', tip:'로그인 안 됨: 가이드와 계산기는 그대로 쓸 수 있습니다. 팀 데이터(진행 상태·팀 값·논의)는 로그인하고 팀원이 되면 보입니다. 눌러서 로그인.'},
     noteam: {cls:'sc-wait', txt:'팀 없음',  tip:'팀 없음: 팀 이름과 비밀번호로 가입하거나 새 팀을 만들면 팀 데이터를 쓸 수 있습니다. 눌러서 팀 가입.'},
-    member: {cls:'sc-on',   txt:'연결됨',   tip:'연결됨: 팀과 공유 중입니다. 저장한 진행 상태·팀 값·논의가 팀원 모두에게 보입니다. 눌러서 팀 화면으로.'},
+    member: {cls:'sc-on',   txt:'연결됨',   tip:'연결됨: 팀과 공유 중입니다. 저장한 진행 상태·팀 값·논의가 팀원 모두에게 보입니다. 눌러서 팀원·계정 화면으로.'},
     error:  {cls:'sc-off',  txt:'연결 끊김', tip:'연결 끊김: 팀 저장소에 연결하지 못했습니다. 읽기와 계산기는 그대로 쓸 수 있습니다. 새로고침해 보십시오.'}
   };
   function paintChip(){
@@ -341,7 +341,7 @@
     if(FBP && !FBP.hidden){ if(e.target.closest('.fbp-x')){ e.preventDefault(); fbClose(); return; }
       const fb = e.target.closest('#fbPanel [data-tp]'); if(fb){ e.preventDefault(); act(fb.dataset.tp, fb).catch(err=>fail(err)); return; }
       /* 바깥 클릭으로는 닫지 않음 (글자를 끌어 고르다 칸 밖에서 손을 떼도 닫히지 않게). 닫기는 ×·[문의] 버튼 */ }
-    if(e.target.closest('#seasonChip.sc-team')){ e.preventDefault(); e.stopPropagation(); open(C && C.state==='member' ? 'progress' : 'account'); return; }
+    if(e.target.closest('#seasonChip.sc-team')){ e.preventDefault(); e.stopPropagation(); open('account'); return; }
     if(e.target.closest('.tp-open')){ e.preventDefault(); e.stopPropagation(); open('account'); return; }
     const tmc = e.target.closest('.adm-tm [data-tmchips]'); if(tmc){ e.preventDefault(); const u=tmc.closest('.tp-card').dataset.uid; CHIPOPEN[u]=!CHIPOPEN[u]; renderTM().catch(err=>fail(err)); return; }
     const tmo = e.target.closest('.adm-tm [data-tmopen]'); if(tmo){ e.preventDefault(); const u=tmo.closest('.tp-card').dataset.uid; TMOPEN[u]=!TMOPEN[u]; renderTM().catch(err=>fail(err)); return; }
@@ -394,5 +394,9 @@
   document.addEventListener('click', e=>{ if(!e.target.closest('.qa-seen')) return; e.preventDefault(); tkSeenAll(); paintQ(); });
   { const _rq = renderQA; renderQA = async function(){ const r = await _rq.apply(this, arguments); try{ paintQ(); }catch(e){} return r; }; }
   { const _ra = renderAdm; renderAdm = function(){ const r=_ra.apply(this, arguments); try{ paintQ(); requestAnimationFrame(tmShow); }catch(e){} return r; }; }
-  Backend.Team.ctx().then(c=>{ C=c; document.body.classList.toggle('no-team', c.state!=='member'); tmShow(); setTimeout(paintQ, 1500); paintChip(); foot(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; document.body.classList.add('no-team'); paintChip(); });
+  /* 팀 정보가 늦게 도착해도, 그 사이 열려 있던 팀원·계정 / 팀 설정 화면을 다시 그림 (새로고침·로그인 직후 "불러오는 중…" 멈춤 방지) */
+  const repaintOpen = () => setTimeout(()=>{ try{ if(typeof TAB==='undefined' || TAB!=='team') return;
+    if(document.querySelector('#v-team [data-ttp=account]:not([hidden])')) window.__ttAccount();
+    if(document.querySelector('#v-team [data-ttp=settings]:not([hidden])')) window.__ttSettings(); }catch(e){} }, 0);
+  Backend.Team.ctx().then(c=>{ C=c; document.body.classList.toggle('no-team', c.state!=='member'); tmShow(); setTimeout(paintQ, 1500); paintChip(); foot(); repaintOpen(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; document.body.classList.add('no-team'); paintChip(); repaintOpen(); });
 })();
