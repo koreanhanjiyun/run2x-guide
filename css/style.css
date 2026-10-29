@@ -2034,3 +2034,9 @@ html:not(.booted) body::after{content:"";position:fixed;top:var(--tabh);left:-40
 #seasonBanner{top:calc(50px + env(safe-area-inset-top,0px));z-index:6;flex-wrap:wrap;row-gap:4px}
 /* 좌표계·거동 창: 넘칠 때 창 안 스크롤 (modes-anim.js fit) */
 #figModal .fm-b{min-height:0}
+/* 설계 그림 애니메이션 재생 버튼 (js/figures/fig-anim.js) */
+.fig figure.anim .an-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 6px;font-size:12.5px;color:var(--muted)}
+.fig figure.anim .an-play{font:inherit;font-size:12px;font-weight:600;line-height:1;background:var(--char);color:#fff;border:1px solid var(--char);border-radius:6px;min-height:28px;padding:0 11px;cursor:pointer;flex:none}
+.fig figure.anim .an-play:hover{filter:brightness(1.25)}
+.fig figure.anim .an-play:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fig figure.anim .an-play[aria-pressed="true"]{background:#fff;color:var(--char)}

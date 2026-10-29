@@ -108,7 +108,7 @@ function markOf(t){ const out=[]; let e=t.previousElementSibling, k=0;
     if(col) t.style.fill=col;
     let marks = (sv && svg) ? markOf(t) : [];
     if(sv && svg && !marks.length){ const lx=+t.getAttribute('x'), ly=+t.getAttribute('y'); let best=null, bd=46;
-      svg.querySelectorAll('line[marker-end],path[marker-end],line.dim,path.arcA,path.arcK').forEach(el=>{ if(el.dataset.symc) return; const bb=attrBox(el); if(!bb) return;
+      svg.querySelectorAll('line[marker-end],path[marker-end],line.dim,path.arcA,path.arcK').forEach(el=>{ if(el.dataset.symc || el.closest('.an-dyn')) return; const bb=attrBox(el); if(!bb) return;
         const dx=Math.max(bb.x-lx,0,lx-(bb.x+bb.width)), dy=Math.max(bb.y-ly,0,ly-(bb.y+bb.height)), d=Math.hypot(dx,dy); if(d<bd){ bd=d; best=el; } });
       if(best) marks=[best]; }
     marks.forEach(m=>m.dataset.symc='1');
