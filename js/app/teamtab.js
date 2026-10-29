@@ -125,10 +125,19 @@ function ttTalkCell(t){ const s=[...t].sort((a,b)=>String(a.at).localeCompare(St
   return `<details class="tt-rep-q"><summary><span class="tt-rq-h">${head}</span></summary><div class="tt-rep-qa">${s.map(q=>`<div class="${q.parent?'r':''}">${q.parent?'↳ ':''}${esc(cut(q.text,300))} <span class="muted">${ttFmt(q.at)}</span></div>`).join('')}</div></details>`; }
 
 /* ---------- 지난 시즌을 보는 중 배너 (H3·H9: 주의 = 주황) ---------- */
+let SB_LAST='';
 function paintSeasonBanner(){ let b=$('#seasonBanner'); const on = viewingOther();
-  if(!b){ b=document.createElement('div'); b.id='seasonBanner'; b.setAttribute('role','status'); document.body.appendChild(b); }
-  b.hidden=!on; if(!on) return;
-  b.innerHTML=`<b>${esc(SEASON)} 시즌</b>을 보는 중입니다 · 팀의 이번 시즌은 ${esc(TEAM_SEASON)}${(SH.on && !SH.canAdmin)?' · 지난 시즌 기록은 회장만 고칠 수 있습니다':''} <button type="button" class="btn small" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button>`; }
+  /* 탭 바로 아래(모든 탭 공통)에 붙임. 예전엔 페이지 맨 끝에 붙어 맨 아래까지 내려야 보였음 */
+  if(!b){ b=document.createElement('div'); b.id='seasonBanner'; b.setAttribute('role','status'); }
+  const nav=document.querySelector('nav.tabs'); if(nav && b.previousElementSibling!==nav) nav.after(b);
+  b.hidden=!on; const root=document.documentElement;
+  if(!on){ root.classList.remove('sb-on'); root.style.removeProperty('--tabh'); SB_LAST=''; return; }
+  b.innerHTML=`<span><b>${esc(SEASON)} 시즌</b>을 보는 중 · 설계·연결도·팀 탭 모두 이 시즌 기록입니다 · 팀의 이번 시즌은 ${esc(TEAM_SEASON)}${(SH.on && !SH.canAdmin)?' · 지난 시즌 기록은 회장만 고칠 수 있습니다':''}</span><button type="button" class="btn small" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button>`;
+  /* 띠 높이만큼 탭 높이(--tabh)를 늘려 목차·경로 줄·고정 제목줄이 띠 아래에 오게 */
+  root.classList.add('sb-on'); root.style.setProperty('--tabh', ((nav?nav.offsetHeight:50) + b.offsetHeight) + 'px');
+  if(SB_LAST!==SEASON){ if(SB_LAST!=='' || window.__sbUser) try{ toast(`설계·연결도·팀 탭이 <b>${esc(SEASON)} 시즌</b> 기록으로 바뀌었습니다.`); }catch(e){} SB_LAST=SEASON; } }
+/* ‹ › 로 직접 바꾼 순간에만 알림 (처음 열 때 지난 시즌이 기억돼 있으면 알림 없이 띠만) */
+document.addEventListener('click', e=>{ if(e.target.closest('[data-ttsn],[data-sn]')) window.__sbUser=1; }, true);
 { const _as=afterSeason; afterSeason=function(){ const r=_as.apply(this,arguments); try{ paintSeasonBanner(); if(TAB==='team') renderTeamTab(true); }catch(e){} return r; }; }
 { const _uc=updSeasonChip; updSeasonChip=function(){ const r=_uc.apply(this,arguments); try{ paintSeasonBanner(); }catch(e){} return r; }; }
 

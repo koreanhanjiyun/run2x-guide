@@ -2030,3 +2030,7 @@ html:not(.booted) body::after{content:"";position:fixed;top:var(--tabh);left:-40
 .authbtn{min-height:24px}
 /* 팀원 표: 칩 줄 위아래 여백 없앰 → 칩이 있든 없든 줄 높이 같게 */
 .tp-mt .tp-parts{margin:0}
+/* 지난 시즌 보는 중 띠: 탭 바로 아래 고정 (top 은 탭 바 높이 50px) */
+#seasonBanner{top:calc(50px + env(safe-area-inset-top,0px));z-index:6;flex-wrap:wrap;row-gap:4px}
+/* 좌표계·거동 창: 넘칠 때 창 안 스크롤 (modes-anim.js fit) */
+#figModal .fm-b{min-height:0}

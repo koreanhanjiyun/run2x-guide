@@ -69,7 +69,14 @@ function initFigRail(){ if($('#figRail')) return;
   const md=document.createElement('div'); md.id='figModal'; md.hidden=true;
   const build=()=>{ if(md.dataset.built) return; md.dataset.built='1'; md.innerHTML=`<div class="fm-panel" role="dialog" aria-label="좌표계·거동"><div class="fm-h"><b>좌표계·거동</b><button class="fm-x" aria-label="닫기" title="닫기 (Esc)">×</button></div><div class="fm-b"><div class="figrow"><figure class="coordfig"><div class="fm-fh"><b>ISO 8855 차량 좌표계</b><span>원점 O = 앞바퀴 중심선(주황 점선) × 차량 중심면(보라 점선) × 지면, 정적 상태</span><span>오른쪽 바퀴의 점은 y &lt; 0 · 볼조인트 y = −(t/2 − d<sub>l</sub>)</span></div>${COORD_SVG}</figure><figure class="coordfig"><div class="fm-fh"><b>차체 회전 (오른손 법칙)</b><span>이동(서지·스웨이·히브)의 +는 왼쪽 그림의 x·y·z와 같음</span></div>${MOTION_SVG}</figure></div><figure class="coordfig" id="modeAnimFig"></figure></div></div>`; };
   document.body.appendChild(fr); document.body.appendChild(md);
-  const close=()=>{ md.hidden=true; fr.classList.remove('open'); try{ window.__modeAnim.stop(); }catch(e){} }, open=()=>{ loadCoord(()=>{ build(); md.hidden=false; fr.classList.add('open'); try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} }); };
+  /* 화면 높이에 맞춤: 창이 화면 아래로 넘치면 창 전체를 비율대로 줄임(zoom, 최소 0.55). 그래도 넘치면 창 안에서 스크롤 */
+  const fit=()=>{ const pn=md.querySelector('.fm-panel'), bd=md.querySelector('.fm-b'); if(md.hidden || !pn) return;
+    pn.style.zoom=''; pn.style.maxHeight=''; if(bd) bd.style.overflowY='';
+    const top=pn.getBoundingClientRect().top, avail=innerHeight-top-14, h=pn.getBoundingClientRect().height; if(h<=avail) return;
+    const z=Math.max(0.55, avail/h); pn.style.zoom=String(Math.floor(z*1000)/1000);
+    if(pn.getBoundingClientRect().height>avail+1){ pn.style.maxHeight=(avail/z)+'px'; if(bd) bd.style.overflowY='auto'; } };
+  window.__figFit=fit; window.addEventListener('resize',()=>requestAnimationFrame(fit));
+  const close=()=>{ md.hidden=true; fr.classList.remove('open'); try{ window.__modeAnim.stop(); }catch(e){} }, open=()=>{ loadCoord(()=>{ build(); md.hidden=false; fr.classList.add('open'); try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} requestAnimationFrame(()=>{ fit(); setTimeout(fit,300); }); }); };
   fr.querySelector('#figToggle').addEventListener('click',()=>{ md.hidden?open():close(); });
   md.addEventListener('click',e=>{ if(e.target===md || e.target.closest('.fm-x')) close(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !md.hidden) close(); });
