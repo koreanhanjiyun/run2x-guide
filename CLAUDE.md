@@ -3,7 +3,7 @@
 - 사이트 원본은 이 저장소다. 여러 파일로 나뉜 정적 사이트(GitHub Pages)이며 빌드 단계가 없다. 스크립트는 `index.html` 의 `<script>` 순서대로 전역에서 실행된다 (모듈 아님). 파일 사이 순서를 바꾸지 말 것.
 - 내용: `js/data/*`. 화면 동작: `js/app/*`. 그림: `js/figures/*`. 저장소: `js/store/backend.js` (Firebase/Claude/없음).
 - 파트 묶음: 모든 파트(공통 제외)는 샤시·전기 중 하나에 속한다. 파트를 추가·변경하면 `js/app/status-shared.js` 의 `PGROUP` 과 `firestore.rules` 의 `grpOf` 를 같이 고칠 것 (한쪽만 고치면 팀장 저장 때 권한 오류).
-- 변경 이력: 사이트에는 설계 내용 변경·정정만 (`js/data/refs.js` 의 변경 이력 항목). 화면·기능 변경은 커밋 메시지로만. 디버깅 모드는 공개 이력에 쓰지 않는다.
+- 변경 이력 (`js/data/refs.js`): 모든 버전을 적는다 (Keep a Changelog). 설계 내용 변경·정정은 자세히(정정은 `cl-fix`), 화면·기능만 바뀐 버전은 `sec-label cl-ui` + "화면·기능" 표시로 짧게 한두 줄. 자세한 화면·기능 변경은 커밋 메시지에. 업데이트 알림은 cl-ui가 아닌 버전에만 뜬다. 디버깅 모드는 공개 이력에 쓰지 않는다.
 - 하단 버전·갱신일: `index.html` 의 `#verline`.
 - 커밋 전에 항상 `python3 tools/stamp.py` 실행 (css·js 주소에 ?v= 꼬리표 → 방문자 캐시 무효화).
 - 검증: `python3 -m http.server` 로 띄워 Playwright로 콘솔 오류 없이 로드되는지, 항목 수(details.item)·단계 수가 그대로인지 확인.

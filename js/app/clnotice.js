@@ -8,7 +8,8 @@
   const KEY = 'run2x.clSeen';
   const get = () => { try{ return localStorage.getItem(KEY); }catch(e){ return null; } };
   const put = v => { try{ localStorage.setItem(KEY, v); }catch(e){} };
-  function latest(){ const r = (typeof REFS!=='undefined') && REFS.find(x=>x.t==='변경 이력'); const m = r && /(\d+\.\d+\.\d+) · \d{4}-\d{2}-\d{2}/.exec(r.b); return m ? m[1] : null; }
+  function latest(){ const r = (typeof REFS!=='undefined') && REFS.find(x=>x.t==='변경 이력'); if(!r) return null;   /* 화면·기능만 바뀐 버전(cl-ui)은 알림 기준에서 뺌 */
+    const re = /<div class="sec-label( cl-ui)?"[^>]*>(\d+\.\d+\.\d+) · \d{4}-\d{2}-\d{2}/g; let m; while((m = re.exec(r.b))){ if(!m[1]) return m[2]; } return null; }
   let L = null, ON = false;
   function clDetails(){ return [...document.querySelectorAll('#ref-list > details')].find(x=>x.querySelector(':scope>summary .stitle')?.textContent.trim()==='변경 이력'); }
   function apply(){
@@ -19,7 +20,7 @@
     const body = d.querySelector('.dbody'); if(!body || body.querySelector('.cl-new')) return;
     const box = document.createElement('div'); box.className='cl-new';
     box.innerHTML = `<span><b>새 업데이트 v${L}</b> · 아래 바뀐 내용을 읽어 보십시오.</span><button type="button" class="btn small pri cl-ok">확인</button>`;
-    body.prepend(box);
+    body.prepend(box); try{ window.__clShow && window.__clShow(L); }catch(e){}
   }
   function done(){ ON=false; put(L);
     document.querySelectorAll('.cl-breathe').forEach(e=>e.classList.remove('cl-breathe'));

@@ -53,11 +53,23 @@ const REFS = [
   ['주','설계 흐름 자체가 바뀜 (단계 번호·순서가 달라짐)','단계 추가·삭제·재배치, 동결 기준 변경, 시즌 개편'],
   ['부','내용·기능이 늘어남','새 항목·상세 카드·그림 추가, 새 기능'],
   ['수','고치기만 함','오탈자, 문구 다듬기, 표시 깨짐·버그 수정']])}
-<p class="muted" style="font-size:14px">이 이력에는 <b>설계 내용</b>의 추가·변경·정정만 적습니다. 화면·기능 변경은 적지 않습니다. <b class="cl-fix">정정</b>은 이미 읽은 내용이 틀렸다가 고쳐진 것이니, 그 값을 쓴 적이 있다면 다시 확인하십시오.</p>
+<p class="muted" style="font-size:14px">모든 버전을 적습니다. <b>설계 내용</b>의 추가·변경·정정은 자세히 적고, 화면·기능만 바뀐 버전은 <span class="cl-ui-tag">화면·기능</span>으로 표시해 짧게 적습니다. 업데이트 알림(참고 탭 주황 표시)은 설계 내용이 바뀐 버전에만 뜹니다. <b class="cl-fix">정정</b>은 이미 읽은 내용이 틀렸다가 고쳐진 것이니, 그 값을 쓴 적이 있다면 다시 확인하십시오.</p>
 <div class="sec-label" style="margin-top:14px">예정</div>
 <ul class="pl"><li>애커먼 계산기 v1.2.1: 안티 기능 삭제, 조건 검사 보강, 3D 킹핀축(2단계) 추가</li><li>기어비 계산기 v2.2.1: J/r² 등가질량, 구름저항 mg, trapz(Time,P), 회생·효율·드라이버 계수</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.3.3 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>변경 이력에 모든 버전을 적고, 화면·기능만 바뀐 버전은 "화면·기능"으로 표시. 업데이트 알림은 설계 내용이 바뀐 버전에만 뜸</li><li>업데이트 알림을 누르면 그 버전 내용이 바로 펼쳐짐</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.3.2 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>팀 탭 사용법을 칸별로 나눔: 팀원·계정 8단계, 팀 설정의 팀원 관리 6단계</li><li>설계 탭 범례·사용법에서 "확인 필요" 배지 설명 삭제</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.3.1 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>새로고침·로그인 직후 팀원·계정 화면이 "불러오는 중…"에서 멈추던 문제 수정</li><li>상단 상태 칩을 누르면 팀원·계정 화면으로 이동</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.3.0 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>팀에 보이는 이름: 본인이 팀원·계정 화면에서, 회장이 팀 설정의 팀원 표에서 바꿀 수 있음 (구글 계정 이름과 별개)</li></ul>
 <div class="sec-label" style="margin-top:14px">1.2.0 · 2026-10-29</div>
 <ul class="pl"><li data-go="a_mr"><b class="cl-fix">정정</b> 푸시로드·로커·댐퍼 그림: 범프 때 댐퍼가 늘어나는 배치였던 것을 압축되도록 다시 그림 (움직이는 그림)</li><li data-go="d_ramp"><b class="cl-fix">정정</b> LSD 램프 그림: 핀이 링의 V홈 면을 타고 올라 링이 d·tanθ만큼 벌어지는 구조로 다시 그림 (움직이는 그림)</li><li data-go="s_trail">트레일 정의 그림에 R·e 표기와 지면 확대 추가 (t<sub>mech</sub> = R·tanν − e)</li><li data-go="b_dist">제동 배분: 제동 하중 이동 그림·밸런스 바 그림 추가, MC 지름 예시를 목표 배분과 맞춤 (MC 조합만으로는 β ≈ 0.72까지)</li><li data-go="g_balance">언더·뉴트럴·오버 정의 그림 추가</li><li data-go="p_brake">답력 → 압력 → 제동 토크 그림 추가</li><li data-go="st_maxsteer">헤어핀 필요 조향각 그림 추가</li><li data-go="d_derate">디레이팅 곡선 그림 추가</li><li data-go="s_anti">안티 0% vs 30% 제동 피치 그림 추가</li><li data-go="g_lapsim">QSS 속도 프로필 예시 그림 추가</li><li data-go="d_apps">페달 맵 그림 추가</li><li data-go="l_driver">규정 95% 드라이버 모델 그림 추가</li><li data-go="st_ack">애커먼·캠버 게인·잭킹·ARB 그림을 움직이는 그림으로 (실제 링크 기구학)</li><li>설계 카드·부품 설명·단계표·배경 글 본문 중간의 문헌·조항 표기를 빼고 출처 칸으로 모음 (규정 칸 제목의 조항 번호는 유지). "확인 필요" 표시를 없애고, 근거가 약한 문장은 일반적인 표현으로 바꿈</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.1.1 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>지난 시즌을 볼 때 뜨는 주황 띠를 탭 바로 아래에 표시</li><li>좌표계·거동 창이 작은 화면에서 잘리지 않게 크기 맞춤</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.1.0 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>쓰다 만 논의·답글·문의가 있으면 새로고침 전에 경고</li><li>지난 시즌 기록은 회장만 편집</li><li>첫 화면 표시 속도 개선, 사용법 안내 중 뒤 화면 조작 막음</li><li>접근성 개선(키보드 포커스 표시, 글자 대비, 누르는 영역), 탭 아이콘 추가</li></ul>
 <div class="sec-label" style="margin-top:14px">1.0.0 · 2026-10-29 · 팀 첫 공유 버전</div>
 <ul class="pl"><li data-go="t_judge">현장평가 대응: "발표자" 펼침 칸 삭제</li><li data-go="e_telem">데이터로거 파트 추가: 데이터 수집 계획·분석(e_daq)을 회로에서 옮기고, 새 항목 "텔레메트리 (실시간 전송)"·"대시보드 화면 구성"을 P4-5에 추가</li><li>부품 소개 전 계통(프레임·서스·조향·제동·구동계·모터컨트롤러·배터리·냉각·회로·에어로) 카드 글을 "왜 필요 → 목적 → 어떻게 → 왜 달성" 흐름으로 다시 씀. 장점 칸 삭제, FS에서는·주의만 남김, 규정 조항은 2026 차량기술규정 원문 기준으로 다시 확인</li><li>부품 그림을 REF4(지난 Run2X 차량) CAD 형상 기준으로 다시 그림. 움직이는 계통(서스·조향·페달·구동)은 REF4 하드포인트로 계산한 애니메이션</li><li>새 내용: 센터락 허브, 풀로드 배치, 두 겹 관 댐퍼 구조와 조절 항목 6가지, 서드 스프링 배치, 롤후프 카드에 벌크헤드, 회생제동의 패러데이·렌츠 법칙, IMD 검사(TSMP) 카드 글</li><li>카드 이름 변경: 사이드포드·흡입 덕트, 리저버·압력 캡·캐치 캔, 언더트레이·디퓨저·사이드 스커트, 전압 측정 포인트·IMD 검사, AIR·프리차지·퓨즈·HVD</li><li>목표 재구성: 최상위 목표를 "종합점수 최대"에서 <b>"더 빠른 차"</b>로 바꾸고, 갈래를 그립·더 큰 힘·가볍게·일관성·끝까지로 다시 묶음. 세부 목표 번호가 ①~⑧로 바뀜(출력 한계까지 가속 추가). FS 배점·보고서 평가는 목표 탭 "FS에서는"으로 옮김</li><li>시작 탭 추가: 자동차에서 F1·FS까지의 흐름, 시스템별 "왜 생겼나 · F1에서 어떻게 발전했나 · FS에서는", FS 부품 소개(그림·하는 일·흔한 형태·이 부품을 정하는 설계 항목)</li><li>"F1에서 금지된 기술"을 "F1이 빨라지려고 시도한 기술들"로 다시 정리해 시작 탭으로 옮김</li><li>부품 탭 삭제: 부품 소개는 시작 탭으로, 부품별 설계 인자는 각 설계 항목의 확정 칩과 연결도에 남음</li><li>용어 통일: "팀 결정값" → "우리 팀 값"</li></ul>
 <div class="sec-label" style="margin-top:14px">0.31.0 · 2026-10-21</div>

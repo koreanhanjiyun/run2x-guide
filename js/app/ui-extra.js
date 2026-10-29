@@ -49,7 +49,8 @@ function initChangelog(){
   list.addEventListener('click',e=>{ const li=e.target.closest('li'); if(!li) return; show(+li.dataset.i); open(false); btn.focus(); });
   btn.addEventListener('keydown',e=>{ if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); show(Math.max(0,Math.min(vers.length-1,cur+(e.key==='ArrowDown'?1:-1)))); } else if(e.key==='Escape') open(false); });
   document.addEventListener('click',e=>{ if(!sel.contains(e.target)) open(false); });
-  show(0); }
+  show(0);
+  window.__clShow = v => { const i=vers.findIndex(x=>x.v.startsWith(v+' ')); if(i>=0) show(i); };   /* 업데이트 알림이 가리키는 버전을 펼쳐 보여 줌 */ }
 
 /* ---------- 목표 트리 연결선 · 흐름 카드 머리 ---------- */
 function decorate(){

@@ -2045,3 +2045,5 @@ html:not(.booted) body::after{content:"";position:fixed;top:var(--tabh);left:-40
 .tp-nmed{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
 .tp-nmi{width:9em;font:inherit;font-size:13px;padding:3px 6px}
 .tp-nmbtn{font-size:12px;margin-left:4px}
+/* 변경 이력: 화면·기능만 바뀐 버전 표시 */
+.cl-ui-tag{display:inline-block;font-size:11.5px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-left:4px;vertical-align:1px}
