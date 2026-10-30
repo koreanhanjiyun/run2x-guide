@@ -2049,3 +2049,26 @@ html:not(.booted) body::after{content:"";position:fixed;top:var(--tabh);left:-40
 .cl-ui-tag{display:inline-block;font-size:11.5px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-left:4px;vertical-align:1px}
 /* 차단한 사람 표 (팀 설정 명단 선택 → 차단한 사람) */
 :is(#teamPanel,.adm-tm) .tp-mt.tp-blt tr.tp-person{display:table-row;padding:0}
+
+/* ============================================================
+   색 정리 (2026-10-30): 설계 탭 항목 본문(펼친 안쪽)만 장식용 보라를 무채색으로 — 정보가 먼저 보이게.
+   목차·단계 머리·시작·팀·연결도 등 길잡이 역할의 보라는 그대로.
+   ============================================================ */
+:root{ --neu-bg:#f1f2f4; --neu-line:#c9ced5; }
+.b-card{background:var(--neu-bg);color:var(--ink-2)}
+.concl,.actbox,.actbox:is(*){border-left-color:var(--ink-2)!important;background:var(--neu-bg)!important}
+.concl b.tag,.actbox b.tag{color:var(--ink)}
+.selfcheck{border-color:var(--neu-line);background:var(--neu-bg)}
+.term{border-bottom-color:var(--muted)}
+.term.on{background:var(--neu-bg)}
+.gpath-l{color:var(--ink-2)}
+.gpath-g{border-color:var(--neu-line);color:var(--ink-2);background:var(--panel)}
+.gpath-g:hover{background:var(--neu-bg);color:var(--ink);border-color:var(--ink-2)}
+.qm{background:var(--neu-bg);color:var(--ink-2)}
+.qm:hover{background:var(--ink-2);color:#fff}
+details.item .tv-s{color:var(--ink-2)}
+.tv-yb{background:var(--neu-bg);color:var(--ink-2)}
+.tv-yb:hover{border-color:var(--ink-2)}
+.vlab.dec{color:var(--ink)}
+.vchip.dec{color:var(--ink)!important;border-bottom-color:var(--ink)!important}
+.ilink:hover{background:var(--neu-bg)}
