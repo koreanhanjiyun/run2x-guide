@@ -37,9 +37,15 @@ const openScrub = () => { const st=$('#st-P3-1'); if(st) st.open=true; const it=
 /* 로그인 전·팀원에게 숨겨진 '진행 상태'·'우리 팀 값' 칸을 사용법 중에만 보이게 (끝나면 되돌림) */
 function showBits(){ const it=$('#it-s_scrub'); if(!it || !TR) return; it.querySelectorAll('.stbox,.tval').forEach(x=>{ if(x.classList.contains('tg-show')) return; x.classList.add('tg-show'); tgUndo(()=>x.classList.remove('tg-show')); }); showStatus(); }
 const SC = { tab:'steps', vm:'full', prep:openScrub, fx:'doing' };
+const GRAPH_TOUR = [
+  ['#v-graph .gcanvas','연결도','설계 탭의 [연결도] 보기입니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다.',{tab:'graph'}],
+  ['#v-graph .gcanvas','항목 고르기','항목 카드를 누르면 받는 정보(파랑)와 넘기는 결과(초록) 선이 강조되고, 오른쪽 칸에 그 항목 내용이 나옵니다. 빈 곳을 누르면 선택이 풀립니다.',{tab:'graph',pic:PIC.graph,press:'#graph .node[data-id=g_mass]',prep:()=>{ try{ selectItem('g_mass',false); }catch(e){} }}],
+  ['#v-graph .g-legend','범례','선 색·점 이은 선·주황 세로선·보라 점·진행 표시의 뜻입니다.',{tab:'graph',union:'span'}],
+  ['#v-graph .gctl','도구','전체 화면, 확대·축소, 전체 보기, 처음 위치입니다. 오른쪽 파트 강조로 원하는 파트만 진하게 볼 수 있습니다.',{tab:'graph',union:'button'}],
+];
 const TOUR = {
  top: [
-  ['.tabs','탭','시작 → 설계 → 연결도 → 참고 순서로 보면 "왜 → 무엇을 → 어떻게"가 이어집니다. 오른쪽 끝 [팀]은 팀의 진행 기록입니다.',{union:'.tab'}],
+  ['.tabs','탭','시작 → 설계 → 참고 순서로 보면 "왜 → 무엇을 → 어떻게"가 이어집니다. 항목 연결도는 설계 탭 안의 [연결도] 보기입니다. 오른쪽 끝 [팀]은 팀의 진행 기록입니다.',{union:'.tab'}],
   ['.gsearch','검색','항목·단계·부품·용어를 한 번에 찾고, 종류별로 묶어 보여 줍니다. 키보드 / 를 누르면 바로 입력합니다. 초성(ㅅㅋㄹ = 스크럽 반경…)이나 영문 약어(KPI)도 됩니다.',{prep:()=>{ showSearch(); }, also:'#gsearch-list'}],
   ['#seasonChip','상태 칩','지금 상태를 색으로 알려 줍니다. 누르면 로그인하거나 팀 탭으로 갑니다.',{pic:PIC.chip,prep:()=>{ hideSearch(); }}],
   ['.topask','문의','내용 오류·사이트 오류·기능 제안을 사이트 개발자에게 보냅니다(로그인 필요). 누르면 이렇게 문의 칸이 내려옵니다. 종류·위치(탭·단계·항목)를 고르고 내용을 적어 보냅니다. 팀과 무관하게 개발자에게만 갑니다.',{prep:()=>{ showAsk(); }, also:'#fbPanel'}],
@@ -68,6 +74,8 @@ const TOUR = {
   ['#v-steps header .legend','표시 배지',`항목 줄과 본문에 붙는 표시입니다. ${B('b-card','상세')} 상세 카드(그림·표가 많은 긴 설명)가 있는 항목, ${B('b-assume','가정값')} 설명용 숫자라 팀 실측값으로 바꿀 것입니다.`,{tab:'steps',vm:'full',union:'span:nth-child(-n+2)'}],
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
   ['#flow-list','흐름만 보기','단계마다 핵심 한 줄만 이어 보여 줍니다. 전체 순서를 빠르게 훑을 때 씁니다. 줄의 [열기 ›]를 누르면 전체 보기의 그 항목으로 갑니다.',{tab:'steps',vm:'flow'}],
+  ['#v-graph .gcanvas','연결도 보기','[연결도]를 누르면 같은 설계 항목을 한 장의 그림으로 봅니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다. 왼쪽 목차는 숨고, 오른쪽 파트 강조·좌표계 배너는 그대로 씁니다.',{tab:'graph'}],
+  ...GRAPH_TOUR.slice(1),
   ['#collapse-all','모두 접기','펼친 단계·항목을 한 번에 닫습니다. 내려 읽는 중에는 위에 뜨는 경로 줄에도 같은 버튼이 있습니다.',{tab:'steps',vm:'full'}],
   ['#st-P3-1>summary','단계 줄','단계 → 항목 → 질문 순서로 세 번 펼칩니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
   ['#it-s_scrub>summary','항목 줄',`항목 이름 · 파트 칩 · ${B('b-card','상세')} · 보라 칩(이 항목을 마치면 확정되는 것) · 오른쪽에 팀 진행 상태(<span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span>, 예정이면 표시 없음) · [연결도] 버튼입니다. 마우스를 올리면 🔗(링크 복사)가 보입니다.`,{...SC,reveal:'#it-s_scrub>summary'}],
@@ -85,12 +93,7 @@ const TOUR = {
   ['#partRail','파트 강조','평소에는 접혀 있고 마우스를 올리면 펼쳐집니다(빼면 다시 접힘). 파트를 고르면 그 파트 항목만 진하게 보이고 나머지는 흐려지며, 여러 개 고를 수 있습니다. 머리를 누르면 펼친 채 고정(📌)됩니다.',{...SC,sync:true,prep:()=>{ const r=$('#partRail'); if(r) r.classList.remove('coll'); }}],
   ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너를 누르면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다. 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
  ],
- graph: [
-  ['#v-graph .gcanvas','연결도','가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다.',{tab:'graph'}],
-  ['#v-graph .gcanvas','항목 고르기','항목 카드를 누르면 받는 정보(파랑)와 넘기는 결과(초록) 선이 강조되고, 오른쪽 칸에 그 항목 내용이 나옵니다. 빈 곳을 누르면 선택이 풀립니다.',{tab:'graph',pic:PIC.graph,press:'#graph .node[data-id=g_mass]',prep:()=>{ try{ selectItem('g_mass',false); }catch(e){} }}],
-  ['#v-graph .g-legend','범례','선 색·점 이은 선·주황 세로선·보라 점·진행 표시의 뜻입니다.',{tab:'graph',union:'span'}],
-  ['#v-graph .gctl','도구','전체 화면, 확대·축소, 전체 보기, 처음 위치입니다. 오른쪽 파트 강조로 원하는 파트만 진하게 볼 수 있습니다.',{tab:'graph',union:'button'}],
- ],
+ graph: GRAPH_TOUR,
  ref: [['#ref-list','참고','용어집(검색 가능)·기준 규정·출처·변경 이력입니다. 줄을 누르면 펼쳐집니다.',{tab:'ref'}]],
  team_nolog: [
   ['#v-team .tt-nav','팀 메뉴','로그인 전에는 [팀원 · 계정]이 먼저 열립니다. 로그인하고 팀에 가입하면 진행 현황·시즌 요약이 보입니다. [대회 점수]는 로그인 없이 볼 수 있습니다.',{tab:'team',sub:'account',union:'button:not([hidden])'}],
@@ -146,7 +149,7 @@ const teamCourse = () => teamNolog() ? [...TOUR.team_nolog] : [...TOUR.team_comm
 /* 팀 설정 화면에서 [이 탭 사용법]을 누르면 팀 설정 사용법만 */
 const teamSettingsOn = () => !!document.querySelector('#v-team [data-ttp=settings]:not([hidden])');
 const startCourse = () => { const s=(typeof START!=='undefined' && START.sys) || ''; return !s ? TOUR.start : s.startsWith('goal:') ? TOUR.goalpage : TOUR.sys; };
-const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.graph, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
+const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
   : name==='team' ? (teamSettingsOn() && SH.on && SH.canAdmin ? [...TOUR.team_admin] : teamCourse()) : name==='start' ? [...startCourse()] : (TOUR[name] ? [...TOUR[name]] : [...TOUR.top]);
 
 /* ---------- 엔진 ---------- */
@@ -267,11 +270,14 @@ function tgText(i){ const st=TR.steps[i], o=st[3]||{}, card=TR.el.querySelector(
   card.querySelector('.tour-n').textContent=`${i+1} / ${TR.steps.length}`;
   card.querySelector('[data-tour-prev]').disabled = i===0; card.querySelector('[data-tour-next]').textContent = i===TR.steps.length-1 ? '마치기' : '다음'; }
 /* 그 단계 화면으로 가는 데 필요한 버튼 누름(탭·처음 화면·하위 화면·보기 방식) */
-function tgClicks(o){ const c=[];
-  if(o.tab && TAB!==o.tab) c.push({sel:`.tabs .tab[data-tab="${o.tab}"]`, run:()=>{ showTab(o.tab); }, reset:true});
+function tgClicks(o){ const c=[]; let vmDone=false;
+  if(o.tab && TAB!==o.tab){
+    if(o.tab==='graph' && TAB==='steps') c.push({sel:'#v-steps [data-vgo="graph"]', run:()=>{ showTab('graph'); }, reset:true});
+    else if(o.tab==='steps' && TAB==='graph'){ const vm=o.vm||(typeof VMODE!=='undefined'?VMODE:'full'); vmDone=true; c.push({sel:`#v-graph [data-vmg="${vm}"]`, run:()=>{ if(typeof setVM==='function') setVM(vm); showTab('steps'); }, reset:true}); }
+    else c.push({sel:`.tabs .tab[data-tab="${o.tab==='graph'?'steps':o.tab}"]`, run:()=>{ showTab(o.tab); }, reset:true}); }
   if(o.home && typeof START!=='undefined' && START.sys) c.push({sel:'#v-start .sp-nav [data-sysgo=""]', run:()=>{ renderStart(''); window.scrollTo({top:0,behavior:'instant'}); }, reset:true});
   if(o.sub && typeof TT!=='undefined'){ const vis=document.querySelector(`#v-team [data-ttp="${o.sub}"]:not([hidden])`); if(!vis || (o.tab && TAB!==o.tab)) c.push({sel:`#v-team .tt-nav [data-tts="${o.sub}"]`, run:()=>{ TT.sub=o.sub; TT.picked=1; renderTeamTab(); }}); }
-  if(o.vm && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
+  if(o.vm && !vmDone && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
   if(o.press) c.push({sel:o.press, run:()=>{}});
   return c; }
 /* 복제본이 보여 주는 화면 상태의 요약 (같으면 다시 복제할 필요 없음) */

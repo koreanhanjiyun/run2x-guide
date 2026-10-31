@@ -8,7 +8,7 @@ function showTab(t, keep){
   ['start','goals','steps','graph','ref','team'].forEach(k=>{ const v=$('#v-'+k); if(v) v.hidden = k!==t; });
   if(t==='start' && typeof renderStart==='function') renderStart(); if(t==='team' && typeof renderTeamTab==='function') renderTeamTab();
   const rail=$('#partRail'); if(rail) rail.hidden = !(t==='steps'||t==='graph'); requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} });
-  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===(t==='graph'?'steps':t))));
   try{ history.replaceState(null,'','#'+t); }catch(e){}
   if(t==='graph' && !graphInit){ graphInit=true; requestAnimationFrame(()=>{ view.x=10; view.y=56; view.k=0.9; applyView(); }); }
   if(!keep && t!==TAB) window.scrollTo(0,0);
@@ -161,4 +161,13 @@ function initGlossary(){
     r=>{ inp.value=''; filt(''); const tr=r.g.tr; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50;
       requestAnimationFrame(()=>smoothScrollTo(()=>tr.getBoundingClientRect().top+window.scrollY-(window.innerHeight+tabh)/2+20, ()=>markHere(tr))); },
     filt);
+}
+/* 연결도는 설계 탭의 셋째 보기 (탭 간소화 A): 목록 ↔ 연결도를 오갈 때 목록의 스크롤 위치를 기억 */
+{ let STEPY = 0; const _st = showTab;
+  showTab = function(t, keep){ if(TAB==='steps' && t==='graph') STEPY = window.scrollY;
+    const back = TAB==='graph' && t==='steps' && !keep; const r = _st.call(this, t, back ? true : keep);
+    if(back) requestAnimationFrame(()=>window.scrollTo({top:STEPY, behavior:'instant'})); return r; };
+  document.addEventListener('click', e => {
+    if(e.target.closest('[data-vgo="graph"]')){ e.preventDefault(); pushHist(); showTab('graph'); return; }
+    const m = e.target.closest('[data-vmg]'); if(m){ e.preventDefault(); if(typeof setVM==='function') setVM(m.dataset.vmg); pushHist(); showTab('steps'); } });
 }

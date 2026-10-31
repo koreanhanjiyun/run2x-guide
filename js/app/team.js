@@ -261,7 +261,7 @@
     const t=FBP.querySelector('.tp-fb'); if(t){ if(pre && IT[pre]){ FBP.querySelector('.tp-fbkind').value='오류'; const w=FBP.querySelector('.tp-fbwhere'); w.value='step:'+IT[pre].s; fillItems(); FBP.querySelector('.tp-fbitem').value=pre; } t.focus(); } }
   function fbClose(){ if(FBP) FBP.hidden=true; const b=document.querySelector('.topask'); if(b) b.setAttribute('aria-expanded','false'); }
   /* 플랫폼 문의 위치: 사이트 전체 / 탭 / 설계 단계 › 항목 */
-  const TABS = [['start','시작 탭'],['graph','연결도 탭'],['ref','참고 탭']];
+  const TABS = [['start','시작 탭'],['graph','설계 탭 · 연결도 보기'],['ref','참고 탭']];
   const plain = t => String(t||'').replace(/<[^>]+>/g,'').replace(/\$/g,'');
   const stepName = s => `${s.id} ${plain(s.t).replace('★ ','')}`;
   function whereOpts(){ return `<option value="">사이트 전체·기타</option><optgroup label="탭">${TABS.map(([k,n])=>`<option value="tab:${k}">${n}</option>`).join('')}</optgroup><optgroup label="설계 단계">${STEPS.map(s=>`<option value="step:${esc(s.id)}">${esc(stepName(s))}</option>`).join('')}</optgroup>`; }

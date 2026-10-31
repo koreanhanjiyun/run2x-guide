@@ -8,7 +8,7 @@
    - 좁은 화면(모바일): 안내 화면만 (L1)
    ============================================================ */
 const SITE = 'Run2X 설계 가이드';
-const TABNAME = {start:'시작', goals:'목표', steps:'설계', graph:'연결도', ref:'참고', team:'팀'};
+const TABNAME = {start:'시작', goals:'목표', steps:'설계', graph:'설계 · 연결도', ref:'참고', team:'팀'};
 const plainT = t => String(t||'').replace(/<[^>]+>/g,'').replace(/\$/g,'').replace('★ ','');
 let CRUMB = {step:null, item:null};
 function setTitle(){ const parts=[]; if(TAB==='steps' && CRUMB.item) parts.push(plainT(IT[CRUMB.item].n)); else if(TAB==='steps' && CRUMB.step) parts.push(CRUMB.step);

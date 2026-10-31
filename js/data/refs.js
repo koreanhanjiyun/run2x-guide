@@ -56,6 +56,8 @@ const REFS = [
 <p class="muted" style="font-size:14px">모든 버전을 적습니다. <b>설계 내용</b>의 추가·변경·정정은 자세히 적고, 화면·기능만 바뀐 버전은 <span class="cl-ui-tag">화면·기능</span>으로 표시해 짧게 적습니다. 업데이트 알림(참고 탭 주황 표시)은 설계 내용이 바뀐 버전에만 뜹니다. <b class="cl-fix">정정</b>은 이미 읽은 내용이 틀렸다가 고쳐진 것이니, 그 값을 쓴 적이 있다면 다시 확인하십시오.</p>
 <div class="sec-label" style="margin-top:14px">예정</div>
 <ul class="pl"><li>애커먼 계산기 v1.2.1: 안티 기능 삭제, 조건 검사 보강, 3D 킹핀축(2단계) 추가</li><li>기어비 계산기 v2.2.1: J/r² 등가질량, 구름저항 mg, trapz(Time,P), 회생·효율·드라이버 계수</li></ul>
+<div class="sec-label cl-ui" style="margin-top:14px">1.3.7 · 2026-10-31 <span class="cl-ui-tag">화면·기능</span></div>
+<ul class="pl"><li>연결도를 설계 탭의 셋째 보기([전체 보기 / 흐름만 보기 / 연결도])로 옮겨 상단 탭을 줄임. 연결도 보기에서는 목차를 숨기고 그림을 전체 폭으로, 목록으로 돌아오면 보던 위치 유지</li><li>설계 탭 사용법에 연결도 보기 설명을 이어 붙임</li></ul>
 <div class="sec-label cl-ui" style="margin-top:14px">1.3.6 · 2026-10-31 <span class="cl-ui-tag">화면·기능</span></div>
 <ul class="pl"><li>설계 본문 색 정리: 장식용 보라색(결론·확인 질문·용어·경로 표시 등)을 중립 회색으로 바꿔 강조색이 필요한 곳에만 남김</li></ul>
 <div class="sec-label cl-ui" style="margin-top:14px">1.3.5 · 2026-10-29 <span class="cl-ui-tag">화면·기능</span></div>

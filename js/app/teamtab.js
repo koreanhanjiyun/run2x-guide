@@ -132,10 +132,10 @@ function paintSeasonBanner(){ let b=$('#seasonBanner'); const on = viewingOther(
   const nav=document.querySelector('nav.tabs'); if(nav && b.previousElementSibling!==nav) nav.after(b);
   b.hidden=!on; const root=document.documentElement;
   if(!on){ root.classList.remove('sb-on'); root.style.removeProperty('--tabh'); SB_LAST=''; return; }
-  b.innerHTML=`<span><b>${esc(SEASON)} 시즌</b>을 보는 중 · 설계·연결도·팀 탭 모두 이 시즌 기록입니다 · 팀의 이번 시즌은 ${esc(TEAM_SEASON)}${(SH.on && !SH.canAdmin)?' · 지난 시즌 기록은 회장만 고칠 수 있습니다':''}</span><button type="button" class="btn small" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button>`;
+  b.innerHTML=`<span><b>${esc(SEASON)} 시즌</b>을 보는 중 · 설계·팀 탭 모두 이 시즌 기록입니다 · 팀의 이번 시즌은 ${esc(TEAM_SEASON)}${(SH.on && !SH.canAdmin)?' · 지난 시즌 기록은 회장만 고칠 수 있습니다':''}</span><button type="button" class="btn small" data-sn="back">${esc(TEAM_SEASON)} 시즌으로 돌아가기</button>`;
   /* 띠 높이만큼 탭 높이(--tabh)를 늘려 목차·경로 줄·고정 제목줄이 띠 아래에 오게 */
   root.classList.add('sb-on'); root.style.setProperty('--tabh', ((nav?nav.offsetHeight:50) + b.offsetHeight) + 'px');
-  if(SB_LAST!==SEASON){ if(SB_LAST!=='' || window.__sbUser) try{ toast(`설계·연결도·팀 탭이 <b>${esc(SEASON)} 시즌</b> 기록으로 바뀌었습니다.`); }catch(e){} SB_LAST=SEASON; } }
+  if(SB_LAST!==SEASON){ if(SB_LAST!=='' || window.__sbUser) try{ toast(`설계·팀 탭이 <b>${esc(SEASON)} 시즌</b> 기록으로 바뀌었습니다.`); }catch(e){} SB_LAST=SEASON; } }
 /* ‹ › 로 직접 바꾼 순간에만 알림 (처음 열 때 지난 시즌이 기억돼 있으면 알림 없이 띠만) */
 document.addEventListener('click', e=>{ if(e.target.closest('[data-ttsn],[data-sn]')) window.__sbUser=1; }, true);
 { const _as=afterSeason; afterSeason=function(){ const r=_as.apply(this,arguments); try{ paintSeasonBanner(); if(TAB==='team') renderTeamTab(true); }catch(e){} return r; }; }

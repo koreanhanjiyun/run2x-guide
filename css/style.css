@@ -2072,3 +2072,12 @@ details.item .tv-s{color:var(--ink-2)}
 .vlab.dec{color:var(--ink)}
 .vchip.dec{color:var(--ink)!important;border-bottom-color:var(--ink)!important}
 .ilink:hover{background:var(--neu-bg)}
+
+/* 설계 탭 연결도 보기: 머리를 한 줄로 */
+.g-head{gap:6px}
+.g-hrow{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
+.g-hrow h1{margin:0}
+.g-head .vtabs{margin-bottom:0;padding-left:0;flex:none}
+.g-head .vtabs button[aria-selected="true"]{cursor:default}
+.g-hint{margin:0 0 6px;font-size:13.5px;color:var(--muted)}
+.g-head .g-legend{font-size:12.5px}
