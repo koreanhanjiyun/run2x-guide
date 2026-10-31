@@ -25,7 +25,7 @@ function findCrumb(){ if(TAB!=='steps' || VMODE==='flow') return {step:null,item
   return {step: step && step.dataset.step, item: item && item.dataset.item}; }
 function paintCrumb(){ const c=$('#crumb'); if(!c) return; const {step,item}=CRUMB; c.hidden=!step; if(!step) return;
   const st=STEPS[SIDX[step]];
-  c.innerHTML=`<div class="cr-in"><button type="button" class="cr-s" data-cr="step"><b>${step}</b> ${plainT(st.t)}</button>${item?`<span class="cr-sep">›</span><button type="button" class="cr-i" data-cr="item">${plainT(IT[item].n)}</button>`:''}<span class="cr-sp"></span><button type="button" class="btn small" data-cr="close">${item?'이 항목 접기':'이 단계 접기'}</button><button type="button" class="btn small" data-cr="all" title="펼친 단계·항목을 모두 닫습니다">모두 접기</button></div>`; fitCrumb(); }
+  c.innerHTML=`<div class="cr-in"><button type="button" class="cr-s" data-cr="step"><b>${step}</b> ${plainT(st.t)}</button>${item?`<span class="cr-sep">›</span><button type="button" class="cr-i" data-cr="item">${plainT(IT[item].n)}</button>`:''}<span class="cr-sp"></span><span class="cr-vt" role="group" aria-label="보기 전환"><button type="button" data-vm="full" aria-pressed="${VMODE==='full'}">전체 보기</button><button type="button" data-vm="flow" aria-pressed="${VMODE==='flow'}">흐름만 보기</button><button type="button" data-vgo="graph" aria-pressed="false">연결도</button></span><button type="button" class="btn small" data-cr="close">${item?'이 항목 접기':'이 단계 접기'}</button><button type="button" class="btn small" data-cr="all" title="펼친 단계·항목을 모두 닫습니다">모두 접기</button></div>`; fitCrumb(); }
 /* 경로 줄 폭 = 본문(단계 목록) 폭 */
 function fitCrumb(){ const c=$('#crumb'), b=document.querySelector('#step-list details.step') || $('#step-list'); if(!c||!b||c.hidden) return; const r=b.getBoundingClientRect(); if(!r.width) return; c.style.left=r.left+'px'; c.style.width=r.width+'px'; c.style.right='auto'; }
 addEventListener('resize', ()=>fitCrumb());
@@ -52,8 +52,7 @@ document.addEventListener('keydown', e=>{ const t=e.target.closest && e.target.c
 syncTabsA11y(); document.body.classList.add('tab-'+TAB);
 
 /* ---------- 움직임 줄이기 (J7) ---------- */
-const REDUCED = matchMedia('(prefers-reduced-motion: reduce)');
-{ const _ss=smoothScrollTo; smoothScrollTo=function(getY, done){ if(!REDUCED.matches) return _ss(getY, done); window.scrollTo({top:Math.max(0,getY()), behavior:'instant'}); window.__progEnd=performance.now(); if(done) done(); }; }
+/* 움직임(부드러운 스크롤·애니메이션)은 OS의 '애니메이션 줄이기' 설정과 상관없이 항상 동작 (사이트 운영자 결정 2026-10-31) */
 
 /* ---------- 모바일 안내 (L1) ---------- */
 (()=>{ const small = Math.min(screen.width, innerWidth) < 900 && matchMedia('(pointer: coarse)').matches; if(!small && innerWidth >= 700) return;

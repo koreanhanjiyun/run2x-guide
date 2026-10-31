@@ -49,7 +49,6 @@ function build(el){
   pb=el.querySelector('.ma-play');
   pb.onclick=()=>{ playing=!playing; t=0; setBtn(); draw(); if(playing && !raf){ last=performance.now(); raf=requestAnimationFrame(frame); } };
   el.querySelector('.ma-spd').oninput=e=>spd=+e.target.value;
-  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) playing=false;
   built=el;
 }
 /* K6: 정지 중에는 화면을 다시 그리지 않음 (재생할 때만 프레임 반복) */

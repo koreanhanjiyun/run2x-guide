@@ -35,6 +35,9 @@ function smoothScrollTo(getY, done){
     if(t<1) SCR = requestAnimationFrame(step); else { SCR=null; window.__progEnd=performance.now(); if(done) done(); } };
   SCR = requestAnimationFrame(step);
 }
+/* 요소 안 가로 스크롤도 직접 애니메이션 (브라우저 기본 smooth는 OS '애니메이션 줄이기' 설정을 따르므로 쓰지 않음) */
+function animScrollLeft(el, to){ const x0=el.scrollLeft, d=to-x0, dur=Math.min(700, Math.max(220, 220+Math.abs(d)*0.4)), t0=performance.now(), ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  const st=now=>{ const t=Math.min(1,(now-t0)/dur); el.scrollLeft=x0+d*ease(t); if(t<1) requestAnimationFrame(st); }; requestAnimationFrame(st); }
 function markHere(el){
   document.querySelectorAll('.here').forEach(x=>x.classList.remove('here'));
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash','here');
@@ -171,3 +174,21 @@ function initGlossary(){
     if(e.target.closest('[data-vgo="graph"]')){ e.preventDefault(); pushHist(); showTab('graph'); return; }
     const m = e.target.closest('[data-vmg]'); if(m){ e.preventDefault(); if(typeof setVM==='function') setVM(m.dataset.vmg); pushHist(); showTab('steps'); } });
 }
+/* 연결도 보기 머리를 목록 보기 머리와 같은 자리에 둠: 설계 탭 본문 칸의 왼쪽 끝·너비를 계산해 그대로 씀 */
+function graphAlign(){ const st=document.querySelector('#v-steps'), gv=document.querySelector('#v-graph'); if(!st||!gv) return;
+  const cs=getComputedStyle(st), cw=document.documentElement.clientWidth, pl=parseFloat(cs.paddingLeft)||0, pr=parseFloat(cs.paddingRight)||0;
+  const content=parseFloat(getComputedStyle(st).getPropertyValue('--content'))||1240, w=Math.min(content, cw-pl-pr), x=pl+Math.max(0,(cw-pl-pr-content)/2);
+  const gpl=parseFloat(getComputedStyle(gv).paddingLeft)||0; gv.style.setProperty('--gx-l', Math.max(0, x-gpl)+'px'); gv.style.setProperty('--gx-w', w+'px'); }
+{ const _st2 = showTab; showTab = function(t, keep){ const r = _st2.call(this, t, keep); if(t==='graph') try{ graphAlign(); }catch(e){} return r; };
+  window.addEventListener('resize', ()=>{ if(TAB==='graph') try{ graphAlign(); }catch(e){} }); }
+/* 목차를 접거나 펴서 너비(--tocx)가 바뀌면 연결도 머리·그림 자리도 다시 맞춤 */
+{ const re = () => { if(TAB==='graph') try{ graphAlign(); }catch(e){} };
+  try{ new MutationObserver(re).observe(document.documentElement, {attributes:true, attributeFilter:['style','class']}); new MutationObserver(re).observe(document.body, {attributes:true, attributeFilter:['class']}); }catch(e){}
+  const t = document.getElementById('toc'); if(t && 'ResizeObserver' in window) try{ new ResizeObserver(re).observe(t); }catch(e){} }
+/* 맨 위로 버튼: 화면 한 높이 이상 내려가면 오른쪽 아래에 뜸 (모든 탭) */
+{ const b = document.createElement('button'); b.type='button'; b.id='toTop'; b.hidden=true; b.setAttribute('aria-label','맨 위로'); b.title='맨 위로';
+  b.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(b);
+  let raf=0; const upd=()=>{ raf=0; b.hidden = window.scrollY < window.innerHeight; };
+  addEventListener('scroll', ()=>{ if(!raf) raf=requestAnimationFrame(upd); }, {passive:true}); addEventListener('resize', ()=>{ if(!raf) raf=requestAnimationFrame(upd); });
+  b.addEventListener('click', ()=>smoothScrollTo(()=>0)); }

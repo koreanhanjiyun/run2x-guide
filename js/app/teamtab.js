@@ -149,7 +149,7 @@ let TTRAF=0; const ttSoon=()=>{ if(TAB!=='team' || TTRAF || window.__ttRendering
 
 document.addEventListener('click', e=>{
   const s=e.target.closest('[data-tts]'); if(s){ e.preventDefault(); TT.sub=s.dataset.tts; TT.picked=1; SETP('ttsub',TT.sub); renderTeamTab(); return; }
-  const c=e.target.closest('[data-ttcell]'); if(c){ e.preventDefault(); TT.cell = TT.cell===c.dataset.ttcell ? null : c.dataset.ttcell; renderTeamTab(true); const l=document.querySelector('#v-team .tt-list'); if(l && TT.cell) l.scrollIntoView({block:'nearest',behavior:'smooth'}); return; }
+  const c=e.target.closest('[data-ttcell]'); if(c){ e.preventDefault(); TT.cell = TT.cell===c.dataset.ttcell ? null : c.dataset.ttcell; renderTeamTab(true); const l=document.querySelector('#v-team .tt-list'); if(l && TT.cell){ const r=l.getBoundingClientRect(), tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; if(r.top<tabh || r.bottom>innerHeight) smoothScrollTo(()=>l.getBoundingClientRect().top+scrollY-tabh-12); } return; }
   if(e.target.closest('[data-ttclear]')){ e.preventDefault(); TT.cell=null; renderTeamTab(true); return; }
   const sn=e.target.closest('[data-ttsn]'); if(sn){ e.preventDefault(); const d=+sn.dataset.ttsn; setSeason(String(+SEASON+d), d); return; }
   if(e.target.closest('[data-ttprint]')){ e.preventDefault(); document.body.classList.add('print-report'); try{ window.print(); }finally{ setTimeout(()=>document.body.classList.remove('print-report'), 500); } return; }

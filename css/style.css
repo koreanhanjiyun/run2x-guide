@@ -1091,7 +1091,6 @@ details.item>summary:hover .ilink,.ilink:focus-visible{opacity:.85}
 @keyframes snR{from{transform:translateX(-70px);opacity:0}to{transform:none;opacity:1}}
 @keyframes snF{from{opacity:.15}to{opacity:1}}
 #admPanel .adm-b.sl-l>section:not(.adm-season),#admPanel .adm-b.sl-l>details,#admPanel .adm-b.sl-r>section:not(.adm-season),#admPanel .adm-b.sl-r>details{animation-duration:.42s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
-@media (prefers-reduced-motion: reduce){#admPanel .adm-b.sl-l>section:not(.adm-season),#admPanel .adm-b.sl-l>details,#admPanel .adm-b.sl-r>section:not(.adm-season),#admPanel .adm-b.sl-r>details{animation-name:snF!important}}
 #admPanel .sn-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
 #admPanel .sn-h h4{margin:0}
 #admPanel .adm-st:empty{display:none}
@@ -1170,7 +1169,6 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 #draftBar .btn{color:#1d2128}
 #draftBar.db-flash{animation:dbFlash .9s ease 2}
 @keyframes dbFlash{50%{box-shadow:0 0 0 4px #f59e0b,0 10px 28px rgba(0,0,0,.28)}}
-@media (prefers-reduced-motion:reduce){#draftBar.db-flash{animation:none;outline:3px solid #f59e0b}}
 :is(#teamPanel,.adm-tm) .tp-del{color:#b42318;margin-left:12px}
 :is(#teamPanel,.adm-tm) .tp-delbox{margin-top:8px;padding:8px 10px;border:1px solid #f1b3ab;background:#fff5f4;border-radius:8px}
 :is(#teamPanel,.adm-tm) .tp-danger{background:#b42318;border-color:#b42318;color:#fff}
@@ -1195,7 +1193,6 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 .cl-breathe{background:#ffe6c7!important;color:#7a4510!important;border-radius:8px}
 .tab.cl-breathe{border-radius:0}
 .cl-hit{animation:clBreathe 1.6s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.cl-hit{animation:none;box-shadow:0 0 0 3px rgba(245,140,30,.7)}}
 .cl-new{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff4e5;border:1px solid #f5c58a;color:#7a4510;border-radius:8px;padding:8px 12px;margin:6px 0 10px;font-size:13.5px}
 .cl-go{margin-left:8px;padding:1px 8px}
 .adm .adm-new,#admbtn .adm-new{margin-left:6px;font-size:11px;font-weight:700;background:#d9730d;color:#fff;border-radius:999px;padding:1px 7px}
@@ -1671,7 +1668,6 @@ body:not(.tab-steps) #crumb{display:none}
 #tip.pin{box-shadow:0 8px 30px rgba(30,20,50,.25);border-color:var(--accent)}
 .calc-out.co-flash .co-b{animation:coFlash .9s ease}
 @keyframes coFlash{0%{background:#fff1c4}100%{background:transparent}}
-@media (prefers-reduced-motion:reduce){.calc-out.co-flash .co-b{animation:none}}
 /* 연결도 범례·노드 글자 (D1·D3·D5) */
 .g-legend svg{vertical-align:middle;margin-right:4px}
 .lg-st{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--ink-2);color:#fff;font-size:11px}
@@ -1768,7 +1764,6 @@ body.rail-open #v-graph.wrap,body.rail-coll #v-graph.wrap{padding-right:150px}
 #busyBar::before{content:"";position:absolute;top:0;bottom:0;left:-40%;width:40%;background:linear-gradient(90deg,transparent,var(--accent),#ffcf4a,transparent);animation:busy 1s linear infinite;will-change:transform}
 #busyBar.on{opacity:1;transition:opacity .1s linear .15s}
 @keyframes busy{to{transform:translateX(350%)}}
-@media (prefers-reduced-motion:reduce){#busyBar::before{animation:none;left:0;width:100%;opacity:.6}}
 
 /* 3D 렌더 부품 그림 (전체도 + 단면 2장이면 위아래로) */
 .cp-fig svg.cfig3{display:block;width:100%;height:auto;max-height:360px;margin:0 auto}
@@ -1998,7 +1993,6 @@ body .stbox.tg-show{display:flex!important}body .tval.tg-show{display:block!impo
 /* 첫 로딩: 보일 탭이 정해질 때까지 본문·하단을 숨기고 탭 아래 진행 막대 (nav2.js 끝에서 html.booted) */
 html:not(.booted) #main, html:not(.booted) #verline{visibility:hidden}
 html:not(.booted) body::after{content:"";position:fixed;top:var(--tabh);left:-40%;width:40%;height:3px;z-index:60;pointer-events:none;background:linear-gradient(90deg,transparent,var(--accent),#ffcf4a,transparent);animation:busy 1s linear infinite}
-@media (prefers-reduced-motion:reduce){html:not(.booted) body::after{animation:none;left:0;width:100%;opacity:.6}}
 /* 키보드 포커스: .btn·칩도 테두리로 보이게 (WCAG 2.4.7) */
 .btn:focus-visible,button.chip:focus-visible,.tp-pchip:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px}
 .tabs .btn:focus-visible,#draftBar .btn:focus-visible{outline-color:var(--focus)}
@@ -2077,7 +2071,166 @@ details.item .tv-s{color:var(--ink-2)}
 .g-head{gap:6px}
 .g-hrow{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
 .g-hrow h1{margin:0}
-.g-head .vtabs{margin-bottom:0;padding-left:0;flex:none}
-.g-head .vtabs button[aria-selected="true"]{cursor:default}
+#v-graph .vtabs{margin-bottom:0;padding-left:0;flex:none}
+#v-graph .vtabs button[aria-selected="true"]{cursor:default}
 .g-hint{margin:0 0 6px;font-size:13.5px;color:var(--muted)}
 .g-head .g-legend{font-size:12.5px}
+
+/* ============================================================
+   팀 탭 미니멀화 (시안 2026-10-31): 카드 상자를 걷고 굵은 윗선·얇은 구분선·여백으로 나눔
+   ============================================================ */
+#v-team .tt-season{background:none;border:0;border-radius:0;padding:0;gap:14px}
+#v-team .tt-season .tt-sn{border-color:var(--line);background:none}
+#v-team .tt-cards{column-gap:36px;row-gap:34px}
+#v-team .tt-top{gap:36px}
+#v-team .tt-card{background:none;border:0;border-top:3px solid var(--ink);border-radius:0;padding:12px 0 0}
+#v-team .tt-card h3{color:var(--ink);font-size:16px}
+#v-team .tt-card .adm-n{background:none;color:var(--muted);font-weight:600;font-size:13px;padding:0;min-width:0}
+#v-team .tt-card .adm-it{padding:4px 0;border-radius:0}
+#v-team .tt-card .adm-it:hover{background:none}
+#v-team .tt-card .adm-it:hover .adm-qt, #v-team .tt-card .adm-it:hover>span:not(.adm-code){text-decoration:underline;text-underline-offset:3px}
+#v-team .tt-card .adm-why{padding-left:48px}
+#v-team .tt-card .adm-code{color:var(--muted)}
+/* 시즌 요약 · 대회 점수: 바깥 상자 없이 */
+#v-team .tt-report{background:none;border:0;border-radius:0;padding:0}
+#v-team .tt-report h3{color:var(--ink);border-top:3px solid var(--ink);padding-top:10px;margin-top:26px}
+#v-team [data-ttp=score] .fs-goal{background:none;border:0;border-radius:0;padding:0;box-shadow:none}
+/* 팀원·계정 · 팀 설정: 바깥 상자 없이, 왼쪽 묶음은 선으로 */
+#v-team #teamPanel, #v-team .adm-tm{background:none;border:0;border-radius:0;padding:0;box-shadow:none}
+#v-team :is(#teamPanel,.adm-tm) .tp-left{border-top:3px solid var(--ink);padding-top:4px;gap:0}
+#v-team :is(#teamPanel,.adm-tm) .tp-right{border-top:3px solid var(--ink);padding-top:14px}
+#v-team :is(#teamPanel,.adm-tm) .tp-left>.tp-sec{border-bottom:1px solid var(--line);padding:14px 0}
+#v-team :is(#teamPanel,.adm-tm) .tp-left>.tp-sec:last-child{border-bottom:0}
+#v-team .tp-mscroll{border:0;border-radius:0;border-top:1px solid var(--line)}
+
+/* ============================================================
+   참고 탭 미니멀화 (시안 2026-10-31): 접이식 상자 대신 굵은 윗선 + 구분선 목록
+   ============================================================ */
+#ref-list{gap:0;border-top:3px solid var(--ink)}
+#ref-list > details.step{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;margin:0}
+#ref-list > details.step[open]{border-left:0;box-shadow:none}
+#ref-list > details.step > summary{padding:16px 0;background:none}
+#ref-list > details.step > summary:hover{background:none}
+#ref-list > details.step > summary:hover .stitle{text-decoration:underline;text-underline-offset:4px}
+#ref-list > details.step > .dbody{padding:0 0 22px;background:none;border:0}
+
+/* ============================================================
+   설계 탭 미니멀화 (시안 2026-10-31)
+   - 큰 흰 판·단계 상자·항목 상자를 걷고 선으로 나눔. 진행 상태는 왼쪽 얇은 색 띠로만
+   - 항목 안: [핵심]만 강조로 남기고, 우리 팀 값·참고·기호·계산·논의는 구역 제목 + 선
+   ============================================================ */
+#v-steps .vpanel{border:0;border-radius:0;background:none;padding:0}
+#v-steps .vtabs, #v-graph .vtabs{margin-bottom:0;padding-left:0;gap:0;border-bottom:1px solid var(--line)}
+#v-steps .vtabs button, #v-graph .vtabs button{background:none!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0;box-shadow:none!important;padding:8px 18px;margin-bottom:-1px;font-size:15px;color:var(--muted)}
+#v-steps .vtabs button[aria-selected="true"], #v-graph .vtabs button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)!important}
+#v-steps .vtabs button:hover, #v-graph .vtabs button:hover{color:var(--ink)}
+#v-steps .vrow2{align-items:flex-end}
+/* 단계 줄 */
+#step-list details.step{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none}
+#step-list details.step>summary{background:none;border-radius:0;padding-left:4px}
+#step-list details.step>summary:hover .stitle{text-decoration:underline;text-underline-offset:4px}
+#step-list .scode{border:0;background:none;padding:0;text-align:left;min-width:64px}
+#step-list details.step.fz>summary .scode{background:none;color:var(--accent);border:0}
+/* 항목 줄 */
+#step-list details.item{background:none!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;box-shadow:none!important}
+#step-list details.item>summary{background:none!important;border-radius:0;box-shadow:inset 3px 0 0 transparent}
+#step-list details.item.st-doing>summary{box-shadow:inset 3px 0 0 #c98a12;background:none}
+#step-list details.item.st-done>summary{box-shadow:inset 3px 0 0 var(--out);background:none}
+#step-list details.item>summary:hover .iname{text-decoration:underline;text-underline-offset:4px}
+#step-list details.item[open]{border:0!important;border-left:3px solid var(--in)!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:none!important}
+#step-list details.item[open]>summary{background:none!important;border-bottom:1px solid var(--line)!important}
+/* 항목 안 */
+#step-list .tval{border:0;border-radius:0;background:none;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+#step-list .concl{background:none;border:0;border-left:3px solid var(--line-2);border-radius:0;padding:4px 0 4px 14px}
+#step-list details.symbox, #step-list details.calc{background:none;border:0;border-top:1px solid var(--line);border-radius:0;margin:0}
+#step-list details.calc>summary, #step-list details.symbox>summary{padding-left:0}
+#step-list .tk-d{border:0!important;border-top:1px solid var(--line)!important;border-radius:0;background:none}
+#step-list .tk-d>summary{padding:10px 0}
+#step-list details.q>summary{background:none}
+#step-list details.q>summary:hover{text-decoration:underline;text-underline-offset:4px}
+#step-list .concl:not(.actbox){background:none!important;border:0!important;border-left:3px solid var(--line-2)!important;border-radius:0!important;padding:4px 0 4px 14px}
+#step-list details.step>.dbody{background:none}
+
+/* ============================================================
+   미니멀 조정 (가): 길거나·높이가 다르거나·격자이거나·겹쳐 펼쳐지는 묶음만 다시 판으로 감쌈
+   판 = 흰 바탕 + 1px 옅은 테두리 + 8px 모서리, 그림자·색 장식 없음
+   ============================================================ */
+/* 팀 진행 현황 구역 */
+#v-team .tt-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+/* 설계 탭: 펼친 단계 본문은 옅은 바탕, 펼친 항목은 흰 판 */
+#step-list details.step[open]{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;margin:6px 0}
+#step-list details.step[open]>summary{border-bottom:1px solid var(--line)}
+#step-list details.step[open]>.dbody{padding:10px 12px 14px}
+#step-list details.item[open]{background:var(--panel)!important;border:1px solid var(--line)!important;border-left:3px solid var(--in)!important;border-radius:8px!important;margin:8px 0}
+#step-list details.item[open]>.dbody{padding-bottom:14px}
+/* 항목 안 도구성 블록: 기호 · 직접 계산해 보기 · 논의 */
+#step-list details.symbox, #step-list details.calc, #step-list .tk-d{background:var(--panel-2)!important;border:1px solid var(--line)!important;border-radius:8px!important;margin:8px 0}
+#step-list details.calc>summary, #step-list details.symbox>summary, #step-list .tk-d>summary{padding:9px 12px}
+
+/* 연결도 보기 머리: 목록 보기와 같은 자리·같은 양식 (제목 → 설명 → 범례 → 보기 전환) */
+#v-graph > .g-head, #v-graph > .g-vrow, body:not(.gmax) #v-graph > .gwrap:not(:fullscreen){box-sizing:border-box;width:var(--gx-w, auto);margin-left:var(--gx-l, 0px)}
+#v-graph > .g-vrow{margin-top:0}
+/* 참고 탭: 묶음 3개는 판으로 */
+#ref-list{border-top:0;gap:10px}
+#ref-list > details.step{background:var(--panel);border:1px solid var(--line);border-radius:8px}
+#ref-list > details.step > summary{padding:14px 18px}
+#ref-list > details.step[open] > summary{border-bottom:1px solid var(--line)}
+#ref-list > details.step > .dbody{padding:14px 18px 18px}
+/* 흐름만 보기: 판은 두고 보라 바탕 머리·번호 테두리만 뺌 */
+#flow-list .scode{border:0;background:none;padding:0;text-align:left}
+#flow-list .flow-step{border:1px solid var(--line);border-radius:8px}
+/* 시작 탭 목표 화면: 세부 목표 접이식을 설계 탭 펼친 항목과 같은 판으로 */
+#v-start .gp-subs details.item{background:var(--panel)!important;border:1px solid var(--line)!important;border-radius:8px!important;box-shadow:none!important}
+#v-start .gp-subs details.item>summary{background:none!important;border-radius:8px;box-shadow:none}
+#v-start .gp-subs details.item[open]{border-left:3px solid var(--in)!important}
+#v-start .gp-subs details.item[open]>summary{background:none!important;border-bottom:1px solid var(--line)!important;border-radius:8px 8px 0 0}
+#v-start .gp-subs details.item>summary:hover{text-decoration:underline;text-underline-offset:4px}
+#v-start .grel{background:none;border-radius:0;border-left:3px solid var(--in);padding:2px 0 2px 12px}
+/* 시작 탭 판 모서리·테두리 통일 */
+#v-start .sp-sec, #v-start .cp-card{border-radius:8px;border-color:var(--line)}
+#v-graph .g-head .legend{flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
+#v-graph > .g-vrow{padding-top:2px}
+body:not(.gmax) #v-graph .gwrap:not(:fullscreen) .gcanvas{height:calc(100vh - var(--tabh) - 262px);min-height:460px}
+
+/* 설계 탭(목록·연결도) 본문 너비를 넓힘: 그림을 본문 폭에 맞추면서 좁아지지 않게 */
+body.tab-steps, body.tab-graph{--content:1480px}
+#ref-list > details.step > .dbody{background:var(--panel)}
+/* 팀 진행 현황: 진행 요약 크기에 맞춘 같은 크기 카드 4열 × 2줄 (진행 요약 + 3 × 2) */
+#v-team .tt-top{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,424px);gap:16px;align-items:stretch}
+#v-team .tt-top > .tt-sum{grid-column:1;grid-row:1}
+#v-team .tt-top > .tt-cards{display:contents}
+#v-team .tt-top > .tt-cards > .tt-card:nth-child(4){grid-column:2;grid-row:2}
+#v-team .tt-top .tt-card{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#v-team .tt-top .tt-card .adm-list{flex:1;min-height:0;max-height:none}
+
+/* 연결도 보기에서도 목차를 그대로 둠 (접힘·펼침 유지, 현재 위치 표시 없음). 전체 화면에서는 가려짐 */
+@media (min-width:0px){ body.tab-graph #toc{display:flex} }
+body.tab-graph #toc .toc-s.cur{background:none!important;box-shadow:none!important;font-weight:inherit!important}
+body.tab-graph #toc .toc-s.cur .tt, body.tab-graph #toc .toc-s.cur .tc{color:inherit!important;font-weight:inherit!important}
+#v-team .tt-top > .tt-cards > .tt-card:nth-child(5){grid-column:3;grid-row:2}
+#v-team .tt-top > .tt-cards > .tt-card:nth-child(6){grid-column:4;grid-row:2}
+
+/* ============================================================
+   남은 미니멀화 (시안 2026-10-31)
+   ============================================================ */
+/* 1. 연결도 조작 막대: 떨어진 버튼 5개 → 한 묶음 */
+.gctl{gap:0}
+.gctl > .btn{border-radius:0;box-shadow:none;margin-left:-1px}
+.gctl > .btn:first-child{border-radius:6px 0 0 6px;margin-left:0}
+.gctl > .btn:nth-last-child(1 of .btn){border-radius:0 6px 6px 0}
+.gctl > #z-home{border-radius:0 6px 6px 0}
+.gctl .stbar{margin-left:10px;border-radius:6px;box-shadow:none}
+/* 경로 줄 보기 전환 */
+#crumb .cr-vt{display:inline-flex;border:1px solid var(--line-2);border-radius:6px;overflow:hidden;flex:none;margin-right:4px}
+#crumb .cr-vt button{font:inherit;font-size:12.5px;border:0;background:var(--panel);color:var(--ink-2);padding:3px 10px;cursor:pointer}
+#crumb .cr-vt button+button{border-left:1px solid var(--line-2)}
+#crumb .cr-vt button[aria-pressed="true"]{background:var(--ink);color:#fff}
+#crumb .cr-vt button:hover:not([aria-pressed="true"]){background:var(--panel-2)}
+/* 맨 위로 버튼 */
+#toTop{position:fixed;right:max(24px, env(safe-area-inset-right,0px));bottom:24px;z-index:45;width:44px;height:44px;border-radius:50%;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 14px rgba(30,20,50,.14)}
+#toTop:hover{background:var(--panel-2)}
+#toTop[hidden]{display:none}
+body.gmax #toTop{display:none}
+/* 단계 줄: 펼쳐 판이 생겨도 화살표·칩이 판 테두리에 붙지 않게 좌우 여백 */
+#step-list details.step>summary{padding-left:16px;padding-right:16px}
+#step-list details.step[open]>.dbody{padding:12px 16px 16px}
