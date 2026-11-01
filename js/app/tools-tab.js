@@ -65,6 +65,11 @@ const TOOL_LIST = [
   ['7','하중 산출','P4-1','도구 1·4·6, 하중 케이스','하드포인트별 부재력'],
   ['8','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교']
 ];
+/* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
+function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {}, ex = W.ex;
+  const rows = (ex ? [[ex.no, ex.name, ex.stage, '대시보드 값', '차속별 축하중 · 다운포스 · 항력', 'ex']] : []).concat(TOOL_LIST.map(r => [...r, W[r[0]] ? r[0] : '']));
+  return rows.map(([n,t,s,i,o,id]) => id ? `<li class="tt-on" data-wb="${id}" tabindex="0" role="button" aria-label="${t} 작업창 열기"><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">${id==='ex' ? '틀 확인용' : '열기'} →</span></li>`
+    : `<li><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">준비 중</span></li>`).join(''); }
 const dashVmax = P => P.nmax/P.gr*2*Math.PI*(P.rt/1000)*60/1000;   /* 모터 회전수 한계 최고속 [km/h] */
 /* 코너 반경 조절기: 곡률(1/R)을 고르게 나눠, 오른쪽으로 갈수록 반경이 줄고 조향이 커진다. 60 m → 설계 최소 회전 반경 */
 const R_MAX = 60, rToU = (R, rmin) => Math.round((1/R - 1/R_MAX)/(1/rmin - 1/R_MAX)*1000), uToR = (u, rmin) => 1/(1/R_MAX + u/1000*(1/rmin - 1/R_MAX));
@@ -125,7 +130,7 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
       <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
       <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
       <section class="tl-sec" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
-        <ol class="tl-tools">${TOOL_LIST.map(([n,t,s,i,o])=>`<li><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">준비 중</span></li>`).join('')}</ol></section>`; }
+        <ol class="tl-tools">${toolRowsHTML()}</ol></section>`; }
   dashPaint(); }
 function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
   dashSync(); dashClamp(); const ss = $('#dvseason'); if(ss) ss.textContent = dvSeason() + ' 시즌';
