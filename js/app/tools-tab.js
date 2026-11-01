@@ -10,7 +10,7 @@ const DASH = (() => {
     ['질량 · 무게중심', [['m','총질량 (드라이버 포함)','kg',300,'ok',0],['fr','앞 배분','%',47.5,'rev',1],['left','왼쪽 배분','%',50,'ok',1],['h','무게중심 높이','mm',290,'rev',0]]],
     ['치수', [['L','휠베이스','mm',1550,'ok',0],['tf','앞 트레드','mm',1200,'ok',0],['tr','뒤 트레드','mm',1180,'ok',0],['rt','타이어 하중 반경','mm',229,'ok',0]]],
     ['에어로', [['cla','C<sub>L</sub>·A','m²',3.0,'rev',2],['cda','C<sub>D</sub>·A','m²',1.4,'rev',2],['xcop','CoP 위치 (앞축부터)','mm',852,'rev',0],['hcop','CoP 높이','mm',420,'asm',0]]],
-    ['타이어 · 서스 · 조향', [['mu','타이어 마찰계수 μ','',1.5,'asm',2],['lltd','앞 롤강성 배분','%',50,'asm',1],['rmin','최소 회전 반경 (CG 경로)','m',3.0,'rev',1]]],
+    ['타이어 · 서스 · 조향', [['mu','타이어 마찰계수 μ','',1.5,'asm',2],['lltd','앞 횡하중 이동 배분','%',50,'asm',1],['rmin','최소 회전 반경 (CG 경로)','m',3.0,'rev',1]]],
     ['파워트레인', [['pmax','최고 출력 (규정)','kW',80,'ok',0],['gr','최종 감속비','',3.55,'rev',2],['nmax','모터 최고 회전수','rpm',6500,'ok',0]]]
   ];
   const STL = {ok:'확정', rev:'검토 중', asm:'가정', calc:'계산값'};
@@ -81,7 +81,7 @@ function dashFigsHTML(){ const K = dashCalc(), P = DASH.P, C = DASH.C;
     <figure class="df-f"><figcaption><b>위에서</b><span>바퀴별 하중${C.straight?'':` · ${C.dir==='L'?'좌':'우'}회전`}</span></figcaption>${CARFIG.top(P, {...C, R: C.straight ? Infinity : C.R}, K)}</figure>
     <figure class="df-f"><figcaption><b>앞에서</b><span>앞축 좌우 하중 · 트레드</span></figcaption>${CARFIG.front(P, {...C, R: C.straight ? Infinity : C.R}, K)}</figure>
     <figure class="df-f"><figcaption><b>뒤에서</b><span>뒤축 좌우 하중 · 트레드</span></figcaption>${CARFIG.rear(P, {...C, R: C.straight ? Infinity : C.R}, K)}</figure>
-    <p class="df-note">두 그림 모두 바퀴 색이 진할수록 하중이 큽니다. 정지 코너웨이트 앞왼 ${(K.st.fl/9.81).toFixed(1)} · 앞오른 ${(K.st.fr/9.81).toFixed(1)} · 뒤왼 ${(K.st.rl/9.81).toFixed(1)} · 뒤오른 ${(K.st.rr/9.81).toFixed(1)} kg, 크로스 ${(K.cross*100).toFixed(1)} %. 앞뒤 횡하중 이동은 앞 롤강성 배분 값으로 나눴습니다.</p>`;
+    <p class="df-note">두 그림 모두 바퀴 색이 진할수록 하중이 큽니다. 정지 코너웨이트 앞왼 ${(K.st.fl/9.81).toFixed(1)} · 앞오른 ${(K.st.fr/9.81).toFixed(1)} · 뒤왼 ${(K.st.rl/9.81).toFixed(1)} · 뒤오른 ${(K.st.rr/9.81).toFixed(1)} kg, 크로스 ${(K.cross*100).toFixed(1)} %. 앞뒤 횡하중 이동은 앞 횡하중 이동 배분 값으로 나눴습니다.</p>`;
 }
 function renderTools(){ const v = $('#v-tools'); if(!v) return;
   if(!v.dataset.built){ v.dataset.built = '1';
