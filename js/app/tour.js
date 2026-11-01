@@ -45,7 +45,7 @@ const GRAPH_TOUR = [
 ];
 const TOUR = {
  top: [
-  ['.tabs','탭','시작 → 설계 → 참고 순서로 보면 "왜 → 무엇을 → 어떻게"가 이어집니다. 항목 연결도는 설계 탭 안의 [연결도] 보기입니다. 오른쪽 끝 [팀]은 팀의 진행 기록입니다.',{union:'.tab'}],
+  ['.tabs','탭','시작 → 설계 → 도구 → 참고 순서로 보면 "왜 → 무엇을 → 어떻게 정하나"가 이어집니다. 항목 연결도는 설계 탭 안의 [연결도] 보기입니다. 오른쪽 끝 [팀]은 팀의 진행 기록입니다.',{union:'.tab'}],
   ['.gsearch','검색','항목·단계·부품·용어를 한 번에 찾고, 종류별로 묶어 보여 줍니다. 키보드 / 를 누르면 바로 입력합니다. 초성(ㅅㅋㄹ = 스크럽 반경…)이나 영문 약어(KPI)도 됩니다.',{prep:()=>{ showSearch(); }, also:'#gsearch-list'}],
   ['#seasonChip','상태 칩','지금 상태를 색으로 알려 줍니다. 누르면 로그인하거나 팀 탭으로 갑니다.',{pic:PIC.chip,prep:()=>{ hideSearch(); }}],
   ['.topask','문의','내용 오류·사이트 오류·기능 제안을 사이트 개발자에게 보냅니다(로그인 필요). 누르면 이렇게 문의 칸이 내려옵니다. 종류·위치(탭·단계·항목)를 고르고 내용을 적어 보냅니다. 팀과 무관하게 개발자에게만 갑니다.',{prep:()=>{ showAsk(); }, also:'#fbPanel'}],
@@ -94,6 +94,14 @@ const TOUR = {
   ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너를 누르면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다. 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
  ],
  graph: GRAPH_TOUR,
+ tools: [
+  ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
+  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. 점 색은 확정·검토 중·가정·계산값입니다. 값을 누르면 고칩니다.',{tab:'tools'}],
+  ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
+  ['#dcond','주행 조건','차속·코너 반경·종가속·에어로 포함 여부를 바꾸거나 예시 상황을 누르면 그림과 아래 숫자가 같이 바뀝니다.',{tab:'tools'}],
+  ['#dpart','파트별','파트별 선도입니다. 전체 범위의 그래프에 지금 조건을 세로 점선으로 표시합니다. 회색 탭은 그 계산 도구를 만들 때 열립니다.',{tab:'tools'}],
+  ['#v-tools .tl-tools','도구 모음','설계 단계 순서의 계산 도구 목록입니다. 누르면 전체 화면 작업창으로 열립니다.',{tab:'tools'}]
+ ],
  ref: [['#ref-list','참고','용어집(검색 가능)·기준 규정·출처·변경 이력입니다. 줄을 누르면 펼쳐집니다.',{tab:'ref'}]],
  team_nolog: [
   ['#v-team .tt-nav','팀 메뉴','로그인 전에는 [팀원 · 계정]이 먼저 열립니다. 로그인하고 팀에 가입하면 진행 현황·시즌 요약이 보입니다. [대회 점수]는 로그인 없이 볼 수 있습니다.',{tab:'team',sub:'account',union:'button:not([hidden])'}],
@@ -149,7 +157,7 @@ const teamCourse = () => teamNolog() ? [...TOUR.team_nolog] : [...TOUR.team_comm
 /* 팀 설정 화면에서 [이 탭 사용법]을 누르면 팀 설정 사용법만 */
 const teamSettingsOn = () => !!document.querySelector('#v-team [data-ttp=settings]:not([hidden])');
 const startCourse = () => { const s=(typeof START!=='undefined' && START.sys) || ''; return !s ? TOUR.start : s.startsWith('goal:') ? TOUR.goalpage : TOUR.sys; };
-const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
+const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.tools, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
   : name==='team' ? (teamSettingsOn() && SH.on && SH.canAdmin ? [...TOUR.team_admin] : teamCourse()) : name==='start' ? [...startCourse()] : (TOUR[name] ? [...TOUR[name]] : [...TOUR.top]);
 
 /* ---------- 엔진 ---------- */

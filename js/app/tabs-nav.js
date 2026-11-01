@@ -5,8 +5,8 @@ const $ = s => document.querySelector(s);
 let graphInit=false, TAB='steps'; const HIST=[];
 function showTab(t, keep){
   if(t==='parts' || t==='goals') t='start';   // 목표 탭은 시작 탭으로 합침
-  ['start','goals','steps','graph','ref','team'].forEach(k=>{ const v=$('#v-'+k); if(v) v.hidden = k!==t; });
-  if(t==='start' && typeof renderStart==='function') renderStart(); if(t==='team' && typeof renderTeamTab==='function') renderTeamTab();
+  ['start','goals','steps','tools','graph','ref','team'].forEach(k=>{ const v=$('#v-'+k); if(v) v.hidden = k!==t; });
+  if(t==='start' && typeof renderStart==='function') renderStart(); if(t==='team' && typeof renderTeamTab==='function') renderTeamTab(); if(t==='tools' && typeof renderTools==='function') renderTools();
   const rail=$('#partRail'); if(rail) rail.hidden = !(t==='steps'||t==='graph'); requestAnimationFrame(()=>{ try{ window.__figPlace&&window.__figPlace(); }catch(e){} });
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===(t==='graph'?'steps':t))));
   try{ history.replaceState(null,'','#'+t); }catch(e){}
