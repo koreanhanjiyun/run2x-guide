@@ -24,13 +24,15 @@ setStatus=function(id,v){
   SH.q[id]=(SH.q[id]||Promise.resolve()).then(run).catch(e=>{ stNote('저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); rebuildShared(); });
 };
 resetShared=async function(){ const se=SEASON;
-  if(!SH.on){ STATUS={}; saveStatus(); Object.values(VAL).forEach(r=>{ if(r&&r.s&&r.s[se]) delete r.s[se]; }); try{ localStorage.setItem('run2x.val.v1', JSON.stringify(VAL)); }catch(e){} refreshVals(); refreshStatus(); toast(`${se} 시즌을 초기화했습니다`); return; }
+  if(!SH.on){ STATUS={}; saveStatus(); Object.values(VAL).forEach(r=>{ if(r&&r.s&&r.s[se]) delete r.s[se]; }); try{ localStorage.setItem('run2x.val.v1', JSON.stringify(VAL)); }catch(e){} if(typeof DVS!=='undefined'){ Object.values(DVS).forEach(r=>{ if(r&&r.s&&r.s[se]) delete r.s[se]; }); try{ localStorage.setItem(DVKEY, JSON.stringify(DVS)); }catch(e){} } refreshVals(); refreshStatus(); toast(`${se} 시즌을 초기화했습니다`); return; }
   if(!SH.canAdmin){ stNote('초기화는 편집 권한자만 할 수 있습니다.'); return; }
   const jobs=[]; Object.entries(SH.raw||{}).forEach(([did,d])=>{ if(d && (d.season||LEGACY_SEASON)===se) jobs.push(SH.db.doc('status/'+did).delete()); });
   Object.entries(VAL).forEach(([id,r])=>{ if(r&&r.s&&r.s[se]){ const s2={...r.s}; delete s2[se]; jobs.push(SH.db.doc('val/'+id).set({...r, s:s2})); } });
+  /* 팀 설계값 · 질량 표 · 드라이버 · 표: 이 시즌 값만 지움 */
+  for(const col of ['dv','mass','drivers','dtab']){ try{ (await SH.db.collection(col).get()).docs.forEach(d=>{ const r=d.data(); if(r&&r.s&&r.s[se]){ const s2={...r.s}; delete s2[se]; jobs.push(SH.db.doc(col+'/'+d.id).set({...r, s:s2})); } }); }catch(e){} }
   try{ await Promise.all(jobs); toast(`${se} 시즌을 초기화했습니다`); }catch(e){ stNote('초기화하지 못한 항목이 있습니다. 다시 시도해 주십시오.'); }
 };
-function afterSeason(){ if(SH.on) rebuildShared(); else { loadLocalStatus(); refreshStatus(); } document.querySelectorAll('.tval[data-view]').forEach(el=>delete el.dataset.view); refreshVals(); try{ renderAdm(); }catch(e){}
+function afterSeason(){ if(SH.on) rebuildShared(); else { loadLocalStatus(); refreshStatus(); } document.querySelectorAll('.tval[data-view]').forEach(el=>delete el.dataset.view); refreshVals(); try{ dashPaint(); }catch(e){} try{ renderAdm(); }catch(e){}
   const c=document.querySelector('#st-confirm>span'); if(c) c.innerHTML=`<b class="sn-big">${esc(SEASON)}</b> 시즌을 초기화합니다. 다시 복원할 수 없습니다.`; }
 /* 보는 시즌은 누구나 바꿀 수 있음 (내 화면만). 팀의 이번 시즌 지정은 회장만 (H3) */
 { const _ss=setSeason; setSeason=function(v,dir){ if(!/^\d{4}$/.test(v)) return; _ss(v,dir); afterSeason(); try{ renderTeamTab && renderTeamTab(true); }catch(e){} try{ paintSeasonBanner(); }catch(e){} }; }

@@ -1,27 +1,60 @@
 /* ============================================================
-   도구 탭 (시안)
+   도구 탭
    - 위: 팀 설계값 대시보드 (값 한곳 + 그림으로 보기 + 파트별)
    - 아래: 도구 모음 (설계 단계 순)
-   - 시안: 값은 이 화면에서만 바뀌고 저장되지 않는다. 저장 구조·권한은 docs/TOOLS-PLAN.md 결정 1~5대로 나중에 붙인다.
+   - 값은 팀 저장소 teams/<팀>/dv/<파트코드>__<키> (docs/STORE-PLAN.md). 저장소가 없으면 이 브라우저에 저장
+   - 아직 아무도 넣지 않은 값은 예시값으로 그림을 그리고 '예시값'으로 표시
    ============================================================ */
 const DASH = (() => {
-  /* 값: [키, 이름, 단위, 기본값, 상태, 소수 자릿수, 비고]  상태: ok 확정 · rev 검토 중 · asm 가정 · calc 계산값 */
+  /* 대시보드에 보이는 키: [키, 소수 자릿수, 예시값]. 이름·단위·담당 파트는 DK(js/store/dash-keys.js) */
   const GROUPS = [
-    ['질량 · 무게중심', [['m','총질량 (드라이버 포함)','kg',300,'ok',0],['fr','앞 배분','%',47.5,'rev',1],['left','왼쪽 배분','%',50,'ok',1],['h','무게중심 높이','mm',290,'rev',0]]],
-    ['치수', [['L','휠베이스','mm',1550,'ok',0],['tf','앞 트레드','mm',1200,'ok',0],['tr','뒤 트레드','mm',1180,'ok',0],['rt','타이어 하중 반경','mm',229,'ok',0]]],
-    ['에어로', [['cla','C<sub>L</sub>·A','m²',3.0,'rev',2],['cda','C<sub>D</sub>·A','m²',1.4,'rev',2],['xcop','CoP 위치 (앞축부터)','mm',852,'rev',0],['hcop','CoP 높이','mm',420,'asm',0]]],
-    ['타이어 · 서스 · 조향', [['mu','타이어 마찰계수 μ','',1.5,'asm',2],['lltd','앞 횡하중 이동 배분','%',50,'asm',1],['rmin','최소 회전 반경 (CG 경로)','m',3.0,'rev',1]]],
-    ['파워트레인', [['pmax','최고 출력 (규정)','kW',80,'ok',0],['gr','최종 감속비','',3.55,'rev',2],['nmax','모터 최고 회전수','rpm',6500,'ok',0]]]
+    ['질량 · 무게중심', [['m',0,300],['fr',1,47.5],['left',1,50],['h',0,290]]],
+    ['치수', [['L',0,1550],['tf',0,1200],['tr',0,1180],['r_eff',0,229]]],
+    ['에어로', [['cla',2,3.0],['cda',2,1.4],['xcop',0,852],['hcop',0,420]]],
+    ['타이어 · 서스 · 조향', [['mu',2,1.5],['lltd',1,50],['rmin',1,3.0]]],
+    ['파워트레인', [['pmax',0,80],['gr',2,3.55],['nmax',0,6500]]]
   ];
-  const STL = {ok:'확정', rev:'검토 중', asm:'가정', calc:'계산값'};
-  const P = {}, ST = {}, DIRTY = new Set();
-  GROUPS.forEach(g => g[1].forEach(r => { P[r[0]] = r[3]; ST[r[0]] = r[4]; }));
+  const STL = {ok:'확정', rev:'검토 중', asm:'가정', calc:'계산값', ex:'예시값 (아직 입력 안 됨)'};
+  const P = {}, ST = {};
   const C = {v:45, R:12, ax:0, dir:'L', straight:false, aero:true};
   const PRESET = { stop:{v:0,R:12,ax:0,straight:true}, accel:{v:40,R:12,ax:1.2,straight:true}, brake:{v:80,R:12,ax:-1.5,straight:true},
     skid:{v:42,R:9.1,ax:0,straight:false}, hair:{v:24,R:4.5,ax:0,straight:false}, vmax:{v:110,R:12,ax:0,straight:true} };
   let PART = 'aero';
-  return { GROUPS, STL, P, ST, DIRTY, C, PRESET, get part(){ return PART; }, set part(v){ PART = v; } };
+  return { GROUPS, STL, P, ST, C, PRESET, get part(){ return PART; }, set part(v){ PART = v; } };
 })();
+
+/* ---------- 팀 설계값 저장소 (dv) ---------- */
+const DVKEY = 'run2x.dv.v1';
+let DVS = {};   /* 문서 id → {s:{시즌:{v, st, src, by, at}}} */
+try{ DVS = JSON.parse(localStorage.getItem(DVKEY)||'{}') || {}; }catch(e){ DVS = {}; }
+const dvSeason = () => (typeof SEASON!=='undefined' ? String(SEASON) : String(new Date().getFullYear()));
+const dvEntry = (k, se) => { const d = DVS[dvId(k)]; return (d && d.s && d.s[se || dvSeason()]) || null; };
+/* 이 키를 고칠 수 있나: 회장 전부, 팀장·파트장은 담당 파트(또는 묶음)만. 저장소가 없으면 이 브라우저에서 자유롭게 */
+const canEditDv = k => !SH.on ? true : (SH.canAdmin || (!pastLock() && isLeadRole(SH.role) && partOK(SH.parts, SH.role, DK[k].p)));   /* 지난 시즌은 회장만 */
+async function dvSave(k, patch){
+  const id = dvId(k), se = dvSeason(), cur = DVS[id] || {s:{}}, prev = (cur.s||{})[se] || {};
+  const ent = {v: prev.v==null ? null : prev.v, st: prev.st || 'rev', src: prev.src || '', ...patch, by: SH.me || null, at: new Date().toISOString()};
+  const doc = {s: {...(cur.s||{}), [se]: ent}};
+  if(!SH.on){ DVS[id] = doc; try{ localStorage.setItem(DVKEY, JSON.stringify(DVS)); }catch(e){} dashPaint(); if(typeof refreshVals==='function') refreshVals(); return true; }
+  if(!canEditDv(k)){ toast(`${DK[k].n} 값은 회장이나 ${DK[k].p} 담당 팀장·파트장만 고칠 수 있습니다.`); return false; }
+  DVS[id] = doc; dashPaint();
+  try{ await SH.db.doc('dv/'+id).set(doc); return true; }
+  catch(e){ toast(Backend.denied && Backend.denied(e) ? '이 값을 고칠 권한이 없습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); return false; }
+}
+/* 팀 저장소 연결: 다른 저장소 구독(onSharedReady) 뒤에 이어 붙임 */
+{ const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
+    db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = r; dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
+/* 설계 탭 항목에 붙는 팀 설계값(읽기 전용). 고치기는 도구 탭에서 (값 한곳 원칙) */
+const DK_BY_ITEM = DKEYS.reduce((o, d) => { if(d.it) (o[d.it] = o[d.it] || []).push(d.k); return o; }, {});
+function dvLinkedHTML(id, se){ const ks = DK_BY_ITEM[id]; if(!ks || !ks.length) return '';
+  const row = k => { const e = dvEntry(k, se), has = e && typeof e.v==='number', st = has ? (e.st||'rev') : '';
+    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} <span class="dv-s s-${st}" title="${DASH.STL[st]||''}"></span>` : '<span class="muted">—</span>'}</td></tr>`; };
+  return `<div class="tv-dv"><div class="tv-dvh"><span class="sec-label">팀 설계값</span><button type="button" class="lnk" data-gotools>도구 탭에서 보기 · 고치기</button></div><table class="kvt tv-t">${ks.map(row).join('')}</table></div>`; }
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-gotools]')){ e.preventDefault(); showTab('tools'); smoothScrollTo(() => 0); } });
+/* 그림·계산에 쓰는 값: 이번 시즌 저장값, 없으면 예시값 */
+function dashSync(){ DASH.GROUPS.forEach(g => g[1].forEach(([k, , ex]) => { const e = dvEntry(k), has = e && typeof e.v==='number' && isFinite(e.v);
+  DASH.P[k] = has ? e.v : ex; DASH.ST[k] = has ? (e.st || 'rev') : 'ex'; }));
+  DASH.P.rt = DASH.P.r_eff; }   /* 그림 코드(dash-figs.js)는 유효 반경을 rt 로 읽음 */
 const TOOL_LIST = [
   ['1','질량·무게중심 계산기','P0','부품별 질량·위치','총질량, 무게중심, 앞뒤·좌우 배분'],
   ['2','랩타임·점수 시뮬레이터','P0','질량, 에어로, 모터 곡선, 트랙','종목별 랩타임·점수, 최적 기어비'],
@@ -35,19 +68,20 @@ const TOOL_LIST = [
 const dashVmax = P => P.nmax/P.gr*2*Math.PI*(P.rt/1000)*60/1000;   /* 모터 회전수 한계 최고속 [km/h] */
 /* 코너 반경 조절기: 곡률(1/R)을 고르게 나눠, 오른쪽으로 갈수록 반경이 줄고 조향이 커진다. 60 m → 설계 최소 회전 반경 */
 const R_MAX = 60, rToU = (R, rmin) => Math.round((1/R - 1/R_MAX)/(1/rmin - 1/R_MAX)*1000), uToR = (u, rmin) => 1/(1/R_MAX + u/1000*(1/rmin - 1/R_MAX));
-const dashFmt = (k, v) => { const r = DASH.GROUPS.flatMap(g=>g[1]).find(x=>x[0]===k); const d = r ? r[5] : 1; return Number(v).toFixed(d); };
+const dashFmt = (k, v) => { const r = DASH.GROUPS.flatMap(g=>g[1]).find(x=>x[0]===k); const d = r ? r[1] : 1; return Number(v).toFixed(d); };
 /* 에어로 제외: 다운포스·항력을 0으로 두고 같은 조건을 다시 계산 */
 const dashP = () => DASH.C.aero ? DASH.P : {...DASH.P, cla:0, cda:0};
 function dashCalc(){ const C = DASH.C; return DASHCALC(dashP(), {v:C.v, R: C.straight ? Infinity : C.R, ax:C.ax, dir:C.dir}); }
 
 function dashValuesHTML(){ const P = DASH.P;
-  const vmax = dashVmax(P);
-  return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k, n, u]) =>
-      `<div class="dv-r${DASH.DIRTY.has(k)?' dirty':''}"><dt>${n}</dt><dd><button type="button" class="dv-v" data-dk="${k}" title="눌러서 수정 (시안: 저장 안 됨)"><b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}</button><span class="dv-s s-${DASH.ST[k]}" title="${DASH.STL[DASH.ST[k]]}"></span></dd></div>`).join('')}
-      ${g==='파워트레인' ? `<div class="dv-r calc"><dt>최고속 (회전수 한계)</dt><dd><span class="dv-v ro"><b>${vmax.toFixed(0)}</b> <span class="dv-u">km/h</span></span><span class="dv-s s-calc" title="계산값"></span></dd></div>` : ''}
-      ${g==='질량 · 무게중심' ? `<div class="dv-r calc"><dt>무게중심 위치 (앞축부터)</dt><dd><span class="dv-v ro"><b>${(P.L*(1-P.fr/100)).toFixed(0)}</b> <span class="dv-u">mm</span></span><span class="dv-s s-calc" title="계산값"></span></dd></div>` : ''}
+  const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
+  const calc = (k, v, u) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-calc" title="계산값"></span></dd></div>`;
+  return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const can = canEditDv(k), st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
+      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd>${can ? `<button type="button" class="dv-v" data-dk="${k}" title="눌러서 고치기">` : `<span class="dv-v ro" title="${DK[k].p} 담당만 고칠 수 있습니다">`}<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}${can ? '</button>' : '</span>'}${can && st!=='ex' ? `<button type="button" class="dv-s s-${st}" data-dst="${k}" title="${DASH.STL[st]} · 눌러서 상태 바꾸기" aria-label="상태 ${DASH.STL[st]}"></button>` : `<span class="dv-s s-${st}" title="${DASH.STL[st]}${e&&e.src?' · '+esc(e.src):''}"></span>`}</dd></div>`; }).join('')}
+      ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h') : ''}
+      ${g==='질량 · 무게중심' ? calc('a_cg', (P.L*(1-P.fr/100)).toFixed(0), 'mm') : ''}
       </dl></section>`).join('')}</div>
-    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><i class="dv-s s-asm"></i>가정</span><span><i class="dv-s s-calc"></i>계산값</span><span class="dv-legn">값을 누르면 바로 고칠 수 있습니다. 시안이라 저장되지 않고, 새로 고치면 처음 값으로 돌아갑니다.</span></p>`;
+    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><i class="dv-s s-asm"></i>가정</span><span><i class="dv-s s-calc"></i>계산값</span><span><i class="dv-s s-ex"></i>예시값</span><span class="dv-legn">${SH.on ? '값을 누르면 고칩니다(담당 파트만). 상태 점을 누르면 확정 · 검토 중 · 가정이 바뀝니다.' : '팀에 로그인하지 않아 이 브라우저에만 저장됩니다.'}</span></p>`;
 }
 function dashReadHTML(){ const K = dashCalc(), f = (v,d) => v.toFixed(d);
   const row = (l, v, cls) => `<div class="dr-r"><dt>${l}</dt><dd class="${cls||''}">${v}</dd></div>`;
@@ -87,27 +121,76 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
   if(!v.dataset.built){ v.dataset.built = '1';
     v.innerHTML = `<header class="top tl-hero"><span class="eyebrow">우리 팀 설계값</span><h1>팀 대시보드</h1>
 </header>
-      <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta">2026 시즌</span></div><div id="dvals"></div></section>
+      <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span><button type="button" class="btn small" data-dvimp>지난 시즌 값 가져오기</button></div><div id="dvals"></div></section>
       <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
       <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
       <section class="tl-sec" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
         <ol class="tl-tools">${TOOL_LIST.map(([n,t,s,i,o])=>`<li><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">준비 중</span></li>`).join('')}</ol></section>`; }
   dashPaint(); }
-function dashPaint(which){ const all = !which;
-  dashClamp();
+function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
+  dashSync(); dashClamp(); const ss = $('#dvseason'); if(ss) ss.textContent = dvSeason() + ' 시즌';
   if(all || which.includes('vals')) $('#dvals').innerHTML = dashValuesHTML();
   if(all || which.includes('cond')){ $('#dcond').innerHTML = dashCondHTML(); dashBipolar(); }
   if(all || which.includes('figs')) $('#dfigs').innerHTML = dashFigsHTML();
   if(all || which.includes('part')) $('#dpart').innerHTML = dashPartHTML(); }
-/* 값 고치기 (시안: 화면 안에서만) */
+/* 값 고치기: 누르면 입력칸 → Enter·바깥 누르기로 저장, Esc 취소. 처음 넣는 값은 '검토 중' */
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('.dv-v[data-dk]'); if(!b) return;
-  const k = b.dataset.dk; const inp = document.createElement('input'); inp.type = 'number'; inp.step = 'any'; inp.value = DASH.P[k]; inp.className = 'dv-in'; inp.setAttribute('aria-label', '값 입력');
+  const k = b.dataset.dk; if(!canEditDv(k)) return;
+  const inp = document.createElement('input'); inp.type = 'number'; inp.step = 'any'; inp.value = DASH.ST[k]==='ex' ? '' : DASH.P[k]; inp.placeholder = String(DASH.P[k]); inp.className = 'dv-in'; inp.setAttribute('aria-label', DK[k].n + ' 값 입력');
   b.replaceWith(inp); inp.focus(); inp.select();
-  const done = ok => { if(!inp.isConnected) return; const x = parseFloat(inp.value); if(ok && isFinite(x) && x !== DASH.P[k]){ DASH.P[k] = x; DASH.DIRTY.add(k); } dashPaint(); };
+  let fin = false; const done = ok => { if(fin || !inp.isConnected) return; fin = true; const t = inp.value.trim(), x = parseFloat(t);
+    if(ok && t!=='' && isFinite(x) && !(DASH.ST[k]!=='ex' && x === DASH.P[k])) dvSave(k, {v: x}); else dashPaint(['vals']); };
   inp.addEventListener('keydown', ev => { if(ev.key==='Enter'){ ev.preventDefault(); done(true); } else if(ev.key==='Escape'){ done(false); } });
   inp.addEventListener('blur', () => done(true));
 });
+/* 상태 점: 확정 → 검토 중 → 가정 → 확정 */
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dst]'); if(!b) return;
+  const k = b.dataset.dst, nx = {ok:'rev', rev:'asm', asm:'ok', calc:'ok'}[DASH.ST[k]] || 'rev'; dvSave(k, {st: nx}); });
+/* 지난 시즌 값 가져오기: 시즌 → 파트 → 항목(여러 개). 가져온 값은 이번 시즌에 '검토 중', 출처 'OOOO 시즌 값' */
+const DVIMP = {se:'', part:'', sel:new Set()};
+function dvSeasons(){ const se = new Set(); Object.values(DVS).forEach(d => Object.keys((d&&d.s)||{}).forEach(x => se.add(x))); se.delete(dvSeason()); return [...se].sort().reverse(); }
+/* 파트 '전체'는 고칠 수 있는 모든 파트를 파트 배너 순서로 묶어 보여 줌 (시즌 전체 가져오기) */
+const DVI_ALL = '__all';
+const dvImpKeys = () => DKEYS.filter(d => (DVIMP.part===DVI_ALL || d.p===DVIMP.part) && dvEntry(d.k, DVIMP.se) && canEditDv(d.k))
+  .sort((a, b) => PARTS.findIndex(p => p[0]===a.p) - PARTS.findIndex(p => p[0]===b.p));
+function dvImpHTML(){ const ses = dvSeasons(), now = dvSeason();
+  const head = `<div class="dvi-h"><b id="dvi-t">지난 시즌 값 가져오기</b><button type="button" class="dvi-x" data-dvimpx aria-label="닫기">×</button></div>`;
+  if(!ses.length) return head + `<div class="dvi-body"><p class="muted">가져올 지난 시즌 값이 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-dvimpx>닫기</button></div>`;
+  if(!ses.includes(DVIMP.se)) DVIMP.se = ses[0];
+  const parts = PARTS.map(p => p[0]).filter(p => DKEYS.some(d => d.p===p && canEditDv(d.k) && dvEntry(d.k, DVIMP.se)));   /* 파트 순서는 파트 배너와 같게 */
+  if(DVIMP.part!==DVI_ALL && !parts.includes(DVIMP.part)) DVIMP.part = DVI_ALL;
+  const ks = dvImpKeys(), fv = e => e && typeof e.v==='number' ? String(e.v) : '—';
+  let lastP = '';
+  const rows = ks.map(d => { const grp = DVIMP.part===DVI_ALL && d.p!==lastP ? `<tr class="dvi-g"><td></td><td colspan="3">${d.p}</td></tr>` : ''; lastP = d.p;
+    return grp + `<tr><td><input type="checkbox" data-dvik="${d.k}"${DVIMP.sel.has(d.k)?' checked':''} aria-label="${d.n.replace(/<[^>]+>/g,'')}"></td><td>${d.n}${d.u?` <span class="dv-u">${d.u}</span>`:''}</td><td>${fv(dvEntry(d.k))}</td><td><b>${fv(dvEntry(d.k, DVIMP.se))}</b></td></tr>`; }).join('');
+  return head + `<div class="dvi-f"><label>시즌 <select data-dvise>${ses.map(x=>`<option${x===DVIMP.se?' selected':''}>${x}</option>`).join('')}</select></label>
+      <label>파트 <select data-dvipt><option value="${DVI_ALL}"${DVIMP.part===DVI_ALL?' selected':''}>전체 (${parts.length}개 파트)</option>${parts.map(p=>`<option${p===DVIMP.part?' selected':''}>${p}</option>`).join('')}</select></label>
+      <span class="muted dvi-n">${SH.on && !SH.canAdmin ? '담당 파트만 보입니다' : ''}</span></div>
+    <div class="dvi-body">${ks.length ? `<table class="dvi-t"><thead><tr><th><input type="checkbox" data-dviall aria-label="모두 고르기"${ks.every(d=>DVIMP.sel.has(d.k))?' checked':''}></th><th>항목</th><th>지금 (${now})</th><th>${DVIMP.se}</th></tr></thead><tbody>${rows}</tbody></table>`
+      : '<p class="muted">이 파트에 가져올 값이 없습니다.</p>'}</div>
+    <div class="dvi-foot"><span class="muted">가져온 값은 ${now} 시즌에 '검토 중'으로 들어갑니다. ${DVIMP.se} 시즌 기록은 그대로 남습니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-dvimpx>취소</button><button type="button" class="btn small pri" data-dvigo${DVIMP.sel.size?'':' disabled'}>고른 ${DVIMP.sel.size}개 가져오기</button></span></div>`; }
+/* 창: 화면 가운데 떠서, 가져오기·취소·Esc·바깥 누르기로 닫힘 */
+function dvImpEl(){ let m = $('#dvimp'); if(!m){ m = document.createElement('div'); m.id = 'dvimp'; m.className = 'dv-modal'; m.hidden = true;
+    m.innerHTML = '<div class="dvm-box" role="dialog" aria-modal="true" aria-labelledby="dvi-t"></div>'; document.body.appendChild(m); } return m; }
+function dvImpPaint(){ const m = dvImpEl(), b = m.querySelector('.dvi-body'), y = b ? b.scrollTop : 0; m.querySelector('.dvm-box').innerHTML = dvImpHTML(); const b2 = m.querySelector('.dvi-body'); if(b2) b2.scrollTop = y; }
+let DVIMP_RET = null;
+function dvImpOpen(btn){ DVIMP.sel.clear(); DVIMP.part = DVI_ALL; DVIMP_RET = btn || null; const m = dvImpEl(); dvImpPaint(); m.hidden = false; const f = m.querySelector('select, button'); if(f) f.focus(); }
+function dvImpClose(){ const m = $('#dvimp'); if(m) m.hidden = true; if(DVIMP_RET && DVIMP_RET.isConnected) DVIMP_RET.focus(); }
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ const m = $('#dvimp'); if(m && !m.hidden){ e.preventDefault(); dvImpClose(); } } });
+document.addEventListener('click', async e => { const t = e.target.closest && e.target;
+  if(!t) return;
+  if(t.closest('[data-dvimp]')){ dvImpOpen(t.closest('[data-dvimp]')); return; }
+  if(t.closest('[data-dvimpx]') || t.matches('#dvimp')){ dvImpClose(); return; }
+  if(t.closest('[data-dvigo]')){ const se = DVIMP.se, ks = [...DVIMP.sel]; let n = 0;
+    for(const k of ks){ const old = dvEntry(k, se); if(old && typeof old.v==='number' && await dvSave(k, {v: old.v, st:'rev', src: se + ' 시즌 값'})) n++; }
+    DVIMP.sel.clear(); dvImpClose(); toast(`${n}개 값을 ${se} 시즌에서 가져왔습니다.`); return; } });
+document.addEventListener('change', e => { const t = e.target; if(!t.closest || !t.closest('#dvimp')) return;
+  if(t.matches('[data-dvise]')){ DVIMP.se = t.value; DVIMP.sel.clear(); }
+  else if(t.matches('[data-dvipt]')){ DVIMP.part = t.value; DVIMP.sel.clear(); }
+  else if(t.matches('[data-dvik]')){ t.checked ? DVIMP.sel.add(t.dataset.dvik) : DVIMP.sel.delete(t.dataset.dvik); }
+  else if(t.matches('[data-dviall]')){ dvImpKeys().forEach(d => t.checked ? DVIMP.sel.add(d.k) : DVIMP.sel.delete(d.k)); }
+  dvImpPaint(); });
 document.addEventListener('input', e => { const r = e.target.closest && e.target.closest('input[data-dc]'); if(!r) return;
   const k = r.dataset.dc, x = parseFloat(r.value), C = DASH.C;
   if(k==='R') C.R = Math.round(uToR(x, DASH.P.rmin)*10)/10; else C[k] = x;

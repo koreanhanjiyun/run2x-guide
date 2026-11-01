@@ -2094,7 +2094,30 @@ details.item .tv-s{color:var(--ink-2)}
 .dv-r.calc b{font-style:italic;color:var(--ink-2)}
 .dv-u{font-size:12px;color:var(--muted)}
 .dv-in{width:88px;font:inherit;font-size:15px;padding:1px 6px;border:1px solid var(--accent);border-radius:4px}
-.dv-r.dirty dt::after{content:" · 바꿈";color:var(--accent);font-size:11.5px}
+.dv-r.ex .dv-v b{color:var(--muted);font-weight:500}
+button.dv-s{border:0;padding:0;cursor:pointer}button.dv-s:hover{outline:2px solid var(--line-2);outline-offset:2px}
+.dv-s.s-ex{background:#fff;box-shadow:inset 0 0 0 1.4px var(--line-2);background-image:repeating-linear-gradient(45deg,var(--line-2) 0 1px,transparent 1px 3px)}
+.dv-r dt .term{border-bottom-style:dotted}
+#tip .tip-l{margin:0 0 3px}#tip .tip-u{color:var(--muted);font-weight:400;font-size:12px}#tip code{font-size:11.5px;color:var(--ink-2)}
+/* 지난 시즌 값 가져오기 창 (가운데 뜨는 창) */
+.tl-sh .btn.small[data-dvimp]{margin-left:12px}
+.dv-modal{position:fixed;inset:0;z-index:80;background:rgba(24,18,40,.38);display:flex;align-items:flex-start;justify-content:center;padding:calc(var(--tabh) + 14px) 24px 24px}
+.dv-modal[hidden]{display:none}
+/* 머리·고르기·아래 버튼은 고정, 항목 목록만 스크롤 */
+.dvm-box{width:min(680px,100%);max-height:calc(100vh - var(--tabh) - 38px);display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 18px 50px rgba(20,12,40,.28);padding:18px 20px}
+.dvi-body{flex:1 1 auto;min-height:0;overflow:auto;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.dvi-t thead th{position:sticky;top:0;background:var(--panel-2);z-index:1}
+.dvi-t tr.dvi-g td{font-size:12.5px;font-weight:700;color:var(--ink-2);background:var(--panel);padding-top:12px}
+.dvi-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.dvi-h b{font-size:16px}
+.dvi-x{font:inherit;font-size:20px;line-height:1;width:30px;height:30px;border:0;border-radius:6px;background:none;color:var(--muted);cursor:pointer}.dvi-x:hover{background:var(--panel-2);color:var(--ink)}
+.dvi-f{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;font-size:13.5px;margin-bottom:10px}
+.dvi-f select{font:inherit;padding:3px 8px;border:1px solid var(--line-2);border-radius:6px;margin-left:6px;color:#1d2128;background:#fff;color-scheme:light}
+.dvi-f select option{color:#1d2128;background:#fff}
+.dvi-t{width:100%;border-collapse:collapse;font-size:13.5px}
+.dvi-t th,.dvi-t td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.dvi-t th{font-weight:600;color:var(--ink-2);font-size:12.5px}.dvi-t td:first-child,.dvi-t th:first-child{width:28px}
+.dvi-btns{display:flex;gap:8px;flex:none}
+.dvi-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;font-size:12.5px}
 .dv-s{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
 .dv-s.s-ok{background:var(--out)}.dv-s.s-rev{background:#fff;box-shadow:inset 0 0 0 1.6px var(--muted)}.dv-s.s-asm{background:#d97706}.dv-s.s-calc{background:#fff;box-shadow:inset 0 0 0 1.6px var(--in)}
 .dv-leg{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:4px 0 0;font-size:12.5px;color:var(--muted)}
@@ -2346,3 +2369,6 @@ body.gmax #toTop{display:none}
 /* 단계 줄: 펼쳐 판이 생겨도 화살표·칩이 판 테두리에 붙지 않게 좌우 여백 */
 #step-list details.step>summary{padding-left:16px;padding-right:16px}
 #step-list details.step[open]>.dbody{padding:12px 16px 16px}
+/* 설계 탭: 항목에 붙는 팀 설계값 (읽기 전용, 고치기는 도구 탭) */
+.tv-dv{margin:0 0 12px}.tv-dvh{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tv-dv .kvt th{font-weight:500}.tv-dv .dv-s{margin-left:6px;vertical-align:middle}

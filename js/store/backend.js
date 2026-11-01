@@ -104,7 +104,7 @@ window.Backend = (function(){
   const err = (code, msg) => { const e = new Error(msg); e.code = code; return e; };
   /* 팀 데이터·팀원·열쇠·이름을 모두 지움. 팀 문서는 내 팀원 문서보다 먼저 지워야 규칙을 통과 */
   async function delTeam(c, tid, name, key){ const fs = c.F.fs, P = 'teams/'+tid;
-    for(const col of ['status','val','qa','meta','blocked','secret']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
+    for(const col of ['status','val','dv','mass','drivers','dtab','qa','meta','blocked','secret']){ const q = await fs.collection(P+'/'+col).get(); await Promise.all(q.docs.map(d=>fs.doc(P+'/'+col+'/'+d.id).delete())); }
     const ms = await fs.collection(P+'/members').get(); await Promise.all(ms.docs.filter(d=>d.id!==c.uid).map(d=>fs.doc(P+'/members/'+d.id).delete()));
     if(key){ try{ await fs.doc('joinKeys/'+key).delete(); }catch(e){} }
     if(name){ try{ await fs.doc('teamNames/'+norm(name).toLowerCase()).delete(); }catch(e){} }
@@ -193,15 +193,17 @@ window.Backend = (function(){
       await setMyTeam(c, tid, null);
       return {current: tid===c.team, deleted}; },
     /* 백업: 모든 시즌의 진행 상태·우리 팀 값, 논의, 이번 시즌 설정을 파일 하나로 (차단 목록·비밀번호는 넣지 않음) */
-    BACKUP_COLS: ['status','val','qa','meta'],
+    BACKUP_COLS: ['status','val','dv','mass','drivers','dtab','qa','meta'],
+    /* 문서 안에 시즌별 값(s: {시즌: …})을 두는 컬렉션: 불러오기 때 고른 시즌만 바꿈 */
+    SEASON_COLS: ['val','dv','mass','drivers','dtab'],
     async exportData(){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team, data = {};
       for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); data[col] = {}; q.docs.forEach(d=>{ data[col][d.id] = d.data(); }); }
-      return {format:'run2x-team-backup', version:1, team:c.teamName, exportedAt:new Date().toISOString(), data}; },
+      return {format:'run2x-team-backup', version:2, team:c.teamName, exportedAt:new Date().toISOString(), data}; },
     /* 백업 파일의 시즌 목록과 시즌별 개수 {시즌: {status, val}} */
     backupSeasons(obj){ const LS = typeof LEGACY_SEASON!=='undefined' ? String(LEGACY_SEASON) : '', out = {};
       const add = (se, k) => { if(!se) return; out[se] = out[se] || {status:0, val:0}; out[se][k]++; };
       Object.values((obj.data||{}).status||{}).forEach(d=>{ if(d && typeof d==='object') add(String(d.season||LS), 'status'); });
-      Object.values((obj.data||{}).val||{}).forEach(d=>{ Object.keys((d&&d.s)||{}).forEach(se=>add(String(se), 'val')); });
+      Team.SEASON_COLS.forEach(col=>Object.values((obj.data||{})[col]||{}).forEach(d=>{ Object.keys((d&&d.s)||{}).forEach(se=>add(String(se), 'val')); }));   /* 팀 값(글 · 숫자 · 표)을 함께 셈 */
       return out; },
     /* 불러오기 = 시즌 골라 복구 + 합치기
        - 고른 시즌: 그 시즌의 진행 상태·우리 팀 값을 파일 내용으로 바꿈 (다른 시즌은 그대로)
@@ -216,15 +218,17 @@ window.Backend = (function(){
       const setIds = new Set(fileSt.map(([id])=>id));
       (await fs.collection(P+'/status').get()).docs.forEach(d=>{ if(SE.has(sOf(d.data())) && !setIds.has(d.id)) ops.push(['del', P+'/status/'+d.id]); });
       fileSt.forEach(([id,d])=>{ ops.push(['set', P+'/status/'+id, d]); n.status++; });
-      /* 우리 팀 값 (항목 문서 안의 시즌별 값) */
-      const curV = {}; (await fs.collection(P+'/val').get()).docs.forEach(d=>{ curV[d.id] = d.data(); });
-      const fileV = obj.data.val || {};
-      new Set([...Object.keys(curV), ...Object.keys(fileV)]).forEach(id=>{ if(!okId(id)) return;
-        const cur = curV[id] || {}, s = Object.assign({}, cur.s || {}); let ch = false;
-        SE.forEach(se=>{ const fv = fileV[id] && fileV[id].s && fileV[id].s[se];
-          if(fv && typeof fv==='object'){ s[se] = fv; ch = true; n.val++; } else if(se in s){ delete s[se]; ch = true; } });
-        if(!ch) return;
-        if(Object.keys(s).length) ops.push(['set', P+'/val/'+id, Object.assign({}, cur, {s, by: c.uid, at: now})]); else if(curV[id]) ops.push(['del', P+'/val/'+id]); });
+      /* 우리 팀 값 · 팀 설계값 · 질량 표 · 드라이버 · 표 (문서 안의 시즌별 값). 백업 형식 1에는 val만 있음 */
+      for(const col of Team.SEASON_COLS){ if(!(col in obj.data)) continue;   /* 파일에 없는 컬렉션(예전 형식)은 지금 값을 그대로 둠 */
+        const curV = {}; (await fs.collection(P+'/'+col).get()).docs.forEach(d=>{ curV[d.id] = d.data(); });
+        const fileV = obj.data[col] || {};
+        new Set([...Object.keys(curV), ...Object.keys(fileV)]).forEach(id=>{ if(!okId(id)) return;
+          const cur = curV[id] || {}, s = Object.assign({}, cur.s || {}); let ch = false;
+          SE.forEach(se=>{ const fv = fileV[id] && fileV[id].s && fileV[id].s[se];
+            if(fv && typeof fv==='object'){ s[se] = fv; ch = true; n.val++; } else if(se in s){ delete s[se]; ch = true; } });
+          if(!ch) return;
+          const doc = col==='val' ? Object.assign({}, cur, {s, by: c.uid, at: now}) : Object.assign({}, cur, {s});
+          if(Object.keys(s).length) ops.push(['set', P+'/'+col+'/'+id, doc]); else if(curV[id]) ops.push(['del', P+'/'+col+'/'+id]); }); }
       /* 논의: 지금 없는 글만 */
       const curQ = new Set((await fs.collection(P+'/qa').get()).docs.map(d=>d.id));
       Object.entries(obj.data.qa||{}).forEach(([id,d])=>{ if(okId(id) && d && d.v===2 && !curQ.has(id)){ ops.push(['set', P+'/qa/'+id, d]); n.qa++; } });

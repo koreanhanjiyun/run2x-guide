@@ -115,12 +115,16 @@ function annotate(root){ if(!TRE || !root || root.dataset.ann) return; root.data
       frag=frag||document.createDocumentFragment(); frag.append(txt.slice(last,m.index));
       const s=document.createElement('span'); s.className='term'; s.dataset.t=TERMS.indexOf(t); s.tabIndex=0; s.setAttribute('role','button'); s.setAttribute('aria-haspopup','dialog'); s.textContent=m[0]; frag.append(s); last=m.index+m[0].length; }
     if(frag){ frag.append(txt.slice(last)); n.replaceWith(frag); } }); }
+/* 팀 설계값 풀이: ① ② ③ 을 줄로 나누고, **굵게**·`키` 표기를 화면용으로 */
+const dkDefHTML = d => String(d||'').replace(/\*\*\[그림\]\*\*\s*/g,'').split(/\s(?=[②③])/).map(x=>`<p class="tip-l">${x.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}</p>`).join('');
 /* 용어 풀이 (C10): 마우스를 올리면 잠깐, 누르거나 키보드로 고르면 고정(다시 누르거나 Esc로 닫음) */
 function initTips(){
   const tip=document.createElement('div'); tip.id='tip'; tip.hidden=true; tip.setAttribute('role','tooltip'); document.body.append(tip);
   let pinned=null;
-  const show=(s, pin)=>{ const t=TERMS[+s.dataset.t]; if(!t) return;
-    tip.innerHTML=`<b>${t.name}</b><div>${t.def}</div><small>참고 › 용어집${pin?' · 닫기: 다시 누르거나 Esc':''}</small>`; subify(tip); tip.hidden=false; tip.classList.toggle('pin', !!pin);
+  /* 팀 설계값(data-dk)은 키 목록의 풀이를, 그 밖은 용어집을 보여 줌 */
+  const show=(s, pin)=>{ const dk = s.dataset.dk && typeof DK!=='undefined' ? DK[s.dataset.dk] : null;
+    const t = dk ? {name: dk.n + (dk.u ? ` <span class="tip-u">[${dk.u}]</span>` : ''), def: dkDefHTML(dk.def), src: `팀 설계값 · ${dk.p} 담당`} : TERMS[+s.dataset.t]; if(!t) return;
+    tip.innerHTML=`<b>${t.name}</b><div>${t.def}</div><small>${t.src||'참고 › 용어집'}${pin?' · 닫기: 다시 누르거나 Esc':''}</small>`; subify(tip); tip.hidden=false; tip.classList.toggle('pin', !!pin);
     const r=s.getBoundingClientRect(), w=Math.min(380, window.innerWidth-24); tip.style.width=w+'px';
     let x=Math.min(Math.max(12, r.left), window.innerWidth-w-12), y=r.bottom+8; tip.style.left=x+'px'; tip.style.top=y+'px';
     const h=tip.offsetHeight; if(y+h>window.innerHeight-8){ tip.style.top=(r.top-h-8)+'px'; } s.setAttribute('aria-describedby','tip'); };
@@ -158,9 +162,10 @@ async function saveVal(id, vals, msgEl){
 }
 /* 우리 팀 값: 입력칸 읽기 */
 function tvRead(box){ const vals={}; box.querySelectorAll('[data-tl]').forEach(i=>{ const l=i.dataset.tl; vals[l]=vals[l]||{}; vals[l][i.dataset.tk]=i.value.trim(); }); return vals; }
-function tvHTML(id){ const a=ACT[id]; if(!a || !a[2].length) return ''; return `<div class="tval" data-tv="${id}"></div>`; }
+function tvHTML(id){ const a=ACT[id], dk = typeof DK_BY_ITEM!=='undefined' && DK_BY_ITEM[id]; if(!dk && (!a || !a[2].length)) return ''; return `<div class="tval" data-tv="${id}"></div>`; }
 /* 보기 → [편집] → 입력 → [적용](저장 전 값으로 보임) / [취소] → 아래 막대 [모두 저장] (H15) */
-function renderTV(el){ const id=el.dataset.tv, labs=ACT[id][2], rec=VAL[id]; const can=canEditItem(id); const man=can && el.dataset.edit==='1';
+function renderTV(el){ const id=el.dataset.tv, labs=(ACT[id]&&ACT[id][2])||[], rec=VAL[id]; const can=canEditItem(id) && labs.length>0; const man=can && el.dataset.edit==='1';
+  if(!labs.length){ el.innerHTML = typeof dvLinkedHTML==='function' ? dvLinkedHTML(id, el.dataset.view||SEASON) : ''; return; }   /* 글로 적는 값이 없는 항목: 팀 설계값만 */
   const staged = (typeof TVSTAGE!=='undefined' && TVSTAGE[id]) || null; const view = man ? SEASON : (el.dataset.view||SEASON);
   const data = (view===SEASON && staged) ? staged : (rec&&rec.s&&valFilled(rec.s[view]) ? rec.s[view] : null);
   const btn = man ? `<button type="button" class="btn small pri" data-tvok>적용</button><button type="button" class="btn small" data-tvno>취소</button>` : (can && view===SEASON ? `<button type="button" class="btn small tv-edit" data-tvedit>편집</button>` : '');
@@ -170,6 +175,7 @@ function renderTV(el){ const id=el.dataset.tv, labs=ACT[id][2], rec=VAL[id]; con
       <div class="tv-foot"><span class="pmsg muted">[적용]은 입력을 닫기만 합니다. 팀원에게 보이려면 아래 막대의 [모두 저장]을 누르십시오.</span></div></div>`;
   } else if(data && valFilled(data)){ h+=`<table class="kvt tv-t">${labs.map(l=>{ const r=data[l]||{}; return `<tr><th>${l}</th><td>${r.v?`<b>${esc(r.v)}</b>`:'<span class="muted">—</span>'}${r.why?`<span class="tv-why">${esc(r.why)}</span>`:''}</td></tr>`; }).join('')}</table>`;
   } else h+=`<p class="muted tv-empty">${SH.on ? '아직 기록된 팀 값이 없습니다.' + (can ? ' [편집]을 눌러 입력하십시오.' : ' 회장이나 담당 팀장·파트장이 입력하면 여기에 표시됩니다.') : '아직 기록된 팀 값이 없습니다.'}</p>`;
+  if(typeof dvLinkedHTML==='function') h = dvLinkedHTML(id, view) + h;   /* 숫자로 정하는 팀 설계값은 위에, 글로 적는 우리 팀 값(이전 기록 포함)은 아래 */
   el.innerHTML=h; el.classList.toggle('tv-dirty', !!staged); }
 document.addEventListener('click',e=>{ const ed=e.target.closest('[data-tvedit]'); if(ed){ const box=ed.closest('.tval'); box.dataset.was = TVSTAGE[box.dataset.tv] ? JSON.stringify(TVSTAGE[box.dataset.tv]) : ''; box.dataset.edit='1'; renderTV(box); const i=box.querySelector('input[data-tl]'); if(i) i.focus(); return; }
   const ok=e.target.closest('[data-tvok]'); if(ok){ const box=ok.closest('.tval'); delete box.dataset.edit; renderTV(box); return; }
