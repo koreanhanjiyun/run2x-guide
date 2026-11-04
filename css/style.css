@@ -2742,3 +2742,8 @@ html.wb-lock #tip{z-index:95}
 .cs-dxf path{fill:none;stroke:#7d8394;stroke-width:1}
 .cs-img image{opacity:.55}
 .cf-faint .cs-img image{opacity:.45}
+/* 작업창 위 막대: 종류별 나눔선 · 사용법 칩(사이트 '이 탭 사용법'과 같은 모양) */
+.wb-sep{display:inline-block;width:1px;height:20px;background:var(--line-2);margin:0 4px;align-self:center}
+.wb-help{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 11px 0 4px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel);color:var(--ink-2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.wb-help b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px}
+.wb-help:hover,.wb-help:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}

@@ -102,13 +102,13 @@ function wbShellHTML(){ const T = wbT();
       <span class="wb-no">${wbEsc(T.no)}</span><span class="wb-stage">${wbEsc(T.stage)}</span><b id="wb-t">${wbEsc(T.name)}</b>
       <span class="wb-code-on" id="wbcodeon" hidden>코드 고침 (저장 안 됨)</span>
       <span class="wb-acts">
-        ${T.tour ? `<button type="button" class="btn small" data-tour="wb:${wbEsc(T.no)}">도움말</button>` : ''}
+        ${T.tour ? `<button type="button" class="wb-help" data-tour="wb:${wbEsc(T.no)}" title="이 작업창의 버튼 위치와 기능을 차례로 안내합니다"><b aria-hidden="true">?</b><span>이 탭 사용법</span></button><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small" data-coordopen title="차량 좌표계 (원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)">좌표계</button>
-        ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}
+        ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}<i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbver>검증표</button>
-        <button type="button" class="btn small" data-wbcode>코드 보기</button>
+        <button type="button" class="btn small" data-wbcode>코드 보기</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
-        <button type="button" class="btn small" data-wbimp>가져오기 .json</button>
+        <button type="button" class="btn small" data-wbimp>가져오기 .json</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
       </span><input type="file" accept=".json,application/json" id="wbfile" hidden></div>
