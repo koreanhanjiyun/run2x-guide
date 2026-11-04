@@ -288,9 +288,23 @@ function tgClicks(o){ const c=[]; let vmDone=false;
   if(o.sub && typeof TT!=='undefined'){ const vis=document.querySelector(`#v-team [data-ttp="${o.sub}"]:not([hidden])`); if(!vis || (o.tab && TAB!==o.tab)) c.push({sel:`#v-team .tt-nav [data-tts="${o.sub}"]`, run:()=>{ TT.sub=o.sub; TT.picked=1; renderTeamTab(); }}); }
   if(o.vm && !vmDone && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
   if(o.press) c.push({sel:o.press, run:()=>{}});
+  /* 화면 안 버튼(예: 작업창의 표 탭): need() 가 참일 때만 누르는 모습 → run() */
+  if(o.click && (!o.click.need || o.click.need())) c.push({sel:o.click.sel, run:o.click.run});
   return c; }
 /* 복제본이 보여 주는 화면 상태의 요약 (같으면 다시 복제할 필요 없음) */
 const tgSig = o => [TAB, (typeof VMODE!=='undefined'?VMODE:''), (typeof TT!=='undefined'?TT.sub:''), (typeof START!=='undefined'?START.sys:''), o.fx||'', document.querySelectorAll('details[open]').length, (typeof SEL!=='undefined'?SEL:'')].join('|');
+/* 화면에 붙은 창 안쪽 스크롤(예: 작업창 오른쪽): 실제 화면과 복제본을 같이 부드럽게 굴려 대상이 보이게 */
+function tgInner(sel, el){ return new Promise(res=>{ if(!TR) return res();
+  const real=[...document.querySelectorAll(sel)].find(x=>!x.closest('#tour')), cl=TR.el.querySelector('.tg-fix '+sel) || TR.el.querySelector(sel);
+  if(!real) return res();
+  if(!TR.inner) TR.inner=new Map(); if(!TR.inner.has(real)){ const y0=real.scrollTop; TR.inner.set(real,y0); tgUndo(()=>{ if(real.isConnected) real.scrollTop=y0; }); }
+  const rc=real.getBoundingClientRect(), r=el.getBoundingClientRect(), max=real.scrollHeight-real.clientHeight, a=real.scrollTop;
+  let to=a; if(r.top < rc.top+16 || r.bottom > rc.bottom-16) to = r.height > rc.height-48 ? a + r.top - rc.top - 24 : a + r.top - rc.top - (rc.height - r.height)/2;
+  to=Math.max(0, Math.min(max, to)); const d=to-a; if(cl) cl.scrollTop=a;
+  if(Math.abs(d)<2 || tgReduced() || TR.fast){ real.scrollTop=to; if(cl) cl.scrollTop=to; return res(); }
+  const dur=Math.min(1100, Math.max(600, 450+Math.abs(d)*0.4)), t0=performance.now(), ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, tk=TR;
+  const step=now=>{ if(TR!==tk) return res(); const t=TR.fast ? 1 : Math.min(1,(now-t0)/dur), y=a+d*ease(t); real.scrollTop=y; if(cl) cl.scrollTop=y; if(t<1) requestAnimationFrame(step); else res(); };
+  requestAnimationFrame(step); }); }
 /* 진행 중에 [다음]·[이전]을 또 누르면: 지금 동작을 바로 끝내고, 누른 횟수만큼 넘어감 */
 function tgQueue(d){ TR.fast=true; TR.queue = TR.queue || {n:0}; TR.queue.n += d; }
 async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); return; } dir=dir||1; const tk=TR; TR.busy=true; TR.el.classList.add('tg-busy');
@@ -300,7 +314,7 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     while(i>=0 && i<TR.steps.length){ const st=TR.steps[i], o=st[3]||{}; TR.keepCrumb=!!o.sync;
       /* 4: 화면을 바꾸는 버튼(탭·하위 화면·보기 방식·항목)을 누르는 모습 → 바뀐 화면으로 서서히 */
       for(const c of tgClicks(o)){
-        if(TR.inited && dir>0) await tgPress(c.sel); if(TR!==tk) return;
+        if(TR.inited && dir>0){ const be=o.inner && tourVis(c.sel); if(be){ await tgInner(o.inner, be); if(TR!==tk) return; } await tgPress(c.sel); } if(TR!==tk) return;
         try{ await c.run(); }catch(e){} await tgFrame(); await tgSleep(60); if(TR!==tk) return;
         if(c.reset) TR.off=scrollY;
         await tgRebuild(o.fx, c.reset ? 260 : 450); if(TR!==tk) return; }
@@ -313,7 +327,8 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
       /* 화면이 바뀐 경우에만 다시 복제 (안 바뀌면 바로 스크롤) */
       const sig=tgSig(o); if(!TR.inited || sig!==TR.sig || o.prep || o.sync!==TR.lastSync) await tgRebuild(o.fx, 450); if(TR!==tk) return; TR.sig=sig; TR.lastSync=o.sync; TR.inited=true;
       TR.el.querySelector('.tg-ptr').classList.remove('on'); tgDim(true); tgHole(null);
-      /* 3: 어둑한 채로 스르륵 */
+      /* 3: 어둑한 채로 스르륵 (창 안쪽 스크롤이면 그 창을) */
+      if(o.inner){ await tgInner(o.inner, el); if(TR!==tk) return; }
       const g=tgGeom(el,o); await tgScrollTo(g.off); if(TR!==tk) return;
       /* 5·6: 도착한 자리에서 하이라이트가 밝아지고, 잠깐 뒤 설명 카드 */
       const gg=tgGeom(el,o); tgHole(gg); tgDim(false); TR.i=i; TR.cur=el; tgText(i); tgCard(gg);

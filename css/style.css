@@ -2672,8 +2672,8 @@ html.wb-lock #tip{z-index:95}
 .m1-ir .m1-n1{text-align:right;padding-right:7px;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .m1-drvc .m1-sm{align-self:flex-start;margin-top:3px;font-size:12px}
 /* 드라이버 정보: 그림 왼쪽 위 입력 상자 */
-.m1-dfw{position:relative;min-width:0}
-.m1-dinfo{position:absolute;left:12px;top:40px;z-index:2;display:flex;flex-direction:column;gap:5px;width:262px;padding:9px 10px;background:rgba(255,255,255,.92);border:1px solid var(--line-2);border-radius:8px;font-size:12.5px;box-shadow:0 2px 8px rgba(30,20,50,.06)}
+.m1-dfw{position:relative;min-width:0;padding-top:48px}
+.m1-dinfo{position:absolute;left:12px;top:88px;z-index:2;display:flex;flex-direction:column;gap:5px;width:262px;padding:9px 10px;background:rgba(255,255,255,.92);border:1px solid var(--line-2);border-radius:8px;font-size:12.5px;box-shadow:0 2px 8px rgba(30,20,50,.06)}
 .m1-dinfo label{display:grid;grid-template-columns:52px minmax(0,1fr) 22px;align-items:center;gap:6px}
 .m1-dinfo label>span{color:var(--ink-2)}
 .m1-dinfo label.m1-dn{grid-template-columns:1fr}
