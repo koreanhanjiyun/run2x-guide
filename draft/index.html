@@ -2700,8 +2700,6 @@ html.wb-lock #tip{z-index:95}
 .m1-dinfo label{display:grid;grid-template-columns:52px minmax(0,1fr) 22px;align-items:center;gap:6px}
 .m1-dinfo label>span{color:var(--ink-2)}
 .m1-dinfo label.m1-dn{grid-template-columns:1fr}
-.m1-dinfo label.m1-dcg{grid-template-columns:52px 8px minmax(0,1fr) 8px minmax(0,1fr) 22px;gap:4px}
-.m1-dinfo em{font-style:normal;color:var(--muted);font-size:11px}
 .m1-dinfo input{font:inherit;font-size:12.5px;width:100%;padding:1px 6px;border:1px solid var(--line-2);border-radius:5px;background:#fff;color:#1d2128;color-scheme:light}
 .m1-dinfo input[type=number]{text-align:right}
 .m1-dinfo label.m1-dn input{font-size:14px;font-weight:700}
@@ -9925,7 +9923,7 @@ document.addEventListener('pointerup', () => { WB_DRAG = null; });
      좌표 · 범주는 어셈블리에만, 항목은 이름 · 한 개 질량 · 개수(어셈블리 질량 = Σ 질량 × 개수, 개수 0 = 뺌)
      범주 cat: s 현가상 · uf 현가하 앞 · ur 현가하 뒤 (드라이버는 drivers 에서 골라 현가상으로 합산)
      hue: 카드 머리 색(연한 색, 색상만 고름)
-   - 드라이버: teams/<팀>/drivers/<d1|d2|d3> = {s:{시즌:{label, sex, height(cm), mass, gear:{helmet, suit, belt}, seg, hip, back, pedal, sw, cg_meas}}}
+   - 드라이버: teams/<팀>/drivers/<d1|d2|d3> = {s:{시즌:{label, sex, height(cm), mass, gear:{helmet, suit, belt}, seg, hip, back, pedal, sw}}}
    - 좌표: x = 앞 차축 중심에서 뒤로 +, y = 차 중심선에서 왼쪽 +, z = 지면에서 위로 + [mm] (대시보드 CoP 위치와 같은 기준)
    - 질량 표 · 드라이버는 팀원 누구나 고침(계산기는 자유). 대시보드 반영만 담당(프레임) · 회장
    - 저장소가 없으면(로그인 전) 이 브라우저에 저장
@@ -9940,7 +9938,7 @@ const M1CAT = [['s','현가상'], ['uf','현가하 앞'], ['ur','현가하 뒤']
 const M1DRV = {d1:'1st', d2:'2nd', d3:'3rd'};
 const M1HC = {d1:'#6A4294', d2:'#1d5f9a', d3:'#c2410c'};   /* 헬멧 색: 1st 보라 · 2nd 파랑 · 3rd 주황 */
 /* 드라이버 기본값: 예시 차량(그림 윤곽) 시트 · 페달 · 핸들 자리(앞 차축 기준)에 남성 175 cm · 70 kg, 장비 0 */
-const M1DDEF = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, foot:20, hip:{x:590, z:230}, pedal:{x:-220, z:250}, sw:{x:375, z:500}, seg:{}, cg_meas:{x:null, z:null}});
+const M1DDEF = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, foot:20, hip:{x:590, z:230}, pedal:{x:-220, z:250}, sw:{x:375, z:500}, seg:{}});
 const M1SEG = {head:'머리', neck:'목', trunk:'몸통', uarm:'상완', farm:'하완', hand:'손', thigh:'허벅지', shank:'정강이', foot:'발'};
 const m1HueBg = h => h==null ? '' : `hsl(${h} 62% 93%)`, m1HueLn = h => `hsl(${h} 45% 62%)`;
 
@@ -9952,7 +9950,7 @@ const m1Groups = () => Object.entries(MASS).map(([id, d]) => { const v = d && d.
 const m1N = it => it.n==null || !isFinite(it.n) ? 1 : +it.n;
 const m1GSum = g => (g.items || []).reduce((a, it) => a + (isFinite(it.m) && it.m!==null ? +it.m*m1N(it) : 0), 0);
 const m1Drv = id => { const d = DRVS[id], v = d && d.s && d.s[m1Season()]; if(!v) return null; const D = M1DDEF();
-  return {...D, ...v, gear:{...D.gear, ...(v.gear||{})}, hip:{...D.hip, ...(v.hip||{})}, pedal:{...D.pedal, ...(v.pedal||{})}, sw:{...D.sw, ...(v.sw||{})}, seg:{...(v.seg||{})}, cg_meas:{...D.cg_meas, ...(v.cg_meas||{})}}; };
+  return {...D, ...v, gear:{...D.gear, ...(v.gear||{})}, hip:{...D.hip, ...(v.hip||{})}, pedal:{...D.pedal, ...(v.pedal||{})}, sw:{...D.sw, ...(v.sw||{})}, seg:{...(v.seg||{})}}; };
 const m1NewId = () => 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 /* 저장: 고친 뒤 0.6 s 모아서 한 번. 이번 시즌 칸만 바꿈(지난 시즌 기록은 그대로). val = null 이면 이번 시즌 칸을 지움 */
@@ -9996,7 +9994,7 @@ function m1MassHTML(){ const gs = m1Groups(), ed = m1CanEdit(), D = WB.R && WB.R
   const drv = `<div class="m1-card m1-drvc" data-m1rc="0,0" style="${at({c:0, r:0})};--m1bg:${m1HueBg(dhue)};--m1ln:${m1HueLn(dhue)}"><div class="m1-ch"><i class="m1-hdot" style="background:${M1HC[M1.dsel]}"></i><b class="m1-gt">드라이버</b><select data-m1dsel aria-label="계산에 넣을 드라이버">${Object.entries(M1DRV).map(([k, t]) => { const d = m1Drv(k); return `<option value="${k}"${M1.dsel===k?' selected':''}>${t}${d && d.label ? ' · ' + wbEsc(d.label) : ''}${d ? '' : ' (기본값)'}</option>`; }).join('')}</select><span class="m1-sum">${D ? wbFmt(D.m, 2) + ' kg' : ''}</span></div>
     <div class="m1-cm"><span class="m1-cat">현가상</span>${D ? ['x','y','z'].map((f, i) => `<label class="m1-xyz"><span>${f}</span><b>${Math.round([D.x, D.y, D.z][i])}</b></label>`).join('') : ''}<i class="m1-u">mm</i></div>
     <div class="m1-ci">${drow('mass', `몸무게${dd.label ? ' (' + wbEsc(dd.label) + ')' : ''}`)}${drow('gear.helmet', '헬멧')}${drow('gear.suit', '드라이버 복')}${drow('gear.belt', '안전벨트')}
-      <button type="button" class="lnk m1-sm" data-m1tab="drv">${D && D.meas ? '좌표: 실측 CG' : '좌표: 드라이버 모델 체절 합'} · 자세는 드라이버 모델에서 →</button></div></div>`;
+      <button type="button" class="lnk m1-sm" data-m1tab="drv">좌표: 드라이버 모델 체절 합 · 자세는 드라이버 모델에서 →</button></div></div>`;
   const slots = []; for(let r = 0; r <= LY.nr; r++) for(let c = 0; c < M1NC; c++){ if(r===0 && c===0) continue; if(!Object.values(LY.at).some(p => p.c===c && p.r===r)) slots.push(`<div class="m1-slot" data-m1slot="${c},${r}" data-m1rc="${c},${r}" style="${at({c, r})}"></div>`); }
   return `<div class="m1-list" id="m1list" style="--m1nc:${M1NC}">${drv}${gs.map(g => { const bg = m1HueBg(g.hue);
     return `<div class="m1-card" data-m1g="${g.id}" data-m1rc="${LY.at[g.id].c},${LY.at[g.id].r}" style="${at(LY.at[g.id])}${g.hue!=null ? `;--m1bg:${bg};--m1ln:${m1HueLn(g.hue)}` : ''}"><div class="m1-ch">
@@ -10076,19 +10074,17 @@ function m1DrvHTML(){ const ed = m1CanEdit(), d = m1Drv(M1.drv) || M1DDEF(), oth
         <div class="m1-sg" id="m1segs">${m1SegTable(D)}</div>
       </aside></div>`; }
 /* 그림 왼쪽 위 드라이버 정보: 입력 상자 (그림을 다시 그려도 입력 중인 칸이 사라지지 않게 그림 밖에 둠) */
-function m1InfoHTML(d, D, ed){ const cm = d.cg_meas || {};
+function m1InfoHTML(d, D, ed){
   const num = (p, v, u, w) => ed ? `<input type="number" step="any" data-m1o="${p}" value="${v==null || !isFinite(v) ? '' : v}"${w ? ` placeholder="${w}"` : ''} aria-label="${p}">${u ? `<i>${u}</i>` : ''}` : `<b>${v==null || !isFinite(v) ? '-' : v}</b>${u ? `<i>${u}</i>` : ''}`;
   return `<div class="m1-dinfo${ed ? ' ed' : ''}" aria-label="드라이버 정보">
     <label class="m1-dn">${ed ? `<input type="text" data-m1o="label" maxlength="20" value="${wbEsc(d.label||'')}" placeholder="표시 이름 (${M1DRV[M1.drv]})" aria-label="표시 이름">` : `<b>${wbEsc(d.label || M1DRV[M1.drv])}</b>`}</label>
     <label><span>키</span>${num('height', +d.height, 'cm')}</label>
     <label><span>몸무게</span>${num('mass', +d.mass, 'kg')}</label>
-    <label class="m1-dcg"><span>실측 CG</span><em>x</em>${num('cg_meas.x', cm.x, '', '모델')}<em>z</em>${num('cg_meas.z', cm.z, 'mm', '모델')}</label>
-    <p class="m1-fh">실측 CG는 x · z를 둘 다 넣으면 모델 대신 씁니다.</p>
     <p class="m1-dsum">드라이버 합 <b id="m1dsum">${D ? wbFmt(D.m, 1) : '-'}</b> kg (장비 포함)</p></div>`; }
 function m1SegTable(D){ if(!D) return '';
   return `<b>체절 질량 · 무게중심</b><table class="m1-st"><thead><tr><th>체절</th><th>kg</th><th>x</th><th>z</th></tr></thead><tbody>${D.segs.map(sg => `<tr><td>${sg.n}</td><td>${wbFmt(sg.m, 2)}</td><td>${Math.round(sg.x)}</td><td>${Math.round(sg.z)}</td></tr>`).join('')}
     <tr class="m1-sum"><td>합</td><td>${wbFmt(D.m, 2)}</td><td>${Math.round(D.model[0])}</td><td>${Math.round(D.model[1])}</td></tr></tbody></table>
-    ${D.meas ? `<p class="m1-fh">계산에는 실측 CG (x ${Math.round(D.cg[0])} · z ${Math.round(D.cg[1])})를 씁니다.</p>` : ''}${D.warn.length ? `<p class="m1-warn">${D.warn.map(wbEsc).join(' · ')}</p>` : ''}`; }
+    ${D.warn.length ? `<p class="m1-warn">${D.warn.map(wbEsc).join(' · ')}</p>` : ''}`; }
 /* 드라이버 그림 (차 윤곽 위, 앞이 왼쪽). 몸은 알약(두 원 + 두 접선) 모양, 발은 뒤꿈치가 직각인 사다리꼴 */
 const M1F = {x0:-960, x1:2120, z0:-110, z1:1290, W:1000};
 function m1Pill(P, a, b, ra, rb, cls, halo){ const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1e-6, u = [dx/l, dy/l], n = [-u[1], u[0]];
@@ -10107,7 +10103,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
   const cg = D.cg, cr = 10, [cx, cy] = T(cg[0], cg[1]);
   const sym = `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)})"><circle r="${cr+2}" fill="#fff"/><path d="M0 0 L${-cr} 0 A${cr} ${cr} 0 0 1 0 ${-cr} Z M0 0 L${cr} 0 A${cr} ${cr} 0 0 1 0 ${cr} Z" fill="#d92d20"/><circle r="${cr}" fill="none" stroke="#d92d20" stroke-width="1.6"/><line x1="${-cr}" x2="${cr}" stroke="#d92d20" stroke-width="1.2"/><line y1="${-cr}" y2="${cr}" stroke="#d92d20" stroke-width="1.2"/></g>`;
   const bl = .82*D.len.trunk, bk = [J.H[0] + bl*Math.sin(D.back), J.H[1] + bl*Math.cos(D.back)], bm = [J.H[0] + 330*Math.sin(D.back), J.H[1] + 330*Math.cos(D.back)];   /* 등받이: 몸통 뒤에 가려지는 길이 */
-  const meas = D.meas, [hx, hy] = S2(J.HC), hr = mm(D.len.head/2 + 28), hcol = M1HC[M1.drv] || M1HC.d1, vid = 'm1v' + M1.drv;
+  const [hx, hy] = S2(J.HC), hr = mm(D.len.head/2 + 28), hcol = M1HC[M1.drv] || M1HC.d1, vid = 'm1v' + M1.drv;
   const visor = `<clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/>`;
   const foot = `<path d="M${J.F.map(p => S2(p).map(v => v.toFixed(1)).join(',')).join(' L')} Z" class="m1-foot"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
@@ -10128,11 +10124,11 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
     ${pt(J.H, 'hip')}${lab(X(J.H[0]) + 12, Z(J.H[1]) + 26, 'hip', `엉덩이점 x ${f0(d.hip.x)} · z ${f0(d.hip.z)}`, 'pt')}
     ${pt(J.P, 'pedal')}${lab(X(J.P[0]) + 14, Z(J.P[1]) + 30, 'pedal', `발목(복사뼈) x ${f0(d.pedal.x)} · z ${f0(d.pedal.z)}`, 'pt', 'start')}
     ${pt(J.G, 'sw')}${lab(X(J.G[0]) - 12, Z(J.G[1]) - 12, 'sw', `핸들 x ${f0(d.sw.x)} · z ${f0(d.sw.z)}`, 'pt', 'end')}
-    ${sym}<text x="${cx}" y="${cy + 28}" text-anchor="middle" class="m1-tl r">CG${meas ? ' (실측)' : ''} x ${f0(cg[0])} · z ${f0(cg[1])}</text>
+    ${sym}<text x="${cx}" y="${cy + 28}" text-anchor="middle" class="m1-tl r">CG x ${f0(cg[0])} · z ${f0(cg[1])}</text>
     <text x="12" y="22" class="m1-tl">← 진행 방향</text>
   </svg>`; }
 /* 그림 위 입력 칸: 라벨 자리에 띄움. 점(x · z)은 두 칸 */
-const M1EF = {back:[['back','°']], foot:[['foot','°']], hip:[['hip.x','x'],['hip.z','z']], pedal:[['pedal.x','x'],['pedal.z','z']], sw:[['sw.x','x'],['sw.z','z']], height:[['height','cm']], mass:[['mass','kg']], label:[['label','']], cg_meas:[['cg_meas.x','x'],['cg_meas.z','z']]};
+const M1EF = {back:[['back','°']], foot:[['foot','°']], hip:[['hip.x','x'],['hip.z','z']], pedal:[['pedal.x','x'],['pedal.z','z']], sw:[['sw.x','x'],['sw.z','z']], height:[['height','cm']], mass:[['mass','kg']], label:[['label','']]};
 const m1Get = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
 function m1EditOpen(t){ const key = t.dataset.m1e, d = m1Drv(M1.drv) || M1DDEF(), box = t.closest('.m1-dwrap'), rb = box.getBoundingClientRect(), rt = t.getBoundingClientRect();
   const fs = key.startsWith('seg.') ? [[key, 'mm']] : M1EF[key]; if(!fs) return;
@@ -10140,7 +10136,7 @@ function m1EditOpen(t){ const key = t.dataset.m1e, d = m1Drv(M1.drv) || M1DDEF()
   const pop = document.createElement('div'); pop.className = 'm1-pop'; pop.style.left = Math.max(0, rt.left - rb.left - 8) + 'px'; pop.style.top = (rt.bottom - rb.top + 4) + 'px';
   pop.innerHTML = fs.map(([p, u]) => { const v = m1Get(d, p);
     return `<label>${key==='label' ? `<input type="text" data-m1p="${p}" maxlength="20" value="${wbEsc(v||'')}" placeholder="${M1DRV[M1.drv]}">` : `<span>${u==='x'||u==='z' ? u : ''}</span><input type="number" step="any" data-m1p="${p}" value="${v==null || !isFinite(v) || (p.startsWith('seg.') && !(v > 0)) ? '' : v}" placeholder="${ph(p)}">${u==='x'||u==='z' ? '<i>mm</i>' : `<i>${u}</i>`}`}</label>`; }).join('')
-    + `<span class="m1-poph">${key.startsWith('seg.') ? '비우면 키 비율' : key==='cg_meas' ? '둘 다 넣으면 모델 대신 씀 · 비우면 모델' : key==='pedal' ? '발목(복사뼈) 중심 좌표 · 발바닥이 페달에 닿음' : key==='foot' ? '발바닥이 수직에서 앞으로 누운 각도' : 'Enter 저장 · Esc 취소'}</span>`;
+    + `<span class="m1-poph">${key.startsWith('seg.') ? '비우면 키 비율' : key==='pedal' ? '발목(복사뼈) 중심 좌표 · 발바닥이 페달에 닿음' : key==='foot' ? '발바닥이 수직에서 앞으로 누운 각도' : 'Enter 저장 · Esc 취소'}</span>`;
   box.querySelectorAll('.m1-pop').forEach(x => x.remove()); box.appendChild(pop); M1.edit = {key, pop};
   const f = pop.querySelector('input'); f.focus(); f.select(); }
 function m1EditDone(save){ const E = M1.edit; if(!E) return; M1.edit = null;
@@ -10153,7 +10149,7 @@ document.addEventListener('focusout', e => { const E = M1.edit; if(E && E.pop.co
 /* ---------- 이벤트 ---------- */
 const m1Path = (o, p, v) => { const ks = p.split('.'); let t = o; ks.slice(0, -1).forEach(k => { t[k] = {...(t[k]||{})}; t = t[k]; }); t[ks[ks.length - 1]] = v; };
 function m1SaveG(id, fn){ const d = MASS[id], v = d && d.s && d.s[m1Season()]; if(!v) return; const g = JSON.parse(JSON.stringify(v)); g.items = g.items || []; fn(g); m1Store('mass', id, g); }
-function m1SaveDrv(fn, id0){ const id = id0 || M1.drv, d = JSON.parse(JSON.stringify(m1Drv(id) || M1DDEF())); fn(d); m1Store('drv', id, d); }
+function m1SaveDrv(fn, id0){ const id = id0 || M1.drv, d = JSON.parse(JSON.stringify(m1Drv(id) || M1DDEF())); delete d.cg_meas; fn(d); m1Store('drv', id, d); }
 document.addEventListener('click', e => { const t = e.target; if(!t.closest || !t.closest('#wbext')) return;
   const tb = t.closest('[data-m1tab]'); if(tb){ M1.tab = tb.dataset.m1tab; wbPaint(['ext']); return; }
   const dv = t.closest('[data-m1drv]'); if(dv){ M1.drv = dv.dataset.m1drv; wbPaint(['ext']); return; }
@@ -10258,7 +10254,7 @@ const M1TOUR = [
   ['#m1list .m1-drvc', '드라이버 카드', '맨 앞 칸에 고정입니다. 계산에 넣을 드라이버(1st · 2nd · 3rd)를 고르고, 몸무게와 장비는 여기서 고쳐도 드라이버 모델과 같은 값이 됩니다. 좌표는 드라이버 모델이 계산한 무게중심입니다.', {prep:() => m1TourGo('mass', '#m1list')}],
   ['#wb .m1-gadd', '어셈블리 더하기', '새 어셈블리 카드를 만듭니다. 이름 · 범주(현가상 · 현가하 앞 · 뒤) · 좌표 · 항목을 채웁니다.', {prep:() => m1TourGo('mass', '#wb .m1-gadd')}],
   ['#m1dfig', '드라이버 그림', '흰 점(엉덩이점 · 발목 · 핸들)을 끌어 자세를 맞춥니다. 그림 위 숫자(체절 길이 · 등받이 · 발 각도 · 좌표)를 누르면 그 자리에서 고칩니다. 빨간 기호가 드라이버 무게중심입니다.', {prep:() => m1TourGo('drv', '#wbext')}],
-  ['#wb .m1-dinfo', '드라이버 정보', '이름 · 키 · 몸무게를 넣습니다. 체절 길이는 키에 비례해 정해집니다. 실측 무게중심이 있으면 x · z를 둘 다 넣어 모델 대신 씁니다.', {prep:() => m1TourGo('drv', '#wbext')}],
+  ['#wb .m1-dinfo', '드라이버 정보', '이름 · 키 · 몸무게를 넣습니다. 체절 길이는 키에 비례해 정해집니다.', {prep:() => m1TourGo('drv', '#wbext')}],
   ['#wb .m1-dside', '체절 · 장비', '성별에 따라 체절 비율 표를 고르고, 헬멧 · 드라이버 복 · 안전벨트 질량을 넣습니다. [2nd와 같게] 등으로 다른 드라이버의 자세를 그대로 가져옵니다. 아래 표는 체절별 질량 · 무게중심입니다.', {prep:() => m1TourGo('drv', '#wbext')}],
   ['#wb .wb-sec[aria-label="결과"]', '결과', '차 전체 질량 · 무게중심 · 앞뒤 배분 · 정지 코너웨이트 · 관성 모멘트입니다. [대시보드와 비교]를 켜면 대시보드 값이 아래에 작게 나옵니다.', {prep:() => m1TourGo(null, '#wb .wb-sec[aria-label="결과"]')}],
   ['#wbmain', '질량 분포', '어셈블리를 옆과 위에서 본 그림입니다. 원 넓이가 질량에 비례하고, 원에 마우스를 올리면 이름이 나옵니다.', {prep:() => m1TourGo(null, '#wbmain')}],
@@ -10330,15 +10326,14 @@ function driver(d){
     ['허벅지 ×2', 'thigh', lerp(H, K, TB.thigh[2]), 2, 0], ['정강이 ×2', 'shank', lerp(K, A, TB.shank[2]), 2, 0], ['발 ×2', 'foot', add(Hl, mul(fd, TB.foot[2]*Lf)), 2, 0] ]
     .map(([n, s, c, q, ex]) => ({n, m: (d.mass + suit)*frac(s)*q + ex, x: c[0], z: c[1]}));   // 드라이버 복은 몸무게처럼 비율로 나눔
   const m = segs.reduce((a, s) => a + s.m, 0), model = m > 0 ? [segs.reduce((a, s) => a + s.m*s.x, 0)/m, segs.reduce((a, s) => a + s.m*s.z, 0)/m] : [0, 0];
-  const cm = d.cg_meas || {}, meas = cm.x !== null && cm.z !== null && isFinite(cm.x) && isFinite(cm.z);
   const lens = {}, lensDef = {}; for(const s of ['head','neck','trunk','uarm','farm','hand','thigh','shank','foot']){ lens[s] = L(s); lensDef[s] = L0(s); }
-  return { m, model, cg: meas ? [cm.x, cm.z] : model, meas, back: th, warn, segs, len: lens, lenDef: lensDef,
+  return { m, model, cg: model, back: th, warn, segs, len: lens, lenDef: lensDef,
     j: {H, S, V, N, Sh, HC, E, W: Wr, K, A, F: [B0, T0, T1, B1], P: [d.pedal.x, d.pedal.z], G: [d.sw.x, d.sw.z]} };
 }
 function calc(I){
   const drv = {}; for(const k in I.drv) drv[k] = driver(I.drv[k]);
   const D = drv[I.dsel] || drv.d1, me = D.m > 0 ? D.m : 0;
-  const di = {m: me, x: D.cg[0], y: 0, z: D.cg[1], cat: 'd', name: '드라이버', meas: D.meas};   // 드라이버는 중심선 위 (좌우 대칭)
+  const di = {m: me, x: D.cg[0], y: 0, z: D.cg[1], cat: 'd', name: '드라이버'};   // 드라이버는 중심선 위 (좌우 대칭)
   const all = I.items.concat(me > 0 ? [di] : []);
   const sum = (arr, f) => arr.reduce((a, it) => a + f(it), 0);
   const m = sum(all, it => it.m);
@@ -10365,7 +10360,6 @@ function calc(I){
     {n:'좌우 대칭 두 어셈블리', I:{L:1600, tf:1200, tr:1200, items:[{m:50, x:800, y:300, z:300, cat:'s'}, {m:50, x:800, y:-300, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:50, fr:50, ixx:9, izz:9, iyy:0}, src:'Ixx = 2 × 50 × 0.3² = 9 kg·m²'},
     {n:'왼쪽으로 60 mm', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:55, cw_fl:27.5, cw_rr:22.5, cross:50}, src:'50 + 60 ÷ 1200 × 100 = 55 %'},
     {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:0, y:0, z:230, cat:'uf'}, {m:34, x:1600, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},
-    {n:'드라이버 실측 CG 우선', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, cg_meas:{x:700, z:350}}}}, expect:{m:70, m_drv:70, fr:56.25, h:350}, src:'(1600 − 700) ÷ 1600 = 56.25 %'},
     {n:'체절 질량 합 = 몸무게 (남)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_drv:70}, src:'체절 비율 합 = 1 (de Leva 1996)'},
     {n:'체절 질량 합 = 몸무게 (여)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), sex:'f', height:165, mass:58}}}, expect:{m_drv:58}, src:'비율 합 0.9999 → 1로 맞춤'},
     {n:'장비 더하기', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, gear:{helmet:1.5, suit:2, belt:1}}}}, expect:{m_drv:74.5}, src:'70 + 1.5 + 2 + 1'}
