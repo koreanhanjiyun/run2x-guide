@@ -243,7 +243,7 @@ async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
     if(await dvSave(d.dk, {v: +R.out[d.k].toFixed(d.d||0), st:'calc', src:T.name})) n++; }
   wbModalClose(); toast(`${n}개 값을 대시보드에 반영했습니다.`); wbPaint(['in','out']); }
 /* .json 내보내기 · 가져오기 (사이트 양식) */
-function wbExport(){ const T = wbT(), doc = {format:'run2x-tool', tool:WB.id, name:T.name, ver:1, season:typeof dvSeason==='function' ? dvSeason() : '', at:new Date().toISOString(), inputs:{...WB.I}};
+function wbExport(){ const T = wbT(), doc = {format:'run2x-tool', tool:WB.id, name:T.name, ver:1, season:typeof dvSeason==='function' ? dvSeason() : '', at:new Date().toISOString(), inputs:{...WB.I}, ...(T.extGet ? {ext:T.extGet()} : {})};   /* ext: 도구가 따로 가진 표(트랙 · 모터 곡선 등) */
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(doc, null, 2)], {type:'application/json'}));
   a.download = `run2x_${WB.id}_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0); }
 function wbImport(file){ const fr = new FileReader(); fr.onload = () => { let d;
@@ -251,6 +251,7 @@ function wbImport(file){ const fr = new FileReader(); fr.onload = () => { let d;
     if(!d || d.format!=='run2x-tool' || !d.inputs){ toast('이 사이트에서 내보낸 도구 파일이 아닙니다.'); return; }
     if(d.tool!==WB.id){ toast(`다른 도구(${wbEsc(d.name || d.tool)})의 파일입니다.`); return; }
     let n = 0; wbT().inputs.forEach(x => { const v = d.inputs[x.k]; if(typeof v==='number' && isFinite(v)){ WB.I[x.k] = v; n++; } });
+    if(d.ext && wbT().extSet) wbT().extSet(d.ext);
     wbSave(); wbPaint(['in']); wbCalc(); toast(`입력 ${n}개를 가져왔습니다${d.at ? ' (' + d.at.slice(0,10) + ' 저장본)' : ''}.`); };
   fr.readAsText(file); }
 
@@ -361,7 +362,7 @@ document.addEventListener('change', e => { const t = e.target; if(!WB.id || !t.m
 function wbCursor(which, idx, step){ const R = WB.R; if(!R) return; if(!R.x && which!=='sig') return;
   const sweep = which==='sig' && WB.xa.startsWith('in:'); if(sweep && !(WB.sw && WB.sw.X)) return;
   const n = sweep ? WB.sw.X.length : R.x.d.length, cur = sweep ? WB.si : WB.xi, nx = Math.max(0, Math.min(n - 1, idx != null ? idx : cur + step));
-  if(nx===cur) return; if(sweep){ WB.si = nx; wbPaint(['sig']); return; } WB.xi = nx; wbPaint(['main','sig']); wb3dUpdate(); }
+  if(nx===cur) return; if(sweep){ WB.si = nx; wbPaint(['sig']); return; } WB.xi = nx; wbPaint(['main','sig']); wb3dUpdate(); if(wbT().onCursor) wbT().onCursor(nx); }
 function wbPick(svg, e){ if(!svg.querySelector('.wb-hit')) return; const hit = svg.querySelector('.wb-hit'), rc = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, px = (e.clientX - rc.left)/rc.width*vb.width;
   const L = +hit.dataset.wbl, W = +hit.dataset.wbw, x0 = +hit.dataset.wbx0, x1 = +hit.dataset.wbx1, xv = x0 + (px - L)/W*(x1 - x0), which = svg.dataset.wbp;
   const xd = which==='sig' && WB.xa.startsWith('in:') ? WB.sw.X : which==='sig' && WB.xa.startsWith('sig:') ? WB.R.sig[WB.xa.slice(4)] : WB.R.x.d;

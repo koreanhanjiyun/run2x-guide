@@ -2760,3 +2760,22 @@ html.wb-lock #tip{z-index:95}
 .shp-guide{stroke:#d92d20;stroke-width:1.5;stroke-dasharray:6 4;pointer-events:none}
 .shp-ln line{stroke:#d92d20;stroke-width:2}
 .shp-ln text{fill:#d92d20;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px}
+/* 도구 2: 트랙 · 모터 곡선 표, 트랙 지도 */
+.t2-h{flex-wrap:wrap;gap:10px 16px}
+.t2-vw{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12.5px}
+.t2-tr{display:grid;grid-template-columns:minmax(320px,1fr) minmax(360px,1.1fr);gap:18px;align-items:start}
+.t2-ed{display:flex;flex-direction:column;gap:6px;min-width:0}
+.t2-ed label{font-size:12.5px;font-weight:600}.t2-ed label .muted{font-weight:400;margin-left:4px}
+.t2-ed textarea{width:100%;box-sizing:border-box;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
+.t2-ed textarea:focus{outline:none;border-color:var(--accent)}
+.t2-msg{font-size:12.5px;color:var(--ink-2)}
+.t2-btns{display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap}
+.t2-map,.t2-mc{margin:0;display:flex;flex-direction:column;gap:4px;min-width:0}
+.t2-msvg{width:100%;max-height:300px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px}
+.t2-line{fill:none;stroke:#7d8394;stroke-width:3;stroke-linejoin:round}
+.t2-st{fill:#232731;stroke:#fff;stroke-width:1.5}.t2-stt{font-size:11px;fill:var(--ink-2);paint-order:stroke;stroke:var(--panel-2);stroke-width:3px}
+.t2-cur{fill:#fff;stroke:#232731;stroke-width:2.5}
+.t2-map figcaption{font-size:12px;display:flex;align-items:center;gap:6px}
+.t2-grad{display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(to right,hsl(230 75% 45%),hsl(115 75% 45%),hsl(0 75% 45%))}
+.t2-gt td.ok{color:#257a47}.t2-gt .t2-sum td{border-top:2px solid var(--line-2)}
+.t2-part .dp-plots{grid-template-columns:minmax(0,820px)}
