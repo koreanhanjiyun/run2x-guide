@@ -2746,6 +2746,7 @@ html.wb-lock #tip{z-index:95}
 .m1-half.ro{cursor:default;color:var(--accent);font-weight:600}
 #figModal.over-wb{z-index:80}
 .m1-rec{font-size:11.5px;fill:var(--muted)}.m1-rec.on{fill:#b45309;font-weight:600}
+.dv-ed{display:inline-flex;align-items:center;gap:4px}.dv-ed .dv-in{width:64px}.dv-sep{color:var(--muted);font-weight:700}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -3342,10 +3343,10 @@ const DKEYS = [
   {"k": "h_s", "n": "현가상질량 무게중심 높이", "u": "mm", "p": "프레임", "it": "g_mass", "calc": true, "def": "① 현가상질량만의 무게중심 지면 높이. ② 부품 질량 표에서 계산. ③ 차 전체 CG 높이 `h`와 다르다. 롤(차체가 기우는 양) 계산에 쓴다.", "fig": false},
   {"k": "m_us_f", "n": "현가하질량 (앞, 바퀴 하나)", "u": "kg", "p": "프레임", "it": "g_mass", "calc": false, "def": "① 바퀴와 함께 오르내리는 질량, 바퀴 하나 기준(타이어, 휠, 허브, 업라이트, 캘리퍼, 디스크 + 걸친 부품 절반). ② 부품 질량 표의 현가하 범주. ③ 앞축 두 바퀴 합이 아니라 바퀴 하나 값이다.", "fig": true},
   {"k": "m_us_r", "n": "현가하질량 (뒤, 바퀴 하나)", "u": "kg", "p": "프레임", "it": "g_mass", "calc": false, "def": "① 바퀴와 함께 오르내리는 질량, 바퀴 하나 기준(타이어, 휠, 허브, 업라이트, 캘리퍼, 디스크 + 걸친 부품 절반). ② 부품 질량 표의 현가하 범주. ③ 앞축 두 바퀴 합이 아니라 바퀴 하나 값이다.", "fig": true},
-  {"k": "fr", "n": "앞 하중 배분", "u": "%", "p": "프레임", "it": "g_mass", "calc": false, "def": "① 앞축 두 바퀴 하중 ÷ 전체 하중. ② 코너 웨이트 스케일. ③ 정지 값이다. 주행 중 다운포스 · 가감속으로 바뀌는 배분은 대시보드 그림에서 따로 보여 준다.", "fig": false},
-  {"k": "left", "n": "왼쪽 하중 배분", "u": "%", "p": "프레임", "it": "g_mass", "calc": true, "def": "① 왼쪽 두 바퀴 하중 ÷ 전체 하중. 50 %면 좌우 대칭. ② 코너 웨이트 스케일. ③ 크로스 웨이트(대각 두 바퀴 합의 비율)와 다르다.", "fig": false},
+  {"k": "fr", "n": "앞 : 뒤 하중 배분", "u": "%", "p": "프레임", "it": "g_mass", "calc": false, "def": "① 앞축 두 바퀴 하중 ÷ 전체 하중(저장 값은 앞 %, 뒤 = 100 − 앞). 대시보드에는 '앞 : 뒤'로 두 숫자를 보이고, 어느 쪽을 고쳐도 다른 쪽이 따라 바뀐다. ② 코너 웨이트 스케일. ③ 정지 값이다. 주행 중 다운포스 · 가감속으로 바뀌는 배분은 대시보드 그림에서 따로 보여 준다.", "fig": false},
+  {"k": "left", "n": "왼 : 오른 하중 배분", "u": "%", "p": "프레임", "it": "g_mass", "calc": true, "def": "① 왼쪽 두 바퀴 하중 ÷ 전체 하중(저장 값은 왼 %, 오른 = 100 − 왼). 50 %면 좌우 대칭. ② 코너 웨이트 스케일. ③ 크로스 웨이트(대각 두 바퀴 합의 비율)와 다르다.", "fig": false},
   {"k": "h", "n": "무게중심 높이", "u": "mm", "p": "프레임", "it": "g_mass", "calc": false, "def": "① 차 전체(현가상 + 현가하) 무게중심의 지면 높이. ② 부품 질량 표에서 계산하거나, 차를 앞뒤로 기울여 앞축 하중 변화로 실측(기울임 측정). 실측 때는 댐퍼를 고정 링크로 바꾸고 타이어 공기압을 맞춘 뒤 잰다. ③ 프레임 하단이 아니라 지면 기준이다.", "fig": true},
-  {"k": "a_cg", "n": "무게중심 위치 (앞축부터)", "u": "mm", "p": "프레임", "it": "", "calc": true, "def": "① 앞축 중심선에서 CG까지 앞뒤 거리 = 휠베이스 × (1 − 앞 배분). ② 계산값. ③ 뒤축부터 잰 값과 헷갈리지 않게 '앞축부터'로 통일.", "fig": false},
+  {"k": "a_cg", "n": "무게중심 위치 (뒤 차축에서 앞으로)", "u": "mm", "p": "프레임", "it": "", "calc": true, "def": "① 뒤 차축 중심선에서 앞으로 CG까지 거리 = 휠베이스 × 앞 배분. 사이트 차량 좌표계(원점 = 뒤 차축 중심)의 CG x와 같은 값. ② 계산값(따로 저장하지 않음). 대시보드에서 이 값을 고치면 앞 배분이 역으로 바뀐다. ③ 2026-11-04 좌표계 통일로 '앞축부터'에서 바꿈.", "fig": false},
   {"k": "ixx", "n": "롤 관성 모멘트", "u": "kg·m²", "p": "프레임", "it": "w_cg", "calc": true, "def": "① CG를 지나는 앞뒤 축(롤) · 좌우 축(피치) · 수직 축(요) 둘레의 회전 관성. ② 부품 질량 표에서 각 부품을 점 질량으로 보고 합산한 추정치. ③ 부품 자체 크기에 의한 관성을 빼므로 실제보다 조금 작게 나온다.", "fig": false},
   {"k": "iyy", "n": "피치 관성 모멘트", "u": "kg·m²", "p": "프레임", "it": "w_cg", "calc": true, "def": "① CG를 지나는 앞뒤 축(롤) · 좌우 축(피치) · 수직 축(요) 둘레의 회전 관성. ② 부품 질량 표에서 각 부품을 점 질량으로 보고 합산한 추정치. ③ 부품 자체 크기에 의한 관성을 빼므로 실제보다 조금 작게 나온다.", "fig": false},
   {"k": "izz", "n": "요 관성 모멘트", "u": "kg·m²", "p": "프레임", "it": "w_cg", "calc": true, "def": "① CG를 지나는 앞뒤 축(롤) · 좌우 축(피치) · 수직 축(요) 둘레의 회전 관성. ② 부품 질량 표에서 각 부품을 점 질량으로 보고 합산한 추정치. ③ 부품 자체 크기에 의한 관성을 빼므로 실제보다 조금 작게 나온다.", "fig": false},
@@ -9442,18 +9443,20 @@ function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {}
 const dashVmax = P => P.nmax/P.gr*2*Math.PI*(P.rt/1000)*60/1000;   /* 모터 회전수 한계 최고속 [km/h] */
 /* 코너 반경 조절기: 곡률(1/R)을 고르게 나눠, 오른쪽으로 갈수록 반경이 줄고 조향이 커진다. 60 m → 설계 최소 회전 반경 */
 const R_MAX = 60, rToU = (R, rmin) => Math.round((1/R - 1/R_MAX)/(1/rmin - 1/R_MAX)*1000), uToR = (u, rmin) => 1/(1/R_MAX + u/1000*(1/rmin - 1/R_MAX));
-const dashFmt = (k, v) => { const r = DASH.GROUPS.flatMap(g=>g[1]).find(x=>x[0]===k); const d = r ? r[1] : 1; return Number(v).toFixed(d); };
+/* 배분(앞 : 뒤, 왼 : 오른)은 저장 값 하나(앞 · 왼 %)를 두 숫자로 */
+const DV_RATIO = {fr:['앞','뒤'], left:['왼','오른']};
+const dashFmt = (k, v) => { if(DV_RATIO[k]){ const a = Number(v); return `${a.toFixed(1)} : ${(100 - a).toFixed(1)}`; } const r = DASH.GROUPS.flatMap(g=>g[1]).find(x=>x[0]===k); const d = r ? r[1] : 1; return Number(v).toFixed(d); };
 /* 에어로 제외: 다운포스·항력을 0으로 두고 같은 조건을 다시 계산 */
 const dashP = () => DASH.C.aero ? DASH.P : {...DASH.P, cla:0, cda:0};
 function dashCalc(){ const C = DASH.C; return DASHCALC(dashP(), {v:C.v, R: C.straight ? Infinity : C.R, ax:C.ax, dir:C.dir}); }
 
 function dashValuesHTML(){ const P = DASH.P;
   const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
-  const calc = (k, v, u) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-calc" title="계산값"></span></dd></div>`;
+  const calc = (k, v, u, inv) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd>${inv && canEditDv(inv) ? `<button type="button" class="dv-v" data-dk="${k}" data-dinv="${inv}" title="계산값 · 고치면 ${DK[inv].n}이 역으로 바뀜">` : '<span class="dv-v ro">'}<b>${v}</b> <span class="dv-u">${u}</span>${inv && canEditDv(inv) ? '</button>' : '</span>'}<span class="dv-s s-calc" title="계산값"></span></dd></div>`;
+  const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr');
   return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const can = canEditDv(k), st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
-      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd>${can ? `<button type="button" class="dv-v" data-dk="${k}" title="눌러서 고치기">` : `<span class="dv-v ro" title="${DK[k].p} 담당만 고칠 수 있습니다">`}<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}${can ? '</button>' : '</span>'}${can && st!=='ex' ? `<button type="button" class="dv-s s-${st}" data-dst="${k}" title="${DASH.STL[st]} · 눌러서 상태 바꾸기" aria-label="상태 ${DASH.STL[st]}"></button>` : `<span class="dv-s s-${st}" title="${DASH.STL[st]}${e&&e.src?' · '+esc(e.src):''}"></span>`}</dd></div>`; }).join('')}
+      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd>${can ? `<button type="button" class="dv-v" data-dk="${k}" title="눌러서 고치기">` : `<span class="dv-v ro" title="${DK[k].p} 담당만 고칠 수 있습니다">`}<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}${can ? '</button>' : '</span>'}${can && st!=='ex' ? `<button type="button" class="dv-s s-${st}" data-dst="${k}" title="${DASH.STL[st]} · 눌러서 상태 바꾸기" aria-label="상태 ${DASH.STL[st]}"></button>` : `<span class="dv-s s-${st}" title="${DASH.STL[st]}${e&&e.src?' · '+esc(e.src):''}"></span>`}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
       ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h') : ''}
-      ${g==='질량 · 무게중심' ? calc('a_cg', (P.L*(1-P.fr/100)).toFixed(0), 'mm') : ''}
       </dl></section>`).join('')}</div>
     <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><i class="dv-s s-asm"></i>가정</span><span><i class="dv-s s-calc"></i>계산값</span><span><i class="dv-s s-ex"></i>예시값</span><span class="dv-legn">${SH.on ? '값을 누르면 고칩니다(담당 파트만). 상태 점을 누르면 확정 · 검토 중 · 가정이 바뀝니다.' : '팀에 로그인하지 않아 이 브라우저에만 저장됩니다.'}</span></p>`;
 }
@@ -9507,16 +9510,26 @@ function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
   if(all || which.includes('cond')){ $('#dcond').innerHTML = dashCondHTML(); dashBipolar(); }
   if(all || which.includes('figs')) $('#dfigs').innerHTML = dashFigsHTML();
   if(all || which.includes('part')) $('#dpart').innerHTML = dashPartHTML(); }
-/* 값 고치기: 누르면 입력칸 → Enter·바깥 누르기로 저장, Esc 취소. 처음 넣는 값은 '검토 중' */
+/* 값 고치기: 누르면 입력칸 → Enter·바깥 누르기로 저장, Esc 취소. 처음 넣는 값은 '검토 중'
+   - 배분(앞 : 뒤, 왼 : 오른): 두 칸, 한쪽을 고치면 다른 쪽이 100 − 값으로 따라 바뀜(둘 다 고칠 수 있음). 저장은 앞 · 왼 값
+   - 무게중심 위치(계산값): 고치면 앞 배분 = 위치 ÷ 휠베이스로 역계산해 저장 */
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('.dv-v[data-dk]'); if(!b) return;
-  const k = b.dataset.dk; if(!canEditDv(k)) return;
-  const inp = document.createElement('input'); inp.type = 'number'; inp.step = 'any'; inp.value = DASH.ST[k]==='ex' ? '' : DASH.P[k]; inp.placeholder = String(DASH.P[k]); inp.className = 'dv-in'; inp.setAttribute('aria-label', DK[k].n + ' 값 입력');
-  b.replaceWith(inp); inp.focus(); inp.select();
-  let fin = false; const done = ok => { if(fin || !inp.isConnected) return; fin = true; const t = inp.value.trim(), x = parseFloat(t);
-    if(ok && t!=='' && isFinite(x) && !(DASH.ST[k]!=='ex' && x === DASH.P[k])) dvSave(k, {v: x}); else dashPaint(['vals']); };
-  inp.addEventListener('keydown', ev => { if(ev.key==='Enter'){ ev.preventDefault(); done(true); } else if(ev.key==='Escape'){ done(false); } });
-  inp.addEventListener('blur', () => done(true));
+  const k = b.dataset.dk, inv = b.dataset.dinv, sk = inv || k; if(!canEditDv(sk)) return;
+  const P = DASH.P, ex = DASH.ST[sk]==='ex', box = document.createElement('span'); box.className = 'dv-ed';
+  const mk = (v, lab) => { const i = document.createElement('input'); i.type = 'number'; i.step = 'any'; i.className = 'dv-in'; i.value = ex ? '' : v; i.placeholder = String(v); i.setAttribute('aria-label', lab); return i; };
+  let ins;
+  if(DV_RATIO[k]){ const [l1, l2] = DV_RATIO[k], a = mk(+(+P[k]).toFixed(2), l1), c = mk(+(100 - P[k]).toFixed(2), l2), sep = document.createElement('span'); sep.className = 'dv-sep'; sep.textContent = ':';
+    a.addEventListener('input', () => { const x = parseFloat(a.value); c.value = isFinite(x) ? +(100 - x).toFixed(2) : ''; });
+    c.addEventListener('input', () => { const x = parseFloat(c.value); a.value = isFinite(x) ? +(100 - x).toFixed(2) : ''; });
+    box.append(a, sep, c); ins = [a, c]; }
+  else { const v = k==='a_cg' ? +(P.L*P.fr/100).toFixed(0) : P[k], i = mk(v, DK[k].n.replace(/<[^>]+>/g, '') + ' 값 입력'); if(k==='a_cg') i.value = v; box.append(i); ins = [i]; }
+  b.replaceWith(box); ins[0].focus(); ins[0].select();
+  let fin = false; const done = ok => { if(fin || !box.isConnected) return; fin = true; const t = ins[0].value.trim(); let x = parseFloat(t);
+    if(k==='a_cg' && isFinite(x) && P.L > 0) x = +(x/P.L*100).toFixed(3);
+    if(ok && t!=='' && isFinite(x) && !(DASH.ST[sk]!=='ex' && x === P[sk])) dvSave(sk, {v: x}); else dashPaint(['vals']); };
+  ins.forEach(i => i.addEventListener('keydown', ev => { if(ev.key==='Enter'){ ev.preventDefault(); done(true); } else if(ev.key==='Escape'){ done(false); } }));
+  box.addEventListener('focusout', ev => { if(!box.contains(ev.relatedTarget)) done(true); });
 });
 /* 상태 점: 확정 → 검토 중 → 가정 → 확정 */
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dst]'); if(!b) return;
