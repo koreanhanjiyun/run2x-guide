@@ -2710,3 +2710,4 @@ html.wb-lock #tip{z-index:95}
 .wb-oc{flex:0 0 auto;min-width:250px}
 .wb-oc .wb-or{column-gap:28px}
 .wb-oc.wide .m1-cwg{min-width:330px}
+.m1-reset.sure{color:var(--verify-fg);background:var(--verify-bg);border-radius:5px;padding:1px 8px;text-decoration:none}

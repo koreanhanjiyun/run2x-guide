@@ -159,7 +159,7 @@ function m1DrvHTML(){ const ed = m1CanEdit(), d = m1Drv(M1.drv) || M1DDEF(), oth
   const gin = (p, lab) => `<label class="m1-gi"><span>${lab}</span>${ed ? m1Num(m1Get(d, p) || null, `data-m1d="${p}" min="0" placeholder="0" aria-label="${lab} [kg]"`) : `<b>${wbFmt(m1Get(d, p) || 0, 1)}</b>`}<i>kg</i></label>`;
   return `<div class="m1-top"><div class="m1-ptabs">${Object.entries(M1DRV).map(([k, t]) => { const dd = m1Drv(k); return `<button type="button" data-m1drv="${k}" aria-pressed="${M1.drv===k}"><i class="m1-hdot" style="background:${M1HC[k]}"></i>${t}${dd && dd.label ? ' · ' + wbEsc(dd.label) : ''}${dd ? '' : '<span>기본값</span>'}</button>`; }).join('')}</div>
       <span class="m1-hint">${ed ? '그림 위 숫자를 누르면 고칩니다 · 흰 점(엉덩이점 · 발목 · 핸들)은 끌어서 옮깁니다' : '지난 시즌 기록은 회장만 고칠 수 있습니다'}</span>
-      ${ed && m1Drv(M1.drv) ? `<button type="button" class="lnk" data-m1dreset>기본값으로</button>` : ''}</div>
+      ${ed && m1Drv(M1.drv) ? `<button type="button" class="lnk m1-reset" data-m1dreset title="엉덩이점 · 등받이 · 발목 · 발 각도 · 핸들 · 직접 고친 체절 길이를 처음으로 (이름 · 키 · 몸무게 · 성별 · 장비는 그대로)">자세 초기화</button>` : ''}</div>
     <div class="m1-dgrid"><div class="m1-dfw">${m1InfoHTML(d, D, ed)}<div class="m1-dwrap" id="m1dfig">${m1DrvFig(WB.R)}</div></div>
       <aside class="m1-dside" aria-label="드라이버 설정">
         <div class="m1-sg"><b>체절 비율</b><div class="m1-seg2">${[['m','남성'],['f','여성']].map(([k, t]) => `<button type="button" data-m1sex="${k}" aria-pressed="${(d.sex||'m')===k}"${ed ? '' : ' disabled'}>${t}</button>`).join('')}</div></div>
@@ -184,6 +184,10 @@ function m1SegTable(D){ if(!D) return '';
     ${D.warn.length ? `<p class="m1-warn">${D.warn.map(wbEsc).join(' · ')}</p>` : ''}`; }
 /* 드라이버 그림 (차 윤곽 위, 앞이 왼쪽). 몸은 알약(두 원 + 두 접선) 모양, 발은 뒤꿈치가 직각인 사다리꼴 */
 const M1F = {x0:-960, x1:2120, z0:-110, z1:1290, W:1000};
+const M1HT = 28;   /* 헬멧 두께(그림용, 머리 길이 양쪽에 더함). 계산은 머리 길이만 씀 */
+/* 범위: 점(엉덩이점 · 발목 · 핸들)은 그림 안에서만, 각도는 등받이 0~70°, 발 0~60° */
+const M1LIM = {x:[M1F.x0 + 40, M1F.x1 - 40], z:[0, M1F.z1 - 40], back:[0, 70], foot:[0, 60]};
+const m1Clamp = (v, [a, b]) => Math.max(a, Math.min(b, v));
 function m1Pill(P, a, b, ra, rb, cls, halo){ const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1e-6, u = [dx/l, dy/l], n = [-u[1], u[0]];
   const sp = Math.max(-.99, Math.min(.99, (ra - rb)/l)), cp = Math.sqrt(1 - sp*sp), e1 = [n[0]*cp + u[0]*sp, n[1]*cp + u[1]*sp], e2 = [-n[0]*cp + u[0]*sp, -n[1]*cp + u[1]*sp];
   const pt = (c, r, e) => `${(c[0] + r*e[0]).toFixed(1)},${(c[1] + r*e[1]).toFixed(1)}`;
@@ -200,7 +204,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
   const cg = D.cg, cr = 10, [cx, cy] = T(cg[0], cg[1]);
   const sym = `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)})"><circle r="${cr+2}" fill="#fff"/><path d="M0 0 L${-cr} 0 A${cr} ${cr} 0 0 1 0 ${-cr} Z M0 0 L${cr} 0 A${cr} ${cr} 0 0 1 0 ${cr} Z" fill="#d92d20"/><circle r="${cr}" fill="none" stroke="#d92d20" stroke-width="1.6"/><line x1="${-cr}" x2="${cr}" stroke="#d92d20" stroke-width="1.2"/><line y1="${-cr}" y2="${cr}" stroke="#d92d20" stroke-width="1.2"/></g>`;
   const bl = .82*D.len.trunk, bk = [J.H[0] + bl*Math.sin(D.back), J.H[1] + bl*Math.cos(D.back)], bm = [J.H[0] + 330*Math.sin(D.back), J.H[1] + 330*Math.cos(D.back)];   /* 등받이: 몸통 뒤에 가려지는 길이 */
-  const [hx, hy] = S2(J.HC), hr = mm(D.len.head/2 + 28), hcol = M1HC[M1.drv] || M1HC.d1, vid = 'm1v' + M1.drv;
+  const [hx, hy] = S2(J.HC), hr = mm(D.len.head/2 + M1HT), hcol = M1HC[M1.drv] || M1HC.d1, vid = 'm1v' + M1.drv;
   const visor = `<clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/>`;
   const foot = `<path d="M${J.F.map(p => S2(p).map(v => v.toFixed(1)).join(',')).join(' L')} Z" class="m1-foot"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
@@ -216,7 +220,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
       ${m1Pill(null, S2(J.H), S2(J.K), mm(86), mm(62), 'm1-p-leg', hal)}${m1Pill(null, S2(J.K), S2(J.A), mm(60), mm(44), 'm1-p-leg', hal)}${foot}
       ${m1Pill(null, S2(J.Sh), S2(J.E), mm(50), mm(40), 'm1-p-arm', hal)}${m1Pill(null, S2(J.E), S2(J.W), mm(38), mm(31), 'm1-p-arm', hal)}<circle cx="${X(J.W[0]).toFixed(1)}" cy="${Z(J.W[1]).toFixed(1)}" r="${mm(42).toFixed(1)}" class="m1-p-hand"/>
     </g>
-    ${segLab(J.H, J.K, 'thigh', 0, 32)}${segLab(J.K, J.A, 'shank', -6, 34)}${segLab(J.F[0], J.F[2], 'foot', -48, -6)}${lab(X(J.F[1][0]) - 10, Z(J.F[1][1]) - 10, 'foot', `발 각도 ${f0(isFinite(d.foot) ? d.foot : 20)}°`, 'pt', 'end')}${segLab(J.H, J.S, 'trunk', 86, -16)}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) + 4, 'seg.head', `머리 ${Math.round(D.len.head)}`, d.seg.head > 0 ? 'set' : 'def')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 16, 'seg.neck', `목 ${Math.round(D.len.neck)}`, d.seg.neck > 0 ? 'set' : 'def')}${segLab(J.Sh, J.E, 'uarm', 0, -20)}${segLab(J.E, J.W, 'farm', 0, -20)}
+    ${segLab(J.H, J.K, 'thigh', 0, 32)}${segLab(J.K, J.A, 'shank', -6, 34)}${segLab(J.F[0], J.F[2], 'foot', -48, -6)}${lab(X(J.F[1][0]) - 10, Z(J.F[1][1]) - 10, 'foot', `발 각도 ${f0(isFinite(d.foot) ? d.foot : 20)}°`, 'pt', 'end')}${segLab(J.H, J.S, 'trunk', 86, -16)}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) + 4, 'seg.head', `머리 ${Math.round(D.len.head)} · 헬멧 바깥 약 ${Math.round(D.len.head + 2*M1HT)}`, d.seg.head > 0 ? 'set' : 'def')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 16, 'seg.neck', `목 ${Math.round(D.len.neck)}`, d.seg.neck > 0 ? 'set' : 'def')}${segLab(J.Sh, J.E, 'uarm', 0, -20)}${segLab(J.E, J.W, 'farm', 0, -20)}
     ${lab(X(bm[0]) + 46, Z(bm[1]) + 46, 'back', `등받이 ${f0(d.back)}°`, 'pt')}
     ${pt(J.H, 'hip')}${lab(X(J.H[0]) + 12, Z(J.H[1]) + 26, 'hip', `엉덩이점 x ${f0(d.hip.x)} · z ${f0(d.hip.z)}`, 'pt')}
     ${pt(J.P, 'pedal')}${lab(X(J.P[0]) + 14, Z(J.P[1]) + 30, 'pedal', `발목(복사뼈) x ${f0(d.pedal.x)} · z ${f0(d.pedal.z)}`, 'pt', 'start')}
@@ -232,12 +236,14 @@ function m1EditOpen(t){ const key = t.dataset.m1e, d = m1Drv(M1.drv) || M1DDEF()
   const pop = document.createElement('div'); pop.className = 'm1-pop'; pop.style.left = Math.max(0, rt.left - rb.left - 8) + 'px'; pop.style.top = (rt.bottom - rb.top + 4) + 'px';
   pop.innerHTML = fs.map(([p, u]) => { const v = m1Get(d, p);
     return `<label>${key==='label' ? `<input type="text" data-m1p="${p}" maxlength="20" value="${wbEsc(v||'')}" placeholder="${M1DRV[M1.drv]}">` : `<span>${u==='x'||u==='z' ? u : ''}</span><input type="number" step="any" data-m1p="${p}" value="${v==null || !isFinite(v) || (p.startsWith('seg.') && !(v > 0)) ? '' : v}" placeholder="${ph(p)}">${u==='x'||u==='z' ? '<i>mm</i>' : `<i>${u}</i>`}`}</label>`; }).join('')
-    + `<span class="m1-poph">${key.startsWith('seg.') ? '비우면 키 비율' : key==='pedal' ? '발목(복사뼈) 중심 좌표 · 발바닥이 페달에 닿음' : key==='foot' ? '발바닥이 수직에서 앞으로 누운 각도' : 'Enter 저장 · Esc 취소'}</span>`;
+    + `<span class="m1-poph">${key.startsWith('seg.') ? '비우면 키 비율' : key==='pedal' ? '발목(복사뼈) 중심 좌표 · 발바닥이 페달에 닿음' : key==='foot' ? '발바닥이 수직에서 앞으로 누운 각도 · 0~60°' : key==='back' ? '등받이가 수직에서 뒤로 누운 각도 · 0~70°' : /^(hip|pedal|sw)$/.test(key) ? '그림 범위 안으로 맞춤 · Enter 저장' : 'Enter 저장 · Esc 취소'}</span>`;
   box.querySelectorAll('.m1-pop').forEach(x => x.remove()); box.appendChild(pop); M1.edit = {key, pop};
   const f = pop.querySelector('input'); f.focus(); f.select(); }
 function m1EditDone(save){ const E = M1.edit; if(!E) return; M1.edit = null;
   if(save){ const vals = [...E.pop.querySelectorAll('[data-m1p]')].map(i => [i.dataset.m1p, i.type==='text' ? i.value.slice(0, 20) : (i.value.trim()==='' ? null : parseFloat(i.value))]);
-    if(vals.every(([, v]) => v===null || typeof v==='string' || isFinite(v))) m1SaveDrv(d => vals.forEach(([p, v]) => m1Path(d, p, v))); }
+    const lim = p => p==='back' ? M1LIM.back : p==='foot' ? M1LIM.foot : /^(hip|pedal|sw)\.x$/.test(p) ? M1LIM.x : /^(hip|pedal|sw)\.z$/.test(p) ? M1LIM.z : null;
+    const vs = vals.map(([p, v]) => [p, typeof v==='number' && isFinite(v) && lim(p) ? m1Clamp(v, lim(p)) : v]);
+    if(vs.every(([, v]) => v===null || typeof v==='string' || isFinite(v))) m1SaveDrv(d => vs.forEach(([p, v]) => m1Path(d, p, v))); }
   E.pop.remove(); }
 document.addEventListener('focusout', e => { const E = M1.edit; if(E && E.pop.contains(e.target) && !E.pop.contains(e.relatedTarget)) m1EditDone(true);
   const P = M1.pick; if(P && P.pop.contains(e.target) && !P.pop.contains(e.relatedTarget)) m1PickClose(true); });
@@ -259,7 +265,9 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest || !
   const sx = t.closest('[data-m1sex]'); if(sx){ m1SaveDrv(d => { d.sex = sx.dataset.m1sex; }); wbPaint(['ext']); return; }
   const sm = t.closest('[data-m1same]'); if(sm){ const o = m1Drv(sm.dataset.m1same) || M1DDEF();
     m1SaveDrv(d => { ['hip','pedal','sw','seg'].forEach(k => { d[k] = JSON.parse(JSON.stringify(o[k])); }); d.back = o.back; d.foot = o.foot; }); wbPaint(['ext']); toast(`${M1DRV[sm.dataset.m1same]}와 같은 자세로 맞췄습니다.`); return; }
-  if(t.closest('[data-m1dreset]')){ m1Store('drv', M1.drv, null); wbPaint(['ext']); return; }
+  const rs = t.closest('[data-m1dreset]'); if(rs){ if(!rs.dataset.sure){ rs.dataset.sure = '1'; rs.textContent = '자세를 처음으로 돌릴까요? 한 번 더 누르면 실행'; rs.classList.add('sure');
+      setTimeout(() => { if(rs.isConnected){ delete rs.dataset.sure; rs.textContent = '자세 초기화'; rs.classList.remove('sure'); } }, 3000); return; }
+    const D0 = M1DDEF(); m1SaveDrv(d => { ['hip','pedal','sw'].forEach(k => { d[k] = {...D0[k]}; }); d.back = D0.back; d.foot = D0.foot; d.seg = {}; }); wbPaint(['ext']); toast('자세를 처음으로 돌렸습니다.'); return; }
   if(t.closest('[data-m1gadd]')){ if(!m1CanEdit()) return; const id = m1NewId();
     m1Store('mass', id, {name:'', x:null, y:0, z:null, cat:'s', items:[{name:'', m:null, n:1}], ord:Date.now()}); wbPaint(['ext']);
     const n = document.querySelector(`[data-m1g="${id}"] [data-m1gf="name"]`); if(n) n.focus(); return; }
@@ -301,7 +309,7 @@ document.addEventListener('pointerdown', e => { if(M1.pick && !M1.pick.pop.conta
 document.addEventListener('pointerdown', e => { const p = e.target.closest && e.target.closest('#m1svg [data-m1drag]'); if(!p || e.button!==0) return; e.preventDefault(); M1.drag = p.dataset.m1drag; });
 document.addEventListener('pointermove', e => { if(!M1.drag) return; const svg = $('#m1svg'); if(!svg) return; const rc = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, s = +svg.dataset.s;
   const px = (e.clientX - rc.left)/rc.width*vb.width, py = (e.clientY - rc.top)/rc.height*vb.height;
-  const x = Math.round((px/s + +svg.dataset.x0)/5)*5, z = Math.round(((+svg.dataset.h - py)/s + +svg.dataset.z0)/5)*5, k = M1.drag;
+  const x = m1Clamp(Math.round((px/s + +svg.dataset.x0)/5)*5, M1LIM.x), z = m1Clamp(Math.round(((+svg.dataset.h - py)/s + +svg.dataset.z0)/5)*5, M1LIM.z), k = M1.drag;
   const d = m1Drv(M1.drv) || M1DDEF(); if(d[k] && d[k].x===x && d[k].z===z) return; m1SaveDrv(dd => { dd[k] = {x, z}; }); });
 document.addEventListener('pointerup', () => { M1.drag = null; });
 
