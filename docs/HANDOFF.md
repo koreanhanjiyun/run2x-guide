@@ -21,7 +21,7 @@ python3 tools/draft/build.py              # → dist/draft/run2x_redesign.html, 
 python3 -m http.server 8801 &             # 저장소 맨 위에서
 node tools/draft/qa/site_check.js 8801    # 기대: uniq 125, 오류 []
 node tools/draft/qa/tools_tour.js         # 기대: 1 / 6 … 6 / 6, errs []
-node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 21/21 · 도움말 1~12, errs []
+node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 26/26 · 도움말 1~12, errs []
 # (node 가 playwright 를 못 찾으면 NODE_PATH=$(npm root -g) 를 앞에 붙임)
 
 # 공개 시안 갱신: main 작업 트리에 draft/ 만 넣어 커밋 · 푸시
