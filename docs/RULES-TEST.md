@@ -8,6 +8,7 @@
 | 날짜 | 규칙 | 결과 | 비고 |
 |---|---|---|---|
 | 2026-11-02 | redesign-v1 의 `firestore.rules` (main 대비 28줄 추가, 삭제·변경 0줄) | 11/11 통과 | 시험 뒤 콘솔에서 게시 |
+| (시험 전) | `mass` · `drivers` 규칙 변경: 팀원 누구나 이번 시즌 칸 쓰기 | 12~15 시험 필요 (8번 기대값 → 허용) | 통과 뒤 다시 게시 |
 
 규칙을 다시 고치면 아래 절차로 다시 시험하고 이 표에 한 줄 더한다.
 
@@ -49,6 +50,7 @@
 
 데이터 D1 (빌드 문서): `s` map → `2026` map → `v` int64 `1600`, `st` string `rev`
 데이터 D2 (빌드 문서): `s` map → `2026` map → `label` string `1st`
+데이터 D3 (빌드 문서): `s` map → `2026` map → `name` string `업라이트 assy`, `x` int64 `0`
 
 | # | 유형 | 위치 | UID | 데이터 | 기대 | 2026-11-02 |
 |---|---|---|---|---|---|---|
@@ -63,6 +65,10 @@
 | 9 | create | `teams/ruletest/dv/sus__kw_f` | `member1` | D1 | 거부 | 거부 |
 | 10 | get | `teams/ruletest/dv/sus__kw_f` | `nobody123` | — | 거부 | 거부 |
 | 11 | get | `teams/ruletest/dv/sus__kw_f` | `member1` | — | 허용 | 허용 |
+| 12 | create | `teams/ruletest/mass/g1` | `member1` | D3 | 허용 | (2026-11-02 규칙 변경 뒤 시험 전) |
+| 13 | create | `teams/ruletest/mass/g1` | `nobody123` | D3 | 거부 | (시험 전) |
+| 14 | create | `teams/ruletest/mass/g1` | `member1` | D3에서 `2026` → `2025` | 거부 | (시험 전) |
+| 15 | create | `teams/ruletest/drivers/d1` | `member1` | D2 | 허용 | (시험 전) |
 
 무엇을 보는 시험인지
 
@@ -76,6 +82,7 @@
 | 7 · 8 | 드라이버는 프레임 담당만 |
 | 9 | 일반 팀원은 쓰지 못함 |
 | 10 · 11 | 읽기는 팀원만 |
+| 12 ~ 15 | 질량 표 어셈블리 · 드라이버는 팀원 누구나 이번 시즌만 씀 (계산기 자유). 8번(서스 파트장 → 드라이버 거부)은 이 변경 뒤 **허용**이 맞음 |
 
 ## 4. 끝난 뒤
 

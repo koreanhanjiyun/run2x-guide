@@ -66,9 +66,9 @@ const TOOL_LIST = [
   ['8','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교']
 ];
 /* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
-function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {}, ex = W.ex;
-  const rows = (ex ? [[ex.no, ex.name, ex.stage, '대시보드 값', '차속별 축하중 · 다운포스 · 항력', 'ex']] : []).concat(TOOL_LIST.map(r => [...r, W[r[0]] ? r[0] : '']));
-  return rows.map(([n,t,s,i,o,id]) => id ? `<li class="tt-on" data-wb="${id}" tabindex="0" role="button" aria-label="${t} 작업창 열기"><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">${id==='ex' ? '틀 확인용' : '열기'} →</span></li>`
+function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
+  const rows = TOOL_LIST.map(r => [...r, W[r[0]] ? r[0] : '']);
+  return rows.map(([n,t,s,i,o,id]) => id ? `<li class="tt-on" data-wb="${id}" tabindex="0" role="button" aria-label="${t} 작업창 열기"><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">열기 →</span></li>`
     : `<li><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">준비 중</span></li>`).join(''); }
 const dashVmax = P => P.nmax/P.gr*2*Math.PI*(P.rt/1000)*60/1000;   /* 모터 회전수 한계 최고속 [km/h] */
 /* 코너 반경 조절기: 곡률(1/R)을 고르게 나눠, 오른쪽으로 갈수록 반경이 줄고 조향이 커진다. 60 m → 설계 최소 회전 반경 */
@@ -111,9 +111,9 @@ function dashBipolar(){ const sl = document.querySelector('#dcond input[data-dc=
   const pc = (parseFloat(sl.value) - sl.min)/(sl.max - sl.min)*100, a = Math.min(50, pc), b = Math.max(50, pc), tr = '#dcd9e5', ac = '#6A4294';
   sl.style.background = `linear-gradient(to right, transparent calc(50% - 1px), #4a4458 calc(50% - 1px), #4a4458 calc(50% + 1px), transparent calc(50% + 1px)), linear-gradient(to right, ${tr} 0%, ${tr} ${a}%, ${ac} ${a}%, ${ac} ${b}%, ${tr} ${b}%, ${tr} 100%)`; }
 function dashPartHTML(){ const P = DASH.P, C = DASH.C;
-  const tabs = [['aero','에어로',''],['goal','차량 목표','도구 2'],['pt','파워트레인','도구 2'],['brake','제동','도구 3'],['susp','서스 기하','도구 4'],['steer','조향','도구 5'],['spring','스프링·ARB','도구 6']];
+  const tabs = [['frame','질량 · 무게중심',''],['aero','에어로',''],['goal','차량 목표','도구 2'],['pt','파워트레인','도구 2'],['brake','제동','도구 3'],['susp','서스 기하','도구 4'],['steer','조향','도구 5'],['spring','스프링·ARB','도구 6']];
   return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+'을 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
-    <div class="dp-body">${DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
+    <div class="dp-body">${DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
 }
 function dashFigsHTML(){ const K = dashCalc(), P = DASH.P, C = DASH.C;
   return `<figure class="df-f"><figcaption><b>옆에서</b><span>축하중 · 무게중심 · 압력 중심</span></figcaption>${CARFIG.side(P, C, K)}</figure>

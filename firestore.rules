@@ -119,13 +119,15 @@ service cloud.firestore {
         allow create: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {})));
         allow update: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
         allow delete: if isTAdmin(t); }
+      // 질량 표(어셈블리 하나 = 문서 하나) · 드라이버: 계산기는 팀원 누구나 쓰므로 팀원이면 이번 시즌 칸을 고칠 수 있음 (회장은 전부).
+      // 지울 때는 문서를 지우지 않고 이번 시즌 칸만 뺌 (지난 시즌 기록 보존). 대시보드 반영(dv)은 담당 파트 규칙 그대로
       match /mass/{c} { allow read: if isMember(t);
-        allow create: if isTAdmin(t) || (canEditPart(t, partOfCode(c)) && onlyCurKey(t, request.resource.data.get('s', {})));
-        allow update: if isTAdmin(t) || (canEditPart(t, partOfCode(c)) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
+        allow create: if isTAdmin(t) || (isMember(t) && onlyCurKey(t, request.resource.data.get('s', {})));
+        allow update: if isTAdmin(t) || (isMember(t) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
         allow delete: if isTAdmin(t); }
       match /drivers/{n} { allow read: if isMember(t);
-        allow create: if n in ['d1','d2','d3'] && (isTAdmin(t) || (canEditPart(t, '프레임') && onlyCurKey(t, request.resource.data.get('s', {}))));
-        allow update: if n in ['d1','d2','d3'] && (isTAdmin(t) || (canEditPart(t, '프레임') && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
+        allow create: if n in ['d1','d2','d3'] && (isTAdmin(t) || (isMember(t) && onlyCurKey(t, request.resource.data.get('s', {}))));
+        allow update: if n in ['d1','d2','d3'] && (isTAdmin(t) || (isMember(t) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
         allow delete: if isTAdmin(t); }
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
       // 팀 비밀번호 원문 (관리자만 보기·쓰기. 오픈채팅 입장 코드 수준으로 취급)
