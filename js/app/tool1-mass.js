@@ -219,7 +219,6 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
     ${pt(J.P, 'pedal')}${lab(X(J.P[0]) + 14, Z(J.P[1]) + 30, 'pedal', `발목(복사뼈) x ${f0(d.pedal.x)} · z ${f0(d.pedal.z)}`, 'pt', 'start')}
     ${pt(J.G, 'sw')}${lab(X(J.G[0]) - 12, Z(J.G[1]) - 12, 'sw', `핸들 x ${f0(d.sw.x)} · z ${f0(d.sw.z)}`, 'pt', 'end')}
     ${sym}<text x="${cx}" y="${cy + 28}" text-anchor="middle" class="m1-tl r">CG x ${f0(cg[0])} · z ${f0(cg[1])}</text>
-    <text x="12" y="22" class="m1-tl">← 진행 방향</text>
   </svg>`; }
 /* 그림 위 입력 칸: 라벨 자리에 띄움. 점(x · z)은 두 칸 */
 const M1EF = {back:[['back','°']], foot:[['foot','°']], hip:[['hip.x','x'],['hip.z','z']], pedal:[['pedal.x','x'],['pedal.z','z']], sw:[['sw.x','x'],['sw.z','z']], height:[['height','cm']], mass:[['mass','kg']], label:[['label','']]};
@@ -309,7 +308,7 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
   const col = {s:'#6A4294', uf:'#1d5f9a', ur:'#257a47', d:'#c2410c'}, rr = m => Math.max(3, Math.sqrt(m)*2.6);
   const sym = (p, c, R_) => `<g transform="translate(${p[0].toFixed(1)},${p[1].toFixed(1)})"><circle r="${R_+2}" fill="#fff"/><path d="M0 0 L${-R_} 0 A${R_} ${R_} 0 0 1 0 ${-R_} Z M0 0 L${R_} 0 A${R_} ${R_} 0 0 1 0 ${R_} Z" fill="${c}"/><circle r="${R_}" fill="none" stroke="${c}" stroke-width="1.5"/><line x1="${-R_}" x2="${R_}" stroke="${c}"/><line y1="${-R_}" y2="${R_}" stroke="${c}"/></g>`;
   let sv = `<svg class="m1-fig cf-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="질량 분포: 옆에서 · 위에서">
-    <text x="${c1 + 4}" y="18" class="m1-tl b">옆에서</text><text x="${c2 + 4}" y="18" class="m1-tl b">위에서</text><text x="${W - 12}" y="18" class="m1-tl" text-anchor="end">← 진행 방향</text>
+    <text x="${c1 + 4}" y="18" class="m1-tl b">옆에서</text><text x="${c2 + 4}" y="18" class="m1-tl b">위에서</text>
     <line x1="${c1 + colw + gap/2}" y1="30" x2="${c1 + colw + gap/2}" y2="${H - 20}" stroke="var(--line)"/>
     ${CARFIG.carSide(ts, L, r, s)}<line x1="${c1}" y1="280" x2="${c1 + colw}" y2="280" class="cf-gnd"/>${CARFIG.carTop(tt, L, r, s, I.tf, I.tr)}`;
   items.slice().sort((a, b) => b.m - a.m).forEach(it => { const c = col[it.cat] || col.s, R_ = rr(it.m), p1 = ts(it.x, it.z), p2 = tt(it.x, -it.y), tl = `<title>${wbEsc(it.name || '')} ${wbFmt(it.m, 1)} kg</title>`;
@@ -326,9 +325,8 @@ function m1PartRun(){ const I = m1PartInputs(), key = JSON.stringify(I); if(key=
   try{ if(!M1P.w){ M1P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['1'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); } }catch(e){ M1P.busy = false; return; }
   M1P.w.onmessage = e => { M1P.busy = false; M1P.key = key; if(e.data.ok){ M1P.R = e.data.r; const b = $('#m1part'); if(b) b.innerHTML = m1PartBody(I, M1P.R); } };
   M1P.w.postMessage(I); }
-function m1PartBody(I, R){ const T = WB_TOOLS['1'], o = R.out; if(!(o.m > 0)) return '<p class="muted">팀 질량 표가 비어 있습니다. 도구 1에서 어셈블리를 넣으십시오.</p>';
-  const groups = []; T.outputs.forEach(d => { let G = groups.find(x => x.n===d.g); if(!G){ G = {n:d.g, ds:[]}; groups.push(G); } G.ds.push(d); });
-  return `<div class="m1-pf">${m1Figure(I, R)}</div><div class="wb-og">${groups.map(G => `<div class="wb-oc${(T.outGroups[G.n]||{}).grid ? ' grid' : ''}"><h4>${G.n}</h4><div class="wb-ol">${G.ds.map(d => `<div class="wb-or"><span class="wb-on">${d.n || DK[d.dk].n}</span><span class="wb-ov"><b>${wbFmt(o[d.k], d.d||0)}</b> <i>${wbEsc(d.u != null ? d.u : DK[d.dk].u)}</i></span></div>`).join('')}</div></div>`).join('')}</div>`; }
+function m1PartBody(I, R){ const o = R.out; if(!(o.m > 0)) return '<p class="muted">팀 질량 표가 비어 있습니다. 도구 1에서 어셈블리를 넣으십시오.</p>';
+  return `<div class="m1-pf">${m1Figure(I, R)}</div>${wbOutCards(WB_TOOLS['1'], R, false)}`; }
 function m1PartHTML(){ setTimeout(m1PartRun, 0);
   return `<div class="m1-part"><p class="dp-note">팀 질량 표(어셈블리 ${m1Groups().length}개)와 ${M1DRV[M1.dsel]} 드라이버, 대시보드의 휠베이스 · 트레드로 계산한 결과입니다. 고치기는 <button type="button" class="lnk" data-wb="1">도구 1 질량 · 무게중심 계산기</button>에서 합니다.</p><div id="m1part">${M1P.R ? m1PartBody(m1PartInputs(), M1P.R) : '<p class="muted">계산 중…</p>'}</div></div>`; }
 
@@ -354,16 +352,29 @@ const M1TOUR = [
   ['#wbmain', '질량 분포', '어셈블리를 옆과 위에서 본 그림입니다. 원 넓이가 질량에 비례하고, 원에 마우스를 올리면 이름이 나옵니다.', {inner:'#wb .wb-right'}],
 ];
 
+/* 결과 카드 도우미: 배분은 "앞 : 뒤" 두 숫자, 코너웨이트는 위에서 본 단순한 차 그림 둘레에 (드라이버 포함 · 공차) */
+const m1Ratio = v => isFinite(v) ? `<b>${wbFmt(v, 1)} : ${wbFmt(100 - v, 1)}</b> <i>%</i>` : '<b>-</b>';
+function m1CwCard(o){ const f = v => isFinite(v) ? wbFmt(v, 1) : '-';
+  const cell = (k, t, side) => `<div class="m1-cw ${side}"><span class="m1-cwl">${t}</span><span><b>${f(o['cw_' + k])}</b> <i>kg</i></span><span class="m1-cw0">공차 ${f(o['cw0_' + k])} kg</span></div>`;
+  const car = `<svg class="m1-cwcar" viewBox="0 0 64 120" aria-hidden="true"><text x="32" y="9" text-anchor="middle">앞</text>
+    <rect x="3" y="20" width="12" height="22" rx="3"/><rect x="49" y="20" width="12" height="22" rx="3"/><rect x="3" y="86" width="12" height="24" rx="3"/><rect x="49" y="86" width="12" height="24" rx="3"/>
+    <path d="M32 14 C26 14 23 22 23 34 L21 92 C21 106 25 113 32 113 C39 113 43 106 43 92 L41 34 C41 22 38 14 32 14 Z" class="b"/><line x1="15" y1="31" x2="49" y2="31"/><line x1="15" y1="98" x2="49" y2="98"/><ellipse cx="32" cy="66" rx="5" ry="8" class="s"/></svg>`;
+  return `<div class="m1-cwg">${cell('fl', '앞왼', 'l')}<div class="m1-cwc">${car}</div>${cell('fr', '앞오른', 'r')}${cell('rl', '뒤왼', 'l')}${cell('rr', '뒤오른', 'r')}</div>
+    <div class="m1-cwx"><span>크로스 (앞오른 + 뒤왼)</span><span><b>${f(o.cross)}</b> <i>%</i><span class="m1-cw0">공차 ${f(o.cross0)} %</span></span></div>`; }
+
 /* ============================================================ 도구 정의 */
 WB_TOOLS['1'] = {
   no:'1', stage:'P0', name:'질량 · 무게중심 계산기', mainTitle:'질량 분포', mainMeta:'차 윤곽은 예시 차량 (휠베이스에 맞춤) · 원 넓이 ∝ 질량',
   noSig:true,
   inputs:[ {k:'L', dk:'L', v:1550, d:0, g:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:'치수'} ],
-  outGroups:{'정지 코너웨이트':{grid:true}, '관성 모멘트':{note:'점질량 근사 · 부품 자체 관성 제외 → 실제보다 작음'}},
+  outGroups:{'정지 코너웨이트':{wide:true, render:o => m1CwCard(o)}, '관성 모멘트':{note:'점질량 근사 · 부품 자체 관성 제외 → 실제보다 작음'}},
   outputs:[
-    {k:'m', dk:'m', d:1, g:'질량'}, {k:'m_s', dk:'m_s', d:1, g:'질량'}, {k:'m_us_f', dk:'m_us_f', d:2, g:'질량'}, {k:'m_us_r', dk:'m_us_r', d:2, g:'질량'}, {k:'m_drv', n:'드라이버 (고른 사람, 장비 포함)', u:'kg', d:1, g:'질량'},
-    {k:'fr', dk:'fr', d:1, g:'무게중심 · 배분'}, {k:'left', dk:'left', d:1, g:'무게중심 · 배분'}, {k:'h', dk:'h', d:0, g:'무게중심 · 배분'}, {k:'h_s', dk:'h_s', d:0, g:'무게중심 · 배분'}, {k:'x_cg', n:'CG 위치 (앞 차축에서)', u:'mm', d:0, g:'무게중심 · 배분'},
+    {k:'m', n:'총질량 (드라이버 포함)', u:'kg', d:1, g:'질량'}, {k:'m_empty', n:'공차중량 (드라이버 제외)', u:'kg', d:1, g:'질량'}, {k:'m_s', dk:'m_s', d:1, g:'질량'}, {k:'m_us_f', dk:'m_us_f', d:2, g:'질량'}, {k:'m_us_r', dk:'m_us_r', d:2, g:'질량'},
+    {k:'m_drv', n:'드라이버 (고른 사람, 장비 포함)', u:'kg', d:1, g:'질량', hide:true},
+    {k:'fr', dk:'fr', n:'앞 : 뒤 하중 배분', d:1, g:'무게중심 · 배분', fmt:m1Ratio}, {k:'left', dk:'left', n:'왼 : 오른 하중 배분', d:1, g:'무게중심 · 배분', fmt:m1Ratio},
+    {k:'x_cg', n:'무게중심 앞뒤 위치 (앞 차축에서)', u:'mm', d:0, g:'무게중심 · 배분'}, {k:'h', dk:'h', n:'무게중심 높이 (지면에서)', d:0, g:'무게중심 · 배분'}, {k:'h_s', dk:'h_s', n:'현가상질량 무게중심 높이', d:0, g:'무게중심 · 배분'},
     {k:'cw_fl', n:'앞왼', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cw_fr', n:'앞오른', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cw_rl', n:'뒤왼', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cw_rr', n:'뒤오른', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cross', n:'크로스 (앞오른 + 뒤왼)', u:'%', d:1, g:'정지 코너웨이트'},
+    {k:'cw0_fl', n:'공차 앞왼', u:'kg', d:1, g:'정지 코너웨이트', hide:true}, {k:'cw0_rr', n:'공차 뒤오른', u:'kg', d:1, g:'정지 코너웨이트', hide:true}, {k:'cross0', n:'공차 크로스', u:'%', d:1, g:'정지 코너웨이트', hide:true},
     {k:'ixx', dk:'ixx', d:1, g:'관성 모멘트'}, {k:'iyy', dk:'iyy', d:1, g:'관성 모멘트'}, {k:'izz', dk:'izz', d:1, g:'관성 모멘트'}
   ],
   extHTML: m1ExtHTML, extraI: m1ExtraI, figure: m1Figure,
@@ -439,11 +450,15 @@ function calc(I){
   const fr = (I.L - xc)/I.L*100;                                               // 앞 하중 배분 = CG 에서 뒤 차축까지 ÷ 휠베이스
   const Wf = m*fr/100, Wr = m - Wf;
   const cw = { fl: Wf*(.5 + yc/I.tf), fr: Wf*(.5 - yc/I.tf), rl: Wr*(.5 + yc/I.tr), rr: Wr*(.5 - yc/I.tr) };
+  // 공차 상태(드라이버 빼고): 같은 식으로 코너웨이트
+  const e = I.items, m0 = sum(e, it => it.m), x0 = m0 > 0 ? sum(e, it => it.m*it.x)/m0 : NaN, y0 = m0 > 0 ? sum(e, it => it.m*it.y)/m0 : NaN;
+  const Wf0 = m0*(I.L - x0)/I.L, Wr0 = m0 - Wf0, cw0 = { fl: Wf0*(.5 + y0/I.tf), fr: Wf0*(.5 - y0/I.tf), rl: Wr0*(.5 + y0/I.tr), rr: Wr0*(.5 - y0/I.tr) };
   // 관성 모멘트: CG 둘레, 어셈블리를 점질량으로 (어셈블리 자체 관성 제외 → 실제보다 작게 나옴) [kg·m²]
   const I2 = f => sum(all, it => it.m*f(it))/1e6;
   return {
     out: { m, fr, left: (cw.fl + cw.rl)/m*100, h: zc, x_cg: xc, y_cg: yc, m_s: ms, h_s: ms > 0 ? sum(sp, it => it.m*it.z)/ms : NaN, x_s: ms > 0 ? sum(sp, it => it.m*it.x)/ms : NaN,
-           m_us_f: muf/2, m_us_r: mur/2, m_drv: me,
+           m_us_f: muf/2, m_us_r: mur/2, m_drv: me, m_empty: m0,
+           cw0_fl: cw0.fl, cw0_fr: cw0.fr, cw0_rl: cw0.rl, cw0_rr: cw0.rr, cross0: m0 > 0 ? (cw0.fr + cw0.rl)/m0*100 : NaN,
            ixx: I2(it => (it.y - yc)**2 + (it.z - zc)**2), iyy: I2(it => (it.x - xc)**2 + (it.z - zc)**2), izz: I2(it => (it.x - xc)**2 + (it.y - yc)**2),
            cw_fl: cw.fl, cw_fr: cw.fr, cw_rl: cw.rl, cw_rr: cw.rr, cross: (cw.fr + cw.rl)/m*100 },
     drv, drvItem: di
@@ -457,6 +472,7 @@ function calc(I){
     {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:0, y:0, z:230, cat:'uf'}, {m:34, x:1600, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},
     {n:'체절 질량 합 = 몸무게 (남)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_drv:70}, src:'체절 비율 합 = 1 (de Leva 1996)'},
     {n:'체절 질량 합 = 몸무게 (여)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), sex:'f', height:165, mass:58}}}, expect:{m_drv:58}, src:'비율 합 0.9999 → 1로 맞춤'},
+    {n:'공차 = 드라이버 빼고', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_empty:100, cw0_fl:27.5, cw0_rr:22.5, cross0:50}, src:'드라이버 없이 왼쪽으로 60 mm 경우와 같음'},
     {n:'장비 더하기', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, gear:{helmet:1.5, suit:2, belt:1}}}}, expect:{m_drv:74.5}, src:'70 + 1.5 + 2 + 1'}
   ]
 };

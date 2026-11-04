@@ -134,14 +134,18 @@ function wbInHTML(){ const T = wbT(); let g0 = '';
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
   if(!R) return '<p class="wb-empty">계산 중…</p>';
-  const groups = []; T.outputs.forEach(d => { const g = d.g || '결과'; let G = groups.find(x => x.n===g); if(!G){ G = {n:g, ds:[]}; groups.push(G); } G.ds.push(d); });
-  const row = d => { const v = R.out ? R.out[d.k] : undefined, db = wbDash(d.dk), u = d.u != null ? d.u : (d.dk ? DK[d.dk].u : ''), dd = d.d||0;
-    const diff = WB.cmp && d.dk && db && isFinite(v) && Math.abs(v - db.v) > Math.pow(10, -dd)/2;
+  return wbOutCards(T, R, WB.cmp); }
+/* 결과 카드: 도구가 정한 묶음마다. d.hide = 화면에 안 보임(검증 · 반영용), d.fmt(v, out) = 값 칸 HTML(단위 포함),
+   outGroups[묶음].render(out) = 카드 본문을 도구가 직접 그림, .wide = 두 칸 너비. 대시보드 '파트별'도 같은 함수(비교 없이) */
+function wbOutCards(T, R, cmp){ const out = R.out || {};
+  const groups = []; T.outputs.forEach(d => { if(d.hide) return; const g = d.g || '결과'; let G = groups.find(x => x.n===g); if(!G){ G = {n:g, ds:[]}; groups.push(G); } G.ds.push(d); });
+  const row = d => { const v = out[d.k], db = wbDash(d.dk), u = d.u != null ? d.u : (d.dk ? DK[d.dk].u : ''), dd = d.d||0;
+    const diff = cmp && d.dk && db && isFinite(v) && Math.abs(v - db.v) > Math.pow(10, -dd)/2;
     const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${d.n || DK[d.dk].n}</span>` : wbEsc(d.n);
-    return `<div class="wb-or${diff?' diff':''}"><span class="wb-on">${nm}</span><span class="wb-ov"><b>${wbFmt(v, dd)}</b>${u ? ` <i>${wbEsc(u)}</i>` : ''}</span>
-      ${WB.cmp && d.dk ? `<span class="wb-odb">${db ? `대시보드 ${wbFmt(db.v, dd)}${db.st==='ex' ? ' (예시값)' : ''}` : '대시보드 값 없음'}</span>` : ''}</div>`; };
+    return `<div class="wb-or${diff?' diff':''}"><span class="wb-on">${nm}</span><span class="wb-ov">${d.fmt ? d.fmt(v, out) : `<b>${wbFmt(v, dd)}</b>${u ? ` <i>${wbEsc(u)}</i>` : ''}`}</span>
+      ${cmp && d.dk ? `<span class="wb-odb">${db ? `대시보드 ${d.fmt ? d.fmt(db.v, {}).replace(/<[^>]+>/g, '') : wbFmt(db.v, dd)}${db.st==='ex' ? ' (예시값)' : ''}` : '대시보드 값 없음'}</span>` : ''}</div>`; };
   return `<div class="wb-og">${groups.map(G => { const gd = (T.outGroups || {})[G.n] || {};
-    return `<div class="wb-oc${gd.grid ? ' grid' : ''}"><h4>${wbEsc(G.n)}${gd.note ? `<span>${wbEsc(gd.note)}</span>` : ''}</h4><div class="wb-ol">${G.ds.map(row).join('')}</div></div>`; }).join('')}</div>`; }
+    return `<div class="wb-oc${gd.grid ? ' grid' : ''}${gd.wide ? ' wide' : ''}"><h4>${wbEsc(G.n)}${gd.note ? `<span>${wbEsc(gd.note)}</span>` : ''}</h4>${gd.render ? gd.render(out) : `<div class="wb-ol">${G.ds.map(row).join('')}</div>`}</div>`; }).join('')}</div>`; }
 function wbXDef(){ const T = wbT(); return {n: (T.x && T.x.n) || 'x', u: (T.x && T.x.u) || ''}; }
 function wbMainHTML(){ const R = WB.R; if(!R) return '';
   if(!R.x) return wbT().figure ? wbT().figure(wbInputs(), R) : '';
