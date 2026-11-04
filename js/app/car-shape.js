@@ -6,7 +6,7 @@
    - 저장: teams/<팀>/shape/<side|top> = {s:{시즌:{kind:'img'|'dxf', ...}}} (팀원 누구나 이번 시즌, 로그인 전은 이 브라우저)
      img: data(줄인 이미지 data: 주소), w, h, p1, p2 (그림 픽셀, 아래로 +)
      dxf: d(선 그림 경로, 도면 단위 · y 를 뒤집어 아래로 +), p1, p2
-   - 계산에는 쓰지 않음. 질량 계산기 · 드라이버 모델 · 대시보드 그림의 바탕만 바뀜
+   - 계산에는 쓰지 않음. 질량 계산기(질량 분포 옆 · 위) · 드라이버 모델 그림의 바탕만 바뀜. 대시보드 '그림으로 보기'는 기본 차 그림 그대로
    ============================================================ */
 const SHAPEKEY = 'run2x.shape.v1', SHP_MAX = 850000;   /* Firestore 문서 1 MiB 한도 안 */
 let SHAPES = {};
@@ -30,7 +30,7 @@ function shMatrix(p1, p2, A, B, noMirror){ const m = !noMirror && p1[0] > p2[0] 
   const ds = [q2[0] - q1[0], q2[1] - q1[1]], dd = [B[0] - A[0], B[1] - A[1]], ls = Math.hypot(ds[0], ds[1]) || 1, k = Math.hypot(dd[0], dd[1])/ls;
   const th = Math.atan2(dd[1], dd[0]) - Math.atan2(ds[1], ds[0]), c = Math.cos(th)*k, s = Math.sin(th)*k;
   return [c*m, s*m, -s, c, A[0] - (c*q1[0] - s*q1[1]), A[1] - (s*q1[0] + c*q1[1])]; }
-/* 그림 조각: A = 앞 바퀴(차축) 중심 화면 점, B = 뒤. 없으면 '' (기본 윤곽을 씀) */
+/* 그림 조각: A = 앞 바퀴(차축) 중심 화면 점, B = 뒤. 없으면 '' (기본 차 그림을 씀) */
 function shSvg(view, A, B, v0){ const v = v0 || shGet(view); if(!v) return '';
   const M = shMatrix(v.p1, v.p2, A, B, view==='top').map(x => +x.toFixed(6)).join(' ');
   return v.kind==='img' ? `<g class="cs-img" transform="matrix(${M})"><image href="${v.data}" width="${v.w}" height="${v.h}" preserveAspectRatio="none"/></g>`
@@ -116,7 +116,7 @@ function shDxfPath(raw){ let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = 
 /* ---------- 창 ---------- */
 function shEl(){ let m = $('#shpm'); if(!m){ m = document.createElement('div'); m.id = 'shpm'; m.className = 'dv-modal shp-modal'; m.hidden = true;
     m.innerHTML = '<div class="dvm-box shp-box" role="dialog" aria-modal="true" aria-labelledby="shp-t"></div>'; document.body.appendChild(m); } return m; }
-const SHV = {side:['옆면', '① 앞 바퀴 중심', '② 뒤 바퀴 중심'], top:['윗면 (선택)', '① 앞 차축 가운데', '② 뒤 차축 가운데']};
+const SHV = {side:['옆면', '① 앞 바퀴 중심', '② 뒤 바퀴 중심'], top:['윗면', '① 앞 차축 가운데', '② 뒤 차축 가운데']};
 function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCanEdit(), n = SHP.pts.length, [, l1, l2] = SHV[v];
   const tabs = `<div class="m1-tabs shp-tabs" role="tablist">${Object.entries(SHV).map(([k, t]) => `<button type="button" role="tab" data-shv="${k}" aria-selected="${v===k}">${t[0]}</button>`).join('')}</div>`;
   const step = !src ? '' : n===0 ? `<b>${l1}</b>을 누르십시오` : n===1 ? `<b>${l2}</b>을 누르십시오` : '두 점을 찍었습니다. 아래 미리보기를 확인하고 저장하십시오';
@@ -133,14 +133,14 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
     res = `<div class="shp-res"><b>맞춘 모습</b> <span class="muted">휠베이스 ${Math.round(L)} mm${v==='side' ? ` · 타이어 반경 ${Math.round(r)} mm` : ''} 기준, 빨간 점 = 바퀴(차축) 중심${v==='side' ? ', 선 = 지면' : ''}</span>
       <svg viewBox="0 0 ${W} ${H}" class="shp-fit">${shSvg(v, A, B, show)}${v==='side' ? `<line x1="0" y1="${H - 20}" x2="${W}" y2="${H - 20}" class="cf-gnd"/>` : ''}<circle cx="${A[0]}" cy="${A[1]}" r="4" class="shp-ax"/><circle cx="${B[0]}" cy="${B[1]}" r="4" class="shp-ax"/><text x="8" y="16" class="cf-t sm mut">← 앞</text></svg></div>`; }
   return `<div class="dvi-h"><b id="shp-t">차 형상 (그림 바탕)</b><button type="button" class="dvi-x" data-shpx aria-label="닫기">×</button></div>
-    <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 윤곽'}</span></div>
+    <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 차 그림'}</span></div>
     <div class="dvi-body shp-body">
-      <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 올리면 질량 계산기 · 드라이버 모델 · 대시보드 그림의 차 윤곽 대신 씁니다. 계산에는 쓰지 않습니다.<br>
-        이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면에서 ${v==='side' ? '측면도' : '윗면도'} 한 장만 두고 저장한 파일을 올리십시오. 올린 뒤 ${l1} → ${l2} 순서로 두 점을 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다${v==='side' ? '' : ' (윗면을 올리지 않으면 기본 윤곽)'}.</p>
+      <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 올리면 질량 계산기의 질량 분포(옆 · 위) · 드라이버 모델 그림의 차 대신 씁니다. 계산에는 쓰지 않습니다.<br>
+        이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면에서 ${v==='side' ? '측면도' : '윗면도'} 한 장만 두고 저장한 파일을 올리십시오. 올린 뒤 ${l1} → ${l2} 순서로 두 점을 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다${v==='side' ? '' : ' (올리지 않거나 되돌리면 기본 차 그림)'}.</p>
       ${ed ? `<label class="btn small shp-file">파일 고르기<input type="file" accept=".png,.jpg,.jpeg,.webp,.dxf" data-shpf hidden></label>` : '<p class="muted">지난 시즌 그림은 회장만 고칠 수 있습니다.</p>'}
       <span class="shp-msg" id="shpmsg">${SHP.busy ? '읽는 중…' : step}</span>
       ${pv}${res}</div>
-    <div class="dvi-foot"><span>${ed && cur && !src ? '<button type="button" class="lnk" data-shpdel>기본 윤곽으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${src ? '<button type="button" class="btn small" data-shpre>다시 찍기</button>' : ''}<button type="button" class="btn small" data-shpx>닫기</button>${ed && src ? `<button type="button" class="btn small pri" data-shpsave${n===2 ? '' : ' disabled'}>저장</button>` : ''}</span></div>`; }
+    <div class="dvi-foot"><span>${ed && cur && !src ? '<button type="button" class="lnk" data-shpdel>기본 차 그림으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${src ? '<button type="button" class="btn small" data-shpre>다시 찍기</button>' : ''}<button type="button" class="btn small" data-shpx>닫기</button>${ed && src ? `<button type="button" class="btn small pri" data-shpsave${n===2 ? '' : ' disabled'}>저장</button>` : ''}</span></div>`; }
 function shPaint(){ const m = shEl(); m.querySelector('.dvm-box').innerHTML = shHTML(); }
 function shOpen(btn){ SHP.ret = btn || null; SHP.src = null; SHP.pts = []; const m = shEl(); shPaint(); m.hidden = false; const f = m.querySelector('[data-shpx]'); if(f) f.focus(); }
 function shClose(){ const m = $('#shpm'); if(m) m.hidden = true; SHP.src = null; SHP.pts = []; if(SHP.ret && SHP.ret.isConnected) SHP.ret.focus(); }
@@ -157,11 +157,11 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-shpx]') || t.id==='shpm'){ shClose(); return; }
   const tv = t.closest('[data-shv]'); if(tv){ SHP.view = tv.dataset.shv; SHP.src = null; SHP.pts = []; shPaint(); return; }
   if(t.closest('[data-shpre]')){ SHP.pts = []; shPaint(); return; }
-  if(t.closest('[data-shpdel]')){ shStore(SHP.view, null); toast('기본 윤곽으로 되돌렸습니다.'); shPaint(); return; }
+  if(t.closest('[data-shpdel]')){ shStore(SHP.view, null); toast('기본 차 그림으로 되돌렸습니다.'); shPaint(); return; }
   if(t.closest('[data-shpsave]')){ const s = SHP.src; if(!s || SHP.pts.length < 2) return;
     const val = s.kind==='img' ? {kind:'img', data:s.data, w:s.w, h:s.h, p1:SHP.pts[0], p2:SHP.pts[1]} : {kind:'dxf', d:s.d, box:s.box, p1:SHP.pts[0], p2:SHP.pts[1]};
     if(JSON.stringify(val).length > SHP_MAX + 20000){ toast('그림이 너무 큽니다. 더 단순한 그림으로 올려 주십시오.'); return; }
-    shStore(SHP.view, val); toast(`${SHV[SHP.view][0].replace(' (선택)', '')} 그림을 저장했습니다.`); SHP.src = null; SHP.pts = []; shPaint(); return; }
+    shStore(SHP.view, val); toast(`${SHV[SHP.view][0]} 그림을 저장했습니다.`); SHP.src = null; SHP.pts = []; shPaint(); return; }
   const sv = t.closest('#shpsrc'); if(sv && SHP.src && SHP.pts.length < 2){ const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(sv.getScreenCTM().inverse()); let p = [q.x, q.y];
     /* DXF: 가까운 원(바퀴 · 허브)이 있으면 그 중심에 붙임 */
     if(SHP.src.kind==='dxf' && SHP.src.circles.length){ const px = 14/(sv.getScreenCTM().a || 1); let best = null, bd = px;
