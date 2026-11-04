@@ -2677,8 +2677,6 @@ html.wb-lock #tip{z-index:95}
 .m1-dinfo label{display:grid;grid-template-columns:52px minmax(0,1fr) 22px;align-items:center;gap:6px}
 .m1-dinfo label>span{color:var(--ink-2)}
 .m1-dinfo label.m1-dn{grid-template-columns:1fr}
-.m1-dinfo label.m1-dcg{grid-template-columns:52px 8px minmax(0,1fr) 8px minmax(0,1fr) 22px;gap:4px}
-.m1-dinfo em{font-style:normal;color:var(--muted);font-size:11px}
 .m1-dinfo input{font:inherit;font-size:12.5px;width:100%;padding:1px 6px;border:1px solid var(--line-2);border-radius:5px;background:#fff;color:#1d2128;color-scheme:light}
 .m1-dinfo input[type=number]{text-align:right}
 .m1-dinfo label.m1-dn input{font-size:14px;font-weight:700}
