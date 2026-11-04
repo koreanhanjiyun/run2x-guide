@@ -2771,6 +2771,12 @@ html.wb-lock #tip{z-index:95}
 .wb-help b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px}
 .wb-help:hover,.wb-help:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
 .shp-src.crop{cursor:crosshair;touch-action:none}.shp-dim{fill:rgba(20,16,32,.35)}.shp-crop{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 4}
+.shp-st{display:inline-block;padding:0 7px;margin-right:4px;border-radius:999px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700}
+.shp-zh{font-size:11.5px;color:var(--muted)}
+.shp-src.pick{cursor:crosshair}
+.shp-guide{stroke:#d92d20;stroke-width:1.5;stroke-dasharray:6 4;pointer-events:none}
+.shp-ln line{stroke:#d92d20;stroke-width:2}
+.shp-ln text{fill:#d92d20;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -10574,7 +10580,8 @@ function shSvg(view, A, B, v0){ const v = v0 || shGet(view); if(!v) return '';
     : `<g class="cs-dxf" transform="matrix(${M})"><path d="${v.d}" vector-effect="non-scaling-stroke"/></g>`; }
 
 /* ---------- 파일 읽기 ---------- */
-const SHP = {view:'side', raw:null, src:null, stage:'', crop:null, drag:null, pts:[], busy:false, ret:null};   /* stage: crop(범위 자르기) → pts(두 점) */
+const SHP = {view:'side', raw:null, src:null, stage:'', crop:null, drag:null, pan:null, vb:null, pts:[], busy:false, ret:null};
+/* stage: crop(범위 자르기) → pts. 옆면 = 점 두 개(앞 · 뒤 바퀴 중심), 윗면 = 선 세 개(앞 차축 중심선 · 뒤 차축 중심선 · 차량 중심선). vb = 미리보기 확대 · 이동 상태 */
 /* 이미지: 원본을 그대로 들고 있다가(자르기는 원본 해상도에서), 자른 뒤 줄여서 저장 */
 function shLoadImage(file){ return new Promise((ok, no) => { const fr = new FileReader(); fr.onerror = () => no(new Error('파일을 읽지 못했습니다.'));
   fr.onload = () => { const im = new Image(); im.onerror = () => no(new Error('이미지를 열 수 없습니다.'));
@@ -10667,21 +10674,34 @@ function shDxfPath(raw){ let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = 
 /* ---------- 창 ---------- */
 function shEl(){ let m = $('#shpm'); if(!m){ m = document.createElement('div'); m.id = 'shpm'; m.className = 'dv-modal shp-modal'; m.hidden = true;
     m.innerHTML = '<div class="dvm-box shp-box" role="dialog" aria-modal="true" aria-labelledby="shp-t"></div>'; document.body.appendChild(m); } return m; }
-const SHV = {side:['옆면', '① 앞 바퀴 중심', '② 뒤 바퀴 중심'], top:['윗면', '① 앞 차축 가운데', '② 뒤 차축 가운데']};
+const SHV = {side:['옆면', '① 앞 바퀴 중심', '② 뒤 바퀴 중심'], top:['윗면', '① 앞 차축 중심선', '② 뒤 차축 중심선']};
+/* 찍을 것: 옆면 [점 앞, 점 뒤], 윗면 [세로선 앞 차축, 세로선 뒤 차축, 가로선 차량 중심선] */
+const SHPICK = {side:[['p','① 앞 바퀴 중심(점)'],['p','② 뒤 바퀴 중심(점)']], top:[['v','① 앞 차축 중심선(세로선)'],['v','② 뒤 차축 중심선(세로선)'],['h','③ 차량 중심선(가로선, 좌우 가운데)']]};
+const shNeed = () => SHPICK[SHP.view].length, shDone = () => SHP.pts.length >= shNeed();
+/* 찍은 것 → 앞 · 뒤 기준점 p1 · p2 (윗면은 두 차축선과 중심선의 교점) */
+const shP12 = () => { const P = SHP.pts; if(!shDone()) return null; return SHP.view==='side' ? [P[0], P[1]] : [[P[0], P[2]], [P[1], P[2]]]; };
+/* 찍은 점 · 선 표시 (확대에 맞춰 크기 유지) */
+function shMarks(VB){ const sc = VB[2]/700, r = 6*sc, fs = 13*sc, P = SHP.pts, pk = SHPICK[SHP.view], big = 1e7;
+  return P.map((q, i) => { const lb = pk[i][1].slice(0, 1) + (SHP.view==='side' ? (i ? ' 뒤' : ' 앞') : ['앞 차축', '뒤 차축', '중심선'][i]);
+    if(pk[i][0]==='p') return `<g class="shp-pt"><circle cx="${q[0]}" cy="${q[1]}" r="${r}"/><text x="${q[0] + r*1.6}" y="${q[1] - r*1.3}" style="font-size:${fs}px">${lb}</text></g>`;
+    const vtx = pk[i][0]==='v';
+    return `<g class="shp-ln"><line x1="${vtx ? q : -big}" y1="${vtx ? -big : q}" x2="${vtx ? q : big}" y2="${vtx ? big : q}" vector-effect="non-scaling-stroke"/><text x="${vtx ? q + 4*sc : VB[0] + 6*sc}" y="${vtx ? VB[1] + 16*sc : q - 5*sc}" style="font-size:${fs}px">${lb}</text></g>`; }).join(''); }
 function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCanEdit(), n = SHP.pts.length, [, l1, l2] = SHV[v];
   const tabs = `<div class="m1-tabs shp-tabs" role="tablist">${Object.entries(SHV).map(([k, t]) => `<button type="button" role="tab" data-shv="${k}" aria-selected="${v===k}">${t[0]}</button>`).join('')}</div>`;
   const stg = SHP.stage, raw = SHP.raw;
-  const step = stg==='crop' ? '<b>쓸 범위</b>를 끌어서 사각형으로 고르십시오 (도면 테두리 · 표제란 · 다른 뷰 · 여백을 빼면 그림이 더 깔끔하고 이미지는 화질도 좋아짐). 필요 없으면 [자르지 않고 계속]' : !src ? '' : n===0 ? `<b>${l1}</b>을 누르십시오` : n===1 ? `<b>${l2}</b>을 누르십시오` : '두 점을 찍었습니다. 아래 미리보기를 확인하고 저장하십시오';
+  const NS = shNeed() + 1, pk = SHPICK[v];
+  const step = stg==='crop' ? `<span class="shp-st">단계 1 / ${NS}</span> <b>쓸 범위</b>를 끌어서 사각형으로 고르십시오 (도면 테두리 · 표제란 · 다른 뷰 · 여백을 빼면 그림이 더 깔끔하고 이미지는 화질도 좋아짐). 필요 없으면 [자르지 않고 계속]`
+    : !src ? '' : n < pk.length ? `<span class="shp-st">단계 ${n + 2} / ${NS}</span> <b>${pk[n][1]}</b>을 누르십시오${pk[n][0]==='p' ? '' : ' (마우스를 따라 선이 움직임)'}` : '모두 찍었습니다. 아래 맞춘 모습을 확인하고 저장하십시오';
+  const zoomHint = (stg==='crop' || src) ? '<span class="shp-zh">휠: 확대 · 축소 · 휠 버튼(또는 Ctrl + 끌기): 이동 · <button type="button" class="lnk" data-shpfit>전체 보기</button></span>' : '';
   let pv = '';
-  if(stg==='crop' && raw){ const [bx, by, bw, bh] = raw.kind==='img' ? raw.box : raw.prev.box, pad = Math.max(bw, bh)*0.03, c = SHP.crop;
-    pv = `<svg class="shp-src crop" id="shpsrc" viewBox="${bx - pad} ${by - pad} ${bw + 2*pad} ${bh + 2*pad}" preserveAspectRatio="xMidYMid meet">${raw.kind==='img' ? `<image href="${raw.prev}" width="${raw.W}" height="${raw.H}" preserveAspectRatio="none"/>` : `<path d="${raw.prev.d}" class="shp-d" vector-effect="non-scaling-stroke"/>`}
-      <path id="shpdim" class="shp-dim" fill-rule="evenodd" d="${c ? `M${bx - pad} ${by - pad}h${bw + 2*pad}v${bh + 2*pad}h${-(bw + 2*pad)}Z M${c[0]} ${c[1]}h${c[2]}v${c[3]}h${-c[2]}Z` : ''}"/><rect id="shpcrop" class="shp-crop" x="${c ? c[0] : 0}" y="${c ? c[1] : 0}" width="${c ? c[2] : 0}" height="${c ? c[3] : 0}" vector-effect="non-scaling-stroke"/></svg>`; }
-  else if(src){ const [bx, by, bw, bh] = src.kind==='img' ? [0, 0, src.w, src.h] : src.box, pad = Math.max(bw, bh)*0.03;
-    const mk = (p, i) => { const r = Math.max(bw, bh)*0.012; return `<g class="shp-pt"><circle cx="${p[0]}" cy="${p[1]}" r="${r}"/><text x="${p[0] + r*1.4}" y="${p[1] - r*1.2}" style="font-size:${r*2.6}px">${i ? '② 뒤' : '① 앞'}</text></g>`; };
-    pv = `<svg class="shp-src" id="shpsrc" viewBox="${bx - pad} ${by - pad} ${bw + 2*pad} ${bh + 2*pad}" preserveAspectRatio="xMidYMid meet">${src.kind==='img' ? `<image href="${src.data}" width="${src.w}" height="${src.h}"/>` : `<path d="${src.d}" class="shp-d" vector-effect="non-scaling-stroke"/>`}${SHP.pts.map(mk).join('')}</svg>`; }
+  if(stg==='crop' && raw){ const [bx, by, bw, bh] = raw.kind==='img' ? raw.box : raw.prev.box, pad = Math.max(bw, bh)*0.03, c = SHP.crop, VB = SHP.vb || [bx - pad, by - pad, bw + 2*pad, bh + 2*pad];
+    pv = `<svg class="shp-src crop" id="shpsrc" data-base="${[bx - pad, by - pad, bw + 2*pad, bh + 2*pad].join(' ')}" viewBox="${VB.join(' ')}" preserveAspectRatio="xMidYMid meet">${raw.kind==='img' ? `<image href="${raw.prev}" width="${raw.W}" height="${raw.H}" preserveAspectRatio="none"/>` : `<path d="${raw.prev.d}" class="shp-d" vector-effect="non-scaling-stroke"/>`}
+      <path id="shpdim" class="shp-dim" fill-rule="evenodd" d="M${bx - pad*20} ${by - pad*20}h${bw + 40*pad}v${bh + 40*pad}h${-(bw + 40*pad)}Z${c ? ` M${c[0]} ${c[1]}h${c[2]}v${c[3]}h${-c[2]}Z` : ''}"/><rect id="shpcrop" class="shp-crop" x="${c ? c[0] : 0}" y="${c ? c[1] : 0}" width="${c ? c[2] : 0}" height="${c ? c[3] : 0}" vector-effect="non-scaling-stroke"/></svg>`; }
+  else if(src){ const [bx, by, bw, bh] = src.kind==='img' ? [0, 0, src.w, src.h] : src.box, pad = Math.max(bw, bh)*0.03, VB = SHP.vb || [bx - pad, by - pad, bw + 2*pad, bh + 2*pad];
+    pv = `<svg class="shp-src pick" id="shpsrc" data-base="${[bx - pad, by - pad, bw + 2*pad, bh + 2*pad].join(' ')}" viewBox="${VB.join(' ')}" preserveAspectRatio="xMidYMid meet">${src.kind==='img' ? `<image href="${src.data}" width="${src.w}" height="${src.h}"/>` : `<path d="${src.d}" class="shp-d" vector-effect="non-scaling-stroke"/>`}<g id="shpmk">${shMarks(VB)}</g><line id="shpguide" class="shp-guide" x1="0" y1="0" x2="0" y2="0" vector-effect="non-scaling-stroke"/></svg>`; }
   /* 결과 미리보기: 지금 휠베이스 · 타이어 반경으로 맞춘 모습 + 바퀴 중심 · 지면 표시 */
   let res = '';
-  const show = src && n===2 ? {...src, p1:SHP.pts[0], p2:SHP.pts[1]} : (!src && cur ? cur : null);
+  const P12 = src && shP12(), show = P12 ? {...src, p1:P12[0], p2:P12[1]} : (!src && cur ? cur : null);
   if(show){ const P = typeof DASH!=='undefined' ? DASH.P : {L:1550, r_eff:229}, L = P.L || 1550, r = P.r_eff || 229, W = 640, H = v==='side' ? 260 : 220, s = W/(L + 1500), x0 = 900;
     const T = (x, y) => [ (x + x0)*s, v==='side' ? H - 20 - y*s : H/2 - y*s ];
     const A = v==='side' ? T(0, r) : T(0, 0), B = v==='side' ? T(L, r) : T(L, 0);
@@ -10691,14 +10711,24 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
     <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 차 그림'}</span></div>
     <div class="dvi-body shp-body">
       <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 올리면 질량 계산기의 질량 분포(옆 · 위) · 드라이버 모델 그림의 차 대신 씁니다. 계산에는 쓰지 않습니다.<br>
-        이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면에서 ${v==='side' ? '측면도' : '윗면도'} 한 장만 두고 저장한 파일을 올리십시오. 올린 뒤 쓸 범위를 자르고(건너뛰어도 됨) ${l1} → ${l2} 순서로 두 점을 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다${v==='side' ? '' : ' (올리지 않거나 되돌리면 기본 차 그림)'}.</p>
+        이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면 파일을 올리십시오${v==='side' ? '' : ' (윗면도는 차 길이 방향이 가로가 되게)'}. 올린 뒤 ${v==='side' ? '① 범위 자르기 → ② 앞 바퀴 중심 → ③ 뒤 바퀴 중심(3단계)' : '① 범위 자르기 → ② 앞 차축 중심선 → ③ 뒤 차축 중심선 → ④ 차량 중심선(4단계)'}만 하면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 올리지 않거나 되돌리면 기본 차 그림입니다.</p>
       ${ed ? `<label class="btn small shp-file">파일 고르기<input type="file" accept=".png,.jpg,.jpeg,.webp,.dxf" data-shpf hidden></label>` : '<p class="muted">지난 시즌 그림은 회장만 고칠 수 있습니다.</p>'}
-      <span class="shp-msg" id="shpmsg">${SHP.busy ? '읽는 중…' : step}</span>
+      <span class="shp-msg" id="shpmsg">${SHP.busy ? '읽는 중…' : step}</span>${zoomHint}
       ${pv}${res}</div>
-    <div class="dvi-foot"><span>${ed && cur && !src ? '<button type="button" class="lnk" data-shpdel>기본 차 그림으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${stg==='crop' ? `<button type="button" class="btn small" data-shpcrop="skip">자르지 않고 계속</button><button type="button" class="btn small pri" data-shpcrop="ok"${SHP.crop ? '' : ' disabled'}>이 범위로 자르기</button>`
-      : `${src && raw ? '<button type="button" class="btn small" data-shprecrop>다시 자르기</button>' : ''}${src ? '<button type="button" class="btn small" data-shpre>다시 찍기</button>' : ''}<button type="button" class="btn small" data-shpx>닫기</button>${ed && src ? `<button type="button" class="btn small pri" data-shpsave${n===2 ? '' : ' disabled'}>저장</button>` : ''}`}</span></div>`; }
+    <div class="dvi-foot"><span>${ed && cur && !src && stg!=='crop' ? '<button type="button" class="btn small" data-shpedit>저장된 그림 다시 편집</button> <button type="button" class="lnk" data-shpdel>기본 차 그림으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${stg==='crop' ? `<button type="button" class="btn small" data-shpcrop="skip">자르지 않고 계속</button><button type="button" class="btn small pri" data-shpcrop="ok"${SHP.crop ? '' : ' disabled'}>이 범위로 자르기</button>`
+      : `${src && raw ? '<button type="button" class="btn small" data-shprecrop>다시 자르기</button>' : ''}${src ? '<button type="button" class="btn small" data-shpre>다시 찍기</button>' : ''}<button type="button" class="btn small" data-shpx>닫기</button>${ed && src ? `<button type="button" class="btn small pri" data-shpsave${shDone() ? '' : ' disabled'}>저장</button>` : ''}`}</span></div>`; }
 function shPaint(){ const m = shEl(); m.querySelector('.dvm-box').innerHTML = shHTML(); }
-const shReset = () => { SHP.raw = null; SHP.src = null; SHP.stage = ''; SHP.crop = null; SHP.drag = null; SHP.pts = []; };
+/* 저장된 그림을 다시 편집: 저장본(자른 · 줄인 그림)을 원본처럼 다시 열어 자르기 · 찍기를 다시 함. 처음 파일은 저장 한도 때문에 보관하지 않으므로 저장한 범위 안에서만 다시 자를 수 있음 */
+async function shEditSaved(){ const cur = shGet(SHP.view); if(!cur) return; shReset(); SHP.busy = true; shPaint();
+  try{ if(cur.kind==='img'){ const im = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('저장된 그림을 열지 못했습니다.')); i.src = cur.data; });
+      SHP.raw = {kind:'img', im, W:cur.w, H:cur.h, prev:cur.data, box:[0, 0, cur.w, cur.h]}; SHP.src = {kind:'img', data:cur.data, w:cur.w, h:cur.h}; }
+    else { const lines = cur.d.split('M').filter(Boolean).map(seg => seg.split('L').map(pr => { const [x, y] = pr.trim().split(/\s+/).map(Number); return [x, -y]; }));
+      const parsed = {lines, circles:(cur.circles || []).map(([x, y, r]) => [x, -y, r])}; SHP.raw = {kind:'dxf', parsed, prev:{d:cur.d, box:cur.box, circles:cur.circles || []}};
+      SHP.src = {kind:'dxf', d:cur.d, box:cur.box, circles:cur.circles || []}; }
+    SHP.stage = 'pts'; SHP.pts = SHP.view==='side' ? [cur.p1, cur.p2] : [cur.p1[0], cur.p2[0], cur.p1[1]]; }
+  catch(e){ toast(e.message || '다시 열지 못했습니다.'); shReset(); }
+  SHP.busy = false; shPaint(); }
+const shReset = () => { SHP.raw = null; SHP.src = null; SHP.stage = ''; SHP.crop = null; SHP.drag = null; SHP.pan = null; SHP.vb = null; SHP.pts = []; };
 function shOpen(btn){ SHP.ret = btn || null; shReset(); const m = shEl(); shPaint(); m.hidden = false; const f = m.querySelector('[data-shpx]'); if(f) f.focus(); }
 function shClose(){ const m = $('#shpm'); if(m) m.hidden = true; shReset(); if(SHP.ret && SHP.ret.isConnected) SHP.ret.focus(); }
 async function shFile(file){ if(!file) return; const ext = (file.name.split('.').pop() || '').toLowerCase();
@@ -10713,32 +10743,54 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const op = t.closest('[data-shpopen]'); if(op){ shOpen(op); return; }
   if(!t.closest('#shpm')) return;
   if(t.closest('[data-shpx]') || t.id==='shpm'){ shClose(); return; }
-  const tv = t.closest('[data-shv]'); if(tv){ SHP.view = tv.dataset.shv; SHP.src = null; SHP.pts = []; shPaint(); return; }
+  const tv = t.closest('[data-shv]'); if(tv){ SHP.view = tv.dataset.shv; shReset(); shPaint(); return; }
   if(t.closest('[data-shpre]')){ SHP.pts = []; shPaint(); return; }
-  if(t.closest('[data-shprecrop]')){ SHP.stage = 'crop'; SHP.src = null; SHP.pts = []; shPaint(); return; }
+  if(t.closest('[data-shprecrop]')){ SHP.stage = 'crop'; SHP.src = null; SHP.pts = []; SHP.vb = null; shPaint(); return; }
+  if(t.closest('[data-shpfit]')){ SHP.vb = null; shPaint(); return; }
+  if(t.closest('[data-shpedit]')){ shEditSaved(); return; }
   const cb = t.closest('[data-shpcrop]'); if(cb && SHP.raw){ const rc = cb.dataset.shpcrop==='ok' ? SHP.crop : null;
     try{ SHP.src = SHP.raw.kind==='img' ? shImgSrc(SHP.raw, rc && [Math.max(0, rc[0]), Math.max(0, rc[1]), Math.min(SHP.raw.W - Math.max(0, rc[0]), rc[2]), Math.min(SHP.raw.H - Math.max(0, rc[1]), rc[3])])
-        : {kind:'dxf', ...shDxfPath(rc ? shDxfClip(SHP.raw.parsed, rc) : SHP.raw.parsed)}; SHP.stage = 'pts'; SHP.pts = []; }
+        : {kind:'dxf', ...shDxfPath(rc ? shDxfClip(SHP.raw.parsed, rc) : SHP.raw.parsed)}; SHP.stage = 'pts'; SHP.pts = []; SHP.vb = null; }
     catch(err){ toast(err.message || '자르지 못했습니다.'); } shPaint(); return; }
   if(t.closest('[data-shpdel]')){ shStore(SHP.view, null); toast('기본 차 그림으로 되돌렸습니다.'); shPaint(); return; }
-  if(t.closest('[data-shpsave]')){ const s = SHP.src; if(!s || SHP.pts.length < 2) return;
-    const val = s.kind==='img' ? {kind:'img', data:s.data, w:s.w, h:s.h, p1:SHP.pts[0], p2:SHP.pts[1]} : {kind:'dxf', d:s.d, box:s.box, p1:SHP.pts[0], p2:SHP.pts[1]};
+  if(t.closest('[data-shpsave]')){ const s = SHP.src, P12 = shP12(); if(!s || !P12) return;
+    const val = s.kind==='img' ? {kind:'img', data:s.data, w:s.w, h:s.h, p1:P12[0], p2:P12[1]} : {kind:'dxf', d:s.d, box:s.box, circles:(s.circles || []).slice(0, 80).map(c => c.map(x => +x.toFixed(2))), p1:P12[0], p2:P12[1]};
     if(JSON.stringify(val).length > SHP_MAX + 20000){ toast('그림이 너무 큽니다. 더 단순한 그림으로 올려 주십시오.'); return; }
     shStore(SHP.view, val); toast(`${SHV[SHP.view][0]} 그림을 저장했습니다.`); SHP.src = null; SHP.pts = []; shPaint(); return; }
-  const sv = t.closest('#shpsrc'); if(sv && SHP.stage==='pts' && SHP.src && SHP.pts.length < 2){ const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(sv.getScreenCTM().inverse()); let p = [q.x, q.y];
-    /* DXF: 가까운 원(바퀴 · 허브)이 있으면 그 중심에 붙임 */
-    if(SHP.src.kind==='dxf' && SHP.src.circles.length){ const px = 14/(sv.getScreenCTM().a || 1); let best = null, bd = px;
+  const sv = t.closest('#shpsrc'); if(sv && SHP.stage==='pts' && SHP.src && !shDone()){ if(SHP.moved){ SHP.moved = false; return; } let p = shPt(sv, e); const kind = SHPICK[SHP.view][SHP.pts.length][0];
+    /* DXF 옆면: 가까운 원(바퀴 · 허브)이 있으면 그 중심에 붙임 */
+    if(kind==='p' && SHP.src.kind==='dxf' && SHP.src.circles.length){ const px = 14/(sv.getScreenCTM().a || 1); let best = null, bd = px;
       SHP.src.circles.forEach(([cx, cy]) => { const d = Math.hypot(cx - p[0], cy - p[1]); if(d < bd){ bd = d; best = [cx, cy]; } }); if(best) p = best; }
-    SHP.pts.push(p); shPaint(); }
+    SHP.pts.push(kind==='p' ? p : kind==='v' ? p[0] : p[1]); shPaint(); }
 });
 document.addEventListener('change', e => { const t = e.target; if(t.matches && t.matches('[data-shpf]')){ shFile(t.files && t.files[0]); t.value = ''; } });
 /* 범위 자르기: 미리보기 위에서 끌어 사각형 */
 const shPt = (sv, e) => { const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(sv.getScreenCTM().inverse()); return [q.x, q.y]; };
-document.addEventListener('pointerdown', e => { const sv = e.target.closest && e.target.closest('#shpsrc.crop'); if(!sv || e.button!==0) return; e.preventDefault(); SHP.drag = {sv, a:shPt(sv, e)}; try{ sv.setPointerCapture(e.pointerId); }catch(err){} });
-document.addEventListener('pointermove', e => { const D = SHP.drag; if(!D) return; const b = shPt(D.sv, e), r = [Math.min(D.a[0], b[0]), Math.min(D.a[1], b[1]), Math.abs(b[0] - D.a[0]), Math.abs(b[1] - D.a[1])]; SHP.crop = r;
-  const R = $('#shpcrop'), M = $('#shpdim'), vb = D.sv.viewBox.baseVal; if(R){ R.setAttribute('x', r[0]); R.setAttribute('y', r[1]); R.setAttribute('width', r[2]); R.setAttribute('height', r[3]); }
-  if(M) M.setAttribute('d', `M${vb.x} ${vb.y}h${vb.width}v${vb.height}h${-vb.width}Z M${r[0]} ${r[1]}h${r[2]}v${r[3]}h${-r[2]}Z`); });
-document.addEventListener('pointerup', () => { const D = SHP.drag; if(!D) return; SHP.drag = null; if(SHP.crop && (SHP.crop[2] < 1e-9 || SHP.crop[3] < 1e-9)) SHP.crop = null; shPaint(); });
+const shVB = sv => { const v = sv.viewBox.baseVal; return [v.x, v.y, v.width, v.height]; };
+const shSetVB = (sv, VB) => { SHP.vb = VB; sv.setAttribute('viewBox', VB.join(' ')); const mk = $('#shpmk'); if(mk) mk.innerHTML = shMarks(VB); };
+/* 끌기: 왼쪽 = 범위 자르기(자르기 단계), 휠 버튼 또는 Ctrl + 끌기 = 이동 */
+document.addEventListener('pointerdown', e => { const sv = e.target.closest && e.target.closest('#shpsrc'); if(!sv) return;
+  if(e.button===1 || (e.button===0 && e.ctrlKey)){ e.preventDefault(); SHP.pan = {sv, x:e.clientX, y:e.clientY, moved:false}; try{ sv.setPointerCapture(e.pointerId); }catch(err){} return; }
+  if(e.button===0 && sv.classList.contains('crop')){ e.preventDefault(); SHP.drag = {sv, a:shPt(sv, e)}; try{ sv.setPointerCapture(e.pointerId); }catch(err){} } });
+document.addEventListener('pointermove', e => { const G = SHP.pan;
+  if(G){ const VB = shVB(G.sv), rc = G.sv.getBoundingClientRect(), k = 1/(Math.min(rc.width/VB[2], rc.height/VB[3]) || 1), dx = e.clientX - G.x, dy = e.clientY - G.y;
+    if(Math.abs(dx) + Math.abs(dy) > 2) G.moved = true; G.x = e.clientX; G.y = e.clientY; shSetVB(G.sv, [VB[0] - dx*k, VB[1] - dy*k, VB[2], VB[3]]); return; }
+  const D = SHP.drag;
+  if(D){ const b = shPt(D.sv, e), r = [Math.min(D.a[0], b[0]), Math.min(D.a[1], b[1]), Math.abs(b[0] - D.a[0]), Math.abs(b[1] - D.a[1])]; SHP.crop = r;
+    const R = $('#shpcrop'), M = $('#shpdim'), base = D.sv.dataset.base.split(' ').map(Number), P = base[2]*20;
+    if(R){ R.setAttribute('x', r[0]); R.setAttribute('y', r[1]); R.setAttribute('width', r[2]); R.setAttribute('height', r[3]); }
+    if(M) M.setAttribute('d', `M${base[0] - P} ${base[1] - P}h${base[2] + 2*P}v${base[3] + 2*P}h${-(base[2] + 2*P)}Z M${r[0]} ${r[1]}h${r[2]}v${r[3]}h${-r[2]}Z`); return; }
+  /* 윗면 선 고르기: 마우스를 따라 세로 · 가로 안내선 */
+  const sv = e.target.closest && e.target.closest('#shpsrc.pick'), gl = $('#shpguide'); if(!gl) return;
+  if(!sv || shDone() || SHPICK[SHP.view][SHP.pts.length][0]==='p'){ gl.setAttribute('x1', 0); gl.setAttribute('x2', 0); gl.setAttribute('y1', 0); gl.setAttribute('y2', 0); return; }
+  const p = shPt(sv, e), v = SHPICK[SHP.view][SHP.pts.length][0]==='v', big = 1e7;
+  gl.setAttribute('x1', v ? p[0] : -big); gl.setAttribute('x2', v ? p[0] : big); gl.setAttribute('y1', v ? -big : p[1]); gl.setAttribute('y2', v ? big : p[1]); });
+document.addEventListener('pointerup', () => { const G = SHP.pan; if(G){ SHP.pan = null; if(G.moved) SHP.moved = true; setTimeout(() => { SHP.moved = false; }, 0); return; }
+  const D = SHP.drag; if(!D) return; SHP.drag = null; if(SHP.crop && (SHP.crop[2] < 1e-9 || SHP.crop[3] < 1e-9)) SHP.crop = null; shPaint(); });
+/* 휠: 마우스 위치를 중심으로 확대 · 축소 */
+document.addEventListener('wheel', e => { const sv = e.target.closest && e.target.closest('#shpsrc'); if(!sv) return; e.preventDefault();
+  const VB = shVB(sv), base = sv.dataset.base.split(' ').map(Number), f = Math.exp(e.deltaY*0.0015), w = Math.min(base[2]*1.5, Math.max(base[2]/60, VB[2]*f)), k = w/VB[2], c = shPt(sv, e);
+  shSetVB(sv, [c[0] - (c[0] - VB[0])*k, c[1] - (c[1] - VB[1])*k, VB[2]*k, VB[3]*k]); }, {passive:false});
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ const m = $('#shpm'); if(m && !m.hidden){ e.preventDefault(); e.stopPropagation(); shClose(); } } }, true);
 </script>
 <script>
