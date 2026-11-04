@@ -28,6 +28,18 @@ service cloud.firestore {
     function curKeyChange(t, a, b) { return !exists(sznPath(t)) || a.diff(b).affectedKeys().hasOnly([string(get(sznPath(t)).data.season)]); }
     function isBlocked(t) { return exists(/databases/$(database)/documents/teams/$(t)/blocked/$(uid())); }
     function str(v, n) { return v is string && v.size() <= n; }
+    // 팀 설계값(dv)·질량 표(mass)·표(dtab): 문서 id 앞부분 = 파트 코드. ※ js/store/dash-keys.js 의 PCODE 와 같게
+    function partOfCode(c) { return {'all':'공통','frame':'프레임','sus':'서스','str':'조향','brk':'제동','pt':'구동계',
+                                     'mc':'모터컨트롤러','bat':'배터리','cool':'냉각','elec':'회로','daq':'데이터로거','aero':'에어로'}.get(c, ''); }
+    function codeOf(d) { return d.split('__')[0]; }
+    // 함께 고치는 파트: 문서 id → 파트 (js/store/dash-keys.js 의 p2, tools/gen_dash_keys.py 의 CO 와 같게)
+    function coOwn(d) { return {'sus__r_load':'프레임'}.get(d, ''); }
+    function canDvPart(t, d) { return canEditPart(t, partOfCode(codeOf(d))) || (coOwn(d) != '' && canEditPart(t, coOwn(d))); }
+    function curSzn(t) { return string(get(sznPath(t)).data.season); }
+    // 이번 시즌 칸 검사: 값은 숫자 또는 비움, 상태는 네 가지 중 하나, 출처 200자 이내
+    function validDvEntry(e) { return e is map && (e.get('v', null) == null || e.v is number)
+                                      && e.get('st', 'rev') in ['ok','rev','asm','calc'] && str(e.get('src', ''), 200); }
+    function validDv(t, m) { return m.keys().hasOnly(['s']) && m.s is map && (!exists(sznPath(t)) || !(curSzn(t) in m.s) || validDvEntry(m.s[curSzn(t)])); }
 
     function tPath(t) { return /databases/$(database)/documents/teams/$(t); }
     function validDName(n) { return n is string && n.size() >= 1 && n.size() <= 20; }
@@ -98,6 +110,32 @@ service cloud.firestore {
         allow create: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && onlyCurKey(t, request.resource.data.get('s', {})));
         allow update: if isTAdmin(t) || (canEditPart(t, request.resource.data.get('part', null)) && (canEditPart(t, resource.data.get('part', null)) || !('part' in resource.data))
                                          && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
+        allow delete: if isTAdmin(t); }
+      // 팀 설계값·질량 표·드라이버·표 (docs/STORE-PLAN.md): 회장 전부, 팀장·파트장은 문서 id 의 담당 파트(드라이버는 프레임)의 이번 시즌만
+      match /dv/{d} { allow read: if isMember(t);
+        allow create: if validDv(t, request.resource.data) && (isTAdmin(t)
+                      || (canDvPart(t, d) && onlyCurKey(t, request.resource.data.get('s', {}))));
+        allow update: if validDv(t, request.resource.data) && (isTAdmin(t)
+                      || (canDvPart(t, d) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
+        allow delete: if isTAdmin(t); }
+      match /dtab/{d} { allow read: if isMember(t);
+        allow create: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {})));
+        allow update: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
+        allow delete: if isTAdmin(t); }
+      // 질량 표(어셈블리 하나 = 문서 하나) · 드라이버: 계산기는 팀원 누구나 쓰므로 팀원이면 이번 시즌 칸을 고칠 수 있음 (회장은 전부).
+      // 지울 때는 문서를 지우지 않고 이번 시즌 칸만 뺌 (지난 시즌 기록 보존). 대시보드 반영(dv)은 담당 파트 규칙 그대로
+      match /mass/{c} { allow read: if isMember(t);
+        allow create: if isTAdmin(t) || (isMember(t) && onlyCurKey(t, request.resource.data.get('s', {})));
+        allow update: if isTAdmin(t) || (isMember(t) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
+        allow delete: if isTAdmin(t); }
+      match /drivers/{n} { allow read: if isMember(t);
+        allow create: if n in ['d1','d2','d3'] && (isTAdmin(t) || (isMember(t) && onlyCurKey(t, request.resource.data.get('s', {}))));
+        allow update: if n in ['d1','d2','d3'] && (isTAdmin(t) || (isMember(t) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
+        allow delete: if isTAdmin(t); }
+      // 차 형상(그림 바탕): 옆면 · 윗면. 팀원 누구나 이번 시즌 칸만 (질량 표와 같음)
+      match /shape/{n} { allow read: if isMember(t);
+        allow create: if n in ['side','top'] && (isTAdmin(t) || (isMember(t) && onlyCurKey(t, request.resource.data.get('s', {}))));
+        allow update: if n in ['side','top'] && (isTAdmin(t) || (isMember(t) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
         allow delete: if isTAdmin(t); }
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
       // 팀 비밀번호 원문 (관리자만 보기·쓰기. 오픈채팅 입장 코드 수준으로 취급)

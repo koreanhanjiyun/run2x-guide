@@ -25,7 +25,7 @@
     if(j===lastJson) return; lastJson = j;
     const now = Date.now(); if(!force && now - acctAt < 20000) return; acctAt = now;
     if(window.Backend && Backend.kind()==='firebase') Backend.Team.ctx().then(c=>{ if(c.uid) Backend.Team.saveLast(j).catch(()=>{}); }).catch(()=>{}); }
-  const h = (location.hash||'').slice(1), TABS=['start','goals','steps','graph','ref','team'];
+  const h = (location.hash||'').slice(1), TABS=['start','goals','steps','tools','graph','ref','team'];
   /* #항목 링크는 항상 우선. #탭만 있으면(새로고침 등) 저장된 위치가 같은 탭일 때 그대로 복원 */
   const local0 = read(PREF('lastpos',''));
   const hasHash = /^it-/.test(h) || (TABS.includes(h) && !(local0 && local0.tab===h));

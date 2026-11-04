@@ -10,6 +10,8 @@ import base64
 html = re.sub(r'(<script src="js/figures/comp-figs\.js[^"]*"></script>)', lambda m: m.group(1) + '\n<script src="js/figures/comp-figs-3d.js"></script>', html)
 # 그림 창을 열 때 따로 불러오는 좌표계 그림 파일도 한 파일 안에 미리 넣음
 html = re.sub(r'(<script src="js/figures/modes-anim\.js[^"]*"></script>)', r'<script src="js/figures/coord-figs.js"></script>\n\1', html)
+# 3D: three.js 와 REF4 단순화 모델도 한 파일 안에 (사이트에서는 3D 화면을 열 때 따로 불러옴)
+html = re.sub(r'(<script src="js/figures/view3d\.js[^"]*"></script>)', r'<script src="vendor/three/three.min.js"></script>\n<script src="vendor/three/GLTFLoader.js"></script>\n\1', html)
 def css_inline(path):
     c = rd(path)
     # css 안의 이미지 주소(../img/…)는 data: 주소로 넣음 (아티팩트는 파일 하나)
@@ -20,6 +22,8 @@ def js_inline(path):
     # 부품 그림 파일의 이미지 주소(img/comp/…webp)는 data: 주소로 넣음
     if path.endswith('comp-figs-3d.js'):
         c = re.sub(r'img/comp/([\w-]+\.webp)', lambda m: 'data:image/webp;base64,' + base64.b64encode(open(os.path.join(ROOT, 'img', 'comp', m.group(1)), 'rb').read()).decode(), c)
+    if path.endswith('workbench.js'):
+        c = c.replace("'img/3d/ref4s.glb'", "'data:model/gltf-binary;base64," + base64.b64encode(open(os.path.join(ROOT, 'img', '3d', 'ref4s.glb'), 'rb').read()).decode() + "'")
     return c
 html = re.sub(r'<script src="((?:js|vendor)/[^"?]+)(?:\?v=[^"]*)?"></script>', lambda m: '<script>\n' + js_inline(m.group(1)).replace('</script>', '<\\/script>') + '</script>', html)
 # 아티팩트는 자체 문서 틀을 씌우므로 doctype·html·head·body 태그를 뺀 본문만 남김

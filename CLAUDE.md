@@ -9,3 +9,6 @@
 - 검증: `python3 -m http.server` 로 띄워 Playwright로 콘솔 오류 없이 로드되는지, 항목 수(details.item)·단계 수가 그대로인지 확인.
 - Claude 아티팩트 게시용 한 파일: `python3 tools/build_single.py`.
 - 사용자(관리자)의 작업 규칙: 명확한 실행 지시("ㄱㄱ", "진행", "반영" 등) 없이는 파일을 고치지 않고 논의만 한다. 답변은 한국어 존댓말.
+- 이어서 작업할 때: 먼저 `docs/HANDOFF.md` (현재 상태 · 시안 빌드와 검사 · 결정 사항 · 남은 일)를 읽는다.
+- 커밋 범위(2026-11-04 결정): 지시받아 끝낸 작업은 묻지 않고 `redesign-v1` 에 커밋 · 푸시하고, 공개 시안 `main` 의 `draft/` 도 같이 갱신한다(`tools/draft/build.py` → `tools/draft/publish.py`). 그 밖의 `main` 반영(배포 · 버전 올림)은 지시가 있을 때만.
+- 시안 확인 주소: https://koreanhanjiyun.github.io/run2x-guide/draft/ (예시 데이터 · 가짜 저장소, 실제 Firebase 연결 안 함).

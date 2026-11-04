@@ -1,19 +1,15 @@
 /* ============================================================
-   3D 킹핀축·조향 캠버 장면 (three.js r128, 펼칠 때만 로드)
+   3D 킹핀축·조향 캠버 장면 (three.js r147 저장소본, 펼칠 때만 로드)
    좌표(three): X = 차량 왼쪽, Y = 위, Z = 차량 앞. 우측 앞바퀴, 바퀴 바깥 = −X
    ============================================================ */
 const KP3D = () => `<div class="kp3d" data-kp3d="1"><div class="kp3d-ph">3D 장면을 불러오는 중입니다…</div></div>`;
-let THREE_P = null;
-function loadThree(){
-  if(window.THREE) return Promise.resolve();
-  if(!THREE_P) THREE_P = new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); });
-  return THREE_P;
-}
+/* three.js 는 저장소 vendor/three (r147), 조작은 공통 V3D.controls (js/figures/view3d.js) */
+const loadThree = () => V3D.three();
 function initKP3D(el){
   if(el.dataset.ready) return; el.dataset.ready='1';
   el.innerHTML = `<div class="kp3d-wrap"><div class="kp3d-view"><canvas></canvas>
     <div class="kp3d-cam"><button data-cam="iso" aria-pressed="true">3D</button><button data-cam="front">차체 정면</button><button data-cam="side">차체 측면</button><button data-cam="top">위</button><span class="sep"></span><button data-cam="tfront">타이어 정면</button><button data-cam="tside">타이어 측면</button></div>
-    <div class="kp3d-tip">휠 버튼(또는 왼쪽) 끌기 = 회전 · Ctrl + 끌기 = 이동 · Shift + 휠 버튼 끌기·휠 굴리기 = 확대 · 보라 실선·면 = 타이어 중심선·중심면, 점선 = 지면 수직선, 보라 점선 = 회전 반지름(조향축 → 바퀴 축 끝)</div></div>
+    <div class="kp3d-tip">${V3D.HELP} · 보라 실선·면 = 타이어 중심선·중심면, 점선 = 지면 수직선, 보라 점선 = 회전 반지름(조향축 → 바퀴 축 끝)</div></div>
     <div class="kp3d-ctl">
     <div class="kp3d-hud"><div><b style="color:var(--s-gam)">캠버 변화 Δγ</b></div><div class="kp3d-big">0.00°</div><div class="kp3d-sub"></div></div>
       <label>조향각 δ <span data-v="d">20°</span><button type="button" class="d0btn" data-d0="1" title="조향각을 0°로">0°</button><input type="range" min="-35" max="35" step="0.5" value="20" data-k="d" class="bipolar"><em class="kp3d-hint">+ 좌회전 (이 우측 바퀴가 바깥) · − 우회전 (안쪽)</em></label>
@@ -107,14 +103,13 @@ function initKP3D(el){
     if(b.dataset.pre){ const p={cas:[6,0],kpi:[0,8],both:[6,8]}[b.dataset.pre]; st.nu=p[0]; st.sg=p[1]; el.querySelectorAll('[data-pre]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); update(); }
     if(b.dataset.cam){ pan.set(0,0,0); mode=b.dataset.cam; const c={iso:[-0.55,0.98,1.7],front:[0,Math.PI/2,1.9],side:[-Math.PI/2,Math.PI/2,1.9],top:[0,0.02,1.9],tfront:[0,Math.PI/2,1.9],tside:[-Math.PI/2,Math.PI/2,1.9]}[mode]; [st.th,st.ph,st.r]=c; el.querySelectorAll('[data-cam]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); }
   });
-  let drag=null;
-  function doPan(e){ const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; cam.updateMatrixWorld(); const rv=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,0), uv=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,1); const h=cv.clientHeight||400; const s=(cam===ocam)?(ocam.top-ocam.bottom)/ocam.zoom/h:2*st.r*Math.tan(pcam.fov*Math.PI/360)/h; pan.add(rv.multiplyScalar(-dx*s)).add(uv.multiplyScalar(dy*s)); render(); }
-  /* SolidWorks 방식: 휠 버튼 끌기 = 회전, Ctrl + 휠 버튼 끌기 = 화면 이동, Shift + 휠 버튼 끌기 = 확대·축소, 휠 굴리기 = 확대·축소 (왼쪽 끌기 = 회전, Ctrl + 왼쪽 끌기 = 이동도 유지) */
-  cv.addEventListener('mousedown', e=>{ if(e.button===1) e.preventDefault(); });
-  cv.addEventListener('pointerdown', e=>{ if(e.button!==0 && e.button!==1) return; const op = e.ctrlKey ? 'pan' : (e.button===1 && e.shiftKey) ? 'zoom' : 'rot'; drag={x:e.clientX,y:e.clientY,pan:op==='pan',zoom:op==='zoom'}; e.preventDefault(); cv.setPointerCapture(e.pointerId); });
-  cv.addEventListener('pointermove', e=>{ if(!drag) return; if(drag.pan){ doPan(e); return; } if(drag.zoom){ const f=Math.exp((e.clientY-drag.y)*0.006); drag.y=e.clientY; drag.x=e.clientX; st.r=Math.min(4,Math.max(0.9,st.r*f)); ocam.zoom=Math.min(4,Math.max(0.4,ocam.zoom/f)); render(); return; } if(mode!=='iso'){ mode='iso'; } st.th -= (e.clientX-drag.x)*0.008; st.ph = Math.min(Math.PI-0.02, Math.max(0.02, st.ph - (e.clientY-drag.y)*0.008)); drag={x:e.clientX,y:e.clientY}; el.querySelectorAll('[data-cam]').forEach(x=>x.setAttribute('aria-pressed','false')); render(); });
-  cv.addEventListener('pointerup', ()=>{ drag=null; }); cv.addEventListener('pointercancel', ()=>{ drag=null; });
-  cv.addEventListener('wheel', e=>{ e.preventDefault(); const f=Math.exp(e.deltaY*0.001); st.r = Math.min(4, Math.max(0.9, st.r*f)); ocam.zoom = Math.min(4, Math.max(0.4, ocam.zoom/f)); render(); }, {passive:false});
+  function doPan(dx, dy){ cam.updateMatrixWorld(); const rv=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,0), uv=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,1); const h=cv.clientHeight||400; const s=(cam===ocam)?(ocam.top-ocam.bottom)/ocam.zoom/h:2*st.r*Math.tan(pcam.fov*Math.PI/360)/h; pan.add(rv.multiplyScalar(-dx*s)).add(uv.multiplyScalar(dy*s)); render(); }
+  /* SolidWorks 방식 조작 (공통 V3D.controls) */
+  V3D.controls(cv, {
+    pan: doPan,
+    zoom: f => { st.r=Math.min(4,Math.max(0.9,st.r*f)); ocam.zoom=Math.min(4,Math.max(0.4,ocam.zoom/f)); render(); },
+    rot: (dx, dy) => { if(mode!=='iso'){ mode='iso'; } st.th -= dx*0.008; st.ph = Math.min(Math.PI-0.02, Math.max(0.02, st.ph - dy*0.008)); el.querySelectorAll('[data-cam]').forEach(x=>x.setAttribute('aria-pressed','false')); render(); }
+  });
   window.addEventListener('resize', ()=>{ size(); render(); });
   try{ new ResizeObserver(()=>{ size(); render(); }).observe(el.querySelector('.kp3d-ctl')); }catch(e){}
   size(); update();
@@ -122,7 +117,7 @@ function initKP3D(el){
 function tryInit3D(root){
   root.querySelectorAll('.kp3d[data-kp3d]:not([data-ready])').forEach(el=>{
     if(!el.offsetParent) return;
-    loadThree().then(()=>initKP3D(el)).catch(()=>{ el.innerHTML='<div class="kp3d-ph">3D 라이브러리를 불러오지 못했습니다. 네트워크를 확인해 주십시오.</div>'; });
+    loadThree().then(()=>initKP3D(el)).catch(()=>{ el.innerHTML='<div class="kp3d-ph">3D 라이브러리(three.js)를 불러오지 못했습니다.</div>'; });
   });
 }
 document.addEventListener('toggle', e=>{ const d=e.target; if(d.tagName==='DETAILS' && d.open) requestAnimationFrame(()=>tryInit3D(d)); }, true);

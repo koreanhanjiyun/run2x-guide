@@ -45,7 +45,7 @@ const GRAPH_TOUR = [
 ];
 const TOUR = {
  top: [
-  ['.tabs','탭','시작 → 설계 → 참고 순서로 보면 "왜 → 무엇을 → 어떻게"가 이어집니다. 항목 연결도는 설계 탭 안의 [연결도] 보기입니다. 오른쪽 끝 [팀]은 팀의 진행 기록입니다.',{union:'.tab'}],
+  ['.tabs','탭','시작 → 설계 → 도구 → 참고 순서로 보면 "왜 → 무엇을 → 어떻게 정하나"가 이어집니다. 항목 연결도는 설계 탭 안의 [연결도] 보기입니다. 오른쪽 끝 [팀]은 팀의 진행 기록입니다.',{union:'.tab'}],
   ['.gsearch','검색','항목·단계·부품·용어를 한 번에 찾고, 종류별로 묶어 보여 줍니다. 키보드 / 를 누르면 바로 입력합니다. 초성(ㅅㅋㄹ = 스크럽 반경…)이나 영문 약어(KPI)도 됩니다.',{prep:()=>{ showSearch(); }, also:'#gsearch-list'}],
   ['#seasonChip','상태 칩','지금 상태를 색으로 알려 줍니다. 누르면 로그인하거나 팀 탭으로 갑니다.',{pic:PIC.chip,prep:()=>{ hideSearch(); }}],
   ['.topask','문의','내용 오류·사이트 오류·기능 제안을 사이트 개발자에게 보냅니다(로그인 필요). 누르면 이렇게 문의 칸이 내려옵니다. 종류·위치(탭·단계·항목)를 고르고 내용을 적어 보냅니다. 팀과 무관하게 개발자에게만 갑니다.',{prep:()=>{ showAsk(); }, also:'#fbPanel'}],
@@ -94,6 +94,15 @@ const TOUR = {
   ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너를 누르면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다. 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
  ],
  graph: GRAPH_TOUR,
+ tools: [
+  ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
+  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. 점 색은 확정·검토 중·가정·계산값입니다. 값을 누르면 고칩니다.',{tab:'tools'}],
+  ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]을 누르면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
+  ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
+  ['#dcond','주행 조건','차속·코너 반경·종가속·에어로 포함 여부를 바꾸거나 예시 상황을 누르면 그림과 아래 숫자가 같이 바뀝니다.',{tab:'tools'}],
+  ['#dpart','파트별','파트별 선도입니다. 전체 범위의 그래프에 지금 조건을 세로 점선으로 표시합니다. 회색 탭은 그 계산 도구를 만들 때 열립니다.',{tab:'tools'}],
+  ['#v-tools .tl-tools','도구 모음','설계 단계 순서의 계산 도구 목록입니다. 누르면 전체 화면 작업창으로 열립니다.',{tab:'tools'}]
+ ],
  ref: [['#ref-list','참고','용어집(검색 가능)·기준 규정·출처·변경 이력입니다. 줄을 누르면 펼쳐집니다.',{tab:'ref'}]],
  team_nolog: [
   ['#v-team .tt-nav','팀 메뉴','로그인 전에는 [팀원 · 계정]이 먼저 열립니다. 로그인하고 팀에 가입하면 진행 현황·시즌 요약이 보입니다. [대회 점수]는 로그인 없이 볼 수 있습니다.',{tab:'team',sub:'account',union:'button:not([hidden])'}],
@@ -149,7 +158,8 @@ const teamCourse = () => teamNolog() ? [...TOUR.team_nolog] : [...TOUR.team_comm
 /* 팀 설정 화면에서 [이 탭 사용법]을 누르면 팀 설정 사용법만 */
 const teamSettingsOn = () => !!document.querySelector('#v-team [data-ttp=settings]:not([hidden])');
 const startCourse = () => { const s=(typeof START!=='undefined' && START.sys) || ''; return !s ? TOUR.start : s.startsWith('goal:') ? TOUR.goalpage : TOUR.sys; };
-const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
+const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.tools, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
+  : name.startsWith('wb:') ? [...((typeof WB_TOOLS!=='undefined' && WB_TOOLS[name.slice(3)] && WB_TOOLS[name.slice(3)].tour) || [])]
   : name==='team' ? (teamSettingsOn() && SH.on && SH.canAdmin ? [...TOUR.team_admin] : teamCourse()) : name==='start' ? [...startCourse()] : (TOUR[name] ? [...TOUR[name]] : [...TOUR.top]);
 
 /* ---------- 엔진 ---------- */
@@ -279,9 +289,23 @@ function tgClicks(o){ const c=[]; let vmDone=false;
   if(o.sub && typeof TT!=='undefined'){ const vis=document.querySelector(`#v-team [data-ttp="${o.sub}"]:not([hidden])`); if(!vis || (o.tab && TAB!==o.tab)) c.push({sel:`#v-team .tt-nav [data-tts="${o.sub}"]`, run:()=>{ TT.sub=o.sub; TT.picked=1; renderTeamTab(); }}); }
   if(o.vm && !vmDone && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
   if(o.press) c.push({sel:o.press, run:()=>{}});
+  /* 화면 안 버튼(예: 작업창의 표 탭): need() 가 참일 때만 누르는 모습 → run() */
+  if(o.click && (!o.click.need || o.click.need())) c.push({sel:o.click.sel, run:o.click.run});
   return c; }
 /* 복제본이 보여 주는 화면 상태의 요약 (같으면 다시 복제할 필요 없음) */
 const tgSig = o => [TAB, (typeof VMODE!=='undefined'?VMODE:''), (typeof TT!=='undefined'?TT.sub:''), (typeof START!=='undefined'?START.sys:''), o.fx||'', document.querySelectorAll('details[open]').length, (typeof SEL!=='undefined'?SEL:'')].join('|');
+/* 화면에 붙은 창 안쪽 스크롤(예: 작업창 오른쪽): 실제 화면과 복제본을 같이 부드럽게 굴려 대상이 보이게 */
+function tgInner(sel, el){ return new Promise(res=>{ if(!TR) return res();
+  const real=[...document.querySelectorAll(sel)].find(x=>!x.closest('#tour')), cl=TR.el.querySelector('.tg-fix '+sel) || TR.el.querySelector(sel);
+  if(!real) return res();
+  if(!TR.inner) TR.inner=new Map(); if(!TR.inner.has(real)){ const y0=real.scrollTop; TR.inner.set(real,y0); tgUndo(()=>{ if(real.isConnected) real.scrollTop=y0; }); }
+  const rc=real.getBoundingClientRect(), r=el.getBoundingClientRect(), max=real.scrollHeight-real.clientHeight, a=real.scrollTop;
+  let to=a; if(r.top < rc.top+16 || r.bottom > rc.bottom-16) to = r.height > rc.height-48 ? a + r.top - rc.top - 24 : a + r.top - rc.top - (rc.height - r.height)/2;
+  to=Math.max(0, Math.min(max, to)); const d=to-a; if(cl) cl.scrollTop=a;
+  if(Math.abs(d)<2 || tgReduced() || TR.fast){ real.scrollTop=to; if(cl) cl.scrollTop=to; return res(); }
+  const dur=Math.min(1100, Math.max(600, 450+Math.abs(d)*0.4)), t0=performance.now(), ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, tk=TR;
+  const step=now=>{ if(TR!==tk) return res(); const t=TR.fast ? 1 : Math.min(1,(now-t0)/dur), y=a+d*ease(t); real.scrollTop=y; if(cl) cl.scrollTop=y; if(t<1) requestAnimationFrame(step); else res(); };
+  requestAnimationFrame(step); }); }
 /* 진행 중에 [다음]·[이전]을 또 누르면: 지금 동작을 바로 끝내고, 누른 횟수만큼 넘어감 */
 function tgQueue(d){ TR.fast=true; TR.queue = TR.queue || {n:0}; TR.queue.n += d; }
 async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); return; } dir=dir||1; const tk=TR; TR.busy=true; TR.el.classList.add('tg-busy');
@@ -291,7 +315,7 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     while(i>=0 && i<TR.steps.length){ const st=TR.steps[i], o=st[3]||{}; TR.keepCrumb=!!o.sync;
       /* 4: 화면을 바꾸는 버튼(탭·하위 화면·보기 방식·항목)을 누르는 모습 → 바뀐 화면으로 서서히 */
       for(const c of tgClicks(o)){
-        if(TR.inited && dir>0) await tgPress(c.sel); if(TR!==tk) return;
+        if(TR.inited && dir>0){ const be=o.inner && tourVis(c.sel); if(be){ await tgInner(o.inner, be); if(TR!==tk) return; } await tgPress(c.sel); } if(TR!==tk) return;
         try{ await c.run(); }catch(e){} await tgFrame(); await tgSleep(60); if(TR!==tk) return;
         if(c.reset) TR.off=scrollY;
         await tgRebuild(o.fx, c.reset ? 260 : 450); if(TR!==tk) return; }
@@ -304,7 +328,8 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
       /* 화면이 바뀐 경우에만 다시 복제 (안 바뀌면 바로 스크롤) */
       const sig=tgSig(o); if(!TR.inited || sig!==TR.sig || o.prep || o.sync!==TR.lastSync) await tgRebuild(o.fx, 450); if(TR!==tk) return; TR.sig=sig; TR.lastSync=o.sync; TR.inited=true;
       TR.el.querySelector('.tg-ptr').classList.remove('on'); tgDim(true); tgHole(null);
-      /* 3: 어둑한 채로 스르륵 */
+      /* 3: 어둑한 채로 스르륵 (창 안쪽 스크롤이면 그 창을) */
+      if(o.inner){ await tgInner(o.inner, el); if(TR!==tk) return; }
       const g=tgGeom(el,o); await tgScrollTo(g.off); if(TR!==tk) return;
       /* 5·6: 도착한 자리에서 하이라이트가 밝아지고, 잠깐 뒤 설명 카드 */
       const gg=tgGeom(el,o); tgHole(gg); tgDim(false); TR.i=i; TR.cur=el; tgText(i); tgCard(gg);
