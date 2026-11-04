@@ -79,7 +79,7 @@ function initFigRail(){ if($('#figRail')) return;
   fr.querySelector('#figToggle').addEventListener('click',()=>{ md.hidden?open():close(); });
   md.addEventListener('click',e=>{ if(e.target===md || e.target.closest('.fm-x')) close(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !md.hidden) close(); });
-  const place=()=>{ const r=$('#partRail'); let top; if(r && !r.hidden){ const b=r.getBoundingClientRect(); top=b.bottom+10; } else { top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50)+14; } fr.style.top=top+'px'; fr.hidden = !(TAB==='steps'||TAB==='graph'||TAB==='parts'); if(fr.hidden && !md.hidden){ close(); } };
+  const place=()=>{ const r=$('#partRail'); let top; if(r && !r.hidden){ const b=r.getBoundingClientRect(); top=b.bottom+10; } else { top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50)+14; } fr.style.top=top+'px'; fr.hidden = !(TAB==='steps'||TAB==='graph'||TAB==='parts'||TAB==='tools'); if(fr.hidden && !md.hidden){ close(); } };
   window.__figPlace=place;
   try{ new ResizeObserver(place).observe($('#partRail')); }catch(e){} window.addEventListener('resize',place); place(); }
 function applyPart(){ try{ initFigRail(); window.__figPlace(); }catch(e){}

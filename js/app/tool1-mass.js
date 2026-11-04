@@ -55,7 +55,7 @@ function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.act
 const m1Num = (v, attrs) => `<input type="number" step="any" ${attrs} value="${v==null || !isFinite(v) ? '' : v}">`;
 function m1ExtHTML(){ return `<section class="wb-sec m1" aria-label="표 입력"><div class="wb-h"><h3>표 입력</h3>
       <div class="m1-tabs" role="tablist">${[['mass','부품 질량 표'], ['drv','드라이버 모델']].map(([k, t]) => `<button type="button" role="tab" data-m1tab="${k}" aria-selected="${M1.tab===k}">${t}</button>`).join('')}</div>
-      <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 뒤 차축에서 앞으로 · y = 중심선에서 왼쪽 · z = 지면에서 위 <button type="button" class="lnk" data-coordopen>좌표계 그림</button> · <button type="button" class="lnk" data-shpopen>차 형상</button></span></div>
+      <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 뒤 차축에서 앞으로 · y = 중심선에서 왼쪽 · z = 지면에서 위</span></div>
     <div id="m1body">${M1.tab==='mass' ? m1MassHTML() : m1DrvHTML()}</div></section>`; }
 /* 카드 배치: 4열, 줄마다 왼쪽부터 빈칸 없이 채움. 드라이버 카드는 첫 줄 첫 칸 고정(첫 줄은 3장까지).
    저장값 pos {c, r}: 줄 r 과 줄 안 순서 c. 자리가 없는 카드는 마지막 줄 뒤에 이어 붙임 */
@@ -371,7 +371,9 @@ function m1TourTab(tab){ if(!M1.tourUndo && typeof tgUndo==='function'){ const t
   if(M1.tab!==tab){ M1.tab = tab; wbPaint(['ext']); } }
 const m1TT = tab => ({click:{sel:`#wb [data-m1tab="${tab}"]`, need:() => M1.tab!==tab, run:() => m1TourTab(tab)}, inner:'#wb .wb-right'});
 const M1TOUR = [
-  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 도움말, 검증표(손계산과 비교), 코드 보기, 입력 내보내기 · 가져오기, 대시보드에 반영입니다.', m1TT('mass')],
+  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 도움말, 좌표계, 차 형상, 검증표(손계산과 비교), 코드 보기, 입력 내보내기 · 가져오기, 대시보드에 반영입니다.', m1TT('mass')],
+  ['#wb .wb-bar [data-coordopen]', '좌표계', '모든 좌표는 사이트 차량 좌표계입니다. 원점은 뒤 차축 중심 · 차량 중심면 · 지면, x는 앞으로 +, y는 왼쪽 +, z는 위로 + [mm]입니다. 누르면 설계 탭과 같은 좌표계 그림이 열립니다. 차 안 부품은 대부분 x가 + 라서 숫자만 넣으면 됩니다.', m1TT('mass')],
+  ['#wb .wb-bar [data-shpopen]', '차 형상', '우리 차 측면도 · 윗면도를 이미지(.png .jpg .webp)나 CAD 도면(.dxf)으로 올리면, 질량 분포와 드라이버 모델 그림의 차 대신 씁니다. 올린 뒤 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심(윗면은 차축 가운데) 두 점만 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 계산에는 쓰지 않고, 올리지 않거나 되돌리면 기본 차 그림입니다.', m1TT('mass')],
   ['#wb .wb-in', '입력', '휠베이스와 트레드입니다. [대시보드 값으로 채우기]를 누르면 대시보드 설계값이 들어옵니다.', m1TT('mass')],
   ['#wb .m1-tabs', '표 입력', '[부품 질량 표]는 어셈블리별 질량과 위치, [드라이버 모델]은 드라이버 자세와 체절 질량입니다. 팀원 누구나 이번 시즌 값을 고칩니다.', m1TT('mass')],
   ['#m1list [data-m1g]', '어셈블리 카드', '카드 하나가 어셈블리 하나입니다. 좌표는 그 어셈블리의 무게중심이고, 질량은 항목의 질량 × 개수 합입니다. 개수를 0으로 하면 그 항목은 빠집니다. 왼쪽 위 동그라미로 카드 색을, 오른쪽 위 단추로 좌우 바꿔 복사 · 지우기를 합니다.', m1TT('mass')],
@@ -412,7 +414,7 @@ WB_TOOLS['1'] = {
     {k:'ixx', dk:'ixx', d:1, g:'관성 모멘트'}, {k:'iyy', dk:'iyy', d:1, g:'관성 모멘트'}, {k:'izz', dk:'izz', d:1, g:'관성 모멘트'}
   ],
   extHTML: m1ExtHTML, extraI: m1ExtraI, figure: m1Figure,
-  tour: M1TOUR,
+  tour: M1TOUR, shape: true,
   onResult(R){ if(M1.tab==='drv'){ if(!M1.edit && !M1.drag){ const f = $('#m1dfig'); if(f) f.innerHTML = m1DrvFig(R); } else { const f = $('#m1dfig'); if(f && M1.drag) f.innerHTML = m1DrvFig(R); }
       const sg = $('#m1segs'); if(sg) sg.innerHTML = m1SegTable(R.drv && R.drv[M1.drv]); const ds = $('#m1dsum'), DD = R.drv && R.drv[M1.drv]; if(ds && DD) ds.textContent = wbFmt(DD.m, 1); const he = $('#m1dhest'); if(he && DD){ he.hidden = !DD.segSet; he.textContent = m1HestTxt(DD); } }
     else if(M1.tab==='mass'){ const a = document.activeElement; if(!M1.pick && !M1.mv && !(a && a.closest && a.closest('#wbext') && a.matches('input, select'))){ const b = $('#m1body'); if(b) b.innerHTML = m1MassHTML(); } } },

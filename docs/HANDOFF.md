@@ -20,8 +20,8 @@ python3 tools/draft/build.py              # → dist/draft/run2x_redesign.html, 
 # 검사 (Playwright, 콘솔 오류 없어야 함)
 python3 -m http.server 8801 &             # 저장소 맨 위에서
 node tools/draft/qa/site_check.js 8801    # 기대: uniq 125, 오류 []
-node tools/draft/qa/tools_tour.js         # 기대: 1 / 6 … 6 / 6, errs []
-node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 32/32 · 도움말 1~13, errs []
+node tools/draft/qa/tools_tour.js         # 기대: 1 / 7 … 7 / 7, errs []
+node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 32/32 · 도움말 1~15, errs []
 # (node 가 playwright 를 못 찾으면 NODE_PATH=$(npm root -g) 를 앞에 붙임)
 
 # 공개 시안 갱신: main 작업 트리에 draft/ 만 넣어 커밋 · 푸시
@@ -50,7 +50,7 @@ cd ../mainwt && git add draft && git commit -m "시안 갱신: draft/ (redesign-
 - 드라이버 카드 항목(몸무게 · 헬멧 · 드라이버 복 · 안전벨트)은 드라이버 모델 값과 같은 값. 드라이버 실측 CG 기능은 관리자 지시로 뺐다(2026-11-04).
 - 드라이버 모델: de Leva 1996 표 4 (머리 · 목 VERT–CERV, 몸통 CERV–MIDH 무게중심 51.38 % / 49.64 %, 정강이 KJC–LMAL 44.59 % / 44.16 %, 남 / 여). 발은 발목 높이 0.039 H · 발 길이 0.152 H 비율(Winter 2009 그림 4.1, Drillis & Contini), 뒤꿈치 ~ 발목 0.22 × 발 길이는 근사.
 - 헬멧 색: 1st 보라 `#6A4294` · 2nd 파랑 `#1d5f9a` · 3rd 주황 `#c2410c`.
-- 차 형상(그림 바탕, `js/app/car-shape.js`): 도구 1 표 입력 머리의 '차 형상'에서 엶. 질량 분포(옆 · 위) · 드라이버 모델 그림에만 쓰고 대시보드 '그림으로 보기'는 기본 차 그림 그대로. 올리지 않거나 되돌리면 기본 차 그림. 이미지(.png .jpg .webp) 또는 DXF(글자 형식, 측면도 · 윗면도 한 장)를 올리고 ① 앞 바퀴(차축) 중심 → ② 뒤 순서로 두 점만 찍으면 크기 · 회전 · 앞뒤 방향이 자동(옆면은 앞이 오른쪽이면 좌우 뒤집기, 윗면은 돌리기만). DXF 는 원 중심에 붙음. `shape/{side|top}` 에 시즌별 저장(약 850 kB 까지), 계산에는 쓰지 않음.
+- 차 형상(그림 바탕, `js/app/car-shape.js`): 작업창 위 막대의 [차 형상](도구 정의 `shape: true`)에서 엶. [좌표계]는 모든 도구 작업창 위 막대, 도구 탭은 오른쪽 '좌표계·거동' 배너. 질량 분포(옆 · 위) · 드라이버 모델 그림에만 쓰고 대시보드 '그림으로 보기'는 기본 차 그림 그대로. 올리지 않거나 되돌리면 기본 차 그림. 이미지(.png .jpg .webp) 또는 DXF(글자 형식, 측면도 · 윗면도 한 장)를 올리고 ① 앞 바퀴(차축) 중심 → ② 뒤 순서로 두 점만 찍으면 크기 · 회전 · 앞뒤 방향이 자동(옆면은 앞이 오른쪽이면 좌우 뒤집기, 윗면은 돌리기만). DXF 는 원 중심에 붙음. `shape/{side|top}` 에 시즌별 저장(약 850 kB 까지), 계산에는 쓰지 않음.
 - 작업창 [도움말]: `WB_TOOLS[번호].tour` 에 단계를 두면 생김. 표 탭이 바뀌는 단계는 `click`, 작업창 안쪽 스크롤은 `inner` 로 부드럽게.
 
 ## 5. 남은 일

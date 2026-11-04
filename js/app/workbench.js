@@ -103,6 +103,8 @@ function wbShellHTML(){ const T = wbT();
       <span class="wb-code-on" id="wbcodeon" hidden>코드 고침 (저장 안 됨)</span>
       <span class="wb-acts">
         ${T.tour ? `<button type="button" class="btn small" data-tour="wb:${wbEsc(T.no)}">도움말</button>` : ''}
+        <button type="button" class="btn small" data-coordopen title="차량 좌표계 (원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)">좌표계</button>
+        ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}
         <button type="button" class="btn small" data-wbver>검증표</button>
         <button type="button" class="btn small" data-wbcode>코드 보기</button>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
