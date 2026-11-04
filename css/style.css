@@ -2711,3 +2711,7 @@ html.wb-lock #tip{z-index:95}
 .wb-oc .wb-or{column-gap:28px}
 .wb-oc.wide .m1-cwg{min-width:330px}
 .m1-reset.sure{color:var(--verify-fg);background:var(--verify-bg);border-radius:5px;padding:1px 8px;text-decoration:none}
+/* 드라이버 그림: 헬멧은 반투명(바깥 지름), 안에 머리 원(머리 길이) */
+.m1-helm{fill-opacity:.42;stroke-width:2}
+.m1-head{fill:#c9a68a;stroke:#fff;stroke-width:1.5}
+.m1-visor{opacity:.55}
