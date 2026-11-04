@@ -64,6 +64,7 @@
 | 차량 전체 질량 · CG 결과(`m`, `fr`, `left`, `h`, `m_s`, `h_s`, `m_us_f/r`, 관성 모멘트) | 프레임 (확정) | 도구 1과 드라이버를 프레임이 맡으므로 결과 반영도 같은 파트가 한다 |
 | 휠베이스 · 트레드(`L`, `tf`, `tr`) | 서스 (확정) | 서스 기하의 기본 치수 |
 | 차량 목표값: `score_goal`, `t_acc` · `t_skid` · `t_ax` · `t_end` | 공통 (팀장 · 회장, 확정) | 차량 목표(P0) 항목 |
+| 하중 반경 `r_load` | 서스 + 프레임 (2026-11-04 확정) | 서스 항목이지만 도구 1 그림 · 계산에 쓰므로 프레임 담당도 고침. `gen_dash_keys.py` 의 `CO` → `dash-keys.js` 의 `p2`, 규칙의 `coOwn` |
 | `ay_max`, `k_us` | 서스 (확정) | 캠버 · 롤 · 밸런스 설계의 기준이라 서스가 정함 |
 | 그 밖 | 항목 파트 그대로 | |
 
@@ -76,6 +77,9 @@
 function partOfCode(c) { return {'all':'공통','frame':'프레임','sus':'서스','str':'조향','brk':'제동','pt':'구동계',
                                  'mc':'모터컨트롤러','bat':'배터리','cool':'냉각','elec':'회로','daq':'데이터로거','aero':'에어로'}.get(c, ''); }
 function codeOf(d) { return d.split('__')[0]; }
+// 공동 담당 (문서 id → 두 번째 파트). ※ dash-keys.js 의 p2 와 같게
+function coOwn(d) { return {'sus__r_load':'프레임'}.get(d, ''); }
+function canDvPart(t, d) { return canEditPart(t, partOfCode(codeOf(d))) || (coOwn(d) != '' && canEditPart(t, coOwn(d))); }
 function curSzn(t) { return string(get(sznPath(t)).data.season); }
 // 이번 시즌 항목 한 칸 검사: 값은 숫자 또는 비움, 상태는 네 가지 중 하나, 출처 200자 이내
 function validDvEntry(e) { return e is map && (e.get('v', null) == null || e.v is number)
@@ -84,9 +88,9 @@ function validDv(t, m) { return m.keys().hasOnly(['s']) && (!exists(sznPath(t)) 
 
 match /dv/{d} { allow read: if isMember(t);
   allow create: if validDv(t, request.resource.data) && (isTAdmin(t)
-                || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {}))));
+                || (canDvPart(t, d) && onlyCurKey(t, request.resource.data.get('s', {}))));
   allow update: if validDv(t, request.resource.data) && (isTAdmin(t)
-                || (canEditPart(t, partOfCode(codeOf(d))) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
+                || (canDvPart(t, d) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
   allow delete: if isTAdmin(t); }
 match /dtab/{d} { allow read: if isMember(t);
   allow create: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {})));

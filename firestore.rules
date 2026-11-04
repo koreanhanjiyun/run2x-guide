@@ -32,6 +32,9 @@ service cloud.firestore {
     function partOfCode(c) { return {'all':'공통','frame':'프레임','sus':'서스','str':'조향','brk':'제동','pt':'구동계',
                                      'mc':'모터컨트롤러','bat':'배터리','cool':'냉각','elec':'회로','daq':'데이터로거','aero':'에어로'}.get(c, ''); }
     function codeOf(d) { return d.split('__')[0]; }
+    // 함께 고치는 파트: 문서 id → 파트 (js/store/dash-keys.js 의 p2, tools/gen_dash_keys.py 의 CO 와 같게)
+    function coOwn(d) { return {'sus__r_load':'프레임'}.get(d, ''); }
+    function canDvPart(t, d) { return canEditPart(t, partOfCode(codeOf(d))) || (coOwn(d) != '' && canEditPart(t, coOwn(d))); }
     function curSzn(t) { return string(get(sznPath(t)).data.season); }
     // 이번 시즌 칸 검사: 값은 숫자 또는 비움, 상태는 네 가지 중 하나, 출처 200자 이내
     function validDvEntry(e) { return e is map && (e.get('v', null) == null || e.v is number)
@@ -111,9 +114,9 @@ service cloud.firestore {
       // 팀 설계값·질량 표·드라이버·표 (docs/STORE-PLAN.md): 회장 전부, 팀장·파트장은 문서 id 의 담당 파트(드라이버는 프레임)의 이번 시즌만
       match /dv/{d} { allow read: if isMember(t);
         allow create: if validDv(t, request.resource.data) && (isTAdmin(t)
-                      || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {}))));
+                      || (canDvPart(t, d) && onlyCurKey(t, request.resource.data.get('s', {}))));
         allow update: if validDv(t, request.resource.data) && (isTAdmin(t)
-                      || (canEditPart(t, partOfCode(codeOf(d))) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
+                      || (canDvPart(t, d) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
         allow delete: if isTAdmin(t); }
       match /dtab/{d} { allow read: if isMember(t);
         allow create: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {})));

@@ -21,6 +21,8 @@ NAMES = {'tf':'앞 트레드','tr':'뒤 트레드','ixx':'롤 관성 모멘트',
          'cla_drs':'C<sub>L</sub>·A (DRS 열림)','cda_drs':'C<sub>D</sub>·A (DRS 열림)','xcop_drs':'CoP 위치 (DRS 열림)',
          'lsd_ramp_acc':'LSD 램프각 (가속)','lsd_ramp_dec':'LSD 램프각 (감속)',
          'derate_t0':'디레이팅 시작 온도','derate_t1':'디레이팅 끝 온도','n_s':'셀 직렬 수','n_p':'셀 병렬 수'}
+# 함께 고치는 파트 (담당 파트 외에 이 파트 담당도 고침). firestore.rules 의 coOwn 과 같게
+CO = {'r_load':'프레임'}
 UNITS = {'cla_drs':'m²','cda_drs':'m²','xcop_drs':'mm'}
 def clean(n): return re.sub(r'\s*\((?:앞 · 뒤[^)]*|앞 · 뒤)\)', lambda m: '', n).replace('앞 · 뒤 ','').strip()
 keys = []
@@ -54,14 +56,16 @@ miss = [d['k'] for d in keys if not d['def']]
 assert not miss, ('풀이 없음', miss)
 out = ['/* ============================================================',
        '   팀 설계값 키 목록 — docs/DASH-VARS.md 에서 만든 파일 (tools/gen_dash_keys.py). 직접 고치지 말고 문서를 고친 뒤 다시 만들 것',
-       '   k 키 · n 이름 · u 단위 · p 담당 파트 · it 연결 설계 항목 · calc 계산값 · def 풀이 · fig 풀이 그림 대상',
+       '   k 키 · n 이름 · u 단위 · p 담당 파트 · p2 함께 고치는 파트(있으면) · it 연결 설계 항목 · calc 계산값 · def 풀이 · fig 풀이 그림 대상',
        '   ※ 파트 코드표 PCODE 는 firestore.rules 의 partOfCode 와 같게',
        '   ============================================================ */',
        'const PCODE = ' + json.dumps(PCODE, ensure_ascii=False) + ';',
        'const PCODE_OF = Object.fromEntries(Object.entries(PCODE).map(([c,p])=>[p,c]));',
        'const DKEYS = [']
 for d in keys:
-    out.append('  ' + json.dumps({x:d[x] for x in ('k','n','u','p','it','calc','def','fig')}, ensure_ascii=False) + ',')
+    o = {x:d[x] for x in ('k','n','u','p','it','calc','def','fig')}
+    if d['k'] in CO: o['p2'] = CO[d['k']]
+    out.append('  ' + json.dumps(o, ensure_ascii=False) + ',')
 out += ['];', 'const DK = Object.fromEntries(DKEYS.map(d=>[d.k,d]));',
         '/* 저장 문서 id: 파트코드__키 (규칙이 id 앞부분으로 담당 파트를 판정) */',
         'const dvId = k => PCODE_OF[DK[k].p] + \'__\' + k;', '']

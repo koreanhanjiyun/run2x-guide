@@ -57,12 +57,12 @@ cd ../mainwt && git add draft && git commit -m "시안 갱신: draft/ (redesign-
 
 | 누가 | 일 |
 |---|---|
-| 관리자 | 규칙 플레이그라운드 시험 8번(기대값 허용으로 바뀜) · 12~15번 → 통과하면 게시 (docs/RULES-TEST.md) |
+| 관리자 | 규칙 플레이그라운드 시험 8번(기대값 허용으로 바뀜) · 12~20번(19~20: 하중 반경 프레임 공동 담당) → 통과하면 게시 (docs/RULES-TEST.md) |
 | Claude (지시 필요) | `main` 배포: 변경 이력(`js/data/refs.js`) 추가 · 버전 올림 · `#verline` |
 | Claude (지시 필요) | 다음 도구(TOOLS-PLAN.md 순서) |
 | 확인 못 함 | Winter 그림 4.1 비율(0.039 H, 0.152 H)은 원문을 열람하지 못했다. 원문 확인 전까지 근사값으로 다룬다 |
 
 ## 6. 주의
 
-- `firestore.rules` 의 `mass` · `drivers` 는 팀원 쓰기로 바뀌었는데 아직 게시 전(시험 12~15 대기). `main` 에 올리면 GitHub Action 이 규칙을 자동 게시하므로, 시험 통과 전에는 `firestore.rules` 를 `main` 에 올리지 않는다.
+- `firestore.rules` 의 `mass` · `drivers` 는 팀원 쓰기로 바뀌었는데 아직 게시 전(시험 12~20 대기). `dv/sus__r_load` 는 프레임 담당도 쓸 수 있음(`coOwn`). `main` 에 올리면 GitHub Action 이 규칙을 자동 게시하므로, 시험 통과 전에는 `firestore.rules` 를 `main` 에 올리지 않는다.
 - 논문 결과 · 학위논문 폴더 등 관리자 PC 의 다른 폴더는 이 저장소와 무관하며 수정 금지.

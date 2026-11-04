@@ -30,13 +30,13 @@ try{ DVS = JSON.parse(localStorage.getItem(DVKEY)||'{}') || {}; }catch(e){ DVS =
 const dvSeason = () => (typeof SEASON!=='undefined' ? String(SEASON) : String(new Date().getFullYear()));
 const dvEntry = (k, se) => { const d = DVS[dvId(k)]; return (d && d.s && d.s[se || dvSeason()]) || null; };
 /* 이 키를 고칠 수 있나: 회장 전부, 팀장·파트장은 담당 파트(또는 묶음)만. 저장소가 없으면 이 브라우저에서 자유롭게 */
-const canEditDv = k => !SH.on ? true : (SH.canAdmin || (!pastLock() && isLeadRole(SH.role) && partOK(SH.parts, SH.role, DK[k].p)));   /* 지난 시즌은 회장만 */
+const canEditDv = k => !SH.on ? true : (SH.canAdmin || (!pastLock() && isLeadRole(SH.role) && (partOK(SH.parts, SH.role, DK[k].p) || (!!DK[k].p2 && partOK(SH.parts, SH.role, DK[k].p2)))));   /* 지난 시즌은 회장만. p2 = 함께 고치는 파트 */
 async function dvSave(k, patch){
   const id = dvId(k), se = dvSeason(), cur = DVS[id] || {s:{}}, prev = (cur.s||{})[se] || {};
   const ent = {v: prev.v==null ? null : prev.v, st: prev.st || 'rev', src: prev.src || '', ...patch, by: SH.me || null, at: new Date().toISOString()};
   const doc = {s: {...(cur.s||{}), [se]: ent}};
   if(!SH.on){ DVS[id] = doc; try{ localStorage.setItem(DVKEY, JSON.stringify(DVS)); }catch(e){} dashPaint(); if(typeof refreshVals==='function') refreshVals(); return true; }
-  if(!canEditDv(k)){ toast(`${DK[k].n} 값은 회장이나 ${DK[k].p} 담당 팀장·파트장만 고칠 수 있습니다.`); return false; }
+  if(!canEditDv(k)){ toast(`${DK[k].n} 값은 회장이나 ${DK[k].p}${DK[k].p2 ? '·' + DK[k].p2 : ''} 담당 팀장·파트장만 고칠 수 있습니다.`); return false; }
   DVS[id] = doc; dashPaint();
   try{ await SH.db.doc('dv/'+id).set(doc); return true; }
   catch(e){ toast(Backend.denied && Backend.denied(e) ? '이 값을 고칠 권한이 없습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); return false; }
