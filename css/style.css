@@ -2748,3 +2748,9 @@ html.wb-lock #tip{z-index:95}
 .wb-help b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px}
 .wb-help:hover,.wb-help:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
 .shp-src.crop{cursor:crosshair;touch-action:none}.shp-dim{fill:rgba(20,16,32,.35)}.shp-crop{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 4}
+.shp-st{display:inline-block;padding:0 7px;margin-right:4px;border-radius:999px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700}
+.shp-zh{font-size:11.5px;color:var(--muted)}
+.shp-src.pick{cursor:crosshair}
+.shp-guide{stroke:#d92d20;stroke-width:1.5;stroke-dasharray:6 4;pointer-events:none}
+.shp-ln line{stroke:#d92d20;stroke-width:2}
+.shp-ln text{fill:#d92d20;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px}
