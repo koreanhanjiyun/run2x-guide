@@ -63,7 +63,7 @@ async function wbSweep(){ const k = WB.xa.slice(3), d = wbT().inputs.find(o => o
   if(!WB.sw || WB.sw.k!==k){ const v = WB.I[k], a = Math.abs(v) > 1e-9 ? Math.abs(v) : 1;   /* 범위: 도구가 정한 sw, 없으면 지금 값 ±50 % */
     WB.sw = d.sw ? {k, lo:d.sw[0], hi:d.sw[1], n:41} : {k, lo:+(v - a*.5).toPrecision(4), hi:+(v + a*.5).toPrecision(4), n:41}; }
   const S = WB.sw, n = Math.max(3, Math.min(201, Math.round(S.n))), X = Array.from({length:n}, (_, i) => S.lo + (S.hi - S.lo)*i/(n - 1));
-  const base = wbInputs(), r = await wbRun(X.map(x => ({...base, [k]:x})), wbCode());
+  const base = wbInputs(), r = await wbRun(X.map(x => ({...base, [k]:x, _sweep:true})), wbCode());   /* _sweep: 도구가 훑기 중에 무거운 부가 계산을 건너뛸 수 있게 */
   if(!r.ok){ S.X = null; S.err = r.err; return; } S.err = ''; S.X = X; S.O = {}; wbT().outputs.forEach(o => { S.O[o.k] = r.outs.map(t => t[o.k]); });
   if(WB.si >= n) WB.si = n - 1; if(!WB.selO.size) wbT().outputs.slice(0, 2).forEach(o => WB.selO.add(o.k)); }
 const wbCalcSoon = () => { clearTimeout(WB.timer); WB.timer = setTimeout(wbCalc, 120); };
@@ -129,7 +129,8 @@ function wbInHTML(){ const T = wbT(); let g0 = '';
   return T.inputs.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
     const grp = d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
     const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : wbInName(d);
-    return grp + `<label class="wb-ir${diff?' diff':''}"><span class="wb-in-n">${nm}</span><input type="number" step="any" data-wbi="${d.k}" value="${isFinite(v)?v:''}"><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
+    return grp + `<label class="wb-ir${diff?' diff':''}"><span class="wb-in-n">${nm}${viz}</span><input type="number" step="any" data-wbi="${d.k}" value="${isFinite(v)?v:''}"><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
@@ -373,3 +374,24 @@ document.addEventListener('pointerdown', e => { if(!WB.R || e.button!==0) return
   e.preventDefault(); WB_DRAG = svg.dataset.wbp; wbPick(svg, e); const box = svg.closest('.wb-plotbox'); if(box) box.focus({preventScroll:true}); });
 document.addEventListener('pointermove', e => { if(!WB_DRAG || !WB.R) return; const svg = document.querySelector(`#wb .wb-plot[data-wbp="${WB_DRAG}"]`); if(svg) wbPick(svg, e); });
 document.addEventListener('pointerup', () => { WB_DRAG = null; });
+
+/* ---------- 입력 칸 옆 '모양 보기' (보조): 입력 정의에 viz(I) → {x:{d,n,u}, ys:[{k,d,c,n,u}], act, note} 가 있으면 그래프 단추.
+   누르면 그 칸 아래 작은 창에 지금 입력값으로 그린 그래프. 입력을 고치면 바로 다시 그림, 바깥을 누르거나 Esc 로 닫음.
+   2D · 3D 표 값(하중 감도, 앞으로 넣을 맵 데이터 등)이 어떻게 생겼는지 확인하고 넘어가는 용도 ---------- */
+const WBV = { k:'', btn:null };
+function wbVizHTML(){ const d = wbT() && wbT().inputs.find(o => o.k===WBV.k); if(!d || !d.viz) return '';
+  let g; try{ g = d.viz({...WB.I}); }catch(e){ return '<p class="wb-err">그래프를 그리지 못했습니다.</p>'; }
+  return `<div class="wb-vzh"><b>${wbInName(d)}</b><span class="muted">지금 입력값으로 그림</span><button type="button" class="dvi-x" data-wbvizx aria-label="닫기">×</button></div>`
+    + wbPlot({id:'viz', w:360, h:210, x:g.x, ys:g.ys, norm:g.ys.length > 1, act:g.act || g.ys[0].k, label:'모양 보기'})
+    + `<div class="wb-leg">${g.ys.map(y => `<span><i style="background:${y.c}"></i>${wbEsc(y.n)}${y.u ? ` [${wbEsc(y.u)}]` : ''}</span>`).join('')}</div>${g.note ? `<p class="wb-vzn">${wbEsc(g.note)}</p>` : ''}`; }
+function wbVizPlace(){ const p = $('#wbvz'), b = WBV.btn; if(!p || !b || !b.isConnected) return; const r = b.getBoundingClientRect();
+  p.style.left = Math.min(window.innerWidth - p.offsetWidth - 12, r.left) + 'px'; p.style.top = Math.min(window.innerHeight - p.offsetHeight - 12, r.bottom + 6) + 'px'; }
+function wbVizOpen(k, btn){ wbVizClose(); WBV.k = k; WBV.btn = btn; const p = document.createElement('div'); p.id = 'wbvz'; p.className = 'wb-vzp'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '모양 보기');
+  p.innerHTML = wbVizHTML(); document.body.appendChild(p); btn.setAttribute('aria-expanded', 'true'); wbVizPlace(); }
+function wbVizClose(){ const p = $('#wbvz'); if(p) p.remove(); if(WBV.btn) WBV.btn.setAttribute('aria-expanded', 'false'); WBV.k = ''; WBV.btn = null; }
+document.addEventListener('click', e => { const t = e.target; if(!t.closest) return;
+  const b = t.closest('[data-wbviz]'); if(b){ e.preventDefault(); if(WBV.k===b.dataset.wbviz) wbVizClose(); else wbVizOpen(b.dataset.wbviz, b); return; }
+  if(t.closest('[data-wbvizx]')){ wbVizClose(); return; }
+  if(WBV.k && !t.closest('#wbvz')) wbVizClose(); });
+document.addEventListener('input', e => { if(!WBV.k || !e.target.closest || !e.target.closest('[data-wbi]')) return; setTimeout(() => { const p = $('#wbvz'); if(p){ p.innerHTML = wbVizHTML(); wbVizPlace(); } }, 0); });
+document.addEventListener('keydown', e => { if(e.key==='Escape' && WBV.k){ e.preventDefault(); e.stopPropagation(); wbVizClose(); } }, true);
