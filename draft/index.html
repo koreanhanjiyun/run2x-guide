@@ -2745,6 +2745,7 @@ html.wb-lock #tip{z-index:95}
 .m1-half:has(input:checked){color:var(--accent);font-weight:600}
 .m1-half.ro{cursor:default;color:var(--accent);font-weight:600}
 #figModal.over-wb{z-index:80}
+.m1-rec{font-size:11.5px;fill:var(--muted)}.m1-rec.on{fill:#b45309;font-weight:600}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -10155,6 +10156,7 @@ function m1SegTable(D){ if(!D) return '';
 const M1F = {x0:-960, x1:2120, z0:-110, z1:1290, W:1000};
 const M1HD = 280;  /* 헬멧 바깥 지름 기본값 [mm] (옆에서 본 앞뒤 길이, 그림용). 머리 길이와 따로 입력, 계산(키 · 무게중심)에는 쓰지 않음 */
 /* 범위: 점(엉덩이점 · 발목 · 핸들)은 그림 안에서만, 각도는 등받이 0~70°, 발 0~60° */
+/* 안전벨트 규정: 상반신(등받이)이 지면에서 60° 이하 = 수직에서 30° 이상이면 허리벨트 각도 기준이 바뀜 (그림에 표시만, 계산과 무관) */
 const M1LIM = {x:[M1F.x0 + 40, M1F.x1 - 40], z:[0, M1F.z1 - 40], back:[0, 70], neck:[-60, 20], foot:[0, 60], helm:[150, 400]};
 const m1Clamp = (v, [a, b]) => Math.max(a, Math.min(b, v));
 function m1Pill(P, a, b, ra, rb, cls, halo){ const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1e-6, u = [dx/l, dy/l], n = [-u[1], u[0]];
@@ -10181,7 +10183,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
     ${CARFIG.carSide(T, L, r, s)}
     <line x1="0" y1="${Z(0)}" x2="${W}" y2="${Z(0)}" class="cf-gnd"/>
     <line x1="${X(L)}" y1="${Z(0) + 4}" x2="${X(L)}" y2="${Z(0) + 16}" stroke="#232731"/><text x="${X(L)}" y="${Z(0) + 28}" class="m1-tl" text-anchor="middle">뒤 차축 x = 0</text>
-    <text x="${W - 12}" y="${Z(0) + 28}" class="m1-tl" text-anchor="end">좌표 [mm]: x = 뒤 차축 중심에서 앞으로 + · z = 지면에서 위로 +</text>
+    <text x="12" y="${Z(0) + 28}" class="m1-tl">좌표 [mm]: x = 뒤 차축 중심에서 앞으로 + · z = 지면에서 위로 +</text>
     <line x1="${X(J.H[0])}" y1="${Z(J.H[1])}" x2="${X(bk[0])}" y2="${Z(bk[1])}" class="m1-back" stroke-width="${mm(55).toFixed(1)}"/>
     <g class="m1-drv">
       ${m1Pill(null, S2(J.H), S2(J.Sh), mm(128), mm(108), 'm1-p-trunk', hal)}
@@ -10192,6 +10194,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
     </g>
     ${segLab(J.H, J.K, 'thigh', 0, 32)}${segLab(J.K, J.A, 'shank', -6, 34)}${segLab(J.F[0], J.F[2], 'foot', -48, -6)}${lab(X(J.F[1][0]) - 10, Z(J.F[1][1]) - 10, 'foot', `발 각도 ${f0(isFinite(d.foot) ? d.foot : 20)}°`, 'pt', 'end')}${segLab(J.H, J.S, 'trunk', 86, -16)}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) - 6, 'seg.head', `머리 ${Math.round(D.len.head)}`, d.seg.head > 0 ? 'set' : 'def')}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) + 14, 'helm', `헬멧 바깥 ${Math.round(d.helm > 0 ? d.helm : M1HD)}`, 'set')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 16, 'seg.neck', `목 ${Math.round(D.len.neck)}`, d.seg.neck > 0 ? 'set' : 'def')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 36, 'neck', `목 각도 ${f0(isFinite(d.neck) ? d.neck : 0)}° (+ 뒤로)`, 'pt')}${segLab(J.Sh, J.E, 'uarm', 0, -20)}${segLab(J.E, J.W, 'farm', 0, -20)}
     ${lab(X(bm[0]) + 46, Z(bm[1]) + 46, 'back', `등받이 ${f0(d.back)}° (+ 뒤로)`, 'pt')}
+    <text x="${(X(bm[0]) + 46).toFixed(1)}" y="${(Z(bm[1]) + 64).toFixed(1)}" class="m1-tl m1-rec${d.back >= 30 ? ' on' : ''}">${d.back >= 30 ? '누운 자세 (상반신 지면에서 60° 이하) · 허리벨트 지면과 60~80°' : '직립 자세 · 허리벨트 지면과 45~65°'}</text>
     ${pt(J.H, 'hip')}${lab(X(J.H[0]) + 12, Z(J.H[1]) + 26, 'hip', `엉덩이점 x ${f0(d.hip.x)} · z ${f0(d.hip.z)}`, 'pt')}
     ${pt(J.P, 'pedal')}${lab(X(J.P[0]) + 14, Z(J.P[1]) + 30, 'pedal', `발목(복사뼈) x ${f0(d.pedal.x)} · z ${f0(d.pedal.z)}`, 'pt', 'start')}
     ${pt(J.G, 'sw')}${lab(X(J.G[0]) - 12, Z(J.G[1]) - 12, 'sw', `핸들 x ${f0(d.sw.x)} · z ${f0(d.sw.z)}`, 'pt', 'end')}
