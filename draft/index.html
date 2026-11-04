@@ -2774,6 +2774,12 @@ html.wb-lock #tip{z-index:95}
 .shp-st{display:inline-block;padding:0 7px;margin-right:4px;border-radius:999px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700}
 .shp-zh{font-size:11.5px;color:var(--muted)}
 .shp-src.pick{cursor:crosshair}
+.shp-stage{position:relative}.shp-stage .shp-src{display:block}
+.shp-zc{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:2px;padding:3px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 2px 6px rgba(20,16,32,.15)}
+.shp-zc button{min-width:28px;height:26px;padding:0 6px;border:0;border-radius:5px;background:transparent;color:var(--ink);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.shp-zc button.shp-zf{font-size:12px;font-weight:600;border-left:1px solid var(--line);border-radius:0 5px 5px 0}
+.shp-zc button:hover,.shp-zc button:focus-visible{background:var(--accent-soft);color:var(--accent);outline:none}
+.shp-zp{min-width:48px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}.shp-zp.on{color:var(--accent);font-weight:700}
 .shp-guide{stroke:#d92d20;stroke-width:1.5;stroke-dasharray:6 4;pointer-events:none}
 .shp-ln line{stroke:#d92d20;stroke-width:2}
 .shp-ln text{fill:#d92d20;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px}
@@ -10692,7 +10698,7 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
   const NS = shNeed() + 1, pk = SHPICK[v];
   const step = stg==='crop' ? `<span class="shp-st">단계 1 / ${NS}</span> <b>쓸 범위</b>를 끌어서 사각형으로 고르십시오 (도면 테두리 · 표제란 · 다른 뷰 · 여백을 빼면 그림이 더 깔끔하고 이미지는 화질도 좋아짐). 필요 없으면 [자르지 않고 계속]`
     : !src ? '' : n < pk.length ? `<span class="shp-st">단계 ${n + 2} / ${NS}</span> <b>${pk[n][1]}</b>을 누르십시오${pk[n][0]==='p' ? '' : ' (마우스를 따라 선이 움직임)'}` : '모두 찍었습니다. 아래 맞춘 모습을 확인하고 저장하십시오';
-  const zoomHint = (stg==='crop' || src) ? '<span class="shp-zh">휠: 확대 · 축소 · 휠 버튼(또는 Ctrl + 끌기): 이동 · <button type="button" class="lnk" data-shpfit>전체 보기</button></span>' : '';
+  const zoomHint = (stg==='crop' || src) ? '<span class="shp-zh">마우스 휠: 확대 · 축소 · 휠 버튼(또는 Ctrl + 끌기): 이동</span>' : '';
   let pv = '';
   if(stg==='crop' && raw){ const [bx, by, bw, bh] = raw.kind==='img' ? raw.box : raw.prev.box, pad = Math.max(bw, bh)*0.03, c = SHP.crop, VB = SHP.vb || [bx - pad, by - pad, bw + 2*pad, bh + 2*pad];
     pv = `<svg class="shp-src crop" id="shpsrc" data-base="${[bx - pad, by - pad, bw + 2*pad, bh + 2*pad].join(' ')}" viewBox="${VB.join(' ')}" preserveAspectRatio="xMidYMid meet">${raw.kind==='img' ? `<image href="${raw.prev}" width="${raw.W}" height="${raw.H}" preserveAspectRatio="none"/>` : `<path d="${raw.prev.d}" class="shp-d" vector-effect="non-scaling-stroke"/>`}
@@ -10714,10 +10720,10 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
         이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면 파일을 올리십시오${v==='side' ? '' : ' (윗면도는 차 길이 방향이 가로가 되게)'}. 올린 뒤 ${v==='side' ? '① 범위 자르기 → ② 앞 바퀴 중심 → ③ 뒤 바퀴 중심(3단계)' : '① 범위 자르기 → ② 앞 차축 중심선 → ③ 뒤 차축 중심선 → ④ 차량 중심선(4단계)'}만 하면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 올리지 않거나 되돌리면 기본 차 그림입니다.</p>
       ${ed ? `<label class="btn small shp-file">파일 고르기<input type="file" accept=".png,.jpg,.jpeg,.webp,.dxf" data-shpf hidden></label>` : '<p class="muted">지난 시즌 그림은 회장만 고칠 수 있습니다.</p>'}
       <span class="shp-msg" id="shpmsg">${SHP.busy ? '읽는 중…' : step}</span>${zoomHint}
-      ${pv}${res}</div>
+      ${pv ? `<div class="shp-stage">${pv}${shZoomCtl()}</div>` : ''}${res}</div>
     <div class="dvi-foot"><span>${ed && cur && !src && stg!=='crop' ? '<button type="button" class="btn small" data-shpedit>저장된 그림 다시 편집</button> <button type="button" class="lnk" data-shpdel>기본 차 그림으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${stg==='crop' ? `<button type="button" class="btn small" data-shpcrop="skip">자르지 않고 계속</button><button type="button" class="btn small pri" data-shpcrop="ok"${SHP.crop ? '' : ' disabled'}>이 범위로 자르기</button>`
       : `${src && raw ? '<button type="button" class="btn small" data-shprecrop>다시 자르기</button>' : ''}${src ? '<button type="button" class="btn small" data-shpre>다시 찍기</button>' : ''}<button type="button" class="btn small" data-shpx>닫기</button>${ed && src ? `<button type="button" class="btn small pri" data-shpsave${shDone() ? '' : ' disabled'}>저장</button>` : ''}`}</span></div>`; }
-function shPaint(){ const m = shEl(); m.querySelector('.dvm-box').innerHTML = shHTML(); }
+function shPaint(){ const m = shEl(); m.querySelector('.dvm-box').innerHTML = shHTML(); shZoomPaint(); }
 /* 저장된 그림을 다시 편집: 저장본(자른 · 줄인 그림)을 원본처럼 다시 열어 자르기 · 찍기를 다시 함. 처음 파일은 저장 한도 때문에 보관하지 않으므로 저장한 범위 안에서만 다시 자를 수 있음 */
 async function shEditSaved(){ const cur = shGet(SHP.view); if(!cur) return; shReset(); SHP.busy = true; shPaint();
   try{ if(cur.kind==='img'){ const im = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('저장된 그림을 열지 못했습니다.')); i.src = cur.data; });
@@ -10747,6 +10753,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-shpre]')){ SHP.pts = []; shPaint(); return; }
   if(t.closest('[data-shprecrop]')){ SHP.stage = 'crop'; SHP.src = null; SHP.pts = []; SHP.vb = null; shPaint(); return; }
   if(t.closest('[data-shpfit]')){ SHP.vb = null; shPaint(); return; }
+  const zb = t.closest('[data-shpz]'); if(zb){ shZoomBy(+zb.dataset.shpz); return; }
   if(t.closest('[data-shpedit]')){ shEditSaved(); return; }
   const cb = t.closest('[data-shpcrop]'); if(cb && SHP.raw){ const rc = cb.dataset.shpcrop==='ok' ? SHP.crop : null;
     try{ SHP.src = SHP.raw.kind==='img' ? shImgSrc(SHP.raw, rc && [Math.max(0, rc[0]), Math.max(0, rc[1]), Math.min(SHP.raw.W - Math.max(0, rc[0]), rc[2]), Math.min(SHP.raw.H - Math.max(0, rc[1]), rc[3])])
@@ -10767,7 +10774,15 @@ document.addEventListener('change', e => { const t = e.target; if(t.matches && t
 /* 범위 자르기: 미리보기 위에서 끌어 사각형 */
 const shPt = (sv, e) => { const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(sv.getScreenCTM().inverse()); return [q.x, q.y]; };
 const shVB = sv => { const v = sv.viewBox.baseVal; return [v.x, v.y, v.width, v.height]; };
-const shSetVB = (sv, VB) => { SHP.vb = VB; sv.setAttribute('viewBox', VB.join(' ')); const mk = $('#shpmk'); if(mk) mk.innerHTML = shMarks(VB); };
+const shSetVB = (sv, VB) => { SHP.vb = VB; sv.setAttribute('viewBox', VB.join(' ')); const mk = $('#shpmk'); if(mk) mk.innerHTML = shMarks(VB); shZoomPaint(sv); };
+/* 그림 위 확대 버튼(오른쪽 위): − · 배율 · ＋ · 전체 보기. 배율 = 처음(전체 보기) 너비 ÷ 지금 너비 */
+const shZoomPct = sv => { const base = sv.dataset.base.split(' ').map(Number); return Math.round(base[2]/shVB(sv)[2]*100); };
+function shZoomCtl(){ return `<div class="shp-zc" role="group" aria-label="그림 확대"><button type="button" data-shpz="-1" title="축소 (마우스 휠도 됨)" aria-label="축소">−</button><span id="shpzp" class="shp-zp">100 %</span><button type="button" data-shpz="1" title="확대 (마우스 휠도 됨)" aria-label="확대">＋</button><button type="button" class="shp-zf" data-shpfit title="처음 크기로">전체 보기</button></div>`; }
+function shZoomPaint(sv){ sv = sv || $('#shpsrc'); const el = $('#shpzp'); if(!sv || !el) return; const z = shZoomPct(sv); el.textContent = `${z} %`; el.classList.toggle('on', Math.abs(z - 100) > 1); }
+/* 버튼 확대: 그림 가운데를 중심으로 1.25배 */
+function shZoomBy(dir){ const sv = $('#shpsrc'); if(!sv) return; const VB = shVB(sv), base = sv.dataset.base.split(' ').map(Number), f = dir > 0 ? 1/1.25 : 1.25,
+    w = Math.min(base[2]*1.5, Math.max(base[2]/60, VB[2]*f)), k = w/VB[2], c = [VB[0] + VB[2]/2, VB[1] + VB[3]/2];
+  shSetVB(sv, [c[0] - VB[2]*k/2, c[1] - VB[3]*k/2, VB[2]*k, VB[3]*k]); }
 /* 끌기: 왼쪽 = 범위 자르기(자르기 단계), 휠 버튼 또는 Ctrl + 끌기 = 이동 */
 document.addEventListener('pointerdown', e => { const sv = e.target.closest && e.target.closest('#shpsrc'); if(!sv) return;
   if(e.button===1 || (e.button===0 && e.ctrlKey)){ e.preventDefault(); SHP.pan = {sv, x:e.clientX, y:e.clientY, moved:false}; try{ sv.setPointerCapture(e.pointerId); }catch(err){} return; }
