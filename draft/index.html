@@ -9379,7 +9379,7 @@ const DASH = (() => {
   const C = {v:45, R:12, ax:0, dir:'L', straight:false, aero:true};
   const PRESET = { stop:{v:0,R:12,ax:0,straight:true}, accel:{v:40,R:12,ax:1.2,straight:true}, brake:{v:80,R:12,ax:-1.5,straight:true},
     skid:{v:42,R:9.1,ax:0,straight:false}, hair:{v:24,R:4.5,ax:0,straight:false}, vmax:{v:110,R:12,ax:0,straight:true} };
-  let PART = 'aero';
+  let PART = 'frame';
   return { GROUPS, STL, P, ST, C, PRESET, get part(){ return PART; }, set part(v){ PART = v; } };
 })();
 
