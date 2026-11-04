@@ -3362,7 +3362,7 @@ window.Backend = (function(){
 <script>
 /* ============================================================
    팀 설계값 키 목록 — docs/DASH-VARS.md 에서 만든 파일 (tools/gen_dash_keys.py). 직접 고치지 말고 문서를 고친 뒤 다시 만들 것
-   k 키 · n 이름 · u 단위 · p 담당 파트 · it 연결 설계 항목 · calc 계산값 · def 풀이 · fig 풀이 그림 대상
+   k 키 · n 이름 · u 단위 · p 담당 파트 · p2 함께 고치는 파트(있으면) · it 연결 설계 항목 · calc 계산값 · def 풀이 · fig 풀이 그림 대상
    ※ 파트 코드표 PCODE 는 firestore.rules 의 partOfCode 와 같게
    ============================================================ */
 const PCODE = {"all": "공통", "frame": "프레임", "sus": "서스", "str": "조향", "brk": "제동", "pt": "구동계", "mc": "모터컨트롤러", "bat": "배터리", "cool": "냉각", "elec": "회로", "daq": "데이터로거", "aero": "에어로"};
@@ -3397,7 +3397,7 @@ const DKEYS = [
   {"k": "k_us", "n": "목표 언더스티어 계수", "u": "deg/g", "p": "서스", "it": "g_balance", "calc": false, "def": "① 같은 반경을 돌 때 횡가속도가 1 g 늘면 바퀴를 몇 도 더 꺾어야 하나(애커먼 각 L/R 몫을 뺀 나머지). + 언더, 0 중립, − 오버. ② 팀이 정함. 다운포스 때문에 속도마다 달라지므로 기준 속도(또는 반경)를 설명 칸에 적는다. ③ 그립 한계 아래(선형 범위)의 성질이다. 한계에서 앞뒤 중 어디가 먼저 미끄러지나(한계 언더 · 오버)와 다르다.", "fig": true},
   {"k": "k_us_meas", "n": "실측 언더스티어 계수", "u": "deg/g", "p": "서스", "it": "t_skid", "calc": true, "def": "① 실제 차의 언더스티어 계수. ② 일정 반경 시험(ISO 4138의 일정 반경법을 스키드패드에 응용): 반경을 지키며 속도를 올리고 조향각 센서 값(조향비로 바퀴 각 환산)과 횡가속도를 기록해 기울기를 구한다. ③ 이렇게 잰 값에는 조향계 변형(컴플라이언스) 영향이 함께 들어간다. 다운포스 때문에 속도에 따라 값이 달라질 수 있다.", "fig": false},
   {"k": "r_eff", "n": "유효 회전 반경 (동반경)", "u": "mm", "p": "서스", "it": "p_tire", "calc": false, "def": "① 바퀴가 한 바퀴 돌 때 차가 나아간 거리 ÷ 2π. 차속 = 바퀴 회전 각속도 × 유효 회전 반경. 동반경이라고도 한다. ② 타이어에 표시를 하고 여러 바퀴 굴려 거리를 잰다. ③ 하중 반경보다 크고 무부하 반경보다 작다. 최고속 · 구동력 계산에 쓴다.", "fig": true},
-  {"k": "r_load", "n": "하중 반경 (하중 받은 바퀴 중심 높이)", "u": "mm", "p": "서스", "it": "p_tire", "calc": false, "def": "① 하중을 받은 정지 상태에서 바퀴 중심부터 지면까지 높이. ② 차를 세워 두고 잰다. ③ 서스 기하 · 그림의 바퀴 중심 높이에 쓴다.", "fig": true},
+  {"k": "r_load", "n": "하중 반경 (하중 받은 바퀴 중심 높이)", "u": "mm", "p": "서스", "it": "p_tire", "calc": false, "def": "① 하중을 받은 정지 상태에서 바퀴 중심부터 지면까지 높이. ② 차를 세워 두고 잰다. ③ 서스 기하 · 그림의 바퀴 중심 높이에 쓴다.", "fig": true, "p2": "프레임"},
   {"k": "rim_d", "n": "림 지름 (기록용)", "u": "in", "p": "서스", "it": "p_tire", "calc": false, "def": "① 공칭 림 지름(10 in, 13 in 등). ② 휠 규격. ③ 기록용이다. 계산에는 휠 안쪽 지름을 쓴다.", "fig": false},
   {"k": "rim_in", "n": "휠 안쪽 지름", "u": "mm", "p": "서스", "it": "p_tire", "calc": false, "def": "① 휠 배럴 안쪽 지름. 브레이크 · 업라이트 · 볼조인트가 들어갈 공간. ② 휠 도면 · 실측. ③ 공칭 림 지름보다 작다.", "fig": false},
   {"k": "mu", "n": "타이어 마찰계수 (기준 하중)", "u": "", "p": "서스", "it": "p_tire", "calc": false, "def": "① 기준 하중에서 타이어가 낼 수 있는 최대 횡력 ÷ 수직 하중(횡 방향 기준). ② 타이어 시험 데이터(TTC 등) · 문헌 · 주행 데이터. 출처를 상태 칸에 표시(가정 / 시험 데이터 / 실측). ③ 시험기 노면 값은 실제 노면보다 크게 나오는 경우가 많아 보정해서 쓴다. 노면 · 온도 · 마모에 따라 바뀐다.", "fig": false},
@@ -9434,13 +9434,13 @@ try{ DVS = JSON.parse(localStorage.getItem(DVKEY)||'{}') || {}; }catch(e){ DVS =
 const dvSeason = () => (typeof SEASON!=='undefined' ? String(SEASON) : String(new Date().getFullYear()));
 const dvEntry = (k, se) => { const d = DVS[dvId(k)]; return (d && d.s && d.s[se || dvSeason()]) || null; };
 /* 이 키를 고칠 수 있나: 회장 전부, 팀장·파트장은 담당 파트(또는 묶음)만. 저장소가 없으면 이 브라우저에서 자유롭게 */
-const canEditDv = k => !SH.on ? true : (SH.canAdmin || (!pastLock() && isLeadRole(SH.role) && partOK(SH.parts, SH.role, DK[k].p)));   /* 지난 시즌은 회장만 */
+const canEditDv = k => !SH.on ? true : (SH.canAdmin || (!pastLock() && isLeadRole(SH.role) && (partOK(SH.parts, SH.role, DK[k].p) || (!!DK[k].p2 && partOK(SH.parts, SH.role, DK[k].p2)))));   /* 지난 시즌은 회장만. p2 = 함께 고치는 파트 */
 async function dvSave(k, patch){
   const id = dvId(k), se = dvSeason(), cur = DVS[id] || {s:{}}, prev = (cur.s||{})[se] || {};
   const ent = {v: prev.v==null ? null : prev.v, st: prev.st || 'rev', src: prev.src || '', ...patch, by: SH.me || null, at: new Date().toISOString()};
   const doc = {s: {...(cur.s||{}), [se]: ent}};
   if(!SH.on){ DVS[id] = doc; try{ localStorage.setItem(DVKEY, JSON.stringify(DVS)); }catch(e){} dashPaint(); if(typeof refreshVals==='function') refreshVals(); return true; }
-  if(!canEditDv(k)){ toast(`${DK[k].n} 값은 회장이나 ${DK[k].p} 담당 팀장·파트장만 고칠 수 있습니다.`); return false; }
+  if(!canEditDv(k)){ toast(`${DK[k].n} 값은 회장이나 ${DK[k].p}${DK[k].p2 ? '·' + DK[k].p2 : ''} 담당 팀장·파트장만 고칠 수 있습니다.`); return false; }
   DVS[id] = doc; dashPaint();
   try{ await SH.db.doc('dv/'+id).set(doc); return true; }
   catch(e){ toast(Backend.denied && Backend.denied(e) ? '이 값을 고칠 권한이 없습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); return false; }
