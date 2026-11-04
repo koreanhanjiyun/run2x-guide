@@ -102,6 +102,7 @@ function wbShellHTML(){ const T = wbT();
       <span class="wb-no">${wbEsc(T.no)}</span><span class="wb-stage">${wbEsc(T.stage)}</span><b id="wb-t">${wbEsc(T.name)}</b>
       <span class="wb-code-on" id="wbcodeon" hidden>코드 고침 (저장 안 됨)</span>
       <span class="wb-acts">
+        ${T.tour ? `<button type="button" class="btn small" data-tour="wb:${wbEsc(T.no)}">도움말</button>` : ''}
         <button type="button" class="btn small" data-wbver>검증표</button>
         <button type="button" class="btn small" data-wbcode>코드 보기</button>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
