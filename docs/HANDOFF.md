@@ -21,7 +21,7 @@ python3 tools/draft/build.py              # → dist/draft/run2x_redesign.html, 
 python3 -m http.server 8801 &             # 저장소 맨 위에서
 node tools/draft/qa/site_check.js 8801    # 기대: uniq 125, 오류 []
 node tools/draft/qa/tools_tour.js         # 기대: 1 / 6 … 6 / 6, errs []
-node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 26/26 · 도움말 1~12, errs []
+node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 31/31 · 도움말 1~12, errs []
 # (node 가 playwright 를 못 찾으면 NODE_PATH=$(npm root -g) 를 앞에 붙임)
 
 # 공개 시안 갱신: main 작업 트리에 draft/ 만 넣어 커밋 · 푸시
@@ -30,7 +30,7 @@ python3 tools/draft/publish.py ../mainwt
 cd ../mainwt && git add draft && git commit -m "시안 갱신: draft/ (redesign-v1 <커밋>)" && git push origin HEAD:main
 ```
 
-- `tools/draft/demo-mock.js`: 가짜 저장소 + 역할 전환 막대(비로그인 · 팀원 · 팀장 · 파트장 · 회장) + 도구 1 예시 데이터(어셈블리 22개, 드라이버 3명).
+- `tools/draft/demo-mock.js`: 가짜 저장소 + 역할 전환 막대(비로그인 · 팀원 · 팀장 · 파트장 · 회장) + 도구 1 예시 데이터(어셈블리 18개, 드라이버 3명). 예시 데이터를 바꾸면 `demo-mock.js` 의 키(`__run2xdemoNN`, `run2x.mass.vN`)와 `qa/h2.js` 의 KEY 를 같이 올려야 이미 본 브라우저에도 새 데이터가 들어감.
 - `publish.py` 는 브라우저 저장 키 앞에 `run2x-draft:` 를 붙여 실제 사이트 저장값과 섞이지 않게 하고, 사진은 사이트의 `img/` 를, 3D 라이브러리는 `draft/vendor/three/` 를 쓴다.
 - `main` 푸시는 작업 환경의 권한 검사에서 막힐 수 있다. 그때는 관리자에게 허락을 받는다.
 
@@ -46,6 +46,7 @@ cd ../mainwt && git add draft && git commit -m "시안 갱신: draft/ (redesign-
 
 - 부품 질량 표: 어셈블리 하나 = 문서 하나 `teams/<팀>/mass/<id>` (docs/STORE-PLAN.md 2절). 좌표 x = 앞 차축에서 뒤로 +, y = 왼쪽 +, z = 지면에서 위 [mm].
 - 카드 배치: 4열, 줄마다 왼쪽부터 빈칸 없이. 카드 위에 놓으면 그 앞에 끼우고, 줄이 넘치면 마지막 카드가 바로 아래 새 줄로. 줄 끝 빈칸 = 그 줄 끝, 줄 사이 = 새 줄. 드라이버 카드는 첫 줄 첫 칸 고정(첫 줄 3장).
+- 걸침(½): 항목마다 체크(기본 해제). 체크한 항목 질량의 절반은 반대쪽으로 — 현가하 카드면 현가상, 현가상 카드면 가장 가까운(3차원) 현가하 카드의 앞 · 뒤(없으면 휠베이스 절반 기준). 저장은 항목의 `half: true`.
 - 드라이버 카드 항목(몸무게 · 헬멧 · 드라이버 복 · 안전벨트)은 드라이버 모델 값과 같은 값. 드라이버 실측 CG 기능은 관리자 지시로 뺐다(2026-11-04).
 - 드라이버 모델: de Leva 1996 표 4 (머리 · 목 VERT–CERV, 몸통 CERV–MIDH 무게중심 51.38 % / 49.64 %, 정강이 KJC–LMAL 44.59 % / 44.16 %, 남 / 여). 발은 발목 높이 0.039 H · 발 길이 0.152 H 비율(Winter 2009 그림 4.1, Drillis & Contini), 뒤꿈치 ~ 발목 0.22 × 발 길이는 근사.
 - 헬멧 색: 1st 보라 `#6A4294` · 2nd 파랑 `#1d5f9a` · 3rd 주황 `#c2410c`.

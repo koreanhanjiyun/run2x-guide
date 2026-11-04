@@ -1,22 +1,19 @@
 /* 도구 1 시험 데이터: 묶음(좌표 x = 앞 차축에서 뒤로) · 항목(질량 × 개수) · 드라이버. 로그인 전 모드에도 이 브라우저 저장소에 한 번 넣음 */
 function M1SEED(){ const mass={}, o={n:0};
   const HUE={frame:265,sus:190,str:40,brk:5,pt:130,mc:220,bat:25,cool:160,aero:205};
-  const G=(code,name,cat,x,y,z,items)=>{ o.n++; const it=items.map(([nm,m,n])=>({name:nm,m,n:n==null?1:n})), hue=HUE[code];
+  const G=(code,name,cat,x,y,z,items)=>{ o.n++; const it=items.map(([nm,m,n,h])=>Object.assign({name:nm,m,n:n==null?1:n}, h?{half:true}:{})), hue=HUE[code];
     mass['g'+String(o.n).padStart(2,'0')]={s:{'2026':{name,cat,x,y,z,hue,items:it,ord:o.n},'2025':{name,cat,x,y,z,hue,items:it.map(i=>({...i,m:+(i.m*1.04).toFixed(2)})),ord:o.n}}}; };
   G('frame','프레임 · 방화벽','s',650,0,330,[['스페이스 프레임',32],['방화벽 판',0.8,2],['리벳 · 볼트',0.4]]);
   G('frame','시트 · 헤드레스트','s',800,0,380,[['시트',2.3],['헤드레스트',0.6],['벨트',1.1]]);
   G('frame','카울 · 언더트레이','s',150,0,330,[['카울',5.2],['언더트레이',1.4],['패스너',0.02,24]]);
   [['왼',1],['오른',-1]].forEach(([sd,k])=>{
-    G('sus','앞 업라이트 assy '+sd,'uf',0,560*k,240,[['너클',1.1],['허브',0.9],['디스크',0.7],['캘리퍼',0.8],['베어링',0.2,2],['휠',3.0],['타이어',4.6],['휠 너트',0.03,4]]);
-    G('sus','뒤 업라이트 assy '+sd,'ur',1560,550*k,240,[['너클',1.2],['허브',1.1],['디스크',0.7],['캘리퍼',0.7],['베어링',0.25,2],['휠',3.0],['타이어',4.6],['휠 너트',0.03,4]]); });
-  [['왼',1],['오른',-1]].forEach(([sd,k])=>{
-    G('sus','앞 위시본 · 푸시로드 '+sd+' (현가하 절반)','uf',0,430*k,260,[['위시본 절반',0.35,2],['푸시로드 절반',0.1],['로드엔드',0.05,2]]);
-    G('sus','앞 위시본 · 푸시로드 '+sd+' (현가상 절반)','s',0,330*k,300,[['위시본 절반',0.35,2],['푸시로드 절반',0.1],['로드엔드',0.05,2]]); });
-  G('sus','댐퍼 · 벨크랭크 (앞)','s',150,0,520,[['댐퍼',0.8,2],['벨크랭크',0.4,2],['ARB',0.6,0]]);
-  G('sus','댐퍼 · 벨크랭크 (뒤)','s',1450,0,470,[['댐퍼',0.8,2],['벨크랭크',0.4,2],['ARB',0.6,1]]);
-  G('str','조향','s',-100,0,210,[['랙 · 피니언',1.3],['타이로드',0.2,2],['스티어링 휠',0.9],['칼럼',0.4]]);
+    G('sus','앞 업라이트 assy '+sd,'uf',0,560*k,240,[['너클',1.1],['허브',0.9],['디스크',0.7],['캘리퍼',0.8],['베어링',0.2,2],['휠',3.0],['타이어',4.6],['휠 너트',0.03,4],['위시본',0.7,2,1],['푸시로드',0.2,1,1],['로드엔드',0.05,4,1]]);
+    G('sus','뒤 업라이트 assy '+sd,'ur',1560,550*k,240,[['너클',1.2],['허브',1.1],['디스크',0.7],['캘리퍼',0.7],['베어링',0.25,2],['휠',3.0],['타이어',4.6],['휠 너트',0.03,4],['위시본',0.75,2,1],['토 링크',0.15,1,1]]); });
+  G('sus','댐퍼 · 벨크랭크 (앞)','s',150,0,520,[['댐퍼',0.8,2,1],['벨크랭크',0.4,2],['ARB',0.6,0]]);
+  G('sus','댐퍼 · 벨크랭크 (뒤)','s',1450,0,470,[['댐퍼',0.8,2,1],['벨크랭크',0.4,2],['ARB',0.6,1]]);
+  G('str','조향','s',-100,0,210,[['랙 · 피니언',1.3],['타이로드',0.2,2,1],['스티어링 휠',0.9],['칼럼',0.4]]);
   G('brk','페달 박스 · 유압','s',-430,0,250,[['페달 박스',2.6],['마스터실린더',0.45,2],['리저버',0.1,2]]);
-  G('pt','모터 · 디퍼렌셜','s',1500,0,225,[['모터',12.4],['디퍼렌셜',3.9],['체인',0.8],['텐셔너',0.15,2]]);
+  G('pt','모터 · 디퍼렌셜','s',1500,0,225,[['모터',12.4],['디퍼렌셜',3.9],['체인',0.8],['텐셔너',0.15,2],['드라이브샤프트 (CV축)',1.1,2,1]]);
   G('mc','인버터','s',1200,0,580,[['모터 컨트롤러',6.5],['HV 케이블',0.9]]);
   G('bat','축전지','s',1084,0,210,[['셀 모듈',4.3,6],['컨테이너',6.1],['BMS',0.6],['저전압 배터리',1.2]]);
   G('cool','냉각 왼','s',700,430,300,[['라디에이터',1.3],['팬',0.6],['호스',0.6]]);
@@ -25,11 +22,11 @@ function M1SEED(){ const mass={}, o={n:0};
   G('aero','뒤날개','s',1620,0,900,[['메인 플레인',1.8],['플랩',0.7,2],['엔드플레이트',0.3,2],['스완넥',0.7]]);
   const D=(label,height,mass,sex,gear)=>({label,sex:sex||'m',height,mass,gear:gear||{helmet:0,suit:0,belt:0},back:32,hip:{x:590,z:230},pedal:{x:-220,z:250},sw:{x:375,z:500},seg:{},cg_meas:{x:null,z:null}});
   return {mass, drv:{d1:{s:{'2026':D('시험 1',175,68,'m',{helmet:1.4,suit:1.1,belt:0.9}),'2025':D('시험 1',175,70)}}, d2:{s:{'2026':D('시험 2',184,80,'m',{helmet:1.5,suit:1.3,belt:0.9})}}, d3:{s:{'2026':Object.assign(D('시험 3',165,58,'f',{helmet:1.3,suit:1.0,belt:0.9}),{pedal:{x:-160,z:250}})}}}}; }
-try{ if(!localStorage.getItem('run2x.mass.v3')){ const T=M1SEED(); localStorage.setItem('run2x.mass.v3','1'); localStorage.setItem('run2x.mass.v2',JSON.stringify(T.mass)); localStorage.setItem('run2x.drv.v2',JSON.stringify(T.drv)); } }catch(e){}
+try{ if(!localStorage.getItem('run2x.mass.v4')){ const T=M1SEED(); localStorage.setItem('run2x.mass.v4','1'); localStorage.setItem('run2x.mass.v2',JSON.stringify(T.mass)); localStorage.setItem('run2x.drv.v2',JSON.stringify(T.drv)); } }catch(e){}
 /* 시안 데모용: Firebase 대신 이 화면 안에서만 도는 가짜 저장소 + 역할 전환 막대.
    상태는 window.name 에 보관(새로고침해도 유지, 다른 사람·기기와 공유 안 됨). */
 (function(){
- const K='__run2xdemo21';
+ const K='__run2xdemo22';
  const load=()=>{ try{ const o=JSON.parse(window.name||'{}'); return o[K]||null; }catch(e){ return null; } };
  const st=load()||{role:'none', db:null};
  const persist=()=>{ try{ const o={}; o[K]=st; window.name=JSON.stringify(o); }catch(e){} };
@@ -119,7 +116,7 @@ try{ if(!localStorage.getItem('run2x.mass.v3')){ const T=M1SEED(); localStorage.
  /* 역할 전환 막대 */
  const ROLES=[['none','비로그인'],['member','팀원'],['head','팀장 (샤시)'],['lead','파트장 (서스·조향)'],['admin','회장']];
  function bar(){ const b=document.createElement('div'); b.id='demoBar';
-  b.innerHTML=`<b>시안 21</b><span class="db-l">보는 사람</span>${ROLES.map(([k,l])=>`<button type="button" data-demorole="${k}" aria-pressed="${st.role===k}">${l}</button>`).join('')}<span class="db-sep"></span><button type="button" data-demofirst>첫 방문 다시 보기</button><button type="button" data-demodiag title="참고 탭 스크롤 버그 확인용">높이 진단</button><button type="button" data-demoreset title="데모 데이터를 처음 상태로">데모 데이터 초기화</button>`;
+  b.innerHTML=`<b>시안 22</b><span class="db-l">보는 사람</span>${ROLES.map(([k,l])=>`<button type="button" data-demorole="${k}" aria-pressed="${st.role===k}">${l}</button>`).join('')}<span class="db-sep"></span><button type="button" data-demofirst>첫 방문 다시 보기</button><button type="button" data-demodiag title="참고 탭 스크롤 버그 확인용">높이 진단</button><button type="button" data-demoreset title="데모 데이터를 처음 상태로">데모 데이터 초기화</button>`;
   setTimeout(()=>b.querySelectorAll('[data-cmp]').forEach(c=>{ c.checked=document.body.classList.contains(c.dataset.cmp); c.onchange=()=>window.setCompare&&setCompare(c.dataset.cmp,c.checked); }),500);
   document.body.appendChild(b);
   b.addEventListener('click',e=>{ const r=e.target.closest('[data-demorole]'); if(r){ setRole(r.dataset.demorole); return; }

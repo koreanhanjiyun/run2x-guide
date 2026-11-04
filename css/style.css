@@ -2715,3 +2715,9 @@ html.wb-lock #tip{z-index:95}
 .m1-helm{fill-opacity:.42;stroke-width:2}
 .m1-head{fill:#c9a68a;stroke:#fff;stroke-width:1.5}
 .m1-visor{opacity:.55}
+/* 걸침(½) 체크 */
+.m1-ir{grid-template-columns:minmax(0,1fr) 62px auto 46px 30px 22px}
+.m1-half{display:inline-flex;align-items:center;gap:2px;font-size:11.5px;color:var(--muted);cursor:pointer;user-select:none}
+.m1-half input{margin:0;width:13px;height:13px;accent-color:var(--accent)}
+.m1-half:has(input:checked){color:var(--accent);font-weight:600}
+.m1-half.ro{cursor:default;color:var(--accent);font-weight:600}
