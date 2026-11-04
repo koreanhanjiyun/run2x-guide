@@ -155,7 +155,7 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
     <div class="dvi-body shp-body">
       <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 올리면 질량 계산기의 질량 분포(옆 · 위) · 드라이버 모델 그림의 차 대신 씁니다. 계산에는 쓰지 않습니다.<br>
         이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면에서 ${v==='side' ? '측면도' : '윗면도'} 한 장만 두고 저장한 파일을 올리십시오. 올린 뒤 쓸 범위를 자르고(건너뛰어도 됨) ${l1} → ${l2} 순서로 두 점을 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다${v==='side' ? '' : ' (올리지 않거나 되돌리면 기본 차 그림)'}.</p>
-      ${ed ? `<label class="btn small shp-file">파일 고르기<input type="file" accept=".png,.jpg,.jpeg,.webp,.dxf,.dwg" data-shpf hidden></label>` : '<p class="muted">지난 시즌 그림은 회장만 고칠 수 있습니다.</p>'}
+      ${ed ? `<label class="btn small shp-file">파일 고르기<input type="file" accept=".png,.jpg,.jpeg,.webp,.dxf" data-shpf hidden></label>` : '<p class="muted">지난 시즌 그림은 회장만 고칠 수 있습니다.</p>'}
       <span class="shp-msg" id="shpmsg">${SHP.busy ? '읽는 중…' : step}</span>
       ${pv}${res}</div>
     <div class="dvi-foot"><span>${ed && cur && !src ? '<button type="button" class="lnk" data-shpdel>기본 차 그림으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${stg==='crop' ? `<button type="button" class="btn small" data-shpcrop="skip">자르지 않고 계속</button><button type="button" class="btn small pri" data-shpcrop="ok"${SHP.crop ? '' : ' disabled'}>이 범위로 자르기</button>`
@@ -165,8 +165,8 @@ const shReset = () => { SHP.raw = null; SHP.src = null; SHP.stage = ''; SHP.crop
 function shOpen(btn){ SHP.ret = btn || null; shReset(); const m = shEl(); shPaint(); m.hidden = false; const f = m.querySelector('[data-shpx]'); if(f) f.focus(); }
 function shClose(){ const m = $('#shpm'); if(m) m.hidden = true; shReset(); if(SHP.ret && SHP.ret.isConnected) SHP.ret.focus(); }
 async function shFile(file){ if(!file) return; const ext = (file.name.split('.').pop() || '').toLowerCase();
-  if(ext==='dwg'){ toast('DWG는 읽을 수 없습니다. CAD에서 [다른 이름으로 저장 → DXF]로 저장해 올려 주십시오.'); const mg = $('#shpmsg'); if(mg) mg.textContent = 'DWG는 읽을 수 없습니다. CAD에서 [다른 이름으로 저장 → DXF](AutoCAD · SolidWorks 도면 · Fusion 모두 가능)로 저장해 올려 주십시오.'; return; }
-  if(!['png','jpg','jpeg','webp','dxf'].includes(ext)){ toast('이미지(.png .jpg .webp) 또는 .dxf 파일만 올릴 수 있습니다.'); return; }
+  if(!['png','jpg','jpeg','webp','dxf'].includes(ext)){ const msg = `읽을 수 없는 파일입니다 (.${ext || '확장자 없음'}). 올릴 수 있는 파일: 이미지 .png .jpg .webp, 도면 .dxf. CAD 파일은 [다른 이름으로 저장 → DXF]로 저장해 올려 주십시오.`;
+    toast(msg); const mg = $('#shpmsg'); if(mg) mg.textContent = msg; return; }
   if(file.size > 40*1024*1024){ toast('파일이 너무 큽니다 (40 MB 이하).'); return; }
   shReset(); SHP.busy = true; shPaint();
   try{ if(ext==='dxf'){ const parsed = shParseDxf(await file.text()); SHP.raw = {kind:'dxf', parsed, prev:shDxfPath(parsed)}; } else SHP.raw = await shLoadImage(file); SHP.stage = 'crop'; }
