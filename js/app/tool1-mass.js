@@ -213,8 +213,8 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
   const sym = `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)})"><circle r="${cr+2}" fill="#fff"/><path d="M0 0 L${-cr} 0 A${cr} ${cr} 0 0 1 0 ${-cr} Z M0 0 L${cr} 0 A${cr} ${cr} 0 0 1 0 ${cr} Z" fill="#d92d20"/><circle r="${cr}" fill="none" stroke="#d92d20" stroke-width="1.6"/><line x1="${-cr}" x2="${cr}" stroke="#d92d20" stroke-width="1.2"/><line y1="${-cr}" y2="${cr}" stroke="#d92d20" stroke-width="1.2"/></g>`;
   const bl = .82*D.len.trunk, bk = [J.H[0] + bl*Math.sin(D.back), J.H[1] + bl*Math.cos(D.back)], bm = [J.H[0] + 330*Math.sin(D.back), J.H[1] + 330*Math.cos(D.back)];   /* 등받이: 몸통 뒤에 가려지는 길이 */
   const [hx, hy] = S2(J.HC), hr = mm((d.helm > 0 ? d.helm : M1HD)/2), hd0 = mm(D.len.head/2), hcol = M1HC[M1.drv] || M1HC.d1, vid = 'm1v' + M1.drv;
-  const nad = (isFinite(d.neck) ? d.neck : 0);
-  const visor = `<g transform="rotate(${(-nad).toFixed(1)} ${hx.toFixed(1)} ${hy.toFixed(1)})"><clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/></g>`;
+  /* 바이저는 목 각도와 상관없이 항상 수평 (시선은 정면) */
+  const visor = `<g><clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/></g>`;
   const foot = `<path d="M${J.F.map(p => S2(p).map(v => v.toFixed(1)).join(',')).join(' L')} Z" class="m1-foot"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
     ${CARFIG.carSide(T, L, r, s)}
