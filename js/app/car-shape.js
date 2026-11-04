@@ -2,7 +2,7 @@
    차 형상 배경 (옆면 · 윗면): 팀이 올린 그림을 차 윤곽 대신 그림 바탕으로 씀
    - 파일: 이미지(.png .jpg .jpeg .webp) 또는 CAD 도면(.dxf, 측면도 · 윗면도 한 장)
    - 맞춤: 그림 위에서 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심 (윗면은 앞 차축 가운데 → 뒤 차축 가운데) 두 점만 찍음
-     → 두 점 거리 = 휠베이스로 크기, 두 점을 잇는 선이 수평이 되게 회전, 앞이 오른쪽이면 좌우 뒤집기. 지면 = 바퀴 중심에서 r_eff 아래
+     → 두 점 거리 = 휠베이스로 크기, 두 점을 잇는 선이 수평이 되게 회전, 앞이 오른쪽이면 좌우 뒤집기. 지면 = 바퀴 중심에서 하중 반경 r_load 아래
    - 저장: teams/<팀>/shape/<side|top> = {s:{시즌:{kind:'img'|'dxf', ...}}} (팀원 누구나 이번 시즌, 로그인 전은 이 브라우저)
      img: data(줄인 이미지 data: 주소), w, h, p1, p2 (그림 픽셀, 아래로 +)
      dxf: d(선 그림 경로, 도면 단위 · y 를 뒤집어 아래로 +), p1, p2
@@ -159,10 +159,10 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
   /* 결과 미리보기: 지금 휠베이스 · 타이어 반경으로 맞춘 모습 + 바퀴 중심 · 지면 표시 */
   let res = '';
   const P12 = src && shP12(), show = P12 ? {...src, p1:P12[0], p2:P12[1]} : (!src && cur ? cur : null);
-  if(show){ const P = typeof DASH!=='undefined' ? DASH.P : {L:1550, r_eff:229}, L = P.L || 1550, r = P.r_eff || 229, W = 640, H = v==='side' ? 260 : 220, s = W/(L + 1500), x0 = 900;
+  if(show){ const WI = typeof WB!=='undefined' && WB.id ? WB.I : {}, P = typeof DASH!=='undefined' ? DASH.P : {}, L = WI.L || P.L || 1550, r = WI.r_load || P.r_load || 220, W = 640, H = v==='side' ? 260 : 220, s = W/(L + 1500), x0 = 900;
     const T = (x, y) => [ (x + x0)*s, v==='side' ? H - 20 - y*s : H/2 - y*s ];
     const A = v==='side' ? T(0, r) : T(0, 0), B = v==='side' ? T(L, r) : T(L, 0);
-    res = `<div class="shp-res"><b>맞춘 모습</b> <span class="muted">휠베이스 ${Math.round(L)} mm${v==='side' ? ` · 타이어 반경 ${Math.round(r)} mm` : ''} 기준, 빨간 점 = 바퀴(차축) 중심${v==='side' ? ', 선 = 지면' : ''}</span>
+    res = `<div class="shp-res"><b>맞춘 모습</b> <span class="muted">휠베이스 ${Math.round(L)} mm${v==='side' ? ` · 타이어 하중 반경 ${Math.round(r)} mm` : ''} 기준, 빨간 점 = 바퀴(차축) 중심${v==='side' ? ', 선 = 지면' : ''}</span>
       <svg viewBox="0 0 ${W} ${H}" class="shp-fit">${shSvg(v, A, B, show)}${v==='side' ? `<line x1="0" y1="${H - 20}" x2="${W}" y2="${H - 20}" class="cf-gnd"/>` : ''}<circle cx="${A[0]}" cy="${A[1]}" r="4" class="shp-ax"/><circle cx="${B[0]}" cy="${B[1]}" r="4" class="shp-ax"/><text x="8" y="16" class="cf-t sm mut">← 앞</text></svg></div>`; }
   return `<div class="dvi-h"><b id="shp-t">차 형상 (그림 바탕)</b><button type="button" class="dvi-x" data-shpx aria-label="닫기">×</button></div>
     <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 차 그림'}</span></div>

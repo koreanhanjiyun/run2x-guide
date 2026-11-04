@@ -204,7 +204,7 @@ function m1Pill(P, a, b, ra, rb, cls, halo){ const dx = b[0] - a[0], dy = b[1] -
   const shape = (h, c) => `<path d="M${pt(a, ra + h, e1)} L${pt(b, rb + h, e1)} L${pt(b, rb + h, e2)} L${pt(a, ra + h, e2)} Z" class="${c}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(ra + h).toFixed(1)}" class="${c}"/><circle cx="${b[0].toFixed(1)}" cy="${b[1].toFixed(1)}" r="${(rb + h).toFixed(1)}" class="${c}"/>`;
   return (halo ? shape(halo, 'm1-halo') : '') + shape(0, cls); }
 function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p class="wb-empty">계산 중…</p>';
-  const d = m1Drv(M1.drv) || M1DDEF(), ed = m1CanEdit(), L = (WB.I.L > 0 ? WB.I.L : 1550), r = (typeof DASH!=='undefined' && DASH.P.r_eff) || 229;
+  const d = m1Drv(M1.drv) || M1DDEF(), ed = m1CanEdit(), L = (WB.I.L > 0 ? WB.I.L : 1550), r = (WB.I.r_load > 0 ? WB.I.r_load : (typeof DASH!=='undefined' && DASH.P.r_load) || 220);
   const {x0, x1, z0, z1, W} = M1F, s = W/(x1 - x0), H = Math.round((z1 - z0)*s), T = (x, z) => [(x - x0)*s, H - (z - z0)*s], X = x => T(x, 0)[0], Z = z => T(0, z)[1];
   const J = D.j, S2 = p => T(p[0], p[1]), mm = v => v*s, f0 = v => Math.round(v), hal = 2.2;
   const lab = (x, z, key, txt, cls, anchor) => `<text x="${x.toFixed(1)}" y="${z.toFixed(1)}" class="m1-e${cls ? ' ' + cls : ''}"${anchor ? ` text-anchor="${anchor}"` : ''}${ed ? ` data-m1e="${key}" tabindex="0" role="button"` : ''}>${txt}</text>`;
@@ -335,7 +335,7 @@ function m1ExtraI(){ const gs = m1Groups(), items = gs.map(g => { const mh = (g.
 
 /* ---------- 결과 그림: 차 윤곽 위에 어셈블리(원 넓이 ∝ 질량)와 CG — 옆에서 · 위에서 (같은 축척) ---------- */
 function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvItem && R.drvItem.m > 0 ? [R.drvItem] : []);
-  const L = I.L, r = (typeof DASH!=='undefined' && DASH.P.r_eff) || 229, W = 1200, H = 330, gap = 60, colw = (W - gap - 20)/2, x0 = -960, x1 = L + 480, s = colw/(x1 - x0);
+  const L = I.L, r = I.r_load > 0 ? I.r_load : 220, W = 1200, H = 330, gap = 60, colw = (W - gap - 20)/2, x0 = -960, x1 = L + 480, s = colw/(x1 - x0);
   const c1 = 10, c2 = 10 + colw + gap, ts = (x, z) => [c1 + (x - x0)*s, 280 - z*s], tt = (x, zr) => [c2 + (x - x0)*s, 165 - zr*s];   /* 위에서: 오른쪽(−y)이 위 (대시보드 윗면도와 같게) */
   /* 원 색 = 그 카드에 정한 색(색 없으면 회색), 드라이버 = 헬멧 색 */
   const colOf = it => it.cat==='d' ? (M1HC[I.dsel] || M1HC.d1) : it.hue!=null ? m1HueLn(it.hue) : '#8b90a0', rr = m => Math.max(3, Math.sqrt(m)*2.6);
@@ -353,7 +353,7 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
 /* ---------- 대시보드 '파트별 > 질량 · 무게중심': 팀 질량 표 · 드라이버로 계산한 결과(읽기 전용) ---------- */
 const M1P = { R:null, key:'', busy:false, w:null };
 function m1PartDirty(){ M1P.key = ''; if(typeof DASH!=='undefined' && DASH.part==='frame' && $('#m1part')) m1PartRun(); }
-function m1PartInputs(){ const P = typeof DASH!=='undefined' ? DASH.P : {}; return {L:P.L || 1550, tf:P.tf || 1200, tr:P.tr || 1180, ...m1ExtraI()}; }
+function m1PartInputs(){ const P = typeof DASH!=='undefined' ? DASH.P : {}; return {L:P.L || 1550, tf:P.tf || 1200, tr:P.tr || 1180, r_load:P.r_load || 220, ...m1ExtraI()}; }
 function m1PartRun(){ const I = m1PartInputs(), key = JSON.stringify(I); if(key===M1P.key || M1P.busy) return; M1P.busy = true;
   try{ if(!M1P.w){ M1P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['1'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); } }catch(e){ M1P.busy = false; return; }
   M1P.w.onmessage = e => { M1P.busy = false; M1P.key = key; if(e.data.ok){ M1P.R = e.data.r; const b = $('#m1part'); if(b) b.innerHTML = m1PartBody(I, M1P.R); } };
@@ -402,7 +402,7 @@ function m1CwCard(o){ const f = v => isFinite(v) ? wbFmt(v, 1) : '-';
 WB_TOOLS['1'] = {
   no:'1', stage:'P0', name:'질량 · 무게중심 계산기', mainTitle:'질량 분포', mainMeta:'차 윤곽은 예시 차량 (휠베이스에 맞춤) · 원 넓이 ∝ 질량',
   noSig:true,
-  inputs:[ {k:'L', dk:'L', v:1550, d:0, g:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:'치수'} ],
+  inputs:[ {k:'L', dk:'L', v:1550, d:0, g:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:'치수'}, {k:'r_load', dk:'r_load', v:220, d:0, g:'치수'} ],   /* r_load: 그림의 지면 높이(바퀴 중심 − r_load)만, 계산에는 안 씀 */
   outGroups:{'정지 코너웨이트':{wide:true, render:o => m1CwCard(o)}, '관성 모멘트':{note:'점질량 근사 · 부품 자체 관성 제외 → 실제보다 작음'}},
   outputs:[
     {k:'m', n:'총질량 (드라이버 포함)', u:'kg', d:1, g:'질량'}, {k:'m_empty', n:'공차중량 (드라이버 제외)', u:'kg', d:1, g:'질량'}, {k:'m_s', dk:'m_s', d:1, g:'질량'}, {k:'m_us_f', dk:'m_us_f', d:2, g:'질량'}, {k:'m_us_r', dk:'m_us_r', d:2, g:'질량'},

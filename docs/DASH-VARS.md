@@ -207,7 +207,7 @@
 
 ### 대시보드 (지금 시안의 18개)
 
-`m` `fr` `left` `h` · `L` `tf` `tr` `r_eff` · `cla` `cda` `xcop` `hcop` · `mu` `lltd` `rmin` · `pmax` `gr` `nmax` (+ 계산값 `a_cg`, `vmax`)
+`m` `fr` `left` `h` · `L` `tf` `tr` `r_eff` `r_load` · `cla` `cda` `xcop` `hcop` · `mu` `lltd` `rmin` · `pmax` `gr` `nmax` (+ 계산값 `a_cg`, `vmax`)
 
 추가 예정(○): 언더·오버와 서스 포함 선택을 열 때 `mu_s`, `c_alpha_f/r`, `k_us`, `rc_f/r`, `anti_dive`, `anti_squat`, `roll_grad`, `k_roll`, `kw_f/r`, `f_ride_f/r` · 그 밖에 `m_s`, `m_us_f/r`, `r_load`, `ixx/iyy/izz`, `ride_h_f/r`, `has_drs`·DRS 값, `ay_max`·`ay_max_sim`, `aero_bal`, `tmax`, `e_pack`, `brake_bias`, `ackermann`, 목표 기록·점수
 
