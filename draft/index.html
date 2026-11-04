@@ -9413,7 +9413,7 @@ const DASH = (() => {
   /* 대시보드에 보이는 키: [키, 소수 자릿수, 예시값]. 이름·단위·담당 파트는 DK(js/store/dash-keys.js) */
   const GROUPS = [
     ['질량 · 무게중심', [['m',0,300],['fr',1,47.5],['left',1,50],['h',0,290]]],
-    ['치수', [['L',0,1550],['tf',0,1200],['tr',0,1180],['r_eff',0,229]]],
+    ['치수', [['L',0,1550],['tf',0,1200],['tr',0,1180],['r_eff',0,229],['r_load',0,220]]],
     ['에어로', [['cla',2,3.0],['cda',2,1.4],['xcop',0,852],['hcop',0,420]]],
     ['타이어 · 서스 · 조향', [['mu',2,1.5],['lltd',1,50],['rmin',1,3.0]]],
     ['파워트레인', [['pmax',0,80],['gr',2,3.55],['nmax',0,6500]]]
@@ -10215,7 +10215,7 @@ function m1Pill(P, a, b, ra, rb, cls, halo){ const dx = b[0] - a[0], dy = b[1] -
   const shape = (h, c) => `<path d="M${pt(a, ra + h, e1)} L${pt(b, rb + h, e1)} L${pt(b, rb + h, e2)} L${pt(a, ra + h, e2)} Z" class="${c}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(ra + h).toFixed(1)}" class="${c}"/><circle cx="${b[0].toFixed(1)}" cy="${b[1].toFixed(1)}" r="${(rb + h).toFixed(1)}" class="${c}"/>`;
   return (halo ? shape(halo, 'm1-halo') : '') + shape(0, cls); }
 function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p class="wb-empty">계산 중…</p>';
-  const d = m1Drv(M1.drv) || M1DDEF(), ed = m1CanEdit(), L = (WB.I.L > 0 ? WB.I.L : 1550), r = (typeof DASH!=='undefined' && DASH.P.r_eff) || 229;
+  const d = m1Drv(M1.drv) || M1DDEF(), ed = m1CanEdit(), L = (WB.I.L > 0 ? WB.I.L : 1550), r = (WB.I.r_load > 0 ? WB.I.r_load : (typeof DASH!=='undefined' && DASH.P.r_load) || 220);
   const {x0, x1, z0, z1, W} = M1F, s = W/(x1 - x0), H = Math.round((z1 - z0)*s), T = (x, z) => [(x - x0)*s, H - (z - z0)*s], X = x => T(x, 0)[0], Z = z => T(0, z)[1];
   const J = D.j, S2 = p => T(p[0], p[1]), mm = v => v*s, f0 = v => Math.round(v), hal = 2.2;
   const lab = (x, z, key, txt, cls, anchor) => `<text x="${x.toFixed(1)}" y="${z.toFixed(1)}" class="m1-e${cls ? ' ' + cls : ''}"${anchor ? ` text-anchor="${anchor}"` : ''}${ed ? ` data-m1e="${key}" tabindex="0" role="button"` : ''}>${txt}</text>`;
@@ -10346,7 +10346,7 @@ function m1ExtraI(){ const gs = m1Groups(), items = gs.map(g => { const mh = (g.
 
 /* ---------- 결과 그림: 차 윤곽 위에 어셈블리(원 넓이 ∝ 질량)와 CG — 옆에서 · 위에서 (같은 축척) ---------- */
 function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvItem && R.drvItem.m > 0 ? [R.drvItem] : []);
-  const L = I.L, r = (typeof DASH!=='undefined' && DASH.P.r_eff) || 229, W = 1200, H = 330, gap = 60, colw = (W - gap - 20)/2, x0 = -960, x1 = L + 480, s = colw/(x1 - x0);
+  const L = I.L, r = I.r_load > 0 ? I.r_load : 220, W = 1200, H = 330, gap = 60, colw = (W - gap - 20)/2, x0 = -960, x1 = L + 480, s = colw/(x1 - x0);
   const c1 = 10, c2 = 10 + colw + gap, ts = (x, z) => [c1 + (x - x0)*s, 280 - z*s], tt = (x, zr) => [c2 + (x - x0)*s, 165 - zr*s];   /* 위에서: 오른쪽(−y)이 위 (대시보드 윗면도와 같게) */
   /* 원 색 = 그 카드에 정한 색(색 없으면 회색), 드라이버 = 헬멧 색 */
   const colOf = it => it.cat==='d' ? (M1HC[I.dsel] || M1HC.d1) : it.hue!=null ? m1HueLn(it.hue) : '#8b90a0', rr = m => Math.max(3, Math.sqrt(m)*2.6);
@@ -10364,7 +10364,7 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
 /* ---------- 대시보드 '파트별 > 질량 · 무게중심': 팀 질량 표 · 드라이버로 계산한 결과(읽기 전용) ---------- */
 const M1P = { R:null, key:'', busy:false, w:null };
 function m1PartDirty(){ M1P.key = ''; if(typeof DASH!=='undefined' && DASH.part==='frame' && $('#m1part')) m1PartRun(); }
-function m1PartInputs(){ const P = typeof DASH!=='undefined' ? DASH.P : {}; return {L:P.L || 1550, tf:P.tf || 1200, tr:P.tr || 1180, ...m1ExtraI()}; }
+function m1PartInputs(){ const P = typeof DASH!=='undefined' ? DASH.P : {}; return {L:P.L || 1550, tf:P.tf || 1200, tr:P.tr || 1180, r_load:P.r_load || 220, ...m1ExtraI()}; }
 function m1PartRun(){ const I = m1PartInputs(), key = JSON.stringify(I); if(key===M1P.key || M1P.busy) return; M1P.busy = true;
   try{ if(!M1P.w){ M1P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['1'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); } }catch(e){ M1P.busy = false; return; }
   M1P.w.onmessage = e => { M1P.busy = false; M1P.key = key; if(e.data.ok){ M1P.R = e.data.r; const b = $('#m1part'); if(b) b.innerHTML = m1PartBody(I, M1P.R); } };
@@ -10413,7 +10413,7 @@ function m1CwCard(o){ const f = v => isFinite(v) ? wbFmt(v, 1) : '-';
 WB_TOOLS['1'] = {
   no:'1', stage:'P0', name:'질량 · 무게중심 계산기', mainTitle:'질량 분포', mainMeta:'차 윤곽은 예시 차량 (휠베이스에 맞춤) · 원 넓이 ∝ 질량',
   noSig:true,
-  inputs:[ {k:'L', dk:'L', v:1550, d:0, g:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:'치수'} ],
+  inputs:[ {k:'L', dk:'L', v:1550, d:0, g:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:'치수'}, {k:'r_load', dk:'r_load', v:220, d:0, g:'치수'} ],   /* r_load: 그림의 지면 높이(바퀴 중심 − r_load)만, 계산에는 안 씀 */
   outGroups:{'정지 코너웨이트':{wide:true, render:o => m1CwCard(o)}, '관성 모멘트':{note:'점질량 근사 · 부품 자체 관성 제외 → 실제보다 작음'}},
   outputs:[
     {k:'m', n:'총질량 (드라이버 포함)', u:'kg', d:1, g:'질량'}, {k:'m_empty', n:'공차중량 (드라이버 제외)', u:'kg', d:1, g:'질량'}, {k:'m_s', dk:'m_s', d:1, g:'질량'}, {k:'m_us_f', dk:'m_us_f', d:2, g:'질량'}, {k:'m_us_r', dk:'m_us_r', d:2, g:'질량'},
@@ -10545,7 +10545,7 @@ function calc(I){
    차 형상 배경 (옆면 · 윗면): 팀이 올린 그림을 차 윤곽 대신 그림 바탕으로 씀
    - 파일: 이미지(.png .jpg .jpeg .webp) 또는 CAD 도면(.dxf, 측면도 · 윗면도 한 장)
    - 맞춤: 그림 위에서 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심 (윗면은 앞 차축 가운데 → 뒤 차축 가운데) 두 점만 찍음
-     → 두 점 거리 = 휠베이스로 크기, 두 점을 잇는 선이 수평이 되게 회전, 앞이 오른쪽이면 좌우 뒤집기. 지면 = 바퀴 중심에서 r_eff 아래
+     → 두 점 거리 = 휠베이스로 크기, 두 점을 잇는 선이 수평이 되게 회전, 앞이 오른쪽이면 좌우 뒤집기. 지면 = 바퀴 중심에서 하중 반경 r_load 아래
    - 저장: teams/<팀>/shape/<side|top> = {s:{시즌:{kind:'img'|'dxf', ...}}} (팀원 누구나 이번 시즌, 로그인 전은 이 브라우저)
      img: data(줄인 이미지 data: 주소), w, h, p1, p2 (그림 픽셀, 아래로 +)
      dxf: d(선 그림 경로, 도면 단위 · y 를 뒤집어 아래로 +), p1, p2
@@ -10702,10 +10702,10 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
   /* 결과 미리보기: 지금 휠베이스 · 타이어 반경으로 맞춘 모습 + 바퀴 중심 · 지면 표시 */
   let res = '';
   const P12 = src && shP12(), show = P12 ? {...src, p1:P12[0], p2:P12[1]} : (!src && cur ? cur : null);
-  if(show){ const P = typeof DASH!=='undefined' ? DASH.P : {L:1550, r_eff:229}, L = P.L || 1550, r = P.r_eff || 229, W = 640, H = v==='side' ? 260 : 220, s = W/(L + 1500), x0 = 900;
+  if(show){ const WI = typeof WB!=='undefined' && WB.id ? WB.I : {}, P = typeof DASH!=='undefined' ? DASH.P : {}, L = WI.L || P.L || 1550, r = WI.r_load || P.r_load || 220, W = 640, H = v==='side' ? 260 : 220, s = W/(L + 1500), x0 = 900;
     const T = (x, y) => [ (x + x0)*s, v==='side' ? H - 20 - y*s : H/2 - y*s ];
     const A = v==='side' ? T(0, r) : T(0, 0), B = v==='side' ? T(L, r) : T(L, 0);
-    res = `<div class="shp-res"><b>맞춘 모습</b> <span class="muted">휠베이스 ${Math.round(L)} mm${v==='side' ? ` · 타이어 반경 ${Math.round(r)} mm` : ''} 기준, 빨간 점 = 바퀴(차축) 중심${v==='side' ? ', 선 = 지면' : ''}</span>
+    res = `<div class="shp-res"><b>맞춘 모습</b> <span class="muted">휠베이스 ${Math.round(L)} mm${v==='side' ? ` · 타이어 하중 반경 ${Math.round(r)} mm` : ''} 기준, 빨간 점 = 바퀴(차축) 중심${v==='side' ? ', 선 = 지면' : ''}</span>
       <svg viewBox="0 0 ${W} ${H}" class="shp-fit">${shSvg(v, A, B, show)}${v==='side' ? `<line x1="0" y1="${H - 20}" x2="${W}" y2="${H - 20}" class="cf-gnd"/>` : ''}<circle cx="${A[0]}" cy="${A[1]}" r="4" class="shp-ax"/><circle cx="${B[0]}" cy="${B[1]}" r="4" class="shp-ax"/><text x="8" y="16" class="cf-t sm mut">← 앞</text></svg></div>`; }
   return `<div class="dvi-h"><b id="shp-t">차 형상 (그림 바탕)</b><button type="button" class="dvi-x" data-shpx aria-label="닫기">×</button></div>
     <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 차 그림'}</span></div>
