@@ -9982,7 +9982,7 @@ const M1CAT = [['s','현가상'], ['uf','현가하 앞'], ['ur','현가하 뒤']
 const M1DRV = {d1:'1st', d2:'2nd', d3:'3rd'};
 const M1HC = {d1:'#6A4294', d2:'#1d5f9a', d3:'#c2410c'};   /* 헬멧 색: 1st 보라 · 2nd 파랑 · 3rd 주황 */
 /* 드라이버 기본값: 예시 차량(그림 윤곽, 휠베이스 1550) 시트 · 페달 · 핸들 자리(뒤 차축 기준 x)에 남성 175 cm · 70 kg, 장비 0 */
-const M1DDEF = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, foot:20, helm:M1HD, hip:{x:960, z:230}, pedal:{x:1770, z:250}, sw:{x:1175, z:500}, seg:{}});
+const M1DDEF = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, neck:0, foot:20, helm:M1HD, hip:{x:960, z:230}, pedal:{x:1770, z:250}, sw:{x:1175, z:500}, seg:{}});
 const M1SEG = {head:'머리', neck:'목', trunk:'몸통', uarm:'상완', farm:'하완', hand:'손', thigh:'허벅지', shank:'정강이', foot:'발'};
 const m1HueBg = h => h==null ? '' : `hsl(${h} 62% 93%)`, m1HueLn = h => `hsl(${h} 45% 62%)`;
 
@@ -10128,12 +10128,12 @@ function m1DrvHTML(){ const ed = m1CanEdit(), d = m1Drv(M1.drv) || M1DDEF(), oth
   const gin = (p, lab) => `<label class="m1-gi"><span>${lab}</span>${ed ? m1Num(m1Get(d, p) || null, `data-m1d="${p}" min="0" placeholder="0" aria-label="${lab} [kg]"`) : `<b>${wbFmt(m1Get(d, p) || 0, 1)}</b>`}<i>kg</i></label>`;
   return `<div class="m1-top"><div class="m1-ptabs">${Object.entries(M1DRV).map(([k, t]) => { const dd = m1Drv(k); return `<button type="button" data-m1drv="${k}" aria-pressed="${M1.drv===k}"><i class="m1-hdot" style="background:${M1HC[k]}"></i>${t}${dd && dd.label ? ' · ' + wbEsc(dd.label) : ''}${dd ? '' : '<span>기본값</span>'}</button>`; }).join('')}</div>
       <span class="m1-hint">${ed ? '그림 위 숫자를 누르면 고칩니다 · 흰 점(엉덩이점 · 발목 · 핸들)은 끌어서 옮깁니다' : '지난 시즌 기록은 회장만 고칠 수 있습니다'}</span>
-      ${ed && m1Drv(M1.drv) ? `<button type="button" class="lnk m1-reset" data-m1dreset title="엉덩이점 · 등받이 · 발목 · 발 각도 · 핸들 · 직접 고친 체절 길이를 처음으로 (이름 · 키 · 몸무게 · 성별 · 장비는 그대로)">자세 초기화</button>` : ''}</div>
+      ${ed && m1Drv(M1.drv) ? `<button type="button" class="lnk m1-reset" data-m1dreset title="엉덩이점 · 등받이 · 목 각도 · 발목 · 발 각도 · 핸들 · 직접 고친 체절 길이를 처음으로 (이름 · 키 · 몸무게 · 성별 · 장비는 그대로)">자세 초기화</button>` : ''}</div>
     <div class="m1-dgrid"><div class="m1-dfw">${m1InfoHTML(d, D, ed)}<div class="m1-dwrap" id="m1dfig">${m1DrvFig(WB.R)}</div></div>
       <aside class="m1-dside" aria-label="드라이버 설정">
         <div class="m1-sg"><b>체절 비율</b><div class="m1-seg2">${[['m','남성'],['f','여성']].map(([k, t]) => `<button type="button" data-m1sex="${k}" aria-pressed="${(d.sex||'m')===k}"${ed ? '' : ' disabled'}>${t}</button>`).join('')}</div></div>
         <div class="m1-sg"><b>장비</b>${gin('gear.helmet', '헬멧 → 머리')}${gin('gear.suit', '드라이버 복 → 체절 비율로')}${gin('gear.belt', '안전벨트 → 몸통')}</div>
-        ${ed ? `<div class="m1-sg"><b>자세 복사</b><span class="m1-fh">엉덩이점 · 등받이 · 발목 · 발 각도 · 핸들 · 체절 길이만</span><div class="m1-same">${others.map(k => `<button type="button" class="btn small" data-m1same="${k}">${M1DRV[k]}와 같게</button>`).join('')}</div></div>` : ''}
+        ${ed ? `<div class="m1-sg"><b>자세 복사</b><span class="m1-fh">엉덩이점 · 등받이 · 목 각도 · 발목 · 발 각도 · 핸들 · 체절 길이만</span><div class="m1-same">${others.map(k => `<button type="button" class="btn small" data-m1same="${k}">${M1DRV[k]}와 같게</button>`).join('')}</div></div>` : ''}
         <div class="m1-sg" id="m1segs">${m1SegTable(D)}</div>
       </aside></div>`; }
 const m1HestTxt = D => `체절 길이로 본 키 약 ${wbFmt(D.hEst, 1)} cm`;
@@ -10155,7 +10155,7 @@ function m1SegTable(D){ if(!D) return '';
 const M1F = {x0:-960, x1:2120, z0:-110, z1:1290, W:1000};
 const M1HD = 280;  /* 헬멧 바깥 지름 기본값 [mm] (옆에서 본 앞뒤 길이, 그림용). 머리 길이와 따로 입력, 계산(키 · 무게중심)에는 쓰지 않음 */
 /* 범위: 점(엉덩이점 · 발목 · 핸들)은 그림 안에서만, 각도는 등받이 0~70°, 발 0~60° */
-const M1LIM = {x:[M1F.x0 + 40, M1F.x1 - 40], z:[0, M1F.z1 - 40], back:[0, 70], foot:[0, 60], helm:[150, 400]};
+const M1LIM = {x:[M1F.x0 + 40, M1F.x1 - 40], z:[0, M1F.z1 - 40], back:[0, 70], neck:[-20, 60], foot:[0, 60], helm:[150, 400]};
 const m1Clamp = (v, [a, b]) => Math.max(a, Math.min(b, v));
 function m1Pill(P, a, b, ra, rb, cls, halo){ const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1e-6, u = [dx/l, dy/l], n = [-u[1], u[0]];
   const sp = Math.max(-.99, Math.min(.99, (ra - rb)/l)), cp = Math.sqrt(1 - sp*sp), e1 = [n[0]*cp + u[0]*sp, n[1]*cp + u[1]*sp], e2 = [-n[0]*cp + u[0]*sp, -n[1]*cp + u[1]*sp];
@@ -10174,7 +10174,8 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
   const sym = `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)})"><circle r="${cr+2}" fill="#fff"/><path d="M0 0 L${-cr} 0 A${cr} ${cr} 0 0 1 0 ${-cr} Z M0 0 L${cr} 0 A${cr} ${cr} 0 0 1 0 ${cr} Z" fill="#d92d20"/><circle r="${cr}" fill="none" stroke="#d92d20" stroke-width="1.6"/><line x1="${-cr}" x2="${cr}" stroke="#d92d20" stroke-width="1.2"/><line y1="${-cr}" y2="${cr}" stroke="#d92d20" stroke-width="1.2"/></g>`;
   const bl = .82*D.len.trunk, bk = [J.H[0] + bl*Math.sin(D.back), J.H[1] + bl*Math.cos(D.back)], bm = [J.H[0] + 330*Math.sin(D.back), J.H[1] + 330*Math.cos(D.back)];   /* 등받이: 몸통 뒤에 가려지는 길이 */
   const [hx, hy] = S2(J.HC), hr = mm((d.helm > 0 ? d.helm : M1HD)/2), hd0 = mm(D.len.head/2), hcol = M1HC[M1.drv] || M1HC.d1, vid = 'm1v' + M1.drv;
-  const visor = `<clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/>`;
+  /* 바이저는 목 각도와 상관없이 항상 수평 (시선은 정면) */
+  const visor = `<g><clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/></g>`;
   const foot = `<path d="M${J.F.map(p => S2(p).map(v => v.toFixed(1)).join(',')).join(' L')} Z" class="m1-foot"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
     ${CARFIG.carSide(T, L, r, s)}
@@ -10189,7 +10190,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
       ${m1Pill(null, S2(J.H), S2(J.K), mm(86), mm(62), 'm1-p-leg', hal)}${m1Pill(null, S2(J.K), S2(J.A), mm(60), mm(44), 'm1-p-leg', hal)}${foot}
       ${m1Pill(null, S2(J.Sh), S2(J.E), mm(50), mm(40), 'm1-p-arm', hal)}${m1Pill(null, S2(J.E), S2(J.W), mm(38), mm(31), 'm1-p-arm', hal)}<circle cx="${X(J.W[0]).toFixed(1)}" cy="${Z(J.W[1]).toFixed(1)}" r="${mm(42).toFixed(1)}" class="m1-p-hand"/>
     </g>
-    ${segLab(J.H, J.K, 'thigh', 0, 32)}${segLab(J.K, J.A, 'shank', -6, 34)}${segLab(J.F[0], J.F[2], 'foot', -48, -6)}${lab(X(J.F[1][0]) - 10, Z(J.F[1][1]) - 10, 'foot', `발 각도 ${f0(isFinite(d.foot) ? d.foot : 20)}°`, 'pt', 'end')}${segLab(J.H, J.S, 'trunk', 86, -16)}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) - 6, 'seg.head', `머리 ${Math.round(D.len.head)}`, d.seg.head > 0 ? 'set' : 'def')}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) + 14, 'helm', `헬멧 바깥 ${Math.round(d.helm > 0 ? d.helm : M1HD)}`, 'set')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 16, 'seg.neck', `목 ${Math.round(D.len.neck)}`, d.seg.neck > 0 ? 'set' : 'def')}${segLab(J.Sh, J.E, 'uarm', 0, -20)}${segLab(J.E, J.W, 'farm', 0, -20)}
+    ${segLab(J.H, J.K, 'thigh', 0, 32)}${segLab(J.K, J.A, 'shank', -6, 34)}${segLab(J.F[0], J.F[2], 'foot', -48, -6)}${lab(X(J.F[1][0]) - 10, Z(J.F[1][1]) - 10, 'foot', `발 각도 ${f0(isFinite(d.foot) ? d.foot : 20)}°`, 'pt', 'end')}${segLab(J.H, J.S, 'trunk', 86, -16)}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) - 6, 'seg.head', `머리 ${Math.round(D.len.head)}`, d.seg.head > 0 ? 'set' : 'def')}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) + 14, 'helm', `헬멧 바깥 ${Math.round(d.helm > 0 ? d.helm : M1HD)}`, 'set')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 16, 'seg.neck', `목 ${Math.round(D.len.neck)}`, d.seg.neck > 0 ? 'set' : 'def')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 36, 'neck', `목 각도 ${f0(isFinite(d.neck) ? d.neck : 0)}°`, 'pt')}${segLab(J.Sh, J.E, 'uarm', 0, -20)}${segLab(J.E, J.W, 'farm', 0, -20)}
     ${lab(X(bm[0]) + 46, Z(bm[1]) + 46, 'back', `등받이 ${f0(d.back)}°`, 'pt')}
     ${pt(J.H, 'hip')}${lab(X(J.H[0]) + 12, Z(J.H[1]) + 26, 'hip', `엉덩이점 x ${f0(d.hip.x)} · z ${f0(d.hip.z)}`, 'pt')}
     ${pt(J.P, 'pedal')}${lab(X(J.P[0]) + 14, Z(J.P[1]) + 30, 'pedal', `발목(복사뼈) x ${f0(d.pedal.x)} · z ${f0(d.pedal.z)}`, 'pt', 'start')}
@@ -10197,7 +10198,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
     ${sym}<text x="${cx}" y="${cy + 28}" text-anchor="middle" class="m1-tl r">CG x ${f0(cg[0])} · z ${f0(cg[1])}</text>
   </svg>`; }
 /* 그림 위 입력 칸: 라벨 자리에 띄움. 점(x · z)은 두 칸 */
-const M1EF = {back:[['back','°']], foot:[['foot','°']], hip:[['hip.x','x'],['hip.z','z']], pedal:[['pedal.x','x'],['pedal.z','z']], sw:[['sw.x','x'],['sw.z','z']], height:[['height','cm']], mass:[['mass','kg']], label:[['label','']], helm:[['helm','mm']]};
+const M1EF = {back:[['back','°']], neck:[['neck','°']], foot:[['foot','°']], hip:[['hip.x','x'],['hip.z','z']], pedal:[['pedal.x','x'],['pedal.z','z']], sw:[['sw.x','x'],['sw.z','z']], height:[['height','cm']], mass:[['mass','kg']], label:[['label','']], helm:[['helm','mm']]};
 const m1Get = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
 function m1EditOpen(t){ const key = t.dataset.m1e, d = m1Drv(M1.drv) || M1DDEF(), box = t.closest('.m1-dwrap'), rb = box.getBoundingClientRect(), rt = t.getBoundingClientRect();
   const fs = key.startsWith('seg.') ? [[key, 'mm']] : M1EF[key]; if(!fs) return;
@@ -10205,13 +10206,13 @@ function m1EditOpen(t){ const key = t.dataset.m1e, d = m1Drv(M1.drv) || M1DDEF()
   const pop = document.createElement('div'); pop.className = 'm1-pop'; pop.style.left = Math.max(0, rt.left - rb.left - 8) + 'px'; pop.style.top = (rt.bottom - rb.top + 4) + 'px';
   pop.innerHTML = fs.map(([p, u]) => { const v = m1Get(d, p);
     return `<label>${key==='label' ? `<input type="text" data-m1p="${p}" maxlength="20" value="${wbEsc(v||'')}" placeholder="${M1DRV[M1.drv]}">` : `<span>${u==='x'||u==='z' ? u : ''}</span><input type="number" step="any" data-m1p="${p}" value="${v==null || !isFinite(v) || (p.startsWith('seg.') && !(v > 0)) ? '' : v}" placeholder="${ph(p)}">${u==='x'||u==='z' ? '<i>mm</i>' : `<i>${u}</i>`}`}</label>`; }).join('')
-    + `<span class="m1-poph">${key.startsWith('seg.') ? '비우면 키 비율' : key==='pedal' ? '발목(복사뼈) 중심 좌표 · 발바닥이 페달에 닿음' : key==='foot' ? '발바닥이 수직에서 앞으로 누운 각도 · 0~60°' : key==='back' ? '등받이가 수직에서 뒤로 누운 각도 · 0~70°' : key==='helm' ? '헬멧 바깥 지름(옆에서 본 앞뒤 길이) · 그림에만 씀 · 150~400' : /^(hip|pedal|sw)$/.test(key) ? '그림 범위 안으로 맞춤 · Enter 저장' : 'Enter 저장 · Esc 취소'}</span>`;
+    + `<span class="m1-poph">${key.startsWith('seg.') ? '비우면 키 비율' : key==='pedal' ? '발목(복사뼈) 중심 좌표 · 발바닥이 페달에 닿음' : key==='foot' ? '발바닥이 수직에서 앞으로 누운 각도 · 0~60°' : key==='back' ? '등받이가 수직에서 뒤로 누운 각도 · 0~70°' : key==='neck' ? '머리 · 목이 수직에서 앞으로 숙인 각도 (경추 7번 기준, 뒤로 젖히면 −) · −20~60°' : key==='helm' ? '헬멧 바깥 지름(옆에서 본 앞뒤 길이) · 그림에만 씀 · 150~400' : /^(hip|pedal|sw)$/.test(key) ? '그림 범위 안으로 맞춤 · Enter 저장' : 'Enter 저장 · Esc 취소'}</span>`;
   box.querySelectorAll('.m1-pop').forEach(x => x.remove()); box.appendChild(pop); M1.edit = {key, pop};
   const f = pop.querySelector('input'); f.focus(); f.select(); }
 function m1EditDone(save){ const E = M1.edit; if(!E) return; M1.edit = null;
   if(save){ const vals = [...E.pop.querySelectorAll('[data-m1p]')].map(i => [i.dataset.m1p, i.type==='text' ? i.value.slice(0, 20) : (i.value.trim()==='' ? null : parseFloat(i.value))]);
     const Lw = WB.I.L > 0 ? WB.I.L : 1550, LX = [Lw - M1LIM.x[1], Lw - M1LIM.x[0]];   /* 그림 범위를 차량 x 로 */
-    const lim = p => p==='back' ? M1LIM.back : p==='foot' ? M1LIM.foot : p==='helm' ? M1LIM.helm : /^(hip|pedal|sw)\.x$/.test(p) ? LX : /^(hip|pedal|sw)\.z$/.test(p) ? M1LIM.z : null;
+    const lim = p => p==='back' ? M1LIM.back : p==='neck' ? M1LIM.neck : p==='foot' ? M1LIM.foot : p==='helm' ? M1LIM.helm : /^(hip|pedal|sw)\.x$/.test(p) ? LX : /^(hip|pedal|sw)\.z$/.test(p) ? M1LIM.z : null;
     const vs = vals.map(([p, v]) => [p, typeof v==='number' && isFinite(v) && lim(p) ? m1Clamp(v, lim(p)) : v]);
     if(vs.every(([, v]) => v===null || typeof v==='string' || isFinite(v))) m1SaveDrv(d => vs.forEach(([p, v]) => m1Path(d, p, v))); }
   E.pop.remove(); }
@@ -10234,10 +10235,10 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest || !
   const le = t.closest('[data-m1e]'); if(le){ m1EditOpen(le); return; }
   const sx = t.closest('[data-m1sex]'); if(sx){ m1SaveDrv(d => { d.sex = sx.dataset.m1sex; }); wbPaint(['ext']); return; }
   const sm = t.closest('[data-m1same]'); if(sm){ const o = m1Drv(sm.dataset.m1same) || M1DDEF();
-    m1SaveDrv(d => { ['hip','pedal','sw','seg'].forEach(k => { d[k] = JSON.parse(JSON.stringify(o[k])); }); d.back = o.back; d.foot = o.foot; }); wbPaint(['ext']); toast(`${M1DRV[sm.dataset.m1same]}와 같은 자세로 맞췄습니다.`); return; }
+    m1SaveDrv(d => { ['hip','pedal','sw','seg'].forEach(k => { d[k] = JSON.parse(JSON.stringify(o[k])); }); d.back = o.back; d.neck = o.neck; d.foot = o.foot; }); wbPaint(['ext']); toast(`${M1DRV[sm.dataset.m1same]}와 같은 자세로 맞췄습니다.`); return; }
   const rs = t.closest('[data-m1dreset]'); if(rs){ if(!rs.dataset.sure){ rs.dataset.sure = '1'; rs.textContent = '자세를 처음으로 돌릴까요? 한 번 더 누르면 실행'; rs.classList.add('sure');
       setTimeout(() => { if(rs.isConnected){ delete rs.dataset.sure; rs.textContent = '자세 초기화'; rs.classList.remove('sure'); } }, 3000); return; }
-    const D0 = M1DDEF(); m1SaveDrv(d => { ['hip','pedal','sw'].forEach(k => { d[k] = {...D0[k]}; }); d.back = D0.back; d.foot = D0.foot; d.seg = {}; }); wbPaint(['ext']); toast('자세를 처음으로 돌렸습니다.'); return; }
+    const D0 = M1DDEF(); m1SaveDrv(d => { ['hip','pedal','sw'].forEach(k => { d[k] = {...D0[k]}; }); d.back = D0.back; d.neck = D0.neck; d.foot = D0.foot; d.seg = {}; }); wbPaint(['ext']); toast('자세를 처음으로 돌렸습니다.'); return; }
   if(t.closest('[data-m1gadd]')){ if(!m1CanEdit()) return; const id = m1NewId();
     m1Store('mass', id, {name:'', x:null, y:0, z:null, cat:'s', items:[{name:'', m:null, n:1}], ord:Date.now()}); wbPaint(['ext']);
     const n = document.querySelector(`[data-m1g="${id}"] [data-m1gf="name"]`); if(n) n.focus(); return; }
@@ -10336,7 +10337,7 @@ const M1TOUR = [
   ['#m1list [data-m1g] .m1-half', '걸침 ½ 체크', '드라이브샤프트(CV축) · 위시본 · 푸시로드 · 타이로드 · 스프링 · 댐퍼처럼 한쪽은 차체, 한쪽은 업라이트에 붙는 부품은 ½을 체크합니다. 체크한 항목은 질량 절반을 반대쪽으로 셉니다. 현가하 카드면 절반은 현가상으로, 현가상 카드(예: 구동계의 CV축)면 가장 가까운 현가하 카드 쪽(앞 · 뒤)으로 갑니다. 총질량 · 무게중심 · 코너웨이트는 그대로이고 현가상 · 현가하질량만 바뀝니다. 체크 칸에 마우스를 올리면 절반이 갈 곳이 나옵니다.', m1TT('mass')],
   ['#m1list .m1-drvc', '드라이버 카드', '첫 줄 첫 칸에 고정입니다. 계산에 넣을 드라이버(1st · 2nd · 3rd)를 고르고, 몸무게와 장비는 여기서 고쳐도 드라이버 모델과 같은 값이 됩니다. 좌표는 드라이버 모델이 계산한 무게중심입니다.', m1TT('mass')],
   ['#wb .m1-gadd', '어셈블리 더하기', '새 어셈블리 카드를 만듭니다. 이름 · 범주(현가상 · 현가하 앞 · 뒤) · 좌표 · 항목을 채웁니다.', m1TT('mass')],
-  ['#m1dfig', '드라이버 그림', '흰 점(엉덩이점 · 발목 · 핸들)을 끌어 자세를 맞춥니다. 그림 위 숫자(체절 길이 · 등받이 · 발 각도 · 좌표)를 누르면 그 자리에서 고칩니다. 빨간 기호가 드라이버 무게중심입니다.', m1TT('drv')],
+  ['#m1dfig', '드라이버 그림', '흰 점(엉덩이점 · 발목 · 핸들)을 끌어 자세를 맞춥니다. 그림 위 숫자(체절 길이 · 등받이 · 목 각도 · 발 각도 · 좌표)를 누르면 그 자리에서 고칩니다. 빨간 기호가 드라이버 무게중심입니다.', m1TT('drv')],
   ['#wb .m1-dinfo', '드라이버 정보', '이름 · 키 · 몸무게를 넣습니다. 체절 길이는 키에 비례해 정해집니다.', m1TT('drv')],
   ['#wb .m1-dside', '체절 · 장비', '성별에 따라 체절 비율 표를 고르고, 헬멧 · 드라이버 복 · 안전벨트 질량을 넣습니다. [2nd와 같게] 등으로 다른 드라이버의 자세를 그대로 가져옵니다. 아래 표는 체절별 질량 · 무게중심입니다.', m1TT('drv')],
   ['#wb .wb-sec[aria-label="결과"]', '결과', '차 전체 질량 · 무게중심 · 앞뒤 배분 · 정지 코너웨이트 · 관성 모멘트입니다. [대시보드와 비교]를 켜면 대시보드 값이 아래에 작게 나옵니다.', {inner:'#wb .wb-right'}],
@@ -10406,8 +10407,10 @@ function driver(d, Lw){
   const H = [Lw - d.hip.x, d.hip.z];
   const S = add(H, [L('trunk')*Math.sin(th), L('trunk')*Math.cos(th)]);        // 경추 7번: 등받이를 따라 뒤로 누움 (x 는 뒤로 +)
   const Sh = lerp(S, H, .15);                                                   // 어깨 관절: 경추 7번에서 몸통 길이 15 % 아래 (근사)
-  const N = [Sh[0], S[1] + L('neck')];                                          // 목 위끝: 목은 어깨에서 수직
-  const V = [Sh[0], N[1] + L('head')], HC = [Sh[0], N[1] + L('head')/2];      // 정수리, 머리 가운데(그림의 헬멧 중심)
+  // 목 · 머리: 어깨 위 경추 7번 높이(B)를 축으로 머리 · 목을 한 덩어리로 기울임. neck = 수직에서 앞으로 숙인 각도 [°] (de Leva 표는 머리 · 목이 한 체절)
+  const na = (isFinite(d.neck) ? d.neck : 0)*Math.PI/180, nu = [-Math.sin(na), Math.cos(na)], B = [Sh[0], S[1]];   // 그림 좌표는 x 뒤 + 이므로 앞으로 = −x
+  const N = add(B, mul(nu, L('neck')));                                          // 목 위끝
+  const V = add(B, mul(nu, L('neck') + L('head'))), HC = add(B, mul(nu, L('neck') + L('head')/2));   // 정수리, 머리 가운데(그림의 헬멧 중심)
   const [E, Wr] = twoLink(Sh, [Lw - d.sw.x, d.sw.z], L('uarm'), L('farm'), false, warn, '핸들');
   const [K, A] = twoLink(H, [Lw - d.pedal.x, d.pedal.z], L('thigh'), L('shank'), true, warn, '페달');
   // 발: 뒤꿈치가 직각인 사다리꼴(발바닥 · 뒤꿈치 뒤 모서리가 직각). 페달 점 = 발목(복사뼈) 중심, 발바닥은 수직에서 foot° 앞으로 누워 페달에 닿음
@@ -10419,7 +10422,7 @@ function driver(d, Lw){
   const Hl = lerp(B0, B1, .5);                                                  // 뒤꿈치 (발 체절 시작점)
   const hd = sub(Wr, E), hu = mul(hd, 1/len(hd));
   const g = d.gear || {}, suit = +g.suit || 0;
-  const segs = [ ['머리 · 목', 'head', [V[0], V[1] - TB.head[2]*LHN], 1, +g.helmet || 0], ['몸통', 'trunk', lerp(S, H, TB.trunk[2]), 1, +g.belt || 0],
+  const segs = [ ['머리 · 목', 'head', sub(V, mul(nu, TB.head[2]*LHN)), 1, +g.helmet || 0], ['몸통', 'trunk', lerp(S, H, TB.trunk[2]), 1, +g.belt || 0],
     ['상완 ×2', 'uarm', lerp(Sh, E, TB.uarm[2]), 2, 0], ['하완 ×2', 'farm', lerp(E, Wr, TB.farm[2]), 2, 0], ['손 ×2', 'hand', add(Wr, mul(hu, TB.hand[2]*L('hand'))), 2, 0],
     ['허벅지 ×2', 'thigh', lerp(H, K, TB.thigh[2]), 2, 0], ['정강이 ×2', 'shank', lerp(K, A, TB.shank[2]), 2, 0], ['발 ×2', 'foot', add(Hl, mul(fd, TB.foot[2]*Lf)), 2, 0] ]
     .map(([n, s, c, q, ex]) => ({n, m: (d.mass + suit)*frac(s)*q + ex, x: Lw - c[0], z: c[1]}));   // 드라이버 복은 몸무게처럼 비율로 나눔
@@ -10430,7 +10433,7 @@ function driver(d, Lw){
   const VS = ['head','neck','trunk','thigh','shank'], hEst = VS.reduce((a, s) => a + L(s), 0)/(TB.head[0] + TB.trunk[0] + TB.thigh[0] + TB.shank[0])*TB.st/10;
   const segSet = VS.some(s => d.seg && d.seg[s] > 0);
   return { m, model, cg: model, hEst, segSet, back: th, warn, segs, len: lens, lenDef: lensDef,
-    j: {H, S, V, N, Sh, HC, E, W: Wr, K, A, F: [B0, T0, T1, B1], P: [Lw - d.pedal.x, d.pedal.z], G: [Lw - d.sw.x, d.sw.z]} };   // j: 그림 좌표(앞 차축에서 뒤로)
+    j: {H, S, V, N, Sh, HC, na, E, W: Wr, K, A, F: [B0, T0, T1, B1], P: [Lw - d.pedal.x, d.pedal.z], G: [Lw - d.sw.x, d.sw.z]} };   // j: 그림 좌표(앞 차축에서 뒤로)
 }
 function calc(I){
   const drv = {}; for(const k in I.drv) drv[k] = driver(I.drv[k], I.L);
@@ -10477,6 +10480,7 @@ function calc(I){
     {n:'공차 = 드라이버 빼고', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_empty:100, cw0_fl:27.5, cw0_rr:22.5, cross0:50}, src:'드라이버 없이 왼쪽으로 60 mm 경우와 같음'},
     {n:'걸침: 현가하 카드', I:{L:1600, tf:1200, tr:1200, items:[{m:10, mh:4, x:1600, y:500, z:250, cat:'uf'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:110, m_s:102, m_us_f:4}, src:'4 ÷ 2 = 2 kg 가 현가상으로 → 현가하 앞 8 kg, 바퀴 하나 4'},
     {n:'걸침: 현가상 카드 → 가까운 뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:20, mh:4, to:'ur', x:100, y:0, z:250, cat:'s'}, {m:10, x:0, y:500, z:250, cat:'ur'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_s:18, m_us_r:6}, src:'4 ÷ 2 = 2 kg 가 뒤 현가하로 → (10 + 2) ÷ 2'},
+    {n:'목 각도: 질량 그대로', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, neck:30}}}, expect:{m_drv:70}, src:'머리 · 목을 기울여도 체절 질량 합 = 몸무게'},
     {n:'장비 더하기', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, gear:{helmet:1.5, suit:2, belt:1}}}}, expect:{m_drv:74.5}, src:'70 + 1.5 + 2 + 1'}
   ]
 };
