@@ -2722,3 +2722,4 @@ html.wb-lock #tip{z-index:95}
 .m1-half:has(input:checked){color:var(--accent);font-weight:600}
 .m1-half.ro{cursor:default;color:var(--accent);font-weight:600}
 #figModal.over-wb{z-index:80}
+.m1-rec{font-size:11.5px;fill:var(--muted)}.m1-rec.on{fill:#b45309;font-weight:600}
