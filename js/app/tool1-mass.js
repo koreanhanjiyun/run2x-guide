@@ -55,7 +55,7 @@ function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.act
 const m1Num = (v, attrs) => `<input type="number" step="any" ${attrs} value="${v==null || !isFinite(v) ? '' : v}">`;
 function m1ExtHTML(){ return `<section class="wb-sec m1" aria-label="표 입력"><div class="wb-h"><h3>표 입력</h3>
       <div class="m1-tabs" role="tablist">${[['mass','부품 질량 표'], ['drv','드라이버 모델']].map(([k, t]) => `<button type="button" role="tab" data-m1tab="${k}" aria-selected="${M1.tab===k}">${t}</button>`).join('')}</div>
-      <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 뒤 차축에서 앞으로 · y = 중심선에서 왼쪽 · z = 지면에서 위 <button type="button" class="lnk" data-coordopen>좌표계 그림</button></span></div>
+      <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 뒤 차축에서 앞으로 · y = 중심선에서 왼쪽 · z = 지면에서 위 <button type="button" class="lnk" data-coordopen>좌표계 그림</button> · <button type="button" class="lnk" data-shpopen>차 형상</button></span></div>
     <div id="m1body">${M1.tab==='mass' ? m1MassHTML() : m1DrvHTML()}</div></section>`; }
 /* 카드 배치: 4열, 줄마다 왼쪽부터 빈칸 없이 채움. 드라이버 카드는 첫 줄 첫 칸 고정(첫 줄은 3장까지).
    저장값 pos {c, r}: 줄 r 과 줄 안 순서 c. 자리가 없는 카드는 마지막 줄 뒤에 이어 붙임 */
@@ -233,7 +233,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
     </g>
     ${segLab(J.H, J.K, 'thigh', 0, 32)}${segLab(J.K, J.A, 'shank', -6, 34)}${segLab(J.F[0], J.F[2], 'foot', -48, -6)}${lab(X(J.F[1][0]) - 10, Z(J.F[1][1]) - 10, 'foot', `발 각도 ${f0(isFinite(d.foot) ? d.foot : 20)}°`, 'pt', 'end')}${segLab(J.H, J.S, 'trunk', 86, -16)}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) - 6, 'seg.head', `머리 ${Math.round(D.len.head)}`, d.seg.head > 0 ? 'set' : 'def')}${lab(X(J.HC[0]) + hr + 8, Z(J.HC[1]) + 14, 'helm', `헬멧 바깥 ${Math.round(d.helm > 0 ? d.helm : M1HD)}`, 'set')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 16, 'seg.neck', `목 ${Math.round(D.len.neck)}`, d.seg.neck > 0 ? 'set' : 'def')}${lab(X(J.N[0]) + mm(60), Z(J.N[1]) + 36, 'neck', `목 각도 ${f0(isFinite(d.neck) ? d.neck : 0)}° (+ 뒤로)`, 'pt')}${segLab(J.Sh, J.E, 'uarm', 0, -20)}${segLab(J.E, J.W, 'farm', 0, -20)}
     ${lab(X(bm[0]) + 46, Z(bm[1]) + 46, 'back', `등받이 ${f0(d.back)}° (+ 뒤로)`, 'pt')}
-    <text x="${(X(bm[0]) + 46).toFixed(1)}" y="${(Z(bm[1]) + 64).toFixed(1)}" class="m1-tl m1-rec${d.back >= 30 ? ' on' : ''}">${d.back >= 30 ? '누운 자세 (상반신 지면에서 60° 이하) · 허리벨트 지면과 60~80° · 다리 사이 벨트 추가' : '직립 자세 · 허리벨트 지면과 45~65°'}</text>
+    <text x="${(X(bm[0]) + 46).toFixed(1)}" y="${(Z(bm[1]) + 64).toFixed(1)}" class="m1-tl m1-rec${d.back >= 30 ? ' on' : ''}">${d.back >= 30 ? `누운 자세 (상반신 지면에서 60° 이하)<tspan x="${(X(bm[0]) + 46).toFixed(1)}" dy="15">허리벨트 지면과 60~80° · 다리 사이 벨트 추가</tspan>` : '직립 자세 · 허리벨트 지면과 45~65°'}</text>
     ${pt(J.H, 'hip')}${lab(X(J.H[0]) + 12, Z(J.H[1]) + 26, 'hip', `엉덩이점 x ${f0(d.hip.x)} · z ${f0(d.hip.z)}`, 'pt')}
     ${pt(J.P, 'pedal')}${lab(X(J.P[0]) + 14, Z(J.P[1]) + 30, 'pedal', `발목(복사뼈) x ${f0(d.pedal.x)} · z ${f0(d.pedal.z)}`, 'pt', 'start')}
     ${pt(J.G, 'sw')}${lab(X(J.G[0]) - 12, Z(J.G[1]) - 12, 'sw', `핸들 x ${f0(d.sw.x)} · z ${f0(d.sw.z)}`, 'pt', 'end')}

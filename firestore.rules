@@ -129,6 +129,11 @@ service cloud.firestore {
         allow create: if n in ['d1','d2','d3'] && (isTAdmin(t) || (isMember(t) && onlyCurKey(t, request.resource.data.get('s', {}))));
         allow update: if n in ['d1','d2','d3'] && (isTAdmin(t) || (isMember(t) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
         allow delete: if isTAdmin(t); }
+      // 차 형상(그림 바탕): 옆면 · 윗면. 팀원 누구나 이번 시즌 칸만 (질량 표와 같음)
+      match /shape/{n} { allow read: if isMember(t);
+        allow create: if n in ['side','top'] && (isTAdmin(t) || (isMember(t) && onlyCurKey(t, request.resource.data.get('s', {}))));
+        allow update: if n in ['side','top'] && (isTAdmin(t) || (isMember(t) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
+        allow delete: if isTAdmin(t); }
       match /meta/{d}   { allow read: if isMember(t); allow write: if isTAdmin(t); }
       // 팀 비밀번호 원문 (관리자만 보기·쓰기. 오픈채팅 입장 코드 수준으로 취급)
       match /secret/{d} { allow read, write: if isTAdmin(t); }

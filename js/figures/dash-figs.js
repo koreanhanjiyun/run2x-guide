@@ -77,6 +77,8 @@ const CARFIG = (() => {
   const heat = (F, Fq) => { const t = Math.max(0, Math.min(1, F/Fq/1.9)); const a = [233,231,238], b = [194,65,12]; return `rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')})`; };
   const XMIN = -930, XMAX_R = 460, VW = 580, VH = 400, PADL = 62;   /* PADL: 측면도 왼쪽에 CoP·무게중심 높이 치수 자리 */
 
+  /* 팀이 올린 차 형상(js/app/car-shape.js)이 있으면 그 그림을 바탕으로: A = 앞 바퀴(차축) 중심 화면 점, B = 뒤 */
+  const cus = (view, A, B) => typeof shSvg==='function' ? shSvg(view, A, B) : '';
   function wheelSide(T, s, x, r, fill){ const [cx, cy] = T(x, r), R = r*s;
     let sp=''; for(let i=0;i<5;i++){ const a=i*72*Math.PI/180 - Math.PI/2; sp+=`<line x1="${(cx+Math.cos(a)*R*0.17).toFixed(1)}" y1="${(cy+Math.sin(a)*R*0.17).toFixed(1)}" x2="${(cx+Math.cos(a)*R*0.56).toFixed(1)}" y2="${(cy+Math.sin(a)*R*0.56).toFixed(1)}" class="cf-spoke"/>`; }
     return `<circle cx="${cx}" cy="${cy}" r="${R}" class="cf-tire" style="fill:${fill}"/><circle cx="${cx}" cy="${cy}" r="${R*0.9}" class="cf-wall"/><circle cx="${cx}" cy="${cy}" r="${R*0.62}" class="cf-rim"/><circle cx="${cx}" cy="${cy}" r="${R*0.44}" class="cf-disc"/>${sp}<circle cx="${cx}" cy="${cy}" r="${R*0.15}" class="cf-hub"/>`; }
@@ -95,12 +97,12 @@ const CARFIG = (() => {
     const [hx, hy] = Q(735, 795), hr = 135*s;
     const torso = `<g class="cf-drv">${seg([1010, 230], [800, 560], 'cf-drv t" style="stroke-width:'+W(250))}${seg([800, 560], [775, 600], 'cf-drv t" style="stroke-width:'+W(230))}${seg([790, 600], [760, 700], 'cf-drv n" style="stroke-width:'+W(110))}</g>`;
     const armL = seg([815, 570], [1020, 455], 'cf-drv a" style="stroke-width:'+W(95)) + seg([1020, 455], [1225, 500], 'cf-drv a" style="stroke-width:'+W(80));
-    const fq = K.tot/4;
+    const fq = K.tot/4, CS = cus('side', T(0, r), T(L, r));
     const [mx, my] = Q(140, 220);
     let h = `<svg viewBox="0 0 ${VW} ${VH}" class="cf-svg" role="img" aria-label="측면도: 휠베이스, 무게중심, 압력 중심, 축하중">
       <defs>${mk(id+'k','var(--ink-2)')}${mk(id+'i','var(--in)')}${mk(id+'o','var(--out)')}${mk(id+'r','var(--acc-r)')}</defs>
       <text x="14" y="18" class="cf-t sm mut">← 진행 방향</text>
-      <g class="cf-car">
+      ${CS ? `<g class="cf-car">${CS}${wheelSide(T, s, 0, r, heat(K.Ff/2, fq))}${wheelSide(T, s, L, r, heat(K.Fr/2, fq))}</g>` : `<g class="cf-car">
       <path d="${sil(T, L, S.acc)}" class="cf-acc"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${(114*s).toFixed(1)}" class="cf-motor"/>
       <path d="${sil(T, L, S.frame)}" class="cf-frame" fill-rule="evenodd"/>
       <path d="${sil(T, L, S.rwsn)}" class="cf-sn"/>
@@ -111,7 +113,7 @@ const CARFIG = (() => {
       ${arms(0, 1)}${arms(L, -1)}
       ${wheelSide(T, s, 0, r, heat(K.Ff/2, fq))}${wheelSide(T, s, L, r, heat(K.Fr/2, fq))}
       <path d="${sil(T, L, S.fwsn)}" class="cf-sn"/><path d="${sil(T, L, S.fw)}" class="cf-aero"/><path d="${sil(T, L, S.rw)}" class="cf-aero"/>
-      </g>`;
+      </g>`}`;
     /* 지면 */
     h += `<line class="cf-gnd" x1="10" y1="${G}" x2="${VW-10}" y2="${G}"/>`;
     for(let x=18; x<VW-10; x+=12) h += `<line class="cf-hatch" x1="${x}" y1="${G}" x2="${x-7}" y2="${G+7}"/>`;
@@ -189,7 +191,8 @@ const CARFIG = (() => {
     if(turn){ const Rp = c.R*1000*s, [gx, gy] = T(K.a, p.tf/2*K.sideF);
       const dx = Math.min(Rp*0.999, 330), dy = Rp - Math.sqrt(Rp*Rp - dx*dx), y1 = gy + (c.dir==='L' ? dy : -dy);
       h += `<path d="M${(gx-dx).toFixed(1)} ${y1.toFixed(1)} A${Rp.toFixed(1)} ${Rp.toFixed(1)} 0 0 ${c.dir==='L'?1:0} ${(gx+dx).toFixed(1)} ${y1.toFixed(1)}" class="cf-path"/>`; }
-    h += `<g class="cf-car">${armsAt(0, tf, 1)}${armsAt(L, tr, -1)}
+    const CT = cus('top', T(0, 0), T(L, 0));
+    if(CT) h += `<g class="cf-car">${CT}`; else { h += `<g class="cf-car">${armsAt(0, tf, 1)}${armsAt(L, tr, -1)}
       <path d="${sil(T, L, S.frame)}" class="cf-frame" fill-rule="evenodd"/><path d="${sil(T, L, S.acc)}" class="cf-acc"/>
       <path d="${sil(T, L, S.fwsn)}" class="cf-sn"/><path d="${sil(T, L, S.fw)}" class="cf-aero t"/>
       <path d="${sil(T, L, S.body)}" class="cf-body"/><path d="${sil(T, L, S.seat)}" class="cf-cockpit"/>`;
@@ -198,10 +201,10 @@ const CARFIG = (() => {
     const [bx, by] = Q(830, 0), arm = zs => { const [ax_, ay_] = Q(800, zs*200), [ex, ey] = Q(1020, zs*235), [wx, wy] = Q(1225, zs*125); return `<path d="M${ax_.toFixed(1)} ${ay_.toFixed(1)} L${ex.toFixed(1)} ${ey.toFixed(1)} L${wx.toFixed(1)} ${wy.toFixed(1)}" class="cf-drv a" fill="none" style="stroke-width:${W(90)}"/>`; };
     h += `<ellipse cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" rx="${W(150)}" ry="${W(230)}" class="cf-drvb"/>${arm(1)}${arm(-1)}
       <path d="${sil(T, L, S.sw)}" class="cf-sw"/><path d="${sil(T, L, S.hr)}" class="cf-hr"/>`;
-    const [hx, hy] = Q(735, 0); h += `<circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(135*s).toFixed(1)}" class="cf-helmet"/>`;
+    const [hx, hy] = Q(735, 0); h += `<circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(135*s).toFixed(1)}" class="cf-helmet"/>`; }
     /* 바퀴 (하중 색, 앞바퀴는 조향각만큼 회전) */
     h += tire(0, tf/2, 205, loads.fr, steer.fr) + tire(0, -tf/2, 205, loads.fl, steer.fl) + tire(L, tr/2, 230, loads.rr, 0) + tire(L, -tr/2, 230, loads.rl, 0);
-    h += `<path d="${sil(T, L, S.rwsn)}" class="cf-sn"/><path d="${sil(T, L, S.rw)}" class="cf-aero"/></g>`;
+    h += (CT ? '' : `<path d="${sil(T, L, S.rwsn)}" class="cf-sn"/><path d="${sil(T, L, S.rw)}" class="cf-aero"/>`) + '</g>';
     /* 바퀴 하중 라벨: 오른쪽 바퀴(위) 라벨은 위, 왼쪽 바퀴(아래) 라벨은 아래 */
     const tag = (x, z, F, F0, nm, up) => { const ex = x===0 ? r*Math.sin(Math.max(Math.abs(steer.fl), Math.abs(steer.fr))*Math.PI/180) : 0, [X] = T(x, 0), [, Yt] = T(x, z + (up ? 115 + ex : -115 - ex)); const d = F - F0, lift = F < 0;
       const y1 = up ? Yt - 26 : Yt + 18;
@@ -292,14 +295,16 @@ const CARFIG = (() => {
     return h;
   }
   /* 차 윤곽만 (하중 · 드라이버 없이): 다른 그림(도구 1 질량 분포 · 드라이버 모델)의 바탕. T(x 앞축에서 뒤로, y 위 또는 z 오른쪽) → 화면, s = 화면/mm */
-  function carSide(T, L, r, s){ const S = REF4SIL.side, Q = (xr, y) => T(RX(xr, L), y), [mx, my] = Q(140, 220);
+  function carSide(T, L, r, s){ const C = cus('side', T(0, r), T(L, r)); if(C) return `<g class="cf-car cf-faint cs">${C}</g>`;
+    const S = REF4SIL.side, Q = (xr, y) => T(RX(xr, L), y), [mx, my] = Q(140, 220);
     const arms = (x, sg) => [[x, r+95, x-170*sg, r+118],[x, r+95, x+170*sg, r+128],[x, r-95, x-180*sg, 150],[x, r-95, x+200*sg, 160]]
       .map(a => { const [x1,y1]=T(a[0],a[1]), [x2,y2]=T(a[2],a[3]); return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="cf-arm"/>`; }).join('');
     return `<g class="cf-car cf-faint"><path d="${sil(T, L, S.acc)}" class="cf-acc"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${(114*s).toFixed(1)}" class="cf-motor"/>
       <path d="${sil(T, L, S.frame)}" class="cf-frame" fill-rule="evenodd"/><path d="${sil(T, L, S.rwsn)}" class="cf-sn"/><path d="${sil(T, L, S.hr)}" class="cf-hr"/>
       <path d="${sil(T, L, S.body)}" class="cf-body"/>${arms(0, 1)}${arms(L, -1)}${wheelSide(T, s, 0, r, '#e9e7ee')}${wheelSide(T, s, L, r, '#e9e7ee')}
       <path d="${sil(T, L, S.fwsn)}" class="cf-sn"/><path d="${sil(T, L, S.fw)}" class="cf-aero"/><path d="${sil(T, L, S.rw)}" class="cf-aero"/></g>`; }
-  function carTop(T, L, r, s, tf, tr){ const S = REF4SIL.top;
+  function carTop(T, L, r, s, tf, tr){ const C = cus('top', T(0, 0), T(L, 0)); if(C) return `<g class="cf-car cf-faint cs">${C}</g>`;
+    const S = REF4SIL.top;
     const ln = (x1_, z1, x2_, z2) => { const [a1,b1]=T(x1_,z1), [a2,b2]=T(x2_,z2); return `<line x1="${a1.toFixed(1)}" y1="${b1.toFixed(1)}" x2="${a2.toFixed(1)}" y2="${b2.toFixed(1)}" class="cf-arm"/>`; };
     const armsAt = (x, t, sg) => [1,-1].map(sd => ln(x, sd*(t/2-70), x-170*sg, sd*215) + ln(x, sd*(t/2-70), x+190*sg, sd*225)).join('');
     const tire = (x, z, wdt) => { const [X, Y] = T(x - r, z + wdt/2); return `<rect x="${X.toFixed(1)}" y="${Y.toFixed(1)}" width="${(2*r*s).toFixed(1)}" height="${(wdt*s).toFixed(1)}" rx="${(34*s).toFixed(1)}" class="cf-ttop" style="fill:#e9e7ee"/>`; };
