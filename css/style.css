@@ -2747,3 +2747,4 @@ html.wb-lock #tip{z-index:95}
 .wb-help{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 11px 0 4px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel);color:var(--ink-2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .wb-help b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px}
 .wb-help:hover,.wb-help:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+.shp-src.crop{cursor:crosshair;touch-action:none}.shp-dim{fill:rgba(20,16,32,.35)}.shp-crop{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 4}
