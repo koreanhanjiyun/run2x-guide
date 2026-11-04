@@ -2721,3 +2721,4 @@ html.wb-lock #tip{z-index:95}
 .m1-half input{margin:0;width:13px;height:13px;accent-color:var(--accent)}
 .m1-half:has(input:checked){color:var(--accent);font-weight:600}
 .m1-half.ro{cursor:default;color:var(--accent);font-weight:600}
+#figModal.over-wb{z-index:80}

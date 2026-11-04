@@ -127,7 +127,7 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
     v.innerHTML = `<header class="top tl-hero"><span class="eyebrow">우리 팀 설계값</span><h1>팀 대시보드</h1>
 </header>
       <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span><button type="button" class="btn small" data-dvimp>지난 시즌 값 가져오기</button></div><div id="dvals"></div></section>
-      <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
+      <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span><button type="button" class="btn small" data-coordopen title="설계 탭과 같은 차량 좌표계 그림 (원점 = 뒤 차축 중심 · 지면)">좌표계</button></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
       <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
       <section class="tl-sec" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
         <ol class="tl-tools">${toolRowsHTML()}</ol></section>`; }
@@ -210,3 +210,8 @@ document.addEventListener('click', e => {
   const pr = e.target.closest && e.target.closest('[data-pre]'); if(pr){ Object.assign(DASH.C, DASH.PRESET[pr.dataset.pre]); dashPaint(['cond','figs','part']); return; }
   const pt = e.target.closest && e.target.closest('[data-part]'); if(pt && !pt.disabled){ DASH.part = pt.dataset.part; dashPaint(['part']); }
 });
+
+/* [좌표계]: 설계 탭 오른쪽 '좌표계·거동' 그림 창을 그대로 엶 (도구 작업창 위에서도) */
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-coordopen]'); if(!b) return;
+  try{ if(typeof initFigRail==='function') initFigRail(); }catch(err){}
+  const md = $('#figModal'), tg = $('#figToggle'); if(!md || !tg) return; md.classList.toggle('over-wb', !!b.closest('#wb')); if(md.hidden) tg.click(); });

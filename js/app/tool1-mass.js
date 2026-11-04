@@ -6,7 +6,8 @@
      범주 cat: s 현가상 · uf 현가하 앞 · ur 현가하 뒤 (드라이버는 drivers 에서 골라 현가상으로 합산)
      hue: 카드 머리 색(연한 색, 색상만 고름)
    - 드라이버: teams/<팀>/drivers/<d1|d2|d3> = {s:{시즌:{label, sex, height(cm), mass, gear:{helmet, suit, belt}, helm(헬멧 바깥 지름 mm, 그림용), seg, hip, back, pedal, sw}}}
-   - 좌표: x = 앞 차축 중심에서 뒤로 +, y = 차 중심선에서 왼쪽 +, z = 지면에서 위로 + [mm] (대시보드 CoP 위치와 같은 기준)
+   - 좌표: 사이트 차량 좌표계(ISO 8855 방향) — x = 뒤 차축 중심에서 앞으로 +, y = 차 중심선에서 왼쪽 +, z = 지면에서 위로 + [mm]. 원점 = 뒤 차축 중심 · 차량 중심면 · 지면
+     (드라이버 그림 · 차 윤곽은 안에서 '앞 차축에서 뒤로' 좌표로 그리므로 그릴 때만 x_그림 = L − x 로 바꿈)
    - 질량 표 · 드라이버는 팀원 누구나 고침(계산기는 자유). 대시보드 반영만 담당(프레임) · 회장
    - 저장소가 없으면(로그인 전) 이 브라우저에 저장
    ============================================================ */
@@ -19,8 +20,8 @@ try{ const v = localStorage.getItem('run2x.wb.1.drv'); if(['d1','d2','d3'].inclu
 const M1CAT = [['s','현가상'], ['uf','현가하 앞'], ['ur','현가하 뒤']];
 const M1DRV = {d1:'1st', d2:'2nd', d3:'3rd'};
 const M1HC = {d1:'#6A4294', d2:'#1d5f9a', d3:'#c2410c'};   /* 헬멧 색: 1st 보라 · 2nd 파랑 · 3rd 주황 */
-/* 드라이버 기본값: 예시 차량(그림 윤곽) 시트 · 페달 · 핸들 자리(앞 차축 기준)에 남성 175 cm · 70 kg, 장비 0 */
-const M1DDEF = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, foot:20, helm:M1HD, hip:{x:590, z:230}, pedal:{x:-220, z:250}, sw:{x:375, z:500}, seg:{}});
+/* 드라이버 기본값: 예시 차량(그림 윤곽, 휠베이스 1550) 시트 · 페달 · 핸들 자리(뒤 차축 기준 x)에 남성 175 cm · 70 kg, 장비 0 */
+const M1DDEF = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, foot:20, helm:M1HD, hip:{x:960, z:230}, pedal:{x:1770, z:250}, sw:{x:1175, z:500}, seg:{}});
 const M1SEG = {head:'머리', neck:'목', trunk:'몸통', uarm:'상완', farm:'하완', hand:'손', thigh:'허벅지', shank:'정강이', foot:'발'};
 const m1HueBg = h => h==null ? '' : `hsl(${h} 62% 93%)`, m1HueLn = h => `hsl(${h} 45% 62%)`;
 
@@ -54,7 +55,7 @@ function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.act
 const m1Num = (v, attrs) => `<input type="number" step="any" ${attrs} value="${v==null || !isFinite(v) ? '' : v}">`;
 function m1ExtHTML(){ return `<section class="wb-sec m1" aria-label="표 입력"><div class="wb-h"><h3>표 입력</h3>
       <div class="m1-tabs" role="tablist">${[['mass','부품 질량 표'], ['drv','드라이버 모델']].map(([k, t]) => `<button type="button" role="tab" data-m1tab="${k}" aria-selected="${M1.tab===k}">${t}</button>`).join('')}</div>
-      <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 앞 차축에서 뒤로 · y = 중심선에서 왼쪽 · z = 지면에서 위</span></div>
+      <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 뒤 차축에서 앞으로 · y = 중심선에서 왼쪽 · z = 지면에서 위 <button type="button" class="lnk" data-coordopen>좌표계 그림</button></span></div>
     <div id="m1body">${M1.tab==='mass' ? m1MassHTML() : m1DrvHTML()}</div></section>`; }
 /* 카드 배치: 4열, 줄마다 왼쪽부터 빈칸 없이 채움. 드라이버 카드는 첫 줄 첫 칸 고정(첫 줄은 3장까지).
    저장값 pos {c, r}: 줄 r 과 줄 안 순서 c. 자리가 없는 카드는 마지막 줄 뒤에 이어 붙임 */
@@ -208,7 +209,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
   const segLab = (a, b, key, dx, dy) => { const m = [(X(a[0]) + X(b[0]))/2 + (dx||0), (Z(a[1]) + Z(b[1]))/2 + (dy||0)];
     return lab(m[0], m[1], 'seg.' + key, `${M1SEG[key]} ${Math.round(D.len[key])}`, d.seg[key] > 0 ? 'set' : 'def', 'middle'); };
   const pt = (p, key) => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Z(p[1]).toFixed(1)}" r="7" class="m1-pt3${ed ? ' drag' : ''}"${ed ? ` data-m1drag="${key}"` : ''}/>`;
-  const cg = D.cg, cr = 10, [cx, cy] = T(cg[0], cg[1]);
+  const cg = D.cg, cr = 10, [cx, cy] = T(L - cg[0], cg[1]);   /* 무게중심은 차량 x → 그림 좌표 */
   const sym = `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)})"><circle r="${cr+2}" fill="#fff"/><path d="M0 0 L${-cr} 0 A${cr} ${cr} 0 0 1 0 ${-cr} Z M0 0 L${cr} 0 A${cr} ${cr} 0 0 1 0 ${cr} Z" fill="#d92d20"/><circle r="${cr}" fill="none" stroke="#d92d20" stroke-width="1.6"/><line x1="${-cr}" x2="${cr}" stroke="#d92d20" stroke-width="1.2"/><line y1="${-cr}" y2="${cr}" stroke="#d92d20" stroke-width="1.2"/></g>`;
   const bl = .82*D.len.trunk, bk = [J.H[0] + bl*Math.sin(D.back), J.H[1] + bl*Math.cos(D.back)], bm = [J.H[0] + 330*Math.sin(D.back), J.H[1] + 330*Math.cos(D.back)];   /* 등받이: 몸통 뒤에 가려지는 길이 */
   const [hx, hy] = S2(J.HC), hr = mm((d.helm > 0 ? d.helm : M1HD)/2), hd0 = mm(D.len.head/2), hcol = M1HC[M1.drv] || M1HC.d1, vid = 'm1v' + M1.drv;
@@ -217,8 +218,8 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
   return `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
     ${CARFIG.carSide(T, L, r, s)}
     <line x1="0" y1="${Z(0)}" x2="${W}" y2="${Z(0)}" class="cf-gnd"/>
-    <line x1="${X(0)}" y1="${Z(0) + 4}" x2="${X(0)}" y2="${Z(0) + 16}" stroke="#232731"/><text x="${X(0)}" y="${Z(0) + 28}" class="m1-tl" text-anchor="middle">앞 차축 x = 0</text>
-    <text x="${W - 12}" y="${Z(0) + 28}" class="m1-tl" text-anchor="end">좌표 [mm]: x = 앞 차축 중심에서 뒤로 + · z = 지면에서 위로 +</text>
+    <line x1="${X(L)}" y1="${Z(0) + 4}" x2="${X(L)}" y2="${Z(0) + 16}" stroke="#232731"/><text x="${X(L)}" y="${Z(0) + 28}" class="m1-tl" text-anchor="middle">뒤 차축 x = 0</text>
+    <text x="${W - 12}" y="${Z(0) + 28}" class="m1-tl" text-anchor="end">좌표 [mm]: x = 뒤 차축 중심에서 앞으로 + · z = 지면에서 위로 +</text>
     <line x1="${X(J.H[0])}" y1="${Z(J.H[1])}" x2="${X(bk[0])}" y2="${Z(bk[1])}" class="m1-back" stroke-width="${mm(55).toFixed(1)}"/>
     <g class="m1-drv">
       ${m1Pill(null, S2(J.H), S2(J.Sh), mm(128), mm(108), 'm1-p-trunk', hal)}
@@ -248,7 +249,8 @@ function m1EditOpen(t){ const key = t.dataset.m1e, d = m1Drv(M1.drv) || M1DDEF()
   const f = pop.querySelector('input'); f.focus(); f.select(); }
 function m1EditDone(save){ const E = M1.edit; if(!E) return; M1.edit = null;
   if(save){ const vals = [...E.pop.querySelectorAll('[data-m1p]')].map(i => [i.dataset.m1p, i.type==='text' ? i.value.slice(0, 20) : (i.value.trim()==='' ? null : parseFloat(i.value))]);
-    const lim = p => p==='back' ? M1LIM.back : p==='foot' ? M1LIM.foot : p==='helm' ? M1LIM.helm : /^(hip|pedal|sw)\.x$/.test(p) ? M1LIM.x : /^(hip|pedal|sw)\.z$/.test(p) ? M1LIM.z : null;
+    const Lw = WB.I.L > 0 ? WB.I.L : 1550, LX = [Lw - M1LIM.x[1], Lw - M1LIM.x[0]];   /* 그림 범위를 차량 x 로 */
+    const lim = p => p==='back' ? M1LIM.back : p==='foot' ? M1LIM.foot : p==='helm' ? M1LIM.helm : /^(hip|pedal|sw)\.x$/.test(p) ? LX : /^(hip|pedal|sw)\.z$/.test(p) ? M1LIM.z : null;
     const vs = vals.map(([p, v]) => [p, typeof v==='number' && isFinite(v) && lim(p) ? m1Clamp(v, lim(p)) : v]);
     if(vs.every(([, v]) => v===null || typeof v==='string' || isFinite(v))) m1SaveDrv(d => vs.forEach(([p, v]) => m1Path(d, p, v))); }
   E.pop.remove(); }
@@ -317,13 +319,13 @@ document.addEventListener('pointerdown', e => { if(M1.pick && !M1.pick.pop.conta
 document.addEventListener('pointerdown', e => { const p = e.target.closest && e.target.closest('#m1svg [data-m1drag]'); if(!p || e.button!==0) return; e.preventDefault(); M1.drag = p.dataset.m1drag; });
 document.addEventListener('pointermove', e => { if(!M1.drag) return; const svg = $('#m1svg'); if(!svg) return; const rc = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, s = +svg.dataset.s;
   const px = (e.clientX - rc.left)/rc.width*vb.width, py = (e.clientY - rc.top)/rc.height*vb.height;
-  const x = m1Clamp(Math.round((px/s + +svg.dataset.x0)/5)*5, M1LIM.x), z = m1Clamp(Math.round(((+svg.dataset.h - py)/s + +svg.dataset.z0)/5)*5, M1LIM.z), k = M1.drag;
+  const Lw = WB.I.L > 0 ? WB.I.L : 1550, x = Math.round((Lw - m1Clamp(px/s + +svg.dataset.x0, M1LIM.x))/5)*5, z = m1Clamp(Math.round(((+svg.dataset.h - py)/s + +svg.dataset.z0)/5)*5, M1LIM.z), k = M1.drag;
   const d = m1Drv(M1.drv) || M1DDEF(); if(d[k] && d[k].x===x && d[k].z===z) return; m1SaveDrv(dd => { dd[k] = {x, z}; }); });
 document.addEventListener('pointerup', () => { M1.drag = null; });
 
 /* ---------- 계산에 넘길 값 ---------- */
 function m1ExtraI(){ const gs = m1Groups(), items = gs.map(g => { const mh = (g.items || []).reduce((a, it) => a + (it.half && isFinite(it.m) && it.m!==null ? +it.m*m1N(it) : 0), 0);
-    return {m:m1GSum(g), mh, to:m1HalfTo(g, gs).cat, x:+g.x||0, y:+g.y||0, z:+g.z||0, cat:g.cat||'s', name:g.name||''}; }).filter(it => it.m > 0);
+    return {m:m1GSum(g), mh, to:m1HalfTo(g, gs).cat, hue:g.hue, x:+g.x||0, y:+g.y||0, z:+g.z||0, cat:g.cat||'s', name:g.name||''}; }).filter(it => it.m > 0);
   const drv = {}; Object.keys(M1DRV).forEach(k => { drv[k] = m1Drv(k) || M1DDEF(); });
   return {items, drv, dsel:M1.dsel}; }
 
@@ -331,16 +333,17 @@ function m1ExtraI(){ const gs = m1Groups(), items = gs.map(g => { const mh = (g.
 function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvItem && R.drvItem.m > 0 ? [R.drvItem] : []);
   const L = I.L, r = (typeof DASH!=='undefined' && DASH.P.r_eff) || 229, W = 1200, H = 330, gap = 60, colw = (W - gap - 20)/2, x0 = -960, x1 = L + 480, s = colw/(x1 - x0);
   const c1 = 10, c2 = 10 + colw + gap, ts = (x, z) => [c1 + (x - x0)*s, 280 - z*s], tt = (x, zr) => [c2 + (x - x0)*s, 165 - zr*s];   /* 위에서: 오른쪽(−y)이 위 (대시보드 윗면도와 같게) */
-  const col = {s:'#6A4294', uf:'#1d5f9a', ur:'#257a47', d:'#c2410c'}, rr = m => Math.max(3, Math.sqrt(m)*2.6);
+  /* 원 색 = 그 카드에 정한 색(색 없으면 회색), 드라이버 = 헬멧 색 */
+  const colOf = it => it.cat==='d' ? (M1HC[I.dsel] || M1HC.d1) : it.hue!=null ? m1HueLn(it.hue) : '#8b90a0', rr = m => Math.max(3, Math.sqrt(m)*2.6);
   const sym = (p, c, R_) => `<g transform="translate(${p[0].toFixed(1)},${p[1].toFixed(1)})"><circle r="${R_+2}" fill="#fff"/><path d="M0 0 L${-R_} 0 A${R_} ${R_} 0 0 1 0 ${-R_} Z M0 0 L${R_} 0 A${R_} ${R_} 0 0 1 0 ${R_} Z" fill="${c}"/><circle r="${R_}" fill="none" stroke="${c}" stroke-width="1.5"/><line x1="${-R_}" x2="${R_}" stroke="${c}"/><line y1="${-R_}" y2="${R_}" stroke="${c}"/></g>`;
   let sv = `<svg class="m1-fig cf-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="질량 분포: 옆에서 · 위에서">
     <text x="${c1 + 4}" y="18" class="m1-tl b">옆에서</text><text x="${c2 + 4}" y="18" class="m1-tl b">위에서</text>
     <line x1="${c1 + colw + gap/2}" y1="30" x2="${c1 + colw + gap/2}" y2="${H - 20}" stroke="var(--line)"/>
     ${CARFIG.carSide(ts, L, r, s)}<line x1="${c1}" y1="280" x2="${c1 + colw}" y2="280" class="cf-gnd"/>${CARFIG.carTop(tt, L, r, s, I.tf, I.tr)}`;
-  items.slice().sort((a, b) => b.m - a.m).forEach(it => { const c = col[it.cat] || col.s, R_ = rr(it.m), p1 = ts(it.x, it.z), p2 = tt(it.x, -it.y), tl = `<title>${wbEsc(it.name || '')} ${wbFmt(it.m, 1)} kg</title>`;
+  items.slice().sort((a, b) => b.m - a.m).forEach(it => { const c = colOf(it), R_ = rr(it.m), p1 = ts(L - it.x, it.z), p2 = tt(L - it.x, -it.y), tl = `<title>${wbEsc(it.name || '')} ${wbFmt(it.m, 1)} kg</title>`;
     sv += `<circle cx="${p1[0].toFixed(1)}" cy="${p1[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle><circle cx="${p2[0].toFixed(1)}" cy="${p2[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle>`; });
-  if(o.m > 0){ sv += sym(ts(o.x_cg, o.h), '#d92d20', 9) + sym(tt(o.x_cg, -o.y_cg), '#d92d20', 9); if(o.m_s > 0) sv += sym(ts(o.x_s, o.h_s), '#6A4294', 7); }
-  sv += `</svg><div class="wb-leg">${[['s','현가상'],['d','드라이버'],['uf','현가하 앞'],['ur','현가하 뒤']].map(([k, t]) => `<span><i style="background:${col[k]}"></i>${t}</span>`).join('')}<span><i style="background:#d92d20"></i>차 전체 CG</span><span><i style="background:#6A4294"></i>현가상 CG</span><span class="muted">원 넓이 ∝ 질량 · 원에 마우스를 올리면 어셈블리 이름</span></div>`;
+  if(o.m > 0){ sv += sym(ts(L - o.x_cg, o.h), '#d92d20', 9) + sym(tt(L - o.x_cg, -o.y_cg), '#d92d20', 9); if(o.m_s > 0) sv += sym(ts(L - o.x_s, o.h_s), '#6A4294', 7); }
+  sv += `</svg><div class="wb-leg"><span><i style="background:#d92d20"></i>차 전체 CG</span><span><i style="background:#6A4294"></i>현가상 CG</span><span class="muted">원 색 = 카드 색 (드라이버 = 헬멧 색) · 원 넓이 ∝ 질량 · 원에 마우스를 올리면 어셈블리 이름</span></div>`;
   return sv; }
 
 /* ---------- 대시보드 '파트별 > 질량 · 무게중심': 팀 질량 표 · 드라이버로 계산한 결과(읽기 전용) ---------- */
@@ -369,6 +372,7 @@ const M1TOUR = [
   ['#wb .m1-tabs', '표 입력', '[부품 질량 표]는 어셈블리별 질량과 위치, [드라이버 모델]은 드라이버 자세와 체절 질량입니다. 팀원 누구나 이번 시즌 값을 고칩니다.', m1TT('mass')],
   ['#m1list [data-m1g]', '어셈블리 카드', '카드 하나가 어셈블리 하나입니다. 좌표는 그 어셈블리의 무게중심이고, 질량은 항목의 질량 × 개수 합입니다. 개수를 0으로 하면 그 항목은 빠집니다. 왼쪽 위 동그라미로 카드 색을, 오른쪽 위 단추로 좌우 바꿔 복사 · 지우기를 합니다.', m1TT('mass')],
   ['#m1list [data-m1g] .m1-grip', '카드 옮기기', '점 손잡이를 끌어 옮깁니다. 카드는 줄마다 왼쪽부터 채워집니다. 다른 카드 위에 놓으면 그 앞에 끼워 넣고(줄이 넘치면 마지막 카드가 바로 아래 새 줄로), 줄 끝 빈칸에 놓으면 그 줄 끝에 붙고, 줄 사이에 놓으면 새 줄이 생깁니다. 끄는 동안 파란 선으로 들어갈 자리를 보여 줍니다.', m1TT('mass')],
+  ['#m1list [data-m1g] .m1-half', '걸침 ½ 체크', '드라이브샤프트(CV축) · 위시본 · 푸시로드 · 타이로드 · 스프링 · 댐퍼처럼 한쪽은 차체, 한쪽은 업라이트에 붙는 부품은 ½을 체크합니다. 체크한 항목은 질량 절반을 반대쪽으로 셉니다. 현가하 카드면 절반은 현가상으로, 현가상 카드(예: 구동계의 CV축)면 가장 가까운 현가하 카드 쪽(앞 · 뒤)으로 갑니다. 총질량 · 무게중심 · 코너웨이트는 그대로이고 현가상 · 현가하질량만 바뀝니다. 체크 칸에 마우스를 올리면 절반이 갈 곳이 나옵니다.', m1TT('mass')],
   ['#m1list .m1-drvc', '드라이버 카드', '첫 줄 첫 칸에 고정입니다. 계산에 넣을 드라이버(1st · 2nd · 3rd)를 고르고, 몸무게와 장비는 여기서 고쳐도 드라이버 모델과 같은 값이 됩니다. 좌표는 드라이버 모델이 계산한 무게중심입니다.', m1TT('mass')],
   ['#wb .m1-gadd', '어셈블리 더하기', '새 어셈블리 카드를 만듭니다. 이름 · 범주(현가상 · 현가하 앞 · 뒤) · 좌표 · 항목을 채웁니다.', m1TT('mass')],
   ['#m1dfig', '드라이버 그림', '흰 점(엉덩이점 · 발목 · 핸들)을 끌어 자세를 맞춥니다. 그림 위 숫자(체절 길이 · 등받이 · 발 각도 · 좌표)를 누르면 그 자리에서 고칩니다. 빨간 기호가 드라이버 무게중심입니다.', m1TT('drv')],
@@ -398,7 +402,7 @@ WB_TOOLS['1'] = {
     {k:'m', n:'총질량 (드라이버 포함)', u:'kg', d:1, g:'질량'}, {k:'m_empty', n:'공차중량 (드라이버 제외)', u:'kg', d:1, g:'질량'}, {k:'m_s', dk:'m_s', d:1, g:'질량'}, {k:'m_us_f', dk:'m_us_f', d:2, g:'질량'}, {k:'m_us_r', dk:'m_us_r', d:2, g:'질량'},
     {k:'m_drv', n:'드라이버 (고른 사람, 장비 포함)', u:'kg', d:1, g:'질량', hide:true}, {k:'h_est', n:'체절 길이로 본 키', u:'cm', d:1, g:'질량', hide:true},
     {k:'fr', dk:'fr', n:'앞 : 뒤 하중 배분', d:1, g:'무게중심 · 배분', fmt:m1Ratio}, {k:'left', dk:'left', n:'왼 : 오른 하중 배분', d:1, g:'무게중심 · 배분', fmt:m1Ratio},
-    {k:'x_cg', n:'무게중심 앞뒤 위치 (앞 차축에서)', u:'mm', d:0, g:'무게중심 · 배분'}, {k:'h', dk:'h', n:'무게중심 높이 (지면에서)', d:0, g:'무게중심 · 배분'}, {k:'h_s', dk:'h_s', n:'현가상질량 무게중심 높이', d:0, g:'무게중심 · 배분'},
+    {k:'x_cg', n:'무게중심 x (뒤 차축에서 앞으로)', u:'mm', d:0, g:'무게중심 · 배분'}, {k:'h', dk:'h', n:'무게중심 높이 (지면에서)', d:0, g:'무게중심 · 배분'}, {k:'h_s', dk:'h_s', n:'현가상질량 무게중심 높이', d:0, g:'무게중심 · 배분'},
     {k:'cw_fl', n:'앞왼', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cw_fr', n:'앞오른', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cw_rl', n:'뒤왼', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cw_rr', n:'뒤오른', u:'kg', d:1, g:'정지 코너웨이트'}, {k:'cross', n:'크로스 (앞오른 + 뒤왼)', u:'%', d:1, g:'정지 코너웨이트'},
     {k:'cw0_fl', n:'공차 앞왼', u:'kg', d:1, g:'정지 코너웨이트', hide:true}, {k:'cw0_rr', n:'공차 뒤오른', u:'kg', d:1, g:'정지 코너웨이트', hide:true}, {k:'cross0', n:'공차 크로스', u:'%', d:1, g:'정지 코너웨이트', hide:true},
     {k:'ixx', dk:'ixx', d:1, g:'관성 모멘트'}, {k:'iyy', dk:'iyy', d:1, g:'관성 모멘트'}, {k:'izz', dk:'izz', d:1, g:'관성 모멘트'}
@@ -411,7 +415,8 @@ WB_TOOLS['1'] = {
   verifyBase:{items:[], drv:{d1:M1DDEF(), d2:M1DDEF(), d3:M1DDEF()}, dsel:'d1'},
   code:`// 입력 I: L · tf · tr [mm], items = 어셈블리 [{m, x, y, z, cat, mh, to}] (cat: s 현가상 · uf 현가하 앞 · ur 현가하 뒤, mh = 걸침 항목 질량 합, to = 현가상일 때 절반이 갈 현가하),
 //        drv = {d1, d2, d3} 드라이버 모델 입력 (키 cm, 장비 gear = 헬멧 · 드라이버 복 · 안전벨트 kg), dsel = 고른 드라이버
-// 좌표: x = 앞 차축 중심에서 뒤로 +, y = 차 중심선에서 왼쪽 +, z = 지면에서 위로 + [mm]
+// 좌표: x = 뒤 차축 중심에서 앞으로 +, y = 차 중심선에서 왼쪽 +, z = 지면에서 위로 + [mm] (ISO 8855 방향, 원점 = 뒤 차축 중심 · 지면)
+// 드라이버 자세는 안에서 '앞 차축에서 뒤로 +' 좌표(xd = L − x)로 계산하고, 체절 무게중심만 다시 x 로 돌려 줌
 // 체절 표 (de Leva 1996, Zatsiorsky-Seluyanov 보정값): [평균 체형 길이 mm, 체중 대비 질량 비율, 무게중심 위치 = 시작점에서 비율]
 //   시작점: 머리 · 목 = 정수리(정수리 ~ 경추 7번, 그중 머리 = 정수리 ~ 아래턱 각 hd, 나머지 = 목), 몸통 = 경추 7번 ~ 엉덩이 관절 가운데(CERV–MIDH), 팔다리 = 몸 쪽 관절,
 //   정강이 = 무릎 관절 ~ 바깥 복사뼈(KJC–LMAL, 발목 점 = 복사뼈와 같게), 손 = 손목 ~ 셋째 손허리뼈 머리, 발 = 뒤꿈치 ~ 발끝 (de Leva 1996 표 4)
@@ -431,19 +436,19 @@ function twoLink(A, B, l1, l2, up, warn, what){
   const J1 = add(A, [l1*Math.cos(ph + a), l1*Math.sin(ph + a)]), J2 = add(A, [l1*Math.cos(ph - a), l1*Math.sin(ph - a)]);
   return [(J1[1] > J2[1]) === up ? J1 : J2, B];
 }
-function driver(d){
+function driver(d, Lw){
   const TB = SEGT[d.sex === 'f' ? 'f' : 'm'], k = d.height*10/TB.st, warn = [], th = d.back*Math.PI/180;
   const L0 = s => s==='head' ? TB.hd*k : s==='neck' ? (TB.head[0] - TB.hd)*k : TB[s][0]*k, L = s => (d.seg && d.seg[s] > 0) ? d.seg[s] : L0(s);
   const LHN = L('head') + L('neck');                                           // 머리 · 목 체절 길이 (정수리 ~ 경추 7번)
   const fsum = ['head','trunk'].reduce((a, s) => a + TB[s][1], 0) + 2*['uarm','farm','hand','thigh','shank','foot'].reduce((a, s) => a + TB[s][1], 0);
   const frac = s => TB[s][1]/fsum;                                             // 비율 합을 1로 맞춤 (반올림 차이)
-  const H = [d.hip.x, d.hip.z];
+  const H = [Lw - d.hip.x, d.hip.z];
   const S = add(H, [L('trunk')*Math.sin(th), L('trunk')*Math.cos(th)]);        // 경추 7번: 등받이를 따라 뒤로 누움 (x 는 뒤로 +)
   const Sh = lerp(S, H, .15);                                                   // 어깨 관절: 경추 7번에서 몸통 길이 15 % 아래 (근사)
   const N = [Sh[0], S[1] + L('neck')];                                          // 목 위끝: 목은 어깨에서 수직
   const V = [Sh[0], N[1] + L('head')], HC = [Sh[0], N[1] + L('head')/2];      // 정수리, 머리 가운데(그림의 헬멧 중심)
-  const [E, Wr] = twoLink(Sh, [d.sw.x, d.sw.z], L('uarm'), L('farm'), false, warn, '핸들');
-  const [K, A] = twoLink(H, [d.pedal.x, d.pedal.z], L('thigh'), L('shank'), true, warn, '페달');
+  const [E, Wr] = twoLink(Sh, [Lw - d.sw.x, d.sw.z], L('uarm'), L('farm'), false, warn, '핸들');
+  const [K, A] = twoLink(H, [Lw - d.pedal.x, d.pedal.z], L('thigh'), L('shank'), true, warn, '페달');
   // 발: 뒤꿈치가 직각인 사다리꼴(발바닥 · 뒤꿈치 뒤 모서리가 직각). 페달 점 = 발목(복사뼈) 중심, 발바닥은 수직에서 foot° 앞으로 누워 페달에 닿음
   //   발 안에서 발목 위치: 발바닥에서 높이 0.039 H, 발 길이 0.152 H (Drillis · Contini 1966, Winter 2009 그림 4.1) → 발 길이의 0.257배
   //   뒤꿈치 뒤에서 발목까지(발바닥 방향) = 발 길이의 0.22배 (근사). 정강이 방향과 상관없이 발 자체 치수로만 그림
@@ -456,7 +461,7 @@ function driver(d){
   const segs = [ ['머리 · 목', 'head', [V[0], V[1] - TB.head[2]*LHN], 1, +g.helmet || 0], ['몸통', 'trunk', lerp(S, H, TB.trunk[2]), 1, +g.belt || 0],
     ['상완 ×2', 'uarm', lerp(Sh, E, TB.uarm[2]), 2, 0], ['하완 ×2', 'farm', lerp(E, Wr, TB.farm[2]), 2, 0], ['손 ×2', 'hand', add(Wr, mul(hu, TB.hand[2]*L('hand'))), 2, 0],
     ['허벅지 ×2', 'thigh', lerp(H, K, TB.thigh[2]), 2, 0], ['정강이 ×2', 'shank', lerp(K, A, TB.shank[2]), 2, 0], ['발 ×2', 'foot', add(Hl, mul(fd, TB.foot[2]*Lf)), 2, 0] ]
-    .map(([n, s, c, q, ex]) => ({n, m: (d.mass + suit)*frac(s)*q + ex, x: c[0], z: c[1]}));   // 드라이버 복은 몸무게처럼 비율로 나눔
+    .map(([n, s, c, q, ex]) => ({n, m: (d.mass + suit)*frac(s)*q + ex, x: Lw - c[0], z: c[1]}));   // 드라이버 복은 몸무게처럼 비율로 나눔
   const m = segs.reduce((a, s) => a + s.m, 0), model = m > 0 ? [segs.reduce((a, s) => a + s.m*s.x, 0)/m, segs.reduce((a, s) => a + s.m*s.z, 0)/m] : [0, 0];
   const lens = {}, lensDef = {}; for(const s of ['head','neck','trunk','uarm','farm','hand','thigh','shank','foot']){ lens[s] = L(s); lensDef[s] = L0(s); }
   // 체절 길이로 본 키: 표 기준 키 × (세로 체절 합 ÷ 표 체절 합). 세로 체절 = 머리 · 목, 몸통, 허벅지, 정강이 (기본값이면 입력한 키와 같음)
@@ -464,16 +469,16 @@ function driver(d){
   const VS = ['head','neck','trunk','thigh','shank'], hEst = VS.reduce((a, s) => a + L(s), 0)/(TB.head[0] + TB.trunk[0] + TB.thigh[0] + TB.shank[0])*TB.st/10;
   const segSet = VS.some(s => d.seg && d.seg[s] > 0);
   return { m, model, cg: model, hEst, segSet, back: th, warn, segs, len: lens, lenDef: lensDef,
-    j: {H, S, V, N, Sh, HC, E, W: Wr, K, A, F: [B0, T0, T1, B1], P: [d.pedal.x, d.pedal.z], G: [d.sw.x, d.sw.z]} };
+    j: {H, S, V, N, Sh, HC, E, W: Wr, K, A, F: [B0, T0, T1, B1], P: [Lw - d.pedal.x, d.pedal.z], G: [Lw - d.sw.x, d.sw.z]} };   // j: 그림 좌표(앞 차축에서 뒤로)
 }
 function calc(I){
-  const drv = {}; for(const k in I.drv) drv[k] = driver(I.drv[k]);
+  const drv = {}; for(const k in I.drv) drv[k] = driver(I.drv[k], I.L);
   const D = drv[I.dsel] || drv.d1, me = D.m > 0 ? D.m : 0;
   const di = {m: me, x: D.cg[0], y: 0, z: D.cg[1], cat: 'd', name: '드라이버'};   // 드라이버는 중심선 위 (좌우 대칭)
   // 걸침(½): 어셈블리 안에서 체크한 항목 질량 mh 의 절반을 반대쪽 범주로 (좌표는 어셈블리 한 점)
   const items = [];
   I.items.forEach(it => { const h = it.mh > 0 ? it.mh/2 : 0; if(!h){ items.push(it); return; }
-    const other = it.cat === 's' ? (it.to === 'uf' || it.to === 'ur' ? it.to : (it.x < I.L/2 ? 'uf' : 'ur')) : 's';
+    const other = it.cat === 's' ? (it.to === 'uf' || it.to === 'ur' ? it.to : (it.x > I.L/2 ? 'uf' : 'ur')) : 's';
     items.push({...it, m: it.m - h}, {...it, m: h, cat: other}); });
   const all = items.concat(me > 0 ? [di] : []);
   const sum = (arr, f) => arr.reduce((a, it) => a + f(it), 0);
@@ -482,12 +487,12 @@ function calc(I){
   const xc = sum(all, it => it.m*it.x)/m, yc = sum(all, it => it.m*it.y)/m, zc = sum(all, it => it.m*it.z)/m;
   const sp = all.filter(it => it.cat === 's' || it.cat === 'd'), ms = sum(sp, it => it.m);
   const muf = sum(all.filter(it => it.cat === 'uf'), it => it.m), mur = sum(all.filter(it => it.cat === 'ur'), it => it.m);
-  const fr = (I.L - xc)/I.L*100;                                               // 앞 하중 배분 = CG 에서 뒤 차축까지 ÷ 휠베이스
+  const fr = xc/I.L*100;                                                       // 앞 하중 배분 = CG 의 뒤 차축에서 거리 ÷ 휠베이스
   const Wf = m*fr/100, Wr = m - Wf;
   const cw = { fl: Wf*(.5 + yc/I.tf), fr: Wf*(.5 - yc/I.tf), rl: Wr*(.5 + yc/I.tr), rr: Wr*(.5 - yc/I.tr) };
   // 공차 상태(드라이버 빼고): 같은 식으로 코너웨이트
   const e = items, m0 = sum(e, it => it.m), x0 = m0 > 0 ? sum(e, it => it.m*it.x)/m0 : NaN, y0 = m0 > 0 ? sum(e, it => it.m*it.y)/m0 : NaN;
-  const Wf0 = m0*(I.L - x0)/I.L, Wr0 = m0 - Wf0, cw0 = { fl: Wf0*(.5 + y0/I.tf), fr: Wf0*(.5 - y0/I.tf), rl: Wr0*(.5 + y0/I.tr), rr: Wr0*(.5 - y0/I.tr) };
+  const Wf0 = m0*x0/I.L, Wr0 = m0 - Wf0, cw0 = { fl: Wf0*(.5 + y0/I.tf), fr: Wf0*(.5 - y0/I.tf), rl: Wr0*(.5 + y0/I.tr), rr: Wr0*(.5 - y0/I.tr) };
   // 관성 모멘트: CG 둘레, 어셈블리를 점질량으로 (어셈블리 자체 관성 제외 → 실제보다 작게 나옴) [kg·m²]
   const I2 = f => sum(all, it => it.m*f(it))/1e6;
   return {
@@ -501,16 +506,16 @@ function calc(I){
 }
 `,
   verify:[
-    {n:'어셈블리 하나', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:1200, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:100, fr:25, left:50, h:300, m_s:100}, src:'(1600 − 1200) ÷ 1600 = 25 %'},
+    {n:'어셈블리 하나', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:400, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:100, fr:25, left:50, h:300, m_s:100}, src:'뒤 차축에서 400 ÷ 1600 = 25 %'},
     {n:'좌우 대칭 두 어셈블리', I:{L:1600, tf:1200, tr:1200, items:[{m:50, x:800, y:300, z:300, cat:'s'}, {m:50, x:800, y:-300, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:50, fr:50, ixx:9, izz:9, iyy:0}, src:'Ixx = 2 × 50 × 0.3² = 9 kg·m²'},
     {n:'왼쪽으로 60 mm', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:55, cw_fl:27.5, cw_rr:22.5, cross:50}, src:'50 + 60 ÷ 1200 × 100 = 55 %'},
-    {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:0, y:0, z:230, cat:'uf'}, {m:34, x:1600, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},
+    {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:1600, y:0, z:230, cat:'uf'}, {m:34, x:0, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},
     {n:'체절 질량 합 = 몸무게 (남)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_drv:70}, src:'체절 비율 합 = 1 (de Leva 1996)'},
     {n:'체절 질량 합 = 몸무게 (여)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), sex:'f', height:165, mass:58}}}, expect:{m_drv:58}, src:'비율 합 0.9999 → 1로 맞춤'},
     {n:'추정 키 = 입력 키 (기본 체절)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), height:182}}}, expect:{h_est:182}, src:'체절 길이가 모두 키 비율이면 같음'},
     {n:'공차 = 드라이버 빼고', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_empty:100, cw0_fl:27.5, cw0_rr:22.5, cross0:50}, src:'드라이버 없이 왼쪽으로 60 mm 경우와 같음'},
-    {n:'걸침: 현가하 카드', I:{L:1600, tf:1200, tr:1200, items:[{m:10, mh:4, x:0, y:500, z:250, cat:'uf'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:110, m_s:102, m_us_f:4}, src:'4 ÷ 2 = 2 kg 가 현가상으로 → 현가하 앞 8 kg, 바퀴 하나 4'},
-    {n:'걸침: 현가상 카드 → 가까운 뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:20, mh:4, to:'ur', x:1500, y:0, z:250, cat:'s'}, {m:10, x:1600, y:500, z:250, cat:'ur'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_s:18, m_us_r:6}, src:'4 ÷ 2 = 2 kg 가 뒤 현가하로 → (10 + 2) ÷ 2'},
+    {n:'걸침: 현가하 카드', I:{L:1600, tf:1200, tr:1200, items:[{m:10, mh:4, x:1600, y:500, z:250, cat:'uf'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:110, m_s:102, m_us_f:4}, src:'4 ÷ 2 = 2 kg 가 현가상으로 → 현가하 앞 8 kg, 바퀴 하나 4'},
+    {n:'걸침: 현가상 카드 → 가까운 뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:20, mh:4, to:'ur', x:100, y:0, z:250, cat:'s'}, {m:10, x:0, y:500, z:250, cat:'ur'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_s:18, m_us_r:6}, src:'4 ÷ 2 = 2 kg 가 뒤 현가하로 → (10 + 2) ÷ 2'},
     {n:'장비 더하기', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, gear:{helmet:1.5, suit:2, belt:1}}}}, expect:{m_drv:74.5}, src:'70 + 1.5 + 2 + 1'}
   ]
 };

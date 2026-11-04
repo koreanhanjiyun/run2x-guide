@@ -1,5 +1,5 @@
 // 매번 새 브라우저 컨텍스트(저장소·기록 비움)에서 역할을 정해 바로 여는 도우미
-const {sleep}=require('./h'); const KEY='__run2xdemo22';
+const {sleep}=require('./h'); const KEY='__run2xdemo23';
 async function fpage(b, base, role, opt={}){ const ctx=await b.newContext({viewport:{width:opt.W||1600,height:opt.H||900}});
   await ctx.addInitScript(([K,role,keepTour])=>{ try{ if(!window.name){ const o={}; o[K]={role,db:null}; window.name=JSON.stringify(o); } if(!sessionStorage.__qa){ sessionStorage.__qa=1; if(!keepTour) ['visited','tourdone','onboard'].forEach(k=>localStorage.setItem('run2x.'+k,'1')); } }catch(e){} }, [KEY,role,!!opt.keepTour]);
   const p=await ctx.newPage(); p.errs=[]; p.cons=[]; p.dialogs=[];

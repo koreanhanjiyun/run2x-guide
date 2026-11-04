@@ -21,7 +21,7 @@ python3 tools/draft/build.py              # → dist/draft/run2x_redesign.html, 
 python3 -m http.server 8801 &             # 저장소 맨 위에서
 node tools/draft/qa/site_check.js 8801    # 기대: uniq 125, 오류 []
 node tools/draft/qa/tools_tour.js         # 기대: 1 / 6 … 6 / 6, errs []
-node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 31/31 · 도움말 1~12, errs []
+node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 31/31 · 도움말 1~13, errs []
 # (node 가 playwright 를 못 찾으면 NODE_PATH=$(npm root -g) 를 앞에 붙임)
 
 # 공개 시안 갱신: main 작업 트리에 draft/ 만 넣어 커밋 · 푸시
@@ -44,7 +44,7 @@ cd ../mainwt && git add draft && git commit -m "시안 갱신: draft/ (redesign-
 
 ## 4. 도구 1 (질량 · 무게중심) 결정 사항
 
-- 부품 질량 표: 어셈블리 하나 = 문서 하나 `teams/<팀>/mass/<id>` (docs/STORE-PLAN.md 2절). 좌표 x = 앞 차축에서 뒤로 +, y = 왼쪽 +, z = 지면에서 위 [mm].
+- 부품 질량 표: 어셈블리 하나 = 문서 하나 `teams/<팀>/mass/<id>` (docs/STORE-PLAN.md 2절). 좌표는 사이트 차량 좌표계(ISO 8855 방향, 2026-11-04 결정): 원점 = 뒤 차축 중심 · 차량 중심면 · 지면, x = 앞으로 +, y = 왼쪽 +, z = 위 + [mm]. 설계 탭 좌표계 그림 · 도구 탭 [좌표계]와 같음. 드라이버 그림 · 차 윤곽은 안에서 '앞 차축에서 뒤로' 좌표로 그리므로 그릴 때만 x_그림 = L − x.
 - 카드 배치: 4열, 줄마다 왼쪽부터 빈칸 없이. 카드 위에 놓으면 그 앞에 끼우고, 줄이 넘치면 마지막 카드가 바로 아래 새 줄로. 줄 끝 빈칸 = 그 줄 끝, 줄 사이 = 새 줄. 드라이버 카드는 첫 줄 첫 칸 고정(첫 줄 3장).
 - 걸침(½): 항목마다 체크(기본 해제). 체크한 항목 질량의 절반은 반대쪽으로 — 현가하 카드면 현가상, 현가상 카드면 가장 가까운(3차원) 현가하 카드의 앞 · 뒤(없으면 휠베이스 절반 기준). 저장은 항목의 `half: true`.
 - 드라이버 카드 항목(몸무게 · 헬멧 · 드라이버 복 · 안전벨트)은 드라이버 모델 값과 같은 값. 드라이버 실측 CG 기능은 관리자 지시로 뺐다(2026-11-04).
