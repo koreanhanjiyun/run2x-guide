@@ -4604,7 +4604,7 @@ const CARFIG = (() => {
   const heat = (F, Fq) => { const t = Math.max(0, Math.min(1, F/Fq/1.9)); const a = [233,231,238], b = [194,65,12]; return `rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')})`; };
   const XMIN = -930, XMAX_R = 460, VW = 580, VH = 400, PADL = 62;   /* PADL: 측면도 왼쪽에 CoP·무게중심 높이 치수 자리 */
 
-  /* 팀이 올린 차 형상(js/app/car-shape.js)이 있으면 그 그림을 바탕으로: A = 앞 바퀴(차축) 중심 화면 점, B = 뒤 */
+  /* 팀이 올린 차 형상(js/app/car-shape.js)이 있으면 그 그림을 바탕으로 (도구 1 질량 분포 · 드라이버 모델만, 대시보드 그림은 기본 그림 그대로): A = 앞 바퀴(차축) 중심 화면 점, B = 뒤 */
   const cus = (view, A, B) => typeof shSvg==='function' ? shSvg(view, A, B) : '';
   function wheelSide(T, s, x, r, fill){ const [cx, cy] = T(x, r), R = r*s;
     let sp=''; for(let i=0;i<5;i++){ const a=i*72*Math.PI/180 - Math.PI/2; sp+=`<line x1="${(cx+Math.cos(a)*R*0.17).toFixed(1)}" y1="${(cy+Math.sin(a)*R*0.17).toFixed(1)}" x2="${(cx+Math.cos(a)*R*0.56).toFixed(1)}" y2="${(cy+Math.sin(a)*R*0.56).toFixed(1)}" class="cf-spoke"/>`; }
@@ -4624,12 +4624,12 @@ const CARFIG = (() => {
     const [hx, hy] = Q(735, 795), hr = 135*s;
     const torso = `<g class="cf-drv">${seg([1010, 230], [800, 560], 'cf-drv t" style="stroke-width:'+W(250))}${seg([800, 560], [775, 600], 'cf-drv t" style="stroke-width:'+W(230))}${seg([790, 600], [760, 700], 'cf-drv n" style="stroke-width:'+W(110))}</g>`;
     const armL = seg([815, 570], [1020, 455], 'cf-drv a" style="stroke-width:'+W(95)) + seg([1020, 455], [1225, 500], 'cf-drv a" style="stroke-width:'+W(80));
-    const fq = K.tot/4, CS = cus('side', T(0, r), T(L, r));
+    const fq = K.tot/4;
     const [mx, my] = Q(140, 220);
     let h = `<svg viewBox="0 0 ${VW} ${VH}" class="cf-svg" role="img" aria-label="측면도: 휠베이스, 무게중심, 압력 중심, 축하중">
       <defs>${mk(id+'k','var(--ink-2)')}${mk(id+'i','var(--in)')}${mk(id+'o','var(--out)')}${mk(id+'r','var(--acc-r)')}</defs>
       <text x="14" y="18" class="cf-t sm mut">← 진행 방향</text>
-      ${CS ? `<g class="cf-car">${CS}${wheelSide(T, s, 0, r, heat(K.Ff/2, fq))}${wheelSide(T, s, L, r, heat(K.Fr/2, fq))}</g>` : `<g class="cf-car">
+      <g class="cf-car">
       <path d="${sil(T, L, S.acc)}" class="cf-acc"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${(114*s).toFixed(1)}" class="cf-motor"/>
       <path d="${sil(T, L, S.frame)}" class="cf-frame" fill-rule="evenodd"/>
       <path d="${sil(T, L, S.rwsn)}" class="cf-sn"/>
@@ -4640,7 +4640,7 @@ const CARFIG = (() => {
       ${arms(0, 1)}${arms(L, -1)}
       ${wheelSide(T, s, 0, r, heat(K.Ff/2, fq))}${wheelSide(T, s, L, r, heat(K.Fr/2, fq))}
       <path d="${sil(T, L, S.fwsn)}" class="cf-sn"/><path d="${sil(T, L, S.fw)}" class="cf-aero"/><path d="${sil(T, L, S.rw)}" class="cf-aero"/>
-      </g>`}`;
+      </g>`;
     /* 지면 */
     h += `<line class="cf-gnd" x1="10" y1="${G}" x2="${VW-10}" y2="${G}"/>`;
     for(let x=18; x<VW-10; x+=12) h += `<line class="cf-hatch" x1="${x}" y1="${G}" x2="${x-7}" y2="${G+7}"/>`;
@@ -4718,8 +4718,7 @@ const CARFIG = (() => {
     if(turn){ const Rp = c.R*1000*s, [gx, gy] = T(K.a, p.tf/2*K.sideF);
       const dx = Math.min(Rp*0.999, 330), dy = Rp - Math.sqrt(Rp*Rp - dx*dx), y1 = gy + (c.dir==='L' ? dy : -dy);
       h += `<path d="M${(gx-dx).toFixed(1)} ${y1.toFixed(1)} A${Rp.toFixed(1)} ${Rp.toFixed(1)} 0 0 ${c.dir==='L'?1:0} ${(gx+dx).toFixed(1)} ${y1.toFixed(1)}" class="cf-path"/>`; }
-    const CT = cus('top', T(0, 0), T(L, 0));
-    if(CT) h += `<g class="cf-car">${CT}`; else { h += `<g class="cf-car">${armsAt(0, tf, 1)}${armsAt(L, tr, -1)}
+    h += `<g class="cf-car">${armsAt(0, tf, 1)}${armsAt(L, tr, -1)}
       <path d="${sil(T, L, S.frame)}" class="cf-frame" fill-rule="evenodd"/><path d="${sil(T, L, S.acc)}" class="cf-acc"/>
       <path d="${sil(T, L, S.fwsn)}" class="cf-sn"/><path d="${sil(T, L, S.fw)}" class="cf-aero t"/>
       <path d="${sil(T, L, S.body)}" class="cf-body"/><path d="${sil(T, L, S.seat)}" class="cf-cockpit"/>`;
@@ -4728,10 +4727,10 @@ const CARFIG = (() => {
     const [bx, by] = Q(830, 0), arm = zs => { const [ax_, ay_] = Q(800, zs*200), [ex, ey] = Q(1020, zs*235), [wx, wy] = Q(1225, zs*125); return `<path d="M${ax_.toFixed(1)} ${ay_.toFixed(1)} L${ex.toFixed(1)} ${ey.toFixed(1)} L${wx.toFixed(1)} ${wy.toFixed(1)}" class="cf-drv a" fill="none" style="stroke-width:${W(90)}"/>`; };
     h += `<ellipse cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" rx="${W(150)}" ry="${W(230)}" class="cf-drvb"/>${arm(1)}${arm(-1)}
       <path d="${sil(T, L, S.sw)}" class="cf-sw"/><path d="${sil(T, L, S.hr)}" class="cf-hr"/>`;
-    const [hx, hy] = Q(735, 0); h += `<circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(135*s).toFixed(1)}" class="cf-helmet"/>`; }
+    const [hx, hy] = Q(735, 0); h += `<circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(135*s).toFixed(1)}" class="cf-helmet"/>`;
     /* 바퀴 (하중 색, 앞바퀴는 조향각만큼 회전) */
     h += tire(0, tf/2, 205, loads.fr, steer.fr) + tire(0, -tf/2, 205, loads.fl, steer.fl) + tire(L, tr/2, 230, loads.rr, 0) + tire(L, -tr/2, 230, loads.rl, 0);
-    h += (CT ? '' : `<path d="${sil(T, L, S.rwsn)}" class="cf-sn"/><path d="${sil(T, L, S.rw)}" class="cf-aero"/>`) + '</g>';
+    h += `<path d="${sil(T, L, S.rwsn)}" class="cf-sn"/><path d="${sil(T, L, S.rw)}" class="cf-aero"/></g>`;
     /* 바퀴 하중 라벨: 오른쪽 바퀴(위) 라벨은 위, 왼쪽 바퀴(아래) 라벨은 아래 */
     const tag = (x, z, F, F0, nm, up) => { const ex = x===0 ? r*Math.sin(Math.max(Math.abs(steer.fl), Math.abs(steer.fr))*Math.PI/180) : 0, [X] = T(x, 0), [, Yt] = T(x, z + (up ? 115 + ex : -115 - ex)); const d = F - F0, lift = F < 0;
       const y1 = up ? Yt - 26 : Yt + 18;
@@ -9522,7 +9521,7 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
     v.innerHTML = `<header class="top tl-hero"><span class="eyebrow">우리 팀 설계값</span><h1>팀 대시보드</h1>
 </header>
       <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span><button type="button" class="btn small" data-dvimp>지난 시즌 값 가져오기</button></div><div id="dvals"></div></section>
-      <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span><button type="button" class="btn small" data-coordopen title="설계 탭과 같은 차량 좌표계 그림 (원점 = 뒤 차축 중심 · 지면)">좌표계</button><button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
+      <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span><button type="button" class="btn small" data-coordopen title="설계 탭과 같은 차량 좌표계 그림 (원점 = 뒤 차축 중심 · 지면)">좌표계</button></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
       <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
       <section class="tl-sec" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
         <ol class="tl-tools">${toolRowsHTML()}</ol></section>`; }
@@ -10534,7 +10533,7 @@ function calc(I){
    - 저장: teams/<팀>/shape/<side|top> = {s:{시즌:{kind:'img'|'dxf', ...}}} (팀원 누구나 이번 시즌, 로그인 전은 이 브라우저)
      img: data(줄인 이미지 data: 주소), w, h, p1, p2 (그림 픽셀, 아래로 +)
      dxf: d(선 그림 경로, 도면 단위 · y 를 뒤집어 아래로 +), p1, p2
-   - 계산에는 쓰지 않음. 질량 계산기 · 드라이버 모델 · 대시보드 그림의 바탕만 바뀜
+   - 계산에는 쓰지 않음. 질량 계산기(질량 분포 옆 · 위) · 드라이버 모델 그림의 바탕만 바뀜. 대시보드 '그림으로 보기'는 기본 차 그림 그대로
    ============================================================ */
 const SHAPEKEY = 'run2x.shape.v1', SHP_MAX = 850000;   /* Firestore 문서 1 MiB 한도 안 */
 let SHAPES = {};
@@ -10558,7 +10557,7 @@ function shMatrix(p1, p2, A, B, noMirror){ const m = !noMirror && p1[0] > p2[0] 
   const ds = [q2[0] - q1[0], q2[1] - q1[1]], dd = [B[0] - A[0], B[1] - A[1]], ls = Math.hypot(ds[0], ds[1]) || 1, k = Math.hypot(dd[0], dd[1])/ls;
   const th = Math.atan2(dd[1], dd[0]) - Math.atan2(ds[1], ds[0]), c = Math.cos(th)*k, s = Math.sin(th)*k;
   return [c*m, s*m, -s, c, A[0] - (c*q1[0] - s*q1[1]), A[1] - (s*q1[0] + c*q1[1])]; }
-/* 그림 조각: A = 앞 바퀴(차축) 중심 화면 점, B = 뒤. 없으면 '' (기본 윤곽을 씀) */
+/* 그림 조각: A = 앞 바퀴(차축) 중심 화면 점, B = 뒤. 없으면 '' (기본 차 그림을 씀) */
 function shSvg(view, A, B, v0){ const v = v0 || shGet(view); if(!v) return '';
   const M = shMatrix(v.p1, v.p2, A, B, view==='top').map(x => +x.toFixed(6)).join(' ');
   return v.kind==='img' ? `<g class="cs-img" transform="matrix(${M})"><image href="${v.data}" width="${v.w}" height="${v.h}" preserveAspectRatio="none"/></g>`
@@ -10644,7 +10643,7 @@ function shDxfPath(raw){ let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = 
 /* ---------- 창 ---------- */
 function shEl(){ let m = $('#shpm'); if(!m){ m = document.createElement('div'); m.id = 'shpm'; m.className = 'dv-modal shp-modal'; m.hidden = true;
     m.innerHTML = '<div class="dvm-box shp-box" role="dialog" aria-modal="true" aria-labelledby="shp-t"></div>'; document.body.appendChild(m); } return m; }
-const SHV = {side:['옆면', '① 앞 바퀴 중심', '② 뒤 바퀴 중심'], top:['윗면 (선택)', '① 앞 차축 가운데', '② 뒤 차축 가운데']};
+const SHV = {side:['옆면', '① 앞 바퀴 중심', '② 뒤 바퀴 중심'], top:['윗면', '① 앞 차축 가운데', '② 뒤 차축 가운데']};
 function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCanEdit(), n = SHP.pts.length, [, l1, l2] = SHV[v];
   const tabs = `<div class="m1-tabs shp-tabs" role="tablist">${Object.entries(SHV).map(([k, t]) => `<button type="button" role="tab" data-shv="${k}" aria-selected="${v===k}">${t[0]}</button>`).join('')}</div>`;
   const step = !src ? '' : n===0 ? `<b>${l1}</b>을 누르십시오` : n===1 ? `<b>${l2}</b>을 누르십시오` : '두 점을 찍었습니다. 아래 미리보기를 확인하고 저장하십시오';
@@ -10661,14 +10660,14 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
     res = `<div class="shp-res"><b>맞춘 모습</b> <span class="muted">휠베이스 ${Math.round(L)} mm${v==='side' ? ` · 타이어 반경 ${Math.round(r)} mm` : ''} 기준, 빨간 점 = 바퀴(차축) 중심${v==='side' ? ', 선 = 지면' : ''}</span>
       <svg viewBox="0 0 ${W} ${H}" class="shp-fit">${shSvg(v, A, B, show)}${v==='side' ? `<line x1="0" y1="${H - 20}" x2="${W}" y2="${H - 20}" class="cf-gnd"/>` : ''}<circle cx="${A[0]}" cy="${A[1]}" r="4" class="shp-ax"/><circle cx="${B[0]}" cy="${B[1]}" r="4" class="shp-ax"/><text x="8" y="16" class="cf-t sm mut">← 앞</text></svg></div>`; }
   return `<div class="dvi-h"><b id="shp-t">차 형상 (그림 바탕)</b><button type="button" class="dvi-x" data-shpx aria-label="닫기">×</button></div>
-    <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 윤곽'}</span></div>
+    <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 차 그림'}</span></div>
     <div class="dvi-body shp-body">
-      <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 올리면 질량 계산기 · 드라이버 모델 · 대시보드 그림의 차 윤곽 대신 씁니다. 계산에는 쓰지 않습니다.<br>
-        이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면에서 ${v==='side' ? '측면도' : '윗면도'} 한 장만 두고 저장한 파일을 올리십시오. 올린 뒤 ${l1} → ${l2} 순서로 두 점을 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다${v==='side' ? '' : ' (윗면을 올리지 않으면 기본 윤곽)'}.</p>
+      <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 올리면 질량 계산기의 질량 분포(옆 · 위) · 드라이버 모델 그림의 차 대신 씁니다. 계산에는 쓰지 않습니다.<br>
+        이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면에서 ${v==='side' ? '측면도' : '윗면도'} 한 장만 두고 저장한 파일을 올리십시오. 올린 뒤 ${l1} → ${l2} 순서로 두 점을 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다${v==='side' ? '' : ' (올리지 않거나 되돌리면 기본 차 그림)'}.</p>
       ${ed ? `<label class="btn small shp-file">파일 고르기<input type="file" accept=".png,.jpg,.jpeg,.webp,.dxf" data-shpf hidden></label>` : '<p class="muted">지난 시즌 그림은 회장만 고칠 수 있습니다.</p>'}
       <span class="shp-msg" id="shpmsg">${SHP.busy ? '읽는 중…' : step}</span>
       ${pv}${res}</div>
-    <div class="dvi-foot"><span>${ed && cur && !src ? '<button type="button" class="lnk" data-shpdel>기본 윤곽으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${src ? '<button type="button" class="btn small" data-shpre>다시 찍기</button>' : ''}<button type="button" class="btn small" data-shpx>닫기</button>${ed && src ? `<button type="button" class="btn small pri" data-shpsave${n===2 ? '' : ' disabled'}>저장</button>` : ''}</span></div>`; }
+    <div class="dvi-foot"><span>${ed && cur && !src ? '<button type="button" class="lnk" data-shpdel>기본 차 그림으로 되돌리기</button>' : ''}</span><span class="dvi-btns">${src ? '<button type="button" class="btn small" data-shpre>다시 찍기</button>' : ''}<button type="button" class="btn small" data-shpx>닫기</button>${ed && src ? `<button type="button" class="btn small pri" data-shpsave${n===2 ? '' : ' disabled'}>저장</button>` : ''}</span></div>`; }
 function shPaint(){ const m = shEl(); m.querySelector('.dvm-box').innerHTML = shHTML(); }
 function shOpen(btn){ SHP.ret = btn || null; SHP.src = null; SHP.pts = []; const m = shEl(); shPaint(); m.hidden = false; const f = m.querySelector('[data-shpx]'); if(f) f.focus(); }
 function shClose(){ const m = $('#shpm'); if(m) m.hidden = true; SHP.src = null; SHP.pts = []; if(SHP.ret && SHP.ret.isConnected) SHP.ret.focus(); }
@@ -10685,11 +10684,11 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-shpx]') || t.id==='shpm'){ shClose(); return; }
   const tv = t.closest('[data-shv]'); if(tv){ SHP.view = tv.dataset.shv; SHP.src = null; SHP.pts = []; shPaint(); return; }
   if(t.closest('[data-shpre]')){ SHP.pts = []; shPaint(); return; }
-  if(t.closest('[data-shpdel]')){ shStore(SHP.view, null); toast('기본 윤곽으로 되돌렸습니다.'); shPaint(); return; }
+  if(t.closest('[data-shpdel]')){ shStore(SHP.view, null); toast('기본 차 그림으로 되돌렸습니다.'); shPaint(); return; }
   if(t.closest('[data-shpsave]')){ const s = SHP.src; if(!s || SHP.pts.length < 2) return;
     const val = s.kind==='img' ? {kind:'img', data:s.data, w:s.w, h:s.h, p1:SHP.pts[0], p2:SHP.pts[1]} : {kind:'dxf', d:s.d, box:s.box, p1:SHP.pts[0], p2:SHP.pts[1]};
     if(JSON.stringify(val).length > SHP_MAX + 20000){ toast('그림이 너무 큽니다. 더 단순한 그림으로 올려 주십시오.'); return; }
-    shStore(SHP.view, val); toast(`${SHV[SHP.view][0].replace(' (선택)', '')} 그림을 저장했습니다.`); SHP.src = null; SHP.pts = []; shPaint(); return; }
+    shStore(SHP.view, val); toast(`${SHV[SHP.view][0]} 그림을 저장했습니다.`); SHP.src = null; SHP.pts = []; shPaint(); return; }
   const sv = t.closest('#shpsrc'); if(sv && SHP.src && SHP.pts.length < 2){ const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(sv.getScreenCTM().inverse()); let p = [q.x, q.y];
     /* DXF: 가까운 원(바퀴 · 허브)이 있으면 그 중심에 붙임 */
     if(SHP.src.kind==='dxf' && SHP.src.circles.length){ const px = 14/(sv.getScreenCTM().a || 1); let best = null, bd = px;
