@@ -2806,8 +2806,8 @@ html.wb-lock #tip{z-index:95}
 .t2-set input:disabled,.t2-set select:disabled{opacity:.5;background:var(--panel-2)}
 .t2-sum{color:var(--ink-2)}
 .t2-rule{font-size:12px;margin:0 0 8px;line-height:1.55}
-.t2-menu{position:relative;margin-left:auto}
-.t2-mn{position:absolute;right:0;top:calc(100% + 4px);z-index:20;display:flex;flex-direction:column;min-width:230px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.14);padding:4px}
+.t2-menu{position:relative;align-self:flex-start}
+.t2-mn{position:absolute;left:0;top:calc(100% + 4px);z-index:20;display:flex;flex-direction:column;min-width:230px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.14);padding:4px}
 .t2-mn button,.t2-mi{font:inherit;font-size:12.5px;text-align:left;padding:6px 10px;border:0;background:none;color:var(--ink);border-radius:5px;cursor:pointer}
 .t2-mn button:hover,.t2-mi:hover{background:var(--panel-2)}
 .t2-pm{position:fixed;inset:0;z-index:60;background:rgba(20,24,40,.35);display:flex;align-items:center;justify-content:center}
@@ -2843,3 +2843,33 @@ html.wb-lock #tip{z-index:95}
 .t2-grt tr:last-child th,.t2-grt tr:last-child td{border-bottom:0}
 .t2-sub{grid-column:1 / -1;font-size:11.5px;text-align:right}
 .t2-dt.ok{color:#257a47}.t2-dt.bad{color:#b42318}.t2-dt em{font-style:normal;color:var(--muted)}
+/* 도구 2 (2026-11-05 2차): [시뮬레이션 | 맵 편집] · 결과 줄 맞춤 · 구동력 선도 프로브 · 지도 확대 */
+.t2-hr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;flex:1;min-width:0}
+.t2-h{flex-wrap:wrap;gap:8px 18px}
+.t2-gm,.t2-vw{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px}
+.t2-lapl{display:inline-flex;align-items:center;gap:6px;font-size:12.5px}
+.t2-lapl select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink)}
+.t2-lapl select:disabled{opacity:.5}
+.t2-tl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.t2-menu .btn:disabled{opacity:.45;cursor:not-allowed;background:var(--panel-2);color:var(--muted);border-color:var(--line)}
+#wb.t2-edit .wb-sec[aria-label="결과"],#wb.t2-edit #wbmid,#wb.t2-edit .wb-sec[aria-label="신호 선택 그래프"]{display:none}
+.t2-mid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.t2-ftbox{position:relative;min-height:280px}
+.t2-ftov{position:absolute;top:10px;right:12px;padding:4px 10px;border-radius:6px;background:rgba(35,39,49,.78);color:#fff;font-size:12px;font-weight:600}
+.t2-ftv .t2-cap,.t2-cap{font-size:12px;line-height:1.6;margin:6px 0 0;color:var(--ink-2)}
+.t2-zb{display:inline-flex;gap:4px;margin-left:auto}.t2-zb .btn{min-width:30px}
+.t2-mapw .t2-msvg{height:330px}
+.t2-msvg.live{cursor:crosshair;touch-action:none}
+.t2-mc{margin:0;min-width:0}
+.t2-oc .t2-rs{display:flex;flex-direction:column}
+.t2-r{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(64px,auto);align-items:center;gap:10px;height:30px;border-bottom:1px solid #eeecf3;font-size:12.5px}
+.t2-r:last-child{border-bottom:0}
+.t2-r.x3{height:90px}
+.t2-r .n{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t2-r .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.t2-r .v b{font-size:13.5px}.t2-r .v i{font-style:normal;color:var(--muted);font-size:11.5px}
+.t2-r .d{text-align:right;font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.t2-dt{font-weight:600}
+.wb-ir.lock input{background:var(--panel-2);color:var(--muted)}
+.wb-ir .wb-lk{grid-column:1 / -1;font-size:11.5px;color:var(--accent)}
+.t2-oc h4 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-oc.g .t2-r .d{font-size:13.5px;font-weight:700;color:var(--ink)}.t2-oc.g .t2-r .d .muted{font-size:11.5px;font-weight:400}

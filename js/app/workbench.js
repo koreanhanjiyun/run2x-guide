@@ -80,25 +80,30 @@ function wbTicks(lo, hi, n){ if(!(hi > lo)){ hi = lo + 1; }
 function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
   const groups = []; ys.forEach(y => { const u = y.u || ''; let G = groups.find(g => g.u===u); if(!G){ G = {u, ys:[]}; groups.push(G); } G.ys.push(y); });
   if(!groups.length) groups.push({u:'', ys:[]});
-  const AW = 50, nL = Math.ceil(groups.length/2), nR = Math.floor(groups.length/2);
-  const W = o.w, H = o.h, L = 18 + AW*nL, R = nR ? 18 + AW*nR : 16, T = 14, B = 42, pw = W - L - R, ph = H - T - B;
-  const xf = xd.filter(isFinite), xr = wbTicks(xf.length ? Math.min(...xf) : 0, xf.length ? Math.max(...xf) : 1, Math.max(4, Math.round(pw/80))), X = x => L + (x - xr.lo)/(xr.hi - xr.lo)*pw;
-  groups.forEach(G => { let lo = Infinity, hi = -Infinity; G.ys.forEach(y => y.d.forEach(v => { if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
-    if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5); });
-  const Y = (v, r) => T + ph - (v - r.lo)/(r.hi - r.lo)*ph, gOf = y => groups.find(g => g.ys.includes(y));
+  /* y 축: 단위마다 하나. 짝수 번째는 왼쪽, 홀수 번째는 오른쪽에 바깥으로 늘어놓음.
+     축 폭 = 눈금 숫자 폭 + 세로 제목 폭 (겹치지 않게). 색: 신호 하나면 축 · 눈금 · 제목 모두 그 선 색, 여럿이면 제목만 신호마다 제 색 */
   const dg = r => Math.abs(r.t[1] - r.t[0]) < 1 ? (Math.abs(r.t[1] - r.t[0]) < 0.1 ? 2 : 1) : 0;
+  groups.forEach(G => { let lo = Infinity, hi = -Infinity; G.ys.forEach(y => y.d.forEach(v => { if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
+    if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5);
+    G.lw = Math.max(...G.r.t.map(t => wbFmt(t, dg(G.r)).length))*6.6; G.aw = Math.round(7 + G.lw + 8 + 13 + 8); });
+  const LG = groups.filter((_, i) => i % 2 === 0), RG = groups.filter((_, i) => i % 2 === 1);
+  const W = o.w, H = o.h, L = 6 + LG.reduce((a, G) => a + G.aw, 0), R = RG.length ? 6 + RG.reduce((a, G) => a + G.aw, 0) : 16, T = 14, B = 42, pw = W - L - R, ph = H - T - B;
+  const xf = xd.filter(isFinite), xr = wbTicks(xf.length ? Math.min(...xf) : 0, xf.length ? Math.max(...xf) : 1, Math.max(4, Math.round(pw/80))), X = x => L + (x - xr.lo)/(xr.hi - xr.lo)*pw;
+  const Y = (v, r) => T + ph - (v - r.lo)/(r.hi - r.lo)*ph, gOf = y => groups.find(g => g.ys.includes(y));
   let s = `<svg class="wb-plot" data-wbp="${o.id || ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${wbEsc(o.label || '그래프')}">`;
   xr.t.forEach(t => { s += `<line x1="${X(t)}" y1="${T}" x2="${X(t)}" y2="${T+ph}" class="wb-grid"/><text x="${X(t)}" y="${T+ph+15}" class="wb-tx" text-anchor="middle">${wbFmt(t, dg(xr))}</text>`; });
   groups[0].r.t.forEach(t => { const y = Y(t, groups[0].r); s += `<line x1="${L}" y1="${y}" x2="${L+pw}" y2="${y}" class="wb-grid"/>`; });
   s += `<text x="${L + pw/2}" y="${H - 6}" class="wb-tl" text-anchor="middle">${wbEsc(o.x.n)}${o.x.u ? ` [${wbEsc(o.x.u)}]` : ''}</text>`;
-  groups.forEach((G, gi) => { const left = gi % 2 === 0, k = Math.floor(gi/2), ax = left ? L - AW*k : L + pw + AW*k, sg = left ? -1 : 1;
-    const col = G.ys.length===1 ? G.ys[0].c : 'var(--ink-2)', all = G.ys.map(y => y.n).join(' · ');
-    /* 세로 제목: 신호가 여럿이면 이름을 잇고, 축 길이를 넘치면 도구가 준 이름(o.yn[단위]) 또는 '첫 신호 외 n개' */
-    const name = G.ys.length===1 ? G.ys[0].n : (o.yn && o.yn[G.u]) || ((all.length + G.u.length + 3)*11 > ph ? `${G.ys[0].n} 외 ${G.ys.length - 1}개` : all);
-    if(k > 0) s += `<line x1="${ax}" y1="${T}" x2="${ax}" y2="${T+ph}" stroke="${col}" stroke-width="1"/>`;
-    G.r.t.forEach(t => { const y = Y(t, G.r); s += `<line x1="${ax}" y1="${y}" x2="${ax + 4*sg}" y2="${y}" stroke="${col}"/><text x="${ax + 7*sg}" y="${y + 4}" class="wb-tx" text-anchor="${left ? 'end' : 'start'}" fill="${col}">${wbFmt(t, dg(G.r))}</text>`; });
-    const tx = ax + (AW - 10)*sg, ty = T + ph/2, ttl = `${name.length > 34 ? name.slice(0, 33) + '…' : name}${G.u ? ` [${G.u}]` : ''}`;
-    s += `<text x="${tx}" y="${ty}" class="wb-tl" text-anchor="middle" fill="${col}" transform="rotate(${left ? -90 : 90} ${tx} ${ty})"><title>${wbEsc(name)}${G.u ? ` [${wbEsc(G.u)}]` : ''}</title>${wbEsc(ttl)}</text>`; });
+  let offL = 0, offR = 0;
+  groups.forEach((G, gi) => { const left = gi % 2 === 0, ax = left ? L - offL : L + pw + offR, sg = left ? -1 : 1; if(left) offL += G.aw; else offR += G.aw;
+    const one = G.ys.length===1, col = one ? G.ys[0].c : 'var(--ink-2)', all = G.ys.map(y => y.n).join(' · ');
+    const short = !one && ((o.yn && o.yn[G.u]) || ((all.length + G.u.length + 3)*11 > ph ? `${G.ys[0].n} 외 ${G.ys.length - 1}개` : ''));
+    s += `<line x1="${ax}" y1="${T}" x2="${ax}" y2="${T+ph}" style="stroke:${col}" stroke-width="1"/>`;
+    G.r.t.forEach(t => { const y = Y(t, G.r); s += `<line x1="${ax}" y1="${y}" x2="${ax + 4*sg}" y2="${y}" style="stroke:${col}"/><text x="${ax + 7*sg}" y="${y + 4}" class="wb-tx" text-anchor="${left ? 'end' : 'start'}" style="fill:${col}">${wbFmt(t, dg(G.r))}</text>`; });
+    const tx = ax + (7 + G.lw + 8 + 7)*sg, ty = T + ph/2, u = G.u ? ` [${wbEsc(G.u)}]` : '';
+    const body = one ? `<tspan style="fill:${col}">${wbEsc(G.ys[0].n)}</tspan>` : short ? `<tspan style="fill:var(--ink-2)">${wbEsc(short)}</tspan>`
+      : G.ys.map((y, i) => `${i ? '<tspan style="fill:var(--muted)"> · </tspan>' : ''}<tspan style="fill:${y.c}">${wbEsc(y.n)}</tspan>`).join('');
+    s += `<text x="${tx}" y="${ty}" class="wb-tl" text-anchor="middle" transform="rotate(${left ? -90 : 90} ${tx} ${ty})"><title>${wbEsc(all)}${u}</title>${body}<tspan style="fill:${col}">${u}</tspan></text>`; });
   s += `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-frame"/>`;
   ys.forEach(y => { const r = gOf(y).r; s += `<polyline fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
   if(o.xi != null && isFinite(xd[o.xi])){ const cx = X(xd[o.xi]), right = cx < L + pw*0.72, lab = [];
@@ -107,7 +112,7 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
       lab.push({y:cy, c:y.c, t:`${wbFmt(v, y.dd != null ? y.dd : 2)}${y.u ? ' ' + y.u : ''}`}); });
     lab.sort((a, b) => a.y - b.y); for(let i = 1; i < lab.length; i++) if(lab[i].y - lab[i-1].y < 13) lab[i].y = lab[i-1].y + 13;   /* 글자끼리 겹치지 않게 아래로 밀기 */
     const over = lab.length ? lab[lab.length-1].y - (T + ph - 4) : 0; if(over > 0) lab.forEach(l => l.y -= over);
-    lab.forEach(l => { s += `<text x="${cx + (right ? 7 : -7)}" y="${l.y + 4}" class="wb-pv" text-anchor="${right ? 'start' : 'end'}" fill="${l.c}">${wbEsc(l.t)}</text>`; }); }
+    lab.forEach(l => { s += `<text x="${cx + (right ? 7 : -7)}" y="${l.y + 4}" class="wb-pv" text-anchor="${right ? 'start' : 'end'}" style="fill:${l.c}">${wbEsc(l.t)}</text>`; }); }
   return s + `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-hit" data-wbl="${L}" data-wbw="${pw}" data-wbx0="${xr.lo}" data-wbx1="${xr.hi}"/></svg>`; }
 const wbSigDef = k => (wbT().sigs || []).find(s => s.k===k) || {k, n:k, u:''};
 const wbColor = k => WB_COL[(wbT().sigs || []).findIndex(s => s.k===k) % WB_COL.length] || WB_COL[0];
@@ -135,6 +140,7 @@ function wbShellHTML(){ const T = wbT();
       <div class="wb-right">
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
         <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span>${T.outHTML ? '' : `<button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button>`}</div><div id="wbout"></div></section>
+        ${T.midHTML ? '<div id="wbmid"></div>' : ''}
         ${T.figure || T.view3d ? `<div class="wb-two${T.view3d ? '' : ' one'}">
           ${T.figure ? `<section class="wb-sec" aria-label="기본 결과 그래프"><div class="wb-h"><h3>${T.mainTitle || '결과 그래프'}</h3><span class="wb-meta">${T.mainMeta || '그래프를 누르거나 끌면 커서 · ←/→ 한 칸씩'}</span></div><div id="wbmain" class="wb-plotbox" tabindex="0"></div></section>` : ''}
           ${T.view3d ? `<section class="wb-sec" aria-label="3D 화면"><div class="wb-h"><h3>3D 화면</h3><span class="wb-meta">${V3D.HELP}</span></div>
@@ -160,7 +166,8 @@ function wbInHTML(){ const T = wbT(); let g0 = '';
     const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : wbInName(d);
     const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
     const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own);
-    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}"><span class="wb-in-n">${dot}${nm}${viz}</span><input type="number" step="any" data-wbi="${d.k}" value="${isFinite(v)?v:''}"><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    const lk = T.inLock ? T.inLock(d.k) : '';   /* 도구가 맵으로 대신 쓰는 입력: 칸을 막고 까닭을 적음 */
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}"><span class="wb-in-n">${dot}${nm}${viz}</span><input type="number" step="any" data-wbi="${d.k}" value="${isFinite(v)?v:''}"${lk ? ' disabled' : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>${lk ? `<span class="wb-lk">${lk}</span>` : ''}
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
@@ -228,6 +235,7 @@ function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) re
   if(all || which.includes('out')) $('#wbout').innerHTML = wbOutHTML();
   if((all || which.includes('main')) && $('#wbmain')){ $('#wbmain').innerHTML = wbMainHTML(); }   /* 도구가 그림(figure)을 줄 때만 있음. 선 그래프 결과는 신호 선택 그래프 하나로 */
   if((all || which.includes('ext')) && $('#wbext')) $('#wbext').innerHTML = wbT().extHTML();
+  if((all || which.includes('ext') || which.includes('mid')) && $('#wbmid')) $('#wbmid').innerHTML = wbT().midHTML();   /* 도구 영역: 결과와 신호 그래프 사이 */
   if((all || which.includes('sig')) && $('#wbsl')){ $('#wbsl').innerHTML = wbSigListHTML(); $('#wbsig').innerHTML = wbSigHTML(); }
   if(all || which.includes('stat')){ $('#wbstat').textContent = WB.err ? '' : (WB.R ? `계산 ${WB.ms < 1 ? '1 ms 미만' : Math.round(WB.ms) + ' ms'} · Web Worker` : ''); const c = $('#wbcodeon'); if(c) c.hidden = WB.code[WB.id] == null; } }
 
