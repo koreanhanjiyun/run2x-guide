@@ -133,11 +133,11 @@ function wbShellHTML(){ const T = wbT();
       <div class="wb-right">
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
         <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span><button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button></div><div id="wbout"></div></section>
-        <div class="wb-two${T.view3d ? '' : ' one'}">
-          <section class="wb-sec" aria-label="기본 결과 그래프"><div class="wb-h"><h3>${T.mainTitle || '결과 그래프'}</h3><span class="wb-meta">${T.mainMeta || '그래프를 누르거나 끌면 커서 · ←/→ 한 칸씩'}</span></div><div id="wbmain" class="wb-plotbox" tabindex="0"></div></section>
+        ${T.figure || T.view3d ? `<div class="wb-two${T.view3d ? '' : ' one'}">
+          ${T.figure ? `<section class="wb-sec" aria-label="기본 결과 그래프"><div class="wb-h"><h3>${T.mainTitle || '결과 그래프'}</h3><span class="wb-meta">${T.mainMeta || '그래프를 누르거나 끌면 커서 · ←/→ 한 칸씩'}</span></div><div id="wbmain" class="wb-plotbox" tabindex="0"></div></section>` : ''}
           ${T.view3d ? `<section class="wb-sec" aria-label="3D 화면"><div class="wb-h"><h3>3D 화면</h3><span class="wb-meta">${V3D.HELP}</span></div>
             <div class="wb-3dbox"><div class="wb-3dv"><div id="wb3d" class="wb-3d"><p class="wb-empty">불러오는 중…</p></div><div class="wb-3dui">${V3D.viewBtns('iso')}</div></div><p class="wb-3dn" id="wb3dn">${T.view3dNote || ''}</p></div></section>` : ''}
-        </div>
+        </div>` : ''}
         ${T.noSig ? '' : `<section class="wb-sec" aria-label="신호 선택 그래프"><div class="wb-h"><h3>신호 선택 그래프</h3><span class="wb-meta">신호마다 자기 눈금 · 이름을 누르면 그 신호의 눈금 · 그래프를 누르거나 끌면 커서</span></div>
           <div class="wb-sig"><div class="wb-sl" id="wbsl"></div><div id="wbsig" class="wb-plotbox" tabindex="0"></div></div></section>`}
       </div></div>`; }
@@ -179,7 +179,8 @@ function wbOutCards(T, R, cmp){ const out = R.out || {};
     return `<div class="wb-oc${gd.grid ? ' grid' : ''}${gd.wide ? ' wide' : ''}"><h4>${wbEsc(G.n)}${gd.note ? `<span>${wbEsc(gd.note)}</span>` : ''}</h4>${gd.render ? gd.render(out) : `<div class="wb-ol">${G.ds.map(row).join('')}</div>`}</div>`; }).join('')}</div>`; }
 function wbXDef(){ const T = wbT(); return {n: (T.x && T.x.n) || 'x', u: (T.x && T.x.u) || ''}; }
 function wbMainHTML(){ const R = WB.R; if(!R) return '';
-  if(!R.x) return wbT().figure ? wbT().figure(wbInputs(), R) : '';
+  return wbT().figure ? wbT().figure(wbInputs(), R) : ''; }
+function wbMainLineHTML(){ const R = WB.R; if(!R || !R.x) return '';   /* 예전 '결과 그래프'(선). 지금은 쓰지 않음 */
   const ys = (R.main || []).filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u, dd:wbSigDef(k).d}));
   return wbPlot({id:'main', w:640, h:300, x:{d:R.x.d, ...wbXDef()}, ys, xi:WB.xi, label:'결과 그래프'})
     + `<div class="wb-leg"><span class="wb-legx">${wbEsc(wbXDef().n)} <b>${wbFmt(R.x.d[WB.xi], 1)}</b> ${wbEsc(wbXDef().u)}</span>${ys.map(y => `<span><i style="background:${y.c}"></i>${wbEsc(y.n)} <b>${wbFmt(y.d[WB.xi], wbSigDef(y.k).d||0)}</b> ${wbEsc(y.u)}</span>`).join('')}</div>`; }
@@ -222,7 +223,7 @@ function wbPanes(P, pi, mk, x, xi, act, label, what){ const h = P.length===1 ? 3
 function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) return;
   if(all || which.includes('in')) $('#wbin').innerHTML = wbInHTML();
   if(all || which.includes('out')) $('#wbout').innerHTML = wbOutHTML();
-  if(all || which.includes('main')){ $('#wbmain').innerHTML = wbMainHTML(); }
+  if((all || which.includes('main')) && $('#wbmain')){ $('#wbmain').innerHTML = wbMainHTML(); }   /* 도구가 그림(figure)을 줄 때만 있음. 선 그래프 결과는 신호 선택 그래프 하나로 */
   if((all || which.includes('ext')) && $('#wbext')) $('#wbext').innerHTML = wbT().extHTML();
   if((all || which.includes('sig')) && $('#wbsl')){ $('#wbsl').innerHTML = wbSigListHTML(); $('#wbsig').innerHTML = wbSigHTML(); }
   if(all || which.includes('stat')){ $('#wbstat').textContent = WB.err ? '' : (WB.R ? `계산 ${WB.ms < 1 ? '1 ms 미만' : Math.round(WB.ms) + ' ms'} · Web Worker` : ''); const c = $('#wbcodeon'); if(c) c.hidden = WB.code[WB.id] == null; } }

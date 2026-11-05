@@ -9,7 +9,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   let o=await R(); console.log('open', f(o.t_acc_s,3), f(o.t_skid_s,3), f(o.t_ax_s), f(o.t_end_s,1), o.n_lap, o.n_st1, 'gr', o.gr_opt, o.gr_acc, o.gr_ax, o.gr_end, 'plim', f(o.p_lim,1), 'e', f(o.e_use), '/', f(o.e_cap), 'err', await p.evaluate(()=>WB.err));
   console.log('dots', await p.evaluate(()=>[...document.querySelectorAll('.wb-in .wb-st')].length), 'sq', await p.evaluate(()=>document.querySelectorAll('.wb-in .wb-st.sq').length), 'legend', await p.evaluate(()=>!!document.querySelector('.wb-inleg')));
   await p.click('.wb-bar [data-wbcode]'); await W(300); await p.click('#wbm [data-wbver]'); await W(30000); console.log('verify', (await p.textContent('#wbm .dvi-foot')).trim().slice(0,40)); await p.click('#wbm [data-wbmx]');
-  for(const c of ['ax','acc','skid','free','end']){ await p.click(`[data-t2course="${c}"]`); await W(4500); const r=await p.evaluate(()=>({n:WB.R&&WB.R.x.d.length, main:document.querySelectorAll('#wbmain polyline').length, lap:!!document.querySelector('[data-t2lap]'), map:document.querySelectorAll('#t2map line').length, cones:document.querySelectorAll('#t2map .t2-cone').length, arr:!!document.querySelector('#t2map .t2-arr'), sl:!!document.querySelector('#t2map .t2-sl'), fin:!!document.querySelector('#t2map .t2-fin'), err:WB.err}));
+  for(const c of ['ax','acc','skid','free','end']){ await p.click(`[data-t2course="${c}"]`); await W(4500); const r=await p.evaluate(()=>({n:WB.R&&WB.R.x.d.length, main:!!document.querySelector('#wbmain'), sig:document.querySelectorAll('#wbsig polyline').length, lap:!!document.querySelector('[data-t2lap]'), map:document.querySelectorAll('#t2map line').length, cones:document.querySelectorAll('#t2map .t2-cone').length, arr:!!document.querySelector('#t2map .t2-arr'), sl:!!document.querySelector('#t2map .t2-sl'), fin:!!document.querySelector('#t2map .t2-fin'), err:WB.err}));
     console.log('course', c, JSON.stringify(r)); if(out) await p.screenshot({path:`${out}/t2_${c}.png`}); }
   for(const l of ['1','14','all','2']){ await p.selectOption('[data-t2lap]', l); await W(4500); console.log('lap', l, await p.evaluate(()=>WB.R.x.d.length+' '+(document.querySelector('#t2mcap')||{}).textContent)); }
   console.log('laptable', await p.locator('.t2-lt button').count()); await p.click('.t2-lt [data-t2lapgo="5"]'); await W(4500); console.log('lapgo', await p.evaluate(()=>T2.lap.end), await p.locator('[data-t2lap]').inputValue());
@@ -48,8 +48,8 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   console.log('own ring', await p.evaluate(()=>document.querySelectorAll('.wb-in .wb-st.own').length));
   await p.selectOption('[data-wbxa]','in:gr'); await W(25000); console.log('sweep', await p.evaluate(()=>WB.sw&&WB.sw.X?WB.sw.X.length+' '+(WB.sw.err||''):'none'), await p.evaluate(()=>WB.err));
   await p.selectOption('[data-wbxa]',''); await W(4500);
-  await p.locator('#wbmain svg .wb-hit').click({position:{x:300,y:100}}); await W(300);
-  console.log('cursor', await p.evaluate(()=>WB.xi), await p.evaluate(()=>!!document.querySelector('#t2map .t2-cur')), 'probe', await p.locator('#wbmain .wb-pv').count());
+  await p.locator('#wbsig svg .wb-hit').click({position:{x:300,y:100}}); await W(300);
+  console.log('cursor', await p.evaluate(()=>WB.xi), await p.evaluate(()=>!!document.querySelector('#t2map .t2-cur')), 'probe', await p.locator('#wbsig .wb-pv').count());
   if(out) await p.screenshot({path:out+'/t2_end.png'});
   await p.evaluate(()=>tourStart('wb:2')); await W(1500); const seen=[];
   for(let i=0;i<20;i++){ seen.push(await p.evaluate(()=>document.querySelector('.tour-n')?.textContent)); const nx=await p.$('[data-tour-next]'); if(!nx || /마치기/.test(await nx.textContent())) break; await nx.click(); await W(5000); }
