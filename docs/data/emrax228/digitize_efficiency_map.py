@@ -6,8 +6,11 @@ XR=int(round(X0+5.5*XPX))                     # 5500 rpm 오른쪽 끝
 C=[('teal',86,(49,133,156)),('purple',90,(103,82,129)),('green',94,(119,147,60)),('red',95,(192,80,77)),('blue',96,(56,93,138))]
 TXT=[(395,80,545,113),(405,135,480,168),(378,192,445,226),(350,288,415,322),(340,415,455,450)]   # 글자 상자 (x0,y0,x1,y1)
 ins={}
-for name,L,c in C:
-  m=np.sqrt(((im-np.array(c))**2).sum(2))<40
+# 선 색 분류: 화소마다 가장 가까운 선 색 하나로만 (2026-11-05 고침: 색마다 따로 거리 < 40 으로 보면
+#   96 % 파란 선의 번진 화소가 86 % 청록 선으로도 잡혀, 96 % 선 위 점이 '86 % 바깥'이 되던 오류)
+DST=np.stack([np.sqrt(((im-np.array(c))**2).sum(2)) for _,_,c in C]); NEAR=DST.argmin(0)
+for ci,(name,L,c) in enumerate(C):
+  m=(DST[ci]<40)&(NEAR==ci)
   for x0,y0,x1,y1 in TXT: m[y0:y1,x0:x1]=False
   m[:, :X0-1]=False; m[Y0+2:,:]=False
   m=nd.binary_dilation(m,iterations=2); m[:,XR:XR+3]=True; m[40:46,:]=m[40:46,:]  # 오른쪽 끝을 닫음

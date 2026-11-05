@@ -92,7 +92,9 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
   groups[0].r.t.forEach(t => { const y = Y(t, groups[0].r); s += `<line x1="${L}" y1="${y}" x2="${L+pw}" y2="${y}" class="wb-grid"/>`; });
   s += `<text x="${L + pw/2}" y="${H - 6}" class="wb-tl" text-anchor="middle">${wbEsc(o.x.n)}${o.x.u ? ` [${wbEsc(o.x.u)}]` : ''}</text>`;
   groups.forEach((G, gi) => { const left = gi % 2 === 0, k = Math.floor(gi/2), ax = left ? L - AW*k : L + pw + AW*k, sg = left ? -1 : 1;
-    const col = G.ys.length===1 ? G.ys[0].c : 'var(--ink-2)', name = G.ys.length===1 ? G.ys[0].n : G.ys.map(y => y.n).join(' · ');
+    const col = G.ys.length===1 ? G.ys[0].c : 'var(--ink-2)', all = G.ys.map(y => y.n).join(' · ');
+    /* 세로 제목: 신호가 여럿이면 이름을 잇고, 축 길이를 넘치면 도구가 준 이름(o.yn[단위]) 또는 '첫 신호 외 n개' */
+    const name = G.ys.length===1 ? G.ys[0].n : (o.yn && o.yn[G.u]) || ((all.length + G.u.length + 3)*11 > ph ? `${G.ys[0].n} 외 ${G.ys.length - 1}개` : all);
     if(k > 0) s += `<line x1="${ax}" y1="${T}" x2="${ax}" y2="${T+ph}" stroke="${col}" stroke-width="1"/>`;
     G.r.t.forEach(t => { const y = Y(t, G.r); s += `<line x1="${ax}" y1="${y}" x2="${ax + 4*sg}" y2="${y}" stroke="${col}"/><text x="${ax + 7*sg}" y="${y + 4}" class="wb-tx" text-anchor="${left ? 'end' : 'start'}" fill="${col}">${wbFmt(t, dg(G.r))}</text>`; });
     const tx = ax + (AW - 10)*sg, ty = T + ph/2, ttl = `${name.length > 34 ? name.slice(0, 33) + '…' : name}${G.u ? ` [${G.u}]` : ''}`;
@@ -132,7 +134,7 @@ function wbShellHTML(){ const T = wbT();
       <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button></div><div id="wbin"></div></aside>
       <div class="wb-right">
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
-        <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span><button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button></div><div id="wbout"></div></section>
+        <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span>${T.outHTML ? '' : `<button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button>`}</div><div id="wbout"></div></section>
         ${T.figure || T.view3d ? `<div class="wb-two${T.view3d ? '' : ' one'}">
           ${T.figure ? `<section class="wb-sec" aria-label="기본 결과 그래프"><div class="wb-h"><h3>${T.mainTitle || '결과 그래프'}</h3><span class="wb-meta">${T.mainMeta || '그래프를 누르거나 끌면 커서 · ←/→ 한 칸씩'}</span></div><div id="wbmain" class="wb-plotbox" tabindex="0"></div></section>` : ''}
           ${T.view3d ? `<section class="wb-sec" aria-label="3D 화면"><div class="wb-h"><h3>3D 화면</h3><span class="wb-meta">${V3D.HELP}</span></div>
@@ -165,6 +167,7 @@ function wbInHTML(){ const T = wbT(); let g0 = '';
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
   if(!R) return '<p class="wb-empty">계산 중…</p>';
+  if(T.outHTML) return T.outHTML(R);   /* 도구가 결과 칸을 직접 그림 (도구 2) */
   return wbOutCards(T, R, WB.cmp); }
 /* 결과 카드: 도구가 정한 묶음마다. d.hide = 화면에 안 보임(검증 · 반영용), d.fmt(v, out) = 값 칸 HTML(단위 포함),
    outGroups[묶음].render(out) = 카드 본문을 도구가 직접 그림, .wide = 두 칸 너비. 대시보드 '파트별'도 같은 함수(비교 없이) */
@@ -202,7 +205,7 @@ function wbPaneBar(sweep){ const P = sweep ? WB.panesO : WB.panes, pi = sweep ? 
 function wbSigListHTML(){ const R = WB.R; if(!R) return '';
   if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return wbAxisHTML() + (S && S.err ? `<p class="wb-err">${wbEsc(S.err)}</p>` : '');
     const d = wbT().inputs.find(o => o.k===S.k);
-    return wbAxisHTML() + wbPaneBar(true) + `<div class="wb-slh"><span>${wbInName(d)}</span><b>${wbFmt(S.X[WB.si], 3)} ${wbEsc(wbInUnit(d))}</b></div>` + wbT().outputs.map(o => `<div class="wb-sr${WB.actO===o.k?' act':''}">
+    return wbAxisHTML() + wbPaneBar(true) + `<div class="wb-slh"><span>${wbInName(d)}</span><b>${wbFmt(S.X[WB.si], 3)} ${wbEsc(wbInUnit(d))}</b></div>` + wbT().outputs.filter(o => S.O[o.k] && S.O[o.k].some(isFinite)).map(o => `<div class="wb-sr${WB.actO===o.k?' act':''}">
       <input type="checkbox" data-wbso="${o.k}"${WB.selO.has(o.k)?' checked':''} aria-label="${wbEsc(wbOutName(o))} 그리기"><i style="background:${wbOutColor(o.k)}"></i>
       <button type="button" class="wb-sn" data-wbacto="${o.k}" title="이 결과의 눈금 보기">${wbOutName(o)}</button><b>${wbFmt(S.O[o.k][WB.si], o.d||0)}</b><span class="wb-u">${wbEsc(wbOutUnit(o))}</span></div>`).join('')
       + `<p class="wb-swn">결과 숫자를 ${S.X.length}번 다시 계산해 그린 것입니다. 나머지 입력은 지금 값 그대로입니다.</p>`; }

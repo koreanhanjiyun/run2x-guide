@@ -2763,17 +2763,8 @@ html.wb-lock #tip{z-index:95}
 /* 도구 2: 트랙 · 모터 곡선 표, 트랙 지도 */
 .t2-h{flex-wrap:wrap;gap:10px 16px}
 .t2-vw{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12.5px}
-.t2-tr{display:grid;grid-template-columns:minmax(320px,1fr) minmax(360px,1.1fr);gap:18px;align-items:start}
-.t2-ed{display:flex;flex-direction:column;gap:6px;min-width:0}
-.t2-ed label{font-size:12.5px;font-weight:600}.t2-ed label .muted{font-weight:400;margin-left:4px}
-.t2-ed textarea{width:100%;box-sizing:border-box;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
-.t2-ed textarea:focus{outline:none;border-color:var(--accent)}
-.t2-msg{font-size:12.5px;color:var(--ink-2)}
-.t2-btns{display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap}
 .t2-map,.t2-mc{margin:0;display:flex;flex-direction:column;gap:4px;min-width:0}
-.t2-msvg{width:100%;max-height:300px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px}
 .t2-line{fill:none;stroke:#7d8394;stroke-width:3;stroke-linejoin:round}
-.t2-st{fill:#232731;stroke:#fff;stroke-width:1.5}.t2-stt{font-size:11px;fill:var(--ink-2);paint-order:stroke;stroke:var(--panel-2);stroke-width:3px}
 .t2-cur{fill:#fff;stroke:#232731;stroke-width:2.5}
 .t2-map figcaption{font-size:12px;display:flex;align-items:center;gap:6px}
 .t2-grad{display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(to right,hsl(230 75% 45%),hsl(115 75% 45%),hsl(0 75% 45%))}
@@ -2785,20 +2776,6 @@ html.wb-lock #tip{z-index:95}
 .wb-vzp{position:fixed;z-index:1200;width:380px;padding:8px 10px 10px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,16,32,.18)}
 .wb-vzh{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:2px}.wb-vzh .dvi-x{margin-left:auto}
 .wb-vzn{margin:4px 0 0;font-size:12px;color:var(--ink-2);line-height:1.5}
-.t2-opt{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12.5px}
-.t2-opt label{display:inline-flex;align-items:center;gap:6px}.t2-opt input[type=number]{width:72px;font:inherit;padding:2px 6px;border:1px solid var(--line-2);border-radius:5px;text-align:right}
-.t2-tbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.t2-file{cursor:pointer}
-.t2-tw{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:8px}
-.t2-tt{width:100%;border-collapse:collapse;font-size:12.5px}
-.t2-tt th{position:sticky;top:0;background:var(--panel-2);font-weight:600;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);z-index:1}
-.t2-tt td{padding:2px 4px;border-bottom:1px solid var(--line)}
-.t2-tt input,.t2-tt select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);color:var(--ink)}
-.t2-tt input[type=number]{width:64px;text-align:right}.t2-tt input[type=text]{width:100%;min-width:90px}
-.t2-tt input:disabled,.t2-tt select:disabled{opacity:.35}
-.t2-rb{white-space:nowrap}.t2-rb button{font:inherit;font-size:12px;width:22px;height:22px;padding:0;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);cursor:pointer;color:var(--ink-2)}
-.t2-rb button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}.t2-rb button:disabled{opacity:.3;cursor:default}
-.t2-lapsel{display:inline-flex;align-items:center;gap:6px}.t2-lapsel select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px}
-.t2-gd{display:block;font-size:11.5px;color:#257a47;text-align:right}.t2-gd.over{color:#b42318}
 .wb-pv{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
 .wb-ctabs{margin:0 0 6px}
 .wb-pane{display:flex;align-items:center;gap:4px;margin:6px 0 2px;font-size:12px}
@@ -2813,20 +2790,56 @@ html.wb-lock #tip{z-index:95}
 .wb-ir.own input{border-color:var(--accent);background:#faf7ff}
 .wb-inleg{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 6px;font-size:11.5px;color:var(--muted)}.wb-inleg span{display:inline-flex;align-items:center}
 /* 도구 2: 코스 고르기 · 공식 코스 지도 · 랩별 기록 · 모터 탭 */
-.t2-info{display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.6;min-width:0}.t2-info p{margin:0}
 .t2-sk{fill:none;stroke:#9aa0ab;stroke-width:1;stroke-dasharray:3 3}
 .t2-cone{stroke:none}.t2-cone.R{fill:#2563eb}.t2-cone.L{fill:#e0a800}.t2-cone.C{fill:#ea7a12}
 .t2-sl{stroke:#16a34a;stroke-width:3.5;stroke-linecap:round}.t2-fin{stroke:#dc2626;stroke-width:3.5;stroke-linecap:round}
 .t2-arr{fill:#232731;stroke:#fff;stroke-width:1}
 .t2-cur{fill:#fff;stroke:#232731;stroke-width:2}
-.t2-mleg text{font-size:10.5px;fill:var(--ink-2)}
-.t2-lt{display:flex;flex-wrap:wrap;gap:4px}
-.t2-lt button{font:inherit;font-size:11.5px;padding:2px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
-.t2-lt button i{font-style:normal;color:var(--ink-3,#8a90a0);margin-right:4px;font-size:10.5px}
-.t2-lt button.st{border-left:3px solid #16a34a}.t2-lt button.on{border-color:var(--accent);background:var(--accent);color:#fff}.t2-lt button.on i{color:#fff}
-.t2-ltn{font-size:12px;margin:0}
-.t2-mb{display:flex;flex-direction:column;gap:6px}
-.t2-col{display:inline-flex;align-items:center;gap:8px;font-size:12.5px}.t2-col select{font:inherit;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px}
-.t2-fmt{font-size:12.5px}.t2-fmt summary{cursor:pointer;color:var(--accent)}.t2-fmt ul{margin:6px 0 0;padding-left:18px;line-height:1.6}
-.t2-tt td:nth-child(n+3):nth-child(-n+5){text-align:right;font-variant-numeric:tabular-nums}
 .t2-hm{display:flex;flex-direction:column;gap:4px;font-size:12.5px}.t2-heat{width:100%;max-width:560px}
+
+/* 도구 2 (2026-11-05 개편): 탭 공통 모양 = 설정 줄 + 표(높이 고정) + 그림 · 결과 3행 */
+.t2-tr{display:grid;grid-template-columns:minmax(360px,1fr) minmax(380px,1.1fr);gap:18px;align-items:start}
+.t2-set{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:12.5px;margin-bottom:6px}
+.t2-set label{display:inline-flex;align-items:center;gap:6px}
+.t2-set input[type=number]{width:72px;font:inherit;padding:2px 6px;border:1px solid var(--line-2);border-radius:5px;text-align:right;background:var(--panel);color:var(--ink)}
+.t2-set select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink)}
+.t2-set input:disabled,.t2-set select:disabled{opacity:.5;background:var(--panel-2)}
+.t2-sum{color:var(--ink-2)}
+.t2-rule{font-size:12px;margin:0 0 8px;line-height:1.55}
+.t2-menu{position:relative;margin-left:auto}
+.t2-mn{position:absolute;right:0;top:calc(100% + 4px);z-index:20;display:flex;flex-direction:column;min-width:230px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.14);padding:4px}
+.t2-mn button,.t2-mi{font:inherit;font-size:12.5px;text-align:left;padding:6px 10px;border:0;background:none;color:var(--ink);border-radius:5px;cursor:pointer}
+.t2-mn button:hover,.t2-mi:hover{background:var(--panel-2)}
+.t2-pm{position:fixed;inset:0;z-index:60;background:rgba(20,24,40,.35);display:flex;align-items:center;justify-content:center}
+.t2-pmb{width:min(640px,92vw);background:var(--panel);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 16px 48px rgba(20,24,40,.25)}
+.t2-pmb h4{margin:0;font-size:14px}.t2-pmb p{margin:0;font-size:12px}
+.t2-pmb textarea{width:100%;box-sizing:border-box;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
+.t2-btns{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.t2-tw{height:330px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.t2-tt{width:100%;border-collapse:collapse;font-size:12.5px}
+.t2-tt th{position:sticky;top:0;background:var(--panel-2);font-weight:600;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);z-index:1;white-space:nowrap}
+.t2-tt td{padding:3px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.t2-tt td.n,.t2-gtab td{text-align:right;font-variant-numeric:tabular-nums}
+.t2-gtab.map th:first-child,.t2-gtab td.t2-rh{position:sticky;left:0;background:var(--panel-2);font-weight:600}
+.t2-gtab.map th:first-child{z-index:2}
+.t2-e{cursor:text}.t2-e:hover{background:#f1effa;box-shadow:inset 0 0 0 1px var(--line-2)}
+.t2-ci{font:inherit;font-size:12.5px;width:100%;min-width:64px;box-sizing:border-box;padding:1px 4px;border:1px solid var(--accent);border-radius:4px;background:var(--panel);color:var(--ink)}
+.t2-x{font:inherit;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:4px;background:none;color:var(--muted);cursor:pointer}
+.t2-x:hover{border-color:#e4b4b0;color:#b42318}
+.t2-add{margin:6px}
+.t2-empty{padding:12px;font-size:12.5px;margin:0}
+.t2-msvg{width:100%;height:330px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px}
+.t2-map figcaption{flex-wrap:wrap}
+.t2-mleg{display:inline-flex;align-items:center;gap:5px;margin-left:10px}
+.t2-mleg i{display:inline-block;width:14px;height:3.5px;border-radius:2px}.t2-mleg i.sl{background:#16a34a}.t2-mleg i.fin{background:#dc2626;margin-left:6px}
+.t2-mleg i.arr{width:auto;height:auto;background:none;font-style:normal;font-size:10px;color:#232731;margin-left:6px}
+.t2-gm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:12.5px;margin-bottom:10px}
+.t2-out{display:flex;flex-direction:column;gap:12px}
+.t2-orow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.t2-orow.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.t2-out .wb-oc{min-width:0}
+.t2-grt{border-collapse:collapse;font-size:13px;width:100%}
+.t2-grt th,.t2-grt td{padding:5px 10px;border-bottom:1px solid #eeecf3;text-align:right;font-variant-numeric:tabular-nums}
+.t2-grt thead th{font-size:12px;color:var(--ink-2);font-weight:600}.t2-grt tbody th{text-align:left;font-weight:400;color:var(--ink-2)}
+.t2-grt tr:last-child th,.t2-grt tr:last-child td{border-bottom:0}
+.t2-sub{grid-column:1 / -1;font-size:11.5px;text-align:right}
+.t2-dt.ok{color:#257a47}.t2-dt.bad{color:#b42318}.t2-dt em{font-style:normal;color:var(--muted)}
