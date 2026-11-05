@@ -9,7 +9,8 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>wbOpen('2')); await W(7000);
   let o=await R(); console.log('open', 'gr_use', o.gr_use, 'acc', f(o.t_acc_s,3), 'skid', f(o.t_skid_s,3), 'ax', f(o.t_ax_s), 'end', f(o.t_end_s,1), 'gr', o.gr_opt, o.gr_acc, o.gr_ax, o.gr_end, 'd', f(o.d_acc,3), f(o.d_end,2), 'ms', await p.evaluate(()=>Math.round(WB.ms)), 'err', await p.evaluate(()=>WB.err));
   console.log('layout', 'cards', await p.locator('#wbout .t2-oc').count(), 'rows g/rec', await p.locator('#wbout .t2-oc.g .t2-r').count(), await p.locator('#wbout .t2-orow:first-child .t2-oc:nth-child(2) .t2-r').count(),
-    'align', await p.evaluate(()=>{ const a=[...document.querySelectorAll('#wbout .t2-oc.g .t2-r')].map(r=>Math.round(r.getBoundingClientRect().top)), b=[...document.querySelectorAll('#wbout .t2-orow:first-child .t2-oc:nth-child(2) .t2-r')].map(r=>Math.round(r.getBoundingClientRect().top)); return a[4]===b[4] && a[1]===b[1] && a[3]===b[3]; }),
+    'align', await p.evaluate(()=>{ const a=[...document.querySelectorAll('#wbout .t2-oc.g .t2-r')].map(r=>Math.round(r.getBoundingClientRect().top)), b=[...document.querySelectorAll('#wbout .t2-orow:first-child .t2-oc:nth-child(2) .t2-r')].map(r=>Math.round(r.getBoundingClientRect().top)); return a.length===b.length && a.every((v,i)=>v===b[i]); }),
+    'vright', await p.evaluate(()=>{ const r=[...document.querySelectorAll('#wbout .t2-orow:first-child .t2-oc:nth-child(2) .t2-r .v')].map(v=>Math.round(v.getBoundingClientRect().right)); return new Set(r).size===1; }),
     'mid', await p.locator('#wbmid .t2-ftw, #wbmid .t2-mapw').count(), 'msfmt', await p.evaluate(()=>[...document.querySelectorAll('#wbout b')].map(x=>x.textContent).find(t=>/\dm \d/.test(t))), 'dt', await p.evaluate(()=>[...document.querySelectorAll('#wbout .t2-dt')].map(x=>x.textContent).join(' ')));
   const t0=Date.now(); await p.click('[data-t2gm="opt"]'); await W(300); o=await R(); console.log('opt instant', Date.now()-t0 < 1500, 'gr_use', o.gr_use, 'c_gr', o.c_gr, (await p.textContent('#wbout .t2-orow:first-child .t2-oc:nth-child(2) h4')).trim().slice(0,40));
   if(out) await p.screenshot({path:out+'/t2_opt.png'});
@@ -17,7 +18,9 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.click('.wb-bar [data-wbcode]'); await W(300); await p.click('#wbm [data-wbver]'); await W(45000); console.log('verify', (await p.textContent('#wbm .dvi-foot')).trim().slice(0,40)); await p.click('#wbm [data-wbmx]');
   // 구동력 선도 프로브
   await p.evaluate(()=>document.querySelector('#wbsig').scrollIntoView({block:'center'})); await W(300); await p.locator('#wbsig svg .wb-hit').click({position:{x:300,y:100}}); await W(150); console.log('pf moving', await p.evaluate(()=>{ const o=document.querySelector('#t2ftov'); return o && !o.hidden ? o.textContent : 'hidden'; }));
-  await W(2500); console.log('pf done', await p.evaluate(()=>document.querySelector('#t2ftov').hidden), (await p.textContent('#t2ftv')).replace(/\s+/g,' ').slice(0,160));
+  await W(2500); console.log('pf plot no hit', await p.evaluate(()=>!document.querySelector('#t2ft .wb-hit')), 'pf lines', await p.locator('#t2ft polyline').count());
+  { const xi=await p.evaluate(()=>WB.xi); const bx=await (await p.$('#t2ft svg')).boundingBox(); await p.mouse.click(bx.x+bx.width*0.8, bx.y+bx.height*0.5); await W(300); console.log('pf click keeps cursor', xi===await p.evaluate(()=>WB.xi)); }
+  console.log('pf done', await p.evaluate(()=>document.querySelector('#t2ftov').hidden), (await p.textContent('#t2ftv')).replace(/\s+/g,' ').slice(0,160));
   // 코스 · 볼 랩 · 지도
   for(const c of ['ax','acc','skid','free','end']){ await p.click(`.t2-hr [data-t2course="${c}"]`); await W(7000); const r=await p.evaluate(()=>({n:WB.R&&WB.R.x.d.length, lapsel:document.querySelector('[data-t2lap]').disabled, cones:document.querySelectorAll('#t2map .t2-cone').length, cap:(document.querySelector('#t2mcap')||{}).textContent.slice(0,60), card:(document.querySelector('#wbout .t2-orow:nth-child(2) h4 span')||{}).textContent, err:WB.err}));
     console.log('course', c, JSON.stringify(r)); if(out) await p.screenshot({path:`${out}/t2_${c}.png`}); }
@@ -27,9 +30,19 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.mouse.move(box.x+box.width*0.3, box.y+box.height*0.5); await p.mouse.down(); await p.mouse.move(box.x+box.width*0.4, box.y+box.height*0.55, {steps:5}); await p.mouse.up(); await W(200); console.log('pan', await p.evaluate(()=>T2.zoom.cx.toFixed(3)));
   await p.click('[data-t2z="fit"]'); await W(200); await p.evaluate(()=>document.querySelector('#t2map').scrollIntoView({block:'center'})); await W(300); const xi0=await p.evaluate(()=>WB.xi); const pt=await p.evaluate(()=>{ const s=document.querySelector('#t2map svg'), q=T2.mp.pts[Math.floor(T2.mp.pts.length/3)], m=s.getScreenCTM(); return [q[0]*m.a+m.e, q[1]*m.d+m.f]; });
   await p.mouse.click(pt[0], pt[1]); await W(300); console.log('map probe', xi0, '->', await p.evaluate(()=>WB.xi), 'n', await p.evaluate(()=>WB.R.x.d.length));
+  // 그래프 칸: 추가 · 고르기 · 높이
+  await p.evaluate(()=>document.querySelector('#wbsig').scrollIntoView({block:'center'})); await p.click('[data-wbpadd]'); await W(400);
+  console.log('pane add', await p.locator('#wbsig .wb-pp').count(), 'on', await p.evaluate(()=>WB.pi), 'padd below', await p.evaluate(()=>{ const b=document.querySelector('.wb-padd'), last=[...document.querySelectorAll('#wbsig .wb-pp')].pop(); return b.getBoundingClientRect().top >= last.getBoundingClientRect().bottom - 1; }));
+  await p.click('#wbsig .wb-pp[data-wbpi="0"]', {position:{x:300,y:60}}); await W(300); console.log('pane select', await p.evaluate(()=>WB.pi), await p.evaluate(()=>document.querySelector('#wbsig .wb-pp[data-wbpi="0"]').classList.contains('on')));
+  { const h=await (await p.$('#wbsig .wb-pp[data-wbpi="0"] .wb-ph')).boundingBox(); const h0=await p.evaluate(()=>document.querySelector('#wbsig .wb-pp[data-wbpi="0"] svg').getBoundingClientRect().height);
+    await p.mouse.move(h.x+h.width/2, h.y+3); await p.mouse.down(); await p.mouse.move(h.x+h.width/2, h.y+83, {steps:6}); await p.mouse.up(); await W(300);
+    console.log('pane resize', Math.round(h0), '->', Math.round(await p.evaluate(()=>document.querySelector('#wbsig .wb-pp[data-wbpi="0"] svg').getBoundingClientRect().height))); }
+  await p.click('#wbsig [data-wbpdel="1"]'); await W(300); console.log('pane del', await p.locator('#wbsig .wb-pp').count());
+  await p.evaluate(()=>{ WB_PH=[]; localStorage.removeItem('run2x.wb.ph'); });
   // 맵 편집: 코스
   await p.click('[data-t2tab="edit"]'); await W(500); console.log('edit hides', await p.evaluate(()=>getComputedStyle(document.querySelector('#wbmid')).display), await p.evaluate(()=>getComputedStyle(document.querySelector('#wb .wb-sec[aria-label="결과"]')).display));
-  console.log('official menu disabled', await p.evaluate(()=>document.querySelector('[data-t2menu="track"]').disabled));
+  console.log('official menu disabled', await p.evaluate(()=>document.querySelector('[data-t2menu="track"]').disabled), 'ro', await p.evaluate(()=>document.querySelector('#t2tt').classList.contains('ro')), 'tops', await p.evaluate(()=>{ const a=document.querySelector('#t2tt').getBoundingClientRect(), b=document.querySelector('#t2emap').getBoundingClientRect(); return Math.round(a.top-b.top)+'/'+Math.round(a.height-b.height); }));
+  { const pt=await p.evaluate(()=>{ const s=document.querySelector('#t2emap svg'), q=T2.mpE.pts[400], m=s.getScreenCTM(); return [q[0]*m.a+m.e, q[1]*m.d+m.f]; }); await p.mouse.click(pt[0], pt[1]); await W(300); console.log('map → row', await p.evaluate(()=>{ const r=document.querySelector('#t2tt tr.t2-hl'); return r ? [...r.parentNode.children].indexOf(r)+1 : 0; })); }
   await p.click('.t2-set [data-t2course="free"]'); await W(4000);
   await p.click('[data-t2menu="track"]'); await W(200); await p.click('[data-t2act="paste"]'); await W(300);
   await p.fill('#t2pta','종류, 길이, 반경\n직선, 100\n왼쪽, 31.4159, 10\n직선, 100\n왼쪽, 31.4159, 10'); await p.click('[data-t2pok]'); await W(500);
@@ -43,7 +56,15 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.click('[data-t2menu="track"]'); await W(200); await p.click('[data-t2act="ex"]'); await W(500); console.log('example', (await p.textContent('#t2sum')).trim());
   if(out) await p.screenshot({path:out+'/t2_edit_course.png'});
   // 맵 편집: 모터 · 효율 · 타이어
-  for(const k of ['mt','eM','eI','tire']){ await p.click(`[data-t2et="${k}"]`); await W(500); console.log('edit', k, (await p.textContent('#t2msum')).trim().slice(0,60), 'cells', await p.locator('#t2tt [data-t2e]').count(), 'svg', await p.locator('#t2mc svg').count()); if(out) await p.screenshot({path:`${out}/t2_e_${k}.png`}); }
+  await p.click('[data-t2menu="track"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(600); console.log('free cleared', await rows(), await p.evaluate(()=>!!document.querySelector('#t2emap')));
+  await p.click('[data-t2tab="sim"]'); await W(500); await p.click('.t2-hr [data-t2course="free"]'); await W(7000); console.log('free empty sim err', JSON.stringify(await p.evaluate(()=>WB.err)), 'errs', p.errs.length);
+  await p.click('[data-t2tab="edit"]'); await W(400); await p.click('[data-t2add]'); await W(400); console.log('add to empty', await rows());
+  await p.click('[data-t2menu="track"]'); await W(200); await p.click('[data-t2act="ex"]'); await W(500);
+  for(const k of ['mt','eM','eI','tire']){ await p.click(`[data-t2et="${k}"]`); await W(500); console.log('edit', k, 'same h', await p.evaluate(()=>{ const a=document.querySelector('#t2tt').getBoundingClientRect(), b=document.querySelector('#t2mc').getBoundingClientRect(); return Math.round(a.top-b.top)+'/'+Math.round(a.height-b.height); }), 'const', await p.evaluate(()=>(document.querySelector('.t2-const')||{}).textContent||''), (await p.textContent('#t2msum')).trim().slice(0,60), 'cells', await p.locator('#t2tt [data-t2e]').count(), 'svg', await p.locator('#t2mc svg').count()); if(out) await p.screenshot({path:`${out}/t2_e_${k}.png`}); }
+  await p.click('[data-t2et="eM"]'); await W(400); await p.click('#t2mc rect[data-ij="10,5"]'); await W(300); console.log('heat → cell', await p.evaluate(()=>{ const c=document.querySelector('#t2tt .t2-hl'); return c ? c.dataset.t2e : 'none'; }));
+  await p.click('[data-t2et="eI"]'); await W(300); await p.click('[data-t2gadd="row"]'); await W(300); await p.click('[data-t2gadd="col"]'); await W(300); console.log('eI grid', JSON.stringify(await p.evaluate(()=>t2Grid(T2.eI))));
+  await p.click('[data-t2menu="eI"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(300);
+  await p.click('[data-t2et="mt"]'); await W(400); { const bx=await (await p.$('#t2mc svg')).boundingBox(); await p.mouse.click(bx.x+bx.width*0.6, bx.y+bx.height*0.5); await W(300); console.log('torque → row', await p.evaluate(()=>{ const r=document.querySelector('#t2tt tr.t2-hl'); return r ? r.dataset.t2row : 'none'; })); }
   await p.click('[data-t2et="tire"]'); await W(300); await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="paste"]'); await W(200); await p.fill('#t2pta','하중 N, μ\n0, 1.8\n1000, 1.6\n2000, 1.45'); await p.click('[data-t2pok]'); await W(500);
   console.log('tire', (await p.textContent('#t2msum')).trim(), 'lock mu', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled), 'lock eta_mot', await p.evaluate(()=>document.querySelector('[data-wbi="eta_mot"]').disabled));
   await W(5000); console.log('tire acc', f((await R()).t_skid_s,3));
@@ -55,7 +76,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.locator('[data-wbi="th_k"]').fill('3'); await p.locator('[data-wbi="th_t0"]').fill('45'); await W(9000); o=await R(); console.log('derate end', f(e0,1), '->', f(o.t_end_s,1), 'tmax', f(o.c_tmax,1));
   await p.locator('[data-wbi="th_k"]').fill('0'); await W(7000);
   await p.locator('[data-wbi="t_skid"]').fill('9.2'); await W(7000); o=await R(); console.log('cla_req', f(o.cla_req)); await p.locator('[data-wbi="t_skid"]').fill('10.5'); await W(7000); console.log('cla_req neg', f((await R()).cla_req));
-  await p.click('[data-wbviz="mu_s"]'); await W(400); console.log('viz', await p.evaluate(()=>!!document.querySelector('#wbvz .wb-plot'))); await p.keyboard.press('Escape'); await W(200);
+  console.log('viz removed', await p.locator('[data-wbviz="mu_s"]').count()===0);
   await p.selectOption('[data-wbxa]','in:gr'); await W(30000); console.log('sweep', await p.evaluate(()=>WB.sw&&WB.sw.X?WB.sw.X.length:'none'), await p.evaluate(()=>WB.err)); await p.selectOption('[data-wbxa]',''); await W(7000);
   console.log('axis colors', await p.evaluate(()=>[...document.querySelectorAll('#wbsig .wb-tl tspan')].map(t=>t.style.fill).filter(Boolean).slice(0,4).join(' ')), 'probe color', await p.evaluate(()=>{ const t=document.querySelector('#wbsig .wb-pv'); return t ? t.style.fill : 'none'; }));
   if(out) await p.screenshot({path:out+'/t2_end.png'});

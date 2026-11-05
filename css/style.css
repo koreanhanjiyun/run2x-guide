@@ -2862,14 +2862,47 @@ html.wb-lock #tip{z-index:95}
 .t2-msvg.live{cursor:crosshair;touch-action:none}
 .t2-mc{margin:0;min-width:0}
 .t2-oc .t2-rs{display:flex;flex-direction:column}
-.t2-r{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(64px,auto);align-items:center;gap:10px;height:30px;border-bottom:1px solid #eeecf3;font-size:12.5px}
+.t2-r{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(78px,auto);align-items:center;gap:10px;height:30px;border-bottom:1px solid #eeecf3;font-size:12.5px}
 .t2-r:last-child{border-bottom:0}
 .t2-r.x3{height:90px}
 .t2-r .n{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .t2-r .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.t2-r .v b{font-size:13.5px}.t2-r .v i{font-style:normal;color:var(--muted);font-size:11.5px}
-.t2-r .d{text-align:right;font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.t2-r .d{text-align:right;color:var(--ink-2);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .t2-dt{font-weight:600}
 .wb-ir.lock input{background:var(--panel-2);color:var(--muted)}
 .wb-ir .wb-lk{grid-column:1 / -1;font-size:11.5px;color:var(--accent)}
 .t2-oc h4 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t2-oc.g .t2-r .d{font-size:13.5px;font-weight:700;color:var(--ink)}.t2-oc.g .t2-r .d .muted{font-size:11.5px;font-weight:400}
+/* 도구 2 (2026-11-06 3차): 탭 안 고르기 줄 · 표 상자 = 그림 상자 높이 · 그림 → 표 · 그래프 칸 */
+.t2-ext > .t2-hr{padding:4px 0 10px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.t2-tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.t2-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.t2-top{min-height:30px;display:flex;align-items:center;gap:8px;font-size:12px}
+.t2-tw,.t2-fbox{height:360px;box-sizing:border-box}
+.t2-fbox{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.t2-fbox > svg,.t2-fbox > div > svg{width:100%;height:100%;display:block}
+.t2-fbox .t2-msvg{border:0;border-radius:0;height:100%}
+.t2-mapw .t2-msvg{height:100%}
+.t2-ftbox > #t2ft{width:100%;height:100%}
+.t2-fcap{font-size:12px;line-height:1.6;display:flex;flex-wrap:wrap;gap:4px 12px}
+.t2-fcap i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.t2-const{color:var(--accent);font-weight:600}
+.t2-fconst{font-size:15px;font-weight:600;text-align:center;line-height:1.7}
+.t2-adds{display:flex;gap:6px;justify-content:center;padding:8px}
+.t2-tw.ro .t2-tt td{color:var(--muted);background:var(--panel-2)}
+.t2-tw.ro{background:var(--panel-2)}
+.t2-tt .t2-hl,.t2-tt tr.t2-hl td{background:#fde68a !important;box-shadow:inset 0 0 0 2px #d97706}
+.t2-arrl{stroke:#232731;stroke-width:2}.t2-arrh{fill:none;stroke:#232731;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.t2-mleg i.arr{color:#232731}
+.t2-r.gopt .d{font-weight:400}
+.wb-pp{position:relative;border:1.5px solid transparent;border-radius:8px;padding:2px 4px 0;margin-bottom:6px}
+.wb-pp.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(106,66,148,.10)}
+.wb-ppx{position:absolute;right:6px;top:4px;z-index:2;width:22px;height:22px;padding:0;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--muted);cursor:pointer;font:inherit}
+.wb-ppx:hover{color:#b42318;border-color:#e4b4b0}
+.wb-ph{height:8px;margin:0 -4px;cursor:ns-resize;border-radius:0 0 8px 8px;background:linear-gradient(var(--line),var(--line)) center/40px 3px no-repeat}
+.wb-ph:hover{background-color:var(--panel-2)}
+.wb-padd{display:flex;justify-content:center;padding:4px 0 2px}
+.wb-pnote b{color:var(--accent)}
+.t2-pick{fill:transparent;cursor:crosshair}
+.t2-hr.left{justify-content:flex-start}
+.t2-ftv{font-size:12px;line-height:1.6}

@@ -113,7 +113,9 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
     lab.sort((a, b) => a.y - b.y); for(let i = 1; i < lab.length; i++) if(lab[i].y - lab[i-1].y < 13) lab[i].y = lab[i-1].y + 13;   /* 글자끼리 겹치지 않게 아래로 밀기 */
     const over = lab.length ? lab[lab.length-1].y - (T + ph - 4) : 0; if(over > 0) lab.forEach(l => l.y -= over);
     lab.forEach(l => { s += `<text x="${cx + (right ? 7 : -7)}" y="${l.y + 4}" class="wb-pv" text-anchor="${right ? 'start' : 'end'}" style="fill:${l.c}">${wbEsc(l.t)}</text>`; }); }
-  return s + `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-hit" data-wbl="${L}" data-wbw="${pw}" data-wbx0="${xr.lo}" data-wbx1="${xr.hi}"/></svg>`; }
+  /* 누르기 영역: 기본 'wb-hit'(커서를 옮김). o.hit = false 면 표시 전용, 문자열이면 그 class (도구가 직접 처리) */
+  if(o.hit===false) return s + '</svg>';
+  return s + `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="${typeof o.hit==='string' ? o.hit : 'wb-hit'}" data-wbl="${L}" data-wbw="${pw}" data-wbt="${T}" data-wbh="${ph}" data-wbx0="${xr.lo}" data-wbx1="${xr.hi}"/></svg>`; }
 const wbSigDef = k => (wbT().sigs || []).find(s => s.k===k) || {k, n:k, u:''};
 const wbColor = k => WB_COL[(wbT().sigs || []).findIndex(s => s.k===k) % WB_COL.length] || WB_COL[0];
 
@@ -207,8 +209,9 @@ function wbAxisHTML(){ const T = wbT(), R = WB.R, sw = WB.xa.startsWith('in:') ?
     ${sw ? `<div class="wb-swr"><input type="number" step="any" data-wbsw="lo" value="${sw.lo}" aria-label="훑기 시작값"><span>~</span><input type="number" step="any" data-wbsw="hi" value="${sw.hi}" aria-label="훑기 끝값"><span class="wb-u">${wbEsc(wbInUnit(T.inputs.find(d => d.k===sw.k)))}</span><input type="number" step="1" min="3" max="201" data-wbsw="n" value="${sw.n}" aria-label="점 수"><span class="wb-u">점</span></div>` : ''}</div>`; }
 /* 신호 그래프 칸: 아래로 최대 3칸, 칸마다 그릴 신호를 따로 고름. WB.sel = 지금 고른 칸의 신호 묶음 */
 function wbSelReset(keys, sweep){ const S = new Set(keys || []); if(sweep){ WB.panesO = [S]; WB.piO = 0; WB.selO = S; } else { WB.panes = [S]; WB.pi = 0; WB.sel = S; } }
+/* 그래프 칸이 여럿이면: 지금 고른 칸 안내 (칸 고르기 = 그래프를 누름) */
 function wbPaneBar(sweep){ const P = sweep ? WB.panesO : WB.panes, pi = sweep ? WB.piO : WB.pi;
-  return `<div class="wb-pane" role="group" aria-label="그래프 칸"><span class="muted">그래프 칸</span>${P.map((_, i) => `<button type="button" data-wbpane="${i}" aria-pressed="${i===pi}" title="칸 ${i+1}에 그릴 것을 고름">${i+1}</button>`).join('')}${P.length < 3 ? '<button type="button" data-wbpadd title="아래에 그래프 칸 하나 더">＋ 칸</button>' : ''}${P.length > 1 ? '<button type="button" data-wbpdel title="고른 칸 지우기">− 칸</button>' : ''}</div>${P.length > 1 ? `<p class="wb-swn">체크하면 ${pi+1}번 칸에 그립니다.</p>` : ''}`; }
+  return P.length > 1 ? `<p class="wb-swn wb-pnote">체크하면 <b>${pi+1}번 칸</b>에 그립니다 · 다른 칸은 그 그래프를 누름</p>` : ''; }
 function wbSigListHTML(){ const R = WB.R; if(!R) return '';
   if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return wbAxisHTML() + (S && S.err ? `<p class="wb-err">${wbEsc(S.err)}</p>` : '');
     const d = wbT().inputs.find(o => o.k===S.k);
@@ -226,10 +229,14 @@ function wbSigHTML(){ const R = WB.R; if(!R) return '';
     return wbPanes(WB.panesO, WB.piO, P => [...P].map(k => wbOutDef(k)).filter(Boolean).map(o => ({k:o.k, d:S.O[o.k], c:wbOutColor(o.k), n:wbOutName(o).replace(/<[^>]+>/g, ''), u:wbOutUnit(o), dd:o.d})), x, WB.si, WB.actO, '입력 훑기 그래프', '결과'); }
   const xs = WB.xa.startsWith('sig:') ? wbSigDef(WB.xa.slice(4)) : null, x = xs ? {d:R.sig[xs.k], n:xs.n, u:xs.u} : {d:R.x.d, ...wbXDef()};
   return wbPanes(WB.panes, WB.pi, P => [...P].filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u, dd:wbSigDef(k).d})), x, WB.xi, WB.act, '신호 선택 그래프', '신호'); }
-function wbPanes(P, pi, mk, x, xi, act, label, what){ const h = P.length===1 ? 300 : P.length===2 ? 230 : 200;
-  return P.map((S, i) => { const ys = mk(S);
-    const body = ys.length ? wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`}) : `<p class="wb-empty">왼쪽에서 ${P.length > 1 ? `${i+1}번 칸에 ` : ''}그릴 ${what}를 고르십시오.</p>`;
-    return P.length > 1 ? `<div class="wb-pp${i===pi ? ' on' : ''}"><button type="button" class="wb-ppn" data-wbpane="${i}" aria-pressed="${i===pi}">칸 ${i+1}</button>${body}</div>` : body; }).join(''); }
+/* 그래프 칸: 칸마다 높이(아래 경계를 끌어 바꿈) · 지우기 ×, 맨 아래 [+ 그래프 칸]. 칸을 누르면 그 칸을 고름 */
+let WB_PH = []; try{ WB_PH = JSON.parse(localStorage.getItem('run2x.wb.ph') || '[]') || []; }catch(e){ WB_PH = []; }
+const wbPh = (i, n) => WB_PH[i] > 0 ? WB_PH[i] : (n===1 ? 300 : n===2 ? 230 : 200);
+function wbPanes(P, pi, mk, x, xi, act, label, what){
+  return P.map((S, i) => { const ys = mk(S), h = wbPh(i, P.length);
+    const body = ys.length ? wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`}) : `<p class="wb-empty" style="min-height:${Math.round(h*0.6)}px">왼쪽에서 ${P.length > 1 ? `${i+1}번 칸에 ` : ''}그릴 ${what}를 고르십시오.</p>`;
+    return `<div class="wb-pp${P.length > 1 && i===pi ? ' on' : ''}" data-wbpi="${i}">${P.length > 1 ? `<button type="button" class="wb-ppx" data-wbpdel="${i}" aria-label="${i+1}번 칸 지우기" title="이 칸 지우기">×</button>` : ''}${body}<div class="wb-ph" data-wbph="${i}" title="끌어서 높이 조절" aria-hidden="true"></div></div>`; }).join('')
+    + (P.length < 3 ? '<div class="wb-padd"><button type="button" class="btn small" data-wbpadd>+ 그래프 칸</button></div>' : ''); }
 function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) return;
   if(all || which.includes('in')) $('#wbin').innerHTML = wbInHTML();
   if(all || which.includes('out')) $('#wbout').innerHTML = wbOutHTML();
@@ -385,7 +392,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }
   if(t.closest('[data-wbpadd]')){ const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length < 3){ P.push(new Set()); if(sw){ WB.piO = P.length-1; WB.selO = P[WB.piO]; } else { WB.pi = P.length-1; WB.sel = P[WB.pi]; } } wbPaint(['sig']); return; }
-  if(t.closest('[data-wbpdel]')){ const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length > 1){ const i = sw ? WB.piO : WB.pi; P.splice(i, 1); const j = Math.max(0, i-1); if(sw){ WB.piO = j; WB.selO = P[j]; } else { WB.pi = j; WB.sel = P[j]; } } wbPaint(['sig']); return; }
+  if(t.closest('[data-wbpdel]')){ const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length > 1){ const i = +t.closest('[data-wbpdel]').dataset.wbpdel; P.splice(i, 1); WB_PH.splice(i, 1); const j = Math.max(0, i-1); if(sw){ WB.piO = j; WB.selO = P[j]; } else { WB.pi = j; WB.sel = P[j]; } } wbPaint(['sig']); return; }
   const ac = t.closest('[data-wbact]'); if(ac){ WB.act = ac.dataset.wbact; WB.sel.add(WB.act); wbPaint(['sig']); return; }
   const ao = t.closest('[data-wbacto]'); if(ao){ WB.actO = ao.dataset.wbacto; WB.selO.add(WB.actO); wbPaint(['sig']); return; }
   const vv = t.closest('#wb [data-v3v]'); if(vv && WB.t3){ WB.t3.orb.set(vv.dataset.v3v); wb3dViews(); WB.t3.render(); return; }
@@ -419,10 +426,17 @@ function wbPick(svg, e){ if(!svg.querySelector('.wb-hit')) return; const hit = s
   let best = -1; for(let i = 0; i < xd.length; i++) if(isFinite(xd[i]) && (best < 0 || Math.abs(xd[i] - xv) < Math.abs(xd[best] - xv))) best = i;
   if(best >= 0) wbCursor(which, best); }
 let WB_DRAG = null;
-document.addEventListener('pointerdown', e => { if(!WB.R || e.button!==0) return; const svg = e.target.closest && e.target.closest('#wb .wb-plot'); if(!svg) return;
-  e.preventDefault(); WB_DRAG = svg.dataset.wbp; wbPick(svg, e); const box = svg.closest('.wb-plotbox'); if(box) box.focus({preventScroll:true}); });
-document.addEventListener('pointermove', e => { if(!WB_DRAG || !WB.R) return; const svg = document.querySelector(`#wb .wb-plot[data-wbp="${WB_DRAG}"]`); if(svg) wbPick(svg, e); });
-document.addEventListener('pointerup', () => { WB_DRAG = null; });
+let WB_PHD = null;   /* 그래프 칸 높이 끌기 */
+document.addEventListener('pointerdown', e => { if(e.button!==0 || !e.target.closest) return;
+  const ph = e.target.closest('#wb [data-wbph]'); if(ph){ e.preventDefault(); const i = +ph.dataset.wbph, n = (WB.xa.startsWith('in:') ? WB.panesO : WB.panes).length, svg = ph.parentElement.querySelector('svg');
+    WB_PHD = {i, y:e.clientY, h0:wbPh(i, n), k: svg ? 1100/svg.getBoundingClientRect().width : 1}; return; }
+  const pp = e.target.closest('#wb [data-wbpi]'); if(pp && !e.target.closest('[data-wbpdel]')){ const i = +pp.dataset.wbpi, sw = WB.xa.startsWith('in:');   /* 칸 고르기 */
+    if(sw ? WB.piO!==i : WB.pi!==i){ if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } const sl = $('#wbsl'); if(sl) sl.innerHTML = wbSigListHTML(); document.querySelectorAll('#wb [data-wbpi]').forEach(d => d.classList.toggle('on', +d.dataset.wbpi===i)); } }
+  if(!WB.R) return; const svg = e.target.closest('#wb .wb-plot'); if(!svg || !svg.querySelector('.wb-hit')) return;   /* 표시 전용 그래프는 커서와 상관없음 */
+  e.preventDefault(); WB_DRAG = svg; wbPick(svg, e); const box = svg.closest('.wb-plotbox'); if(box) box.focus({preventScroll:true}); });
+document.addEventListener('pointermove', e => { if(WB_PHD){ const D = WB_PHD; WB_PH[D.i] = Math.max(120, Math.min(700, Math.round(D.h0 + (e.clientY - D.y)*D.k))); if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const b = $('#wbsig'); if(b) b.innerHTML = wbSigHTML(); }); return; }
+  if(!WB_DRAG || !WB.R) return; if(WB_DRAG.isConnected) wbPick(WB_DRAG, e); else { WB_DRAG = document.querySelector('#wb .wb-plot[data-wbp="sig"]'); } });
+document.addEventListener('pointerup', () => { WB_DRAG = null; if(WB_PHD){ WB_PHD = null; try{ localStorage.setItem('run2x.wb.ph', JSON.stringify(WB_PH)); }catch(e){} } });
 
 /* ---------- 입력 칸 옆 '모양 보기' (보조): 입력 정의에 viz(I) → {x:{d,n,u}, ys:[{k,d,c,n,u}], act, note} 가 있으면 그래프 단추.
    누르면 그 칸 아래 작은 창에 지금 입력값으로 그린 그래프. 입력을 고치면 바로 다시 그림, 바깥을 누르거나 Esc 로 닫음.
