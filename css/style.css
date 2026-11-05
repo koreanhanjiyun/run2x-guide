@@ -2765,6 +2765,7 @@ html.wb-lock #tip{z-index:95}
 .t2-vw{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12.5px}
 .t2-map,.t2-mc{margin:0;display:flex;flex-direction:column;gap:4px;min-width:0}
 .t2-line{fill:none;stroke:#7d8394;stroke-width:3;stroke-linejoin:round}
+.t2-cl{fill:none;stroke:#7d8394;stroke-width:1.2;stroke-dasharray:4 3;opacity:.8}
 .t2-cur{fill:#fff;stroke:#232731;stroke-width:2.5}
 .t2-map figcaption{font-size:12px;display:flex;align-items:center;gap:6px}
 .t2-grad{display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(to right,hsl(230 75% 45%),hsl(115 75% 45%),hsl(0 75% 45%))}

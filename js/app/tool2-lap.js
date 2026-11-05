@@ -81,7 +81,7 @@ function t2EffParse(txt){ const L = t2Lines(txt).filter(l => l.cells.length); if
   if(t.length < 2) return {map:null, msg:'<span class="wb-err">맵의 토크 줄을 2줄 이상 읽지 못했습니다</span>'};
   const sc = Math.max(...e.flat()) <= 1.5 ? 100 : 1, map = {n:head, t, e:e.map(r => r.map(v => v*sc))};
   return {map, msg:`맵 ${t.length} × ${head.length} (토크 ${wbFmt(t[0], 0)} ~ ${wbFmt(t[t.length-1], 0)} N·m, 회전수 ${wbFmt(head[0], 0)} ~ ${wbFmt(head[head.length-1], 0)} rpm, 효율 ${wbFmt(Math.min(...map.e.flat()), 1)} ~ ${wbFmt(Math.max(...map.e.flat()), 1)} %)`}; }
-const t2ExtraI = () => ({ end: typeof FSK26!=='undefined' ? {seg:FSK26.seg, laps:FSK26.laps, stint:FSK26.stint} : {seg:[]},
+const t2ExtraI = () => ({ end: typeof FSK26!=='undefined' ? {seg:FSK26.seg, laps:FSK26.laps, stint:FSK26.stint, WL:FSK26.WL, WR:FSK26.WR, slalom:FSK26.slalom || []} : {seg:[]},
   free:{seg:t2Track(T2.free.text).segs, laps:T2.free.laps, s0:T2.free.s0}, motor:t2MotorParse(T2.mtext).pts, motorC:t2MotorParse(T2.mtext).ptsC,
   effM:t2EffParse(T2.eM).map, effI:t2EffParse(T2.eI).map, tireMap:t2TireParse(T2.tire).map, course:T2.course, lap:T2.lap[T2.course] || '1', grMode:T2.grMode });
 
@@ -346,9 +346,18 @@ function t2Geo(){ const c = T2.course; let G, close = false, rev = false, extra 
   else { const SR = 9.125, C2 = 2*Math.PI*SR; G = t2Pts([[15, 0], [C2, -SR], [C2, -SR], [C2, SR], [C2, SR], [15, 0]], 0.5, 0, -15, Math.PI/2); [[SR, 0], [-SR, 0]].forEach(([cx, cy]) => [7.625, 10.625].forEach(rr => extra.push([cx, cy, rr]))); }
   return G && {...G, close, rev, extra}; }
 const T2MW = 440, T2MH = 330;
+/* 가운데 선 점 → 옆으로 e 만큼 (코스 원래 방향의 왼쪽 +). rl = {s: 가운데 선 거리 [m], e: 옆 거리 [m]} (계산 결과) */
+function t2Offset(X, Y, rl){ const n = X.length, S = [0]; for(let i = 1; i < n; i++) S.push(S[i - 1] + Math.hypot(X[i] - X[i - 1], Y[i] - Y[i - 1]));
+  const f = rl.s.at(-1) / (S[n - 1] || 1), eAt = s => { const a = rl.s; let lo = 0, hi = a.length - 1; if(s <= a[0]) return rl.e[0]; if(s >= a[hi]) return rl.e[hi];
+    while(hi - lo > 1){ const m = (lo + hi) >> 1; if(a[m] <= s) lo = m; else hi = m; } const t = (s - a[lo]) / ((a[hi] - a[lo]) || 1); return rl.e[lo] + t*(rl.e[hi] - rl.e[lo]); };
+  const OX = [], OY = [];
+  for(let i = 0; i < n; i++){ const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1), dx = X[b] - X[a], dy = Y[b] - Y[a], d = Math.hypot(dx, dy) || 1, e = eAt(S[i]*f);
+    OX.push(X[i] - dy/d*e); OY.push(Y[i] + dx/d*e); }   // 왼쪽 법선 = (−ty, tx)
+  return {X:OX, Y:OY}; }
 function t2MapSVG(plain){ const c = T2.course, R = WB.id==='2' && !plain ? WB.R : null, mp = R && R.map, G = t2Geo(); if(!G) return '<p class="muted">구간이 없습니다.</p>';
-  const {X:xs, Y:ys, close, rev} = G, N = xs.length, pad = 22, W = T2MW, H = T2MH;
-  const x0 = Math.min(...xs) - (c==='skid' ? 3 : 0), x1 = Math.max(...xs) + (c==='skid' ? 3 : 0), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const {X:xc, Y:yc, close, rev} = G, N = xc.length, pad = 22, W = T2MW, H = T2MH;
+  const RLp = mp && mp.rl ? t2Offset(xc, yc, mp.rl) : null, xs = RLp ? RLp.X : xc, ys = RLp ? RLp.Y : yc;   // 주행선이 있으면 그 선을 칠함 (가운데 선은 점선)
+  const x0 = Math.min(...xc) - (c==='skid' ? 3 : 0), x1 = Math.max(...xc) + (c==='skid' ? 3 : 0), y0 = Math.min(...yc), y1 = Math.max(...yc);
   const s = Math.min((W - 2*pad)/Math.max(1, x1 - x0), (H - 2*pad)/Math.max(1, y1 - y0)), ox = (W - (x1 - x0)*s)/2, oy = (H - (y1 - y0)*s)/2;
   const tx = x => ox + (x - x0)*s, ty = y => H - oy - (y - y0)*s, Pt = i => [tx(xs[i]), ty(ys[i])];
   T2[plain ? 'mpE' : 'mp'] = {N, pts:xs.map((_, i) => Pt(i))};   // 누르기 → 가장 가까운 점
@@ -356,6 +365,7 @@ function t2MapSVG(plain){ const c = T2.course, R = WB.id==='2' && !plain ? WB.R 
   let svg = `<svg viewBox="${vx.toFixed(1)} ${vy.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}" class="t2-msvg${plain ? '' : ' live'}" role="img" aria-label="${T2CN[c]} 코스 지도">`;
   G.extra.forEach(([cx, cy, rr]) => { svg += `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${(rr*s).toFixed(1)}" class="t2-sk" vector-effect="non-scaling-stroke"/>`; });
   if((c==='ax' || c==='end') && FSK26.cones) FSK26.cones.forEach(([cx, cy, sd]) => { svg += `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${(1.6*Math.max(sz, .35)).toFixed(2)}" class="t2-cone ${sd}"/>`; });
+  if(RLp) svg += `<polyline points="${xc.map((_, i) => [tx(xc[i]), ty(yc[i])].map(v => v.toFixed(1)).join(',')).join(' ')}" class="t2-cl" vector-effect="non-scaling-stroke"/>`;
   let vc = null, P = 0; if(mp){ vc = mp.vc || (mp.acc || mp.skid ? R.sig.v : null); P = mp.P || 0; }
   const leg = '<span class="t2-mleg"><i class="sl"></i>출발 <i class="fin"></i>결승 <i class="arr">→</i>주행 방향</span>'; let cap = '';
   if(vc){ const lo = isFinite(mp.lo) ? mp.lo : Math.min(...vc.filter(isFinite)), hi = isFinite(mp.hi) ? mp.hi : Math.max(...vc.filter(isFinite)), st = Math.max(1, Math.floor(N/900));
@@ -495,7 +505,8 @@ function t2OutHTML(R){ const o = R.out, opt = T2.grMode==='opt', c = T2.course;
   const crec = c==='skid' ? t2R('기록 (좌우 한 바퀴 합)', `<b>${t2T(o.c_t, 3)}</b>`, '') + t2R('8자 전체 주행 (진입 ~ 탈출)', `<b>${t2T(o.c_ttot, 2)}</b>`, '')
     : o.c_n > 1 ? (T2.lap[c]==='all' ? '' : t2R(`${o.c_lap}번째 랩`, `<b>${t2T(o.c_t, 2)}</b>`, '')) + t2R('첫 랩 (정지 출발)', `<b>${t2T(o.c_t1, 2)}</b>`, '') + t2R('평균 랩 (정지 출발 랩 제외)', `<b>${t2T(o.c_tavg, 2)}</b>`, '') + t2R('총합', `<b>${t2T(o.c_ttot, 1)}</b>`, '')
     : t2R('기록', `<b>${t2T(o.c_t, c==='acc' ? 3 : 2)}</b>`, '');
-  const r1 = t2R(grLab, `<b>${t2F(o.c_gr, 2)}</b>`, '') + crec + t2R('최고 차속', `<b>${t2F(o.c_vtop, 1)}</b> <i>km/h</i>`, '');
+  const r1 = t2R(grLab, `<b>${t2F(o.c_gr, 2)}</b>`, '') + crec + t2R('최고 차속', `<b>${t2F(o.c_vtop, 1)}</b> <i>km/h</i>`, '')
+    + (isFinite(o.c_len) ? t2R('한 랩 주행 거리', `<b>${t2F(o.c_len, 1)}</b> <i>m</i>`, `<span class="muted">${o.c_rl ? '최소 곡률 주행선' : '가운데 선'}</span>`) : '');
   const r2 = t2R('최고 모터 회전수', `<b>${t2F(o.c_rpm, 0)}</b> <i>rpm</i>`, '') + t2R('최대 모터 토크', `<b>${t2F(o.c_tq, 1)}</b> <i>N·m</i>`, '') + t2R('최대 단자 출력', `<b>${t2F(o.c_pbat, 1)}</b> <i>kW</i>`, '')
     + t2R('가장 낮은 단자 전압', `<b>${t2F(o.c_vmin, 1)}</b> <i>V</i>`, '') + t2R('모터 최고 온도', `<b>${t2F(o.c_tmax, 1)}</b> <i>°C</i>`, `<span class="muted">끝 ${t2F(o.c_tm, 1)} °C</span>`)
     + t2R('최대 전류 때 단자 전압 (SOC 100 %)', `<b>${t2F(o.v_load, 1)}</b> <i>V</i>`, '') + t2R('단자 출력 상한 (규정 · 전류 한계)', `<b>${t2F(o.p_max, 2)}</b> <i>kW</i>`, '') + t2R('모터 기저 회전수 (공칭 전압)', `<b>${t2F(o.n_base, 0)}</b> <i>rpm</i>`, '');
@@ -532,14 +543,14 @@ const M2TOUR = [
   ['#wb .t2-orow', '결과 1행', '감속비(종목마다 가장 빠른 감속비와 그때 기록) · 종목 기록(기준 감속비) · 차량 한계. 같은 종목이 같은 높이라 옆으로 비교합니다. ± = 가장 빠른 기록 대비, 초록은 빠름 · 빨강은 느림.', t2TT('sim', null, 'end')],
   ['#wb .t2-orow + .t2-orow', '결과 2행', '고른 코스 · 볼 랩의 기록, 축전지 · 모터(회전수 · 토크 · 출력 · 전압 · 모터 온도), 에너지(단자 · 소비 · SOC, 내구는 에너지 제한 · CO₂). 최적 모드에서 감속비는 그 코스에서 가장 빠른 값입니다.', t2TT('sim', null, 'end')],
   ['#wb .t2-ftw', '구동력 선도', '코스 커서 지점의 전압 · 모터 온도 · 횡가속도로 다시 그린 선도입니다(보기만, 눌러도 커서는 안 움직임). 세로선 = 그 점의 차속. 아래 글이 그 점의 구동력을 무엇이 정했는지(모터 곡선 · 출력 상한 · 뒤축 접지), 제동 한계, 앞축 여유를 알려 줍니다.', t2TT('sim', null, 'end')],
-  ['#wb .t2-mapw', '코스 지도', '휠로 확대, 끌어서 이동, 누르면 그 위치로 커서가 옮겨 갑니다. 색 = 차속(여러 랩이면 모든 랩 통틀어 같은 범위), 주황 콘 = 슬라럼.', t2TT('sim', null, 'end')],
+  ['#wb .t2-mapw', '코스 지도', '휠로 확대, 끌어서 이동, 누르면 그 위치로 커서가 옮겨 갑니다. 색 = 차속(여러 랩이면 모든 랩 통틀어 같은 범위), 주황 콘 = 슬라럼. 색 선 = 계산한 주행선(코스 폭 안에서 곡률이 가장 작은 선, 슬라럼 콘은 번갈아 비켜 감), 점선 = 코스 가운데 선. 주행선은 입력의 \'주행선\' 묶음에서 끄거나 경계 여유를 바꿀 수 있습니다.', t2TT('sim', null, 'end')],
   ['#wbsl', '신호 고르기', '그래프를 누르면 그 칸이 강조되고, 여기 체크가 그 칸에 그릴 신호를 고릅니다. 이름을 누르면 그 신호의 눈금이 앞으로. 축 · 눈금 · 제목 · 값 글자는 선 색과 같습니다.', t2TT('sim')],
   ['#wbsig', '그래프 칸', '그래프를 누르거나 끌면 커서(←/→ 한 칸씩). 아래 [+ 그래프 칸]으로 최대 3칸, 칸 오른쪽 위 × 로 지우고, 칸 아래 경계를 끌어 높이를 바꿉니다.', t2TT('sim')],
   ['#wbsl [data-wbxa]', '입력 훑기', '가로축을 [입력 훑기 → 최종 감속비] 등으로 바꾸면 그 입력을 바꿔 가며 다시 계산한 종목 기록 변화를 봅니다 (나머지 입력은 지금 값).', t2TT('sim')]
 ];
 
 /* ============================================================ 도구 정의 */
-const T2G = {car:'질량 · 무게중심', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', goal:'스키드패드 목표 (0 = 정하지 않음)'};
+const T2G = {car:'질량 · 무게중심', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', rl:'주행선', goal:'스키드패드 목표 (0 = 정하지 않음)'};
 WB_TOOLS['2'] = {
   no:'2', stage:'P0', name:'랩타임 시뮬레이터',
   x:{n:'거리', u:'m'},
@@ -562,6 +573,9 @@ WB_TOOLS['2'] = {
     {k:'c_vmax', n:'셀 최대 전압 (만충)', u:'V', v:4.2, d:2, g:T2G.bat}, {k:'c_vmin', n:'셀 방전 종지 전압', u:'V', v:2.5, d:2, g:T2G.bat},
     {k:'c_vnom', n:'셀 공칭 전압', u:'V', v:3.6, d:2, g:T2G.bat}, {k:'c_ah', n:'셀 용량', u:'Ah', v:4.5, d:2, g:T2G.bat},
     {k:'r_pack', dk:'r_pack', v:180, d:0, g:T2G.bat}, {k:'i_bms_max', dk:'i_bms_max', v:270, d:0, g:T2G.bat}, {k:'e_target', dk:'e_target', v:0, d:2, g:T2G.bat},
+    {k:'rl_on', n:'주행선 (1 = 코스 폭 안 최소 곡률, 0 = 가운데 선)', u:'', v:1, d:0, g:T2G.rl},
+    {k:'rl_b', n:'코스 경계 · 슬라럼 콘에서 차 중심까지 최소 거리', u:'m', v:1.0, d:2, g:T2G.rl},
+    {k:'w_free', n:'내 코스 폭 (가운데 선 양쪽 같게)', u:'m', v:3.5, d:2, g:T2G.rl},
     {k:'t_skid', dk:'t_skid', v:0, d:3, g:T2G.goal}
   ],
   /* 결과 칸은 outHTML 이 그림. outputs = 대시보드 반영 · 입력 훑기 · 검증표 이름 */
@@ -594,7 +608,7 @@ WB_TOOLS['2'] = {
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
   tour: M2TOUR,
   verifyBase:{end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
-              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, course:'acc', lap:'2', grMode:'my'},
+              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_free:3.5, course:'acc', lap:'2', grMode:'my'},
   verify:[
     {n:'가속 · 접지 한계만 (μ = 1, CG 뒤축 위)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{t_acc_s:3.910309, ax_0:1}, src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
     {n:'가속 · 회전부 관성 J ÷ r²', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:1.25, r_eff:250, tmax:100, gr:4, eta_dt:100}, expect:{t_acc_s:5.477226}, src:'F = 100 × 4 ÷ 0.25 = 1600 N, 등가 질량 300 + 1.25 ÷ 0.25² = 320 kg → a = 5'},
@@ -618,8 +632,12 @@ WB_TOOLS['2'] = {
     {n:'축전지 · 단자 출력 상한', I:{n_s:72, c_vmax:4.2, r_pack:180, i_bms_max:270, pmax:80}, expect:{p_max:68.526}, src:'min(80 kW, 253.8 V × 270 A) = 68.53 kW'},
     {n:'모터 · 기저 회전수가 전압에 비례', I:{motor:[[0, 200], [3000, 200], [6000, 100]], v_ref:300, ke_ratio:1, n_s:50, c_vnom:3, nmax:9000, tmax:250}, expect:{n_base:1565}, src:'표 기준 300 V 에서 3000 rpm 부터 줄어듦 → 150 V 면 1500 rpm 부터. 98 % (196 N·m) 는 1560 rpm, 그 아래로 처음 내려가는 5 rpm 칸 = 1565'},
     {n:'내구 · 26랩 = 드라이버 13 + 13', I:{end:{seg:[[100, 0]], laps:26, stint:13}}, expect:{n_lap:26, n_st1:13}, src:'대회 공식'},
-    {n:'내구 · 에너지 제한이 걸리면 소비 ≤ 한도', I:{end:{seg:[[400, 0], [31.4159, 10], [400, 0], [31.4159, 10]], laps:26, stint:13}, e_target:3, pmax:80}, expect:{e_ok:1}, src:'한도 3 kWh 로 줄이면 출력 상한을 낮춰 맞춤'}
-],
+    {n:'내구 · 에너지 제한이 걸리면 소비 ≤ 한도', I:{end:{seg:[[400, 0], [31.4159, 10], [400, 0], [31.4159, 10]], laps:26, stint:13}, e_target:3, pmax:80}, expect:{e_ok:1}, src:'한도 3 kWh 로 줄이면 출력 상한을 낮춰 맞춤'},
+    {n:'주행선 · 슬라럼 콘 2개 (곧은 80 m 닫힌 코스, 폭 6 m)', I:{course:'end', rl_on:1, rl_b:1, end:{seg:[[20, 0], [20, 0], [20, 0], [20, 0]], laps:1, stint:1, WL:[3, 3, 3, 3], WR:[3, 3, 3, 3], slalom:[1, 3]}}, expect:{c_len:80.119760},
+     src:"Σ(e'')² 최소, e(20) = +1, e(60) = −1, 주기 80 → 2계 차분이 콘 사이에서 직선 → e(u) = a·u + c·u³ (u = x − 40, 1 m 간격), c = 1 ÷ (2·20³ + 20), a = −(3·20² + 1)·c → 길이 = Σ√(1 + Δe²)"},
+    {n:'주행선 · 둥근 코스 + 안쪽 콘 (반경 20 m, 폭 6 m)', I:{course:'end', rl_on:1, rl_b:1, end:{seg:[[125.663706, 20]], laps:1, stint:1, WL:[3], WR:[3], slalom:[0]}}, expect:{c_len:119.380521},
+     src:'곡률 일정이면 Σ(k0 + e″)² 는 e 가 일정할 때 가장 작음 → 콘 때문에 e = +1 (안쪽 1 m) → 반경 19 m, 길이 = 2π × 19'},
+  ],
   code:`// ================================================================
 // 도구 2 랩타임 시뮬레이터 — 계산 코드
 // ================================================================
@@ -903,6 +921,183 @@ function rotate(segs, s0) {
 const reverse = segs => segs.slice().reverse().map(([l, R]) => [l, -R]);
 
 
+// ================================================================ 주행선 (최소 곡률)
+// 가운데 선에서 옆으로 e [m] (왼쪽 +) 만큼 옮긴 경로를 찾음 (Heilmeier 외 2020 의 최소 곡률 경로를 곡선 좌표로)
+//   경로 곡률 ≈ k0 + e''  → Σ h (k0 + e'')² 가 가장 작은 e (이차 계획법, Heilmeier 와 같은 1차 근사)
+//      옆으로 옮겨서 생기는 곡률 변화 k0² e 는 뺌: 넣으면 긴 원호에서 바깥 경계로만 밀려
+//      FSK 2026 내구 기록이 오히려 느려짐 (1487 → 1524 s, 오토크로스 53.9 → 56.2 s)
+//   경계: −(오른쪽 폭 − b) ≤ e ≤ 왼쪽 폭 − b  (b = 경계 · 콘에서 차 중심까지 최소 거리)
+//   슬라럼 콘(가운데 선 위): 콘 자리에서 e ≥ b 또는 e ≤ −b 를 번갈아 (첫 콘 방향은 제약 없이 푼 경로 쪽)
+//   풀이: ADMM + 원시-쌍대 능동 집합법, 5대각 행렬 분해. 닫힌 코스는 처음 ↔ 끝을 이어 주기 조건으로 풂
+//   결과: 1 m 안팎 조각의 [길이 m, 반경 m] — 길이 = h (1 − k0 e) √(1 + e'²), 곡률 = (k0 + e'') ÷ (1 − k0 e)
+const RLC = new Map();   // 코스마다 한 번만 (차량 입력과 상관없음)
+
+// 대칭 행렬 풀이: 대각 d0 + 띠(한 칸 · 두 칸 옆 d1, d2) + 띠 밖 몇 칸 (닫힌 코스의 처음 ↔ 끝 연결)
+//   띠 부분 B 는 LDLᵀ 분해, 띠 밖 몇 칸은 Woodbury 식으로 보정: x = y − Z (I + M Pᵀ Z)⁻¹ M Pᵀ y   (y = B⁻¹b, Z = B⁻¹P)
+//   ext = [[a, b, 값]] (a < b, b − a > 2).  반환: b → x 풀이 함수 (한 번 분해, 여러 번 풂)
+function symSolver(d0, d1, d2, ext) {
+  const n = d0.length, D = new Float64Array(n), L1 = new Float64Array(n), L2 = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    D[i] = d0[i] - (i > 0 ? L1[i - 1] * L1[i - 1] * D[i - 1] : 0) - (i > 1 ? L2[i - 2] * L2[i - 2] * D[i - 2] : 0);
+    if (i < n - 1) L1[i] = (d1[i] - (i > 0 ? L1[i - 1] * L2[i - 1] * D[i - 1] : 0)) / D[i];
+    if (i < n - 2) L2[i] = d2[i] / D[i];
+  }
+  const band = b => { const x = Float64Array.from(b);
+    for (let i = 1; i < n; i++) x[i] -= L1[i - 1] * x[i - 1] + (i > 1 ? L2[i - 2] * x[i - 2] : 0);
+    for (let i = 0; i < n; i++) x[i] /= D[i];
+    for (let i = n - 2; i >= 0; i--) x[i] -= L1[i] * x[i + 1] + (i < n - 2 ? L2[i] * x[i + 2] : 0);
+    return x; };
+  if (!ext || !ext.length) return band;
+  // ---------- 띠 밖: 관련 점 K, 그 사이 값 M (k × k)
+  const K = [...new Set(ext.flatMap(([a, b]) => [a, b]))], k = K.length, at = new Map(K.map((v, i) => [v, i]));
+  const Mx = Array.from({ length: k }, () => new Float64Array(k));
+  ext.forEach(([a, b, v]) => { Mx[at.get(a)][at.get(b)] += v; Mx[at.get(b)][at.get(a)] += v; });
+  const Z = K.map(j => { const e = new Float64Array(n); e[j] = 1; return band(e); });          // Z[c] = B⁻¹ 의 j 번째 열
+  const S = Array.from({ length: k }, (_, r) => Float64Array.from({ length: k }, (_, c) => (r === c ? 1 : 0) + Mx[r].reduce((acc, m, t) => acc + m * Z[c][K[t]], 0)));
+  const lu = luDense(S);
+  return b => { const y = band(b), w = lu(Mx.map(row => row.reduce((acc, m, t) => acc + m * y[K[t]], 0)));
+    for (let c = 0; c < k; c++) if (w[c]) for (let i = 0; i < n; i++) y[i] -= Z[c][i] * w[c];
+    return y; };
+}
+// 작은 밀집 행렬 LU (부분 피벗) → 풀이 함수
+function luDense(A0) {
+  const n = A0.length, A = A0.map(r => Float64Array.from(r)), p = [...Array(n).keys()];
+  for (let c = 0; c < n; c++) {
+    let m = c; for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[m][c])) m = r;
+    [A[c], A[m]] = [A[m], A[c]]; [p[c], p[m]] = [p[m], p[c]];
+    for (let r = c + 1; r < n; r++) { const f = A[r][c] / A[c][c]; A[r][c] = f; for (let j = c + 1; j < n; j++) A[r][j] -= f * A[c][j]; }
+  }
+  return b => { const x = p.map(i => b[i]);
+    for (let i = 0; i < n; i++) for (let j = 0; j < i; j++) x[i] -= A[i][j] * x[j];
+    for (let i = n - 1; i >= 0; i--) { for (let j = i + 1; j < n; j++) x[i] -= A[i][j] * x[j]; x[i] /= A[i][i]; }
+    return x; };
+}
+
+// 상자 제약 이차 계획: min ½ eᵀQe + gᵀe,  lo ≤ e ≤ hi
+//   Q = 5대각 + (닫힌 코스면) 처음 ↔ 끝 연결: Q[i][i] = q0[i], Q[i][i+1] = q1[i], Q[i][i+2] = q2[i]  (번호는 n 으로 나눈 나머지)
+//   1) ADMM (Boyd 외 2011) 으로 어느 점이 경계에 붙는지 대강 잡고
+//        x = (Q + ρI)⁻¹ (ρ(z − u) − g),  z = [x + u] 를 상자 안으로,  u ← u + x − z   ((Q + ρI) 는 한 번만 분해)
+//   2) 원시-쌍대 능동 집합법 (Hintermüller 외 2002) 으로 마무리: 경계에 붙은 점은 고정, 나머지는 방정식을 정확히 풂
+//   3) 최적 조건 (KKT) 이 맞을 때까지 되풀이
+function boxQP(q0, q1, q2, g, lo, hi, z0) {
+  const n = q0.length, rho = 1, W = i => ((i % n) + n) % n;
+  const nb = []; for (let i = 0; i < n; i++) { if (q1[i]) nb.push([i, W(i + 1), q1[i]]); if (q2[i]) nb.push([i, W(i + 2), q2[i]]); }   // 위 삼각 성분
+  const Qg = (x, i) => g[i] + q0[i] * x[i] + q1[i] * x[W(i + 1)] + q1[W(i - 1)] * x[W(i - 1)] + q2[i] * x[W(i + 2)] + q2[W(i - 2)] * x[W(i - 2)];
+  // 부분 행렬 (점 목록 F, 순서대로) 풀이 함수: 띠 + 띠 밖
+  const subSolver = (F, add) => { const m = F.length, pos = new Int32Array(n).fill(-1); F.forEach((i, a) => { pos[i] = a; });
+    const d0 = Float64Array.from(F, i => q0[i] + add), d1 = new Float64Array(m), d2 = new Float64Array(m), ext = [];
+    nb.forEach(([i, j, v]) => { const a = pos[i], b = pos[j]; if (a < 0 || b < 0) return; const lo_ = Math.min(a, b), hi_ = Math.max(a, b);
+      if (hi_ - lo_ === 1) d1[lo_] += v; else if (hi_ - lo_ === 2) d2[lo_] += v; else ext.push([lo_, hi_, v]); });
+    return symSolver(d0, d1, d2, ext); };
+  const all = [...Array(n).keys()], solve = subSolver(all, rho);
+  const e = new Float64Array(n), u = new Float64Array(n), r = new Float64Array(n), mu = new Float64Array(n), act = new Int8Array(n);
+  for (let i = 0; i < n; i++) e[i] = Math.max(lo[i], Math.min(hi[i], z0 ? z0[i] : 0));
+  for (let round = 0; round < 6; round++) {
+    // ---------- 1) ADMM
+    for (let it = 0; it < 600; it++) {
+      for (let i = 0; i < n; i++) r[i] = rho * (e[i] - u[i]) - g[i];
+      const x = solve(r); let res = 0;
+      for (let i = 0; i < n; i++) { const zn = Math.max(lo[i], Math.min(hi[i], x[i] + u[i])); res = Math.max(res, Math.abs(zn - e[i]), Math.abs(x[i] - zn)); e[i] = zn; u[i] += x[i] - zn; }
+      if (res < 1e-6) break;
+    }
+    // ---------- 2) 능동 집합 마무리
+    for (let i = 0; i < n; i++) mu[i] = -rho * u[i];        // 경계가 미는 힘 ≈ Qe + g
+    let prev = '';
+    for (let it = 0; it < 30; it++) {
+      for (let i = 0; i < n; i++) act[i] = lo[i] >= hi[i] ? -1 : mu[i] - (e[i] - lo[i]) > 0 ? -1 : mu[i] - (e[i] - hi[i]) < 0 ? 1 : 0;
+      const key = act.join(''); if (key === prev) break; prev = key;
+      const F = []; for (let i = 0; i < n; i++) { if (act[i] < 0) e[i] = lo[i]; else if (act[i] > 0) e[i] = hi[i]; else F.push(i); }
+      if (F.length) {                                       // 자유 점만의 방정식 (고정 점은 오른쪽으로)
+        const fr = new Int8Array(n); F.forEach(i => { fr[i] = 1; });
+        const rhs = F.map(i => { const y = Qg(e, i) - q0[i] * e[i]; let free = 0;
+          [[1, q1[i]], [-1, q1[W(i - 1)]], [2, q2[i]], [-2, q2[W(i - 2)]]].forEach(([d, v]) => { const j = W(i + d); if (fr[j]) free += v * e[j]; });
+          return -(y - free); });                           // −(g + 고정 점 몫)
+        const x = subSolver(F, 0)(rhs); F.forEach((i, a) => { e[i] = x[a]; });
+      }
+      for (let i = 0; i < n; i++) mu[i] = act[i] ? Qg(e, i) : 0;
+    }
+    // ---------- 3) 최적 조건 확인: 맞으면 끝, 아니면 ADMM 부터 다시
+    let kkt = 0;
+    for (let i = 0; i < n; i++) { const y = Qg(e, i), l = e[i] <= lo[i] + 1e-9, h = e[i] >= hi[i] - 1e-9;
+      kkt = Math.max(kkt, l && h ? 0 : e[i] < lo[i] - 1e-9 || e[i] > hi[i] + 1e-9 ? 1 : l ? -y : h ? y : Math.abs(y)); }
+    for (let i = 0; i < n; i++) { e[i] = Math.max(lo[i], Math.min(hi[i], e[i])); u[i] = -mu[i] / rho; }
+    boxQP.kkt = kkt;
+    if (kkt < 1e-8) break;
+  }
+  return e;
+}
+
+// segs = [[길이, 반경]], o = {closed, wl(i), wr(i) [m], b [m], cones: [점 번호 = 그 구간 시작], key}
+function racingLine(segs, o) {
+  if (o.key && RLC.has(o.key)) return RLC.get(o.key);
+  // ---------- 1 m 안팎 조각으로 나눔
+  const h = [], k0 = [], wl = [], wr = [], segNode = [];
+  segs.forEach(([l, R], i) => { const n = Math.max(1, Math.ceil(l / 1.05 - 1e-9)); segNode.push(h.length);
+    for (let j = 0; j < n; j++) { h.push(l / n); k0.push(R ? 1 / R : 0); wl.push(o.wl(i)); wr.push(o.wr(i)); } });
+  const M = h.length, cyc = o.closed && M >= 6, n = cyc ? M : M + 1;          // 점 수: 닫힌 코스는 마지막 점 = 처음 점
+  const W = i => cyc ? ((i % n) + n) % n : i;
+  const hA = i => h[cyc ? W(i) : Math.max(0, Math.min(M - 1, i))];          // 점 i 와 i+1 사이 조각
+  const kA = i => k0[cyc ? W(i) : Math.max(0, Math.min(M - 1, i))];
+  // ---------- 점마다 경계 · 슬라럼 제약 (점 양쪽 조각 폭의 평균)
+  const lo = new Float64Array(n), hi = new Float64Array(n);
+  for (let i = 0; i < n; i++) { const a = cyc ? W(i) : Math.min(M - 1, i), b = cyc ? W(i - 1) : Math.max(0, i - 1);
+    const L = (wl[a] + wl[b]) / 2 - o.b, Rr = (wr[a] + wr[b]) / 2 - o.b; lo[i] = -Rr; hi[i] = L; if (lo[i] > hi[i]) lo[i] = hi[i] = (L - Rr) / 2; }
+  if (!cyc) { lo[0] = hi[0] = 0; lo[n - 1] = hi[n - 1] = 0; }                // 열린 코스: 출발 · 끝은 가운데
+  // ---------- 목적: Σ hn (kn + D2e)²  (D2e = 점 i 의 2계 차분) → ½ eᵀQe + gᵀe
+  const q0 = new Float64Array(n), q1 = new Float64Array(n), q2 = new Float64Array(n), g = new Float64Array(n);
+  const addQ = (i, j, v) => { const d = cyc ? W(j - i) : j - i; if (d === 0) q0[i] += v; else if (d === 1) q1[i] += v; else if (d === 2) q2[i] += v;
+    else if (d === n - 1) q1[j] += v; else q2[j] += v; };                     // 닫힌 코스: 처음 ↔ 끝 연결
+  for (let i = cyc ? 0 : 1; i < (cyc ? n : n - 1); i++) {
+    const hm = hA(i - 1), hp = hA(i), hn = (hm + hp) / 2, kn = (kA(i - 1) * hm + kA(i) * hp) / (hm + hp);
+    const c = [1 / (hm * hn), -(1 / hm + 1 / hp) / hn, 1 / (hp * hn)], idx = [W(i - 1), i, W(i + 1)];
+    for (let a = 0; a < 3; a++) { g[idx[a]] += hn * kn * c[a];
+      for (let b = a; b < 3; b++) addQ(idx[a], idx[b], hn * c[a] * c[b]); }
+  }
+  for (let i = 0; i < n; i++) q0[i] += 1e-9;                                    // 곧은 코스에서도 풀리게 (아주 작은 가운데 쪽 당김)
+  // ---------- 1차: 슬라럼 없이 → 첫 콘 방향을 정하고, 2차: 슬라럼 넣어서
+  let e = boxQP(q0, q1, q2, g, lo, hi);
+  const cones = (o.cones || []).slice().sort((a, b) => a - b);
+  if (cones.length) {
+    const groups = []; cones.forEach(c => { const gl = groups[groups.length - 1]; if (gl && c - gl[gl.length - 1] < 20) gl.push(c); else groups.push([c]); });
+    groups.forEach(gp => { const sgn0 = e[segNode[gp[0]]] >= 0 ? 1 : -1;
+      gp.forEach((c, j) => { const i = segNode[c], sg = j % 2 ? -sgn0 : sgn0; if (sg > 0) lo[i] = Math.max(lo[i], o.b); else hi[i] = Math.min(hi[i], -o.b); if (lo[i] > hi[i]) lo[i] = hi[i]; }); });
+    e = boxQP(q0, q1, q2, g, lo, hi, e);
+  }
+  // ---------- 조각 → [길이, 반경]:  길이 = h (1 − k0 e) √(1 + e'²),  곡률 = (k0 + e'') ÷ (1 − k0 e)
+  const E = i => cyc ? e[W(i)] : e[Math.max(0, Math.min(n - 1, i))];
+  const D2 = i => { const hm = hA(i - 1), hp = hA(i), hn = (hm + hp) / 2; return ((E(i + 1) - E(i)) / hp - (E(i) - E(i - 1)) / hm) / hn; };
+  const out = [], eNode = [];
+  for (let i = 0; i < M; i++) {
+    const em = (E(i) + E(i + 1)) / 2, de = (E(i + 1) - E(i)) / h[i];
+    const dd = cyc ? (D2(i) + D2(i + 1)) / 2 : (i > 0 ? D2(i) : 0) / 2 + (i + 1 < n - 1 ? D2(i + 1) : 0) / 2;
+    const k = (k0[i] + dd) / (1 - k0[i] * em), l = h[i] * (1 - k0[i] * em) * Math.sqrt(1 + de * de);
+    out.push([l, Math.abs(k) > 1e-5 ? 1 / k : 0]); eNode.push(E(i));
+  }
+  eNode.push(E(M));
+  const sN = [0]; h.forEach(x => sN.push(sN.at(-1) + x));
+  const res = { segs: out, e: segNode.map(j => eNode[j]), len: out.reduce((a, r) => a + r[0], 0),   // e: 원래 구간 시작점마다 [m]
+                sN, eN: eNode };                                                                 // 그림용: 가운데 선 거리 [m] → 옆 거리 [m]
+  if (o.key) RLC.set(o.key, res);
+  return res;
+}
+
+// 코스 구간 → 실제로 달리는 구간 (I.rl_on = 1 이면 최소 곡률 주행선, 아니면 가운데 선)
+function drivenSegs(I, which, segs, closed) {
+  if (!(I.rl_on > 0) || !segs.length) return { segs, e: null, len: sum(segs.map(r => r[0])) };
+  const E = I.end || {}, b = Math.max(0, I.rl_b);
+  if (which === 'end' || which === 'ax') {
+    const N = segs.length, wl = E.WL || [], wr = E.WR || [], rev = which === 'ax';
+    const W = (arr, i) => arr.length ? (arr[i] + arr[(i + 1) % arr.length]) / 2 : 1.75;
+    const o = { closed: true, b, key: \`\${which}|\${b}|\${N}\`,
+      wl: i => rev ? W(wr, N - 1 - i) : W(wl, i), wr: i => rev ? W(wl, N - 1 - i) : W(wr, i),
+      cones: (E.slalom || []).map(j => rev ? (N - j) % N : j) };   // 거꾸로 달리면 왼쪽 · 오른쪽 폭이 바뀌고, 점 j = 거꾸로 구간 N − j 의 시작
+    return racingLine(segs, o);
+  }
+  const w = Math.max(0, I.w_free) / 2;                                    // 내 코스: 폭 입력 (가운데에서 양쪽 같게)
+  return racingLine(segs, { closed, b, wl: () => w, wr: () => w, key: \`free|\${b}|\${w}|\${closed}|\${JSON.stringify(segs)}\` });
+}
+
+
 // ================================================================ 주행
 // 차속 [m/s]: 코너 한계 → 앞으로 가속 (정지 출발) → 뒤에서 제동.  V0[i] = 칸마다 개방 전압 [V], TM[i] = 모터 온도 [°C]
 function speed(C, G, V0, TM) {
@@ -1029,13 +1224,14 @@ function skidV(C, R, V0) {
 // 오토크로스: 내구 코스를 거꾸로 한 바퀴, 정지 출발, SOC 100 %
 function runAx(I, C, ds) {
   const segs = (I.end && I.end.seg) || [];
-  return segs.length ? laps(C, reverse(segs), 1, ds, 1, C.Voc(1)) : null;
+  return segs.length ? laps(C, drivenSegs(I, 'ax', reverse(segs), true).segs, 1, ds, 1, C.Voc(1)) : null;
 }
 
 // 내구: 드라이버 2명이 n1 · n2 랩을 각각 정지 출발로 이어서 (교체 시간 제외)
 //   full = 랩을 모두 계산 (SOC 반영),  아니면 3랩으로 줄여 셈 (SOC 중간값 고정, 감속비 찾기용)
 function endurance(I, C, full, ds) {
-  const E = I.end || {}, segs = E.seg || [], n = E.laps || 26, n1 = E.stint || Math.floor(n / 2), n2 = n - n1;
+  const E = I.end || {}, n = E.laps || 26, n1 = E.stint || Math.floor(n / 2), n2 = n - n1;
+  const segs = drivenSegs(I, 'end', E.seg || [], true).segs;
   if (!segs.length) return null;
   if (full) {
     const A = laps(C, segs, n1, ds, 1), B = laps(C, segs, n2, ds, A.soc1, undefined, A.T1);   // 모터 온도는 교체 뒤에도 이어짐
@@ -1080,7 +1276,9 @@ function freeSegs(I) {
   if (!segs0.length) return null;
   const m = Math.max(1, Math.round(F.laps || 1)), s0 = F.s0 || 0;
   const closed = F.closed != null ? F.closed !== false : (m > 1 || s0 > 0);
-  return { segs: closed ? rotate(segs0, s0) : segs0, m: closed ? m : 1 };
+  const sg = closed ? rotate(segs0, s0) : segs0;
+  const D = drivenSegs(I, 'free', sg, closed);
+  return { segs: D.segs, m: closed ? m : 1, rl: D };
 }
 function runFree(I, C, ds, fast) {
   const F = freeSegs(I);
@@ -1222,6 +1420,13 @@ function modeRun(I, G2, G3, fast) {
   const vk = v.map(a => a * 3.6);
   const map = K.skid ? { skid: true } : c === 'acc' ? { acc: true } : { P, rev: !!K.rev, vc: vk.slice(jm * P, (jm + 1) * P + 1) };
   map.lo = Math.min(...vk); map.hi = Math.max(...vk);     // 색 범위 = 모든 랩 통틀어 (어느 랩을 봐도 같은 색 = 같은 차속)
+  // 주행선: 지도에 그릴 옆 거리 (코스 원래 방향 기준, 왼쪽 +) · 한 랩 길이
+  const segE = (I.end && I.end.seg) || [];
+  const RL = c === 'end' ? drivenSegs(I, 'end', segE, true) : c === 'ax' ? drivenSegs(I, 'ax', reverse(segE), true) : c === 'free' ? freeSegs(I).rl : null;
+  if (RL && RL.eN) {
+    const Lc = RL.sN.at(-1);                               // 오토크로스는 거꾸로 달리므로 거리 · 좌우를 되돌림
+    map.rl = c === 'ax' ? { s: RL.sN.map(x => Lc - x).reverse(), e: RL.eN.map(x => -x).reverse() } : { s: RL.sN, e: RL.eN };
+  }
 
   const sl = a => a.slice(from, to + 1);
   const Gs = { s: sl(G.s).map(x => x - G.s[from]), k: G.k.slice(from, to) }, vv = sl(v);
@@ -1233,7 +1438,7 @@ function modeRun(I, G2, G3, fast) {
   const pick = a => jj >= 0 ? a[jj] : sum(a);
   const socEnd = K.EN ? K.EN.soc1 : (K.L.soc1 != null ? K.L.soc1 : NaN);
   Object.assign(out, {
-    c_gr: G3, c_n: lt.length, c_lap: jj + 1,
+    c_gr: G3, c_n: lt.length, c_lap: jj + 1, c_len: RL ? RL.len : NaN, c_rl: RL && RL.eN ? 1 : 0,
     c_t: c === 'skid' ? E.skid : lt.length > 1 ? (jj >= 0 ? lt[jj] : ls.total) : lt[0],
     c_t1: ls.first, c_tavg: ls.avg, c_ttot: ls.total,
     c_vtop: Math.max(...vv) * 3.6,
@@ -1347,7 +1552,7 @@ function calc(I) {
 /* ============================================================ 대시보드 '파트별 > 차량 목표 · 파워트레인'
    대시보드 값으로 도구 2를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
-const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
+const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'rl_b', 'w_free'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
   T2GOAL.forEach(k => { const db = wbDash(k); I[k] = db ? db.v : 0; });
