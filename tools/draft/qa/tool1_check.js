@@ -11,7 +11,7 @@ const {start,sleep,chromium,PORT,end,S}=require('./h'); const {fpage}=require('.
  console.log('insert  ', await rows(), '(넘친 카드는 바로 아래 새 줄)');
  await ev(p,()=>document.querySelector('.wb-right').scrollTo(0,0)); await p.selectOption('[data-m1dsel]','d3'); await sleep(1200);
  console.log('driver d3 card mass', await ev(p,()=>document.querySelector('[data-m1dc="mass"]').value), '= model', await ev(p,()=>(m1Drv('d3')||{}).mass));
- await p.click('[data-wbver]'); await sleep(1500); console.log('verify', await ev(p,()=>document.querySelector('#wbm .dvi-foot span').textContent.trim())); await ev(p,()=>wbModalClose());
+ await p.click('.wb-bar [data-wbcode]'); await sleep(300); await p.click('#wbm [data-wbver]'); await sleep(1500); console.log('verify', await ev(p,()=>document.querySelector('#wbm .dvi-foot span').textContent.trim())); await ev(p,()=>wbModalClose());
  await p.click('[data-tour="wb:1"]'); await sleep(2500); const seen=[];
  for(let i=0;i<20;i++){ seen.push(await ev(p,()=>document.querySelector('.tour-n')?.textContent)); const nx=await p.$('[data-tour-next]'); if(!nx || /마치기/.test(await nx.textContent())) break; await nx.click(); await sleep(4500); }
  { const fin=await p.$('[data-tour-next]'); if(fin) await fin.click(); await sleep(1500); }

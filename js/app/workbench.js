@@ -12,7 +12,7 @@
 const WB_TOOLS = {};
 const WB_COL = ['#6A4294','#1d5f9a','#c2410c','#257a47','#9c6c00','#ab2f75','#0b7a55','#5f6973'];
 const WB = { id:null, I:{}, R:null, err:'', ms:0, xi:0, sel:new Set(), act:'', code:{}, ret:null, worker:null, wsrc:'', seq:0, wait:{}, t3:null, timer:0,
-  xa:'', sw:null, si:0, selO:new Set(), actO:'', cmp:false };   /* cmp: 대시보드 값과 비교해 보기 (기본 끔) */   /* xa: '' 기본 축 · 'sig:키' 신호 · 'in:키' 입력 훑기 */
+  xa:'', sw:null, si:0, selO:new Set(), actO:'', cmp:false, panes:[], pi:0, panesO:[], piO:0 };   /* cmp: 대시보드 값과 비교해 보기 (기본 끔) */   /* xa: '' 기본 축 · 'sig:키' 신호 · 'in:키' 입력 훑기 */
 const wbT = () => WB_TOOLS[WB.id];
 const wbEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wbFmt = (x, d) => (typeof x==='number' && isFinite(x)) ? x.toLocaleString('ko-KR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
@@ -21,7 +21,7 @@ const wbStoreKey = id => 'run2x.wb.' + id;
 /* ---------- 대시보드 값 (입력 채우기 · 비교 · 반영) ---------- */
 function wbDash(dk){ if(!dk) return null;
   const e = typeof dvEntry==='function' ? dvEntry(dk) : null;
-  if(e && typeof e.v==='number' && isFinite(e.v)) return {v:e.v, st:e.st || 'rev'};
+  if(e && typeof e.v==='number' && isFinite(e.v)) return {v:e.v, st:e.st || 'rev', by:e.by || '', at:e.at || '', src:e.src || ''};
   if(typeof DASH!=='undefined' && typeof DASH.P[dk]==='number') return {v:DASH.P[dk], st:'ex'};   /* 아직 아무도 안 넣은 값 = 예시값 */
   return null; }
 const wbInName = d => d.n || (d.dk && DK[d.dk] ? DK[d.dk].n : d.k);
@@ -42,7 +42,8 @@ function wbWorker(src){
   WB.worker = w; WB.wsrc = src; return w; }
 function wbRun(I, code){ return new Promise(res => {   /* I 가 배열이면 여러 입력을 한 번에(입력 훑기) */
   let w; try{ w = wbWorker(code); }catch(err){ res({ok:false, err:'계산기를 시작하지 못했습니다: ' + err.message}); return; }
-  const id = ++WB.seq, to = setTimeout(() => { if(WB.wait[id]){ delete WB.wait[id]; if(WB.worker===w){ w.terminate(); WB.worker = null; WB.wsrc = ''; } res({ok:false, err:'계산이 3초 안에 끝나지 않아 멈췄습니다 (반복문 확인)'}); } }, 3000);
+  const lim = Array.isArray(I) ? 30 : 8;   /* 제한 시간 [s]: 한 번 계산 8초, 입력 훑기(여러 번) 30초 */
+  const id = ++WB.seq, to = setTimeout(() => { if(WB.wait[id]){ delete WB.wait[id]; if(WB.worker===w){ w.terminate(); WB.worker = null; WB.wsrc = ''; } res({ok:false, err:`계산이 ${lim}초 안에 끝나지 않아 멈췄습니다 (반복문 확인)`}); } }, lim*1000);
   WB.wait[id] = r => { clearTimeout(to); res(r); };
   w.postMessage(Array.isArray(I) ? {id, Is:I} : {id, I}); }); }
 /* 계산에 넘기는 입력: 입력 칸 + 도구가 따로 모으는 값(표 · 드라이버 등, T.extraI) */
@@ -65,7 +66,7 @@ async function wbSweep(){ const k = WB.xa.slice(3), d = wbT().inputs.find(o => o
   const S = WB.sw, n = Math.max(3, Math.min(201, Math.round(S.n))), X = Array.from({length:n}, (_, i) => S.lo + (S.hi - S.lo)*i/(n - 1));
   const base = wbInputs(), r = await wbRun(X.map(x => ({...base, [k]:x, _sweep:true})), wbCode());   /* _sweep: 도구가 훑기 중에 무거운 부가 계산을 건너뛸 수 있게 */
   if(!r.ok){ S.X = null; S.err = r.err; return; } S.err = ''; S.X = X; S.O = {}; wbT().outputs.forEach(o => { S.O[o.k] = r.outs.map(t => t[o.k]); });
-  if(WB.si >= n) WB.si = n - 1; if(!WB.selO.size) wbT().outputs.slice(0, 2).forEach(o => WB.selO.add(o.k)); }
+  if(WB.si >= n) WB.si = n - 1; if(!WB.panesO.length) wbSelReset([], true); if(!WB.panesO.some(P => P.size)) wbT().outputs.filter(o => !o.hide).slice(0, 2).forEach(o => WB.selO.add(o.k)); }
 const wbCalcSoon = () => { clearTimeout(WB.timer); WB.timer = setTimeout(wbCalc, 120); };
 
 /* ---------- 그래프 (SVG) ---------- */
@@ -73,22 +74,38 @@ function wbTicks(lo, hi, n){ if(!(hi > lo)){ hi = lo + 1; }
   const raw = (hi - lo)/n, p = Math.pow(10, Math.floor(Math.log10(raw))), s = [1,2,2.5,5,10].map(k => k*p).find(k => k >= raw) || 10*p;
   const a = Math.floor(lo/s)*s, b = Math.ceil(hi/s)*s, t = []; for(let x = a; x <= b + s*1e-9; x += s) t.push(+x.toPrecision(12)); return {lo:a, hi:b, t}; }
 /* o: {w, h, x:{d,n,u}, ys:[{k,d,c,n,u}], norm, act, xi} — norm: 신호마다 자기 범위로(신호 선택 그래프) */
-function wbPlot(o){ const W = o.w, H = o.h, L = 58, R = 14, T = 28, B = 38, pw = W-L-R, ph = H-T-B, xd = o.x.d;
-  const xf = xd.filter(isFinite), xr = wbTicks(Math.min(...xf), Math.max(...xf), 8), X = x => L + (x - xr.lo)/(xr.hi - xr.lo)*pw;
-  const rng = ys => { let lo = Infinity, hi = -Infinity; ys.forEach(y => y.d.forEach(v => { if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
-    if(!isFinite(lo)){ lo = 0; hi = 1; } if(!o.norm){ lo = Math.min(lo, 0); } if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } return wbTicks(lo, hi, 5); };
-  const share = !o.norm ? rng(o.ys) : null, yr = y => share || rng([y]);
-  const axisY = o.norm ? (o.ys.find(y => y.k===o.act) || o.ys[0]) : null, ay = axisY ? yr(axisY) : share;
-  const Y = (v, r) => T + ph - (v - r.lo)/(r.hi - r.lo)*ph;
+/* 그래프 (MATLAB 방식): 단위가 같은 선은 한 축을 함께 씀. 축 1개 = 왼쪽, 2개 = 왼쪽 · 오른쪽(yyaxis), 3개부터 바깥으로 이어 붙임(왼 · 오 번갈아).
+   축 제목은 축 옆에 세로로 가운데, x 축 제목은 아래 가운데. 커서(xi)가 있으면 점 옆에 값 글자(프로브).
+   o = {id, w, h, x:{d, n, u}, ys:[{k, d, c, n, u, dd}], xi, act, label}. o.norm 은 예전 이름(지금은 단위별 축이라 쓰지 않음) */
+function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
+  const groups = []; ys.forEach(y => { const u = y.u || ''; let G = groups.find(g => g.u===u); if(!G){ G = {u, ys:[]}; groups.push(G); } G.ys.push(y); });
+  if(!groups.length) groups.push({u:'', ys:[]});
+  const AW = 50, nL = Math.ceil(groups.length/2), nR = Math.floor(groups.length/2);
+  const W = o.w, H = o.h, L = 18 + AW*nL, R = nR ? 18 + AW*nR : 16, T = 14, B = 42, pw = W - L - R, ph = H - T - B;
+  const xf = xd.filter(isFinite), xr = wbTicks(xf.length ? Math.min(...xf) : 0, xf.length ? Math.max(...xf) : 1, Math.max(4, Math.round(pw/80))), X = x => L + (x - xr.lo)/(xr.hi - xr.lo)*pw;
+  groups.forEach(G => { let lo = Infinity, hi = -Infinity; G.ys.forEach(y => y.d.forEach(v => { if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
+    if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5); });
+  const Y = (v, r) => T + ph - (v - r.lo)/(r.hi - r.lo)*ph, gOf = y => groups.find(g => g.ys.includes(y));
+  const dg = r => Math.abs(r.t[1] - r.t[0]) < 1 ? (Math.abs(r.t[1] - r.t[0]) < 0.1 ? 2 : 1) : 0;
   let s = `<svg class="wb-plot" data-wbp="${o.id || ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${wbEsc(o.label || '그래프')}">`;
-  xr.t.forEach(t => { s += `<line x1="${X(t)}" y1="${T}" x2="${X(t)}" y2="${T+ph}" class="wb-grid"/><text x="${X(t)}" y="${T+ph+16}" class="wb-tx" text-anchor="middle">${wbFmt(t, Math.abs(xr.t[1]-xr.t[0]) < 1 ? 2 : 0)}</text>`; });
-  if(ay) ay.t.forEach(t => { const y = Y(t, ay); s += `<line x1="${L}" y1="${y}" x2="${L+pw}" y2="${y}" class="wb-grid"/><text x="${L-6}" y="${y+4}" class="wb-tx" text-anchor="end"${axisY?` fill="${axisY.c}"`:''}>${wbFmt(t, Math.abs(ay.t[1]-ay.t[0]) < 1 ? 2 : 0)}</text>`; });
-  s += `<text x="${L+pw}" y="${H-4}" class="wb-tl" text-anchor="end">${wbEsc(o.x.n)}${o.x.u?` [${wbEsc(o.x.u)}]`:''}</text>`;
-  if(ay){ const u = axisY ? axisY.u : (o.ys[0] && o.ys[0].u); s += `<text x="${L}" y="14" class="wb-tl"${axisY?` fill="${axisY.c}"`:''}>${axisY ? wbEsc(axisY.n) + ' ' : ''}${u?`[${wbEsc(u)}]`:''}</text>`; }
+  xr.t.forEach(t => { s += `<line x1="${X(t)}" y1="${T}" x2="${X(t)}" y2="${T+ph}" class="wb-grid"/><text x="${X(t)}" y="${T+ph+15}" class="wb-tx" text-anchor="middle">${wbFmt(t, dg(xr))}</text>`; });
+  groups[0].r.t.forEach(t => { const y = Y(t, groups[0].r); s += `<line x1="${L}" y1="${y}" x2="${L+pw}" y2="${y}" class="wb-grid"/>`; });
+  s += `<text x="${L + pw/2}" y="${H - 6}" class="wb-tl" text-anchor="middle">${wbEsc(o.x.n)}${o.x.u ? ` [${wbEsc(o.x.u)}]` : ''}</text>`;
+  groups.forEach((G, gi) => { const left = gi % 2 === 0, k = Math.floor(gi/2), ax = left ? L - AW*k : L + pw + AW*k, sg = left ? -1 : 1;
+    const col = G.ys.length===1 ? G.ys[0].c : 'var(--ink-2)', name = G.ys.length===1 ? G.ys[0].n : G.ys.map(y => y.n).join(' · ');
+    if(k > 0) s += `<line x1="${ax}" y1="${T}" x2="${ax}" y2="${T+ph}" stroke="${col}" stroke-width="1"/>`;
+    G.r.t.forEach(t => { const y = Y(t, G.r); s += `<line x1="${ax}" y1="${y}" x2="${ax + 4*sg}" y2="${y}" stroke="${col}"/><text x="${ax + 7*sg}" y="${y + 4}" class="wb-tx" text-anchor="${left ? 'end' : 'start'}" fill="${col}">${wbFmt(t, dg(G.r))}</text>`; });
+    const tx = ax + (AW - 10)*sg, ty = T + ph/2, ttl = `${name.length > 34 ? name.slice(0, 33) + '…' : name}${G.u ? ` [${G.u}]` : ''}`;
+    s += `<text x="${tx}" y="${ty}" class="wb-tl" text-anchor="middle" fill="${col}" transform="rotate(${left ? -90 : 90} ${tx} ${ty})"><title>${wbEsc(name)}${G.u ? ` [${wbEsc(G.u)}]` : ''}</title>${wbEsc(ttl)}</text>`; });
   s += `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-frame"/>`;
-  o.ys.forEach(y => { const r = yr(y); s += `<polyline fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
-  if(o.xi != null && isFinite(xd[o.xi])){ const cx = X(xd[o.xi]); s += `<line x1="${cx}" y1="${T}" x2="${cx}" y2="${T+ph}" class="wb-cur"/>`;
-    o.ys.forEach(y => { const v = y.d[o.xi]; if(isFinite(v)) s += `<circle cx="${cx}" cy="${Y(v, yr(y))}" r="3.2" fill="${y.c}" stroke="#fff" stroke-width="1"/>`; }); }
+  ys.forEach(y => { const r = gOf(y).r; s += `<polyline fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
+  if(o.xi != null && isFinite(xd[o.xi])){ const cx = X(xd[o.xi]), right = cx < L + pw*0.72, lab = [];
+    s += `<line x1="${cx}" y1="${T}" x2="${cx}" y2="${T+ph}" class="wb-cur"/>`;
+    ys.forEach(y => { const v = y.d[o.xi]; if(!isFinite(v)) return; const cy = Y(v, gOf(y).r); s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="${y.c}" stroke="#fff" stroke-width="1"/>`;
+      lab.push({y:cy, c:y.c, t:`${wbFmt(v, y.dd != null ? y.dd : 2)}${y.u ? ' ' + y.u : ''}`}); });
+    lab.sort((a, b) => a.y - b.y); for(let i = 1; i < lab.length; i++) if(lab[i].y - lab[i-1].y < 13) lab[i].y = lab[i-1].y + 13;   /* 글자끼리 겹치지 않게 아래로 밀기 */
+    const over = lab.length ? lab[lab.length-1].y - (T + ph - 4) : 0; if(over > 0) lab.forEach(l => l.y -= over);
+    lab.forEach(l => { s += `<text x="${cx + (right ? 7 : -7)}" y="${l.y + 4}" class="wb-pv" text-anchor="${right ? 'start' : 'end'}" fill="${l.c}">${wbEsc(l.t)}</text>`; }); }
   return s + `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-hit" data-wbl="${L}" data-wbw="${pw}" data-wbx0="${xr.lo}" data-wbx1="${xr.hi}"/></svg>`; }
 const wbSigDef = k => (wbT().sigs || []).find(s => s.k===k) || {k, n:k, u:''};
 const wbColor = k => WB_COL[(wbT().sigs || []).findIndex(s => s.k===k) % WB_COL.length] || WB_COL[0];
@@ -105,8 +122,7 @@ function wbShellHTML(){ const T = wbT();
         ${T.tour ? `<button type="button" class="wb-help" data-tour="wb:${wbEsc(T.no)}" title="이 작업창의 버튼 위치와 기능을 차례로 안내합니다"><b aria-hidden="true">?</b><span>이 탭 사용법</span></button><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small" data-coordopen title="차량 좌표계 (원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)">좌표계</button>
         ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}<i class="wb-sep" aria-hidden="true"></i>
-        <button type="button" class="btn small" data-wbver>검증표</button>
-        <button type="button" class="btn small" data-wbcode>코드 보기</button><i class="wb-sep" aria-hidden="true"></i>
+        <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
         <button type="button" class="btn small" data-wbimp>가져오기 .json</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
@@ -125,12 +141,24 @@ function wbShellHTML(){ const T = wbT();
         ${T.noSig ? '' : `<section class="wb-sec" aria-label="신호 선택 그래프"><div class="wb-h"><h3>신호 선택 그래프</h3><span class="wb-meta">신호마다 자기 눈금 · 이름을 누르면 그 신호의 눈금 · 그래프를 누르거나 끌면 커서</span></div>
           <div class="wb-sig"><div class="wb-sl" id="wbsl"></div><div id="wbsig" class="wb-plotbox" tabindex="0"></div></div></section>`}
       </div></div>`; }
+/* 입력 칸 상태 점 (대시보드와 같은 색): 확정 · 검토 중 · 가정 · 계산값 · 예시값. 대시보드 값과 다르게 고치면 점 둘레에 고리(직접 고침).
+   대시보드에 없는 값(도구 기본값 · 도구 전용)은 회색 네모. 마우스를 올리면 담당 파트 · 대시보드 값 · 상태 · 고친 사람 */
+const WB_STL = {ok:'확정', rev:'검토 중', asm:'가정', calc:'계산값', ex:'예시값'};
+function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2;
+  if(!K) return `<i class="wb-st sq" title="이 도구에서만 쓰는 값 (대시보드에 없음) · 도구 기본값 ${wbFmt(d.v, dd)}"></i>`;
+  const part = K.p + (K.p2 ? ' · ' + K.p2 : '');
+  if(!db) return `<i class="wb-st sq" title="${wbEsc(K.n)} · 담당 ${wbEsc(part)} · 대시보드 값 없음 → 도구 기본값 ${wbFmt(d.v, dd)}"></i>`;
+  const who = db.by ? ` · ${db.by}${db.at ? ' ' + String(db.at).slice(0, 10) : ''}` : '';
+  const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''} (${WB_STL[db.st] || db.st})${who}${own ? ` → 지금 ${wbFmt(v, dd)} (직접 고침, 대시보드는 그대로)` : ''}`;
+  return `<i class="wb-st dv-s s-${db.st}${own ? ' own' : ''}" title="${wbEsc(tip)}"></i>`; }
+const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ex"></i>예시값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
 function wbInHTML(){ const T = wbT(); let g0 = '';
-  return T.inputs.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
+  return WB_INLEG + T.inputs.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
     const grp = d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
     const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : wbInName(d);
     const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
-    return grp + `<label class="wb-ir${diff?' diff':''}"><span class="wb-in-n">${nm}${viz}</span><input type="number" step="any" data-wbi="${d.k}" value="${isFinite(v)?v:''}"><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own);
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}"><span class="wb-in-n">${dot}${nm}${viz}</span><input type="number" step="any" data-wbi="${d.k}" value="${isFinite(v)?v:''}"><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
@@ -152,7 +180,7 @@ function wbOutCards(T, R, cmp){ const out = R.out || {};
 function wbXDef(){ const T = wbT(); return {n: (T.x && T.x.n) || 'x', u: (T.x && T.x.u) || ''}; }
 function wbMainHTML(){ const R = WB.R; if(!R) return '';
   if(!R.x) return wbT().figure ? wbT().figure(wbInputs(), R) : '';
-  const ys = (R.main || []).filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u}));
+  const ys = (R.main || []).filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u, dd:wbSigDef(k).d}));
   return wbPlot({id:'main', w:640, h:300, x:{d:R.x.d, ...wbXDef()}, ys, xi:WB.xi, label:'결과 그래프'})
     + `<div class="wb-leg"><span class="wb-legx">${wbEsc(wbXDef().n)} <b>${wbFmt(R.x.d[WB.xi], 1)}</b> ${wbEsc(wbXDef().u)}</span>${ys.map(y => `<span><i style="background:${y.c}"></i>${wbEsc(y.n)} <b>${wbFmt(y.d[WB.xi], wbSigDef(y.k).d||0)}</b> ${wbEsc(y.u)}</span>`).join('')}</div>`; }
 /* 신호 선택 그래프: 가로축 고르기 → 기본 축 · 신호(XY) · 입력 훑기 */
@@ -166,28 +194,31 @@ function wbAxisHTML(){ const T = wbT(), R = WB.R, sw = WB.xa.startsWith('in:') ?
       <optgroup label="신호 (XY)">${(T.sigs || []).filter(d => R.sig[d.k]).map(d => opt('sig:' + d.k, wbEsc(d.n))).join('')}</optgroup>` : ''}
       <optgroup label="입력 훑기">${T.inputs.map(d => opt('in:' + d.k, wbInName(d).replace(/<[^>]+>/g, ''))).join('')}</optgroup></select></label>
     ${sw ? `<div class="wb-swr"><input type="number" step="any" data-wbsw="lo" value="${sw.lo}" aria-label="훑기 시작값"><span>~</span><input type="number" step="any" data-wbsw="hi" value="${sw.hi}" aria-label="훑기 끝값"><span class="wb-u">${wbEsc(wbInUnit(T.inputs.find(d => d.k===sw.k)))}</span><input type="number" step="1" min="3" max="201" data-wbsw="n" value="${sw.n}" aria-label="점 수"><span class="wb-u">점</span></div>` : ''}</div>`; }
+/* 신호 그래프 칸: 아래로 최대 3칸, 칸마다 그릴 신호를 따로 고름. WB.sel = 지금 고른 칸의 신호 묶음 */
+function wbSelReset(keys, sweep){ const S = new Set(keys || []); if(sweep){ WB.panesO = [S]; WB.piO = 0; WB.selO = S; } else { WB.panes = [S]; WB.pi = 0; WB.sel = S; } }
+function wbPaneBar(sweep){ const P = sweep ? WB.panesO : WB.panes, pi = sweep ? WB.piO : WB.pi;
+  return `<div class="wb-pane" role="group" aria-label="그래프 칸"><span class="muted">그래프 칸</span>${P.map((_, i) => `<button type="button" data-wbpane="${i}" aria-pressed="${i===pi}" title="칸 ${i+1}에 그릴 것을 고름">${i+1}</button>`).join('')}${P.length < 3 ? '<button type="button" data-wbpadd title="아래에 그래프 칸 하나 더">＋ 칸</button>' : ''}${P.length > 1 ? '<button type="button" data-wbpdel title="고른 칸 지우기">− 칸</button>' : ''}</div>${P.length > 1 ? `<p class="wb-swn">체크하면 ${pi+1}번 칸에 그립니다.</p>` : ''}`; }
 function wbSigListHTML(){ const R = WB.R; if(!R) return '';
   if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return wbAxisHTML() + (S && S.err ? `<p class="wb-err">${wbEsc(S.err)}</p>` : '');
     const d = wbT().inputs.find(o => o.k===S.k);
-    return wbAxisHTML() + `<div class="wb-slh"><span>${wbInName(d)}</span><b>${wbFmt(S.X[WB.si], 3)} ${wbEsc(wbInUnit(d))}</b></div>` + wbT().outputs.map(o => `<div class="wb-sr${WB.actO===o.k?' act':''}">
+    return wbAxisHTML() + wbPaneBar(true) + `<div class="wb-slh"><span>${wbInName(d)}</span><b>${wbFmt(S.X[WB.si], 3)} ${wbEsc(wbInUnit(d))}</b></div>` + wbT().outputs.map(o => `<div class="wb-sr${WB.actO===o.k?' act':''}">
       <input type="checkbox" data-wbso="${o.k}"${WB.selO.has(o.k)?' checked':''} aria-label="${wbEsc(wbOutName(o))} 그리기"><i style="background:${wbOutColor(o.k)}"></i>
       <button type="button" class="wb-sn" data-wbacto="${o.k}" title="이 결과의 눈금 보기">${wbOutName(o)}</button><b>${wbFmt(S.O[o.k][WB.si], o.d||0)}</b><span class="wb-u">${wbEsc(wbOutUnit(o))}</span></div>`).join('')
       + `<p class="wb-swn">결과 숫자를 ${S.X.length}번 다시 계산해 그린 것입니다. 나머지 입력은 지금 값 그대로입니다.</p>`; }
   const xs = WB.xa.startsWith('sig:') ? wbSigDef(WB.xa.slice(4)) : null, xv = xs ? R.sig[xs.k][WB.xi] : R.x.d[WB.xi];
-  return wbAxisHTML() + `<div class="wb-slh"><span>${wbEsc(xs ? xs.n : wbXDef().n)}</span><b>${wbFmt(xv, xs ? (xs.d||0) : 1)} ${wbEsc(xs ? xs.u : wbXDef().u)}</b></div>` + (wbT().sigs || []).filter(s => R.sig[s.k]).map(s => `<div class="wb-sr${WB.act===s.k?' act':''}">
+  return wbAxisHTML() + wbPaneBar(false) + `<div class="wb-slh"><span>${wbEsc(xs ? xs.n : wbXDef().n)}</span><b>${wbFmt(xv, xs ? (xs.d||0) : 1)} ${wbEsc(xs ? xs.u : wbXDef().u)}</b></div>` + (wbT().sigs || []).filter(s => R.sig[s.k]).map(s => `<div class="wb-sr${WB.act===s.k?' act':''}">
       <input type="checkbox" data-wbsg="${s.k}"${WB.sel.has(s.k)?' checked':''} aria-label="${wbEsc(s.n)} 그리기"><i style="background:${wbColor(s.k)}"></i>
       <button type="button" class="wb-sn" data-wbact="${s.k}" title="이 신호의 눈금 보기">${wbEsc(s.n)}</button><b>${wbFmt(R.sig[s.k][WB.xi], s.d||0)}</b><span class="wb-u">${wbEsc(s.u)}</span></div>`).join(''); }
 function wbSigHTML(){ const R = WB.R; if(!R) return '';
   if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return '<p class="wb-empty">계산 중…</p>';
-    const d = wbT().inputs.find(o => o.k===S.k), ys = [...WB.selO].map(k => wbOutDef(k)).filter(Boolean).map(o => ({k:o.k, d:S.O[o.k], c:wbOutColor(o.k), n:wbOutName(o).replace(/<[^>]+>/g, ''), u:wbOutUnit(o)}));
-    if(!ys.length) return '<p class="wb-empty">왼쪽에서 그릴 결과를 고르십시오.</p>';
-    if(!ys.some(y => y.k===WB.actO)) WB.actO = ys[0].k;
-    return wbPlot({id:'sig', w:1100, h:290, x:{d:S.X, n:wbInName(d).replace(/<[^>]+>/g, ''), u:wbInUnit(d)}, ys, norm:true, act:WB.actO, xi:WB.si, label:'입력 훑기 그래프'}); }
-  const ys = [...WB.sel].filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u}));
-  if(!ys.length) return '<p class="wb-empty">왼쪽에서 그릴 신호를 고르십시오.</p>';
-  if(!ys.some(y => y.k===WB.act)) WB.act = ys[0].k;
-  const xs = WB.xa.startsWith('sig:') ? wbSigDef(WB.xa.slice(4)) : null;
-  return wbPlot({id:'sig', w:1100, h:290, x: xs ? {d:R.sig[xs.k], n:xs.n, u:xs.u} : {d:R.x.d, ...wbXDef()}, ys, norm:true, act:WB.act, xi:WB.xi, label:'신호 선택 그래프'}); }
+    const d = wbT().inputs.find(o => o.k===S.k), x = {d:S.X, n:wbInName(d).replace(/<[^>]+>/g, ''), u:wbInUnit(d)};
+    return wbPanes(WB.panesO, WB.piO, P => [...P].map(k => wbOutDef(k)).filter(Boolean).map(o => ({k:o.k, d:S.O[o.k], c:wbOutColor(o.k), n:wbOutName(o).replace(/<[^>]+>/g, ''), u:wbOutUnit(o), dd:o.d})), x, WB.si, WB.actO, '입력 훑기 그래프', '결과'); }
+  const xs = WB.xa.startsWith('sig:') ? wbSigDef(WB.xa.slice(4)) : null, x = xs ? {d:R.sig[xs.k], n:xs.n, u:xs.u} : {d:R.x.d, ...wbXDef()};
+  return wbPanes(WB.panes, WB.pi, P => [...P].filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u, dd:wbSigDef(k).d})), x, WB.xi, WB.act, '신호 선택 그래프', '신호'); }
+function wbPanes(P, pi, mk, x, xi, act, label, what){ const h = P.length===1 ? 300 : P.length===2 ? 230 : 200;
+  return P.map((S, i) => { const ys = mk(S);
+    const body = ys.length ? wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`}) : `<p class="wb-empty">왼쪽에서 ${P.length > 1 ? `${i+1}번 칸에 ` : ''}그릴 ${what}를 고르십시오.</p>`;
+    return P.length > 1 ? `<div class="wb-pp${i===pi ? ' on' : ''}"><button type="button" class="wb-ppn" data-wbpane="${i}" aria-pressed="${i===pi}">칸 ${i+1}</button>${body}</div>` : body; }).join(''); }
 function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) return;
   if(all || which.includes('in')) $('#wbin').innerHTML = wbInHTML();
   if(all || which.includes('out')) $('#wbout').innerHTML = wbOutHTML();
@@ -204,7 +235,7 @@ function wbLoad(id){ const T = WB_TOOLS[id], I = {}; let saved = {};
 function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(WB.I)); }catch(e){} }
 function wbOpen(id, ret){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
   WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0;
-  WB.sel = new Set(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; WB.selO = new Set(); WB.actO = '';
+  wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && T.xiStart === 'end') { WB.xi = WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
   wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); }
@@ -218,18 +249,21 @@ function wbModal(html, cls){ let m = $('#wbm'); if(!m){ m = document.createEleme
   const f = m.querySelector('textarea, input, button:not(.dvi-x)') || m.querySelector('button'); if(f) f.focus(); return m; }
 function wbModalClose(){ const m = $('#wbm'); if(m && !m.hidden){ m.hidden = true; m.innerHTML = ''; return true; } return false; }
 const wbMHead = t => `<div class="dvi-h"><b id="wbm-t">${t}</b><button type="button" class="dvi-x" data-wbmx aria-label="닫기">×</button></div>`;
+/* 코드 · 검증 창 위 탭: 코드(보기 · 고치기) | 검증(검증표) */
+const wbCTabs = on => `<div class="m1-tabs wb-ctabs" role="tablist"><button type="button" role="tab" data-wbcode aria-selected="${on==='code'}">코드</button><button type="button" role="tab" data-wbver aria-selected="${on==='ver'}">검증표</button></div>`;
 /* 검증표: 손계산·문헌값과 지금 코드의 결과를 나란히 */
-async function wbVerify(){ const T = wbT(), code = wbCode(); wbModal(wbMHead('검증표') + '<div class="dvi-body"><p class="wb-empty">계산 중…</p></div>', 'wb-wide');
+async function wbVerify(){ const T = wbT(), code = wbCode(); wbModal(wbMHead('코드 · 검증') + wbCTabs('ver') + '<div class="dvi-body"><p class="wb-empty">계산 중…</p></div>', 'wb-wide');
   const rows = []; let pass = 0, n = 0;
   for(const c of (T.verify || [])){ const I = {...T.inputs.reduce((o, d) => (o[d.k] = d.v, o), {}), ...(T.verifyBase || {}), ...c.I}, r = await wbRun(I, code);
     Object.entries(c.expect).forEach(([k, ex]) => { const d = T.outputs.find(o => o.k===k) || {n:k, u:'', d:3}, got = r.ok && r.r.out ? r.r.out[k] : NaN;
       const tol = c.tol != null ? c.tol : 0.001, ok = isFinite(got) && Math.abs(got - ex) <= tol*Math.max(1, Math.abs(ex)); n++; if(ok) pass++;
       rows.push(`<tr class="${ok?'ok':'ng'}"><td>${wbEsc(c.n)}</td><td>${d.dk && DK[d.dk] ? DK[d.dk].n : wbEsc(d.n)}</td><td>${wbFmt(ex, (d.d||0)+1)}</td><td>${r.ok ? wbFmt(got, (d.d||0)+1) : '<span class="wb-err">' + wbEsc(r.err) + '</span>'}</td><td>${wbEsc(d.u || (d.dk && DK[d.dk] ? DK[d.dk].u : ''))}</td><td>${ok?'통과':'<b>다름</b>'}</td><td class="muted">${wbEsc(c.src||'')}</td></tr>`); }); }
   const m = $('#wbm'); if(!m || m.hidden) return;
-  m.querySelector('.dvm-box').innerHTML = wbMHead('검증표') + `<div class="dvi-body"><table class="dvi-t wb-vt"><thead><tr><th>경우</th><th>항목</th><th>기대값</th><th>계산값</th><th>단위</th><th>판정</th><th>기대값 근거</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
+  if(!m.querySelector('[data-wbver][aria-selected="true"]')) return;
+  m.querySelector('.dvm-box').innerHTML = wbMHead('코드 · 검증') + wbCTabs('ver') + `<p class="wb-cnote muted">답을 이미 아는 단순한 경우(해석해 · 손계산)에서 지금 코드의 결과가 같은지 봅니다. 코드를 고친 뒤 기존 식이 깨지지 않았는지 확인하는 용도입니다.</p><div class="dvi-body"><table class="dvi-t wb-vt"><thead><tr><th>경우</th><th>항목</th><th>기대값</th><th>계산값</th><th>단위</th><th>판정</th><th>기대값 근거</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
     <div class="dvi-foot"><span class="muted">${pass} / ${n} 통과 · 허용 오차 상대 0.1 %${WB.code[WB.id]!=null ? ' · 고친 코드로 계산' : ''}</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`; }
 /* 코드 보기: 고친 코드는 이 창을 닫아도 작업창이 열려 있는 동안만 쓰이고, 다시 열면 원래 코드 */
-function wbCodeOpen(){ wbModal(wbMHead('코드 보기 · 고치기') + `<p class="wb-cnote muted">입력 <code>I</code>(왼쪽 입력 칸의 키)를 받아 <code>out</code>(결과 숫자) · <code>x</code>(가로축) · <code>sig</code>(신호) · <code>main</code>(결과 그래프에 그릴 신호)를 돌려주는 <code>calc(I)</code> 함수입니다. 고친 코드는 저장되지 않으며, 작업창을 다시 열면 원래 코드로 돌아갑니다. 계산은 페이지와 떨어진 Web Worker에서 돌아갑니다.</p>
+function wbCodeOpen(){ wbModal(wbMHead('코드 · 검증') + wbCTabs('code') + `<p class="wb-cnote muted">입력 <code>I</code>(왼쪽 입력 칸의 키)를 받아 <code>out</code>(결과 숫자) · <code>x</code>(가로축) · <code>sig</code>(신호) · <code>main</code>(결과 그래프에 그릴 신호)를 돌려주는 <code>calc(I)</code> 함수입니다. 고친 코드는 저장되지 않으며, 작업창을 다시 열면 원래 코드로 돌아갑니다. 계산은 페이지와 떨어진 Web Worker에서 돌아갑니다.</p>
     <div class="dvi-body"><textarea class="wb-ta" spellcheck="false" aria-label="계산 코드">${wbEsc(wbCode())}</textarea></div>
     <div class="dvi-foot"><span class="wb-cmsg muted" id="wbcmsg"></span><span class="dvi-btns"><button type="button" class="btn small" data-wbcreset>원래 코드로</button><button type="button" class="btn small" data-wbmx>닫기</button><button type="button" class="btn small pri" data-wbcrun>이 코드로 계산</button></span></div>`, 'wb-wide wb-codebox'); }
 /* 대시보드에 반영: 대시보드 키가 있는 결과만. 담당이 아닌 값은 고를 수 없음. 반영한 값은 '계산값', 출처 = 도구 이름 */
@@ -326,7 +360,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(!WB.id) return;
   if(t.closest('[data-wbmx]') || t.matches('#wbm')){ wbModalClose(); return; }
   if(t.closest('[data-wbx]')){ wbClose(); return; }
-  if(t.closest('[data-wbfill]')){ let n = 0; wbT().inputs.forEach(d => { const db = wbDash(d.dk); if(db){ WB.I[d.k] = db.v; n++; } }); wbSave(); wbPaint(['in']); wbCalc(); toast(`대시보드 값 ${n}개로 채웠습니다.`); return; }
+  if(t.closest('[data-wbfill]')){ let n = 0, ch = 0, no = 0; wbT().inputs.forEach(d => { const db = wbDash(d.dk); if(db){ if(Math.abs((WB.I[d.k] ?? NaN) - db.v) > 1e-12 || !isFinite(WB.I[d.k])) ch++; WB.I[d.k] = db.v; n++; } else no++; }); wbSave(); wbPaint(['in']); wbCalc(); toast(`대시보드 값 ${n}개로 채웠습니다 (그중 바뀐 값 ${ch}개)${no ? ` · ${no}개는 대시보드에 없어 지금 값 그대로` : ''}. 칸 옆 점 색이 대시보드 상태입니다.`); return; }
   if(t.closest('[data-wbcmp]')){ WB.cmp = !WB.cmp; t.closest('[data-wbcmp]').setAttribute('aria-pressed', String(WB.cmp)); wbPaint(['in','out']); return; }
   if(t.closest('[data-wbver]')){ wbVerify(); return; }
   if(t.closest('[data-wbcode]')){ wbCodeOpen(); return; }
@@ -337,6 +371,9 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbimp]')){ $('#wbfile').click(); return; }
   if(t.closest('[data-wbput]')){ wbPutOpen(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
+  const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }
+  if(t.closest('[data-wbpadd]')){ const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length < 3){ P.push(new Set()); if(sw){ WB.piO = P.length-1; WB.selO = P[WB.piO]; } else { WB.pi = P.length-1; WB.sel = P[WB.pi]; } } wbPaint(['sig']); return; }
+  if(t.closest('[data-wbpdel]')){ const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length > 1){ const i = sw ? WB.piO : WB.pi; P.splice(i, 1); const j = Math.max(0, i-1); if(sw){ WB.piO = j; WB.selO = P[j]; } else { WB.pi = j; WB.sel = P[j]; } } wbPaint(['sig']); return; }
   const ac = t.closest('[data-wbact]'); if(ac){ WB.act = ac.dataset.wbact; WB.sel.add(WB.act); wbPaint(['sig']); return; }
   const ao = t.closest('[data-wbacto]'); if(ao){ WB.actO = ao.dataset.wbacto; WB.selO.add(WB.actO); wbPaint(['sig']); return; }
   const vv = t.closest('#wb [data-v3v]'); if(vv && WB.t3){ WB.t3.orb.set(vv.dataset.v3v); wb3dViews(); WB.t3.render(); return; }

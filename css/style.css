@@ -2799,3 +2799,34 @@ html.wb-lock #tip{z-index:95}
 .t2-rb button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}.t2-rb button:disabled{opacity:.3;cursor:default}
 .t2-lapsel{display:inline-flex;align-items:center;gap:6px}.t2-lapsel select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px}
 .t2-gd{display:block;font-size:11.5px;color:#257a47;text-align:right}.t2-gd.over{color:#b42318}
+.wb-pv{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
+.wb-ctabs{margin:0 0 6px}
+.wb-pane{display:flex;align-items:center;gap:4px;margin:6px 0 2px;font-size:12px}
+.wb-pane button{font:inherit;font-size:12px;min-width:26px;height:24px;padding:0 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);cursor:pointer;color:var(--ink-2)}
+.wb-pane button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.wb-pp{position:relative;border-left:3px solid transparent;padding-left:4px}.wb-pp.on{border-left-color:var(--accent)}
+.wb-ppn{position:absolute;left:8px;top:2px;font:inherit;font-size:11px;padding:1px 6px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);cursor:pointer;color:var(--ink-2);z-index:1}
+.wb-ppn[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
+.wb-st{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;flex:none;cursor:help}
+.wb-st.sq{border-radius:1.5px;background:#c3c7cf}
+.wb-st.own{outline:2px solid var(--accent);outline-offset:1.5px}
+.wb-ir.own input{border-color:var(--accent);background:#faf7ff}
+.wb-inleg{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 6px;font-size:11.5px;color:var(--muted)}.wb-inleg span{display:inline-flex;align-items:center}
+/* 도구 2: 코스 고르기 · 공식 코스 지도 · 랩별 기록 · 모터 탭 */
+.t2-info{display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.6;min-width:0}.t2-info p{margin:0}
+.t2-sk{fill:none;stroke:#9aa0ab;stroke-width:1;stroke-dasharray:3 3}
+.t2-cone{stroke:none}.t2-cone.R{fill:#2563eb}.t2-cone.L{fill:#e0a800}.t2-cone.C{fill:#ea7a12}
+.t2-sl{stroke:#16a34a;stroke-width:3.5;stroke-linecap:round}.t2-fin{stroke:#dc2626;stroke-width:3.5;stroke-linecap:round}
+.t2-arr{fill:#232731;stroke:#fff;stroke-width:1}
+.t2-cur{fill:#fff;stroke:#232731;stroke-width:2}
+.t2-mleg text{font-size:10.5px;fill:var(--ink-2)}
+.t2-lt{display:flex;flex-wrap:wrap;gap:4px}
+.t2-lt button{font:inherit;font-size:11.5px;padding:2px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.t2-lt button i{font-style:normal;color:var(--ink-3,#8a90a0);margin-right:4px;font-size:10.5px}
+.t2-lt button.st{border-left:3px solid #16a34a}.t2-lt button.on{border-color:var(--accent);background:var(--accent);color:#fff}.t2-lt button.on i{color:#fff}
+.t2-ltn{font-size:12px;margin:0}
+.t2-mb{display:flex;flex-direction:column;gap:6px}
+.t2-col{display:inline-flex;align-items:center;gap:8px;font-size:12.5px}.t2-col select{font:inherit;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px}
+.t2-fmt{font-size:12.5px}.t2-fmt summary{cursor:pointer;color:var(--accent)}.t2-fmt ul{margin:6px 0 0;padding-left:18px;line-height:1.6}
+.t2-tt td:nth-child(n+3):nth-child(-n+5){text-align:right;font-variant-numeric:tabular-nums}
+.t2-hm{display:flex;flex-direction:column;gap:4px;font-size:12.5px}.t2-heat{width:100%;max-width:560px}

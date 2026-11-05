@@ -371,7 +371,7 @@ function m1TourTab(tab){ if(!M1.tourUndo && typeof tgUndo==='function'){ const t
   if(M1.tab!==tab){ M1.tab = tab; wbPaint(['ext']); } }
 const m1TT = tab => ({click:{sel:`#wb [data-m1tab="${tab}"]`, need:() => M1.tab!==tab, run:() => m1TourTab(tab)}, inner:'#wb .wb-right'});
 const M1TOUR = [
-  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 차 형상, 검증표(손계산과 비교), 코드 보기, 입력 내보내기 · 가져오기, 대시보드에 반영입니다.', m1TT('mass')],
+  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 차 형상, 코드 · 검증(계산 코드와 손계산 비교표), 입력 내보내기 · 가져오기, 대시보드에 반영입니다.', m1TT('mass')],
   ['#wb .wb-bar [data-coordopen]', '좌표계', '모든 좌표는 사이트 차량 좌표계입니다. 원점은 뒤 차축 중심 · 차량 중심면 · 지면, x는 앞으로 +, y는 왼쪽 +, z는 위로 + [mm]입니다. 누르면 설계 탭과 같은 좌표계 그림이 열립니다. 차 안 부품은 대부분 x가 + 라서 숫자만 넣으면 됩니다.', m1TT('mass')],
   ['#wb .wb-bar [data-shpopen]', '차 형상', '우리 차 측면도 · 윗면도를 이미지(.png .jpg .webp)나 CAD 도면(.dxf)으로 올리면, 질량 분포와 드라이버 모델 그림의 차 대신 씁니다. 올린 뒤 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심(윗면은 차축 가운데) 두 점만 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 계산에는 쓰지 않고, 올리지 않거나 되돌리면 기본 차 그림입니다.', m1TT('mass')],
   ['#wb .wb-in', '입력', '휠베이스와 트레드입니다. [대시보드 값으로 채우기]를 누르면 대시보드 설계값이 들어옵니다.', m1TT('mass')],
