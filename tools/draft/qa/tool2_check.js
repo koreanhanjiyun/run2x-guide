@@ -91,11 +91,14 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   { // 모델 단계 항목 · 열 모델 · 시뮬레이션 위 조합 표시 · e_lim 옵션 위치 · 주행선 옵션 행 · 열 지우기 · 효율 맵 눈금
     await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2eg="model"]'); await W(300);
     console.log('model page', await p.locator('.t2-mdop').count(), 'disabled', await p.locator('.t2-mdop:disabled').count(), 'top md seg', await p.locator('.t2-hr [data-t2md]').count());
-    await p.click('[data-t2tm="2"]'); await W(200); console.log('tm', await p.evaluate(()=>WB.I.tm), 'lock b_c', await p.evaluate(()=>t2InLock('b_c')||'-'));
+    const th=()=>p.evaluate(()=>[WB.I.th_on,WB.I.cw_on,WB.I.bt_on].join(''));
+    await p.click('[data-t2th="th_on"]'); await W(150); const s1=await th(); await p.click('[data-t2th="cw_on"]'); await W(150); const s2=await th(); await p.click('[data-t2th="th_on"]'); await W(150); const s3=await th();
+    console.log('th toggles', s1, s2, s3, 'lock th_k', await p.evaluate(()=>t2InLock('th_k')||'-'));
+    await p.click('[data-t2th="cw_on"]'); await W(150); await p.click('[data-t2th="bt_on"]'); await W(150); console.log('th all', await th(), 'lock b_c', await p.evaluate(()=>t2InLock('b_c')||'-'));
     await p.click('[data-t2tab="sim"]'); await idle(); o=await R();
     console.log('rmin row', await p.evaluate(()=>[WB.I.rmin, WB.R.out.c_rmn, WB.R.out.c_rbad, /가장 작은 반경/.test(document.querySelector('#wbout').textContent)]));
     console.log('sim badge', (await p.textContent('.t2-mdl')).trim(), 'tw', f(o.c_twmax,1), 'tb', f(o.c_tbmax,1), 'card', await p.evaluate(()=>/냉각수 최고 온도/.test(document.querySelector('#wb').textContent)));
-    await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2eg="model"]'); await W(200); await p.click('[data-t2tm="0"]'); await W(200);
+    await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2eg="model"]'); await W(200); await p.click('[data-t2th="cw_on"]'); await W(150); await p.click('[data-t2th="bt_on"]'); await W(150); console.log('th back', await p.evaluate(()=>[WB.I.th_on,WB.I.cw_on,WB.I.bt_on].join('')));
     await p.click('[data-t2eg="bat"]'); await W(300); console.log('e_lim in row', await p.evaluate(()=>document.querySelector('[data-wbi="e_target"]').closest('.wb-ir').querySelectorAll('[data-t2el]').length), 'lock', await p.evaluate(()=>document.querySelector('[data-wbi="e_target"]').disabled));
     await p.click('[data-t2el="2"]'); await W(200); console.log('e_lim 2', await p.evaluate(()=>[WB.I.e_lim, WB.I.e_target, document.querySelector('[data-wbi="e_target"]').disabled]));
     await p.click('[data-t2el="1"]'); await W(200);
