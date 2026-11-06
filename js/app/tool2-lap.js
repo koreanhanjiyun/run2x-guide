@@ -883,9 +883,10 @@ function t2Ortho(P, r){ let d = `M${P[0][0]},${P[0][1]}`;
     if(q < 0.5){ d += ` L${bx},${by}`; continue; }
     d += ` L${(bx - (bx - ax)/l1*q).toFixed(1)},${(by - (by - ay)/l1*q).toFixed(1)} Q${bx},${by} ${(bx + (cx - bx)/l2*q).toFixed(1)},${(by + (cy - by)/l2*q).toFixed(1)}`; }
   const e = P[P.length - 1]; return d + ` L${e[0]},${e[1]}`; }
-function t2CoolSVG(C){ const by = new Map(C.blocks.map(b => [b.id, b])), W = 900, H = 200;
+const T2CSC = 1.25;   // 그림 1 단위 = 1.25 px (블럭이 많아 그림이 넓어지면 상자 안에서 가로 · 세로로 넘겨 봄)
+function t2CoolSVG(C){ const by = new Map(C.blocks.map(b => [b.id, b])), W = Math.max(900, ...C.blocks.map(b => b.x + T2CBW + 60)), H = Math.max(200, ...C.blocks.map(b => b.y + T2CBH + 20));
   const pin = b => [b.x, b.y + T2CBH/2], pout = b => [b.x + T2CBW, b.y + T2CBH/2];
-  let s = `<svg viewBox="0 0 ${W} ${H}" class="t2-csvg" data-t2csvg="${C.id}">`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="t2-csvg" data-t2csvg="${C.id}" style="width:${Math.round(W*T2CSC)}px">`;
   // 선 = 수평 · 수직만 (꺾이는 곳은 둥글게), 그림은 호스(수랭) · 덕트(공랭): 바깥 테두리 + 안쪽 색 + 흐름 방향으로 움직이는 무늬
   const lane = Math.max(...C.blocks.map(q => q.y + T2CBH)) + 22, H2 = Math.max(H, lane + 14);
   C.links.forEach(([a, b], j) => { const A = by.get(a), B = by.get(b); if(!A || !B) return; const [x1, y1] = pout(A), [x2, y2] = pin(B);
@@ -893,19 +894,21 @@ function t2CoolSVG(C){ const by = new Map(C.blocks.map(b => [b.id, b])), W = 900
                             : [[x1, y1], [x1 + 18, y1], [x1 + 18, lane], [x2 - 18, lane], [x2 - 18, y2], [x2, y2]];       // 뒤로: 블럭 아래 길로 돌아감
     const d = t2Ortho(P, 10);
     s += `<g class="t2-hose ${C.kind}"><path d="${d}" class="o"/><path d="${d}" class="i"/><path d="${d}" class="f"/></g><path d="${d}" class="t2-clhit" data-t2clink="${C.id}:${j}"><title>누르면 이 선을 지움</title></path>`; });
-  s = s.replace(`viewBox="0 0 ${W} ${H}"`, `viewBox="0 0 ${W} ${H2}"`);
+  s = s.replace(`viewBox="0 0 ${W} ${H}"`, `viewBox="0 0 ${W} ${H2}"`);   // 아래로 돌아가는 호스 길까지
   C.blocks.forEach(b => { const [nm, kind] = T2CB[b.t], q = t2CV(b.p, t2CParams(C, b)), sel = C.sel===b.id;
     const sub = b.t==='rad' ? `${q.A} m² · UA ${q.UA}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
     s += `<g class="t2-cb ${kind}${sel ? ' sel' : ''}" data-t2cb="${C.id}:${b.id}" transform="translate(${b.x},${b.y})"><rect width="${T2CBW}" height="${T2CBH}" rx="7"/>
       <text x="${T2CBW/2}" y="24" text-anchor="middle" class="t2-cbn">${nm}</text><text x="${T2CBW/2}" y="42" text-anchor="middle" class="t2-cbs">${sub}</text>
       ${b.t!=='in' ? `<circle cx="0" cy="${T2CBH/2}" r="6" class="t2-cpi"/>` : ''}${b.t!=='out' ? `<circle cx="${T2CBW}" cy="${T2CBH/2}" r="7" class="t2-cpo" data-t2cpo="${C.id}:${b.id}"><title>끌어서 다음 블럭에 이음</title></circle>` : ''}</g>`; });
-  return s + `<path class="t2-cdrag" d="" hidden/></svg>`; }
+  if(T2CG && T2CG.cid===C.id){ if(T2CG.gx!=null) s += `<line x1="${T2CG.gx}" x2="${T2CG.gx}" y1="0" y2="${H2}" class="t2-cguide"/>`; if(T2CG.gy!=null) s += `<line y1="${T2CG.gy}" y2="${T2CG.gy}" x1="0" x2="${W}" class="t2-cguide"/>`; }   // 정렬 안내선
+  return s + `<g class="t2-hose ${C.kind} drag" style="display:none"><path class="o"/><path class="i"/><path class="f"/></g><circle class="t2-cend ${C.kind}" r="9" style="display:none"/></svg>`; }   // 끄는 중인 호스 · 끝 (커서 따라감)
 function t2CoolPage(){ const CC = T2.cool.circuits, nw = CC.filter(c => c.kind==='water').length, na = CC.filter(c => c.kind==='air').length, comp = t2CoolCompile(), used = new Set(CC.flatMap(c => c.blocks.map(b => b.t)));
   const card = C => { const E = comp.err[C.id], B = C.blocks.find(b => b.id===C.sel), pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b'] : ['m', 'i', 'b'];
     const form = (title, def, obj, attr) => `<div class="t2-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t2CV(obj, def)[k];
         return `<label class="t2-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"><i>${u}</i></label>`; }).join('')}</div>`;
     return `<div class="t2-cc" data-t2cc="${C.id}"><div class="t2-cch"><b>${wbEsc(C.name)}</b><span class="muted">${C.kind==='water' ? '선 방향 = 냉각수 흐름 · 한 바퀴' : '선 방향 = 공기 흐름 · 입구 → 출구'}</span>
-        <span class="t2-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => `<button type="button" class="btn small" data-t2cadd="${C.id}:${t}"${(T2CB[t][1]==='part' && used.has(t)) || ((t==='rad' || t==='pump') && C.blocks.some(b => b.t===t)) ? ' disabled' : ''}>+ ${T2CB[t][0]}</button>`).join('')}</span>
+        <span class="t2-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T2CB[t][1]==='part' && !here && used.has(t) ? T2.cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = (t==='rad' || t==='pump' || T2CB[t][1]==='part') && here;
+      return `<button type="button" class="btn small" data-t2cadd="${C.id}:${t}"${one ? ` disabled title="${T2CB[t][0]}은 이 회로에 이미 있음 (${t==='rad' || t==='pump' ? '회로마다 1개' : '부품은 한 곳에만'})"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T2CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
         <button type="button" class="btn small t2-cdel" data-t2cdel="${C.id}">회로 지우기</button></div>
       ${C.kind==='water' ? form('냉각수', T2CP.water, C.p, `data-t2cwp="${C.id}"`) : ''}
       <div class="t2-cbox">${t2CoolSVG(C)}</div>
@@ -913,9 +916,9 @@ function t2CoolPage(){ const CC = T2.cool.circuits, nw = CC.filter(c => c.kind==
       ${B ? `<div class="t2-csel">${t2CParams(C, B).length ? form(`${T2CB[B.t][0]} 블럭`, t2CParams(C, B), B.p, `data-t2cbp="${C.id}:${B.id}"`) : `<div class="t2-cform"><b>${T2CB[B.t][0]} 블럭</b><span class="muted">${T2CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}
         ${B.t!=='in' && B.t!=='out' ? `<button type="button" class="btn small" data-t2cbx="${C.id}:${B.id}">블럭 지우기</button>` : ''}</div>` : '<p class="muted t2-cmsg">블럭을 누르면 입력이 여기 나옵니다. 블럭은 끌어서 옮기고, 오른쪽 점을 끌어 다음 블럭에 놓으면 이어지며, 선을 누르면 지워집니다.</p>'}</div>`; };
   const free = ['m', 'i', 'b'].filter(p => !used.has(p)).map(p => T2CB[p][0]);
-  return `<div class="t2-cool"><div class="t2-cbar"><button type="button" class="btn small" data-t2cnew="water"${nw >= 3 ? ' disabled' : ''}>+ 수랭 회로</button><button type="button" class="btn small" data-t2cnew="air"${na >= 3 ? ' disabled' : ''}>+ 공랭 덕트</button>
+  return `<div class="t2-cool">${t2Consts('cool')}<div class="t2-cbar"><button type="button" class="btn small" data-t2cnew="water"${nw >= 3 ? ' disabled' : ''}>+ 수랭 회로</button><button type="button" class="btn small" data-t2cnew="air"${na >= 3 ? ' disabled' : ''}>+ 공랭 덕트</button>
       <span class="muted">수랭 · 공랭 각각 최대 3개. ${free.length ? `회로에 없는 부품(${free.join(' · ')})은 외기로 바로 식습니다 (부품 hA).` : ''} 같은 회로에 라디에이터가 여러 개면 면적 · UA 를 합해 한 블럭으로 넣습니다.</span></div>
-    ${CC.map(card).join('')}${t2Consts('cool')}</div>`; }
+    ${CC.map(card).join('')}</div>`; }
 /* 고친 뒤: 저장 · 다시 그림 · (시뮬레이션 탭으로 갈 때) 계산 */
 const t2CoolSet = (paint = true) => { t2Save(); if(paint) wbPaint(['ext']); wbCalcSoon(); };
 const t2CC = id => T2.cool.circuits.find(c => c.id===id);
@@ -926,29 +929,50 @@ document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) r
                            : {id, kind, name:`공랭 덕트 ${n}`, p:{}, sel:'', blocks:[{id:id + 'i', t:'in', x:40, y:70, p:{}}, {id:id + 'o', t:'out', x:680, y:70, p:{}}], links:[[id + 'i', id + 'o']]});
     t2CoolSet(); return; }
   const dl = t.closest('[data-t2cdel]'); if(dl){ T2.cool.circuits = T2.cool.circuits.filter(c => c.id!==dl.dataset.t2cdel); t2CoolSet(); return; }
-  const ad = t.closest('[data-t2cadd]'); if(ad){ const [cid, ty] = ad.dataset.t2cadd.split(':'), C = t2CC(cid), id = t2Cid(T2.cool.circuits.flatMap(c => c.blocks), 'k');
-    const x = Math.min(900 - T2CBW - 10, 40 + C.blocks.length*120 % 700), y = 10 + (C.blocks.length % 2)*120; C.blocks.push({id, t:ty, x, y, p:{}}); C.sel = id; t2CoolSet(); return; }
+  const ad = t.closest('[data-t2cadd]'); if(ad && !ad.disabled){ const [cid, ty] = ad.dataset.t2cadd.split(':'), C = t2CC(cid), id = t2Cid(T2.cool.circuits.flatMap(c => c.blocks), 'k');
+    if(T2CB[ty][1]==='part') T2.cool.circuits.forEach(c => { if(c===C) return; const ids = c.blocks.filter(b => b.t===ty).map(b => b.id); if(!ids.length) return;   // 부품은 한 곳에만: 다른 회로에 있으면 빼 옴
+      c.blocks = c.blocks.filter(b => !ids.includes(b.id)); c.links = c.links.filter(([a, b]) => !ids.includes(a) && !ids.includes(b)); });
+    const xr = C.blocks.length ? Math.max(...C.blocks.map(b => b.x)) + T2CBW + 50 : 40, y0 = C.blocks.length ? C.blocks[0].y : 70;   // 맨 오른쪽 블럭 옆에 (그림이 넓어짐)
+    C.blocks.push({id, t:ty, x:xr, y:y0, p:{}}); C.sel = id; t2CoolSet(); return; }
   const bx = t.closest('[data-t2cbx]'); if(bx){ const [cid, bid] = bx.dataset.t2cbx.split(':'), C = t2CC(cid); C.blocks = C.blocks.filter(b => b.id!==bid); C.links = C.links.filter(([a, b]) => a!==bid && b!==bid); C.sel = ''; t2CoolSet(); return; }
   const lk = t.closest('[data-t2clink]'); if(lk){ const [cid, j] = lk.dataset.t2clink.split(':'), C = t2CC(cid); C.links.splice(+j, 1); t2CoolSet(); return; } });
 document.addEventListener('change', e => { if(WB.id!=='2' || !e.target.matches) return; const t = e.target;
   if(t.matches('[data-t2cbp]')){ const [cid, bid] = t.dataset.t2cbp.split(':'), B = t2CC(cid).blocks.find(b => b.id===bid); B.p = B.p || {}; B.p[t.name] = +t.value; }
   else if(t.matches('[data-t2cwp]')){ const C = t2CC(t.dataset.t2cwp); C.p = C.p || {}; C.p[t.name] = +t.value; }
   else return; t2CoolSet(); });
-/* 블럭 끌기 · 선 잇기 (포인터) */
-let T2CD = null;
+/* 블럭 끌기 · 선 잇기 (포인터): 블럭을 끌면 호스도 같이 따라오고, 오른쪽 점을 끌면 그 블럭의 호스가 빠져나와 커서를 따라옴 → 다른 블럭 위에서 놓으면 이어짐 */
+let T2CD = null, T2CG = null;   // 끄는 중 · 정렬 안내선 {cid, gx, gy}
 const t2CPt = (svg, e) => { const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal; return [(e.clientX - r.left)/r.width*vb.width, (e.clientY - r.top)/r.height*vb.height]; };
+function t2CoolRe(cid){ const old = document.querySelector(`svg[data-t2csvg="${cid}"]`); if(!old) return null; const tmp = document.createElement('div'); tmp.innerHTML = t2CoolSVG(t2CC(cid)); const n = tmp.firstElementChild; old.replaceWith(n); return n; }
+const t2CTarget = (e, cid, from) => { const el = document.elementFromPoint(e.clientX, e.clientY), g = el && el.closest && el.closest('[data-t2cb]'), to = g && g.dataset.t2cb.split(':');
+  if(!to || to[0]!==cid || to[1]===from) return null; const B = t2CC(cid).blocks.find(b => b.id===to[1]); return B && B.t!=='in' ? {g, id:to[1]} : null; };
 document.addEventListener('pointerdown', e => { if(WB.id!=='2' || !e.target.closest) return; const svg = e.target.closest('svg[data-t2csvg]'); if(!svg) return;
-  const po = e.target.closest('[data-t2cpo]'); if(po){ const [cid, bid] = po.dataset.t2cpo.split(':'); T2CD = {mode:'link', cid, bid, svg}; e.preventDefault(); return; }
+  const po = e.target.closest('[data-t2cpo]');
+  if(po){ const [cid, bid] = po.dataset.t2cpo.split(':'), C = t2CC(cid), old = C.links.filter(([a]) => a===bid);
+    C.links = C.links.filter(([a]) => a!==bid);                                    // 원래 이 블럭에서 나가던 호스를 빼서 끌고 다님 (놓을 곳이 없으면 되돌림)
+    T2CD = {mode:'link', cid, bid, old, svg:t2CoolRe(cid)}; t2CDrag(e); e.preventDefault(); return; }
   const g = e.target.closest('[data-t2cb]'); if(!g) return; const [cid, bid] = g.dataset.t2cb.split(':'), B = t2CC(cid).blocks.find(b => b.id===bid), [px, py] = t2CPt(svg, e);
-  T2CD = {mode:'move', cid, bid, svg, g, dx:px - B.x, dy:py - B.y, moved:false}; e.preventDefault(); });
-document.addEventListener('pointermove', e => { if(!T2CD) return; const [px, py] = t2CPt(T2CD.svg, e), C = t2CC(T2CD.cid), B = C && C.blocks.find(b => b.id===T2CD.bid); if(!B) return;
-  if(T2CD.mode==='move'){ B.x = Math.max(0, Math.min(900 - T2CBW, px - T2CD.dx)); B.y = Math.max(0, Math.min(200 - T2CBH, py - T2CD.dy)); T2CD.moved = true; T2CD.g.setAttribute('transform', `translate(${B.x},${B.y})`); }
-  else { const p = T2CD.svg.querySelector('.t2-cdrag'); p.hidden = false; const x1 = B.x + T2CBW, y1 = B.y + T2CBH/2, xm = Math.max(x1 + 12, (x1 + px)/2); p.setAttribute('d', t2Ortho([[x1, y1], [xm, y1], [xm, py], [px, py]], 8)); } });
+  T2CD = {mode:'move', cid, bid, svg, dx:px - B.x, dy:py - B.y, moved:false, raf:0}; e.preventDefault(); });
+function t2CDrag(e){ const D = T2CD, C = t2CC(D.cid), B = C.blocks.find(b => b.id===D.bid), svg = D.svg; if(!svg) return; const [px, py] = t2CPt(svg, e);
+  const x1 = B.x + T2CBW, y1 = B.y + T2CBH/2, xm = Math.max(x1 + 16, (x1 + px)/2), d = t2Ortho([[x1, y1], [xm, y1], [xm, py], [px, py]], 10);
+  const hg = svg.querySelector('.t2-hose.drag'), ce = svg.querySelector('.t2-cend'); hg.style.display = ''; hg.querySelectorAll('path').forEach(p => p.setAttribute('d', d));
+  ce.style.display = ''; ce.setAttribute('cx', px); ce.setAttribute('cy', py);
+  svg.querySelectorAll('.t2-cb.tgt').forEach(g => g.classList.remove('tgt')); const T = t2CTarget(e, D.cid, D.bid); if(T) T.g.classList.add('tgt'); }
+document.addEventListener('pointermove', e => { if(!T2CD) return; const D = T2CD;
+  if(D.mode==='link'){ t2CDrag(e); return; }
+  const [px, py] = t2CPt(D.svg, e), C = t2CC(D.cid), B = C && C.blocks.find(b => b.id===D.bid); if(!B) return;
+  // 정렬: 다른 블럭과 가운데가 8 안쪽이면 같은 수평 · 수직선에 붙이고 안내선을 그림, 아니면 10 칸 격자에 맞춤
+  let x = Math.max(0, Math.min(4000, px - D.dx)), y = Math.max(0, Math.min(1500, py - D.dy)), gx = null, gy = null;
+  C.blocks.forEach(o => { if(o===B) return; if(gy==null && Math.abs(y - o.y) < 8){ y = o.y; gy = o.y + T2CBH/2; } if(gx==null && Math.abs(x - o.x) < 8){ x = o.x; gx = o.x + T2CBW/2; } });
+  if(gx==null) x = Math.round(x/10)*10; if(gy==null) y = Math.round(y/10)*10;
+  B.x = x; B.y = y; D.moved = true; T2CG = {cid:D.cid, gx, gy};   // 오른쪽 · 아래로 끌면 그림이 넓어짐
+  if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const n = t2CoolRe(D.cid); if(n) D.svg = n; }); });   // 호스도 같이 다시 그림
 document.addEventListener('pointerup', e => { if(!T2CD) return; const D = T2CD, C = t2CC(D.cid); T2CD = null; if(!C) return;
-  if(D.mode==='move'){ if(!D.moved) C.sel = C.sel===D.bid ? '' : D.bid; t2CoolSet(); return; }
-  const el = document.elementFromPoint(e.clientX, e.clientY), g = el && el.closest && el.closest('[data-t2cb]'), to = g && g.dataset.t2cb.split(':');
-  if(to && to[0]===D.cid && to[1]!==D.bid && !['in'].includes(C.blocks.find(b => b.id===to[1]).t)){   // 앞 블럭의 나가는 선 · 뒤 블럭의 들어오는 선은 하나씩 (직렬)
-    C.links = C.links.filter(([a, b]) => a!==D.bid && b!==to[1]); C.links.push([D.bid, to[1]]); }
+  T2CG = null;
+  if(D.mode==='move'){ if(D.raf) cancelAnimationFrame(D.raf); if(!D.moved) C.sel = C.sel===D.bid ? '' : D.bid; t2CoolSet(); return; }
+  const T = t2CTarget(e, D.cid, D.bid);
+  if(T){ C.links = C.links.filter(([, b]) => b!==T.id); C.links.push([D.bid, T.id]); }   // 뒤 블럭으로 들어오던 호스는 하나만 (직렬)
+  else C.links.push(...D.old);                                                            // 블럭 위가 아니면 원래대로
   t2CoolSet(); });
 
 /* ============================================================ 이 탭 사용법 */

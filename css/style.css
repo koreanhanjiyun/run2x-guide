@@ -3054,3 +3054,11 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2-hose.air .f{stroke:#9aa4b2;stroke-width:2;stroke-dasharray:6 10;animation:t2flow 1.4s linear infinite}
 @keyframes t2flow{to{stroke-dashoffset:-30}}
 .t2-clhit{stroke-width:16}
+.t2-hose.drag path{pointer-events:none}.t2-hose.drag .o{opacity:.9}
+.t2-cend{pointer-events:none;stroke-width:2.5}.t2-cend.water{fill:#3f86d1;stroke:#26303c}.t2-cend.air{fill:#eceef2;stroke:#7b828d}
+.t2-cb.tgt rect{stroke:#2f9e5b;stroke-width:3;fill:#eaf7ef}
+.t2-cpo{transition:r .12s}.t2-cpo:hover{r:10}
+.t2-cb:active{cursor:grabbing}
+.t2-cbox{overflow:auto;max-height:520px}.t2-csvg{width:auto;max-width:none}
+.t2-cpal .btn:disabled{opacity:.4;cursor:not-allowed}
+.t2-cguide{stroke:#e0559b;stroke-width:1.2;stroke-dasharray:5 4;pointer-events:none}

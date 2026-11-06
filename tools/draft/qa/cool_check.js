@@ -12,12 +12,23 @@ const H=require('./h.js');
   await p.evaluate(()=>{ const C=T2.cool.circuits[0]; C.links=C.links.filter(([a,b])=>!(a==='k3'&&b==='k4')); t2Save(); wbPaint(['ext']); }); await W(300);
   console.log('broken', JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)));
   const o=await (await p.$('[data-t2cpo="w1:k3"]')).boundingBox(), t=await (await p.$('[data-t2cb="w1:k4"] rect')).boundingBox();
-  await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+30,t.y+30,{steps:6}); await p.mouse.up(); await W(300);
+  await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+30,t.y+30,{steps:6}); await W(100);
+  console.log('dragging', await p.evaluate(()=>[document.querySelector('.t2-hose.drag').style.display, !!document.querySelector('.t2-cb.tgt')]));
+  if(process.argv[2]) await p.screenshot({path:process.argv[2]+'/cool_drag.png'});
+  await p.mouse.up(); await W(300);
   console.log('relinked', JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)), await p.evaluate(()=>JSON.stringify(T2.cool.circuits[0].links)));
   await p.click('[data-t2cb="w1:k1"] rect'); await W(300); console.log('sel form', await p.locator('.t2-csel input').count());
   await p.click('[data-t2cnew="water"]'); await W(300); console.log('new circuit', await p.locator('.t2-cc').count(), JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)));
   if(process.argv[2]) await p.screenshot({path:process.argv[2]+'/cool.png', fullPage:false});
-  await p.click('[data-t2cdel="w2"]'); await W(300);
+  { const w0=await p.evaluate(()=>document.querySelector('svg[data-t2csvg="w2"]').getBoundingClientRect().width);
+    await p.click('[data-t2cadd="w2:b"]'); await W(300); await p.click('[data-t2cadd="w2:b"]').catch(()=>{}); await W(200);
+    const w1=await p.evaluate(()=>document.querySelector('svg[data-t2csvg="w2"]').getBoundingClientRect().width);
+    console.log('add bat to w2', JSON.stringify(await p.evaluate(()=>T2.cool.circuits.map(c=>c.id+':'+c.blocks.map(b=>b.t).join(',')))), 'width', Math.round(w0), '->', Math.round(w1), 'err', JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)));
+    for(let k=0;k<4;k++){ await p.evaluate(()=>{ const C=T2.cool.circuits[0]; }); }
+    await p.click('[data-t2cadd="w2:m"]'); await W(300);
+    console.log('move motor', JSON.stringify(await p.evaluate(()=>T2.cool.circuits.map(c=>c.id+':'+c.blocks.map(b=>b.t).join(',')))));
+    await p.evaluate(()=>{ T2.cool=T2COOL_DEF(); t2Save(); wbPaint(['ext']); }); await W(300); }
+
   // model page cooling labels
   await p.click('[data-t2eg="model"]'); await W(300); console.log('model cool', await p.evaluate(()=>[...document.querySelectorAll('.t2-mdc b')].map(x=>x.textContent).join(' | ')));
   // compute with coolant on
