@@ -3037,6 +3037,10 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .t2-rbadl{color:#b91c1c}
 .t2-inopt{margin-left:0;max-width:100%}.t2-inopt .dc-seg{flex-wrap:wrap;max-width:100%}
 .t2-gtab td.t2-empty{text-align:left}
+/* 지도: 차가 지나간 영역 (어두운 무채색, 묶음에 한 번 투명도 → 겹쳐도 같은 진하기) */
+.t2-msvg .t2-sweep{opacity:.3;pointer-events:none}.t2-msvg .t2-sweep polygon{fill:#2f3338;stroke:none}
+.t2-swl i{display:inline-block;width:14px;height:8px;background:#2f3338;opacity:.35;border-radius:2px;margin-right:4px;vertical-align:middle}
+.t2-msvg .t2-corr{fill:#2f3338;opacity:.14;stroke:none;pointer-events:none}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -9936,7 +9940,7 @@ function wbWorker(src){
       const r = calc(e.data.I); postMessage({id:e.data.id, ok:true, r, ms:performance.now()-t0}); }
     catch(err){ postMessage({id:e.data.id, ok:false, err:String(err && err.message || err)}); } };`;
   const w = new Worker(URL.createObjectURL(new Blob([body], {type:'text/javascript'})));
-  w.onmessage = e => { if(e.data.prog != null){ if(WB.wait[e.data.id]) wbProgShow(e.data.prog, e.data.msg); return; }
+  w.onmessage = e => { if(e.data.prog != null){ if(WB.wait[e.data.id]){ WB.progD = true; wbProgShow(e.data.prog, e.data.msg); } return; }
     const f = WB.wait[e.data.id]; if(f){ delete WB.wait[e.data.id]; f(e.data); } };
   w.onerror = e => { e.preventDefault(); const msg = '코드 오류: ' + (e.message || '읽을 수 없는 코드');
     Object.keys(WB.wait).forEach(id => { WB.wait[id]({ok:false, err:msg}); delete WB.wait[id]; }); WB.worker = null; WB.wsrc = ''; };
@@ -9954,13 +9958,14 @@ const wbRefresh = () => { if(WB.id) wbCalcSoon(); };
 const wbCode = () => WB.code[WB.id] != null ? WB.code[WB.id] : wbT().code;
 /* 계산 중 표시: 0.3초 넘게 걸리면 결과 칸 위에 진행 막대 + 이전 결과 흐리게. 새 계산이 오면 하던 계산은 버림 */
 function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = false; p.classList.toggle('ind', f == null);
-  const b = p.querySelector('i'); if(b && f != null) b.style.width = Math.round(Math.max(0, Math.min(1, f))*100) + '%';
+  const b = p.querySelector('i'); if(b && f != null){ const w = Math.round(Math.max(0, Math.min(1, f))*100), w0 = parseFloat(b.style.width) || 0;
+    if(w < w0){ b.style.transition = 'none'; b.style.width = w + '%'; void b.offsetWidth; b.style.transition = ''; } else b.style.width = w + '%'; }   // 줄어들 때(새 계산)는 바로, 늘어날 때만 부드럽게
   const t = p.querySelector('span'); if(t) t.textContent = (msg || '계산 중') + (f != null ? ` · ${Math.round(f*100)} %` : ' …'); }
 /* 계산 중: 화면 위에 고정한 진행 막대(스크롤과 상관없이 보임) + 오른쪽 화면 전체를 살짝 회색. 끝나면 바뀐 결과 칸 · 그래프가 한 번 깜빡임 */
 function wbBusy(on){ clearTimeout(WB.busyT); const m = $('#wb'), p = $('#wbprog');
-  if(on){ if(m) m.classList.add('wb-busy'); WB.busyT = setTimeout(() => wbProgShow(null, '계산 중'), 150); return; }
+  if(on){ if(m) m.classList.add('wb-busy'); WB.progD = false; WB.busyT = setTimeout(() => { if(!WB.progD) wbProgShow(null, '계산 중'); }, 150); return; }   // 진행 신호가 이미 왔으면 흐르는 막대로 바꾸지 않음
   if(m){ m.classList.remove('wb-busy'); m.classList.remove('wb-flash'); void m.offsetWidth; m.classList.add('wb-flash'); clearTimeout(WB.flashT); WB.flashT = setTimeout(() => m.classList.remove('wb-flash'), 800); }
-  if(p){ p.hidden = true; const b = p.querySelector('i'); if(b) b.style.width = '0%'; } }
+  if(p){ p.hidden = true; const b = p.querySelector('i'); if(b){ b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth; b.style.transition = ''; } } }
 /* 휠 확대는 박스를 눌러 켠 뒤에만 (data-zoombox). 다른 곳을 누르거나 Esc = 끔 → 휠 = 페이지 스크롤 */
 /*   상자는 다시 그려질 수 있어 이름(data-zoombox 값)으로 기억하고, 다시 그린 뒤에도 강조를 다시 붙임 (wbZoomMark) */
 const WBZ = { key:'' };
@@ -11593,6 +11598,20 @@ function t2FreeCones(){ const rows = t2Track(T2.free.text).rows; if(!rows.length
       if(i < n && s >= nb - 1e-9){ put(W[k][0], W[k][1]); nb += 3; }
       while(ci < cs.length && a >= cs[ci] - 1e-9){ out.push([x, y, 'C']); ci++; } } });
   return out; }
+/* 코스 폭 경계 (지도 칠하기용): 왼쪽 · 오른쪽 경계 점 [[x, y]] (m). 공식 코스 = 실제 콘으로 잡은 폭 (t2ConeBounds), 내 코스 = 행마다 폭 (0.5 m 간격) */
+function t2Bounds(c){
+  if(c==='end' || c==='ax'){ const X = FSK26.X, Y = FSK26.Y, N = X.length, B = t2ConeBounds(), Lp = [], Rp = [];
+    for(let i = 0; i < N; i++){ const a = (i - 1 + N) % N, b = (i + 1) % N, dx = X[b] - X[a], dy = Y[b] - Y[a], d = Math.hypot(dx, dy) || 1, nx = -dy/d, ny = dx/d;
+      Lp.push([X[i] + nx*B.WL[i], Y[i] + ny*B.WL[i]]); Rp.push([X[i] - nx*B.WR[i], Y[i] - ny*B.WR[i]]); }
+    return {L:Lp, R:Rp, close:true}; }
+  if(c==='free'){ const rows = t2Track(T2.free.text).rows; if(!rows.length) return null; const W = t2Widths(rows), Lp = [], Rp = [];
+    let x = 0, y = 0, h = 0;
+    rows.forEach((r, k) => { const n = Math.max(1, Math.ceil(r.l/0.5)), st = r.l/n;
+      for(let i = 0; i <= n; i++){
+        if(i){ if(!r.R){ x += st*Math.cos(h); y += st*Math.sin(h); } else { const dh = st/r.R; x += r.R*(Math.sin(h + dh) - Math.sin(h)); y -= r.R*(Math.cos(h + dh) - Math.cos(h)); h += dh; } }
+        if(i < n || k === rows.length - 1){ const nx = -Math.sin(h), ny = Math.cos(h); Lp.push([x + nx*W[k][0], y + ny*W[k][0]]); Rp.push([x - nx*W[k][1], y - ny*W[k][1]]); } } });
+    return {L:Lp, R:Rp, close:t2Closed()}; }
+  return null; }
 /* 슬라럼 콘 자리에서 비켜 갈 폭이 모자란 곳 (양쪽 모두 폭 ≥ 2 × 차 중심 여유 여야 번갈아 비켜 감) */
 function t2SlalomTight(rows){ const I = WB.I, b = I.w_car > 0 ? I.w_car/2 + Math.max(0, I.rl_m || 0) : Math.max(0, I.rl_b), W = t2Widths(rows);
   return rows.map((r, i) => isFinite(r.sl) && (W[i][0] < 2*b - 1e-9 || W[i][1] < 2*b - 1e-9) ? i + 1 : 0).filter(Boolean); }
@@ -11625,7 +11644,10 @@ function t2MapSVG(plain){ const c = plain ? T2.ecourse : T2.course, R = WB.id===
   G.extra.forEach(([cx, cy, rr]) => { svg += `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${(rr*s).toFixed(1)}" class="t2-sk" vector-effect="non-scaling-stroke"/>`; });
   const cones = c==='ax' || c==='end' ? FSK26.cones || [] : c==='free' ? t2FreeCones() : [];
   const cone = ([cx, cy, sd]) => `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${((sd==='C' ? 2.2 : 1.6)*Math.max(sz, .35)).toFixed(2)}" class="t2-cone ${sd}"/>`;
+  if(plain){ const BD = t2Bounds(c); if(BD){ const pts = A => A.map(([x, y]) => `${tx(x).toFixed(1)},${ty(y).toFixed(1)}`).join(' L');   // 편집 탭: 좌우 경계 안을 반투명 어두운 색으로
+    svg += BD.close ? `<path d="M${pts(BD.L)}Z M${pts(BD.R)}Z" class="t2-corr" fill-rule="evenodd"/>` : `<path d="M${pts(BD.L)} L${pts(BD.R.slice().reverse())}Z" class="t2-corr"/>`; } }
   cones.forEach(q => { if(q[2]!=='C') svg += cone(q); });                     // 경계 콘은 선 아래, 슬라럼 콘(가운데)은 선 위에 (아래 '출발선' 앞에서)
+  if(!plain && R && WB.I.w_car > 0) svg += t2Sweep(xs, ys, close, rev, tx, ty);   // 차가 지나간 영역 (반투명 회색)
   if(RLp) svg += `<polyline points="${xc.map((_, i) => [tx(xc[i]), ty(yc[i])].map(v => v.toFixed(1)).join(',')).join(' ')}" class="t2-cl" vector-effect="non-scaling-stroke"/>`;
   let vc = null, P = 0; if(mp){ vc = mp.vc || (mp.acc || mp.skid ? R.sig.v : null); P = mp.P || 0; }
   const leg = '<span class="t2-mleg"><i class="sl"></i>출발 <i class="fin"></i>결승 <i class="arr">→</i>주행 방향</span>'; let cap = '';
@@ -11639,6 +11661,7 @@ function t2MapSVG(plain){ const c = plain ? T2.ecourse : T2.course, R = WB.id===
     const bad = i => { const s = S0[i]*f; return mp.rbad.some(([a, b]) => s >= a - 0.5 && s <= b + 0.5); };
     for(let i = 0; i + 1 < N; i++) if(bad(i) || bad(i + 1)){ const a = Pt(i), b = Pt(i + 1); svg += `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" class="t2-rbad" vector-effect="non-scaling-stroke"/>`; }
     cap += ' · <span class="t2-rbadl">빨간 테두리 = 최소 회전 반경보다 급한 곳</span>'; }
+  if(!plain && R && WB.I.w_car > 0) cap += ' · <span class="t2-swl"><i></i>차가 지나간 영역 (전폭 · 전장 · 저속 차체 각도)</span>';
   if(!plain) setTimeout(() => { const cp = $('#t2mcap'); if(cp) cp.innerHTML = cap; }, 0);
   cones.forEach(q => { if(q[2]==='C') svg += cone(q); });
   /* 출발선(초록) = 주행 방향 오른쪽 절반, 결승선(빨강) = 왼쪽 절반 → 같은 자리여도 겹치지 않음. 화살표는 출발선 끝에서 코스와 나란히 */
@@ -11653,6 +11676,19 @@ function t2MapSVG(plain){ const c = plain ? T2.ecourse : T2.course, R = WB.id===
   /* 프로브: 신호 그래프의 거리 위치 (여러 랩이면 한 랩 안의 위치) */
   if(R && R.x && WB.xi != null){ const k = t2SigToMap(WB.xi, N, P), q = Pt(k); svg += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${(4*Math.max(sz, .35)).toFixed(2)}" class="t2-cur" vector-effect="non-scaling-stroke"/>`; }
   return svg + '</svg>'; }
+/* 차가 지나간 영역: 지도 선(차 중심 경로, m) 점마다 차 사각형 (뒤 끝 ~ 앞 끝 × 전폭). 차체 방향 = 진행 방향 − β,  β = atan(l_r · κ) (저속 기구학 선회)
+   κ = 세 점 곡률을 앞뒤 2 점씩 평균.  거꾸로 달리는 코스(오토크로스)는 진행 방향 · 곡률 부호를 뒤집음.  묶음 전체에 투명도를 한 번 걸어 겹친 곳도 같은 진하기 */
+function t2Sweep(xs, ys, close, rev, tx, ty){ const I = WB.I, L = I.L/1000, lr = L*I.fr/100, xf = (L - lr) + Math.max(0, I.oh_f || 0), xr = lr + Math.max(0, I.oh_r || 0), hw = I.w_car/2;
+  const N = xs.length, m = close ? N - 1 : N, ix = i => close ? ((i % m) + m) % m : Math.max(0, Math.min(N - 1, i)), dir = rev ? -1 : 1;
+  const k3 = i => { const a = ix(i - 1), b = ix(i), c = ix(i + 1), x0 = xs[a], y0 = ys[a], x1 = xs[b], y1 = ys[b], x2 = xs[c], y2 = ys[c];
+    const d = Math.hypot(x1 - x0, y1 - y0)*Math.hypot(x2 - x1, y2 - y1)*Math.hypot(x2 - x0, y2 - y0); return d > 1e-9 ? 2*((x1 - x0)*(y2 - y0) - (y1 - y0)*(x2 - x0))/d : 0; };
+  const kr = Array.from({length:N}, (_, i) => k3(i)), K = i => { let s = 0, n = 0; for(let d = -2; d <= 2; d++){ const j = ix(i + d); s += kr[j]; n++; } return s/n; };
+  let g = '<g class="t2-sweep">';
+  for(let i = 0; i < m; i++){ const a = ix(i - 1), b = ix(i + 1); let ux = (xs[b] - xs[a])*dir, uy = (ys[b] - ys[a])*dir; const u = Math.hypot(ux, uy) || 1; ux /= u; uy /= u;
+    const beta = Math.atan(lr*K(i)*dir), th = Math.atan2(uy, ux) - beta, c = Math.cos(th), s = Math.sin(th);
+    const P = [[xf, hw], [xf, -hw], [-xr, -hw], [-xr, hw]].map(([x, y]) => `${tx(xs[i] + c*x - s*y).toFixed(1)},${ty(ys[i] + s*x + c*y).toFixed(1)}`);
+    g += `<polygon points="${P.join(' ')}"/>`; }
+  return g + '</g>'; }
 /* 신호 칸 ↔ 지도 점: 공식 코스는 지도 점(대회 JSON)과 계산 칸 수가 달라 거리 비율로 맞춤, 오토크로스는 반대 방향 */
 function t2SigToMap(xi, N, P){ const c = T2.course; let k = xi;
   if(P){ k = xi % P === 0 && xi ? P : xi % P; if(c==='end' || c==='ax'){ k = Math.round(k*(N - 1)/P); if(c==='ax') k = N - 1 - k; } }
@@ -12742,11 +12778,14 @@ function improveLine(RL, C, V, flying, prog) {
   return res;
 }
 
+// 진행 막대 (작업창 Worker 안에서만): 주행선 다듬기가 [0, PG0), 나머지 계산이 [PG0, 1]
+let PG0 = 0;
+const prog = (f, msg) => { if (typeof wbProg === 'function') wbProg(f, msg); };
 let RLI = {}, RLI_LAST = {};   // 다듬은 주행선: 이번 계산 (코스별) · 마지막 전체 계산 (입력 훑기용)
 const rlKey = I => JSON.stringify(I, (k, v) => ['course', 'lap', 'grMode', '_sweep', '_probe'].includes(k) ? undefined : v);
 // 이번 입력으로 내구 · 오토크로스 · 내 코스 주행선을 다듬어 둠 (차량 · 감속비 = 입력 감속비, 같은 입력이면 다시 안 함)
 function prepLines(I, sweep) {
-  RLI = {};
+  RLI = {}; PG0 = 0;
   if (!(I.rl_on >= 2)) return;
   if (sweep) { RLI = RLI_LAST; return; }            // 입력 훑기: 지금 입력으로 다듬은 선을 그대로 (훑는 값마다 다시 다듬지 않음)
   const key = rlKey(I);
@@ -12762,7 +12801,7 @@ function prepLines(I, sweep) {
     if (pg) pg(0);
     out[w] = improveLine(base(), C, V, fly, pg);
   });
-  if (typeof wbProg === 'function') wbProg(jobs.length / (jobs.length + 1), '기록 계산 중');
+  PG0 = jobs.length / (jobs.length + 1);
   RLI = RLI_LAST = out;
 }
 
@@ -13039,9 +13078,9 @@ function scanGr(score) {
 
 // 종목별 가장 빠른 감속비 + 배점 가중 제안
 //   제안 = Σ 배점 × (입력 감속비 기록 − 그 감속비 기록) ÷ 입력 감속비 기록 이 가장 큰 감속비
-function bestGr(I) {
+function bestGr(I, pg) {
   const memo = new Map();
-  const ev = gg => { gg = Math.round(gg * 100) / 100; if (!memo.has(gg)) memo.set(gg, events(I, gg, true)); return memo.get(gg); };
+  const ev = gg => { gg = Math.round(gg * 100) / 100; if (!memo.has(gg)) { memo.set(gg, events(I, gg, true)); if (pg) pg(Math.min(1, memo.size / 30)); } return memo.get(gg); };   // 감속비 약 30 개를 훑음
   const E0 = ev(I.gr);
   const J = E => Object.keys(W_PT).reduce((a, k) => a + (isFinite(E0[k]) && isFinite(E[k]) ? W_PT[k] * (E0[k] - E[k]) / E0[k] : 0), 0);
   const out = {};
@@ -13245,10 +13284,15 @@ function calc(I) {
   }
 
   // ---------- 주행선 다듬기 (I.rl_on = 2): 입력이 바뀌었을 때만
+  prog(0, '준비 중');                                   // 진행 막대를 바로 숫자로 (흐르는 막대로 바뀌지 않게)
   prepLines(I, false);
 
+  // ---------- 진행: 남은 [PG0, 1] 을 감속비 훑기 60 % · 가장 빠른 감속비 내구 10 % · 두 모드 20 % · 내 코스 10 % 로
+  const P = (a, msg) => prog(PG0 + (1 - PG0) * a, msg);
+  P(0, '감속비 훑는 중');
   // ---------- 감속비 (두 모드 공통): 종목별 가장 빠른 값 · 배점 가중 제안, 그 감속비에서 다 계산한 기록
-  const B = bestGr(I);
+  const B = bestGr(I, f => P(0.6 * f, '감속비 훑는 중'));
+  P(0.6, '기록 계산 중');
   const ENb  = runEnd(I, B.end, true);                   // 내구가 가장 빠른 감속비에서 다 계산
   const endb = ENb ? lapStat(ENb.t, [0, ENb.n1]) : null;
   const fast = {
@@ -13259,7 +13303,9 @@ function calc(I) {
   const BF = I.course === 'free' ? bestGrFree(I) : NaN;   // 내 코스: 최적 모드에서 고른 코스 감속비
 
   // ---------- 두 모드를 미리 계산 (전환은 다시 계산 없이)
+  P(0.7, '기록 계산 중 · 내 감속비');
   const my = modeRun(I, I.gr, I.gr, fast);
+  P(0.8, '기록 계산 중 · 최적 감속비');
   const G3 = ({ acc: B.acc, ax: B.ax, end: B.end, free: BF, skid: B.opt })[I.course];
   const g3  = isFinite(G3) ? G3 : B.opt;
   const opt = B.opt === I.gr && g3 === I.gr ? { ...my, out: { ...my.out } } : modeRun(I, B.opt, g3, fast);
@@ -13277,6 +13323,7 @@ function calc(I) {
   Object.assign(my.out, common); Object.assign(opt.out, common);
 
   // ---------- 내 코스 (검증 · 대시보드용, 입력 감속비)
+  P(0.9, '기록 계산 중 · 내 코스');
   const FR = runFree(I, C, 0.5, false);
   if (FR) {
     const fr = lapStat(FR.t, [0]);
@@ -13294,6 +13341,7 @@ function calc(I) {
   const ft = tractive(I, I.gr, C.Voc(1), C.Tinit, 0, 0);
 
   const cur = I.grMode === 'opt' ? opt : my;
+  P(1, '마무리');
   return { ...cur, modes: { my, opt }, motor, ft };
 }
 `
