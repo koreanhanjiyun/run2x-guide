@@ -3089,3 +3089,9 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t4-pw{margin-top:14px}.t4-tw{overflow-x:auto}.t4-t{min-width:760px}.t4-t td,.t4-t th{text-align:right;white-space:nowrap}.t4-t td:first-child,.t4-t th:first-child{text-align:left}
 .t4-t td .ok{color:#2f7d4f}
 .t4-oi input{width:90px;font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px}
+/* 도구 5 정면 그림 */
+.t5-figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.t5-fig{margin:0}.t5-fig figcaption{font-size:12.5px;font-weight:700;margin-bottom:4px}
+.t5-svg{width:100%;height:auto;display:block;background:var(--panel-2);border-radius:7px}
+.t5-tx{font-size:8px;fill:var(--muted)}.t5-tx.b{fill:#6A4294;font-weight:700}
+.t5-note{font-size:12px;margin:8px 0 0}
