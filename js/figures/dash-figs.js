@@ -128,7 +128,7 @@ const CARFIG = (() => {
     h += hdim(hiCoP ? xIn : (AERO ? xOut : xIn), cy, cx-10, '', 'k', `h ${f0(p.h)}`)
       + (AERO ? hdim(hiCoP ? xOut : xIn, py, px-10, 'in', 'i', `${sub('h','CoP')} ${f0(p.hcop)}`) : '')
       + `<line x1="${cx}" y1="${cy+9}" x2="${cx}" y2="${G}" class="cf-lead"/>`;
-    /* 앞뒤 위치 치수 (뒤축부터): 위쪽 빈 곳에, 뒤축에서 먼 쪽을 바깥(위)에 */
+    /* 앞뒤 위치 치수 (뒤축부터, 치수선이 뒤축에서 시작하므로 글자는 'CG · CoP 값'만): 위쪽 빈 곳에, 뒤축에서 먼 쪽을 바깥(위)에 */
     const [, yTopF] = T(0, 2*r + 30), yA = 36, yB = 60;
     const xdim = (xe, ye, yd, cls, mid, txt) => `<line x1="${xe}" y1="${yd-6}" x2="${xe}" y2="${ye}" class="cf-ext${cls?' '+cls:''}"/>
       <line x1="${x1}" y1="${yd}" x2="${xe}" y2="${yd}" class="cf-dim${cls?' '+cls:''}" marker-start="url(#${id+mid}d)" marker-end="url(#${id+mid}d)"/>
@@ -136,8 +136,8 @@ const CARFIG = (() => {
         : `<text x="${x1-4}" y="${yd-6}" text-anchor="end" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`}`;   /* 치수선보다 글자가 길면 뒤축에 오른쪽 끝을 맞춰 치수선 위에 (그림 밖으로 안 나가게) */
     const farCoP = AERO && Math.abs(px - x1) > Math.abs(cx - x1);
     h += `<line x1="${x1}" y1="${yA-6}" x2="${x1}" y2="${yTopF}" class="cf-ext"/>`
-      + xdim(cx, cy-11, AERO ? (farCoP ? yB : yA) : yB, '', 'k', `CG 뒤축부터 ${f0(L - K.a)} mm`)
-      + (AERO ? xdim(px, py-10, farCoP ? yA : yB, 'in', 'i', `CoP 뒤축부터 ${f0(p.xcop)} mm`) : '');
+      + xdim(cx, cy-11, AERO ? (farCoP ? yB : yA) : yB, '', 'k', `CG ${f0(L - K.a)} mm`)
+      + (AERO ? xdim(px, py-10, farCoP ? yA : yB, 'in', 'i', `CoP ${f0(p.xcop)} mm`) : '');
     /* 화살표·기호 */
     const kF = 0.05, dfL = Math.min(90, K.DF*kF), dL = Math.min(90, K.D*kF);
     const ax_ = Math.abs(c.ax) > 0.05, il = Math.min(64, Math.abs(c.ax)*40), idr = c.ax>0 ? 1 : -1;
