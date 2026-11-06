@@ -31,18 +31,21 @@ const wbInUnit = d => d.u != null ? d.u : (d.dk && DK[d.dk] ? DK[d.dk].u : '');
 function wbWorker(src){
   if(WB.worker && WB.wsrc===src) return WB.worker;
   if(WB.worker) WB.worker.terminate();
-  const body = src + `\n;self.onmessage = e => { const t0 = performance.now();
+  /* wbProg(0~1, 글): 계산 코드가 진행 상황을 알림 (도구 2 주행선 다듬기 등) */
+  const body = src + `\n;let WBID = 0; const wbProg = (f, msg) => postMessage({id:WBID, prog:f, msg});
+    self.onmessage = e => { const t0 = performance.now(); WBID = e.data.id;
     try { if(e.data.Is){ const outs = e.data.Is.map(I => { const r = calc(I); return (r && r.out) || {}; }); postMessage({id:e.data.id, ok:true, outs, ms:performance.now()-t0}); return; }
       const r = calc(e.data.I); postMessage({id:e.data.id, ok:true, r, ms:performance.now()-t0}); }
     catch(err){ postMessage({id:e.data.id, ok:false, err:String(err && err.message || err)}); } };`;
   const w = new Worker(URL.createObjectURL(new Blob([body], {type:'text/javascript'})));
-  w.onmessage = e => { const f = WB.wait[e.data.id]; if(f){ delete WB.wait[e.data.id]; f(e.data); } };
+  w.onmessage = e => { if(e.data.prog != null){ if(WB.wait[e.data.id]) wbProgShow(e.data.prog, e.data.msg); return; }
+    const f = WB.wait[e.data.id]; if(f){ delete WB.wait[e.data.id]; f(e.data); } };
   w.onerror = e => { e.preventDefault(); const msg = '코드 오류: ' + (e.message || '읽을 수 없는 코드');
     Object.keys(WB.wait).forEach(id => { WB.wait[id]({ok:false, err:msg}); delete WB.wait[id]; }); WB.worker = null; WB.wsrc = ''; };
   WB.worker = w; WB.wsrc = src; return w; }
 function wbRun(I, code){ return new Promise(res => {   /* I 가 배열이면 여러 입력을 한 번에(입력 훑기) */
   let w; try{ w = wbWorker(code); }catch(err){ res({ok:false, err:'계산기를 시작하지 못했습니다: ' + err.message}); return; }
-  const lim = Array.isArray(I) ? 30 : 8;   /* 제한 시간 [s]: 한 번 계산 8초, 입력 훑기(여러 번) 30초 */
+  const cl = (wbT() && wbT().calcLimit) || 8, lim = Array.isArray(I) ? Math.max(30, cl) : cl;   /* 제한 시간 [s]: 한 번 계산 8초(도구가 calcLimit 로 늘림), 입력 훑기(여러 번) 30초 */
   const id = ++WB.seq, to = setTimeout(() => { if(WB.wait[id]){ delete WB.wait[id]; if(WB.worker===w){ w.terminate(); WB.worker = null; WB.wsrc = ''; } res({ok:false, err:`계산이 ${lim}초 안에 끝나지 않아 멈췄습니다 (반복문 확인)`}); } }, lim*1000);
   WB.wait[id] = r => { clearTimeout(to); res(r); };
   w.postMessage(Array.isArray(I) ? {id, Is:I} : {id, I}); }); }
@@ -51,13 +54,27 @@ const wbInputs = () => ({...WB.I, ...(wbT().extraI ? wbT().extraI() : {})});
 /* 도구 모듈이 표 등을 고친 뒤 부름: 다시 계산 */
 const wbRefresh = () => { if(WB.id) wbCalcSoon(); };
 const wbCode = () => WB.code[WB.id] != null ? WB.code[WB.id] : wbT().code;
+/* 계산 중 표시: 0.3초 넘게 걸리면 결과 칸 위에 진행 막대 + 이전 결과 흐리게. 새 계산이 오면 하던 계산은 버림 */
+function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = false; p.classList.toggle('ind', f == null);
+  const b = p.querySelector('i'); if(b && f != null) b.style.width = Math.round(Math.max(0, Math.min(1, f))*100) + '%';
+  const t = p.querySelector('span'); if(t) t.textContent = (msg || '계산 중') + (f != null ? ` · ${Math.round(f*100)} %` : ' …'); }
+function wbBusy(on){ clearTimeout(WB.busyT); const o = $('#wbout'), p = $('#wbprog');
+  if(on){ WB.busyT = setTimeout(() => { if(o) o.classList.add('wb-dim'); wbProgShow(null, '계산 중'); }, 300); return; }
+  if(o) o.classList.remove('wb-dim'); if(p){ p.hidden = true; const b = p.querySelector('i'); if(b) b.style.width = '0%'; } }
+function wbKill(){ if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
+  Object.keys(WB.wait).forEach(id => { const f = WB.wait[id]; delete WB.wait[id]; f({ok:false, cancelled:true}); }); }
 async function wbCalc(){ const T = wbT(); if(!T) return;
+  if(WB.busy) wbKill();                                   /* 입력이 또 바뀜: 하던 계산은 버리고 새로 */
+  const my = WB.cseq = (WB.cseq || 0) + 1; WB.busy = true; wbBusy(true);
   const r = await wbRun(wbInputs(), wbCode());
+  if(r.cancelled || my !== WB.cseq) return;
   if(!r.ok){ WB.err = r.err; WB.R = null; }
   else if(!r.r || !r.r.out || (r.r.x && !r.r.sig)){ WB.err = '계산 결과에 out(결과 숫자)이, x(가로축)가 있으면 sig(신호)도 있어야 합니다'; WB.R = null; }
   else { WB.err = ''; WB.R = r.r; WB.ms = r.ms; if(WB.R.x){ const n = WB.R.x.d.length; if(WB.xi >= n) WB.xi = n - 1; } else if(!WB.xa) WB.xa = 'in:' + (T.sweepFirst || T.inputs[0].k); }
   if(T.onResult) T.onResult(WB.R);   /* 도구 모듈이 자기 영역(표 · 그림)을 결과에 맞춰 고침 */
   if(WB.xa.startsWith('in:') && !WB.err && !T.noSig) await wbSweep();
+  if(my !== WB.cseq) return;
+  WB.busy = false; wbBusy(false);
   wbPaint(['out','main','sig','stat']); wb3dUpdate(); }
 /* 입력 훑기: 고른 입력 하나를 lo~hi 에서 n 점으로 바꿔 가며 계산, 결과 숫자(out)를 모음. 나머지 입력은 지금 값 */
 async function wbSweep(){ const k = WB.xa.slice(3), d = wbT().inputs.find(o => o.k===k); if(!d) return;
@@ -65,7 +82,7 @@ async function wbSweep(){ const k = WB.xa.slice(3), d = wbT().inputs.find(o => o
     WB.sw = d.sw ? {k, lo:d.sw[0], hi:d.sw[1], n:41} : {k, lo:+(v - a*.5).toPrecision(4), hi:+(v + a*.5).toPrecision(4), n:41}; }
   const S = WB.sw, n = Math.max(3, Math.min(201, Math.round(S.n))), X = Array.from({length:n}, (_, i) => S.lo + (S.hi - S.lo)*i/(n - 1));
   const base = wbInputs(), r = await wbRun(X.map(x => ({...base, [k]:x, _sweep:true})), wbCode());   /* _sweep: 도구가 훑기 중에 무거운 부가 계산을 건너뛸 수 있게 */
-  if(!r.ok){ S.X = null; S.err = r.err; return; } S.err = ''; S.X = X; S.O = {}; wbT().outputs.forEach(o => { S.O[o.k] = r.outs.map(t => t[o.k]); });
+  if(r.cancelled) return; if(!r.ok){ S.X = null; S.err = r.err; return; } S.err = ''; S.X = X; S.O = {}; wbT().outputs.forEach(o => { S.O[o.k] = r.outs.map(t => t[o.k]); });
   if(WB.si >= n) WB.si = n - 1; if(!WB.panesO.length) wbSelReset([], true); if(!WB.panesO.some(P => P.size)) wbT().outputs.filter(o => !o.hide).slice(0, 2).forEach(o => WB.selO.add(o.k)); }
 const wbCalcSoon = () => { clearTimeout(WB.timer); WB.timer = setTimeout(wbCalc, 120); };
 
@@ -141,7 +158,7 @@ function wbShellHTML(){ const T = wbT();
       <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button></div><div id="wbin"></div></aside>
       <div class="wb-right">
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
-        <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span>${T.outHTML ? '' : `<button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button>`}</div><div id="wbout"></div></section>
+        <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span>${T.outHTML ? '' : `<button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button>`}</div><div class="wb-prog" id="wbprog" hidden role="status" aria-live="polite"><i></i><span></span></div><div id="wbout"></div></section>
         ${T.midHTML ? '<div id="wbmid"></div>' : ''}
         ${T.figure || T.view3d ? `<div class="wb-two${T.view3d ? '' : ' one'}">
           ${T.figure ? `<section class="wb-sec" aria-label="기본 결과 그래프"><div class="wb-h"><h3>${T.mainTitle || '결과 그래프'}</h3><span class="wb-meta">${T.mainMeta || '그래프를 누르거나 끌면 커서 · ←/→ 한 칸씩'}</span></div><div id="wbmain" class="wb-plotbox" tabindex="0"></div></section>` : ''}
