@@ -44,9 +44,12 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   console.log('official menu disabled', await p.evaluate(()=>document.querySelector('[data-t2menu="track"]').disabled), 'ro', await p.evaluate(()=>document.querySelector('#t2tt').classList.contains('ro')), 'tops', await p.evaluate(()=>{ const a=document.querySelector('#t2tt').getBoundingClientRect(), b=document.querySelector('#t2emap').getBoundingClientRect(); return Math.round(a.top-b.top)+'/'+Math.round(a.height-b.height); }));
   { const pt=await p.evaluate(()=>{ const s=document.querySelector('#t2emap svg'), q=T2.mpE.pts[400], m=s.getScreenCTM(); return [q[0]*m.a+m.e, q[1]*m.d+m.f]; }); await p.mouse.click(pt[0], pt[1]); await W(300); console.log('map → row', await p.evaluate(()=>{ const r=document.querySelector('#t2tt tr.t2-hl'); return r ? [...r.parentNode.children].indexOf(r)+1 : 0; })); }
   await p.click('.t2-set [data-t2course="free"]'); await W(4000);
-  await p.click('[data-t2menu="track"]'); await W(200); await p.click('[data-t2act="paste"]'); await W(300);
-  await p.fill('#t2pta','종류, 길이, 반경\n직선, 100\n왼쪽, 31.4159, 10\n직선, 100\n왼쪽, 31.4159, 10'); await p.click('[data-t2pok]'); await W(500);
-  console.log('paste', await rows(), (await p.textContent('#t2sum')).trim());
+  console.log('track menu no paste', await (async()=>{ await p.click('[data-t2menu="track"]'); await W(200); const n=await p.locator('[data-t2act="paste"]').count(); await p.click('[data-t2menu="track"]'); await W(200); return n===0; })());
+  const ctrlV=async txt=>{ await p.evaluate(t=>{ const dt=new DataTransfer(); dt.setData('text/plain', t); document.querySelector('#t2tt').dispatchEvent(new ClipboardEvent('paste',{clipboardData:dt,bubbles:true,cancelable:true})); }, txt); await W(500); };
+  await ctrlV('종류\t길이 m\t반경 m\t왼쪽 폭 m\t오른쪽 폭 m\t슬라럼 콘 간격 m\t메모\n직선\t100\t\t2\t2\t20\t슬라럼\n왼쪽\t31.4159\t10\t3\t\t\t\n직선\t100\t\t\t\t\t\n왼쪽\t31.4159\t10\t\t\t8\t곡선 슬라럼');
+  console.log('ctrl+v', await rows(), (await p.textContent('#t2sum')).trim(), 'w', await p.evaluate(()=>t2Track(T2.free.text).rows.map(r=>[r.wl,r.wr,r.sl].map(x=>isFinite(x)?x:'-').join('/')).join(' ')), 'cones', await p.evaluate(()=>{ const c=t2FreeCones(); return ['L','R','C'].map(k=>c.filter(x=>x[2]===k).length).join('/'); }), 'inh', await p.locator('#t2tt .t2-inh').count());
+  await ctrlV('직선\t100\n왼쪽\t31.4159\t10\n직선\t100\n왼쪽\t31.4159\t10');
+  console.log('ctrl+v no head', await rows());
   await cell(0,'l',120); await cell(1,'type','오른쪽'); await cell(1,'ang',90); console.log('edit', await rows());
   await cell(3,'no',1); console.log('move 4→1', await rows()); await p.click('#t2tt [data-t2del="0"]'); await W(400); await p.click('#t2tt [data-t2add]'); await W(400); console.log('del · add', await rows());
   await p.locator('[data-t2o="laps"]').fill('5'); await W(500);
@@ -65,9 +68,12 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.click('[data-t2et="eI"]'); await W(300); await p.click('[data-t2gadd="row"]'); await W(300); await p.click('[data-t2gadd="col"]'); await W(300); console.log('eI grid', JSON.stringify(await p.evaluate(()=>t2Grid(T2.eI))));
   await p.click('[data-t2menu="eI"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(300);
   await p.click('[data-t2et="mt"]'); await W(400); { const bx=await (await p.$('#t2mc svg')).boundingBox(); await p.mouse.click(bx.x+bx.width*0.6, bx.y+bx.height*0.5); await W(300); console.log('torque → row', await p.evaluate(()=>{ const r=document.querySelector('#t2tt tr.t2-hl'); return r ? r.dataset.t2row : 'none'; })); }
+  { await p.click('[data-t2et="eI"]'); await W(300); await p.click('[data-t2gadd="row"]'); await W(300); await p.click('[data-t2gadd="col"]'); await W(300);
+    console.log('empty grid cells', await p.evaluate(()=>{ const td=[...document.querySelectorAll('#t2tt .t2-gtab tbody td')]; return td.map(x=>Math.round(x.getBoundingClientRect().width)+'x'+Math.round(x.getBoundingClientRect().height)).join(' '); }));
+    await p.click('[data-t2menu="eI"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(400); }
   await p.click('[data-t2et="tire"]'); await W(300); await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="paste"]'); await W(200); await p.fill('#t2pta','하중 N, μ\n0, 1.8\n1000, 1.6\n2000, 1.45'); await p.click('[data-t2pok]'); await W(500);
   console.log('tire', (await p.textContent('#t2msum')).trim(), 'lock mu', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled), 'lock eta_mot', await p.evaluate(()=>document.querySelector('[data-wbi="eta_mot"]').disabled));
-  await W(5000); console.log('tire acc', f((await R()).t_skid_s,3));
+  await W(800); for(let i=0;i<150 && await p.evaluate(()=>WB.busy);i++) await W(200); console.log('tire acc', f((await R()).t_skid_s,3));
   await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(500); console.log('tire cleared lock', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled));
   await p.click('[data-t2et="mt"]'); await W(300); await p.click('#t2tt [data-t2e="1,1"]'); await W(150); await p.fill('#t2tt .t2-ci','100'); await p.press('#t2tt .t2-ci','Enter'); await W(6000); console.log('torque edit acc', f((await R()).t_acc_s,3));
   await p.click('[data-t2menu="mt"]'); await W(200); await p.click('[data-t2act="ex"][data-t2k="mt"]'); await W(6000); console.log('torque reset acc', f((await R()).t_acc_s,3));

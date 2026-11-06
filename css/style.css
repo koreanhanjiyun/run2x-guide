@@ -2792,7 +2792,7 @@ html.wb-lock #tip{z-index:95}
 .wb-inleg{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 6px;font-size:11.5px;color:var(--muted)}.wb-inleg span{display:inline-flex;align-items:center}
 /* 도구 2: 코스 고르기 · 공식 코스 지도 · 랩별 기록 · 모터 탭 */
 .t2-sk{fill:none;stroke:#9aa0ab;stroke-width:1;stroke-dasharray:3 3}
-.t2-cone{stroke:none}.t2-cone.R{fill:#2563eb}.t2-cone.L{fill:#e0a800}.t2-cone.C{fill:#ea7a12}
+.t2-cone{stroke:none}.t2-cone.R{fill:#2563eb}.t2-cone.L{fill:#e0a800}.t2-cone.C{fill:#ea580c;stroke:#fff;stroke-width:.6px;vector-effect:non-scaling-stroke}
 .t2-sl{stroke:#16a34a;stroke-width:3.5;stroke-linecap:round}.t2-fin{stroke:#dc2626;stroke-width:3.5;stroke-linecap:round}
 .t2-arr{fill:#232731;stroke:#fff;stroke-width:1}
 .t2-cur{fill:#fff;stroke:#232731;stroke-width:2}
@@ -2915,3 +2915,10 @@ html.wb-lock #tip{z-index:95}
 .wb-prog span{position:relative;display:block;padding:2px 10px;color:var(--ink-2)}
 @keyframes wbprog{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
 #wbout.wb-dim{opacity:.45;transition:opacity .2s}
+/* 맵 편집 표: 빈 칸도 줄 높이 유지, 칸 표(토크 · 효율 · 타이어)는 내용만큼 폭 (빈 표에 줄 · 열을 더해도 납작 · 넓적하지 않게) */
+.t2-tt td,.t2-tt th{height:27px;box-sizing:border-box}
+.t2-gtab{width:auto}
+.t2-gtab td,.t2-gtab th{min-width:76px}
+.t2-inh{color:var(--muted);opacity:.7}
+.t2-cdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea7a12;vertical-align:middle}
+.t2-pvh{margin-left:10px;font-size:12px}
