@@ -38,6 +38,15 @@ const H=require('./h.js');
     console.log('move motor', JSON.stringify(await p.evaluate(()=>T9.cool.circuits.map(c=>c.id+':'+c.blocks.map(b=>b.t).join(',')))));
     await p.evaluate(()=>{ T9.cool=T9COOL_DEF(); t9Save(); wbPaint(['ext']); wbCalcSoon(); }); await W(800); }
 
+  // 펌프 여러 개: 직렬 (펌프 하나 더 → 큰 유량) · 병렬 (라디에서 갈래마다 펌프 → 유량 합, 비율 = 유량 비)
+  await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.blocks.push({id:'kp2', t:'pump', x:250, y:200, p:{flow:12, V:0.1}}); C.links=[['k1','k2'],['k2','kp2'],['kp2','k3'],['k3','k4'],['k4','k1']]; t9Save(); wbPaint(['ext']); wbCalcSoon(); }); await W(800);
+  console.log('series pumps', JSON.stringify(await p.evaluate(()=>{ const c=t9CoolCompile(); return [c.err, c.mode, +c.net.water[0].Cc.toFixed(2)]; })), await p.evaluate(()=>document.querySelector('.t9-cmsg').textContent));
+  await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.blocks.find(b=>b.id==='k2').p.flow=8; C.blocks.find(b=>b.id==='kp2').p.flow=4; C.links=[['k1','k2'],['k1','kp2'],['k2','k3'],['kp2','k4'],['k3','k1'],['k4','k1']]; C.selL=0; t9Save(); wbPaint(['ext']); wbCalcSoon(); }); await W(800);
+  console.log('parallel pumps', JSON.stringify(await p.evaluate(()=>{ const c=t9CoolCompile(); return [c.err, c.mode, +c.net.water[0].Cc.toFixed(2), c.net.water[0].nodes.map(n=>n.t+(n.part||'')+':'+n.q.toFixed(3))]; })), await p.evaluate(()=>(document.querySelector('.t9-csel')||{}).textContent));
+  if(process.argv[2]) await p.screenshot({path:process.argv[2]+'/cool_pumps.png'});
+  await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.links=[['k1','k2'],['k2','k3'],['k3','kp2'],['kp2','k4'],['k4','k1'],['k2','k4']]; C.selL=-1; t9Save(); wbPaint(['ext']); }); await W(300);
+  console.log('bad pumps', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)));
+  await p.evaluate(()=>{ T9.cool=T9COOL_DEF(); t9Save(); wbPaint(['ext']); wbCalcSoon(); }); await W(800);
   // 도구 2 에 등가값 넣기 → 도구 2 저장값
   await p.evaluate(()=>{ localStorage.removeItem(wbStoreKey('2')); }); await W(100); await p.click('[data-t9x="put"]'); await W(300);
   console.log('put', await p.evaluate(()=>{ const s=JSON.parse(localStorage.getItem(wbStoreKey('2'))||'{}'); return JSON.stringify([s.cw_c,s.ua0,s.ua60,s.m_cool,s.i_cool,s.b_cool,s.cw_on]); }));

@@ -20,7 +20,9 @@ NAMES = {'tf':'앞 트레드','tr':'뒤 트레드','ixx':'롤 관성 모멘트',
          'meas_camber_load':'실측 하중당 캠버 변화','meas_toe_load':'실측 하중당 토 변화',
          'cla_drs':'C<sub>L</sub>·A (DRS 열림)','cda_drs':'C<sub>D</sub>·A (DRS 열림)','xcop_drs':'CoP 위치 (DRS 열림)',
          'lsd_ramp_acc':'LSD 램프각 (가속)','lsd_ramp_dec':'LSD 램프각 (감속)',
-         'derate_t0':'디레이팅 시작 온도','derate_t1':'디레이팅 끝 온도','n_s':'셀 직렬 수','n_p':'셀 병렬 수'}
+         'derate_t0':'디레이팅 시작 온도','derate_t1':'디레이팅 끝 온도','n_s':'셀 직렬 수','n_p':'셀 병렬 수',
+         'c_vmax':'셀 최대 전압 (만충)','c_vnom':'셀 공칭 전압','c_vmin':'셀 최소 전압 (방전 종지)','q_mot':'내구 평균 모터 손실','q_inv':'내구 평균 인버터 손실','q_bat':'내구 평균 축전지 발열',
+         'cool_ua0':'라디에이터 UA 등가 (정지)','cool_ua60':'라디에이터 UA 등가 (60 km/h)'}
 # 함께 고치는 파트 (담당 파트 외에 이 파트 담당도 고침). firestore.rules 의 coOwn 과 같게
 CO = {'r_load':'프레임'}
 UNITS = {'cla_drs':'m²','cda_drs':'m²','xcop_drs':'mm'}

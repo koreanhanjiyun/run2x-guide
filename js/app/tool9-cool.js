@@ -22,7 +22,9 @@ try{ const s = JSON.parse(localStorage.getItem(T9KEY) || 'null'); if(s && s.cool
 const t9Save = () => { try{ localStorage.setItem(T9KEY, JSON.stringify({cool:T9.cool})); }catch(e){} };
 
 /* ---------- 냉각 블럭 배치 (시뮬링크처럼 블럭을 놓고 선으로 이음, 2026-11-06 도구 2 편집 탭에서 옮겨 옴)
-   수랭 회로 (최대 3개): 라디에이터 · 펌프 · 모터 · 인버터 · 축전지 블럭을 라디에서 나와 라디로 돌아오게 이음 (라디 1개 이상 · 처음 라디가 기준, 펌프 1개, 선 방향 = 냉각수 흐름, 갈라짐 · 합쳐짐 가능)
+   수랭 회로 (최대 3개): 라디에이터 · 펌프 · 모터 · 인버터 · 축전지 블럭을 라디에서 나와 라디로 돌아오게 이음 (라디 · 펌프 1개 이상, 처음 라디가 기준, 선 방향 = 냉각수 흐름, 갈라짐 · 합쳐짐 가능)
+   펌프가 여럿이면: 모두 전체 흐름이 지나가는 자리(직렬)면 회로 유량 = 그중 큰 유량 (펌프 곡선 · 배관 저항이 없으므로 같은 유량을 낸다고 보고 큰 쪽이 정함),
+                   한 곳에서 갈라진 갈래마다 펌프가 바로 붙어 있으면(병렬) 회로 유량 = 유량 합, 그 갈래 비율 = 펌프 유량 비 (호스 비율 입력 대신). 둘을 섞으면 오류
    공랭 덕트 (최대 3개): 입구 → 부품 … → 출구 로 이음 (선 방향 = 공기 흐름, 앞 부품 열로 공기가 데워짐)
    부품(모터 · 인버터 · 축전지)은 전체에서 한 번만 놓을 수 있고, 어디에도 없으면 외기로 바로 식음 (부품 hA) */
 const T9CB = { rad:['라디에이터', 'rad'], pump:['펌프', 'pump'], m:['모터', 'part'], i:['인버터', 'part'], b:['축전지', 'part'], in:['공기 입구', 'io'], out:['공기 출구', 'io'] };
@@ -37,11 +39,15 @@ const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { r[k] = 
 /* 수랭 회로 → 계산용: 갈라지고 합쳐지는 배관 가능. 라디에이터에서 나가는 흐름 = 1, 갈라지는 곳은 호스마다 비율(합 1), 합쳐지는 곳은 더함.
    라디로 들어오는 호스를 빼면 순환 없는 흐름이어야 함 → 그 순서(위상 정렬)로 점을 늘어놓음 (라디 = 0 번). 펌프는 전체 흐름이 지나가야 함 */
 function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.blocks.filter(b => b.t==='rad'), pumps = C.blocks.filter(b => b.t==='pump');
-  if(!rads.length) E.push('라디에이터가 1개 이상 있어야 함'); if(pumps.length!==1) E.push('펌프는 1개'); if(E.length) return {E};   // 라디가 여럿이면 처음 놓은 라디가 회로의 시작점
+  if(!rads.length) E.push('라디에이터가 1개 이상 있어야 함'); if(!pumps.length) E.push('펌프가 1개 이상 있어야 함'); if(E.length) return {E};   // 라디가 여럿이면 처음 놓은 라디가 회로의 시작점
   const R0 = rads[0].id, L = C.links.filter(([a, b]) => by.has(a) && by.has(b)), outs = id => L.filter(l => l[0]===id), ins = id => L.filter(l => l[1]===id);
   C.blocks.forEach(b => { const nm = T9CB[b.t][0]; if(!outs(b.id).length) E.push(`${nm}에서 나가는 호스가 없음`); if(!ins(b.id).length) E.push(`${nm}로 들어오는 호스가 없음`); });
   if(E.length) return {E};
-  const fr = l => { const o = outs(l[0]); if(o.length < 2) return 1; const w = o.map(x => isFinite(+x[2]) && +x[2] > 0 ? +x[2] : 1/o.length), s = w.reduce((a, b) => a + b, 0); return w[o.indexOf(l)]/s; };
+  const flow = id => t9CV(by.get(id).p, T9CP.pump).flow, isPump = id => by.get(id).t==='pump';
+  const pSplit = t9PumpSplit(C, by);   // 갈래마다 펌프가 붙은 갈라짐 (있으면 그 비율 = 펌프 유량 비)
+  const fr = l => { const o = outs(l[0]); if(o.length < 2) return 1;
+    if(pSplit && l[0]===pSplit){ const s = o.reduce((a, x) => a + flow(x[1]), 0); return s > 0 ? flow(l[1])/s : 1/o.length; }
+    const w = o.map(x => isFinite(+x[2]) && +x[2] > 0 ? +x[2] : 1/o.length), s = w.reduce((a, b) => a + b, 0); return w[o.indexOf(l)]/s; };
   // 위상 정렬 (라디로 들어오는 호스 빼고)
   const deg = new Map(C.blocks.map(b => [b.id, ins(b.id).filter(l => l[1]!==R0).length])); deg.set(R0, 0); const order = [], Q = [R0];
   while(Q.length){ const id = Q.shift(); order.push(id); outs(id).forEach(l => { if(l[1]===R0) return; deg.set(l[1], deg.get(l[1]) - 1); if(deg.get(l[1])===0) Q.push(l[1]); }); }
@@ -49,19 +55,30 @@ function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.bloc
   const ix = new Map(order.map((id, k) => [id, k])), q = new Map([[R0, 1]]);
   order.forEach(id => { if(id!==R0) q.set(id, ins(id).reduce((a, l) => a + q.get(l[0])*fr(l), 0)); });
   const qr = ins(R0).reduce((a, l) => a + q.get(l[0])*fr(l), 0);
-  if(Math.abs(qr - 1) > 1e-6) E.push('라디로 돌아오는 흐름이 1 이 아님'); if(Math.abs(q.get(pumps[0].id) - 1) > 1e-6) E.push('펌프는 전체 흐름이 지나가는 곳에 (갈라지기 전 · 합쳐진 뒤)');
+  if(Math.abs(qr - 1) > 1e-6) E.push('라디로 돌아오는 흐름이 1 이 아님');
+  // 펌프 규칙: 직렬(모두 전체 흐름) → 큰 유량, 한 갈라짐의 갈래마다 하나씩(병렬) → 유량 합
+  const full = pumps.filter(b => Math.abs(q.get(b.id) - 1) < 1e-6), part = pumps.filter(b => Math.abs(q.get(b.id) - 1) >= 1e-6);
+  let Vt = 0, mode = '';
+  if(!part.length){ Vt = Math.max(...full.map(b => flow(b.id))); mode = full.length > 1 ? `직렬 펌프 ${full.length}개 → 큰 유량 ${Vt} L/min` : ''; }
+  else if(!full.length && pSplit && part.every(b => ins(b.id).length===1 && ins(b.id)[0][0]===pSplit) && Math.abs(q.get(pSplit) - 1) < 1e-6 && part.length===outs(pSplit).length){
+    Vt = part.reduce((a, b) => a + flow(b.id), 0); mode = `병렬 펌프 ${part.length}개 → 유량 합 ${+Vt.toFixed(2)} L/min`; }
+  else E.push('펌프는 모두 전체 흐름이 지나가는 자리(직렬)에 두거나, 한 곳에서 갈라진 갈래마다 바로 하나씩(병렬) 두어야 함');
+  if(!(Vt > 0) && !E.length) E.push('펌프 유량이 0');
   if(E.length) return {E};
   const nodes = order.map(id => { const B = by.get(id), v = t9CV(B.p, t9CParams(C, B));
     return {t:B.t==='rad' ? 'rad' : B.t==='pump' ? 'pump' : 'part', part:T9CB[B.t][1]==='part' ? B.t : undefined, C:Math.max(1, v.V/1000*P.rho*P.cp), q:id===R0 ? 1 : q.get(id),
             ins:ins(id).map(l => [ix.get(l[0]), q.get(l[0])*fr(l)]), ...(B.t==='rad' ? {UA:v.UA, A:v.A, kd:v.kd, fan:v.fan} : {})}; });   // 라디마다 공기 쪽 값
-  const rr = t9CV(rads[0].p, T9CP.rad), pu = t9CV(pumps[0].p, T9CP.pump);
-  return {E, net:{nodes, Cc:pu.flow/60000*P.rho*P.cp, UA:rr.UA, A:rr.A, kd:rr.kd, fan:rr.fan}, q, fr}; }
+  const rr = t9CV(rads[0].p, T9CP.rad);
+  return {E, net:{nodes, Cc:Vt/60000*P.rho*P.cp, UA:rr.UA, A:rr.A, kd:rr.kd, fan:rr.fan}, q, fr, mode}; }
+/* 갈래마다 펌프가 바로 붙은 갈라짐 블럭 id (나가는 호스가 둘 이상이고 모두 펌프로 감), 없으면 '' */
+function t9PumpSplit(C, by){ const L = C.links.filter(([a, b]) => by.has(a) && by.has(b));
+  for(const B of C.blocks){ const o = L.filter(l => l[0]===B.id); if(o.length >= 2 && o.every(l => by.get(l[1]).t==='pump')) return B.id; } return ''; }
 /* 배치 → 계산용 회로 + 오류 */
-function t9CoolCompile(){ const out = {water:[], air:[]}, err = {}, used = {};
+function t9CoolCompile(){ const out = {water:[], air:[]}, err = {}, used = {}, mode = {};
   (T9.cool.circuits || []).forEach(C => { const E = [], by = new Map(C.blocks.map(b => [b.id, b])), nx = new Map(), pv = new Map();
     C.links.forEach(([a, b]) => { if(by.has(a) && by.has(b)){ nx.set(a, b); pv.set(b, a); } });
     C.blocks.forEach(b => { if(T9CB[b.t] && T9CB[b.t][1]==='part'){ if(used[b.t]) E.push(`${T9CB[b.t][0]}이 다른 회로에도 있음`); used[b.t] = true; } });
-    if(C.kind==='water'){ const r = t9CWater(C, by); E.push(...r.E); if(!r.E.length) out.water.push(r.net); }
+    if(C.kind==='water'){ const r = t9CWater(C, by); E.push(...r.E); if(!r.E.length){ out.water.push(r.net); if(r.mode) mode[C.id] = r.mode; } }
     else { const ins = C.blocks.filter(b => b.t==='in'), outs = C.blocks.filter(b => b.t==='out'), parts = [];
       if(ins.length!==1 || outs.length!==1) E.push('입구 · 출구는 1개씩');
       else { let cur = nx.get(ins[0].id); const seen = new Set();
@@ -69,7 +86,7 @@ function t9CoolCompile(){ const out = {water:[], air:[]}, err = {}, used = {};
         if(cur!==outs[0].id) E.push('입구에서 출구까지 이어져야 함'); else if(seen.size!==C.blocks.length - 2) E.push('이어지지 않은 블럭이 있음'); }
       if(!E.length){ const q = t9CV(ins[0].p, T9CP.in); out.air.push({A:q.A, kd:q.kd, fan:q.fan, parts}); } }
     if(E.length) err[C.id] = E; });
-  return {net:out, err}; }
+  return {net:out, err, mode}; }
 /* 부품이 어디서 식는지: 'w1' 처럼 회로 id + 종류, 없으면 null (오류 회로는 안 침) */
 function t9CoolWhere(p){ const ok = t9CoolCompile().err; for(const C of T9.cool.circuits){ if(ok[C.id]) continue; if(C.blocks.some(b => b.t===p)) return C; } return null; }
 const T9CBW = 150, T9CBH = 58;   // 블럭 크기 (그림 좌표)
@@ -122,21 +139,23 @@ function t9CoolPage(){ const CC = T9.cool.circuits, nw = CC.filter(c => c.kind==
     const form = (title, def, obj, attr) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
         return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"><i>${u}</i></label>`; }).join('')}</div>`;
     return `<div class="t9-cc" data-t9cc="${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b><span class="muted">${C.kind==='water' ? '선 방향 = 냉각수 흐름 · 라디에서 나와 라디로 (갈라짐 · 합쳐짐 가능)' : '선 방향 = 공기 흐름 · 입구 → 출구'}</span>
-        <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? T9.cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = (t==='pump' || T9CB[t][1]==='part') && here;
-      return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${T9CB[t][0]}은 이 회로에 이미 있음 (${t==='pump' ? '회로마다 1개' : '부품은 한 곳에만'})"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
+        <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? T9.cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = T9CB[t][1]==='part' && here;
+      return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${T9CB[t][0]}은 이 회로에 이미 있음 (부품은 한 곳에만)"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
         <button type="button" class="btn small t9-cdel" data-t9cdel="${C.id}">회로 지우기</button></div>
       ${C.kind==='water' ? form('냉각수', T9CP.water, C.p, `data-t9cwp="${C.id}"`) : ''}
       <div class="t9-cbox">${t9CoolSVG(C)}</div>
-      <p class="t9-cmsg ${E ? 'bad' : 'ok'}">${E ? '계산에서 빠짐: ' + E.join(' · ') : '이어짐 · 계산에 씀'}</p>
+      <p class="t9-cmsg ${E ? 'bad' : 'ok'}">${E ? '계산에서 빠짐: ' + E.join(' · ') : '이어짐 · 계산에 씀' + (comp.mode[C.id] ? ' · ' + comp.mode[C.id] : '')}</p>
       ${C.selL >= 0 && C.links[C.selL] ? (() => { const l = C.links[C.selL], A = C.blocks.find(b => b.id===l[0]), Bt = C.blocks.find(b => b.id===l[1]), o = C.links.filter(q => q[0]===l[0]);
-          return `<div class="t9-csel"><div class="t9-cform"><b>호스</b><span>${T9CB[A.t][0]} → ${T9CB[Bt.t][0]}</span>${o.length > 1 ? o.map(q => { const k = o.indexOf(q) + 1, jj = C.links.indexOf(q), Bq = C.blocks.find(b => b.id===q[1]);
+          return `<div class="t9-csel"><div class="t9-cform"><b>호스</b><span>${T9CB[A.t][0]} → ${T9CB[Bt.t][0]}</span>${o.length > 1 && t9PumpSplit(C, new Map(C.blocks.map(b => [b.id, b])))===l[0] ? (() => { const fl = o.map(q => t9CV(C.blocks.find(b => b.id===q[1]).p, T9CP.pump).flow), sf = fl.reduce((a, b) => a + b, 0) || 1;
+                return o.map((q, k) => `<span class="t9-cfi"><span>${k + 1}번 (→ 펌프 ${fl[k]} L/min)</span><b>${(fl[k]/sf*100).toFixed(1)} %</b></span>`).join('') + '<span class="muted">갈래마다 펌프 → 비율 = 펌프 유량 비</span>'; })()
+            : o.length > 1 ? o.map(q => { const k = o.indexOf(q) + 1, jj = C.links.indexOf(q), Bq = C.blocks.find(b => b.id===q[1]);
               return `<label class="t9-cfi"><span>${k}번 (→ ${T9CB[Bq.t][0]}) 비율</span><input type="number" step="any" min="1" max="99" value="${(+(q[2] || 1/o.length)*100).toFixed(1)}" data-t9crat="${C.id}:${jj}"><i>%</i></label>`; }).join('') : '<span class="muted">갈라지지 않은 호스 (흐름 100 %)</span>'}</div>
             <button type="button" class="btn small" data-t9clx="${C.id}">호스 지우기</button></div>`; })() : ''}
       ${B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`) : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}
         ${B.t!=='in' && B.t!=='out' ? `<button type="button" class="btn small" data-t9cbx="${C.id}:${B.id}">블럭 지우기</button>` : ''}</div>` : (C.selL >= 0 ? '' : `<p class="muted t9-cmsg">블럭 · 호스를 누르면 입력이 여기 나옵니다 (Delete 키로 지우기). 블럭은 끌어서 옮기고, 오른쪽 점을 끌어 다른 블럭에 놓으면 이어집니다.${C.kind==='water' ? ' 한 블럭에서 호스를 둘 이상 끌어내면 갈라지고(번호 · 비율), 한 블럭으로 여러 호스가 들어오면 합쳐집니다.' : ''}</p>`)}</div>`; };
   const free = ['m', 'i', 'b'].filter(p => !used.has(p)).map(p => T9CB[p][0]);
   return `<div class="t9-cool"><div class="t9-cbar"><button type="button" class="btn small" data-t9cnew="water"${nw >= 3 ? ' disabled' : ''}>+ 수랭 회로</button><button type="button" class="btn small" data-t9cnew="air"${na >= 3 ? ' disabled' : ''}>+ 공랭 덕트</button>
-      <span class="muted">수랭 · 공랭 각각 최대 3개. ${free.length ? `회로에 없는 부품(${free.join(' · ')})은 외기로 바로 식습니다 (부품 hA).` : ''} 라디에이터는 여러 개 넣을 수 있고, 처음 넣은 라디에이터가 회로의 기준(출발점)입니다. 펌프는 회로당 하나입니다.</span></div>
+      <span class="muted">수랭 · 공랭 각각 최대 3개. ${free.length ? `회로에 없는 부품(${free.join(' · ')})은 외기로 바로 식습니다 (부품 hA).` : ''} 라디에이터 · 펌프는 여러 개 넣을 수 있습니다. 처음 넣은 라디에이터가 회로의 기준(출발점)이고, 펌프가 모두 직렬이면 큰 유량, 한 곳에서 갈라진 갈래마다 하나씩이면 유량 합(갈래 비율 = 펌프 유량 비)입니다.</span></div>
     ${CC.map(card).join('')}</div>`; }
 /* 고친 뒤: 저장 · 다시 그림 · (시뮬레이션 탭으로 갈 때) 계산 */
 const t9CoolSet = (paint = true) => { t9Save(); if(paint) wbPaint(['ext']); wbCalcSoon(); };
@@ -250,9 +269,9 @@ WB_TOOLS['9'] = {
   x:{n:'시간', u:'s'},
   sweepFirst:'v',
   inputs:[
-    {k:'t_amb', n:'외기 온도', u:'°C', v:25, d:0, g:T9G.run}, {k:'v', n:'평균 차속', u:'km/h', v:53, d:1, g:T9G.run, sw:[0, 120]},
+    {k:'t_amb', n:'외기 온도', u:'°C', v:25, d:0, g:T9G.run}, {k:'v', dk:'v_end_avg', n:'평균 차속', u:'km/h', v:53, d:1, g:T9G.run, sw:[0, 120]},
     {k:'t_run', n:'주행 시간', u:'s', v:1390, d:0, g:T9G.run}, {k:'t0', n:'출발 온도', u:'°C', v:25, d:0, g:T9G.run},
-    {k:'L_m', n:'모터 손실', u:'W', v:750, d:0, g:T9G.heat}, {k:'L_i', n:'인버터 손실', u:'W', v:490, d:0, g:T9G.heat}, {k:'L_b', n:'축전지 발열', u:'W', v:1180, d:0, g:T9G.heat},
+    {k:'L_m', dk:'q_mot', n:'모터 손실', u:'W', v:750, d:0, g:T9G.heat}, {k:'L_i', dk:'q_inv', n:'인버터 손실', u:'W', v:490, d:0, g:T9G.heat}, {k:'L_b', dk:'q_bat', n:'축전지 발열', u:'W', v:1180, d:0, g:T9G.heat},
     {k:'th_c', n:'모터 열용량', u:'J/K', v:6000, d:0, g:T9G.m}, {k:'th_r', n:'모터 → 냉각수 열저항 (수랭)', u:'K/W', v:0.02, d:4, g:T9G.m},
     {k:'m_ha0', n:'모터 공랭 hA (정지)', u:'W/K', v:10, d:1, g:T9G.m}, {k:'m_ha60', n:'모터 공랭 hA (60 km/h)', u:'W/K', v:40, d:1, g:T9G.m},
     {k:'i_c', n:'인버터 열용량', u:'J/K', v:2000, d:0, g:T9G.i}, {k:'i_r', n:'인버터 → 냉각수 열저항 (수랭)', u:'K/W', v:0.05, d:4, g:T9G.i},
@@ -267,8 +286,8 @@ WB_TOOLS['9'] = {
     {k:'s_qw', n:'냉각수로 버리는 열', u:'W', d:0, g:'정상 온도 (평균 차속, 발열 일정)'}, {k:'s_qa', n:'공기로 바로 버리는 열', u:'W', d:0, g:'정상 온도 (평균 차속, 발열 일정)'},
     {k:'e_tm', n:'모터', u:'°C', d:1, g:'주행 시간 뒤 (출발 온도에서)'}, {k:'e_ti', n:'인버터', u:'°C', d:1, g:'주행 시간 뒤 (출발 온도에서)'}, {k:'e_tb', n:'축전지', u:'°C', d:1, g:'주행 시간 뒤 (출발 온도에서)'},
     {k:'e_win', n:'라디 입구 (수랭 회로 1)', u:'°C', d:2, g:'주행 시간 뒤 (출발 온도에서)'},
-    {k:'q_cw', n:'냉각수 열용량 (모든 수랭 회로)', u:'J/K', d:0, g:'도구 2 등가값 (냉각수 한 덩어리)'}, {k:'q_ua0', n:'라디에이터 UA 등가 (정지)', u:'W/K', d:1, g:'도구 2 등가값 (냉각수 한 덩어리)'},
-    {k:'q_ua60', n:'라디에이터 UA 등가 (60 km/h)', u:'W/K', d:1, g:'도구 2 등가값 (냉각수 한 덩어리)'},
+    {k:'q_cw', dk:'cool_c', n:'냉각수 열용량 (모든 수랭 회로)', u:'J/K', d:0, g:'도구 2 등가값 (냉각수 한 덩어리)'}, {k:'q_ua0', dk:'cool_ua0', n:'라디에이터 UA 등가 (정지)', u:'W/K', d:1, g:'도구 2 등가값 (냉각수 한 덩어리)'},
+    {k:'q_ua60', dk:'cool_ua60', n:'라디에이터 UA 등가 (60 km/h)', u:'W/K', d:1, g:'도구 2 등가값 (냉각수 한 덩어리)'},
     {k:'n_w', n:'수랭 회로 수', u:'', d:0, g:'정상 온도 (평균 차속, 발열 일정)', hide:true}, {k:'n_a', n:'공랭 덕트 수', u:'', d:0, g:'정상 온도 (평균 차속, 발열 일정)', hide:true},
   ],
   sigs:[
@@ -295,7 +314,9 @@ WB_TOOLS['9'] = {
     {n:'도구 2 등가값 · 팬 라디 (라디 → 펌프 → 인버터, 팬 0.08 m³/s, 정지 · 60 km/h)', I:{v:50, L_m:0, L_i:400, L_b:0, i_r:0.05, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:250, A:0.06, kd:0.3, fan:0.08}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'i', C:836, q:1, ins:[[1, 1]]}], Cc:557.3333333333334}], air:[]}}, expect:{q_ua0:63.210299, q_ua60:174.316836},
      src:'부품이 하나면 냉각수 점 − 외기 = Q ÷ (ε C_min) → UA 등가 = ε C_min. 정지: 공기 = 팬 0.08 m³/s → C_a = 96.48 W/K, 코어 풍속 1.333 m/s → UA = 250 × (1.333 ÷ 5)^0.6 → ε C_min = 63.210 W/K. 60 km/h: 공기 = 0.06 × 0.3 × 16.667 + 0.08 = 0.38 m³/s → ε C_min = 174.317 W/K'},
     {n:'시간에 따라 · 오래 달리면 정상 온도에 닿음 (직렬 회로, 출발 25 °C, 20000 s)', I:{v:158.0724, L_m:215.371, L_i:113.353, L_b:0, th_r:0.02, i_r:0.05, th_c:500, i_c:500, t_run:20000, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[3, 1]], UA:250, A:0.06, kd:0.3, fan:0}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'i', C:836, q:1, ins:[[1, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[2, 1]]}], Cc:557.3333333333334}], air:[]}}, expect:{e_tm:30.564363, e_ti:31.538161, e_win:26.256943},
-     src:'칸마다 지수 적분한 냉각수 · 부품 온도가 시상수(냉각수 전체 5016 J/K ÷ ε C_min 261.5 W/K ≈ 19 s)보다 아주 긴 시간 뒤 첫째 경우의 손계산 정상 온도와 같아짐'}
+     src:'칸마다 지수 적분한 냉각수 · 부품 온도가 시상수(냉각수 전체 5016 J/K ÷ ε C_min 261.5 W/K ≈ 19 s)보다 아주 긴 시간 뒤 첫째 경우의 손계산 정상 온도와 같아짐'},
+    {n:'병렬 펌프 · 라디 → (펌프 8 L/min → 인버터) · (펌프 4 L/min → 모터) → 라디 (회로 유량 = 합 12 L/min, 갈래 비율 = 펌프 유량 비 2/3 · 1/3)', I:{v:158.0724, L_m:215.371, L_i:113.353, L_b:0, th_r:0.02, i_r:0.05, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[3, 2/3], [4, 1/3]], UA:250, A:0.06, kd:0.3, fan:0}, {t:'pump', C:418, q:2/3, ins:[[0, 2/3]]}, {t:'pump', C:418, q:1/3, ins:[[0, 1/3]]}, {t:'part', part:'i', C:836, q:2/3, ins:[[1, 2/3]]}, {t:'part', part:'m', C:1254, q:1/3, ins:[[2, 1/3]]}], Cc:836}], air:[]}}, expect:{s_win:26.160986, s_ti:31.638810, s_tm:30.848058},
+     src:'C_c = 12 L/min × 1000 × 4180 ÷ 60000 = 836 W/K → ε C_min = 283.142 W/K (C_a = 953.2, NTU = 1.79). 라디 입구 = 25 + 328.724 ÷ 283.142 = 26.1610, 출구 = 25 + (1 − 283.142 ÷ 836) × 1.1610. 인버터 점 = 출구 + 113.353 ÷ (2/3 × 836) → 인버터 = + 113.353 × 0.05 = 31.6388, 모터 점 = 출구 + 215.371 ÷ (1/3 × 836) → 모터 = + 215.371 × 0.02 = 30.8481'}
   ],
   code: `// ================================================================
 // 도구 9 냉각 계통 계산기 — 계산 코드
