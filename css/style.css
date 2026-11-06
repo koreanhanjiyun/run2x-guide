@@ -2470,7 +2470,10 @@ html.wb-lock,html.wb-lock body{overflow:hidden}
 .wb-vt td:nth-child(3),.wb-vt td:nth-child(4){font-variant-numeric:tabular-nums}
 html.wb-lock #tip{z-index:95}
 .wb-ot th,.wb-ot td{background:none}
-.wb-vt td:first-child,.wb-vt th:first-child{width:auto;white-space:nowrap}
+/* 검증표: 경우 · 근거 열은 넓게(줄바꿈), 숫자 · 단위 · 판정 열은 내용만큼 */
+.wb-vt{table-layout:fixed;width:100%}
+.wb-vt th:nth-child(1){width:27%}.wb-vt th:nth-child(2){width:14%}.wb-vt th:nth-child(3),.wb-vt th:nth-child(4){width:9%}.wb-vt th:nth-child(5){width:7%}.wb-vt th:nth-child(6){width:6%}.wb-vt th:nth-child(7){width:28%}
+.wb-vt td{white-space:normal;overflow-wrap:anywhere;vertical-align:top}
 /* 도구 1: 표 입력 (부품 질량 표 · 드라이버 모델) */
 .m1 .wb-h{align-items:center}
 .m1-ptabs{display:flex;flex-wrap:wrap;gap:6px}
@@ -2871,7 +2874,8 @@ html.wb-lock #tip{z-index:95}
 .t2-r .d{text-align:right;color:var(--ink-2);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .t2-dt{font-weight:600}
 .wb-ir.lock input{background:var(--panel-2);color:var(--muted)}
-.wb-ir .wb-lk{grid-column:1 / -1;font-size:11.5px;color:var(--accent)}
+.wb-in-n{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0}.wb-in-t{min-width:0}
+.wb-ir .wb-lk{margin-left:auto;font-size:11.5px;color:var(--accent);white-space:nowrap}
 .t2-oc h4 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t2-oc.g .t2-r .d{font-size:13.5px;font-weight:700;color:var(--ink)}.t2-oc.g .t2-r .d .muted{font-size:11.5px;font-weight:400}
 /* 도구 2 (2026-11-06 3차): 탭 안 고르기 줄 · 표 상자 = 그림 상자 높이 · 그림 → 표 · 그래프 칸 */
@@ -2964,8 +2968,36 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .t2-sbs{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-start}
 .t2-sb{flex:1 1 480px;min-width:0;border:1px solid var(--line);border-radius:7px;padding:4px 4px 6px;background:var(--panel-2)}
 .t2-sbh{font-size:12px;font-weight:700;color:var(--ink-2);padding:3px 6px 4px}
-.t2-cg .wb-ir{grid-template-columns:minmax(0,1fr) 92px 50px 120px;min-height:34px;box-sizing:border-box}
-.t2-cg .wb-ir .wb-lk{grid-column:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-cg .wb-ir{grid-template-columns:minmax(0,1fr) 92px 46px;min-height:36px;box-sizing:border-box}
 .t2-cnote{margin:10px 2px 0;font-size:12px}
 .t2-mth{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:4px 0 6px;font-size:13px}
 .t2-use{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12.5px}
+/* 도구 2 편집 표: 모든 칸 구분선 · 가운데 · 행 · 열 모양 추가 단추 */
+.t2-gtab{margin:0 auto;border-collapse:collapse}
+.t2-gtab td,.t2-gtab th{border:1px solid var(--line)}
+.t2-gtab td.t2-xc,.t2-gtab th.t2-xc{min-width:30px;width:30px;padding:0;text-align:center}
+.t2-gtab tr.t2-delc td{background:var(--panel-2);height:26px}
+.t2-tt tr.t2-addr td{padding:0;border:1px dashed var(--line);background:var(--panel-2)}
+.t2-tt tr.t2-addr button,.t2-gtab th.t2-addc button{font:inherit;font-size:12.5px;width:100%;height:100%;min-height:27px;border:0;background:none;color:var(--accent,#3d5a99);cursor:pointer;font-weight:600}
+.t2-tt tr.t2-addr button:hover,.t2-gtab th.t2-addc button:hover{background:var(--panel)}
+.t2-gtab th.t2-addc{min-width:58px;width:58px;padding:0;border:1px dashed var(--line);background:var(--panel-2);vertical-align:middle;position:static}
+.t2-gtab th.t2-addc button span{font-weight:400;color:var(--muted);font-size:11px}
+.t2-gtab td.t2-empty{white-space:normal;max-width:420px}
+.t2-pvh{margin:6px 2px 0;font-size:12px}
+.t2-heat .t2-hg{stroke:rgba(255,255,255,.55);stroke-width:1;pointer-events:none}
+.t2-heat .t2-hf{fill:none;stroke:var(--line);pointer-events:none}
+/* 입력 행 안 옵션 · 상자 맨 위 옵션 행 */
+.t2-inopt{margin-left:8px;flex:0 0 auto}.t2-inopt .dc-seg button{padding:2px 8px;font-size:11.5px}
+.t2-optrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 6px 8px;border-bottom:1px dashed var(--line);margin-bottom:4px}
+.t2-optn{font-size:12.5px;font-weight:600}.t2-optd{flex:1 1 100%;margin:0;font-size:12px}
+/* 모델 단계 */
+.t2-model{display:flex;flex-direction:column;gap:14px}
+.t2-mdnote{margin:2px 0 0;font-size:12.5px}
+.t2-mdh{font-size:13px;font-weight:700;margin-bottom:6px}
+.t2-mdops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.t2-mdop{font:inherit;text-align:left;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;color:var(--ink)}
+.t2-mdop b{font-size:13.5px}.t2-mdd{font-size:12.5px;line-height:1.5}.t2-mdu{font-size:11.5px;color:var(--muted);line-height:1.45}
+.t2-mdop:hover{border-color:#9fb0d6}
+.t2-mdop[aria-pressed="true"]{border-color:#3d5a99;box-shadow:inset 0 0 0 1px #3d5a99;background:#f2f5fc}
+.t2-mdop:disabled{opacity:.45;cursor:not-allowed}
+.t2-mdl{font-size:12px;font-weight:600;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);white-space:nowrap}

@@ -10,7 +10,7 @@ const DASHCALC = (p, c) => {
   const xcop = p.xcop/1000, hcop = p.hcop/1000;
   const ay = (c.R>0 && isFinite(c.R)) ? v*v/c.R : 0, ax = c.ax*g;
   const Ff0 = W*p.fr/100, Fr0 = W - Ff0;
-  const DFf = DF*(L - xcop)/L, DFr = DF - DFf;
+  const DFf = DF*xcop/L, DFr = DF - DFf;   /* xcop = 뒤축부터 앞으로 CoP 거리 */
   const dX = (m*ax*h + D*hcop)/L;             /* 뒤로 넘어가는 하중 (가속·항력) */
   const Ff = Ff0 + DFf - dX, Fr = Fr0 + DFr + dX;
   const lam = p.lltd/100, tf = p.tf/1000, tr = p.tr/1000;
@@ -118,7 +118,7 @@ const CARFIG = (() => {
     h += `<line class="cf-gnd" x1="10" y1="${G}" x2="${VW-10}" y2="${G}"/>`;
     for(let x=18; x<VW-10; x+=12) h += `<line class="cf-hatch" x1="${x}" y1="${G}" x2="${x-7}" y2="${G+7}"/>`;
     /* 무게중심: 높이 치수는 휠베이스처럼 차 밖(앞쪽)으로 뺀다 */
-    const [cx, cy] = T(K.a, p.h), [x0] = T(0,0), [x1] = T(L,0), [px, py] = T(p.xcop, p.hcop);
+    const [cx, cy] = T(K.a, p.h), [x0] = T(0,0), [x1] = T(L,0), [px, py] = T(L - p.xcop, p.hcop);   /* p.xcop = 뒤축부터 */
     const hdim = (xd, yt, xs, cls, mid, txt) => `<line x1="${xs}" y1="${yt}" x2="${xd-5}" y2="${yt}" class="cf-ext${cls?' '+cls:''}"/>
       <line x1="${xd}" y1="${yt}" x2="${xd}" y2="${G}" class="cf-dim${cls?' '+cls:''}" marker-start="url(#${id+mid}d)" marker-end="url(#${id+mid}d)"/>
       <text transform="translate(${xd-6} ${(yt+G)/2}) rotate(-90)" text-anchor="middle" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`;
@@ -128,16 +128,16 @@ const CARFIG = (() => {
     h += hdim(hiCoP ? xIn : (AERO ? xOut : xIn), cy, cx-10, '', 'k', `h ${f0(p.h)}`)
       + (AERO ? hdim(hiCoP ? xOut : xIn, py, px-10, 'in', 'i', `${sub('h','CoP')} ${f0(p.hcop)}`) : '')
       + `<line x1="${cx}" y1="${cy+9}" x2="${cx}" y2="${G}" class="cf-lead"/>`;
-    /* 앞뒤 위치 치수: 위쪽 빈 곳에, 앞축에서 먼 쪽을 바깥(위)에 */
+    /* 앞뒤 위치 치수 (뒤축부터): 위쪽 빈 곳에, 뒤축에서 먼 쪽을 바깥(위)에 */
     const [, yTopF] = T(0, 2*r + 30), yA = 36, yB = 60;
     const xdim = (xe, ye, yd, cls, mid, txt) => `<line x1="${xe}" y1="${yd-6}" x2="${xe}" y2="${ye}" class="cf-ext${cls?' '+cls:''}"/>
-      <line x1="${x0}" y1="${yd}" x2="${xe}" y2="${yd}" class="cf-dim${cls?' '+cls:''}" marker-start="url(#${id+mid}d)" marker-end="url(#${id+mid}d)"/>
-      ${Math.abs(xe-x0) - 20 > [...txt].reduce((w, ch) => w + (/[\uac00-\ud7a3]/.test(ch) ? 14 : ch===' ' ? 4.2 : 8.2), 0) ? `<text x="${(x0+xe)/2}" y="${yd-6}" text-anchor="middle" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`
-        : `<text x="${x0-8}" y="${yd+5}" text-anchor="end" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`}`;   /* 치수선보다 글자가 길면 앞축 바깥(왼쪽)에 */
-    const farCoP = AERO && px > cx;
-    h += `<line x1="${x0}" y1="${yA-6}" x2="${x0}" y2="${yTopF}" class="cf-ext"/>`
-      + xdim(cx, cy-11, AERO ? (farCoP ? yB : yA) : yB, '', 'k', `CG 앞축부터 ${f0(K.a)} mm`)
-      + (AERO ? xdim(px, py-10, farCoP ? yA : yB, 'in', 'i', `CoP 앞축부터 ${f0(p.xcop)} mm`) : '');
+      <line x1="${x1}" y1="${yd}" x2="${xe}" y2="${yd}" class="cf-dim${cls?' '+cls:''}" marker-start="url(#${id+mid}d)" marker-end="url(#${id+mid}d)"/>
+      ${Math.abs(xe-x1) - 20 > [...txt].reduce((w, ch) => w + (/[\uac00-\ud7a3]/.test(ch) ? 14 : ch===' ' ? 4.2 : 8.2), 0) ? `<text x="${(x1+xe)/2}" y="${yd-6}" text-anchor="middle" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`
+        : `<text x="${x1+8}" y="${yd+5}" text-anchor="start" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`}`;   /* 치수선보다 글자가 길면 뒤축 바깥에 */
+    const farCoP = AERO && Math.abs(px - x1) > Math.abs(cx - x1);
+    h += `<line x1="${x1}" y1="${yA-6}" x2="${x1}" y2="${yTopF}" class="cf-ext"/>`
+      + xdim(cx, cy-11, AERO ? (farCoP ? yB : yA) : yB, '', 'k', `CG 뒤축부터 ${f0(L - K.a)} mm`)
+      + (AERO ? xdim(px, py-10, farCoP ? yA : yB, 'in', 'i', `CoP 뒤축부터 ${f0(p.xcop)} mm`) : '');
     /* 화살표·기호 */
     const kF = 0.05, dfL = Math.min(90, K.DF*kF), dL = Math.min(90, K.D*kF);
     const ax_ = Math.abs(c.ax) > 0.05, il = Math.min(64, Math.abs(c.ax)*40), idr = c.ax>0 ? 1 : -1;

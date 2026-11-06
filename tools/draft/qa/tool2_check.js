@@ -88,6 +88,22 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   { await p.evaluate(()=>document.querySelector('#wbsig').scrollIntoView({block:'center'})); await p.evaluate(()=>{ wbZSet(100, 300); wbPaint(['sig']); }); await W(300); const z=await p.evaluate(()=>WB.zx); await p.dblclick('#wbsig .wb-pp[data-wbpi="0"] .wb-hit'); await W(300); console.log('graph zoom', !!z, 'dblclick reset', await p.evaluate(()=>WB.zx===null), 'no +-', await p.locator('[data-wbzb]').count()===0); }
   await p.click('.t2-hr [data-t2course="end"]'); await idle();
   { await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2ecourse="skid"]'); await W(700); const busy=await p.evaluate(()=>WB.busy); await p.evaluate(()=>{ WB.I.cla=3.1; wbCalcSoon(); }); await W(700); const b2=await p.evaluate(()=>[WB.busy, WB.dirty]); await p.click('[data-t2tab="sim"]'); await W(300); const b3=await p.evaluate(()=>WB.busy); await idle(); await p.evaluate(()=>{ WB.I.cla=3.0; wbSave(); wbCalcSoon(); }); await idle(); console.log('edit no calc', busy, JSON.stringify(b2), 'sim calc', b3, 'course kept', await p.evaluate(()=>T2.course)); }
+  { // 모델 단계 항목 · 열 모델 · 시뮬레이션 위 조합 표시 · e_lim 옵션 위치 · 주행선 옵션 행 · 열 지우기 · 효율 맵 눈금
+    await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2eg="model"]'); await W(300);
+    console.log('model page', await p.locator('.t2-mdop').count(), 'disabled', await p.locator('.t2-mdop:disabled').count(), 'top md seg', await p.locator('.t2-hr [data-t2md]').count());
+    await p.click('[data-t2tm="2"]'); await W(200); console.log('tm', await p.evaluate(()=>WB.I.tm), 'lock b_c', await p.evaluate(()=>t2InLock('b_c')||'-'));
+    await p.click('[data-t2tab="sim"]'); await idle(); o=await R();
+    console.log('sim badge', (await p.textContent('.t2-mdl')).trim(), 'tw', f(o.c_twmax,1), 'tb', f(o.c_tbmax,1), 'card', await p.evaluate(()=>/냉각수 최고 온도/.test(document.querySelector('#wb').textContent)));
+    await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2eg="model"]'); await W(200); await p.click('[data-t2tm="0"]'); await W(200);
+    await p.click('[data-t2eg="bat"]'); await W(300); console.log('e_lim in row', await p.evaluate(()=>!!document.querySelector('[data-wbi="e_target"]').closest('.wb-ir').querySelector('[data-t2el]')));
+    await p.click('[data-t2eg="course"]'); await W(300); console.log('rl in box', await p.evaluate(()=>!!document.querySelector('.t2-sb .t2-optrow [data-t2rl]')));
+    await et('eM'); await W(300); const nc0 = await p.evaluate(()=>t2Grid(T2.eM)[0].length);
+    console.log('heat ticks', await p.locator('#t2mc .t2-hg').count(), 'addc', await p.locator('#t2tt .t2-addc').count(), 'addr', await p.locator('#t2tt .t2-addr').count());
+    await p.click('#t2tt [data-t2gdelc="3"]'); await W(300); console.log('del col', nc0, '->', await p.evaluate(()=>t2Grid(T2.eM)[0].length));
+    await p.click('[data-t2menu="eM"]'); await W(200); await p.click('[data-t2act="ex"][data-t2k="eM"]'); await W(300);
+    await et('tire'); await W(300); console.log('tire x max', await p.evaluate(()=>{ const t=[...document.querySelectorAll('#t2mc .wb-tx')].map(x=>+x.textContent.replace(/,/g,'')).filter(isFinite); return Math.max(...t); }));
+    if(out){ await et('eM'); await W(300); await p.screenshot({path:out+'/t2_eM.png'}); await p.click('[data-t2eg="model"]'); await W(300); await p.screenshot({path:out+'/t2_model.png'}); }
+    await p.click('[data-t2tab="sim"]'); await idle(); }
   console.log('viz removed', await p.locator('[data-wbviz="mu_s"]').count()===0);
   await p.selectOption('[data-wbxa]','in:gr'); await W(30000); console.log('sweep', await p.evaluate(()=>WB.sw&&WB.sw.X?WB.sw.X.length:'none'), await p.evaluate(()=>WB.err)); await p.selectOption('[data-wbxa]',''); await W(7000);
   console.log('axis colors', await p.evaluate(()=>[...document.querySelectorAll('#wbsig .wb-tl tspan')].map(t=>t.style.fill).filter(Boolean).slice(0,4).join(' ')), 'probe color', await p.evaluate(()=>{ const t=document.querySelector('#wbsig .wb-pv'); return t ? t.style.fill : 'none'; }));

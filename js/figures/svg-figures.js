@@ -470,7 +470,7 @@ FIG.aerocp = () => { const m = markers();
   <circle cx="340" cy="165" r="6" class="pi"/><text x="328" y="170" text-anchor="end" class="tb">CG</text>
   <line class="ext" x1="340" y1="171" x2="340" y2="256"/>
   ${ground(20,640,256)}
-  ${dimH(m.id,150,380,276,'$x_{cp}',292)}
+  ${dimH(m.id,380,530,276,'$x_{cp}',292)}
   ${dimH(m.id,150,530,304,'$L',322)}
   <text x="40" y="30" class="tb">← 진행 방향</text>
   <text x="330" y="30" text-anchor="middle" class="tm">압력 중심이 CG(정적 하중 배분 위치)보다 앞이면 오버 쪽, 뒤면 언더 쪽</text>
