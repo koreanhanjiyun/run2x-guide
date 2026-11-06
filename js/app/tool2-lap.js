@@ -538,6 +538,7 @@ function t2MapSVG(plain){ const c = plain ? T2.ecourse : T2.course, R = WB.id===
   const cones = c==='ax' || c==='end' ? FSK26.cones || [] : c==='free' ? t2FreeCones() : [];
   const cone = ([cx, cy, sd]) => `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${((sd==='C' ? 2.2 : 1.6)*Math.max(sz, .35)).toFixed(2)}" class="t2-cone ${sd}"/>`;
   cones.forEach(q => { if(q[2]!=='C') svg += cone(q); });                     // 경계 콘은 선 아래, 슬라럼 콘(가운데)은 선 위에 (아래 '출발선' 앞에서)
+  if(!plain && R && WB.I.w_car > 0) svg += t2Sweep(xs, ys, close, rev, tx, ty);   // 차가 지나간 영역 (반투명 회색)
   if(RLp) svg += `<polyline points="${xc.map((_, i) => [tx(xc[i]), ty(yc[i])].map(v => v.toFixed(1)).join(',')).join(' ')}" class="t2-cl" vector-effect="non-scaling-stroke"/>`;
   let vc = null, P = 0; if(mp){ vc = mp.vc || (mp.acc || mp.skid ? R.sig.v : null); P = mp.P || 0; }
   const leg = '<span class="t2-mleg"><i class="sl"></i>출발 <i class="fin"></i>결승 <i class="arr">→</i>주행 방향</span>'; let cap = '';
@@ -551,6 +552,7 @@ function t2MapSVG(plain){ const c = plain ? T2.ecourse : T2.course, R = WB.id===
     const bad = i => { const s = S0[i]*f; return mp.rbad.some(([a, b]) => s >= a - 0.5 && s <= b + 0.5); };
     for(let i = 0; i + 1 < N; i++) if(bad(i) || bad(i + 1)){ const a = Pt(i), b = Pt(i + 1); svg += `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" class="t2-rbad" vector-effect="non-scaling-stroke"/>`; }
     cap += ' · <span class="t2-rbadl">빨간 테두리 = 최소 회전 반경보다 급한 곳</span>'; }
+  if(!plain && R && WB.I.w_car > 0) cap += ' · <span class="t2-swl"><i></i>차가 지나간 영역 (전폭 · 전장 · 저속 차체 각도)</span>';
   if(!plain) setTimeout(() => { const cp = $('#t2mcap'); if(cp) cp.innerHTML = cap; }, 0);
   cones.forEach(q => { if(q[2]==='C') svg += cone(q); });
   /* 출발선(초록) = 주행 방향 오른쪽 절반, 결승선(빨강) = 왼쪽 절반 → 같은 자리여도 겹치지 않음. 화살표는 출발선 끝에서 코스와 나란히 */
@@ -565,6 +567,19 @@ function t2MapSVG(plain){ const c = plain ? T2.ecourse : T2.course, R = WB.id===
   /* 프로브: 신호 그래프의 거리 위치 (여러 랩이면 한 랩 안의 위치) */
   if(R && R.x && WB.xi != null){ const k = t2SigToMap(WB.xi, N, P), q = Pt(k); svg += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${(4*Math.max(sz, .35)).toFixed(2)}" class="t2-cur" vector-effect="non-scaling-stroke"/>`; }
   return svg + '</svg>'; }
+/* 차가 지나간 영역: 지도 선(차 중심 경로, m) 점마다 차 사각형 (뒤 끝 ~ 앞 끝 × 전폭). 차체 방향 = 진행 방향 − β,  β = atan(l_r · κ) (저속 기구학 선회)
+   κ = 세 점 곡률을 앞뒤 2 점씩 평균.  거꾸로 달리는 코스(오토크로스)는 진행 방향 · 곡률 부호를 뒤집음.  묶음 전체에 투명도를 한 번 걸어 겹친 곳도 같은 진하기 */
+function t2Sweep(xs, ys, close, rev, tx, ty){ const I = WB.I, L = I.L/1000, lr = L*I.fr/100, xf = (L - lr) + Math.max(0, I.oh_f || 0), xr = lr + Math.max(0, I.oh_r || 0), hw = I.w_car/2;
+  const N = xs.length, m = close ? N - 1 : N, ix = i => close ? ((i % m) + m) % m : Math.max(0, Math.min(N - 1, i)), dir = rev ? -1 : 1;
+  const k3 = i => { const a = ix(i - 1), b = ix(i), c = ix(i + 1), x0 = xs[a], y0 = ys[a], x1 = xs[b], y1 = ys[b], x2 = xs[c], y2 = ys[c];
+    const d = Math.hypot(x1 - x0, y1 - y0)*Math.hypot(x2 - x1, y2 - y1)*Math.hypot(x2 - x0, y2 - y0); return d > 1e-9 ? 2*((x1 - x0)*(y2 - y0) - (y1 - y0)*(x2 - x0))/d : 0; };
+  const kr = Array.from({length:N}, (_, i) => k3(i)), K = i => { let s = 0, n = 0; for(let d = -2; d <= 2; d++){ const j = ix(i + d); s += kr[j]; n++; } return s/n; };
+  let g = '<g class="t2-sweep">';
+  for(let i = 0; i < m; i++){ const a = ix(i - 1), b = ix(i + 1); let ux = (xs[b] - xs[a])*dir, uy = (ys[b] - ys[a])*dir; const u = Math.hypot(ux, uy) || 1; ux /= u; uy /= u;
+    const beta = Math.atan(lr*K(i)*dir), th = Math.atan2(uy, ux) - beta, c = Math.cos(th), s = Math.sin(th);
+    const P = [[xf, hw], [xf, -hw], [-xr, -hw], [-xr, hw]].map(([x, y]) => `${tx(xs[i] + c*x - s*y).toFixed(1)},${ty(ys[i] + s*x + c*y).toFixed(1)}`);
+    g += `<polygon points="${P.join(' ')}"/>`; }
+  return g + '</g>'; }
 /* 신호 칸 ↔ 지도 점: 공식 코스는 지도 점(대회 JSON)과 계산 칸 수가 달라 거리 비율로 맞춤, 오토크로스는 반대 방향 */
 function t2SigToMap(xi, N, P){ const c = T2.course; let k = xi;
   if(P){ k = xi % P === 0 && xi ? P : xi % P; if(c==='end' || c==='ax'){ k = Math.round(k*(N - 1)/P); if(c==='ax') k = N - 1 - k; } }
@@ -1654,11 +1669,14 @@ function improveLine(RL, C, V, flying, prog) {
   return res;
 }
 
+// 진행 막대 (작업창 Worker 안에서만): 주행선 다듬기가 [0, PG0), 나머지 계산이 [PG0, 1]
+let PG0 = 0;
+const prog = (f, msg) => { if (typeof wbProg === 'function') wbProg(f, msg); };
 let RLI = {}, RLI_LAST = {};   // 다듬은 주행선: 이번 계산 (코스별) · 마지막 전체 계산 (입력 훑기용)
 const rlKey = I => JSON.stringify(I, (k, v) => ['course', 'lap', 'grMode', '_sweep', '_probe'].includes(k) ? undefined : v);
 // 이번 입력으로 내구 · 오토크로스 · 내 코스 주행선을 다듬어 둠 (차량 · 감속비 = 입력 감속비, 같은 입력이면 다시 안 함)
 function prepLines(I, sweep) {
-  RLI = {};
+  RLI = {}; PG0 = 0;
   if (!(I.rl_on >= 2)) return;
   if (sweep) { RLI = RLI_LAST; return; }            // 입력 훑기: 지금 입력으로 다듬은 선을 그대로 (훑는 값마다 다시 다듬지 않음)
   const key = rlKey(I);
@@ -1674,7 +1692,7 @@ function prepLines(I, sweep) {
     if (pg) pg(0);
     out[w] = improveLine(base(), C, V, fly, pg);
   });
-  if (typeof wbProg === 'function') wbProg(jobs.length / (jobs.length + 1), '기록 계산 중');
+  PG0 = jobs.length / (jobs.length + 1);
   RLI = RLI_LAST = out;
 }
 
@@ -1951,9 +1969,9 @@ function scanGr(score) {
 
 // 종목별 가장 빠른 감속비 + 배점 가중 제안
 //   제안 = Σ 배점 × (입력 감속비 기록 − 그 감속비 기록) ÷ 입력 감속비 기록 이 가장 큰 감속비
-function bestGr(I) {
+function bestGr(I, pg) {
   const memo = new Map();
-  const ev = gg => { gg = Math.round(gg * 100) / 100; if (!memo.has(gg)) memo.set(gg, events(I, gg, true)); return memo.get(gg); };
+  const ev = gg => { gg = Math.round(gg * 100) / 100; if (!memo.has(gg)) { memo.set(gg, events(I, gg, true)); if (pg) pg(Math.min(1, memo.size / 30)); } return memo.get(gg); };   // 감속비 약 30 개를 훑음
   const E0 = ev(I.gr);
   const J = E => Object.keys(W_PT).reduce((a, k) => a + (isFinite(E0[k]) && isFinite(E[k]) ? W_PT[k] * (E0[k] - E[k]) / E0[k] : 0), 0);
   const out = {};
@@ -2157,10 +2175,15 @@ function calc(I) {
   }
 
   // ---------- 주행선 다듬기 (I.rl_on = 2): 입력이 바뀌었을 때만
+  prog(0, '준비 중');                                   // 진행 막대를 바로 숫자로 (흐르는 막대로 바뀌지 않게)
   prepLines(I, false);
 
+  // ---------- 진행: 남은 [PG0, 1] 을 감속비 훑기 60 % · 가장 빠른 감속비 내구 10 % · 두 모드 20 % · 내 코스 10 % 로
+  const P = (a, msg) => prog(PG0 + (1 - PG0) * a, msg);
+  P(0, '감속비 훑는 중');
   // ---------- 감속비 (두 모드 공통): 종목별 가장 빠른 값 · 배점 가중 제안, 그 감속비에서 다 계산한 기록
-  const B = bestGr(I);
+  const B = bestGr(I, f => P(0.6 * f, '감속비 훑는 중'));
+  P(0.6, '기록 계산 중');
   const ENb  = runEnd(I, B.end, true);                   // 내구가 가장 빠른 감속비에서 다 계산
   const endb = ENb ? lapStat(ENb.t, [0, ENb.n1]) : null;
   const fast = {
@@ -2171,7 +2194,9 @@ function calc(I) {
   const BF = I.course === 'free' ? bestGrFree(I) : NaN;   // 내 코스: 최적 모드에서 고른 코스 감속비
 
   // ---------- 두 모드를 미리 계산 (전환은 다시 계산 없이)
+  P(0.7, '기록 계산 중 · 내 감속비');
   const my = modeRun(I, I.gr, I.gr, fast);
+  P(0.8, '기록 계산 중 · 최적 감속비');
   const G3 = ({ acc: B.acc, ax: B.ax, end: B.end, free: BF, skid: B.opt })[I.course];
   const g3  = isFinite(G3) ? G3 : B.opt;
   const opt = B.opt === I.gr && g3 === I.gr ? { ...my, out: { ...my.out } } : modeRun(I, B.opt, g3, fast);
@@ -2189,6 +2214,7 @@ function calc(I) {
   Object.assign(my.out, common); Object.assign(opt.out, common);
 
   // ---------- 내 코스 (검증 · 대시보드용, 입력 감속비)
+  P(0.9, '기록 계산 중 · 내 코스');
   const FR = runFree(I, C, 0.5, false);
   if (FR) {
     const fr = lapStat(FR.t, [0]);
@@ -2206,6 +2232,7 @@ function calc(I) {
   const ft = tractive(I, I.gr, C.Voc(1), C.Tinit, 0, 0);
 
   const cur = I.grMode === 'opt' ? opt : my;
+  P(1, '마무리');
   return { ...cur, modes: { my, opt }, motor, ft };
 }
 `

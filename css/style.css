@@ -3014,3 +3014,6 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .t2-rbadl{color:#b91c1c}
 .t2-inopt{margin-left:0;max-width:100%}.t2-inopt .dc-seg{flex-wrap:wrap;max-width:100%}
 .t2-gtab td.t2-empty{text-align:left}
+/* 지도: 차가 지나간 영역 (어두운 무채색, 묶음에 한 번 투명도 → 겹쳐도 같은 진하기) */
+.t2-msvg .t2-sweep{opacity:.3;pointer-events:none}.t2-msvg .t2-sweep polygon{fill:#2f3338;stroke:none}
+.t2-swl i{display:inline-block;width:14px;height:8px;background:#2f3338;opacity:.35;border-radius:2px;margin-right:4px;vertical-align:middle}

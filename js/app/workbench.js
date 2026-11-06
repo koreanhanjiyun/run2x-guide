@@ -38,7 +38,7 @@ function wbWorker(src){
       const r = calc(e.data.I); postMessage({id:e.data.id, ok:true, r, ms:performance.now()-t0}); }
     catch(err){ postMessage({id:e.data.id, ok:false, err:String(err && err.message || err)}); } };`;
   const w = new Worker(URL.createObjectURL(new Blob([body], {type:'text/javascript'})));
-  w.onmessage = e => { if(e.data.prog != null){ if(WB.wait[e.data.id]) wbProgShow(e.data.prog, e.data.msg); return; }
+  w.onmessage = e => { if(e.data.prog != null){ if(WB.wait[e.data.id]){ WB.progD = true; wbProgShow(e.data.prog, e.data.msg); } return; }
     const f = WB.wait[e.data.id]; if(f){ delete WB.wait[e.data.id]; f(e.data); } };
   w.onerror = e => { e.preventDefault(); const msg = '코드 오류: ' + (e.message || '읽을 수 없는 코드');
     Object.keys(WB.wait).forEach(id => { WB.wait[id]({ok:false, err:msg}); delete WB.wait[id]; }); WB.worker = null; WB.wsrc = ''; };
@@ -56,13 +56,14 @@ const wbRefresh = () => { if(WB.id) wbCalcSoon(); };
 const wbCode = () => WB.code[WB.id] != null ? WB.code[WB.id] : wbT().code;
 /* 계산 중 표시: 0.3초 넘게 걸리면 결과 칸 위에 진행 막대 + 이전 결과 흐리게. 새 계산이 오면 하던 계산은 버림 */
 function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = false; p.classList.toggle('ind', f == null);
-  const b = p.querySelector('i'); if(b && f != null) b.style.width = Math.round(Math.max(0, Math.min(1, f))*100) + '%';
+  const b = p.querySelector('i'); if(b && f != null){ const w = Math.round(Math.max(0, Math.min(1, f))*100), w0 = parseFloat(b.style.width) || 0;
+    if(w < w0){ b.style.transition = 'none'; b.style.width = w + '%'; void b.offsetWidth; b.style.transition = ''; } else b.style.width = w + '%'; }   // 줄어들 때(새 계산)는 바로, 늘어날 때만 부드럽게
   const t = p.querySelector('span'); if(t) t.textContent = (msg || '계산 중') + (f != null ? ` · ${Math.round(f*100)} %` : ' …'); }
 /* 계산 중: 화면 위에 고정한 진행 막대(스크롤과 상관없이 보임) + 오른쪽 화면 전체를 살짝 회색. 끝나면 바뀐 결과 칸 · 그래프가 한 번 깜빡임 */
 function wbBusy(on){ clearTimeout(WB.busyT); const m = $('#wb'), p = $('#wbprog');
-  if(on){ if(m) m.classList.add('wb-busy'); WB.busyT = setTimeout(() => wbProgShow(null, '계산 중'), 150); return; }
+  if(on){ if(m) m.classList.add('wb-busy'); WB.progD = false; WB.busyT = setTimeout(() => { if(!WB.progD) wbProgShow(null, '계산 중'); }, 150); return; }   // 진행 신호가 이미 왔으면 흐르는 막대로 바꾸지 않음
   if(m){ m.classList.remove('wb-busy'); m.classList.remove('wb-flash'); void m.offsetWidth; m.classList.add('wb-flash'); clearTimeout(WB.flashT); WB.flashT = setTimeout(() => m.classList.remove('wb-flash'), 800); }
-  if(p){ p.hidden = true; const b = p.querySelector('i'); if(b) b.style.width = '0%'; } }
+  if(p){ p.hidden = true; const b = p.querySelector('i'); if(b){ b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth; b.style.transition = ''; } } }
 /* 휠 확대는 박스를 눌러 켠 뒤에만 (data-zoombox). 다른 곳을 누르거나 Esc = 끔 → 휠 = 페이지 스크롤 */
 /*   상자는 다시 그려질 수 있어 이름(data-zoombox 값)으로 기억하고, 다시 그린 뒤에도 강조를 다시 붙임 (wbZoomMark) */
 const WBZ = { key:'' };
