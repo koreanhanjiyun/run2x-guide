@@ -3018,3 +3018,10 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .t2-msvg .t2-sweep{opacity:.3;pointer-events:none}.t2-msvg .t2-sweep polygon{fill:#2f3338;stroke:none}
 .t2-swl i{display:inline-block;width:14px;height:8px;background:#2f3338;opacity:.35;border-radius:2px;margin-right:4px;vertical-align:middle}
 .t2-msvg .t2-corr{fill:#2f3338;opacity:.14;stroke:none;pointer-events:none}
+/* 모델 단계 · 열 모델: 카드 4개 (켜고 끄는 단추 + 냉각 방식) */
+.t2-mdops.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.t2-mdop.tg{cursor:default}
+.t2-mdop.tg.on{border-color:#3d5a99;box-shadow:inset 0 0 0 1px #3d5a99;background:#f2f5fc}
+button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.t2-mdc{display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap}
+.t2-mdc .dc-seg button{padding:2px 9px;font-size:11.5px}
