@@ -11213,6 +11213,7 @@ function t2EffParse(txt){ const L = t2Lines(txt).filter(l => l.cells.length); if
    점마다 왼쪽 · 오른쪽 폭 = 그 쪽 콘 두 개 사이 옆 거리를 거리로 직선 보간 (콘 사이를 직선으로 이은 경계).
    슬라럼 콘 (C) = 가장 가까운 점 번호 · 그 옆 거리 (가운데 선 위가 아닐 수 있음) */
 let T2CW = null;
+const T2SLP = 5, T2SLW = 5;   // 슬라럼 구간: 첫 · 끝 콘 앞뒤로 넓힐 거리 [m], 슬라럼 콘에서 양쪽 폭 [m]
 function t2ConeBounds(){ if(T2CW) return T2CW; const X = FSK26.X, Y = FSK26.Y, N = X.length, S = [0];
   for(let i = 1; i <= N; i++) S.push(S[i - 1] + Math.hypot(X[i % N] - X[i - 1], Y[i % N] - Y[i - 1]));
   const Ltot = S[N], proj = (x, y) => { let best = null;
@@ -11226,8 +11227,17 @@ function t2ConeBounds(){ if(T2CW) return T2CW; const X = FSK26.X, Y = FSK26.Y, N
   const interp = (A, s) => { if(!A.length) return NaN; const n = A.length; let j = 0; while(j < n && A[j][0] <= s) j++;
     const a = A[(j - 1 + n) % n], b = A[j % n], sa = a[0] - (j === 0 ? Ltot : 0), sb = b[0] + (j === n ? Ltot : 0), f = sb > sa ? (s - sa)/(sb - sa) : 0;
     return a[1] + f*(b[1] - a[1]); };
-  side.L.sort((p, q) => p[0] - q[0]); side.R.sort((p, q) => p[0] - q[0]); sl.sort((p, q) => p[0] - q[0]);
-  const WL = [], WR = []; for(let i = 0; i < N; i++){ const l = interp(side.L, S[i]), r = interp(side.R, S[i]); WL.push(isFinite(l) ? l : FSK26.WL[i]); WR.push(isFinite(r) ? r : FSK26.WR[i]); }
+  sl.sort((p, q) => p[0] - q[0]);
+  // 슬라럼 구간: 실제 대회에는 슬라럼 옆 좌우 콘이 없음 → 묶음(콘 간격 20 m 안)의 첫 콘 앞 T2SLP m ~ 끝 콘 뒤 T2SLP m 은 좌우 콘을 경계로 쓰지 않고,
+  //   폭 = 슬라럼 콘 옆 거리(콘 사이 직선 보간) ± T2SLW m (그 구간 차 움직임에 영향이 없을 만큼 넓게)
+  const sS = sl.map(([k, , ds]) => S[k] + ds), zones = [];
+  sl.forEach((q, j) => { const z = zones[zones.length - 1]; if(z && sS[j] - z.e < 20){ z.e = sS[j]; z.c.push([sS[j], q[1]]); } else zones.push({b:sS[j], e:sS[j], c:[[sS[j], q[1]]]}); });
+  const inZ = s => zones.find(z => s >= z.b - T2SLP && s <= z.e + T2SLP);
+  side.L = side.L.filter(([s0]) => !inZ(s0)); side.R = side.R.filter(([s0]) => !inZ(s0));
+  side.L.sort((p, q) => p[0] - q[0]); side.R.sort((p, q) => p[0] - q[0]);
+  const WL = [], WR = []; for(let i = 0; i < N; i++){ const l = interp(side.L, S[i]), r = interp(side.R, S[i]); WL.push(isFinite(l) ? l : FSK26.WL[i]); WR.push(isFinite(r) ? r : FSK26.WR[i]);
+    const z = inZ(S[i]); if(z){ const C = z.c; let lat = C[0][1]; if(S[i] >= C[C.length - 1][0]) lat = C[C.length - 1][1]; else for(let j = 1; j < C.length; j++) if(S[i] <= C[j][0]){ const f = (S[i] - C[j - 1][0])/((C[j][0] - C[j - 1][0]) || 1); lat = C[j - 1][1] + Math.max(0, f)*(C[j][1] - C[j - 1][1]); break; }
+      WL[i] = lat + T2SLW; WR[i] = T2SLW - lat; } }
   return T2CW = {WL, WR, slalom:sl.map(q => q[0]), slat:sl.map(q => q[1]), sds:sl.map(q => q[2])}; }
 const t2ExtraI = () => ({ end: typeof FSK26!=='undefined' ? (() => { const B = t2ConeBounds(); return {seg:FSK26.seg, laps:FSK26.laps, stint:FSK26.stint, WL:B.WL, WR:B.WR, slalom:B.slalom, slat:B.slat, sds:B.sds}; })() : {seg:[]},
   /* 맵: [위 상수]를 고르면 표가 있어도 넘기지 않음 */
