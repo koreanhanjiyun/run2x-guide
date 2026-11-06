@@ -92,6 +92,7 @@ function m1MassHTML(){ const gs = m1Groups(), ed = m1CanEdit(), D = WB.R && WB.R
         <span class="m1-sum">${wbFmt(m1GSum(g), 2)} kg</span>
         ${ed ? `<span class="m1-acts"><button type="button" class="m1-ib" data-m1gcopy aria-label="좌우 바꿔 복사" title="복사본 만들기 (y 부호 · 이름의 왼/오른을 바꿈)">${M1IC.copy}</button><button type="button" class="m1-ib del" data-m1gdel aria-label="어셈블리 지우기" title="어셈블리 지우기">${M1IC.del}</button></span>` : ''}</div>
       <div class="m1-cm">${ed ? `<select data-m1gf="cat" class="m1-cat" aria-label="범주">${M1CAT.map(([k, t]) => `<option value="${k}"${(g.cat||'s')===k?' selected':''}>${t}</option>`).join('')}</select>` : `<span class="m1-cat">${(M1CAT.find(c => c[0]===(g.cat||'s'))||[])[1]}</span>`}${xyz(g)}<i class="m1-u">mm</i></div>
+      <div class="m1-cm m1-dim" title="어셈블리를 이 크기의 직육면체(질량 고르게)로 보고 자체 관성을 더함. 비우면 점질량"><span class="m1-cat ro">크기</span>${[['lx', '길이 x'], ['ly', '폭 y'], ['lz', '높이 z']].map(([f, n]) => `<label class="m1-xyz"><span>${n.split(' ')[1]}</span>${ed ? m1Num(g[f], `data-m1gf="${f}" aria-label="${n} [mm] (자체 관성용, 선택)" placeholder="—"`) : `<b>${g[f]!=null ? wbFmt(g[f], 0) : '—'}</b>`}</label>`).join('')}<i class="m1-u">mm</i></div>
       <div class="m1-ci">${(g.items||[]).map((it, i) => `<div class="m1-ir${m1N(it)===0 ? ' off' : ''}">${ed ? `<input type="text" data-m1if="name" data-m1ii="${i}" value="${wbEsc(it.name||'')}" placeholder="항목" aria-label="항목 이름">${m1Num(it.m, `data-m1if="m" data-m1ii="${i}" aria-label="한 개 질량 [kg]"`)}<i>kg ×</i>${m1Num(it.n==null ? 1 : it.n, `data-m1if="n" data-m1ii="${i}" min="0" step="1" aria-label="개수"`)}<label class="m1-half" title="${wbEsc(HT)}"><input type="checkbox" data-m1if="half" data-m1ii="${i}"${it.half ? ' checked' : ''} aria-label="걸침 (절반은 반대쪽)">½</label><button type="button" class="m1-ix" data-m1idel="${i}" aria-label="항목 지우기" title="항목 지우기">×</button>`
           : `<span>${wbEsc(it.name||'')}</span><b>${wbFmt(it.m, 2)}</b><i>kg × ${m1N(it)}</i><span class="m1-half ro" title="${wbEsc(HT)}">${it.half ? '½' : ''}</span><span></span>`}</div>`).join('')}${ed ? `<button type="button" class="m1-add" data-m1iadd>+ 항목</button>` : ''}</div></div>`; }).join('')}${ed ? slots.join('') : ''}</div>
     ${ed ? `<button type="button" class="m1-gadd" data-m1gadd>+ 어셈블리</button>` : ''}
@@ -329,7 +330,7 @@ document.addEventListener('pointerup', () => { M1.drag = null; });
 
 /* ---------- 계산에 넘길 값 ---------- */
 function m1ExtraI(){ const gs = m1Groups(), items = gs.map(g => { const mh = (g.items || []).reduce((a, it) => a + (it.half && isFinite(it.m) && it.m!==null ? +it.m*m1N(it) : 0), 0);
-    return {m:m1GSum(g), mh, to:m1HalfTo(g, gs).cat, hue:g.hue, x:+g.x||0, y:+g.y||0, z:+g.z||0, cat:g.cat||'s', name:g.name||''}; }).filter(it => it.m > 0);
+    return {m:m1GSum(g), mh, to:m1HalfTo(g, gs).cat, hue:g.hue, x:+g.x||0, y:+g.y||0, z:+g.z||0, lx:+g.lx||0, ly:+g.ly||0, lz:+g.lz||0, cat:g.cat||'s', name:g.name||''}; }).filter(it => it.m > 0);
   const drv = {}; Object.keys(M1DRV).forEach(k => { drv[k] = m1Drv(k) || M1DDEF(); });
   return {items, drv, dsel:M1.dsel}; }
 
@@ -403,7 +404,7 @@ WB_TOOLS['1'] = {
   no:'1', stage:'P0', name:'질량 · 무게중심 계산기', mainTitle:'질량 분포', mainMeta:'차 윤곽은 예시 차량 (휠베이스에 맞춤) · 원 넓이 ∝ 질량',
   noSig:true,
   inputs:[ {k:'L', dk:'L', v:1550, d:0, g:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:'치수'}, {k:'r_load', dk:'r_load', v:220, d:0, g:'치수'} ],   /* r_load: 그림의 지면 높이(바퀴 중심 − r_load)만, 계산에는 안 씀 */
-  outGroups:{'정지 코너웨이트':{wide:true, render:o => m1CwCard(o)}, '관성 모멘트':{note:'점질량 근사 · 부품 자체 관성 제외 → 실제보다 작음'}},
+  outGroups:{'정지 코너웨이트':{wide:true, render:o => m1CwCard(o)}, '관성 모멘트':{note:'평행축 + 크기를 넣은 어셈블리의 자체 관성(고른 직육면체). 크기가 빈 어셈블리는 점질량 → 실제보다 작을 수 있음'}},
   outputs:[
     {k:'m', n:'총질량 (드라이버 포함)', u:'kg', d:1, g:'질량'}, {k:'m_empty', n:'공차중량 (드라이버 제외)', u:'kg', d:1, g:'질량'}, {k:'m_s', dk:'m_s', d:1, g:'질량'}, {k:'m_us_f', dk:'m_us_f', d:2, g:'질량'}, {k:'m_us_r', dk:'m_us_r', d:2, g:'질량'},
     {k:'m_drv', n:'드라이버 (고른 사람, 장비 포함)', u:'kg', d:1, g:'질량', hide:true}, {k:'h_est', n:'체절 길이로 본 키', u:'cm', d:1, g:'질량', hide:true},
@@ -588,8 +589,9 @@ function calc(I) {
   const Wf0 = m0 * x0 / I.L, Wr0 = m0 - Wf0;
   const cw0 = { fl: Wf0 * (.5 + y0 / I.tf), fr: Wf0 * (.5 - y0 / I.tf), rl: Wr0 * (.5 + y0 / I.tr), rr: Wr0 * (.5 - y0 / I.tr) };
 
-  // ---------- 관성 모멘트 [kg·m²]: CG 둘레, 어셈블리를 점질량으로 (어셈블리 자체 관성 제외 → 실제보다 작게 나옴)
-  const I2 = f => sum(all, it => it.m * f(it)) / 1e6;
+  // ---------- 관성 모멘트 [kg·m²]: CG 둘레 = 평행축 (점질량 m d²) + 어셈블리 자체 (크기 lx · ly · lz 를 넣으면 고른 직육면체 m (b² + c²) ÷ 12, 비우면 0)
+  const I2 = (f, g) => sum(all, it => it.m * (f(it) + g(it) / 12)) / 1e6;
+  const sq = v => (+v || 0) ** 2;
 
   return {
     out: {
@@ -597,9 +599,9 @@ function calc(I) {
       m_s: ms, h_s: ms > 0 ? sum(sp, it => it.m * it.z) / ms : NaN, x_s: ms > 0 ? sum(sp, it => it.m * it.x) / ms : NaN,
       m_us_f: muf / 2, m_us_r: mur / 2, m_drv: me, h_est: D.hEst, m_empty: m0,
       cw0_fl: cw0.fl, cw0_fr: cw0.fr, cw0_rl: cw0.rl, cw0_rr: cw0.rr, cross0: m0 > 0 ? (cw0.fr + cw0.rl) / m0 * 100 : NaN,
-      ixx: I2(it => (it.y - yc) ** 2 + (it.z - zc) ** 2),
-      iyy: I2(it => (it.x - xc) ** 2 + (it.z - zc) ** 2),
-      izz: I2(it => (it.x - xc) ** 2 + (it.y - yc) ** 2),
+      ixx: I2(it => (it.y - yc) ** 2 + (it.z - zc) ** 2, it => sq(it.ly) + sq(it.lz)),
+      iyy: I2(it => (it.x - xc) ** 2 + (it.z - zc) ** 2, it => sq(it.lx) + sq(it.lz)),
+      izz: I2(it => (it.x - xc) ** 2 + (it.y - yc) ** 2, it => sq(it.lx) + sq(it.ly)),
       cw_fl: cw.fl, cw_fr: cw.fr, cw_rl: cw.rl, cw_rr: cw.rr, cross: (cw.fr + cw.rl) / m * 100,
     },
     drv, drvItem: di,
@@ -608,6 +610,7 @@ function calc(I) {
 `,
   verify:[
     {n:'어셈블리 하나', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:400, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:100, fr:25, left:50, h:300, m_s:100}, src:'뒤 차축에서 400 ÷ 1600 = 25 %'},
+    {n:'어셈블리 자체 관성 · 고른 직육면체 1000 × 600 × 300 mm, 100 kg (CG 자리)', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:0, z:300, lx:1000, ly:600, lz:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{ixx:3.75, iyy:9.083333, izz:11.333333}, src:'Ixx = 100 × (0.6² + 0.3²) ÷ 12 = 3.75, Iyy = 100 × (1² + 0.3²) ÷ 12 = 9.0833, Izz = 100 × (1² + 0.6²) ÷ 12 = 11.3333 kg·m² (평행축 몫 0)'},
     {n:'좌우 대칭 두 어셈블리', I:{L:1600, tf:1200, tr:1200, items:[{m:50, x:800, y:300, z:300, cat:'s'}, {m:50, x:800, y:-300, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:50, fr:50, ixx:9, izz:9, iyy:0}, src:'Ixx = 2 × 50 × 0.3² = 9 kg·m²'},
     {n:'왼쪽으로 60 mm', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:55, cw_fl:27.5, cw_rr:22.5, cross:50}, src:'50 + 60 ÷ 1200 × 100 = 55 %'},
     {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:1600, y:0, z:230, cat:'uf'}, {m:34, x:0, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},
