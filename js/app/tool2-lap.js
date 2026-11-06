@@ -244,7 +244,8 @@ function t2InOpt(k){ if(WB.id!=='2') return '';
 /* 모델 단계: 차량 · 열 두 축을 따로 고름 */
 const T2MDV = [[0, '0 기본', '무게중심 높이 전체로 좌우 하중 이동을 계산합니다. 롤은 계산하지 않습니다.', '차량 제원 (무게중심 높이 · 트레드) · 타이어 (μ · 하중 감도)'],
                [1, '1 롤센터 · 롤', '앞 · 뒤 롤센터 높이로 하중 이동을 기하 몫(롤센터에서 바로 전달)과 탄성 몫(스프링 · 안티롤바)으로 나누고, 롤 강성으로 롤각을 계산합니다.', '차량 제원 · 서스 · 조향 › 롤센터 · 롤 (앞 · 뒤 롤센터 높이, 롤 강성)'],
-               [2, '2 비선형 타이어', '하중에 따라 휘어지는 타이어 곡선으로 접지력을 계산합니다.', '준비 중']];
+               [2, '2 비선형 타이어', '슬립각 · 슬립률에 따라 휘어지는 타이어 곡선으로 접지력을 계산합니다. 정상 선회에서 앞 · 뒤 슬립각으로 차체 각도(β)와 언더 · 오버 성향이 정해집니다.', '준비 중'],
+               [3, '3 과도 (요 · 롤 운동)', '요 관성 · 요 모멘트로 조향을 꺾은 뒤 요레이트 · 횡가속도가 따라오는 시간 지연을 계산합니다 (2 자유도 → 롤 포함 3 자유도).', '준비 중']];
 /* 열 모델: 계통마다 켜고 끔 (k = 입력 키). 냉각수 계통은 모터 열이 켜져야 켜짐 */
 const T2MDT = [['th_on', '모터 열', '모터 손실로 모터 온도가 오르고 냉각수 쪽으로 열을 내보냅니다. 디레이팅 계수가 0 이 아니면 온도로 최대 토크를 깎습니다. 끄면 모터 온도는 출발 온도 그대로이고 디레이팅도 없습니다.', '모터 · 인버터 › 모터 열 · 디레이팅 (열용량 · 열저항 · 냉각수 온도 · 출발 온도 · 디레이팅)'],
                ['cw_on', '냉각수 계통 (수랭)', '모터에서 나온 열과 인버터 손실이 냉각수로 들어가고, 라디에이터가 외기로 내보냅니다. 방열 능력은 차속에 따라 커지고, 냉각수 온도가 오르면 모터 냉각이 약해집니다. 끄면 냉각수 온도는 고정값입니다. 켜면 모터 열도 켜집니다.', '모터 · 인버터 › 냉각수 · 라디에이터 (냉각수 열용량, 정지 · 60 km/h 방열 능력) · 이 화면 외기 온도'],
@@ -253,11 +254,11 @@ const t2Th = () => ({m: WB.I.th_on !== 0, w: WB.I.th_on !== 0 && WB.I.cw_on === 
 const t2ThName = () => { const t = t2Th(), a = [t.m && '모터', t.w && '냉각수', t.b && '축전지'].filter(Boolean); return a.length ? a.join(' · ') : '없음'; };
 function t2ModelPage(){ const md = WB.I.md >= 1 ? 1 : 0, th = t2Th(), on = {th_on:th.m, cw_on:th.w, bt_on:th.b};
   const head = (nm, note) => `<div class="t2-mdh">${nm}<span class="muted t2-mdhn">${note}</span></div>`;
-  const veh = `<div class="t2-mdax">${head('차량 모델', '하나 고름')}<div class="t2-mdops">${T2MDV.map(([k, t, d, u]) => { const off = k===2;
+  const veh = `<div class="t2-mdax">${head('차량 모델', '하나 고름')}<div class="t2-mdops">${T2MDV.map(([k, t, d, u]) => { const off = k>=2;
       return `<button type="button" class="t2-mdop" data-t2md="${k}" aria-pressed="${md===k}"${off ? ' disabled' : ''}><b>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">${off ? '준비 중' : `쓰는 입력: ${u}`}</span></button>`; }).join('')}</div></div>`;
   const thm = `<div class="t2-mdax">${head('열 모델', '계통마다 켜고 끔 · 냉각수 계통은 모터 열이 켜져야 켜짐')}<div class="t2-mdops">${T2MDT.map(([k, t, d, u]) =>
       `<button type="button" class="t2-mdop tg" data-t2th="${k}" aria-pressed="${on[k]}"><b><span class="t2-tgb">${on[k] ? '켬' : '끔'}</span>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">쓰는 입력: ${u}</span></button>`).join('')}</div></div>`;
-  return `<div class="t2-model"><p class="muted t2-mdnote">차량 모델은 하나를 고르고, 열 모델은 계통마다 켜고 끕니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 [모델 · 차량 N · 열 …]으로 보입니다. 대시보드로 보내는 값은 늘 차량 0 · 열 모델 모터 열만으로 계산합니다.</p>
+  return `<div class="t2-model"><p class="muted t2-mdnote">차량 모델은 하나를 고르고, 열 모델은 계통마다 켜고 끕니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 [모델 · 차량 N · 열 …]으로 보입니다. 대시보드로 보내는 값은 늘 차량 0 · 열 모델 모터 열만으로 계산합니다. 차가 차지하는 폭(전장 · 저속 선회 때 차체 각도 β = atan(l_r ÷ R))은 기하라서 단계와 상관없이 늘 넣습니다 (차량 제원 › 치수, 전폭이 0 이면 안 씀).</p>
     ${veh}${thm}${t2Consts('model')}</div>`; }
 function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
   if(grp==='model') return t2ModelPage();
@@ -677,7 +678,7 @@ function t2InLock(k){ const L = '아래 표 사용';
   if(k==='mu' || k==='mu_s') return t2UseMap('tire') ? L : '';
   if(k==='rmin') return WB.I.rm_on === 0 ? '고려 안 함' : '';
   if(k==='e_target') return t2ElOf()===2 ? '' : t2ElOf()===1 ? '제원 용량 사용' : '제한 없음';
-  if(k==='rl_b') return WB.I.w_car > 0 ? '차 전폭으로 계산' : ''; if(k==='rl_m') return WB.I.w_car > 0 ? '' : '전폭이 0 이면 안 씀';
+  if(k==='rl_b') return WB.I.w_car > 0 ? '차 전폭으로 계산' : ''; if(k==='rl_m' || k==='oh_f' || k==='oh_r') return WB.I.w_car > 0 ? '' : '전폭이 0 이면 안 씀';
   if(['h_rcf', 'h_rcr', 'k_roll'].includes(k)) return WB.I.md >= 1 ? '' : '차량 모델 1 에서 씀';
   { const th = t2Th();
     if(['th_k', 'th_t0', 'th_c', 'th_r', 'th_init', 'th_cool'].includes(k)) return th.m ? '' : '모터 열 끔';
@@ -686,7 +687,7 @@ function t2InLock(k){ const L = '아래 표 사용';
     if(k==='t_amb') return th.w || th.b ? '' : '냉각수 · 축전지 모두 끔'; }
   return ''; }
 /* 차 전폭을 바꾸면 그 자리에서 '최소 거리' · '여유' 칸 막힘을 다시 맞춤 (입력 칸 전체를 다시 그리면 글자 넣던 칸을 놓침) */
-function t2RlLock(){ ['rl_b', 'rl_m'].forEach(k => { const i = document.querySelector(`#wb [data-wbi="${k}"]`); if(!i) return; const r = i.closest('.wb-ir'), lk = t2InLock(k);
+function t2RlLock(){ ['rl_b', 'rl_m', 'oh_f', 'oh_r'].forEach(k => { const i = document.querySelector(`#wb [data-wbi="${k}"]`); if(!i) return; const r = i.closest('.wb-ir'), lk = t2InLock(k);
   i.disabled = !!lk; r.classList.toggle('lock', !!lk); let s = r.querySelector('.wb-lk'); if(lk && !s){ s = document.createElement('span'); s.className = 'wb-lk'; i.parentNode.insertBefore(s, i.nextSibling.nextSibling); }
   if(s){ if(lk) s.textContent = lk; else s.remove(); } }); }
 document.addEventListener('input', e => { if(WB.id==='2' && e.target.matches && e.target.matches('[data-wbi="w_car"]')) setTimeout(t2RlLock, 0); });
@@ -737,6 +738,7 @@ function t2OutHTML(R){ const o = R.out, opt = T2.grMode==='opt', c = T2.course;
   const r1 = t2R(grLab, `<b>${t2F(o.c_gr, 2)}</b>`, '') + crec + t2R('최고 차속', `<b>${t2F(o.c_vtop, 1)}</b> <i>km/h</i>`, '')
     + (isFinite(o.c_rmn) ? t2R('가장 작은 반경', `<b>${t2F(o.c_rmn, 2)}</b> <i>m</i>`, WB.I.rm_on !== 0 && WB.I.rmin > 0 ? (o.c_rbad > 0 ? `<span class="t2-dt bad">${t2F(WB.I.rmin, 1)} m 보다 급한 곳 ${t2F(o.c_rbad, 1)} m</span>` : `<span class="muted">최소 회전 반경 ${t2F(WB.I.rmin, 1)} m 지킴</span>`) : '<span class="muted">최소 회전 반경 고려 안 함</span>') : '')
     + (o.c_ctight > 0 ? t2R('여유를 못 지킨 콘', `<b>${o.c_ctight}</b> <i>개</i>`, `<span class="t2-dt bad">콘 ↔ 경계 틈 &lt; 2 × ${t2F(o.c_rlb, 2)} m</span>`) : '')
+    + (isFinite(o.c_bo) ? t2R('가장 급한 곳 차 여유', `<b>${t2F(o.c_bo, 2)}</b> <i>/</i> <b>${t2F(o.c_bi, 2)}</b> <i>m</i>`, '<span class="muted">바깥 / 안쪽 (전장 · 차체 각도 포함)</span>') : '')
     + (isFinite(o.c_len) ? t2R('한 랩 거리', `<b>${t2F(o.c_len, 1)}</b> <i>m</i>`, `<span class="muted">${!o.c_rl ? '중심 라인' : `${o.c_rl === 2 ? `레코드 라인 −${t2F(o.c_rlg, 2)} s` : '최소 곡률 라인'} · 여유 ${t2F(o.c_rlb, 2)} m${WB.I.w_car > 0 ? ` (${t2F(WB.I.w_car, 2)} ÷ 2 + ${t2F(Math.max(0, WB.I.rl_m || 0), 2)})` : ''}`}</span>`) : '')
     + (isFinite(o.c_ltot) && o.c_n > 1 ? t2R('총 거리', o.c_ltot >= 1000 ? `<b>${t2F(o.c_ltot/1000, 2)}</b> <i>km</i>` : `<b>${t2F(o.c_ltot, 0)}</b> <i>m</i>`, `<span class="muted">한 랩 × ${o.c_n}랩</span>`) : '');
   const r2 = t2R('최고 모터 회전수', `<b>${t2F(o.c_rpm, 0)}</b> <i>rpm</i>`, '') + t2R('최대 모터 토크', `<b>${t2F(o.c_tq, 1)}</b> <i>N·m</i>`, '') + t2R('최대 단자 출력', `<b>${t2F(o.c_pbat, 1)}</b> <i>kW</i>`, '')
@@ -802,6 +804,7 @@ WB_TOOLS['2'] = {
     {k:'m', dk:'m', v:300, d:0, g:T2G.car, sb:'질량 · 무게중심'}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T2G.car, sb:'질량 · 무게중심'}, {k:'h', dk:'h', v:290, d:0, g:T2G.car, sb:'질량 · 무게중심'},
     {k:'L', dk:'L', v:1550, d:0, g:T2G.car, sb:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:T2G.car, sb:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:T2G.car, sb:'치수'},
     {k:'w_car', n:'차 전폭 (타이어 · 윙 포함, 0 = 입력 안 함)', u:'m', v:0, d:2, g:T2G.car, sb:'치수'},
+    {k:'oh_f', n:'앞 오버행 (앞축 ~ 차 앞 끝)', u:'m', v:0, d:2, g:T2G.car, sb:'치수'}, {k:'oh_r', n:'뒤 오버행 (뒤축 ~ 차 뒤 끝)', u:'m', v:0, d:2, g:T2G.car, sb:'치수'},
     {k:'mu', dk:'mu', n:'타이어 μ (기준 하중)', v:1.5, d:2, g:T2G.tire, sb:'마찰 · 하중 이동'}, {k:'mu_s', dk:'mu_s', n:'μ 하중 감도', v:0, d:3, g:T2G.tire, sb:'마찰 · 하중 이동'}, {k:'lltd', dk:'lltd', v:50, d:1, g:T2G.tire, sb:'마찰 · 하중 이동'},
     {k:'r_eff', dk:'r_eff', n:'바퀴 유효 반경 (동반경)', v:229, d:0, g:T2G.tire, sb:'바퀴'}, {k:'crr', dk:'crr', v:0.015, d:3, g:T2G.tire, sb:'바퀴'},
     {k:'cla', dk:'cla', n:'C<sub>L</sub>·A (다운포스)', v:3.0, d:2, g:T2G.aero, sb:'공력 계수'}, {k:'cda', dk:'cda', n:'C<sub>D</sub>·A (항력)', v:1.4, d:2, g:T2G.aero, sb:'공력 계수'},
@@ -869,7 +872,7 @@ WB_TOOLS['2'] = {
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
   tour: M2TOUR,
   verifyBase:{end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
-              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, rl_m:0.2, e_lim:1, rmin:0, md:0, th_on:1, cw_on:0, bt_on:0, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
+              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, oh_f:0, oh_r:0, rl_m:0.2, e_lim:1, rmin:0, md:0, th_on:1, cw_on:0, bt_on:0, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
   verify:[
     {n:'가속 · 접지 한계만 (μ = 1, CG 뒤축 위)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{t_acc_s:3.910309, ax_0:1}, src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
     {n:'가속 · 회전부 관성 J ÷ r²', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:1.25, r_eff:250, tmax:100, gr:4, eta_dt:100}, expect:{t_acc_s:5.477226}, src:'F = 100 × 4 ÷ 0.25 = 1600 N, 등가 질량 300 + 1.25 ÷ 0.25² = 320 kg → a = 5'},
@@ -938,6 +941,8 @@ WB_TOOLS['2'] = {
      src:"콘 자리 제약이 e ≥ 0.5 + 1 · e ≤ −0.5 − 1 → 가운데 콘 경우의 해 × 1.5: e(u) = 1.5 (a·u + c·u³) → 길이 = Σ√(1 + Δe²) = 80.2691 m (가운데 콘이면 80.1198 m)"},
     {n:'주행선 · 콘과 경계 사이가 좁으면 알림 (왼쪽 폭 1.5 m, b = 1 m)', I:{course:'end', rl_on:1, rl_b:1, end:{seg:[[20, 0], [20, 0], [20, 0], [20, 0]], laps:1, stint:1, WL:[1.5, 1.5, 1.5, 1.5], WR:[3, 3, 3, 3], slalom:[1, 3]}}, expect:{c_ctight:1},
      src:'첫 콘은 왼쪽으로 지나가야 하는데 콘 ↔ 왼쪽 경계 1.5 m < 2b = 2 m → 1개. 두 번째 콘(오른쪽, 3 m)은 지킴'},
+    {n:'차 여유 · 전장과 저속 차체 각도 (반경 10 m 원, 전폭 1.4 m, 휠베이스 1.6 m, 앞 50 %, 앞 · 뒤 오버행 0.5 · 0.3 m, 여유 0.2 m)', I:{course:'free', lap:'1', rl_on:0, w_car:1.4, rl_m:0.2, oh_f:0.5, oh_r:0.3, L:1600, fr:50, free:{seg:[[62.831853, 10]], wl:[3], wr:[3], closed:true, laps:1, s0:0}}, expect:{c_rmn:10, c_bo:1.072678, c_bi:0.932051},
+     src:'l_r = 0.8 m, 뒤축 반경 R_r = √(10² − 0.8²) = 9.9679. 바깥 = √(2.1² + (R_r + 0.7)²) − 10 + 0.2 = 1.0727 m (앞 끝 = 뒤축에서 1.6 + 0.5), 안쪽 = 10 − (R_r − 0.7) + 0.2 = 0.9321 m (곧은 길이면 둘 다 0.9 m)'},
   ],
   calcLimit: 60,   /* 한 번 계산 제한 시간 [s] (주행선 다듬기 포함) */
   code:`// ================================================================
@@ -1422,11 +1427,11 @@ function racingLine(segs, o) {
   const W = i => cyc ? ((i % n) + n) % n : i;
   const hA = i => h[cyc ? W(i) : Math.max(0, Math.min(M - 1, i))];          // 점 i 와 i+1 사이 조각
   const kA = i => k0[cyc ? W(i) : Math.max(0, Math.min(M - 1, i))];
-  // ---------- 점마다 경계 · 슬라럼 제약 (점 양쪽 조각 폭의 평균)
-  const lo = new Float64Array(n), hi = new Float64Array(n);
-  for (let i = 0; i < n; i++) { const a = cyc ? W(i) : Math.min(M - 1, i), b = cyc ? W(i - 1) : Math.max(0, i - 1);
-    const L = (wl[a] + wl[b]) / 2 - o.b, Rr = (wr[a] + wr[b]) / 2 - o.b; lo[i] = -Rr; hi[i] = L; if (lo[i] > hi[i]) lo[i] = hi[i] = (L - Rr) / 2; }
-  if (!cyc) { lo[0] = hi[0] = 0; lo[n - 1] = hi[n - 1] = 0; }                // 열린 코스: 출발 · 끝은 가운데
+  // ---------- 점마다 폭 (점 양쪽 조각 폭의 평균)
+  const lo = new Float64Array(n), hi = new Float64Array(n), wlN = new Float64Array(n), wrN = new Float64Array(n);
+  for (let i = 0; i < n; i++) { const a = cyc ? W(i) : Math.min(M - 1, i), b = cyc ? W(i - 1) : Math.max(0, i - 1); wlN[i] = (wl[a] + wl[b]) / 2; wrN[i] = (wr[a] + wr[b]) / 2; }
+  // 여유 [왼쪽, 오른쪽] = 곡률 k 에서 차 왼쪽 · 오른쪽이 차 중심 선보다 나가는 거리 + 여유 (o.bk 없으면 양쪽 o.b)
+  const bAt = k => o.bk ? o.bk(k) : [o.b, o.b];
   // ---------- 목적: Σ hn (kn + D2e)²  (D2e = 점 i 의 2계 차분) → ½ eᵀQe + gᵀe
   const q0 = new Float64Array(n), q1 = new Float64Array(n), q2 = new Float64Array(n), g = new Float64Array(n);
   const addQ = (i, j, v) => { const d = cyc ? W(j - i) : j - i; if (d === 0) q0[i] += v; else if (d === 1) q1[i] += v; else if (d === 2) q2[i] += v;
@@ -1442,26 +1447,31 @@ function racingLine(segs, o) {
     }
     for (let i = 0; i < n; i++) q0[i] += 1e-9; };                               // 곧은 코스에서도 풀리게 (아주 작은 가운데 쪽 당김)
   build();
-  // ---------- 1차: 슬라럼 없이 → 첫 콘 방향을 정하고, 2차: 슬라럼 넣어서
-  let e = boxQP(q0, q1, q2, g, lo, hi);
-  const tight = new Set();   // 콘과 경계 사이가 좁아 여유 b 를 못 지키는 콘 (구간 번호)
+  // ---------- 경계 · 슬라럼 콘 제약: 점 곡률 kN 에서의 차 여유로 (곧은 선 → 풀린 선의 곡률로 다시 → 몇 번)
+  const tight = new Set();   // 콘과 경계 사이가 좁아 여유를 못 지키는 콘 (구간 번호)
   const cones = (o.cones || []).slice().sort((a, b) => a - b);
-  if (cones.length || (o.groups && o.groups.length)) {
-    // 콘 묶음: 주어지면 그대로 (내 코스 = 행마다), 아니면 구간 번호가 20 안쪽으로 이어지는 콘 (공식 코스 = 1 m 구간 → 약 20 m)
-    const groups = o.groups && o.groups.length ? o.groups : [];
-    if (!groups.length) cones.forEach(c => { const gl = groups[groups.length - 1]; if (gl && c - gl[gl.length - 1] < 20) gl.push(c); else groups.push([c]); });
-    groups.forEach(gp => { const sgn0 = 1;   // 묶음의 첫 콘은 차가 왼쪽으로 지나감 (FSK 공식 코스 규칙, 내 코스도 같게)
+  const groups = o.groups && o.groups.length ? o.groups.map(g => g.slice()) : [];
+  // 콘 묶음: 주어지면 그대로 (내 코스 = 행마다), 아니면 구간 번호가 20 안쪽으로 이어지는 콘 (공식 코스 = 1 m 구간 → 약 20 m)
+  if (!groups.length) cones.forEach(c => { const gl = groups[groups.length - 1]; if (gl && c - gl[gl.length - 1] < 20) gl.push(c); else groups.push([c]); });
+  const bounds = kN => { tight.clear();
+    for (let i = 0; i < n; i++) { const [bL, bR] = bAt(kN[i]), L = wlN[i] - bL, Rr = wrN[i] - bR; lo[i] = -Rr; hi[i] = L; if (lo[i] > hi[i]) lo[i] = hi[i] = (L - Rr) / 2; }
+    if (!cyc) { lo[0] = hi[0] = 0; lo[n - 1] = hi[n - 1] = 0; }              // 열린 코스: 출발 · 끝은 가운데
+    groups.forEach(gp => { const sgn0 = 1;   // 묶음의 첫 콘은 차가 왼쪽으로 지나감 (FSK 공식 코스 규칙, 내 코스도 같게) → 콘은 차 오른쪽
       gp.forEach((c, j) => { const i = segNode[c], sg = j % 2 ? -sgn0 : sgn0, cl = o.coneLat && o.coneLat.has(c) ? o.coneLat.get(c) : 0;   // cl = 콘의 옆 거리 (내 코스 = 가운데 선 위 0)
-        // 콘 = 반지름 b 원 (콘 자리 = 점 i 에서 앞뒤로 cd 만큼): 콘을 사이에 둔 두 점은 옆으로 b, 그 밖의 점은 앞뒤 거리 ds 일 때 √(b² − ds²) 이상
+        // 콘 = 반지름 b 원 (콘 자리 = 점 i 에서 앞뒤로 cd 만큼, b = 콘 쪽 차 여유): 콘을 사이에 둔 두 점은 옆으로 b, 그 밖의 점은 앞뒤 거리 ds 일 때 √(b² − ds²) 이상
         const cd = o.coneDs && o.coneDs.has(c) ? o.coneDs.get(c) : 0;
         for (let d = -8; d <= 8; d++) { const q = i + d, k = cyc ? W(q) : q; if (k < 0 || k >= n) continue;
+          const bc = bAt(kN[k])[sg > 0 ? 1 : 0];
           let s = -cd; if (d > 0) for (let t = 0; t < d; t++) s += hA(i + t); else for (let t = 1; t <= -d; t++) s -= hA(i - t);
-          const br = d === 0 || (Math.abs(cd) > 1e-9 && d === Math.sign(cd)); if (!br && Math.abs(s) >= o.b) continue;
-          const off = br ? o.b : Math.sqrt(o.b * o.b - s * s);
+          const br = d === 0 || (Math.abs(cd) > 1e-9 && d === Math.sign(cd)); if (!br && Math.abs(s) >= bc) continue;
+          const off = br ? bc : Math.sqrt(bc * bc - s * s);
           if (sg > 0) lo[k] = Math.max(lo[k], cl + off); else hi[k] = Math.min(hi[k], cl - off);
-          if (lo[k] > hi[k]) { lo[k] = hi[k]; tight.add(c); } } }); });
-    e = boxQP(q0, q1, q2, g, lo, hi, e);
-  }
+          if (lo[k] > hi[k]) { lo[k] = hi[k]; tight.add(c); } } }); }); };
+  const kNode = x => { const kN = new Float64Array(n); for (let i = i0; i < i1; i++) { const { kn, c, idx } = node(i); kN[i] = (kn + c[0] * x[idx[0]] + c[1] * x[idx[1]] + c[2] * x[idx[2]]) / (1 - kn * x[i]); }
+    if (!cyc) { kN[0] = kN[1]; kN[n - 1] = kN[n - 2]; } return kN; };
+  bounds(new Float64Array(n));
+  let e = boxQP(q0, q1, q2, g, lo, hi);
+  if (o.bk) for (let it = 0; it < 3; it++) { bounds(kNode(e)); e = boxQP(q0, q1, q2, g, lo, hi, e); }   // 차 길이 · 저속 차체 각도: 곡률에 따라 여유가 바뀜
   // ---------- 최소 회전 반경: 곡률이 1/rmin 을 넘는 점에 벌점(10 → 100 → …)을 붙여 다시 풂 (최대 8 번, 폭 안에서 못 맞추면 남김 → 결과에 경고)
   // ---------- 최소 회전 반경 |κ| ≤ 1/rmin.  곡률 κ = (kn + D2e) ÷ (1 − kn·e) 이므로 (1 − kn·e > 0)
   //   kn + D2e ≤ kmax (1 − kn·e)  과  −(kn + D2e) ≤ kmax (1 − kn·e)  두 줄 모두 e 에 대해 선형 → 곡률 제약 QP 로 다시 풂 (어긴 점이 있을 때만)
@@ -1484,7 +1494,7 @@ function racingLine(segs, o) {
       }
     }
   }
-  const res = lineOut(e, { h, k0, cyc, n, M, segNode, lo, hi, kmax });
+  const res = lineOut(e, { h, k0, cyc, n, M, segNode, lo, hi, kmax, wlN, wrN, bk: o.bk || null });
   res.ctight = tight.size;
   if (o.key) RLC.set(o.key, res);
   return res;
@@ -1498,6 +1508,24 @@ function rTight(segs, rmin) { let r = Infinity, bad = 0;
   (segs || []).forEach(([l, R]) => { if (!R) return; const a = Math.abs(R); if (a < r) r = a; if (rmin > 0 && a < rmin * (1 - 1e-3)) bad += l; });
   return { r, bad }; }
 const rlB = I => I.w_car > 0 ? I.w_car / 2 + Math.max(0, I.rl_m || 0) : Math.max(0, I.rl_b);
+// 차 여유 (기하, 차량 모델 단계와 상관없이): 차 = 전폭 w × (앞 끝 ~ 뒤 끝) 사각형, 저속 기구학 선회 (뒷바퀴 옆 미끄럼 없음)
+//   회전 중심 O 는 뒤축 연장선 위, 뒤축 중심 반경 R_r = √(R² − l_r²)  (R = CG 경로 반경, l_r = CG ~ 뒤축) → 차체가 CG 경로에 대해 β = atan(l_r / R) 만큼 비스듬
+//   바깥 여유 = 바깥 모서리 (앞 끝 · 뒤 끝) 중 O 에서 가장 먼 거리 − R,  안쪽 여유 = R − 안쪽 옆면에서 O 까지 가장 가까운 거리  (+ 여유 rl_m)
+//   곡률 k > 0 (왼쪽 회전) 이면 [왼쪽, 오른쪽] = [안쪽, 바깥], 곧은 길이면 둘 다 w/2 + 여유.  전폭이 0 이면 쓰지 않음 (양쪽 rl_b)
+function bodyBk(I) {
+  if (!(I.w_car > 0)) return null;
+  const w = I.w_car, mg = Math.max(0, I.rl_m || 0), L = I.L / 1000, lr = L * I.fr / 100;   // fr = 앞축 하중 % → CG 는 뒤축에서 L·fr 앞
+  const xF = L + Math.max(0, I.oh_f || 0), xR = -Math.max(0, I.oh_r || 0);                  // 뒤축 기준 차 앞 끝 · 뒤 끝 [m]
+  const C = new Map();
+  return k => { const a = Math.abs(k); if (a < 1e-4) return [w / 2 + mg, w / 2 + mg];
+    const key = Math.round(a * 1e4); if (C.has(key) && k > 0 === C.get(key)[2]) return C.get(key).slice(0, 2);
+    const R = 1 / a, Rr = Math.sqrt(Math.max(R * R - lr * lr, 1e-6));
+    const out = Math.max(Math.hypot(xF, Rr + w / 2), Math.hypot(xR, Rr + w / 2)) - R;
+    const din = xR <= 0 && xF >= 0 ? Math.abs(Rr - w / 2) : Math.min(Math.hypot(xF, Rr - w / 2), Math.hypot(xR, Rr - w / 2));
+    const bo = out + mg, bi = Math.max(0, R - din) + mg, r = k > 0 ? [bi, bo] : [bo, bi];
+    C.set(key, [r[0], r[1], k > 0]); return r; };
+}
+const bodyKey = I => I.w_car > 0 ? [I.w_car, I.oh_f || 0, I.oh_r || 0, I.L, I.fr, I.rl_m].join(',') : '';
 
 // ================================================================ 주행선 다듬기 (랩타임 직접 줄이기, I.rl_on = 2)
 // 최소 곡률 주행선에서 출발해, 경로를 조금씩 옮겨 보고 준정상 랩타임이 줄면 받아들임 (줄지 않으면 버림 → 최소 곡률보다 느려지지 않음)
@@ -1591,6 +1619,8 @@ function improveLine(RL, C, V, flying, prog) {
     const js = new Set(); y.forEach((_, i) => { for (let j = i - 2; j <= i + 1; j++) { const q = cyc ? ((j % M) + M) % M : j; if (q >= 0 && q < M) js.add(q); } });
     const X = i => y.has(i) ? y.get(i) : e[i];
     const J = [...js], nl = [], nk = []; J.forEach(j => { const [l, k] = piece(X, j); nl.push(l); nk.push(Math.abs(k) > 1e-5 ? k : 0); });
+    if (geo.bk) for (const i of y.keys()) { const [bL, bR] = geo.bk(nodeK(X, i)), v = X(i);   // 옮긴 점의 새 곡률에서 차 여유로 경계 확인
+      if ((v > geo.wlN[i] - bL + 1e-9 && v > e[i]) || (v < -(geo.wrN[i] - bR) - 1e-9 && v < e[i])) return false; }
     for (const i of y.keys()) for (let d = -1; d <= 1; d++) { const p = cyc ? W(i + d) : i + d; if (!cyc && (p <= 0 || p >= n - 1)) continue;
       const kNew = Math.abs(nodeK(X, p)); if (kNew > kLim * (1 + 1e-6) && kNew > Math.abs(nodeK(i => e[i], p)) + 1e-12) return false; }   // 뾰족한 꺾임을 만드는 옮김은 버림
     if (geo.kmax) for (let q = 0; q < J.length; q++) { const ko = Math.abs(mdl.K[J[q]]), kn = Math.abs(nk[q]);
@@ -1656,7 +1686,7 @@ function drivenSegs(I, which, segs, closed, fx) {
   if (which === 'end' || which === 'ax') {
     const N = segs.length, wl = E.WL || [], wr = E.WR || [], rev = which === 'ax';
     const W = (arr, i) => arr.length ? (arr[i] + arr[(i + 1) % arr.length]) / 2 : 1.75;
-    const o = { closed: true, b, kmax: rkMax(I), key: \`\${which}|\${b}|\${rkMax(I)}|\${JSON.stringify(segs)}|\${JSON.stringify(E.slalom || [])}|\${JSON.stringify(E.slat || [])}|\${JSON.stringify(E.sds || [])}|\${JSON.stringify(wl)}|\${JSON.stringify(wr)}\`,
+    const o = { closed: true, b, bk: bodyBk(I), kmax: rkMax(I), key: \`\${which}|\${b}|\${bodyKey(I)}|\${rkMax(I)}|\${JSON.stringify(segs)}|\${JSON.stringify(E.slalom || [])}|\${JSON.stringify(E.slat || [])}|\${JSON.stringify(E.sds || [])}|\${JSON.stringify(wl)}|\${JSON.stringify(wr)}\`,
       wl: i => rev ? W(wr, N - 1 - i) : W(wl, i), wr: i => rev ? W(wl, N - 1 - i) : W(wr, i),
       cones: (E.slalom || []).map(j => rev ? (N - j) % N : j),
       coneLat: new Map((E.slalom || []).map((j, q) => [rev ? (N - j) % N : j, (rev ? -1 : 1) * ((E.slat || [])[q] || 0)])),
@@ -1665,8 +1695,8 @@ function drivenSegs(I, which, segs, closed, fx) {
   }
   // 내 코스: 구간마다 폭 (fx 없으면 [내 코스 폭] 을 양쪽 같게) · 슬라럼 콘 묶음
   const w = FREE_W, X = fx || { wl: [], wr: [], groups: [] };
-  return racingLine(segs, { closed, b, kmax: rkMax(I), wl: i => X.wl[i] != null ? X.wl[i] : w, wr: i => X.wr[i] != null ? X.wr[i] : w, groups: X.groups,
-                            key: \`free|\${b}|\${rkMax(I)}|\${w}|\${closed}|\${JSON.stringify(segs)}|\${JSON.stringify(X)}\` });
+  return racingLine(segs, { closed, b, bk: bodyBk(I), kmax: rkMax(I), wl: i => X.wl[i] != null ? X.wl[i] : w, wr: i => X.wr[i] != null ? X.wr[i] : w, groups: X.groups,
+                            key: \`free|\${b}|\${bodyKey(I)}|\${rkMax(I)}|\${w}|\${closed}|\${JSON.stringify(segs)}|\${JSON.stringify(X)}\` });
 }
 
 
@@ -2058,7 +2088,9 @@ function modeRun(I, G2, G3, fast) {
   Object.assign(out, {
     c_gr: G3, c_n: lt.length, c_lap: jj + 1, c_len: RL ? RL.len : NaN, c_ltot: RL ? RL.len * lt.length : NaN, c_rl: RL && RL.eN ? (RL.gain != null ? 2 : 1) : 0, c_rlg: RL && RL.gain != null ? RL.gain : NaN, c_rlb: rlB(I),   // 한 랩 · 총 거리 [m]
     ...(() => { const rmE = I.rm_on !== 0 ? I.rmin : 0, T = RL ? rTight(RL.segs, rmE) : c === 'skid' ? rTight([[1, 9.125]], rmE) : { r: Infinity, bad: 0 };
-                return { c_rmn: isFinite(T.r) ? T.r : NaN, c_rbad: T.bad, c_ctight: RL && RL.ctight ? RL.ctight : 0 }; })(),   // c_ctight = 여유를 못 지킨 콘 수                       // 달리는 선 가장 작은 반경 · 최소 회전 반경보다 급한 길이 [m]
+                const bk = bodyBk(I), bb = bk && isFinite(T.r) ? bk(1 / T.r) : [NaN, NaN];
+                return { c_rmn: isFinite(T.r) ? T.r : NaN, c_rbad: T.bad, c_ctight: RL && RL.ctight ? RL.ctight : 0,
+                         c_bo: Math.max(bb[0], bb[1]), c_bi: Math.min(bb[0], bb[1]) }; })(),   // 가장 급한 곳에서 차 바깥 · 안쪽 여유 [m] (전폭이 있을 때)   // c_ctight = 여유를 못 지킨 콘 수                       // 달리는 선 가장 작은 반경 · 최소 회전 반경보다 급한 길이 [m]
     c_t: c === 'skid' ? E.skid : lt.length > 1 ? (jj >= 0 ? lt[jj] : ls.total) : lt[0],
     c_t1: ls.first, c_tavg: ls.avg, c_ttot: ls.total,
     c_vtop: Math.max(...vv) * 3.6,
@@ -2182,7 +2214,7 @@ function calc(I) {
 /* ============================================================ 대시보드 '파트별 > 차량 목표 · 파워트레인'
    대시보드 값으로 도구 2를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
-const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'rl_m', 'rl_b', 'e_lim', 'rm_on', 'md', 'th_on', 'cw_on', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
+const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'oh_f', 'oh_r', 'rl_m', 'rl_b', 'e_lim', 'rm_on', 'md', 'th_on', 'cw_on', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
   T2GOAL.forEach(k => { const db = wbDash(k); I[k] = db ? db.v : 0; });
