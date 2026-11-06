@@ -505,6 +505,20 @@ function t2FreeCones(){ const rows = t2Track(T2.free.text).rows; if(!rows.length
       if(i < n && s >= nb - 1e-9){ put(W[k][0], W[k][1]); nb += 3; }
       while(ci < cs.length && a >= cs[ci] - 1e-9){ out.push([x, y, 'C']); ci++; } } });
   return out; }
+/* 코스 폭 경계 (지도 칠하기용): 왼쪽 · 오른쪽 경계 점 [[x, y]] (m). 공식 코스 = 실제 콘으로 잡은 폭 (t2ConeBounds), 내 코스 = 행마다 폭 (0.5 m 간격) */
+function t2Bounds(c){
+  if(c==='end' || c==='ax'){ const X = FSK26.X, Y = FSK26.Y, N = X.length, B = t2ConeBounds(), Lp = [], Rp = [];
+    for(let i = 0; i < N; i++){ const a = (i - 1 + N) % N, b = (i + 1) % N, dx = X[b] - X[a], dy = Y[b] - Y[a], d = Math.hypot(dx, dy) || 1, nx = -dy/d, ny = dx/d;
+      Lp.push([X[i] + nx*B.WL[i], Y[i] + ny*B.WL[i]]); Rp.push([X[i] - nx*B.WR[i], Y[i] - ny*B.WR[i]]); }
+    return {L:Lp, R:Rp, close:true}; }
+  if(c==='free'){ const rows = t2Track(T2.free.text).rows; if(!rows.length) return null; const W = t2Widths(rows), Lp = [], Rp = [];
+    let x = 0, y = 0, h = 0;
+    rows.forEach((r, k) => { const n = Math.max(1, Math.ceil(r.l/0.5)), st = r.l/n;
+      for(let i = 0; i <= n; i++){
+        if(i){ if(!r.R){ x += st*Math.cos(h); y += st*Math.sin(h); } else { const dh = st/r.R; x += r.R*(Math.sin(h + dh) - Math.sin(h)); y -= r.R*(Math.cos(h + dh) - Math.cos(h)); h += dh; } }
+        if(i < n || k === rows.length - 1){ const nx = -Math.sin(h), ny = Math.cos(h); Lp.push([x + nx*W[k][0], y + ny*W[k][0]]); Rp.push([x - nx*W[k][1], y - ny*W[k][1]]); } } });
+    return {L:Lp, R:Rp, close:t2Closed()}; }
+  return null; }
 /* 슬라럼 콘 자리에서 비켜 갈 폭이 모자란 곳 (양쪽 모두 폭 ≥ 2 × 차 중심 여유 여야 번갈아 비켜 감) */
 function t2SlalomTight(rows){ const I = WB.I, b = I.w_car > 0 ? I.w_car/2 + Math.max(0, I.rl_m || 0) : Math.max(0, I.rl_b), W = t2Widths(rows);
   return rows.map((r, i) => isFinite(r.sl) && (W[i][0] < 2*b - 1e-9 || W[i][1] < 2*b - 1e-9) ? i + 1 : 0).filter(Boolean); }
@@ -537,6 +551,8 @@ function t2MapSVG(plain){ const c = plain ? T2.ecourse : T2.course, R = WB.id===
   G.extra.forEach(([cx, cy, rr]) => { svg += `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${(rr*s).toFixed(1)}" class="t2-sk" vector-effect="non-scaling-stroke"/>`; });
   const cones = c==='ax' || c==='end' ? FSK26.cones || [] : c==='free' ? t2FreeCones() : [];
   const cone = ([cx, cy, sd]) => `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${((sd==='C' ? 2.2 : 1.6)*Math.max(sz, .35)).toFixed(2)}" class="t2-cone ${sd}"/>`;
+  if(plain){ const BD = t2Bounds(c); if(BD){ const pts = A => A.map(([x, y]) => `${tx(x).toFixed(1)},${ty(y).toFixed(1)}`).join(' L');   // 편집 탭: 좌우 경계 안을 반투명 어두운 색으로
+    svg += BD.close ? `<path d="M${pts(BD.L)}Z M${pts(BD.R)}Z" class="t2-corr" fill-rule="evenodd"/>` : `<path d="M${pts(BD.L)} L${pts(BD.R.slice().reverse())}Z" class="t2-corr"/>`; } }
   cones.forEach(q => { if(q[2]!=='C') svg += cone(q); });                     // 경계 콘은 선 아래, 슬라럼 콘(가운데)은 선 위에 (아래 '출발선' 앞에서)
   if(!plain && R && WB.I.w_car > 0) svg += t2Sweep(xs, ys, close, rev, tx, ty);   // 차가 지나간 영역 (반투명 회색)
   if(RLp) svg += `<polyline points="${xc.map((_, i) => [tx(xc[i]), ty(yc[i])].map(v => v.toFixed(1)).join(',')).join(' ')}" class="t2-cl" vector-effect="non-scaling-stroke"/>`;
