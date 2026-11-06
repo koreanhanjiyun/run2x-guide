@@ -3024,6 +3024,10 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .t2-mdop[aria-pressed="true"]{border-color:#3d5a99;box-shadow:inset 0 0 0 1px #3d5a99;background:#f2f5fc}
 .t2-mdop:disabled{opacity:.45;cursor:not-allowed}
 .t2-mdl{font-size:12px;font-weight:600;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);white-space:nowrap}
+.t2-mdhn{font-weight:400;font-size:12px;margin-left:8px}
+.t2-mdop.tg b{display:flex;align-items:center;gap:8px}
+.t2-tgb{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--panel-2)}
+.t2-mdop.tg[aria-pressed="true"] .t2-tgb{background:#3d5a99;border-color:#3d5a99;color:#fff}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -11265,7 +11269,7 @@ const t2Seg = (attr, cur, items) => `<span class="dc-seg" role="group">${items.m
 function t2ExtHTML(){ const sim = T2.tab==='sim', w = $('#wb'); if(w) w.classList.toggle('t2-edit', !sim);
   const R = WB.id==='2' ? WB.R : null, go = R && R.modes ? R.modes.opt.out.gr_use : NaN;
   const bar = sim
-    ? `<span class="t2-mdl" title="계산에 쓴 모델 단계 (편집 탭 [모델 단계]에서 바꿈)">모델 · 차량 ${WB.I.md >= 1 ? 1 : 0} · 열 ${WB.I.tm >= 2 ? 2 : WB.I.tm >= 1 ? 1 : 0}</span><span class="t2-gm"><span class="muted">기준 감속비</span>${t2Seg('data-t2gm', T2.grMode, [['my', `내 감속비 ${wbFmt(WB.I.gr, 2)}`], ['opt', `최적 감속비 ${isFinite(go) ? wbFmt(go, 2) : '…'}`]])}</span>
+    ? `<span class="t2-mdl" title="계산에 쓴 모델 단계 (편집 탭 [모델 단계]에서 바꿈)">모델 · 차량 ${WB.I.md >= 1 ? 1 : 0} · 열 ${t2ThName()}</span><span class="t2-gm"><span class="muted">기준 감속비</span>${t2Seg('data-t2gm', T2.grMode, [['my', `내 감속비 ${wbFmt(WB.I.gr, 2)}`], ['opt', `최적 감속비 ${isFinite(go) ? wbFmt(go, 2) : '…'}`]])}</span>
        <span class="t2-vw"><label class="t2-lapl">볼 랩 <span id="t2lapw">${t2LapSel()}</span></label><span class="muted">코스</span>${t2Seg('data-t2course', T2.course, T2COURSES.map(k => [k, T2CN[k]]))}</span>`
     : `<span class="t2-vw"><span class="muted">편집할 항목</span>${t2Seg('data-t2eg', t2Grp(T2.etab), T2EI)}</span>
 `;
@@ -11298,15 +11302,20 @@ function t2InOpt(k){ if(k!=='e_target' || WB.id!=='2') return ''; const m = t2El
 const T2MDV = [[0, '0 기본', '무게중심 높이 전체로 좌우 하중 이동을 계산합니다. 롤은 계산하지 않습니다.', '차량 제원 (무게중심 높이 · 트레드) · 타이어 (μ · 하중 감도)'],
                [1, '1 롤센터 · 롤', '앞 · 뒤 롤센터 높이로 하중 이동을 기하 몫(롤센터에서 바로 전달)과 탄성 몫(스프링 · 안티롤바)으로 나누고, 롤 강성으로 롤각을 계산합니다.', '차량 제원 · 롤센터 · 롤 (앞 · 뒤 롤센터 높이, 롤 강성)'],
                [2, '2 비선형 타이어', '하중에 따라 휘어지는 타이어 곡선으로 접지력을 계산합니다.', '준비 중']];
-const T2MDT = [[0, '0 모터만', '모터 온도만 계산합니다. 냉각수 온도는 늘 고정값으로 둡니다. 축전지 내부저항은 일정합니다.', '모터 · 인버터 › 모터 열 · 디레이팅 (열용량 · 열저항 · 냉각수 온도 · 디레이팅 시작 온도)'],
-               [1, '1 + 냉각수 · 라디에이터 · 외기', '모터에서 나온 열과 인버터 손실이 냉각수로 들어가고, 라디에이터가 외기로 내보냅니다. 라디에이터 방열 능력은 차속에 따라 커집니다. 냉각수 온도가 오르면 모터 냉각이 약해집니다.', '모터 · 인버터 › 냉각수 · 라디에이터 (냉각수 열용량, 정지 · 60 km/h 방열 능력) · 이 화면 외기 온도'],
-               [2, '2 + 축전지 온도 · 저항 온도 의존', '팩 내부저항 손실로 축전지 온도가 오르고, 외기로 열을 내보냅니다. 내부저항은 온도가 낮을수록 커집니다 (손실 · 전압 강하 · 발열에 반영).', '축전지 › 축전지 열 (팩 열용량, 방열 능력, 시작 온도, 저항 온도 계수) · 외기 온도']];
-function t2ModelPage(){ const md = WB.I.md >= 1 ? 1 : 0, tm = WB.I.tm >= 2 ? 2 : WB.I.tm >= 1 ? 1 : 0;
-  const axis = (nm, attr, cur, L) => `<div class="t2-mdax"><div class="t2-mdh">${nm}</div><div class="t2-mdops">${L.map(([k, t, d, u]) => {
-      const off = attr==='data-t2md' && k===2;
-      return `<button type="button" class="t2-mdop" ${attr}="${k}" aria-pressed="${cur===k}"${off ? ' disabled' : ''}><b>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">${off ? '준비 중' : `쓰는 입력: ${u}`}</span></button>`; }).join('')}</div></div>`;
-  return `<div class="t2-model"><p class="muted t2-mdnote">두 축을 따로 골라 조합합니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 [모델 · 차량 N · 열 N]으로 보입니다. 대시보드로 보내는 값은 늘 차량 0 · 열 0 으로 계산합니다.</p>
-    ${axis('차량 모델', 'data-t2md', md, T2MDV)}${axis('열 모델', 'data-t2tm', tm, T2MDT)}${t2Consts('model')}</div>`; }
+/* 열 모델: 계통마다 켜고 끔 (k = 입력 키). 냉각수 계통은 모터 열이 켜져야 켜짐 */
+const T2MDT = [['th_on', '모터 열', '모터 손실로 모터 온도가 오르고 냉각수 쪽으로 열을 내보냅니다. 디레이팅 계수가 0 이 아니면 온도로 최대 토크를 깎습니다. 끄면 모터 온도는 출발 온도 그대로이고 디레이팅도 없습니다.', '모터 · 인버터 › 모터 열 · 디레이팅 (열용량 · 열저항 · 냉각수 온도 · 출발 온도 · 디레이팅)'],
+               ['cw_on', '냉각수 계통 (수랭)', '모터에서 나온 열과 인버터 손실이 냉각수로 들어가고, 라디에이터가 외기로 내보냅니다. 방열 능력은 차속에 따라 커지고, 냉각수 온도가 오르면 모터 냉각이 약해집니다. 끄면 냉각수 온도는 고정값입니다. 켜면 모터 열도 켜집니다.', '모터 · 인버터 › 냉각수 · 라디에이터 (냉각수 열용량, 정지 · 60 km/h 방열 능력) · 이 화면 외기 온도'],
+               ['bt_on', '축전지 온도 (공랭)', '팩 내부저항 손실로 축전지 온도가 오르고 외기로 열을 내보냅니다. 내부저항은 온도가 낮을수록 커집니다 (손실 · 전압 강하 · 발열에 반영). 냉각수 계통과는 이어져 있지 않습니다. 끄면 내부저항은 일정합니다.', '축전지 › 축전지 열 (팩 열용량, 방열 능력, 시작 온도, 저항 온도 계수) · 이 화면 외기 온도']];
+const t2Th = () => ({m: WB.I.th_on !== 0, w: WB.I.th_on !== 0 && WB.I.cw_on === 1, b: WB.I.bt_on === 1});
+const t2ThName = () => { const t = t2Th(), a = [t.m && '모터', t.w && '냉각수', t.b && '축전지'].filter(Boolean); return a.length ? a.join(' · ') : '없음'; };
+function t2ModelPage(){ const md = WB.I.md >= 1 ? 1 : 0, th = t2Th(), on = {th_on:th.m, cw_on:th.w, bt_on:th.b};
+  const head = (nm, note) => `<div class="t2-mdh">${nm}<span class="muted t2-mdhn">${note}</span></div>`;
+  const veh = `<div class="t2-mdax">${head('차량 모델', '하나 고름')}<div class="t2-mdops">${T2MDV.map(([k, t, d, u]) => { const off = k===2;
+      return `<button type="button" class="t2-mdop" data-t2md="${k}" aria-pressed="${md===k}"${off ? ' disabled' : ''}><b>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">${off ? '준비 중' : `쓰는 입력: ${u}`}</span></button>`; }).join('')}</div></div>`;
+  const thm = `<div class="t2-mdax">${head('열 모델', '계통마다 켜고 끔 · 냉각수 계통은 모터 열이 켜져야 켜짐')}<div class="t2-mdops">${T2MDT.map(([k, t, d, u]) =>
+      `<button type="button" class="t2-mdop tg" data-t2th="${k}" aria-pressed="${on[k]}"><b><span class="t2-tgb">${on[k] ? '켬' : '끔'}</span>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">쓰는 입력: ${u}</span></button>`).join('')}</div></div>`;
+  return `<div class="t2-model"><p class="muted t2-mdnote">차량 모델은 하나를 고르고, 열 모델은 계통마다 켜고 끕니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 [모델 · 차량 N · 열 …]으로 보입니다. 대시보드로 보내는 값은 늘 차량 0 · 열 모델 모터 열만으로 계산합니다.</p>
+    ${veh}${thm}${t2Consts('model')}</div>`; }
 function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
   if(grp==='model') return t2ModelPage();
   if(grp==='course') return `${t2Consts('course')}${t2CourseEdit()}`;
@@ -11701,7 +11710,9 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const eg = t.closest('[data-t2eg]'); if(eg){ const g = eg.dataset.t2eg; T2.etab = g==='mot' ? (T2MOT.includes(T2.etab) ? T2.etab : (T2.emot || 'mt')) : g; T2.menu = ''; t2Save(); wbPaint(['ext']); return; }
   const rl = t.closest('[data-t2rl]'); if(rl){ WB.I.rl_on = +rl.dataset.t2rl; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
   const mdb = t.closest('[data-t2md]'); if(mdb){ if(mdb.disabled) return; WB.I.md = +mdb.dataset.t2md; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
-  const tmb = t.closest('[data-t2tm]'); if(tmb){ WB.I.tm = +tmb.dataset.t2tm; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
+  const thb = t.closest('[data-t2th]'); if(thb){ const k = thb.dataset.t2th, th = t2Th(), now = k==='th_on' ? th.m : k==='cw_on' ? th.w : th.b, v = now ? 0 : 1;
+    WB.I[k] = v; if(k==='cw_on' && v) WB.I.th_on = 1; if(k==='th_on' && !v) WB.I.cw_on = 0;   // 냉각수를 켜면 모터 열도 켬, 모터 열을 끄면 냉각수도 끔
+    wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
   const dl = t.closest('[data-t2del]'); if(dl){ const rows = t2Track(T2.free.text).rows; rows.splice(+dl.dataset.t2del, 1); t2SetRows(rows); return; }
   if(t.closest('[data-t2add]')){ const rows = t2Track(T2.free.text).rows; rows.push({l:10, R:0, wl:NaN, wr:NaN, sl:NaN, note:''}); t2SetRows(rows); const tw = $('#t2tt'); if(tw) tw.scrollTop = tw.scrollHeight; return; }
   const gd = t.closest('[data-t2gdel]'); if(gd){ const k = T2.etab, g = t2Grid(t2MtText(k)); g.splice(+gd.dataset.t2gdel, 1); t2MtSet(k, t2GridText(g)); return; }
@@ -11717,8 +11728,11 @@ function t2InLock(k){ const L = '아래 표 사용';
   if(k==='e_target') return t2ElOf()===2 ? '' : t2ElOf()===1 ? '제원 용량 사용' : '제한 없음';
   if(k==='rl_b') return WB.I.w_car > 0 ? '차 전폭으로 계산' : ''; if(k==='rl_m') return WB.I.w_car > 0 ? '' : '전폭이 0 이면 안 씀';
   if(['h_rcf', 'h_rcr', 'k_roll'].includes(k)) return WB.I.md >= 1 ? '' : '차량 모델 1 에서 씀';
-  if(['cw_c', 'ua0', 'ua60', 't_amb'].includes(k)) return WB.I.tm >= 1 ? '' : '열 모델 1 에서 씀';
-  if(['b_c', 'b_ha', 'b_t0', 'b_alpha'].includes(k)) return WB.I.tm >= 2 ? '' : '열 모델 2 에서 씀';
+  { const th = t2Th();
+    if(['th_k', 'th_t0', 'th_c', 'th_r', 'th_init', 'th_cool'].includes(k)) return th.m ? '' : '모터 열 끔';
+    if(['cw_c', 'ua0', 'ua60'].includes(k)) return th.w ? '' : '냉각수 계통 끔';
+    if(['b_c', 'b_ha', 'b_t0', 'b_alpha'].includes(k)) return th.b ? '' : '축전지 온도 끔';
+    if(k==='t_amb') return th.w || th.b ? '' : '냉각수 · 축전지 모두 끔'; }
   return ''; }
 /* 차 전폭을 바꾸면 그 자리에서 '최소 거리' · '여유' 칸 막힘을 다시 맞춤 (입력 칸 전체를 다시 그리면 글자 넣던 칸을 놓침) */
 function t2RlLock(){ ['rl_b', 'rl_m'].forEach(k => { const i = document.querySelector(`#wb [data-wbi="${k}"]`); if(!i) return; const r = i.closest('.wb-ir'), lk = t2InLock(k);
@@ -11774,9 +11788,9 @@ function t2OutHTML(R){ const o = R.out, opt = T2.grMode==='opt', c = T2.course;
     + (isFinite(o.c_len) ? t2R('한 랩 거리', `<b>${t2F(o.c_len, 1)}</b> <i>m</i>`, `<span class="muted">${!o.c_rl ? '중심 라인' : `${o.c_rl === 2 ? `레코드 라인 (최소 곡률보다 −${t2F(o.c_rlg, 2)} s)` : '최소 곡률 라인'} · 여유 ${t2F(o.c_rlb, 2)} m${WB.I.w_car > 0 ? ` (${t2F(WB.I.w_car, 2)} ÷ 2 + ${t2F(Math.max(0, WB.I.rl_m || 0), 2)})` : ''}`}</span>`) : '')
     + (isFinite(o.c_ltot) && o.c_n > 1 ? t2R('총 거리', o.c_ltot >= 1000 ? `<b>${t2F(o.c_ltot/1000, 2)}</b> <i>km</i>` : `<b>${t2F(o.c_ltot, 0)}</b> <i>m</i>`, `<span class="muted">한 랩 × ${o.c_n}랩</span>`) : '');
   const r2 = t2R('최고 모터 회전수', `<b>${t2F(o.c_rpm, 0)}</b> <i>rpm</i>`, '') + t2R('최대 모터 토크', `<b>${t2F(o.c_tq, 1)}</b> <i>N·m</i>`, '') + t2R('최대 단자 출력', `<b>${t2F(o.c_pbat, 1)}</b> <i>kW</i>`, '')
-    + t2R('가장 낮은 단자 전압', `<b>${t2F(o.c_vmin, 1)}</b> <i>V</i>`, '') + t2R('모터 최고 온도', `<b>${t2F(o.c_tmax, 1)}</b> <i>°C</i>`, `<span class="muted">끝 ${t2F(o.c_tm, 1)} °C</span>`)
-    + t2R('냉각수 최고 온도', `<b>${t2F(o.c_twmax, 1)}</b> <i>°C</i>`, `<span class="muted">${isFinite(o.c_twmax) ? `끝 ${t2F(o.c_tw, 1)} °C` : '열 모델 1 이상에서 계산'}</span>`)
-    + t2R('축전지 최고 온도', `<b>${t2F(o.c_tbmax, 1)}</b> <i>°C</i>`, `<span class="muted">${isFinite(o.c_tbmax) ? `끝 ${t2F(o.c_tb, 1)} °C` : '열 모델 2 에서 계산'}</span>`)
+    + t2R('가장 낮은 단자 전압', `<b>${t2F(o.c_vmin, 1)}</b> <i>V</i>`, '') + t2R('모터 최고 온도', `<b>${t2F(o.c_tmax, 1)}</b> <i>°C</i>`, `<span class="muted">${isFinite(o.c_tmax) ? `끝 ${t2F(o.c_tm, 1)} °C` : '모터 열 켜면 계산'}</span>`)
+    + t2R('냉각수 최고 온도', `<b>${t2F(o.c_twmax, 1)}</b> <i>°C</i>`, `<span class="muted">${isFinite(o.c_twmax) ? `끝 ${t2F(o.c_tw, 1)} °C` : '냉각수 계통 켜면 계산'}</span>`)
+    + t2R('축전지 최고 온도', `<b>${t2F(o.c_tbmax, 1)}</b> <i>°C</i>`, `<span class="muted">${isFinite(o.c_tbmax) ? `끝 ${t2F(o.c_tb, 1)} °C` : '축전지 온도 켜면 계산'}</span>`)
     + t2R('최대 전류 때 단자 전압 (SOC 100 %)', `<b>${t2F(o.v_load, 1)}</b> <i>V</i>`, '') + t2R('단자 출력 상한 (규정 · 전류 한계)', `<b>${t2F(o.p_max, 2)}</b> <i>kW</i>`, '') + t2R('모터 기저 회전수 (공칭 전압)', `<b>${t2F(o.n_base, 0)}</b> <i>rpm</i>`, '');
   const one = o.c_n > 1 && T2.lap[c]!=='all' ? `${o.c_lap}번째 랩 ` : '';
   // 에너지 칸: 모든 코스 같은 줄 (해당 없으면 —)
@@ -11805,7 +11819,7 @@ const M2TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 코드 · 검증(계산 코드와 해석해 비교표), 입력 내보내기 · 가져오기(맵 편집 표 포함), 대시보드에 반영(제안 감속비 · 최고 차속 · 횡가속도 · 랩 에너지)입니다.', t2TT('sim')],
   ['#wb .wb-in', '입력', '입력 칸은 위 [편집] 탭에 항목별로 있습니다(자주 바꿔 보는 값만 나중에 이곳으로 꺼낼 예정). 여기에는 [대시보드 값으로 채우기]와 칸 앞 점의 뜻이 있습니다: 색 점 = 대시보드 값(확정 · 검토 중 · 가정 · 계산값 · 예시값), 고리 = 직접 고친 값, 회색 네모 = 도구 기본값.', t2TT('sim')],
   ['#wb [data-t2tab="edit"]', '편집 탭', '모든 입력을 항목별로 넣는 탭입니다: 코스 · 차량 제원 · 타이어 · 에어로 · 모터 · 인버터 · 구동계 · 축전지 · 모델 단계. 항목마다 위에 상수 칸(비슷한 값끼리 상자), 아래에 표 · 그림이 있습니다. 여기서 고치는 동안은 계산하지 않고, [시뮬레이션] 탭으로 가면 한 번 계산합니다. 코스 단추는 시뮬레이션 코스와 따로입니다.', t2TT('edit', 'course')],
-  ['#wb .t2-model', '모델 단계', '차량 모델(0 기본 · 1 롤센터 · 롤)과 열 모델(0 모터만 · 1 + 냉각수 · 라디에이터 · 외기 · 2 + 축전지 온도 · 저항 온도 의존)을 따로 눌러 조합합니다. 단추마다 계산하는 것과 쓰는 입력(어느 항목에 있는지)이 적혀 있고, 그 단계에서 안 쓰는 입력 칸은 막힙니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 보입니다. 대시보드 반영은 늘 차량 0 · 열 0.', t2TT('edit', 'model')],
+  ['#wb .t2-model', '모델 단계', '차량 모델(0 기본 · 1 롤센터 · 롤)과 열 모델(모터 열 · 냉각수 계통 · 축전지 온도를 각각 켜고 끔, 냉각수 계통은 모터 열이 켜져야 켜짐)을 눌러 조합합니다. 단추마다 계산하는 것과 쓰는 입력(어느 항목에 있는지)이 적혀 있고, 그 단계에서 안 쓰는 입력 칸은 막힙니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 보입니다. 대시보드 반영은 늘 차량 0 · 열 모터 열만.', t2TT('edit', 'model')],
   ['#wb .t2-cg', '상수인가, 표인가', '표가 비어 있으면 위 상수 칸(모터 최대 토크 · 모터 효율 · 인버터 효율 · μ · 하중 감도)을 쓰고, 그림 위에 "상수 칸을 씁니다"가 뜹니다. 표 제목 옆 [계산에 쓸 값]에서 [아래 표 · 위 상수]를 고릅니다. 표를 쓰면 그 상수 칸은 막힙니다("아래 표 사용"). 숫자 하나만 넣어도 상수 표가 됩니다.', t2TT('edit', 'eM')],
   ['#wb .t2-tw', '표 고치기', '칸을 눌러 고치고 Enter(반영) · Esc(취소). 표 맨 아래 [+ 행] 행, 효율 맵은 오른쪽 [+ 열] 열로 늘리고, 행 끝 × 로 행을, 맵 맨 아래 × 로 열을 지웁니다. 빈 표에서 누르면 머리 행부터 만듭니다. 토크 표는 1열 회전수 · 2열 최대 토크 · 3열 연속 토크(디레이팅 하한)입니다.', t2TT('edit', 'mt')],
   ['#wb .t2-menu', '입력하기', '붙여넣기(창에 붙여 넣으면 표를 덮어씀 · 내 코스는 창 대신 표에 Ctrl+V) · 파일 가져오기(.xlsx 첫 시트 · .csv) · 양식 받기(쓰는 법이 양식 맨 위 # 행에 있음) · 예시로 · 비우기.', t2TT('edit', 'mt')],
@@ -11825,7 +11839,7 @@ const M2TOUR = [
 
 /* ============================================================ 도구 정의 */
 /* 입력 묶음 (편집 탭 항목마다 그림: T2EG). ui:'edit' = 편집 탭에만, ui:'none' = 다른 곳(단추 · 결과 카드)에서 고침 → 왼쪽 입력 칸은 비움 */
-const T2G = {thm:'열 모델', cool:'냉각수 · 라디에이터 (열 모델 1)', bth:'축전지 열 (열 모델 2)', car:'차량 제원', rc:'롤센터 · 롤 (모델 단계 1)', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', rl:'주행선 여유 · 경계', goal:'스키드패드 목표 (0 = 정하지 않음)'};
+const T2G = {thm:'열 모델', cool:'냉각수 · 라디에이터 (열 모델 냉각수 계통)', bth:'축전지 열 (열 모델 축전지 온도)', car:'차량 제원', rc:'롤센터 · 롤 (모델 단계 1)', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', rl:'주행선 여유 · 경계', goal:'스키드패드 목표 (0 = 정하지 않음)'};
 const T2EG = {course:[T2G.rl], car:[T2G.car, T2G.rc], tire:[T2G.tire], aero:[T2G.aero], mot:[T2G.mot, T2G.th, T2G.cool], dt:[T2G.dt], bat:[T2G.bat, T2G.bth], model:[T2G.thm]};
 WB_TOOLS['2'] = {
   no:'2', stage:'P0', name:'랩타임 시뮬레이터',
@@ -11846,7 +11860,7 @@ WB_TOOLS['2'] = {
     {k:'eta_mot', n:'모터 효율 (상수)', u:'%', v:95, d:1, g:T2G.mot, sb:'효율 상수'}, {k:'eta_inv', n:'인버터 효율 (상수)', u:'%', v:97, d:1, g:T2G.mot, sb:'효율 상수'},
     {k:'th_k', n:'디레이팅 계수 (0 = 항상 최대 토크)', u:'N·m/°C', v:0, d:2, g:T2G.th, sb:'디레이팅'}, {k:'th_t0', n:'디레이팅 시작 온도', u:'°C', v:100, d:0, g:T2G.th, sb:'디레이팅'},
     {k:'th_c', n:'모터 열용량', u:'J/K', v:6000, d:0, g:T2G.th, sb:'모터 열'}, {k:'th_r', n:'모터 → 냉각수 열저항', u:'K/W', v:0.02, d:4, g:T2G.th, sb:'모터 열'},
-    {k:'th_cool', n:'냉각수 온도 (열 모델 0 = 고정, 1 이상 = 출발 값)', u:'°C', v:40, d:0, g:T2G.th, sb:'모터 열'}, {k:'th_init', n:'모터 출발 온도', u:'°C', v:40, d:0, g:T2G.th, sb:'모터 열'},
+    {k:'th_cool', n:'냉각수 온도 (냉각수 계통 끔 = 고정, 켬 = 출발 값)', u:'°C', v:40, d:0, g:T2G.th, sb:'모터 열'}, {k:'th_init', n:'모터 출발 온도', u:'°C', v:40, d:0, g:T2G.th, sb:'모터 열'},
     {k:'gr', dk:'gr', v:3.55, d:2, g:T2G.dt, sb:'구동계', sw:[2.5, 7]}, {k:'eta_dt', dk:'eta_dt', v:95, d:0, g:T2G.dt, sb:'구동계'}, {k:'j_eq', dk:'j_eq', n:'회전부 등가 관성 (바퀴 축 기준)', v:0.5, d:2, g:T2G.dt, sb:'구동계'},
     {k:'n_s', dk:'n_s', v:72, d:0, g:T2G.bat, sb:'셀 구성'}, {k:'n_p', dk:'n_p', v:6, d:0, g:T2G.bat, sb:'셀 구성'},
     {k:'c_vmax', n:'셀 최대 전압 (만충)', u:'V', v:4.2, d:2, g:T2G.bat, sb:'셀 전압'}, {k:'c_vnom', n:'셀 공칭 전압', u:'V', v:3.6, d:2, g:T2G.bat, sb:'셀 전압'},
@@ -11860,7 +11874,8 @@ WB_TOOLS['2'] = {
     {k:'rl_m', n:'여유 (차 옆면 ↔ 코스 경계 · 콘, 전폭이 있을 때)', u:'m', v:0.2, d:2, g:T2G.rl, sb:'여유'},
     {k:'rl_b', n:'경계 · 콘에서 차 중심까지 최소 거리 (전폭이 0 일 때)', u:'m', v:1.0, d:2, g:T2G.rl, sb:'여유'},
     {k:'md', n:'차량 모델 단계 (0 = 기본, 1 = 롤센터 · 롤)', u:'', v:0, d:0, g:T2G.rc, ui:'none'},
-    {k:'tm', n:'열 모델 단계 (0 = 모터만, 1 = + 냉각수 · 라디에이터, 2 = + 축전지)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
+    {k:'th_on', n:'열 모델 · 모터 열 (1 = 켬)', u:'', v:1, d:0, g:T2G.thm, ui:'none'}, {k:'cw_on', n:'열 모델 · 냉각수 계통 (1 = 켬, 모터 열이 켜져야 켜짐)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
+    {k:'bt_on', n:'열 모델 · 축전지 온도 (1 = 켬)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
     {k:'t_amb', n:'외기 온도', u:'°C', v:25, d:0, g:T2G.thm, sb:'외기'},
     {k:'cw_c', n:'냉각수 계통 열용량', u:'J/K', v:8000, d:0, g:T2G.cool, sb:'냉각수 · 라디에이터'},
     {k:'ua0', n:'라디에이터 UA (정지)', u:'W/K', v:60, d:0, g:T2G.cool, sb:'냉각수 · 라디에이터'}, {k:'ua60', n:'라디에이터 UA (60 km/h)', u:'W/K', v:300, d:0, g:T2G.cool, sb:'냉각수 · 라디에이터'},
@@ -11901,7 +11916,7 @@ WB_TOOLS['2'] = {
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
   tour: M2TOUR,
   verifyBase:{end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
-              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, rl_m:0.2, e_lim:1, rmin:0, md:0, tm:0, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
+              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, rl_m:0.2, e_lim:1, rmin:0, md:0, th_on:1, cw_on:0, bt_on:0, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
   verify:[
     {n:'가속 · 접지 한계만 (μ = 1, CG 뒤축 위)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{t_acc_s:3.910309, ax_0:1}, src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
     {n:'가속 · 회전부 관성 J ÷ r²', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:1.25, r_eff:250, tmax:100, gr:4, eta_dt:100}, expect:{t_acc_s:5.477226}, src:'F = 100 × 4 ÷ 0.25 = 1600 N, 등가 질량 300 + 1.25 ÷ 0.25² = 320 kg → a = 5'},
@@ -11948,9 +11963,9 @@ WB_TOOLS['2'] = {
      src:'접지 한계만이면 종가속도 = μg 일정 → 최대 1 g, 일정 반경 선회 ay = μg → 1 g'},
     {n:'내구 · 에너지 상한 제한 안 함 → 출력 상한 100 %', I:{end:{seg:[[400, 0], [31.4159, 10], [400, 0], [31.4159, 10]], laps:26, stint:13}, e_target:3, e_lim:0, pmax:80}, expect:{p_lim:100},
      src:'상한을 끄면 소비와 상관없이 출력 배율 1 (위 경우와 같은 코스 · 한도에서 제한만 끔)'},
-    {n:'열 모델 2 · 정상 온도 (직선 20 km, 최고속 일정, 효율 90 · 95 %)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, tm:2, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0}, expect:{c_tm:30.951053, c_tw:26.643624, c_tb:25.385101},
+    {n:'열 모델 모터 · 냉각수 · 축전지 · 정상 온도 (직선 20 km, 최고속 일정, 효율 90 · 95 %)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0}, expect:{c_tm:30.951053, c_tw:26.643624, c_tb:25.385101},
      src:'F = 0.015·300·9.81 = 44.15 N, v = 43.909 m/s → 축 1938.4 W, 모터 손실 215.4 W, 인버터 손실 113.4 W. 냉각수 = 25 + 328.7 ÷ 200 = 26.644, 모터 = 냉각수 + 215.4 × 0.02 = 30.951, 축전지 I = 8.776 A → 25 + I²·0.1 ÷ 20 = 25.385 °C'},
-    {n:'열 모델 2 · 내부저항 온도 의존 (α = 0.02 /°C)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, tm:2, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0.02}, expect:{c_tb:25.382138},
+    {n:'열 모델 축전지 · 내부저항 온도 의존 (α = 0.02 /°C)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0.02}, expect:{c_tb:25.382138},
      src:'T = 25 + I(T)²·R(T) ÷ 20, R(T) = 0.1 (1 + 0.02 (25 − T)) 를 고정점 반복으로 풂 → 25.3821 °C'},
     {n:'최소 회전 반경 · 레코드 라인이 안쪽으로 가다 멈춤 (반경 20 m, 폭 6 m, rmin 19 m)', I:{course:'free', lap:'2', rl_on:2, rl_b:1, rmin:19, mu:1, mu_s:0, crr:0, cla:0, cda:0, tmax:1e5, free:{seg:[[125.663706, 20]], wl:[3], wr:[3], closed:true, laps:2, s0:0}}, expect:{c_t:8.744242, c_len:119.380521, c_rbad:0},
      src:'제약이 없으면 안쪽 경계 18 m. 반경 19 m 아래로는 못 가므로 r = 19: 2π·19 ÷ √(9.81·19) = 8.7442 s, 길이 2π·19'},
@@ -11960,6 +11975,10 @@ WB_TOOLS['2'] = {
      src:'가장 큰 반경 = 바깥 경계 2.5 + (1.75 − 1) = 3.25 m < 4 m → 한 바퀴 전부 급함: 2π·3.25 = 20.4204 m'},
     {n:'최소 회전 반경 · 가운데 선은 그대로 두고 알림 (반경 2.5 m, rmin 3 m)', I:{course:'free', lap:'1', rl_on:0, rmin:3, free:{seg:[[15.707963, 2.5]], wl:[1.75], wr:[1.75], closed:true, laps:1, s0:0}}, expect:{c_rmn:2.5, c_rbad:15.707963},
      src:'가운데 선을 그대로 달리므로 반경 2.5 m, 급한 길이 = 한 바퀴 2π·2.5 = 15.7080 m'},
+    {n:'열 모델 모터 열 끔 → 디레이팅 없음', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:0, r_eff:250, gr:4, eta_dt:100, tmax:1e5, motor:[[0, 200], [10000, 200]], motorC:[[0, 100], [10000, 100]], v_ref:300, ke_ratio:1, th_k:10, th_t0:40, th_init:45, th_c:1e9, th_r:1e9, th_cool:45, th_on:0}, expect:{t_acc_s:3.75},
+     src:'모터 열을 끄면 온도로 토크를 깎지 않음: 200 N·m → F = 3200 N, a = 10.667 → t = √(2 × 75 ÷ 10.667) = 3.75 s (켜면 4.3301 s)'},
+    {n:'열 모델 모터 · 축전지 (냉각수 계통 끔 → 냉각수 온도 고정)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:0, bt_on:1, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0}, expect:{c_tm:29.307429, c_tb:25.385101},
+     src:'모터 = 고정 냉각수 25 + 손실 215.37 W × 0.02 = 29.3074 °C, 축전지는 냉각수와 이어져 있지 않아 세 계통 모두 켤 때와 같은 25.3851 °C'},
   ],
   calcLimit: 60,   /* 한 번 계산 제한 시간 [s] (주행선 다듬기 포함) */
   code:`// ================================================================
@@ -11967,7 +11986,7 @@ WB_TOOLS['2'] = {
 // ================================================================
 // 입력 I : 왼쪽 입력 칸 (단위 그대로: kg, mm, %, 1/kN, rpm, N·m, kW, V, Ah, mΩ, A, kWh, s)과 작업창 위 표
 //   I.end   = {seg:[[길이 m, 반경 m], …], laps, stint}   공식 내구 코스 (오토크로스 = 거꾸로 한 바퀴)
-//   I.tm    = 열 모델 단계 (0 모터만 · 1 + 냉각수 · 라디에이터 · 2 + 축전지), I.md = 차량 모델 단계 (0 · 1 롤센터)
+//   I.th_on · I.cw_on · I.bt_on = 열 모델 켜기 (모터 열 · 냉각수 계통 · 축전지 온도, 1 = 켬; 냉각수는 모터 열이 켜져야 켜짐), I.md = 차량 모델 단계 (0 · 1 롤센터)
 //   I.rmin  = 최소 회전 반경 [m] (주행선 곡률 ≤ 1/rmin 으로 다듬고, 못 맞춘 구간은 c_rbad 로 알림; 0 = 제약 없음),  I.e_lim = 내구 에너지 상한 (0 없음 · 1 제원 용량 · 2 임의 e_target)
 //   I.free  = {seg, wl, wr, sl, laps, s0}               내 코스 (반경: 왼쪽 회전 +, 오른쪽 −, 직선 0 · 구간마다 왼쪽 · 오른쪽 폭 [m], 슬라럼 콘 간격 [m], null = 빈칸)
 //   I.motor = [[회전수 rpm, 토크 N·m], …]                모터 토크 곡선 (기준 전압 I.v_ref 에서. 비면 최대 토크 일정)
@@ -12080,28 +12099,28 @@ function car(I, gr, kP) {
   };
 
   // ---------- 모터 열 · 디레이팅: 모터 온도 Tm [°C] 가 시작 온도를 넘으면 최대 토크를 계수 [N·m/°C] 만큼 깎음 (연속 곡선 아래로는 안 감)
-  const thK  = I.th_k > 0 ? I.th_k : 0;               // 디레이팅 계수 [N·m/°C]  (0 = 항상 최대 토크)
+  const thOn = I.th_on !== 0, cwOn = thOn && I.cw_on === 1, btOn = I.bt_on === 1;   // 열 모델: 모터 열 · 냉각수 계통 · 축전지 온도
+  const thK  = thOn && I.th_k > 0 ? I.th_k : 0;       // 디레이팅 계수 [N·m/°C]  (0 = 항상 최대 토크, 모터 열을 끄면 디레이팅도 없음)
   const thT0 = I.th_t0;                               // 디레이팅 시작 온도 [°C]
   const thC  = Math.max(1, I.th_c);                   // 열용량 [J/K]
   const thR  = Math.max(1e-9, I.th_r);                // 냉각까지 열저항 [K/W]
   const thCo = I.th_cool;                             // 냉각수 온도 [°C]
-  // ---------- 열 모델 단계 (I.tm): 0 = 모터만 (냉각수 온도 고정), 1 = + 냉각수 · 라디에이터 · 외기, 2 = + 축전지 온도 · 내부저항 온도 의존
+  // ---------- 열 모델 (켜고 끔): 모터 열 (끄면 출발 온도 그대로 · 디레이팅 없음), 냉각수 계통 (끄면 냉각수 온도 고정), 축전지 온도 (끄면 25 °C · 내부저항 일정)
   //   모터    : C_m dT_m/dt = 모터 손실 − (T_m − T_w) ÷ R_m
   //   냉각수  : C_w dT_w/dt = (T_m − T_w) ÷ R_m + 인버터 손실 − UA(v) (T_w − T_외기),  UA(v) = UA_0 + (UA_60 − UA_0) × v ÷ 60 km/h  (선형)
   //   축전지  : C_b dT_b/dt = I² R(T_b) − hA (T_b − T_외기),  R(T) = R_25 (1 + α (25 − T))  (0.3 R_25 아래로는 안 감)
   //   칸마다 지수 적분 (그 칸 동안 다른 노드 온도 · 손실은 고정) → dt 가 커도 안정
-  const tmod = I.tm >= 2 ? 2 : I.tm >= 1 ? 1 : 0;
   const Tamb = isFinite(I.t_amb) ? I.t_amb : 25;                         // 외기 온도 [°C]
   const Cw   = Math.max(1, I.cw_c || 1), ua0 = Math.max(0, I.ua0 || 0), ua60 = Math.max(0, I.ua60 || 0);   // 냉각수 열용량 [J/K] · 라디에이터 UA [W/K]
   const Cb   = Math.max(1, I.b_c || 1), hAb = Math.max(0, I.b_ha || 0), alp = I.b_alpha || 0;              // 축전지 열용량 [J/K] · 냉각 hA [W/K] · 저항 온도 계수 [1/°C]
-  const rS   = Tb => tmod >= 2 ? Math.max(0.3, 1 + alp * (25 - Tb)) : 1;  // 내부저항 배율
+  const rS   = Tb => btOn ? Math.max(0.3, 1 + alp * (25 - Tb)) : 1;  // 내부저항 배율
   const toward = (T, Teq, k, dt) => Teq + (T - Teq) * Math.exp(-k * dt);   // dT/dt = k (Teq − T) 의 해
   function thStep(st, Lm, Li, Ib, v, dt) {
-    const Tw = tmod >= 1 ? st.w : thCo;
-    const Tm = toward(st.m, Tw + Lm * thR, 1 / (thR * thC), dt);
+    const Tw = cwOn ? st.w : thCo;
+    const Tm = thOn ? toward(st.m, Tw + Lm * thR, 1 / (thR * thC), dt) : st.m;
     let w = thCo, b = st.b;
-    if (tmod >= 1) { const UA = Math.max(1e-6, ua0 + (ua60 - ua0) * v / (60 / 3.6)), Q = (st.m - st.w) / thR + Li; w = toward(st.w, Tamb + Q / UA, UA / Cw, dt); }
-    if (tmod >= 2) { const Q = Ib * Ib * Rb * rS(st.b); b = hAb > 0 ? toward(st.b, Tamb + Q / hAb, hAb / Cb, dt) : st.b + Q * dt / Cb; }
+    if (cwOn) { const UA = Math.max(1e-6, ua0 + (ua60 - ua0) * v / (60 / 3.6)), Q = (st.m - st.w) / thR + Li; w = toward(st.w, Tamb + Q / UA, UA / Cw, dt); }
+    if (btOn) { const Q = Ib * Ib * Rb * rS(st.b); b = hAb > 0 ? toward(st.b, Tamb + Q / hAb, hAb / Cb, dt) : st.b + Q * dt / Cb; }
     return { m: Tm, w, b };
   }
   const tmNext = (Tm, Ploss, dt) => thStep({ m: Tm, w: thCo, b: 25 }, Ploss, 0, 0, 0, dt).m;   // 예전 이름 (모터만)
@@ -12240,7 +12259,7 @@ function car(I, gr, kP) {
   }
 
   return { m, meff, r, gr, eta, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR, rollAng,
-           vCorner, aDrive, aBrake, drive, elec, Tcurve, Voc, Epack, Ecap, ptMax, Rb, Imax, tmNext, thStep, rS, tmod, thK, Tinit: I.th_init,
+           vCorner, aDrive, aBrake, drive, elec, Tcurve, Voc, Epack, Ecap, ptMax, Rb, Imax, tmNext, thStep, rS, thOn, cwOn, btOn, thK, Tinit: I.th_init,
            TH0: { m: I.th_init, w: I.th_cool, b: isFinite(I.b_t0) ? I.b_t0 : 25 } };   // 출발 온도 (모터 · 냉각수 · 축전지)
 }
 
@@ -12691,9 +12710,9 @@ function walk(C, G, v, V0, rec, T0) {
       S.rpm.push(C.rpm(v[i]));         // [rpm]
       S.tq.push(E.T);                  // [N·m]
       S.tlim.push(C.Tcurve(C.rpm(v[i]), V0[i], tm[i]));   // 그 순간 토크 한계 (디레이팅 포함) [N·m]
-      S.tmot.push(tm[i]);              // 모터 온도 [°C]
-      S.tcool.push(C.tmod >= 1 ? tw[i] : NaN);   // 냉각수 온도 [°C] (열 모델 1 이상)
-      S.tbat.push(C.tmod >= 2 ? tb[i] : NaN);    // 축전지 온도 [°C] (열 모델 2)
+      S.tmot.push(C.thOn ? tm[i] : NaN);   // 모터 온도 [°C] (모터 열 켬)
+      S.tcool.push(C.cwOn ? tw[i] : NaN);   // 냉각수 온도 [°C] (냉각수 계통 켬)
+      S.tbat.push(C.btOn ? tb[i] : NaN);    // 축전지 온도 [°C] (축전지 온도 켬)
       S.voc.push(V0[i]);               // 개방 전압 [V] (구동력 선도 프로브용)
       S.pbat.push(E.P / 1000);         // 단자 출력 [kW]
       S.vbat.push(E.V);                // 단자 전압 [V]
@@ -13030,9 +13049,9 @@ function modeRun(I, G2, G3, fast) {
     c_t1: ls.first, c_tavg: ls.avg, c_ttot: ls.total,
     c_vtop: Math.max(...vv) * 3.6,
     c_rpm: Math.max(...W.S.rpm), c_tq: Math.max(...W.S.tq), c_pbat: Math.max(...W.S.pbat), c_vmin: Math.min(...W.S.vbat),
-    c_tm: W.tm.at(-1), c_tmax: Math.max(...W.tm),
-    c_tw: K.C.tmod >= 1 ? W.tw.at(-1) : NaN, c_twmax: K.C.tmod >= 1 ? Math.max(...W.tw) : NaN,       // 냉각수 끝 · 최고 [°C]
-    c_tb: K.C.tmod >= 2 ? W.tb.at(-1) : NaN, c_tbmax: K.C.tmod >= 2 ? Math.max(...W.tb) : NaN,       // 축전지 끝 · 최고 [°C]
+    c_tm: K.C.thOn ? W.tm.at(-1) : NaN, c_tmax: K.C.thOn ? Math.max(...W.tm) : NaN,
+    c_tw: K.C.cwOn ? W.tw.at(-1) : NaN, c_twmax: K.C.cwOn ? Math.max(...W.tw) : NaN,       // 냉각수 끝 · 최고 [°C]
+    c_tb: K.C.btOn ? W.tb.at(-1) : NaN, c_tbmax: K.C.btOn ? Math.max(...W.tb) : NaN,       // 축전지 끝 · 최고 [°C]
     c_et: pick(le) / 3.6e6, c_ec: pick(lc) / 3.6e6,
     // 에너지 카드 (모든 코스 같은 줄): 그 코스 전체 랩 합 · 출력 상한 없이 (내구 말고는 상한이 없어 전체와 같음) [kWh]
     c_all_t: sum(le) / 3.6e6, c_all_c: sum(lc) / 3.6e6,
@@ -13149,12 +13168,12 @@ function calc(I) {
 /* ============================================================ 대시보드 '파트별 > 차량 목표 · 파워트레인'
    대시보드 값으로 도구 2를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
-const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'rl_m', 'rl_b', 'e_lim', 'md', 'tm', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
+const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'rl_m', 'rl_b', 'e_lim', 'md', 'th_on', 'cw_on', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
   T2GOAL.forEach(k => { const db = wbDash(k); I[k] = db ? db.v : 0; });
   try{ const s = JSON.parse(localStorage.getItem(wbStoreKey('2')) || '{}') || {}; T2ONLY.forEach(k => { if(typeof s[k]==='number' && isFinite(s[k])) I[k] = s[k]; }); }catch(e){}
-  return {...I, ...t2ExtraI(), md:0, tm:0, course:'acc', lap:'1', grMode:'my'}; }   // 대시보드 반영은 차량 · 열 모델 단계 0
+  return {...I, ...t2ExtraI(), md:0, th_on:1, cw_on:0, bt_on:0, course:'acc', lap:'1', grMode:'my'}; }   // 대시보드 반영은 차량 모델 0 · 열 모델 모터 열만
 function t2PartDirty(){ T2P.key = ''; if(typeof DASH!=='undefined' && (DASH.part==='goal' || DASH.part==='pt') && $('#t2part')) t2PartRun(); }
 function t2PartRun(){ const I = t2PartInputs(), key = JSON.stringify(I); if(key===T2P.key || T2P.busy) return; T2P.busy = true;
   try{ if(!T2P.w) T2P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['2'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); }catch(e){ T2P.busy = false; return; }
