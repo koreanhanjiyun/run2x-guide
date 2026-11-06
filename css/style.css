@@ -3005,3 +3005,12 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .t2-mdop.tg b{display:flex;align-items:center;gap:8px}
 .t2-tgb{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--panel-2)}
 .t2-mdop.tg[aria-pressed="true"] .t2-tgb{background:#3d5a99;border-color:#3d5a99;color:#fff}
+/* [+ 열] = 표 오른쪽 끝 세로 띠 (모든 행 높이), 편집 탭 상자 = 1행 3열 고정 */
+.t2-gtab th.t2-addc{position:relative}
+.t2-gtab th.t2-addc button{position:absolute;inset:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.t2-sbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;align-items:start}
+.t2-sb{flex:none}
+.t2-msvg .t2-rbad{stroke:#dc2626;stroke-width:9;stroke-linecap:round;fill:none;opacity:.45;pointer-events:none}
+.t2-rbadl{color:#b91c1c}
+.t2-inopt{margin-left:0;max-width:100%}.t2-inopt .dc-seg{flex-wrap:wrap;max-width:100%}
+.t2-gtab td.t2-empty{text-align:left}

@@ -133,7 +133,7 @@ const CARFIG = (() => {
     const xdim = (xe, ye, yd, cls, mid, txt) => `<line x1="${xe}" y1="${yd-6}" x2="${xe}" y2="${ye}" class="cf-ext${cls?' '+cls:''}"/>
       <line x1="${x1}" y1="${yd}" x2="${xe}" y2="${yd}" class="cf-dim${cls?' '+cls:''}" marker-start="url(#${id+mid}d)" marker-end="url(#${id+mid}d)"/>
       ${Math.abs(xe-x1) - 20 > [...txt].reduce((w, ch) => w + (/[\uac00-\ud7a3]/.test(ch) ? 14 : ch===' ' ? 4.2 : 8.2), 0) ? `<text x="${(x1+xe)/2}" y="${yd-6}" text-anchor="middle" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`
-        : `<text x="${x1+8}" y="${yd+5}" text-anchor="start" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`}`;   /* 치수선보다 글자가 길면 뒤축 바깥에 */
+        : `<text x="${x1-4}" y="${yd-6}" text-anchor="end" class="cf-t ${cls?'inc':'dk'}">${txt}</text>`}`;   /* 치수선보다 글자가 길면 뒤축에 오른쪽 끝을 맞춰 치수선 위에 (그림 밖으로 안 나가게) */
     const farCoP = AERO && Math.abs(px - x1) > Math.abs(cx - x1);
     h += `<line x1="${x1}" y1="${yA-6}" x2="${x1}" y2="${yTopF}" class="cf-ext"/>`
       + xdim(cx, cy-11, AERO ? (farCoP ? yB : yA) : yB, '', 'k', `CG 뒤축부터 ${f0(L - K.a)} mm`)
