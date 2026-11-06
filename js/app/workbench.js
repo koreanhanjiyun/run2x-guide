@@ -58,9 +58,21 @@ const wbCode = () => WB.code[WB.id] != null ? WB.code[WB.id] : wbT().code;
 function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = false; p.classList.toggle('ind', f == null);
   const b = p.querySelector('i'); if(b && f != null) b.style.width = Math.round(Math.max(0, Math.min(1, f))*100) + '%';
   const t = p.querySelector('span'); if(t) t.textContent = (msg || '계산 중') + (f != null ? ` · ${Math.round(f*100)} %` : ' …'); }
-function wbBusy(on){ clearTimeout(WB.busyT); const o = $('#wbout'), p = $('#wbprog');
-  if(on){ WB.busyT = setTimeout(() => { if(o) o.classList.add('wb-dim'); wbProgShow(null, '계산 중'); }, 300); return; }
-  if(o) o.classList.remove('wb-dim'); if(p){ p.hidden = true; const b = p.querySelector('i'); if(b) b.style.width = '0%'; } }
+/* 계산 중: 화면 위에 고정한 진행 막대(스크롤과 상관없이 보임) + 오른쪽 화면 전체를 살짝 회색. 끝나면 바뀐 결과 칸 · 그래프가 한 번 깜빡임 */
+function wbBusy(on){ clearTimeout(WB.busyT); const m = $('#wb'), p = $('#wbprog');
+  if(on){ if(m) m.classList.add('wb-busy'); WB.busyT = setTimeout(() => wbProgShow(null, '계산 중'), 150); return; }
+  if(m){ m.classList.remove('wb-busy'); m.classList.remove('wb-flash'); void m.offsetWidth; m.classList.add('wb-flash'); clearTimeout(WB.flashT); WB.flashT = setTimeout(() => m.classList.remove('wb-flash'), 800); }
+  if(p){ p.hidden = true; const b = p.querySelector('i'); if(b) b.style.width = '0%'; } }
+/* 휠 확대는 박스를 눌러 켠 뒤에만 (data-zoombox). 다른 곳을 누르거나 Esc = 끔 → 휠 = 페이지 스크롤 */
+/*   상자는 다시 그려질 수 있어 이름(data-zoombox 값)으로 기억하고, 다시 그린 뒤에도 강조를 다시 붙임 (wbZoomMark) */
+const WBZ = { key:'' };
+const wbZoomKey = el => el ? (el.getAttribute('data-zoombox') || el.id || '') : '';
+const wbZoomOn = el => !!el && !!WBZ.key && wbZoomKey(el)===WBZ.key;
+function wbZoomMark(){ document.querySelectorAll('[data-zoombox]').forEach(el => el.classList.toggle('zact', wbZoomOn(el))); }
+function wbZoomSet(el){ WBZ.key = wbZoomKey(el); wbZoomMark(); }
+document.addEventListener('pointerdown', e => { const b = e.target.closest && e.target.closest('[data-zoombox]'); wbZoomSet(b); }, true);
+new MutationObserver(() => { if(WBZ.key) wbZoomMark(); }).observe(document.documentElement, {childList:true, subtree:true});
+document.addEventListener('keydown', e => { if(e.key==='Escape' && WBZ.key){ wbZoomSet(null); } });
 function wbKill(){ if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
   Object.keys(WB.wait).forEach(id => { const f = WB.wait[id]; delete WB.wait[id]; f({ok:false, cancelled:true}); }); }
 async function wbCalc(){ const T = wbT(); if(!T) return;
@@ -90,10 +102,13 @@ const wbCalcSoon = () => { clearTimeout(WB.timer); WB.timer = setTimeout(wbCalc,
 function wbTicks(lo, hi, n){ if(!(hi > lo)){ hi = lo + 1; }
   const raw = (hi - lo)/n, p = Math.pow(10, Math.floor(Math.log10(raw))), s = [1,2,2.5,5,10].map(k => k*p).find(k => k >= raw) || 10*p;
   const a = Math.floor(lo/s)*s, b = Math.ceil(hi/s)*s, t = []; for(let x = a; x <= b + s*1e-9; x += s) t.push(+x.toPrecision(12)); return {lo:a, hi:b, t}; }
+/* 확대한 범위의 눈금: 범위 끝은 그대로 두고 그 안의 눈금만 */
+function wbTicksIn(lo, hi, n){ const r = wbTicks(lo, hi, n), e = (hi - lo)*1e-9; return {lo, hi, t:r.t.filter(t => t >= lo - e && t <= hi + e)}; }
 /* o: {w, h, x:{d,n,u}, ys:[{k,d,c,n,u}], norm, act, xi} — norm: 신호마다 자기 범위로(신호 선택 그래프) */
 /* 그래프 (MATLAB 방식): 단위가 같은 선은 한 축을 함께 씀. 축 1개 = 왼쪽, 2개 = 왼쪽 · 오른쪽(yyaxis), 3개부터 바깥으로 이어 붙임(왼 · 오 번갈아).
    축 제목은 축 옆에 세로로 가운데, x 축 제목은 아래 가운데. 커서(xi)가 있으면 점 옆에 값 글자(프로브).
-   o = {id, w, h, x:{d, n, u}, ys:[{k, d, c, n, u, dd}], xi, act, label}. o.norm 은 예전 이름(지금은 단위별 축이라 쓰지 않음) */
+   o = {id, w, h, x:{d, n, u}, ys:[{k, d, c, n, u, dd}], xi, act, label}. o.norm 은 예전 이름(지금은 단위별 축이라 쓰지 않음)
+   확대: o.zx = {lo, hi} (x 보기 범위), o.zy = {a, b} (y 축마다 자동 범위의 a ~ b 비율), o.clip = 선을 그림 영역 안으로 자르는 id.  신호가 없으면 축 · 그리드만 ('- [-]') */
 function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
   const groups = []; ys.forEach(y => { const u = y.u || ''; let G = groups.find(g => g.u===u); if(!G){ G = {u, ys:[]}; groups.push(G); } G.ys.push(y); });
   if(!groups.length) groups.push({u:'', ys:[]});
@@ -102,30 +117,33 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
   const dg = r => Math.abs(r.t[1] - r.t[0]) < 1 ? (Math.abs(r.t[1] - r.t[0]) < 0.1 ? 2 : 1) : 0;
   groups.forEach(G => { let lo = Infinity, hi = -Infinity; G.ys.forEach(y => y.d.forEach(v => { if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
     if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5);
+    if(o.zy){ const a = G.r.lo + o.zy.a*(G.r.hi - G.r.lo), b = G.r.lo + o.zy.b*(G.r.hi - G.r.lo); G.r = wbTicksIn(a, b, 5); }
     G.lw = Math.max(...G.r.t.map(t => wbFmt(t, dg(G.r)).length))*6.6; G.aw = Math.round(7 + G.lw + 8 + 13 + 8); });
   const LG = groups.filter((_, i) => i % 2 === 0), RG = groups.filter((_, i) => i % 2 === 1);
   const W = o.w, H = o.h, L = 6 + LG.reduce((a, G) => a + G.aw, 0), R = RG.length ? 6 + RG.reduce((a, G) => a + G.aw, 0) : 16, T = 14, B = 42, pw = W - L - R, ph = H - T - B;
-  const xf = xd.filter(isFinite), xr = wbTicks(xf.length ? Math.min(...xf) : 0, xf.length ? Math.max(...xf) : 1, Math.max(4, Math.round(pw/80))), X = x => L + (x - xr.lo)/(xr.hi - xr.lo)*pw;
+  const xf = xd.filter(isFinite), xn = Math.max(4, Math.round(pw/80));
+  const xr = o.zx ? wbTicksIn(o.zx.lo, o.zx.hi, xn) : wbTicks(xf.length ? Math.min(...xf) : 0, xf.length ? Math.max(...xf) : 1, xn), X = x => L + (x - xr.lo)/(xr.hi - xr.lo)*pw;
+  const cid = o.clip ? `wbc-${o.clip}` : '', clip = cid ? ` clip-path="url(#${cid})"` : '';
   const Y = (v, r) => T + ph - (v - r.lo)/(r.hi - r.lo)*ph, gOf = y => groups.find(g => g.ys.includes(y));
-  let s = `<svg class="wb-plot" data-wbp="${o.id || ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${wbEsc(o.label || '그래프')}">`;
+  let s = `<svg class="wb-plot" data-wbp="${o.id || ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${wbEsc(o.label || '그래프')}">${cid ? `<defs><clipPath id="${cid}"><rect x="${L}" y="${T}" width="${pw}" height="${ph}"/></clipPath></defs>` : ''}`;
   xr.t.forEach(t => { s += `<line x1="${X(t)}" y1="${T}" x2="${X(t)}" y2="${T+ph}" class="wb-grid"/><text x="${X(t)}" y="${T+ph+15}" class="wb-tx" text-anchor="middle">${wbFmt(t, dg(xr))}</text>`; });
   groups[0].r.t.forEach(t => { const y = Y(t, groups[0].r); s += `<line x1="${L}" y1="${y}" x2="${L+pw}" y2="${y}" class="wb-grid"/>`; });
   s += `<text x="${L + pw/2}" y="${H - 6}" class="wb-tl" text-anchor="middle">${wbEsc(o.x.n)}${o.x.u ? ` [${wbEsc(o.x.u)}]` : ''}</text>`;
   let offL = 0, offR = 0;
   groups.forEach((G, gi) => { const left = gi % 2 === 0, ax = left ? L - offL : L + pw + offR, sg = left ? -1 : 1; if(left) offL += G.aw; else offR += G.aw;
-    const one = G.ys.length===1, col = one ? G.ys[0].c : 'var(--ink-2)', all = G.ys.map(y => y.n).join(' · ');
+    const one = G.ys.length===1, col = one ? G.ys[0].c : 'var(--ink-2)', all = G.ys.length ? G.ys.map(y => y.n).join(' · ') : '-';
     const short = !one && ((o.yn && o.yn[G.u]) || ((all.length + G.u.length + 3)*11 > ph ? `${G.ys[0].n} 외 ${G.ys.length - 1}개` : ''));
     s += `<line x1="${ax}" y1="${T}" x2="${ax}" y2="${T+ph}" style="stroke:${col}" stroke-width="1"/>`;
     G.r.t.forEach(t => { const y = Y(t, G.r); s += `<line x1="${ax}" y1="${y}" x2="${ax + 4*sg}" y2="${y}" style="stroke:${col}"/><text x="${ax + 7*sg}" y="${y + 4}" class="wb-tx" text-anchor="${left ? 'end' : 'start'}" style="fill:${col}">${wbFmt(t, dg(G.r))}</text>`; });
-    const tx = ax + (7 + G.lw + 8 + 7)*sg, ty = T + ph/2, u = G.u ? ` [${wbEsc(G.u)}]` : '';
-    const body = one ? `<tspan style="fill:${col}">${wbEsc(G.ys[0].n)}</tspan>` : short ? `<tspan style="fill:var(--ink-2)">${wbEsc(short)}</tspan>`
+    const tx = ax + (7 + G.lw + 8 + 7)*sg, ty = T + ph/2, u = G.u ? ` [${wbEsc(G.u)}]` : (G.ys.length ? '' : ' [-]');
+    const body = !G.ys.length ? '<tspan style="fill:var(--muted)">-</tspan>' : one ? `<tspan style="fill:${col}">${wbEsc(G.ys[0].n)}</tspan>` : short ? `<tspan style="fill:var(--ink-2)">${wbEsc(short)}</tspan>`
       : G.ys.map((y, i) => `${i ? '<tspan style="fill:var(--muted)"> · </tspan>' : ''}<tspan style="fill:${y.c}">${wbEsc(y.n)}</tspan>`).join('');
     s += `<text x="${tx}" y="${ty}" class="wb-tl" text-anchor="middle" transform="rotate(${left ? -90 : 90} ${tx} ${ty})"><title>${wbEsc(all)}${u}</title>${body}<tspan style="fill:${col}">${u}</tspan></text>`; });
   s += `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-frame"/>`;
-  ys.forEach(y => { const r = gOf(y).r; s += `<polyline fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
-  if(o.xi != null && isFinite(xd[o.xi])){ const cx = X(xd[o.xi]), right = cx < L + pw*0.72, lab = [];
+  ys.forEach(y => { const r = gOf(y).r; s += `<polyline${clip} fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
+  if(o.xi != null && isFinite(xd[o.xi]) && xd[o.xi] >= xr.lo && xd[o.xi] <= xr.hi){ const cx = X(xd[o.xi]), right = cx < L + pw*0.72, lab = [];
     s += `<line x1="${cx}" y1="${T}" x2="${cx}" y2="${T+ph}" class="wb-cur"/>`;
-    ys.forEach(y => { const v = y.d[o.xi]; if(!isFinite(v)) return; const cy = Y(v, gOf(y).r); s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="${y.c}" stroke="#fff" stroke-width="1"/>`;
+    ys.forEach(y => { const v = y.d[o.xi], r = gOf(y).r; if(!isFinite(v) || v < r.lo || v > r.hi) return; const cy = Y(v, r); s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="${y.c}" stroke="#fff" stroke-width="1"/>`;
       lab.push({y:cy, c:y.c, t:`${wbFmt(v, y.dd != null ? y.dd : 2)}${y.u ? ' ' + y.u : ''}`}); });
     lab.sort((a, b) => a.y - b.y); for(let i = 1; i < lab.length; i++) if(lab[i].y - lab[i-1].y < 13) lab[i].y = lab[i-1].y + 13;   /* 글자끼리 겹치지 않게 아래로 밀기 */
     const over = lab.length ? lab[lab.length-1].y - (T + ph - 4) : 0; if(over > 0) lab.forEach(l => l.y -= over);
@@ -154,11 +172,12 @@ function wbShellHTML(){ const T = wbT();
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
       </span><input type="file" accept=".json,application/json" id="wbfile" hidden></div>
+    <div class="wb-prog" id="wbprog" hidden role="status" aria-live="polite"><i></i><span></span></div>
     <div class="wb-main">
       <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button></div><div id="wbin"></div></aside>
       <div class="wb-right">
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
-        <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span>${T.outHTML ? '' : `<button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button>`}</div><div class="wb-prog" id="wbprog" hidden role="status" aria-live="polite"><i></i><span></span></div><div id="wbout"></div></section>
+        <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span>${T.outHTML ? '' : `<button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button>`}</div><div id="wbout"></div></section>
         ${T.midHTML ? '<div id="wbmid"></div>' : ''}
         ${T.figure || T.view3d ? `<div class="wb-two${T.view3d ? '' : ' one'}">
           ${T.figure ? `<section class="wb-sec" aria-label="기본 결과 그래프"><div class="wb-h"><h3>${T.mainTitle || '결과 그래프'}</h3><span class="wb-meta">${T.mainMeta || '그래프를 누르거나 끌면 커서 · ←/→ 한 칸씩'}</span></div><div id="wbmain" class="wb-plotbox" tabindex="0"></div></section>` : ''}
@@ -166,7 +185,7 @@ function wbShellHTML(){ const T = wbT();
             <div class="wb-3dbox"><div class="wb-3dv"><div id="wb3d" class="wb-3d"><p class="wb-empty">불러오는 중…</p></div><div class="wb-3dui">${V3D.viewBtns('iso')}</div></div><p class="wb-3dn" id="wb3dn">${T.view3dNote || ''}</p></div></section>` : ''}
         </div>` : ''}
         ${T.noSig ? '' : `<section class="wb-sec" aria-label="신호 선택 그래프"><div class="wb-h"><h3>신호 선택 그래프</h3><span class="wb-meta">신호마다 자기 눈금 · 이름을 누르면 그 신호의 눈금 · 그래프를 누르거나 끌면 커서</span></div>
-          <div class="wb-sig"><div class="wb-sl" id="wbsl"></div><div id="wbsig" class="wb-plotbox" tabindex="0"></div></div></section>`}
+          <div class="wb-sig"><div class="wb-sl" id="wbsl"></div><div id="wbsig" class="wb-plotbox wb-panes" tabindex="0" data-zm="cur"></div></div></section>`}
       </div></div>`; }
 /* 입력 칸 상태 점 (대시보드와 같은 색): 확정 · 검토 중 · 가정 · 계산값 · 예시값. 대시보드 값과 다르게 고치면 점 둘레에 고리(직접 고침).
    대시보드에 없는 값(도구 기본값 · 도구 전용)은 회색 네모. 마우스를 올리면 담당 파트 · 대시보드 값 · 상태 · 고친 사람 */
@@ -179,9 +198,14 @@ function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[
   const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''} (${WB_STL[db.st] || db.st})${who}${own ? ` → 지금 ${wbFmt(v, dd)} (직접 고침, 대시보드는 그대로)` : ''}`;
   return `<i class="wb-st dv-s s-${db.st}${own ? ' own' : ''}" title="${wbEsc(tip)}"></i>`; }
 const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ex"></i>예시값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
-function wbInHTML(){ const T = wbT(); let g0 = '';
-  return WB_INLEG + T.inputs.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
-    const grp = d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
+/* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
+   도구가 입력을 자기 화면(도구 2 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
+function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2) */
+  if(!list.length && T.inEmpty) return WB_INLEG + T.inEmpty;
+  return WB_INLEG + wbInRows(list); }
+function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
+  return list.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
+    const grp = head && d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
     const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : wbInName(d);
     const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
     const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own);
@@ -249,13 +273,21 @@ function wbSigHTML(){ const R = WB.R; if(!R) return '';
 /* 그래프 칸: 칸마다 높이(아래 경계를 끌어 바꿈) · 지우기 ×, 맨 아래 [+ 그래프 칸]. 칸을 누르면 그 칸을 고름 */
 let WB_PH = []; try{ WB_PH = JSON.parse(localStorage.getItem('run2x.wb.ph') || '[]') || []; }catch(e){ WB_PH = []; }
 const wbPh = (i, n) => WB_PH[i] > 0 ? WB_PH[i] : (n===1 ? 300 : n===2 ? 230 : 200);
-function wbPanes(P, pi, mk, x, xi, act, label, what){
-  return P.map((S, i) => { const ys = mk(S), h = wbPh(i, P.length);
-    const body = ys.length ? wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`}) : `<p class="wb-empty" style="min-height:${Math.round(h*0.6)}px">왼쪽에서 ${P.length > 1 ? `${i+1}번 칸에 ` : ''}그릴 ${what}를 고르십시오.</p>`;
-    return `<div class="wb-pp${P.length > 1 && i===pi ? ' on' : ''}" data-wbpi="${i}">${P.length > 1 ? `<button type="button" class="wb-ppx" data-wbpdel="${i}" aria-label="${i+1}번 칸 지우기" title="이 칸 지우기">×</button>` : ''}${body}<div class="wb-ph" data-wbph="${i}" title="끌어서 높이 조절" aria-hidden="true"></div></div>`; }).join('')
+/* 그래프 칸마다 상자 하나. 위 오른쪽 단추줄: [커서 · 이동 · 영역 확대] (모드, 모든 칸 같음) · [+ · − · 맞춤] · ×
+   x 보기 범위는 모든 칸이 같이 (WB.zx, MATLAB linkaxes x), y 는 칸마다 (WB.zy[i]). 휠 = x 확대 · Shift + 휠 = 그 칸 y 확대 (칸을 눌러 켠 뒤) */
+const WB_ZM = [['cur', '커서', '누르거나 끌면 커서'], ['pan', '이동', '끌어서 보기 범위 옮김'], ['box', '영역 확대', '끌어서 사각형 영역을 확대']];
+const wbZx = () => WB.zx && WB.zx.key===WB.xa ? WB.zx : null;
+function wbPanes(P, pi, mk, x, xi, act, label, what){ const zm = WB.zm || 'cur';
+  return P.map((S, i) => { const ys = mk(S), h = wbPh(i, P.length), zy = WB.zy && WB.zy[i];
+    const tb = `<div class="wb-ptb" role="toolbar" aria-label="${i+1}번 그래프 칸 보기">${WB_ZM.map(([k, t, ti]) => `<button type="button" data-wbzm="${k}" aria-pressed="${zm===k}" title="${ti}">${t}</button>`).join('')}<i></i>`
+      + `<button type="button" data-wbzb="in" data-wbzi="${i}" title="가로 확대" aria-label="확대">+</button><button type="button" data-wbzb="out" data-wbzi="${i}" title="가로 축소" aria-label="축소">−</button><button type="button" data-wbzb="fit" data-wbzi="${i}" title="모두 보기">맞춤</button>`
+      + (P.length > 1 ? `<i></i><button type="button" class="wb-ppx" data-wbpdel="${i}" aria-label="${i+1}번 칸 지우기" title="이 칸 지우기">×</button>` : '') + '</div>';
+    const body = wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`, zx:wbZx(), zy, clip:`p${i}`});
+    const hint = ys.length ? '' : `<p class="wb-pempty">왼쪽에서 ${P.length > 1 ? `${i+1}번 칸에 ` : ''}그릴 ${what}를 고르십시오.</p>`;
+    return `<div class="wb-pp${P.length > 1 && i===pi ? ' on' : ''}" data-wbpi="${i}" data-zoombox="pane${i}">${tb}${body}${hint}<div class="wb-ph" data-wbph="${i}" title="끌어서 높이 조절" aria-hidden="true"></div></div>`; }).join('')
     + (P.length < 3 ? '<div class="wb-padd"><button type="button" class="btn small" data-wbpadd>+ 그래프 칸</button></div>' : ''); }
 function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) return;
-  if(all || which.includes('in')) $('#wbin').innerHTML = wbInHTML();
+  if(all || which.includes('in')){ $('#wbin').innerHTML = wbInHTML(); if(!all && !which.includes('ext') && wbT().inExt && $('#wbext')) $('#wbext').innerHTML = wbT().extHTML(); }   /* 입력을 도구 화면에 그리는 도구: 그 화면도 다시 */
   if(all || which.includes('out')) $('#wbout').innerHTML = wbOutHTML();
   if((all || which.includes('main')) && $('#wbmain')){ $('#wbmain').innerHTML = wbMainHTML(); }   /* 도구가 그림(figure)을 줄 때만 있음. 선 그래프 결과는 신호 선택 그래프 하나로 */
   if((all || which.includes('ext')) && $('#wbext')) $('#wbext').innerHTML = wbT().extHTML();
@@ -408,8 +440,10 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbput]')){ wbPutOpen(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }
-  if(t.closest('[data-wbpadd]')){ const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length < 3){ P.push(new Set()); if(sw){ WB.piO = P.length-1; WB.selO = P[WB.piO]; } else { WB.pi = P.length-1; WB.sel = P[WB.pi]; } } wbPaint(['sig']); return; }
-  if(t.closest('[data-wbpdel]')){ const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length > 1){ const i = +t.closest('[data-wbpdel]').dataset.wbpdel; P.splice(i, 1); WB_PH.splice(i, 1); const j = Math.max(0, i-1); if(sw){ WB.piO = j; WB.selO = P[j]; } else { WB.pi = j; WB.sel = P[j]; } } wbPaint(['sig']); return; }
+  const zmb = t.closest('[data-wbzm]'); if(zmb){ WB.zm = zmb.dataset.wbzm; $('#wbsig').dataset.zm = WB.zm; wbPaint(['sig']); return; }
+  const zbb = t.closest('[data-wbzb]'); if(zbb){ const z = zbb.dataset.wbzb; if(z==='fit'){ WB.zx = null; WB.zy = []; } else { const r = wbZRange(), c = (r.lo + r.hi)/2, h = (r.hi - r.lo)/2*(z==='in' ? 1/1.5 : 1.5); wbZSet(c - h, c + h); } wbPaint(['sig']); return; }
+  if(t.closest('[data-wbpadd]')){ WB.zy = []; const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length < 3){ P.push(new Set()); if(sw){ WB.piO = P.length-1; WB.selO = P[WB.piO]; } else { WB.pi = P.length-1; WB.sel = P[WB.pi]; } } wbPaint(['sig']); return; }
+  if(t.closest('[data-wbpdel]')){ WB.zy = []; const sw = WB.xa.startsWith('in:'), P = sw ? WB.panesO : WB.panes; if(P.length > 1){ const i = +t.closest('[data-wbpdel]').dataset.wbpdel; P.splice(i, 1); WB_PH.splice(i, 1); const j = Math.max(0, i-1); if(sw){ WB.piO = j; WB.selO = P[j]; } else { WB.pi = j; WB.sel = P[j]; } } wbPaint(['sig']); return; }
   const ac = t.closest('[data-wbact]'); if(ac){ WB.act = ac.dataset.wbact; WB.sel.add(WB.act); wbPaint(['sig']); return; }
   const ao = t.closest('[data-wbacto]'); if(ao){ WB.actO = ao.dataset.wbacto; WB.selO.add(WB.actO); wbPaint(['sig']); return; }
   const vv = t.closest('#wb [data-v3v]'); if(vv && WB.t3){ WB.t3.orb.set(vv.dataset.v3v); wb3dViews(); WB.t3.render(); return; }
@@ -443,6 +477,41 @@ function wbPick(svg, e){ if(!svg.querySelector('.wb-hit')) return; const hit = s
   let best = -1; for(let i = 0; i < xd.length; i++) if(isFinite(xd[i]) && (best < 0 || Math.abs(xd[i] - xv) < Math.abs(xd[best] - xv))) best = i;
   if(best >= 0) wbCursor(which, best); }
 let WB_DRAG = null;
+/* ---------- 그래프 칸 확대 · 이동 (MATLAB 피규어처럼). x 는 모든 칸 같이 (WB.zx = {key: 가로축, lo, hi}), y 는 칸마다 자동 범위의 비율 (WB.zy[i] = {a, b}) */
+let WBZD = null;
+function wbXData(){ const R = WB.R; return WB.xa.startsWith('in:') ? (WB.sw && WB.sw.X) || [] : WB.xa.startsWith('sig:') ? R.sig[WB.xa.slice(4)] : R.x.d; }
+function wbXFull(){ const d = wbXData().filter(isFinite); return d.length ? {lo:Math.min(...d), hi:Math.max(...d)} : {lo:0, hi:1}; }
+const wbZRange = () => wbZx() || wbXFull();
+function wbZSet(lo, hi){ const F = wbXFull(), w = hi - lo; if(!(w > 0) || w >= (F.hi - F.lo)*0.999){ WB.zx = null; return; }
+  if(lo < F.lo){ hi += F.lo - lo; lo = F.lo; } if(hi > F.hi){ lo -= hi - F.hi; hi = F.hi; } WB.zx = {key:WB.xa, lo, hi}; }
+function wbZyOf(i){ return (WB.zy && WB.zy[i]) || {a:0, b:1}; }
+function wbZySet(i, a, b){ WB.zy = WB.zy || []; WB.zy[i] = Math.abs(a) < 1e-3 && Math.abs(b - 1) < 1e-3 ? null : {a, b}; }
+/* svg 의 화면 점 → 그림 좌표 · 그림 영역 */
+function wbZGeom(svg, e){ const hit = svg.querySelector('.wb-hit'), rc = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+  return {px:(e.clientX - rc.left)/rc.width*vb.width, py:(e.clientY - rc.top)/rc.height*vb.height, L:+hit.dataset.wbl, W:+hit.dataset.wbw, T:+hit.dataset.wbt, H:+hit.dataset.wbh, x0:+hit.dataset.wbx0, x1:+hit.dataset.wbx1}; }
+function wbZDown(svg, e){ const pane = svg.closest('[data-wbpi]'), i = pane ? +pane.dataset.wbpi : 0, g = wbZGeom(svg, e);
+  try{ svg.setPointerCapture(e.pointerId); }catch(err){} document.body.classList.add('wb-dragging');
+  WBZD = {mode:WB.zm, svg, i, g, zy:wbZyOf(i), id:e.pointerId}; }
+function wbZMove(e){ const D = WBZD, g = wbZGeom(D.svg, e);
+  if(D.mode==='pan'){ const dx = -(g.px - D.g.px)/D.g.W*(D.g.x1 - D.g.x0), dy = (g.py - D.g.py)/D.g.H*(D.zy.b - D.zy.a);
+    wbZSet(D.g.x0 + dx, D.g.x1 + dx); wbZySet(D.i, D.zy.a + dy, D.zy.b + dy);
+    if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const b = $('#wbsig'); if(b){ b.innerHTML = wbSigHTML(); D.svg = b.querySelectorAll('.wb-plot')[D.i] || D.svg; } }); return; }
+  let r = D.svg.querySelector('.wb-zbox'); if(!r){ r = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); r.setAttribute('class', 'wb-zbox'); D.svg.appendChild(r); }
+  const cx = v => Math.max(D.g.L, Math.min(D.g.L + D.g.W, v)), cy = v => Math.max(D.g.T, Math.min(D.g.T + D.g.H, v));
+  const xa = cx(Math.min(g.px, D.g.px)), xb = cx(Math.max(g.px, D.g.px)), ya = cy(Math.min(g.py, D.g.py)), yb = cy(Math.max(g.py, D.g.py));
+  r.setAttribute('x', xa); r.setAttribute('y', ya); r.setAttribute('width', xb - xa); r.setAttribute('height', yb - ya); D.box = {xa, xb, ya, yb}; }
+function wbZUp(e){ const D = WBZD; WBZD = null; document.body.classList.remove('wb-dragging'); try{ D.svg.releasePointerCapture(D.id); }catch(err){}
+  if(D.mode==='box' && D.box){ const B = D.box, G = D.g, X = p => G.x0 + (p - G.L)/G.W*(G.x1 - G.x0);
+    if(B.xb - B.xa >= 6) wbZSet(X(B.xa), X(B.xb));
+    if(B.yb - B.ya >= 6){ const f = p => 1 - (p - G.T)/G.H, s = D.zy.b - D.zy.a; wbZySet(D.i, D.zy.a + f(B.yb)*s, D.zy.a + f(B.ya)*s); } }
+  wbPaint(['sig']); }
+/* 휠 (칸을 눌러 켠 뒤): x 확대 · 축소 (커서 둘레), Shift + 휠 = 그 칸 y */
+document.addEventListener('wheel', e => { const pane = e.target.closest && e.target.closest('#wbsig [data-wbpi]'); if(!pane || !wbZoomOn(pane) || !WB.R) return;
+  const svg = pane.querySelector('.wb-plot'); if(!svg || !svg.querySelector('.wb-hit')) return; e.preventDefault();
+  const g = wbZGeom(svg, e), f = e.deltaY < 0 ? 0.8 : 1.25, i = +pane.dataset.wbpi;
+  if(e.shiftKey){ const zy = wbZyOf(i), s = zy.b - zy.a, m = zy.a + (1 - (g.py - g.T)/g.H)*s; wbZySet(i, m - (m - zy.a)*f, m + (zy.b - m)*f); }
+  else { const m = g.x0 + (g.px - g.L)/g.W*(g.x1 - g.x0); wbZSet(m - (m - g.x0)*f, m + (g.x1 - m)*f); }
+  wbPaint(['sig']); }, {passive:false});
 let WB_PHD = null;   /* 그래프 칸 높이 끌기 */
 document.addEventListener('pointerdown', e => { if(e.button!==0 || !e.target.closest) return;
   const ph = e.target.closest('#wb [data-wbph]'); if(ph){ e.preventDefault(); const i = +ph.dataset.wbph, n = (WB.xa.startsWith('in:') ? WB.panesO : WB.panes).length, svg = ph.parentElement.querySelector('svg');
@@ -450,10 +519,11 @@ document.addEventListener('pointerdown', e => { if(e.button!==0 || !e.target.clo
   const pp = e.target.closest('#wb [data-wbpi]'); if(pp && !e.target.closest('[data-wbpdel]')){ const i = +pp.dataset.wbpi, sw = WB.xa.startsWith('in:');   /* 칸 고르기 */
     if(sw ? WB.piO!==i : WB.pi!==i){ if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } const sl = $('#wbsl'); if(sl) sl.innerHTML = wbSigListHTML(); document.querySelectorAll('#wb [data-wbpi]').forEach(d => d.classList.toggle('on', +d.dataset.wbpi===i)); } }
   if(!WB.R) return; const svg = e.target.closest('#wb .wb-plot'); if(!svg || !svg.querySelector('.wb-hit')) return;   /* 표시 전용 그래프는 커서와 상관없음 */
+  if(svg.dataset.wbp==='sig' && (WB.zm || 'cur')!=='cur'){ e.preventDefault(); wbZDown(svg, e); return; }   /* 이동 · 영역 확대 모드 */
   e.preventDefault(); WB_DRAG = svg; wbPick(svg, e); const box = svg.closest('.wb-plotbox'); if(box) box.focus({preventScroll:true}); });
-document.addEventListener('pointermove', e => { if(WB_PHD){ const D = WB_PHD; WB_PH[D.i] = Math.max(120, Math.min(700, Math.round(D.h0 + (e.clientY - D.y)*D.k))); if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const b = $('#wbsig'); if(b) b.innerHTML = wbSigHTML(); }); return; }
+document.addEventListener('pointermove', e => { if(WBZD){ wbZMove(e); return; } if(WB_PHD){ const D = WB_PHD; WB_PH[D.i] = Math.max(120, Math.min(700, Math.round(D.h0 + (e.clientY - D.y)*D.k))); if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const b = $('#wbsig'); if(b) b.innerHTML = wbSigHTML(); }); return; }
   if(!WB_DRAG || !WB.R) return; if(WB_DRAG.isConnected) wbPick(WB_DRAG, e); else { WB_DRAG = document.querySelector('#wb .wb-plot[data-wbp="sig"]'); } });
-document.addEventListener('pointerup', () => { WB_DRAG = null; if(WB_PHD){ WB_PHD = null; try{ localStorage.setItem('run2x.wb.ph', JSON.stringify(WB_PH)); }catch(e){} } });
+document.addEventListener('pointerup', e => { if(WBZD){ wbZUp(e); return; } WB_DRAG = null; if(WB_PHD){ WB_PHD = null; try{ localStorage.setItem('run2x.wb.ph', JSON.stringify(WB_PH)); }catch(e){} } });
 
 /* ---------- 입력 칸 옆 '모양 보기' (보조): 입력 정의에 viz(I) → {x:{d,n,u}, ys:[{k,d,c,n,u}], act, note} 가 있으면 그래프 단추.
    누르면 그 칸 아래 작은 창에 지금 입력값으로 그린 그래프. 입력을 고치면 바로 다시 그림, 바깥을 누르거나 Esc 로 닫음.

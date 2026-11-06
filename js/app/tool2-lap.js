@@ -4,7 +4,7 @@
      공식 내구 코스 = js/data/fsk2026-course.js (FSK26), 모터 기본값 = js/data/emrax228.js (EMRAX228)
    - 차량 모델: 점질량 준정적 + 앞뒤 · 좌우 하중 이동 + 타이어 하중 감도(직선 또는 맵) + 뒤축 구동,
      모터 곡선(전압 보정) · 열(1점 모델) · 디레이팅, 효율(상수 또는 맵), 축전지(내부저항 · SOC)
-   - 탭: [시뮬레이션] 결과 · 구동력 선도(프로브) · 코스 지도(확대 · 프로브) · 신호 그래프 / [맵 편집] 코스 · 모터 · 효율 · 타이어 표
+   - 탭: [시뮬레이션] 결과 · 구동력 선도(프로브) · 코스 지도(확대 · 프로브) · 신호 그래프 / [편집] 코스 · 차량 제원 · 타이어 · 에어로 · 모터 · 인버터 · 구동계 · 축전지 (상수 + 표), · 모터 · 효율 · 타이어 표
    - 결과: [내 감속비 | 최적 감속비] (두 모드 미리 계산) · 감속비 · 종목 기록(가장 빠른 기록 대비) · 차량 한계 / 고른 코스 · 축전지 · 모터 · 에너지
    ============================================================ */
 const T2KEY = 'run2x.wb.2.ext.v2';
@@ -14,12 +14,16 @@ const T2TRACK_EX = ['종류, 길이 m, 반경 m, 왼쪽 폭 m, 오른쪽 폭 m, 
   '오른쪽, 7.85, 10  # 시케인', '왼쪽, 7.85, 10', '왼쪽, 7.85, 10', '오른쪽, 7.85, 10', '직선, 30', '왼쪽, 15.71, 5  # 왼쪽 헤어핀 (지름 10 m)', '직선, 35',
   '오른쪽, 47.12, 30, , , 8  # 곡선 위 슬라럼 (반경 30 m · 콘 간격 8 m)', '직선, 40', '오른쪽, 17.28, 5.5', '직선, 25', '왼쪽, 23.56, 15', '직선, 50', '오른쪽, 31.42, 10', '직선, 30'].join('\n');
 const T2MOTOR_PH = '첫 줄은 열 이름, 그 아래 한 줄에 회전수 · 최대 토크 · 연속 토크\n회전수 rpm, 최대 토크 N·m, 연속 토크 N·m\n0, 230, 110\n4800, 230, 112\n6500, 180, 92\n\n연속 토크는 디레이팅의 하한 (없으면 0 까지 깎임).';
-const T2TIRE_PH = '비우면 왼쪽 [타이어 마찰계수] · [μ 하중 감도]를 씁니다.\n숫자 하나 = 하중과 상관없는 μ\n표 = 한 줄에 바퀴 하나 수직 하중 N, μ\n하중 N, μ\n0, 1.8\n1000, 1.6\n2000, 1.45';
-const T2EFF_PH = '비우면 왼쪽 입력 칸의 상수 효율을 씁니다.\n숫자 하나 = 상수 효율 [%] (예: 97)\n맵 = 첫 줄은 회전수, 첫 열은 토크, 칸은 효율 %\n토크 N·m \\ 회전수 rpm, 0, 2000, 4000\n50, 88, 93, 92\n150, 90, 95, 94\n230, 87, 93, 92';
+const T2TIRE_PH = '비우면 위 [타이어 마찰계수] · [μ 하중 감도]를 씁니다.\n숫자 하나 = 하중과 상관없는 μ\n표 = 한 줄에 바퀴 하나 수직 하중 N, μ\n하중 N, μ\n0, 1.8\n1000, 1.6\n2000, 1.45';
+const T2EFF_PH = '비우면 위 상수 칸의 효율을 씁니다.\n숫자 하나 = 상수 효율 [%] (예: 97)\n맵 = 첫 줄은 회전수, 첫 열은 토크, 칸은 효율 %\n토크 N·m \\ 회전수 rpm, 0, 2000, 4000\n50, 88, 93, 92\n150, 90, 95, 94\n230, 87, 93, 92';
 /* 화면 상태 (이 브라우저에 저장). free.text = 내 코스 표를 글로 (한 줄에 한 구간) */
 const T2 = { tab:'sim', etab:'course', course:'end', lap:{end:'1', free:'1'}, free:{text:'', laps:1, s0:0}, mtext:'', eM:'', eI:'', tire:'', grMode:'my',
-             menu:'', paste:'', zoom:{k:1, cx:.5, cy:.5}, timer:0 };
-const T2ET = {course:'코스', mt:'모터 토크 곡선', eM:'모터 효율 맵', eI:'인버터 효율 맵', tire:'타이어 하중 감도'};   // 맵 편집 항목
+             menu:'', paste:'', zoom:{k:1, cx:.5, cy:.5}, zoomE:{k:1, cx:.5, cy:.5}, timer:0 };
+const T2ET = {course:'코스', mt:'모터 토크 곡선', eM:'모터 효율 맵', eI:'인버터 효율 맵', tire:'타이어 하중 감도'};   // 표 이름 (붙여넣기 창 · 메뉴)
+/* 편집 탭 항목 (위 단추). 모터 · 인버터는 안에서 표 고름 (etab = mt · eM · eI) */
+const T2EI = [['course', '코스'], ['car', '차량 제원'], ['tire', '타이어'], ['aero', '에어로'], ['mot', '모터 · 인버터'], ['dt', '구동계'], ['bat', '축전지']];
+const T2MOT = ['mt', 'eM', 'eI'];
+const t2Grp = et => T2MOT.includes(et) ? 'mot' : et;   // etab → 위 단추
 T2.free.text = T2TRACK_EX.split('\n').map(l => l).join('\n');
 T2.mtext = (typeof EMRAX228!=='undefined' ? EMRAX228.torque : ''); T2.eM = (typeof EMRAX228!=='undefined' ? EMRAX228.eff : '');
 const T2COURSES = ['free', 'ax', 'end', 'acc', 'skid'];
@@ -27,7 +31,7 @@ function t2Load(s){ if(!s || typeof s!=='object') return;
   if(T2COURSES.includes(s.course)) T2.course = s.course; if(s.lap && typeof s.lap==='object') Object.assign(T2.lap, s.lap);
   if(s.free && typeof s.free.text==='string') Object.assign(T2.free, {text:s.free.text, laps:Math.max(1, Math.round(+s.free.laps || 1)), s0:Math.max(0, +s.free.s0 || 0)});
   if(typeof s.mtext==='string') T2.mtext = s.mtext; if(typeof s.eM==='string') T2.eM = s.eM; if(typeof s.eI==='string') T2.eI = s.eI; if(typeof s.tire==='string') T2.tire = s.tire;
-  if(s.grMode==='my' || s.grMode==='opt') T2.grMode = s.grMode; if(['sim', 'edit'].includes(s.tab)) T2.tab = s.tab; if(T2ET[s.etab]) T2.etab = s.etab; }
+  if(s.grMode==='my' || s.grMode==='opt') T2.grMode = s.grMode; if(['sim', 'edit'].includes(s.tab)) T2.tab = s.tab; if(T2ET[s.etab] || T2EI.some(([k]) => k===s.etab && k!=='mot')) T2.etab = s.etab; }
 try{ t2Load(JSON.parse(localStorage.getItem(T2KEY) || '{}')); }catch(e){}
 const t2Save = () => { try{ localStorage.setItem(T2KEY, JSON.stringify({course:T2.course, lap:T2.lap, free:T2.free, mtext:T2.mtext, eM:T2.eM, eI:T2.eI, tire:T2.tire, grMode:T2.grMode, tab:T2.tab, etab:T2.etab})); }catch(e){} };
 
@@ -63,6 +67,7 @@ const t2Lines = txt => String(txt || '').split(/\r?\n/).map((ln, i) => { const m
   return {i: i + 1, note: (m[2] || '').trim(), cells: body ? (/[,;\t]/.test(body) ? body.split(/[,;\t]/) : body.split(/\s+/)).map(c => c.trim()) : []}; });
 /* 내 코스 글 → 구간 {l 길이, R 반경 (왼쪽 +), wl · wr 왼쪽 · 오른쪽 폭, sl 슬라럼 콘 간격 (빈칸 = NaN), note}
    열 이름 줄(종류 · 길이 · 반경 · 왼쪽 폭 · 오른쪽 폭 · 슬라럼 콘 간격 · 메모)이 있으면 그 열 위치로 읽고, 없으면 예전 방식(숫자 순서: 길이 · 반경) */
+const T2W0 = 1.75;   // 첫 줄 폭이 비었을 때 채우는 값 [m] (양쪽 합 3.5 m)
 const T2COLS = [['type', /종류|type/i], ['l', /길이|length/i], ['R', /반경|radius/i], ['wl', /왼쪽\s*폭|left\s*width/i], ['wr', /오른쪽\s*폭|right\s*width/i],
                 ['sl', /슬라럼|slalom|콘\s*간격/i], ['note', /메모|note|comment/i]];
 function t2HeadMap(cells){ if(cells.some(c => c!=='' && isFinite(+c))) return null; const m = {};
@@ -80,9 +85,10 @@ function t2Track(txt){ const rows = [], bad = []; let H = null;   // bad = 숫�
     if(r){ if(!(r.wl >= 0)) r.wl = NaN; if(!(r.wr >= 0)) r.wr = NaN; if(!(r.sl > 0)) r.sl = NaN;
       if(L.note) r.note = (r.note ? r.note + ' ' : '') + L.note; rows.push(r); }
     else if(rows.length) bad.push(L.i); });
+  if(rows.length){ if(!isFinite(rows[0].wl)) rows[0].wl = T2W0; if(!isFinite(rows[0].wr)) rows[0].wr = T2W0; }   // 첫 줄 폭은 늘 적혀 있게 (예전 코스 · 빈칸)
   return {rows, bad, segs: rows.map(r => [r.l, r.R]), len: rows.reduce((a, r) => a + r.l, 0)}; }
-/* 빈 폭 칸 = 윗줄 값, 첫 줄도 비면 [내 코스 폭] ÷ 2 */
-function t2Widths(rows, wfree){ let a = Math.max(0, wfree) / 2, b = a; return rows.map(r => { if(isFinite(r.wl)) a = r.wl; if(isFinite(r.wr)) b = r.wr; return [a, b]; }); }
+/* 빈 폭 칸 = 윗줄 값 (첫 줄은 읽을 때 1.75 m 로 채움 → 숨은 기본값 없음) */
+function t2Widths(rows){ let a = T2W0, b = a; return rows.map(r => { if(isFinite(r.wl)) a = r.wl; if(isFinite(r.wr)) b = r.wr; return [a, b]; }); }
 /* 모터 토크 표: 1열 = 회전수 rpm, 2열 = 최대 토크, 3열 = 연속 토크 (디레이팅 하한) [N·m]. 숫자가 없는 첫 줄 = 열 이름 */
 function t2MotorParse(txt){ let names = [], rows = [], bad = [];
   t2Lines(txt).forEach(L => { if(!L.cells.length) return; const nums = L.cells.map(c => c==='' ? NaN : +c);
@@ -145,13 +151,13 @@ const T2TPL = {
   track:{name:'내코스_양식', rows:[
     ['# 내 코스 양식 — 한 줄에 한 구간 · 위에서부터 달리는 순서 · 첫 줄(# 아닌 줄)은 열 이름 (열 순서는 바꿔도 됨, 이름으로 읽음)'],
     ['# 종류: 직선 · 왼쪽 · 오른쪽 (영어 Straight · Left · Right 도 됨) · 길이 · 반경 m 는 코스 가운데 선 기준 · 직선은 반경을 비움'],
-    ['# 왼쪽 · 오른쪽 폭 m = 가운데 선에서 그 쪽 경계까지 · 비우면 윗줄 값 (첫 줄도 비면 도구 왼쪽 [내 코스 폭] ÷ 2) · 경계 콘은 지도에 자동으로 그림'],
+    ['# 왼쪽 · 오른쪽 폭 m = 가운데 선에서 그 쪽 경계까지 · 비우면 윗줄 값 (첫 줄은 꼭 적음 · 비우면 1.75 m 로 채움) · 경계 콘은 지도에 자동으로 그림'],
     ['# 슬라럼 콘 간격 m = 그 구간 가운데 선 위에 콘을 이 간격으로 (첫 콘은 구간 시작에서 간격 ÷ 2 뒤) · 직선 · 곡선 모두 됨 · 비우면 콘 없음'],
     ['# # 로 시작하는 줄은 건너뜀 · 엑셀 .xls 는 .xlsx 로 저장해 올림 · 표에서 Ctrl+V 로 여러 칸을 바로 붙여도 됨'],
     ['종류', '길이 m', '반경 m', '왼쪽 폭 m', '오른쪽 폭 m', '슬라럼 콘 간격 m', '메모'], ['직선', 54, '', 2, 2, '', '출발 직선'], ['직선', 60, '', '', '', 10, '슬라럼'],
     ['왼쪽', 31.42, 20, 3, 2, '', '바깥 넓음'], ['오른쪽', 47.12, 30, '', '', 8, '곡선 위 슬라럼'], ['직선', 30, '', '', '', '', '']]},
   motor:{name:'모터토크_양식', rows:[
-    ['# 모터 토크 곡선 양식 — 1열 회전수 rpm · 2열 최대 토크 N·m · 3열 연속 토크 N·m (디레이팅 하한 · 없으면 비움)'], ['# 도구 왼쪽 [모터 표 기준 전압]에서 잰 곡선을 넣음 · # 줄은 건너뜀'],
+    ['# 모터 토크 곡선 양식 — 1열 회전수 rpm · 2열 최대 토크 N·m · 3열 연속 토크 N·m (디레이팅 하한 · 없으면 비움)'], ['# 도구 위 [모터 표 기준 전압]에서 잰 곡선을 넣음 · # 줄은 건너뜀'],
     ['회전수 rpm', '최대 토크 N·m', '연속 토크 N·m'], [0, 230, 110], [4800, 230, 112], [6500, 180, 92]]},
   eff:{name:'효율맵_양식', rows:[
     ['# 효율 양식 — 숫자 하나만 쓰면 상수 효율 % · 표면 맵'], ['# 맵: 첫 줄 = 회전수 rpm · 첫 열 = 토크 N·m · 칸 = 효율 % (0 ~ 1 비율로 써도 됨)'], ['# # 줄은 건너뜀'],
@@ -164,10 +170,10 @@ function t2Template(kind, fmt){ const T = T2TPL[kind]; let blob;
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${T.name}.${fmt}`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
 
 
-/* ============================================================ 작업창 위 탭: [시뮬레이션] · [맵 편집]
+/* ============================================================ 작업창 위 탭: [시뮬레이션] · [편집]
    시뮬레이션: 위 줄(기준 감속비 · 볼 랩 · 코스) → 결과 → 구동력 선도 · 코스 지도 (프로브) → 신호 선택 그래프
-   맵 편집   : 항목(코스 · 모터 토크 곡선 · 모터 효율 맵 · 인버터 효율 맵 · 타이어 하중 감도) → 왼쪽 표 + 오른쪽 그림
-               표에 값이 있으면 왼쪽 입력의 상수 칸을 막고 표를 씀. 비우면 다시 상수 */
+   편집      : 항목(코스 · 차량 제원 · 타이어 · 에어로 · 모터 · 인버터 · 구동계 · 축전지) → 상수 칸(왼쪽 입력 칸과 같은 부품) + 표 · 그림
+               표에 값이 있으면 그 상수 칸을 막고 표를 씀. 비우면 다시 상수. 왼쪽 입력 칸은 비워 둠 (자주 바꾸는 값은 나중에) */
 const T2CN = {free:'내 코스', ax:'오토크로스', end:'내구레이스', acc:'가속', skid:'스키드패드'};
 const t2Sum = a => a.reduce((x, y) => x + y, 0);
 const t2Closed = () => T2.free.laps > 1 || T2.free.s0 > 0;      // 랩 수 2 이상이거나 출발 위치가 0이 아니면 닫힌 코스
@@ -178,10 +184,20 @@ function t2ExtHTML(){ const sim = T2.tab==='sim', w = $('#wb'); if(w) w.classLis
   const bar = sim
     ? `<span class="t2-gm"><span class="muted">기준 감속비</span>${t2Seg('data-t2gm', T2.grMode, [['my', `내 감속비 ${wbFmt(WB.I.gr, 2)}`], ['opt', `최적 감속비 ${isFinite(go) ? wbFmt(go, 2) : '…'}`]])}</span>
        <span class="t2-vw"><label class="t2-lapl">볼 랩 <span id="t2lapw">${t2LapSel()}</span></label><span class="muted">코스</span>${t2Seg('data-t2course', T2.course, T2COURSES.map(k => [k, T2CN[k]]))}</span>`
-    : `<span class="t2-vw"><span class="muted">편집할 표</span>${t2Seg('data-t2et', T2.etab, Object.entries(T2ET))}</span>`;
-  return `<section class="wb-sec t2-ext" aria-label="시뮬레이션 · 맵 편집"><div class="wb-h t2-h"><div class="m1-tabs" role="tablist">${[['sim', '시뮬레이션'], ['edit', '맵 편집']].map(([k, t]) => `<button type="button" role="tab" data-t2tab="${k}" aria-selected="${T2.tab===k}">${t}</button>`).join('')}</div></div>
+    : `<span class="t2-vw"><span class="muted">편집할 항목</span>${t2Seg('data-t2eg', t2Grp(T2.etab), T2EI)}</span>
+       <span class="t2-md"><span class="muted" title="0 = 무게중심 높이 전체로 횡하중 이동, 1 = 롤센터로 기하 · 탄성 몫을 나누고 롤각 신호. 대시보드 반영은 늘 0">모델 단계</span>${t2Seg('data-t2md', String(WB.I.md >= 1 ? 1 : 0), [['0', '0 기본'], ['1', '1 롤센터 · 롤']])}</span>`;
+  return `<section class="wb-sec t2-ext" aria-label="시뮬레이션 · 편집"><div class="wb-h t2-h"><div class="m1-tabs" role="tablist">${[['sim', '시뮬레이션'], ['edit', '편집']].map(([k, t]) => `<button type="button" role="tab" data-t2tab="${k}" aria-selected="${T2.tab===k}">${t}</button>`).join('')}</div></div>
     <div class="t2-hr${sim ? '' : ' left'}">${bar}</div>
-    ${sim ? '' : T2.etab==='course' ? t2CourseEdit() : t2MapEdit(T2.etab)}${t2PasteHTML()}</section>`; }
+    ${sim ? '' : t2EditBody()}${t2PasteHTML()}</section>`; }
+/* 편집 탭 본문: 항목의 상수 칸 (왼쪽 입력과 같은 칸) + 표 · 그림 */
+function t2Consts(grp){ const gs = T2EG[grp] || [], list = WB_TOOLS['2'].inputs.filter(d => gs.includes(d.g) && d.ui!=='none');
+  return list.length ? `<div class="t2-cg">${wbInRows(list)}</div>` : ''; }
+function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
+  if(grp==='course') return `<div class="t2-rlbar"><span class="muted">주행선</span>${t2Seg('data-t2rl', String(WB.I.rl_on >= 2 ? 2 : WB.I.rl_on >= 1 ? 1 : 0), [['2', '다듬은 선'], ['1', '최소 곡률'], ['0', '가운데 선']])}
+      <span class="muted t2-rlnote">다듬은 선 = 최소 곡률 선을 랩타임이 줄도록 다듬음 · 슬라럼은 첫 콘을 왼쪽으로 지나감</span></div>${t2Consts('course')}${t2CourseEdit()}`;
+  if(grp==='mot') return t2Consts('mot') + `<div class="t2-sub"><span class="muted">표</span>${t2Seg('data-t2et', et, T2MOT.map(k => [k, T2ET[k]]))}</div>` + t2MapEdit(et);
+  if(grp==='tire') return t2Consts('tire') + t2MapEdit('tire');
+  return t2Consts(grp); }
 
 /* ---------- [입력하기 ▾] 메뉴: 표 k = track · mt · eM · eI · tire.  on = false 면 회색으로 막음 */
 function t2MenuHTML(k, label, on){ const tpl = k==='track' ? 'track' : k==='mt' ? 'motor' : k==='tire' ? 'tire' : 'eff';
@@ -218,7 +234,7 @@ function t2CourseRows(c){
   return [{l:15, R:0, note:'진입'}, {l:C2, R:-9.125, note:'오른쪽 1바퀴'}, {l:C2, R:-9.125, note:'오른쪽 2바퀴 (기록)'}, {l:C2, R:9.125, note:'왼쪽 1바퀴'}, {l:C2, R:9.125, note:'왼쪽 2바퀴 (기록)'}, {l:15, R:0, note:'탈출'}]; }
 const t2LapsOf = c => c==='free' ? T2.free.laps : c==='end' ? FSK26.laps : 1;
 function t2LapSel(){ const c = T2.course, n = t2LapsOf(c), cur = n > 1 ? (T2.lap[c] || '1') : '1';
-  const o = n > 1 ? [...Array.from({length:n}, (_, i) => [String(i + 1), `${i + 1}번째 랩${c==='end' && (i===0 || i===FSK26.stint) ? ' (정지 출발)' : ''}`]), ['all', `전체 ${n}랩 이어서`]] : [['1', '1번째 랩']];
+  const o = n > 1 ? [['all', '전체'], ...Array.from({length:n}, (_, i) => [String(i + 1), `${i + 1}번째 랩${c==='end' && (i===0 || i===FSK26.stint) ? ' (정지 출발)' : ''}`])] : [['1', '1번째 랩']];
   return `<select data-t2lap${n > 1 ? '' : ' disabled'}>${o.map(([k, t]) => `<option value="${k}"${cur===k ? ' selected' : ''}>${t}</option>`).join('')}</select>`; }
 function t2CourseEdit(){ const c = T2.course, own = c==='free', rows = t2CourseRows(c);
   return `<div class="t2-set">${t2Seg('data-t2course', c, T2COURSES.map(k => [k, T2CN[k]]))}
@@ -227,7 +243,7 @@ function t2CourseEdit(){ const c = T2.course, own = c==='free', rows = t2CourseR
       <span class="t2-sum" id="t2sum">${t2SumText(rows, own)}</span></div>
     <p class="t2-rule muted">${own ? '' : '<b>공식 코스 · 보기만 (고칠 수 없음).</b> '}${T2INFO[c]()}</p>
     ${t2Pair(t2MenuHTML('track', '코스 입력하기', own), `<div class="t2-tw${own ? '' : ' ro'}" id="t2tt">${t2TrackTable(rows, own)}</div>`,
-      '<span class="muted">그림을 누르면 표에서 그 구간으로 갑니다</span>', `<div class="t2-fbox" id="t2emap">${t2MapSVG(true)}</div>`,
+      `<span class="muted">그림을 누르면 표에서 그 구간으로 갑니다</span>${T2ZB}`, `<div class="t2-fbox" id="t2emap" data-zoombox="t2emap">${t2MapSVG(true)}</div>`,
       '<span class="t2-mleg"><i class="sl"></i>출발 (주행 방향 오른쪽) <i class="fin"></i>결승 (왼쪽) <i class="arr">→</i>주행 방향</span>')}`; }
 /* 맵 편집 한 줄: 왼쪽 [위 줄 + 표 상자], 오른쪽 [위 줄 + 그림 상자 + 아래 글]. 두 상자는 같은 높이 */
 const t2Pair = (lt, lbox, rt, rbox, rcap) => `<div class="t2-tr"><div class="t2-col"><div class="t2-top">${lt}</div>${lbox}</div><div class="t2-col"><div class="t2-top">${rt}</div>${rbox}${rcap ? `<div class="t2-fcap muted">${rcap}</div>` : ''}</div></div>`;
@@ -235,9 +251,9 @@ function t2SumText(rows, own){ if(!rows.length) return '<span class="wb-err">구
   const nc = own ? t2FreeCones().filter(c => c[2]==='C').length : rows.filter(r => r.cone).length, tight = own ? t2SlalomTight(rows) : [];
   return `한 바퀴 <b>${wbFmt(t2Sum(rows.map(r => r.l)), 1)}</b> m · 구간 ${rows.length}개${nc ? ` · 슬라럼 콘 ${nc}개` : ''}${tight.length ? ` · <span class="wb-err">${tight.slice(0, 5).join(', ')}번 구간: 폭이 차 중심 여유 × 2 보다 좁아 콘을 번갈아 비켜 갈 수 없음</span>` : ''}`; }
 /* 구간 표. own = 내 코스 (칸을 눌러 고침 · × 지우기 · + 구간 · Ctrl+V 로 여러 칸 붙이기)
-   폭 빈칸은 윗줄 값(첫 줄은 [내 코스 폭] ÷ 2)을 흐리게 보여 줌 */
+   폭 빈칸은 윗줄 값을 흐리게 보여 줌 (첫 줄은 늘 적혀 있음) */
 function t2TrackTable(rows, own){ const ed = (i, k, v, cls, raw) => own ? `<td class="t2-e${cls ? ' ' + cls : ''}" data-t2e="${i},${k}"${raw!=null ? ` data-t2v="${raw}"` : ''} tabindex="0">${v}</td>` : `<td${cls ? ` class="${cls}"` : ''}>${v}</td>`;
-  const W = own ? t2Widths(rows, WB.I.w_free) : rows.map(r => [r.wl, r.wr]), f2 = x => wbFmt(x, 2);
+  const W = own ? t2Widths(rows) : rows.map(r => [r.wl, r.wr]), f2 = x => wbFmt(x, 2);
   const wc = (i, k, v, eff) => ed(i, k, isFinite(v) ? f2(v) : `<span class="t2-inh">${f2(eff)}</span>`, 'n', isFinite(v) ? +v : '');
   const body = rows.map((r, i) => `<tr>${ed(i, 'no', i + 1, 'muted')}${ed(i, 'type', r.R ? (r.R > 0 ? '왼쪽' : '오른쪽') : '직선')}${ed(i, 'l', f2(r.l), 'n')}${ed(i, 'R', r.R ? f2(Math.abs(r.R)) : '', 'n')}${ed(i, 'ang', r.R ? wbFmt(r.l/Math.abs(r.R)*180/Math.PI, 1) : '', 'n')}`
     + `${own ? wc(i, 'wl', r.wl, W[i][0]) + wc(i, 'wr', r.wr, W[i][1]) : `<td class="n">${f2(r.wl)}</td><td class="n">${f2(r.wr)}</td>`}`
@@ -278,20 +294,20 @@ const t2MtText = k => k==='mt' ? T2.mtext : T2[k];
 function t2MtSet(k, txt){ if(k==='mt') T2.mtext = txt; else T2[k] = txt; t2Repaint(); t2Soon(); wbPaint(['in']); }
 function t2GridEdit(r, c, v){ const k = T2.etab, g = t2Grid(t2MtText(k)); if(!g[r]) return; g[r][c] = String(v).trim(); t2MtSet(k, t2GridText(g)); }
 const T2ERULE = {
-  mt:   '1열 회전수 rpm · 2열 최대 토크 · 3열 연속 토크 N·m. 왼쪽 [모터 표 기준 전압]에서 잰 곡선을 축전지 단자 전압과 유도 전압 비로 늘이고 줄입니다. 연속 토크는 디레이팅 하한입니다. 비면 [모터 최대 토크] 일정.',
-  eM:   '첫 줄 = 회전수 rpm, 첫 열 = 토크 N·m, 칸 = 효율 %. 숫자 하나면 상수. 비우면 왼쪽 [모터 효율] 상수 칸. 모터 손실(열)은 이 효율로 계산합니다.',
-  eI:   '첫 줄 = 회전수 rpm, 첫 열 = 토크 N·m, 칸 = 효율 %. 숫자 하나면 상수. 비우면 왼쪽 [인버터 효율] 상수 칸. 모터 × 인버터 효율을 곱해 쓰므로, 합친 맵을 모터에 넣고 인버터를 100 으로 둬도 같습니다.',
-  tire: '한 줄에 바퀴 하나 수직 하중 N · 그때 μ (사이는 직선 보간, 범위 밖은 끝값). 숫자 하나면 하중과 상관없는 μ. 비우면 왼쪽 [타이어 마찰계수] · [μ 하중 감도].' };
+  mt:   '1열 회전수 rpm · 2열 최대 토크 · 3열 연속 토크 N·m. 위 [모터 표 기준 전압]에서 잰 곡선을 축전지 단자 전압과 유도 전압 비로 늘이고 줄입니다. 연속 토크는 디레이팅 하한입니다. 비면 [모터 최대 토크] 일정.',
+  eM:   '첫 줄 = 회전수 rpm, 첫 열 = 토크 N·m, 칸 = 효율 %. 숫자 하나면 상수. 비우면 위 [모터 효율] 상수 칸. 모터 손실(열)은 이 효율로 계산합니다.',
+  eI:   '첫 줄 = 회전수 rpm, 첫 열 = 토크 N·m, 칸 = 효율 %. 숫자 하나면 상수. 비우면 위 [인버터 효율] 상수 칸. 모터 × 인버터 효율을 곱해 쓰므로, 합친 맵을 모터에 넣고 인버터를 100 으로 둬도 같습니다.',
+  tire: '한 줄에 바퀴 하나 수직 하중 N · 그때 μ (사이는 직선 보간, 범위 밖은 끝값). 숫자 하나면 하중과 상관없는 μ. 비우면 위 [타이어 마찰계수] · [μ 하중 감도].' };
 function t2MapEdit(k){ const txt = t2MtText(k), empty = !t2Grid(txt).length;
   const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
   return `<div class="t2-set"><span class="t2-sum" id="t2msum">${msg}</span></div><p class="t2-rule muted">${T2ERULE[k]}</p>
     ${t2Pair(t2MenuHTML(k, '입력하기', true), `<div class="t2-tw" id="t2tt">${t2GridTable(k, txt)}</div>`,
-      empty ? `<span class="t2-const">표가 비어 있어 왼쪽 입력 상수를 씁니다 · ${t2ConstNote(k)}</span>` : '<span class="muted">그림을 누르면 표에서 그 칸으로 갑니다</span>',
+      empty ? `<span class="t2-const">표가 비어 있어 위 상수 칸을 씁니다 · ${t2ConstNote(k)}</span>` : '<span class="muted">그림을 누르면 표에서 그 칸으로 갑니다</span>',
       `<div class="t2-fbox" id="t2mc">${t2EditPlot(k)}</div>`, t2EditCap(k))}`; }
 /* 표가 비었을 때 쓰는 상수 */
 function t2ConstNote(k){ const I = WB.I;
   return k==='mt' ? `모터 최대 토크 ${wbFmt(I.tmax, 0)} N·m 일정` : k==='eM' ? `모터 효율 ${wbFmt(I.eta_mot, 1)} %` : k==='eI' ? `인버터 효율 ${wbFmt(I.eta_inv, 1)} %` : `μ ${wbFmt(I.mu, 2)} · 하중 감도 ${wbFmt(I.mu_s, 3)} 1/kN`; }
-function t2MotorMsg(M){ return M.pts.length ? `${M.pts.length}점 · ${wbFmt(M.pts[0][0], 0)} ~ ${wbFmt(M.pts[M.pts.length-1][0], 0)} rpm · 최대 ${wbFmt(Math.max(...M.pts.map(p => p[1])), 1)} N·m${M.ptsC.length ? ` · 연속 ${wbFmt(Math.max(...M.ptsC.map(p => p[1])), 1)} N·m` : ' · 연속 토크 없음'}` : '비어 있음 → 왼쪽 [모터 최대 토크] 일정'; }
+function t2MotorMsg(M){ return M.pts.length ? `${M.pts.length}점 · ${wbFmt(M.pts[0][0], 0)} ~ ${wbFmt(M.pts[M.pts.length-1][0], 0)} rpm · 최대 ${wbFmt(Math.max(...M.pts.map(p => p[1])), 1)} N·m${M.ptsC.length ? ` · 연속 ${wbFmt(Math.max(...M.ptsC.map(p => p[1])), 1)} N·m` : ' · 연속 토크 없음'}` : '비어 있음 → 위 [모터 최대 토크] 일정'; }
 /* 칸 표: 토크 곡선 · 타이어는 줄 추가 · 지우기, 효율 맵은 칸만 고침 (행 · 열을 바꾸려면 [입력하기]) */
 function t2GridTable(k, txt){ const g = t2Grid(txt), map = k==='eM' || k==='eI';
   const adds = `<div class="t2-adds">${map ? '<button type="button" class="btn small" data-t2gadd="row">+ 행 (토크)</button><button type="button" class="btn small" data-t2gadd="col">+ 열 (회전수)</button>' : '<button type="button" class="btn small" data-t2gadd="row">+ 줄</button>'}</div>`;
@@ -333,13 +349,13 @@ function t2Heat(M){ const W = 560, H = 330, L = 50, B = 34, T = 8, R = 8, pw = W
 const t2HeatCap = M => { const all = M.e.flat(); return `파랑 ${wbFmt(Math.min(...all), 1)} % → 빨강 ${wbFmt(Math.max(...all), 1)} % · 칸에 마우스를 올리면 값, 누르면 표의 그 칸`; };
 
 /* ============================================================ 시뮬레이션: 결과 아래 [구동력 선도 | 코스 지도] */
+const T2ZB = '<span class="t2-zb"><button type="button" class="btn small" data-t2z="in" aria-label="확대">+</button><button type="button" class="btn small" data-t2z="out" aria-label="축소">−</button><button type="button" class="btn small" data-t2z="fit">맞춤</button></span>';
 function t2MidHTML(){ if(T2.tab!=='sim') return '';
   return `<div class="t2-mid">
-      <section class="wb-sec t2-ftw" aria-label="구동력 선도"><div class="wb-h"><h3>구동력 선도</h3><span class="wb-meta">코스 커서 지점의 선도 (커서를 멈추고 0.4초 뒤 다시 계산) · 보기만</span></div>
+      <section class="wb-sec t2-ftw" aria-label="구동력 선도"><div class="wb-h"><h3>구동력 선도</h3></div>
         <div class="t2-fbox t2-ftbox"><div id="t2ft">${T2.pf.html || '<p class="wb-empty">계산 중…</p>'}</div><div class="t2-ftov" id="t2ftov" hidden></div></div><div id="t2ftv" class="t2-ftv">${T2.pf.note || ''}</div></section>
-      <section class="wb-sec t2-mapw" aria-label="코스 지도"><div class="wb-h"><h3>코스 지도</h3><span class="wb-meta">휠 = 확대 · 끌기 = 이동 · 누르기 = 그 위치로 커서</span>
-          <span class="t2-zb"><button type="button" class="btn small" data-t2z="in" aria-label="확대">+</button><button type="button" class="btn small" data-t2z="out" aria-label="축소">−</button><button type="button" class="btn small" data-t2z="fit">맞춤</button></span></div>
-        <div class="t2-fbox" id="t2map">${t2MapSVG(false)}</div><div class="t2-ftv muted" id="t2mcap"></div></section></div>`; }
+      <section class="wb-sec t2-mapw" aria-label="코스 지도"><div class="wb-h"><h3>코스 지도</h3>${T2ZB}</div>
+        <div class="t2-fbox" id="t2map" data-zoombox="t2map">${t2MapSVG(false)}</div><div class="t2-ftv muted" id="t2mcap"></div></section></div>`; }
 
 /* ---------- 구동력 선도 프로브: 커서가 멈추면 그 점의 상태로 선도를 다시 계산 (계산은 별도 Worker) */
 T2.pf = { html:'', note:'', timer:0, busy:false, want:null, w:null, src:'' };
@@ -347,7 +363,7 @@ function t2PfOverlay(t){ const o = $('#t2ftov'); if(!o) return; o.hidden = !t; o
 function t2PfSoon(){ clearTimeout(T2.pf.timer); if(T2.tab!=='sim') return; t2PfOverlay('프로브 이동 중…'); T2.pf.timer = setTimeout(t2PfRun, 400); }
 function t2PfRun(){ const R = WB.R, S = R && R.sig; if(!S || !S.v || !S.voc){ t2PfOverlay(''); return; }
   const i = Math.max(0, Math.min(S.v.length - 1, WB.xi || 0)), g = 9.81;
-  const st = {i, v:S.v[i], gr:R.out.c_gr, V:S.voc[i], Tm:S.tmot[i], ay:S.ay[i]*g, ax:S.ax[i]*g, axg:S.ax[i], tq:S.tq[i], tlim:S.tlim[i]};
+  const st = {i, v:S.v[i], gr:R.out.c_gr, V:S.voc[i], Tm:S.tmot[i], ay:Math.abs(S.ay[i])*g, ax:S.ax[i]*g, axg:S.ax[i], tq:S.tq[i], tlim:S.tlim[i]};
   T2.pf.want = st; if(T2.pf.busy) return; t2PfOverlay('계산 중…');
   const code = wbCode(); if(!T2.pf.w || T2.pf.src!==code){ if(T2.pf.w) T2.pf.w.terminate(); T2.pf.src = code;
     T2.pf.w = new Worker(URL.createObjectURL(new Blob([code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false, e:String(err)}); } };'], {type:'text/javascript'}))); }
@@ -386,7 +402,7 @@ function t2Geo(){ const c = T2.course; let G, close = false, rev = false, extra 
   return G && {...G, close, rev, extra}; }
 const T2MW = 440, T2MH = 330;
 /* 내 코스 콘 (지도용): 경계 콘 3 m 간격 (왼쪽 노랑 L · 오른쪽 파랑 R), 슬라럼 콘 (가운데 주황 C). 출발 위치와 상관없이 같은 자리 (코스 원점에서 그림) */
-function t2FreeCones(){ const rows = t2Track(T2.free.text).rows; if(!rows.length) return []; const W = t2Widths(rows, WB.I.w_free), out = [];
+function t2FreeCones(){ const rows = t2Track(T2.free.text).rows; if(!rows.length) return []; const W = t2Widths(rows), out = [];
   let x = 0, y = 0, h = 0, s = 0, nb = 0;
   rows.forEach((r, k) => { const n = Math.max(1, Math.ceil(r.l/0.25)), st = r.l/n, cs = [];
     if(isFinite(r.sl)) for(let p = r.sl/2; p < r.l - 1e-6; p += r.sl) cs.push(p);
@@ -398,7 +414,7 @@ function t2FreeCones(){ const rows = t2Track(T2.free.text).rows; if(!rows.length
       while(ci < cs.length && a >= cs[ci] - 1e-9){ out.push([x, y, 'C']); ci++; } } });
   return out; }
 /* 슬라럼 콘 자리에서 비켜 갈 폭이 모자란 곳 (양쪽 모두 폭 ≥ 2 × 차 중심 여유 여야 번갈아 비켜 감) */
-function t2SlalomTight(rows){ const I = WB.I, b = I.w_car > 0 ? I.w_car/2 + Math.max(0, I.rl_m || 0) : Math.max(0, I.rl_b), W = t2Widths(rows, I.w_free);
+function t2SlalomTight(rows){ const I = WB.I, b = I.w_car > 0 ? I.w_car/2 + Math.max(0, I.rl_m || 0) : Math.max(0, I.rl_b), W = t2Widths(rows);
   return rows.map((r, i) => isFinite(r.sl) && (W[i][0] < 2*b - 1e-9 || W[i][1] < 2*b - 1e-9) ? i + 1 : 0).filter(Boolean); }
 /* 내 코스 표에 Ctrl+V: 엑셀에서 복사한 여러 칸(탭 · 줄바꿈)이면 표 전체를 바꿈. 첫 줄에 열 이름이 있으면 그 이름으로, 없으면 양식 열 순서로 읽음 */
 document.addEventListener('paste', e => { if(WB.id!=='2' || T2.tab!=='edit' || T2.etab!=='course' || T2.course!=='free') return;
@@ -424,7 +440,7 @@ function t2MapSVG(plain){ const c = T2.course, R = WB.id==='2' && !plain ? WB.R 
   const s = Math.min((W - 2*pad)/Math.max(1, x1 - x0), (H - 2*pad)/Math.max(1, y1 - y0)), ox = (W - (x1 - x0)*s)/2, oy = (H - (y1 - y0)*s)/2;
   const tx = x => ox + (x - x0)*s, ty = y => H - oy - (y - y0)*s, Pt = i => [tx(xs[i]), ty(ys[i])];
   T2[plain ? 'mpE' : 'mp'] = {N, pts:xs.map((_, i) => Pt(i))};   // 누르기 → 가장 가까운 점
-  const Z = plain ? {k:1, cx:.5, cy:.5} : T2.zoom, vw = W/Z.k, vh = H/Z.k, vx = Z.cx*W - vw/2, vy = Z.cy*H - vh/2, sz = 1/Z.k;   // 확대 = viewBox 를 줄임 (선 굵기는 그대로)
+  const Z = plain ? T2.zoomE : T2.zoom, vw = W/Z.k, vh = H/Z.k, vx = Z.cx*W - vw/2, vy = Z.cy*H - vh/2, sz = 1/Z.k;   // 확대 = viewBox 를 줄임 (선 굵기는 그대로)
   let svg = `<svg viewBox="${vx.toFixed(1)} ${vy.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}" class="t2-msvg${plain ? '' : ' live'}" role="img" aria-label="${T2CN[c]} 코스 지도">`;
   G.extra.forEach(([cx, cy, rr]) => { svg += `<circle cx="${tx(cx).toFixed(1)}" cy="${ty(cy).toFixed(1)}" r="${(rr*s).toFixed(1)}" class="t2-sk" vector-effect="non-scaling-stroke"/>`; });
   const cones = c==='ax' || c==='end' ? FSK26.cones || [] : c==='free' ? t2FreeCones() : [];
@@ -461,18 +477,29 @@ function t2MapToSig(i){ const R = WB.R, mp = R && R.map, c = T2.course; if(!R ||
   let k = c==='end' || c==='ax' ? Math.round((c==='ax' ? N - 1 - i : i)*P/(N - 1)) : i; const base = Math.floor((WB.xi || 0)/P)*P;
   return Math.max(0, Math.min(n - 1, (n - 1 > P ? base : 0) + Math.min(P, k))); }
 function t2MapRepaint(){ const m = $('#t2map'); if(m) m.innerHTML = t2MapSVG(false); }
-/* 휠 확대 (커서 둘레) · 끌기 이동 · 누르기 프로브 */
+function t2EMapRepaint(){ const m = $('#t2emap'); if(m) m.innerHTML = t2MapSVG(true); }
+/* 지도 두 개: 시뮬레이션 (#t2map, T2.zoom) · 편집 코스 (#t2emap, T2.zoomE)
+   휠 확대 = 박스를 한 번 눌러 켠 뒤에만 (wbZoomOn, 스크롤하다 박스 위를 지나가도 확대되지 않게)
+   끌기 이동 = 포인터를 박스에 잡아 둠 → 박스 밖으로 나가도 놓을 때까지 지도만 움직임 · 누르기 = 시뮬레이션은 커서, 편집은 표의 그 구간 */
+const t2MapOf = el => { const box = el && el.closest && el.closest('#t2map, #t2emap'); return box ? {box, edit:box.id==='t2emap'} : null; };
 function t2SvgPt(svg, e){ const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
-function t2ZoomAt(f, px, py){ const Z = T2.zoom, k = Math.max(1, Math.min(40, Z.k*f)); if(px != null){ const a = px/T2MW, b = py/T2MH; Z.cx = a - (a - Z.cx)*Z.k/k; Z.cy = b - (b - Z.cy)*Z.k/k; } Z.k = k;
-  if(k===1){ Z.cx = .5; Z.cy = .5; } const h = .5/k; Z.cx = Math.max(h, Math.min(1 - h, Z.cx)); Z.cy = Math.max(h, Math.min(1 - h, Z.cy)); t2MapRepaint(); }
-document.addEventListener('wheel', e => { const svg = e.target.closest && e.target.closest('#t2map svg'); if(!svg) return; e.preventDefault(); const p = t2SvgPt(svg, e); t2ZoomAt(e.deltaY < 0 ? 1.25 : 0.8, p.x, p.y); }, {passive:false});
+function t2ZoomAt(f, px, py, edit){ const Z = edit ? T2.zoomE : T2.zoom, k = Math.max(1, Math.min(40, Z.k*f)); if(px != null){ const a = px/T2MW, b = py/T2MH; Z.cx = a - (a - Z.cx)*Z.k/k; Z.cy = b - (b - Z.cy)*Z.k/k; } Z.k = k;
+  if(k===1){ Z.cx = .5; Z.cy = .5; } const h = .5/k; Z.cx = Math.max(h, Math.min(1 - h, Z.cx)); Z.cy = Math.max(h, Math.min(1 - h, Z.cy)); edit ? t2EMapRepaint() : t2MapRepaint(); }
+document.addEventListener('wheel', e => { const M = t2MapOf(e.target); if(!M || !wbZoomOn(M.box)) return; const svg = M.box.querySelector('svg'); if(!svg) return;
+  e.preventDefault(); const p = t2SvgPt(svg, e); t2ZoomAt(e.deltaY < 0 ? 1.25 : 0.8, p.x, p.y, M.edit); }, {passive:false});
 let T2DRAG = null;
-document.addEventListener('pointerdown', e => { const svg = e.target.closest && e.target.closest('#t2map svg'); if(!svg || e.button) return; T2DRAG = {x:e.clientX, y:e.clientY, cx:T2.zoom.cx, cy:T2.zoom.cy, w:svg.getBoundingClientRect().width, moved:false}; });
-document.addEventListener('pointermove', e => { if(!T2DRAG) return; const dx = e.clientX - T2DRAG.x, dy = e.clientY - T2DRAG.y; if(!T2DRAG.moved && Math.hypot(dx, dy) < 4) return; T2DRAG.moved = true;
-  const Z = T2.zoom, f = 1/(T2DRAG.w*Z.k), h = .5/Z.k; Z.cx = Math.max(h, Math.min(1 - h, T2DRAG.cx - dx*f)); Z.cy = Math.max(h, Math.min(1 - h, T2DRAG.cy - dy*f*T2MW/T2MH)); t2MapRepaint(); });
-document.addEventListener('pointerup', e => { const d = T2DRAG; T2DRAG = null; if(!d || d.moved) return; const svg = document.querySelector('#t2map svg'); if(!svg || !T2.mp) return;
-  const p = t2SvgPt(svg, e); let bi = 0, bd = Infinity; T2.mp.pts.forEach(([x, y], i) => { const dd = (x - p.x)**2 + (y - p.y)**2; if(dd < bd){ bd = dd; bi = i; } });
-  const xi = t2MapToSig(bi); if(xi != null) wbCursor('sig', xi); });
+document.addEventListener('pointerdown', e => { const M = t2MapOf(e.target); if(!M || e.button || e.target.closest('button')) return; const svg = M.box.querySelector('svg'); if(!svg) return;
+  e.preventDefault();   // 끌기 중 글자 선택 막음
+  const Z = M.edit ? T2.zoomE : T2.zoom; try{ M.box.setPointerCapture(e.pointerId); }catch(err){}
+  document.body.classList.add('wb-dragging'); T2DRAG = {box:M.box, edit:M.edit, id:e.pointerId, x:e.clientX, y:e.clientY, cx:Z.cx, cy:Z.cy, w:svg.getBoundingClientRect().width, moved:false}; });
+document.addEventListener('pointermove', e => { const d = T2DRAG; if(!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if(!d.moved && Math.hypot(dx, dy) < 4) return; d.moved = true; e.preventDefault();
+  const Z = d.edit ? T2.zoomE : T2.zoom, f = 1/(d.w*Z.k), h = .5/Z.k; Z.cx = Math.max(h, Math.min(1 - h, d.cx - dx*f)); Z.cy = Math.max(h, Math.min(1 - h, d.cy - dy*f*T2MW/T2MH)); d.edit ? t2EMapRepaint() : t2MapRepaint(); });
+const t2DragEnd = e => { const d = T2DRAG; T2DRAG = null; document.body.classList.remove('wb-dragging'); if(!d) return; try{ d.box.releasePointerCapture(d.id); }catch(err){}
+  if(d.moved || e.type==='pointercancel') return; const svg = d.box.querySelector('svg'), M = d.edit ? T2.mpE : T2.mp; if(!svg || !M) return;
+  const p = t2SvgPt(svg, e); let bi = 0, bd = Infinity; M.pts.forEach(([x, y], i) => { const dd = (x - p.x)**2 + (y - p.y)**2; if(dd < bd){ bd = dd; bi = i; } });
+  if(d.edit){ const r = t2PtToRow(bi); if(r >= 0) t2Hl($(`#t2tt tbody tr:nth-child(${r + 1})`)); }
+  else { const xi = t2MapToSig(bi); if(xi != null) wbCursor('sig', xi); } };
+document.addEventListener('pointerup', t2DragEnd); document.addEventListener('pointercancel', t2DragEnd);
 
 /* ============================================================ 그림 → 표 칸 찾기 (그림에서 튀는 곳을 누르면 표의 그 칸으로) */
 function t2Hl(el){ document.querySelectorAll('#t2tt .t2-hl').forEach(x => x.classList.remove('t2-hl')); if(!el) return; el.classList.add('t2-hl');
@@ -486,8 +513,6 @@ function t2PtToRow(i){ const c = T2.course, rows = t2CourseRows(c), M = T2.mpE; 
 function t2PickX(svg, e){ const hit = svg.querySelector('.t2-pick'); if(!hit) return NaN; const rc = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, px = (e.clientX - rc.left)/rc.width*vb.width;
   return +hit.dataset.wbx0 + (px - +hit.dataset.wbl)/(+hit.dataset.wbw)*(+hit.dataset.wbx1 - +hit.dataset.wbx0); }
 document.addEventListener('click', e => { const t = e.target; if(!t.closest || !t.closest('#wbext .t2-fbox')) return;
-  const em = t.closest('#t2emap svg'); if(em && T2.mpE){ const p = t2SvgPt(em, e); let bi = 0, bd = Infinity; T2.mpE.pts.forEach(([x, y], i) => { const d = (x - p.x)**2 + (y - p.y)**2; if(d < bd){ bd = d; bi = i; } });
-    const r = t2PtToRow(bi); if(r >= 0) t2Hl($(`#t2tt tbody tr:nth-child(${r + 1})`)); return; }
   const rc = t.closest('#t2mc rect[data-ij]'); if(rc){ const [i, j] = rc.dataset.ij.split(',').map(Number); t2Hl($(`#t2tt [data-t2e="${i + 1},${j + 1}"]`)); return; }
   const sv = t.closest('#t2mc svg'); if(sv && sv.querySelector('.t2-pick')){ const x = t2PickX(sv, e), g = t2Grid(t2MtText(T2.etab)); let best = -1;
     g.forEach((r, i) => { const v = parseFloat(r[0]); if(isFinite(v) && (best < 0 || Math.abs(v - x) < Math.abs(parseFloat(g[best][0]) - x))) best = i; });
@@ -496,17 +521,20 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest || !
 /* ============================================================ 고치기 · 이벤트 */
 function t2Soon(){ t2Save(); clearTimeout(T2.timer); T2.timer = setTimeout(() => { wbRefresh(); t2PartDirty(); }, 350); }
 function t2Repaint(){ const tw = $('#t2tt'), st = tw ? tw.scrollTop : 0, sl = tw ? tw.scrollLeft : 0; wbPaint(['ext']); const t2 = $('#t2tt'); if(t2){ t2.scrollTop = st; t2.scrollLeft = sl; } }
-function t2SetCourse(c){ T2.course = c; T2.menu = ''; T2.zoom = {k:1, cx:.5, cy:.5}; t2Save(); WB.xi = 0; wbSelReset(['v', 'pw']); WB.act = ''; if(!WB.xa.startsWith('in:')) WB.xa = ''; wbPaint(['ext']); wbRefresh(); }
+function t2SetCourse(c){ T2.course = c; T2.menu = ''; WB.zx = null; WB.zy = []; T2.zoom = {k:1, cx:.5, cy:.5}; T2.zoomE = {k:1, cx:.5, cy:.5}; t2Save(); WB.xi = 0; wbSelReset(['v', 'pw']); WB.act = ''; if(!WB.xa.startsWith('in:')) WB.xa = ''; wbPaint(['ext']); wbRefresh(); }
 /* 기준 감속비 전환: 두 모드를 미리 계산해 두었으므로 결과만 바꿔 끼움 */
 function t2SetGrMode(m){ T2.grMode = m; t2Save(); const R = WB.R; if(R && R.modes){ Object.assign(R, R.modes[m]); if(R.x && WB.xi >= R.x.d.length) WB.xi = R.x.d.length - 1; wbPaint(['ext', 'out', 'sig']); t2PfSoon(); } else wbRefresh(); }
 document.addEventListener('input', e => { const t = e.target; if(!t.closest || !t.closest('#wbext')) return;
   if(t.matches('[data-t2o]')){ const k = t.dataset.t2o, v = parseFloat(t.value); if(!isFinite(v) || v < 0) return; T2.free[k] = k==='laps' ? Math.max(1, Math.round(v)) : v;
-    const mp = $('#t2emap'); if(mp) mp.innerHTML = t2MapSVG(true); t2Soon(); } });
+    t2EMapRepaint(); t2Soon(); } });
+/* 결과 칸 '스키드패드 목표' 입력: Enter · 칸 밖 누름에 반영 (입력 칸은 계산 중 다시 그려도 됨) */
+document.addEventListener('change', e => { const t = e.target; if(WB.id!=='2' || !t.matches || !t.matches('[data-t2skid]')) return;
+  const v = parseFloat(t.value); WB.I.t_skid = isFinite(v) && v > 0 ? v : 0; wbSave(); wbCalcSoon(); });
 document.addEventListener('change', e => { const t = e.target; if(!t.closest || !t.closest('#wbext')) return;
   if(t.matches('[data-t2file]')){ const f = t.files && t.files[0], k = t.dataset.t2file; t.value = ''; T2.menu = ''; if(f) t2Import(f, k==='mt' ? 'motor' : k); else t2Repaint(); return; }
   if(t.matches('[data-t2lap]')){ T2.lap[T2.course] = t.value; t2Save(); WB.xi = 0; t.blur(); wbRefresh(); } });
 document.addEventListener('click', e => { const t = e.target; if(!t.closest) return;
-  const zb = t.closest('#wbmid [data-t2z]'); if(zb){ const z = zb.dataset.t2z; if(z==='fit'){ T2.zoom = {k:1, cx:.5, cy:.5}; t2MapRepaint(); } else t2ZoomAt(z==='in' ? 1.5 : 1/1.5); return; }
+  const zb = t.closest('[data-t2z]'); if(zb){ const z = zb.dataset.t2z, ed = !!zb.closest('#wbext'); if(z==='fit'){ T2[ed ? 'zoomE' : 'zoom'] = {k:1, cx:.5, cy:.5}; ed ? t2EMapRepaint() : t2MapRepaint(); } else t2ZoomAt(z==='in' ? 1.5 : 1/1.5, null, null, ed); return; }
   if(!t.closest('#wbext')){ if(T2.menu && WB.id==='2'){ T2.menu = ''; t2Repaint(); } return; }
   const gm = t.closest('[data-t2gm]'); if(gm){ t2SetGrMode(gm.dataset.t2gm); return; }
   const mn = t.closest('[data-t2menu]'); if(mn){ if(mn.disabled) return; T2.menu = T2.menu===mn.dataset.t2menu ? '' : mn.dataset.t2menu; t2Repaint(); return; }
@@ -527,7 +555,10 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
     T2.paste = ''; t2Repaint(); t2Soon(); wbPaint(['in']); return; }
   const tb = t.closest('[data-t2tab]'); if(tb){ T2.tab = tb.dataset.t2tab; T2.menu = ''; t2Save(); wbPaint(['ext']); if(T2.tab==='sim'){ t2MapRepaint(); t2PfSoon(); } return; }
   const cs = t.closest('[data-t2course]'); if(cs){ t2SetCourse(cs.dataset.t2course); return; }
-  const et = t.closest('[data-t2et]'); if(et){ T2.etab = et.dataset.t2et; T2.menu = ''; t2Save(); wbPaint(['ext']); return; }
+  const et = t.closest('[data-t2et]'); if(et){ T2.etab = et.dataset.t2et; if(T2MOT.includes(T2.etab)) T2.emot = T2.etab; T2.menu = ''; t2Save(); wbPaint(['ext']); return; }
+  const eg = t.closest('[data-t2eg]'); if(eg){ const g = eg.dataset.t2eg; T2.etab = g==='mot' ? (T2MOT.includes(T2.etab) ? T2.etab : (T2.emot || 'mt')) : g; T2.menu = ''; t2Save(); wbPaint(['ext']); return; }
+  const rl = t.closest('[data-t2rl]'); if(rl){ WB.I.rl_on = +rl.dataset.t2rl; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
+  const mdb = t.closest('[data-t2md]'); if(mdb){ WB.I.md = +mdb.dataset.t2md; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
   const dl = t.closest('[data-t2del]'); if(dl){ const rows = t2Track(T2.free.text).rows; rows.splice(+dl.dataset.t2del, 1); t2SetRows(rows); return; }
   if(t.closest('[data-t2add]')){ const rows = t2Track(T2.free.text).rows; rows.push({l:10, R:0, wl:NaN, wr:NaN, sl:NaN, note:''}); t2SetRows(rows); const tw = $('#t2tt'); if(tw) tw.scrollTop = tw.scrollHeight; return; }
   const gd = t.closest('[data-t2gdel]'); if(gd){ const k = T2.etab, g = t2Grid(t2MtText(k)); g.splice(+gd.dataset.t2gdel, 1); t2MtSet(k, t2GridText(g)); return; }
@@ -535,11 +566,12 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const ce = t.closest('td[data-t2e], th[data-t2e]'); if(ce){ t2CellOpen(ce); return; } });
 document.addEventListener('keydown', e => { const ce = e.target.closest && e.target.closest('#wbext td[data-t2e], #wbext th[data-t2e]'); if(ce && e.key==='Enter' && !e.target.matches('input,select')){ e.preventDefault(); t2CellOpen(ce); }
   if(e.key==='Escape' && WB.id==='2' && (T2.paste || T2.menu)){ e.preventDefault(); e.stopImmediatePropagation(); T2.paste = ''; T2.menu = ''; t2Repaint(); } }, true);
-/* 맵 편집에 표가 있으면 그 입력 칸은 막음 */
-function t2InLock(k){ const L = '맵 편집 탭 표 사용';
+/* 편집 탭에 표가 있으면 그 상수 칸은 막음 */
+function t2InLock(k){ const L = '아래 표 사용';
   if(k==='eta_mot') return T2.eM.trim() ? L : ''; if(k==='eta_inv') return T2.eI.trim() ? L : '';
   if(k==='mu' || k==='mu_s') return t2TireParse(T2.tire).map ? L : '';
   if(k==='rl_b') return WB.I.w_car > 0 ? '차 전폭으로 계산' : ''; if(k==='rl_m') return WB.I.w_car > 0 ? '' : '전폭이 0 이면 안 씀';
+  if(['h_rcf', 'h_rcr', 'k_roll'].includes(k)) return WB.I.md >= 1 ? '' : '모델 단계 1 에서 씀';
   return ''; }
 /* 차 전폭을 바꾸면 그 자리에서 '최소 거리' · '여유' 칸 막힘을 다시 맞춤 (입력 칸 전체를 다시 그리면 글자 넣던 칸을 놓침) */
 function t2RlLock(){ ['rl_b', 'rl_m'].forEach(k => { const i = document.querySelector(`#wb [data-wbi="${k}"]`); if(!i) return; const r = i.closest('.wb-ir'), lk = t2InLock(k);
@@ -563,15 +595,24 @@ function t2OutHTML(R){ const o = R.out, opt = T2.grMode==='opt', c = T2.course;
     + G('오토크로스', `<b>${t2F(o.gr_ax, 2)}</b>`, `<b>${t2T(o.tb_ax, 2)}</b>`) + G('내구 첫 랩 (정지 출발)', `<b>${t2F(o.gr_end, 2)}</b>`, `<b>${t2T(o.tb_end1, 2)}</b>`)
     + G('내구 평균 랩 (정지 출발 랩 제외)', '', `<b>${t2T(o.tb_endavg, 2)}</b>`) + G('내구 총합', '', `<b>${t2T(o.tb_end, 1)}</b>`), 'g');
   const rec = t2Box('종목 기록', `감속비 ${t2F(o.gr_use, 2)} (${opt ? '최적' : '내 감속비'}) · ± = 가장 빠른 기록 대비`,
-      t2R('기준 감속비', `<b>${t2F(o.gr_use, 2)}</b>`, `<span class="muted">${opt ? '최적 감속비' : '왼쪽 입력'}</span>`)
+      t2R('기준 감속비', `<b>${t2F(o.gr_use, 2)}</b>`, `<span class="muted">${opt ? '최적 감속비' : '편집 탭 [구동계]'}</span>`)
     + t2R('가속', `<b>${t2T(o.t_acc_s, 3)}</b>`, t2Dt(o.d_acc)) + t2R('스키드패드 (좌우 합)', `<b>${t2T(o.t_skid_s, 3)}</b>`, `<span class="muted">우 ${t2F(o.t_skid_r, 3)} · 좌 ${t2F(o.t_skid_l, 3)}</span>`)
     + t2R('오토크로스', `<b>${t2T(o.t_ax_s, 2)}</b>`, t2Dt(o.d_ax)) + t2R('내구 첫 랩 (정지 출발)', `<b>${t2T(o.t_end1, 2)}</b>`, '')
     + t2R('내구 평균 랩 (정지 출발 랩 제외)', `<b>${t2T(o.t_endavg, 2)}</b>`, '') + t2R('내구 총합', `<b>${t2T(o.t_end_s, 1)}</b>`, t2Dt(o.d_end)));
-  const cla = o.g_skid > 0 ? `<b>${isFinite(o.cla_req) ? (o.cla_req > 0 ? '' : '') + t2F(o.cla_req, 2) : '±15 밖'}</b> <i>m²</i>` : '—';
+  // 스키드패드 목표 (좌우 합) 를 여기서 고침 → 필요 C_L·A · 지금 C_L·A · 조절 ±
+  const gs = o.g_skid > 0, dcl = o.cla_req - WB.I.cla;
+  const claWhy = gs && !isFinite(o.cla_req) ? (o.g_skid < o.t_skid_s ? '목표가 너무 빠름 (한 바퀴 기록이 아닌 좌우 합인지 확인)' : '목표가 너무 느림') : '';
+  const cla = !gs ? '<b>—</b>' : isFinite(o.cla_req) ? `<b>${t2F(o.cla_req, 2)}</b> <i>m²</i>` : '<b>±15 밖</b>';
+  const claM = !gs ? '<span class="muted">위 목표를 넣으면 계산</span>' : claWhy ? `<span class="t2-dt bad">${claWhy}</span>`
+    : `<span class="muted">지금 ${t2F(WB.I.cla, 2)} · 조절</span> <span class="t2-dp ${dcl > 0 ? 'up' : 'dn'}">${dcl > 0 ? '+' : '−'}${t2F(Math.abs(dcl), 2)}</span>`;
   const lim = t2Box('차량 한계', `감속비 ${t2F(o.gr_use, 2)}`,
-      t2R('최고 차속 (회전수 한계)', `<b>${t2F(o.vmax, 1)}</b> <i>km/h</i>`, '') + t2R('오토크로스 최고 차속', `<b>${t2F(o.v_top, 1)}</b> <i>km/h</i>`, '')
-    + t2R('출발 종가속도', `<b>${t2F(o.ax_0, 2)}</b> <i>g</i>`, '') + t2R('스키드패드 횡가속도', `<b>${t2F(o.ay_skid, 2)}</b> <i>g</i>`, '')
-    + t2R('스키드패드 목표에 필요한 C_L·A', cla, o.g_skid > 0 ? `<span class="muted">목표 ${t2F(o.g_skid, 3)}s (좌우 합) · 지금 ${t2F(WB.I.cla, 2)}${isFinite(o.cla_req) && o.cla_req < WB.I.cla ? ' · 남음' : ''}</span>` : '<span class="muted">왼쪽 [스키드패드 목표] 입력</span>'));
+      t2R('최고 차속 (회전수 한계)', `<b>${t2F(o.vmax, 1)}</b> <i>km/h</i>`, '')
+    + t2R('오토크로스 · 내구 최고 차속', `<b>${t2F(o.v_top, 1)}</b> <i>/</i> <b>${t2F(o.v_endtop, 1)}</b> <i>km/h</i>`, '')
+    + t2R('가속 출발 종가속도', `<b>${t2F(o.ax_0, 2)}</b> <i>g</i>`, '') + t2R('가속 최대 종가속도', `<b>${t2F(o.ax_max, 2)}</b> <i>g</i>`, '')
+    + t2R('스키드패드 횡가속도', `<b>${t2F(o.ay_skid, 2)}</b> <i>g</i>`, '<span class="muted">기록 바퀴 평균</span>')
+    + t2R('스키드패드 목표 (좌우 합)', `<input type="number" step="any" min="0" class="t2-ski" data-t2skid value="${gs ? o.g_skid : ''}" placeholder="0" aria-label="스키드패드 목표 좌우 합 s"> <i>s</i>`,
+          `<span class="muted">${gs ? `한 바퀴 평균 ${t2F(o.g_skid/2, 3)} s` : '0 = 정하지 않음'}</span>`)
+    + t2R('목표에 필요한 C_L·A', cla, claM));
   /* 2행 */
   const cn = T2CN[c] + (o.c_n > 1 ? ` · ${T2.lap[c]==='all' ? `전체 ${o.c_n}랩` : `${o.c_lap}번째 랩`}` : '');
   const grLab = !opt ? '감속비 (입력)' : c==='skid' ? '감속비 (상관없어 최적 감속비)' : '감속비 (이 코스에서 가장 빠른 값)';
@@ -584,12 +625,15 @@ function t2OutHTML(R){ const o = R.out, opt = T2.grMode==='opt', c = T2.course;
     + t2R('가장 낮은 단자 전압', `<b>${t2F(o.c_vmin, 1)}</b> <i>V</i>`, '') + t2R('모터 최고 온도', `<b>${t2F(o.c_tmax, 1)}</b> <i>°C</i>`, `<span class="muted">끝 ${t2F(o.c_tm, 1)} °C</span>`)
     + t2R('최대 전류 때 단자 전압 (SOC 100 %)', `<b>${t2F(o.v_load, 1)}</b> <i>V</i>`, '') + t2R('단자 출력 상한 (규정 · 전류 한계)', `<b>${t2F(o.p_max, 2)}</b> <i>kW</i>`, '') + t2R('모터 기저 회전수 (공칭 전압)', `<b>${t2F(o.n_base, 0)}</b> <i>rpm</i>`, '');
   const one = o.c_n > 1 && T2.lap[c]!=='all' ? `${o.c_lap}번째 랩 ` : '';
-  const r3 = t2R(`${one}단자 에너지`, `<b>${t2F(o.c_et, 3)}</b> <i>kWh</i>`, '') + t2R(`${one}소비 (저항 손실 포함)`, `<b>${t2F(o.c_ec, 3)}</b> <i>kWh</i>`, '') + t2R(one ? `${o.c_lap}번째 랩 끝 SOC` : '끝 SOC', `<b>${t2F(o.c_soc, 1)}</b> <i>%</i>`, '')
-    + (c==='end' ? t2R('내구 전체 (단자 / 소비)', `<b>${t2F(o.e_end_t, 2)}</b> <i>/</i> <b>${t2F(o.e_end_c, 2)}</b> <i>kWh</i>`, `<span class="muted">${o.n_lap}랩</span>`)
-       + t2R('출력 상한 없이 (단자 / 소비)', `<b>${t2F(o.e_nl_t, 2)}</b> <i>/</i> <b>${t2F(o.e_nl_c, 2)}</b> <i>kWh</i>`, '<span class="muted">용량 가늠용</span>')
-       + t2R('쓸 수 있는 에너지', `<b>${t2F(o.c_cap, 2)}</b> <i>kWh</i>`, '<span class="muted">0 = 팩 전체</span>')
-       + t2R('출력 상한 비율', o.c_plim >= 99.95 ? '<b>제한 없음</b>' : `<b>${t2F(o.c_plim, 1)}</b> <i>%</i>`, o.c_plim < 99.95 ? '<span class="t2-dt bad">에너지에 맞추려고 낮춤</span>' : '')
-       + t2R('보정 에너지 소비량 (CO₂)', `<b>${t2F(o.c_co2, 2)}</b> <i>kg/100 km</i>`, o.c_co2 > 60.06 ? '<span class="t2-dt bad">실격 기준 60.06 초과</span>' : '<span class="muted">실격 기준 60.06 이하</span>') : '');
+  // 에너지 칸: 모든 코스 같은 줄 (해당 없으면 —)
+  const kw = (a, b) => `<b>${t2F(a, 3)}</b> <i>/</i> <b>${t2F(b, 3)}</b> <i>kWh</i>`, NA = '<b>—</b>', en = c==='end';
+  const r3 = t2R(`${one || '볼 랩 '}단자 / 소비`, kw(o.c_et, o.c_ec), '<span class="muted">소비 = 저항 손실 포함</span>')
+    + t2R(one ? `${o.c_lap}번째 랩 끝 SOC` : '끝 SOC', `<b>${t2F(o.c_soc, 1)}</b> <i>%</i>`, '')
+    + t2R('전체 (단자 / 소비)', kw(o.c_all_t, o.c_all_c), `<span class="muted">${o.c_n > 1 ? `${o.c_n}랩` : '한 번'}</span>`)
+    + t2R('출력 상한 없이 (단자 / 소비)', kw(o.c_nl_t, o.c_nl_c), `<span class="muted">${en ? '용량 가늠용' : '상한 없음 (내구만 걸림)'}</span>`)
+    + t2R('쓸 수 있는 에너지', en ? `<b>${t2F(o.c_cap, 2)}</b> <i>kWh</i>` : NA, en ? '<span class="muted">0 = 팩 전체</span>' : '<span class="muted">내구만</span>')
+    + t2R('출력 상한 비율', !en ? NA : o.c_plim >= 99.95 ? '<b>제한 없음</b>' : `<b>${t2F(o.c_plim, 1)}</b> <i>%</i>`, en ? (o.c_plim < 99.95 ? '<span class="t2-dt bad">에너지에 맞추려고 낮춤</span>' : '') : '<span class="muted">내구만</span>')
+    + t2R('보정 에너지 소비량 (CO₂)', en ? `<b>${t2F(o.c_co2, 2)}</b> <i>kg/100 km</i>` : NA, !en ? '<span class="muted">내구만</span>' : o.c_co2 > 60.06 ? '<span class="t2-dt bad">실격 기준 60.06 초과</span>' : '<span class="muted">실격 기준 60.06 이하</span>');
   return `<div class="t2-out"><div class="t2-orow three">${gear}${rec}${lim}</div>
     <div class="t2-orow three">${t2Box('고른 코스', cn, r1)}${t2Box('축전지 · 모터', cn, r2)}${t2Box('에너지 (회생 제외)', cn, r3)}</div></div>`; }
 
@@ -605,27 +649,29 @@ function t2TourTab(tab, et, course){ if(!T2.tourUndo && typeof tgUndo==='functio
 const t2TT = (tab, et, course) => ({click:{sel:`#wb [data-t2tab="${tab}"]`, need:() => T2.tab!==tab || (et && T2.etab!==et) || (course && T2.course!==course), run:() => t2TourTab(tab, et, course)}, inner:'#wb .wb-right'});
 const M2TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 코드 · 검증(계산 코드와 해석해 비교표), 입력 내보내기 · 가져오기(맵 편집 표 포함), 대시보드에 반영(제안 감속비 · 최고 차속 · 횡가속도 · 랩 에너지)입니다.', t2TT('sim')],
-  ['#wb .wb-in', '입력', '차량 · 타이어 · 에어로 · 모터 · 모터 열 · 구동계 · 축전지 · 스키드패드 목표입니다. 칸 앞 점 = 값의 출처: 색 점은 대시보드 값(확정 · 검토 중 · 가정 · 계산값 · 예시값), 고리는 직접 고친 값, 회색 네모는 도구 기본값. [대시보드 값으로 채우기]로 팀 설계값을 넣습니다.', t2TT('sim')],
-  ['#wb [data-t2tab="edit"]', '맵 편집 탭', '숫자 하나로 안 되는 값 — 코스 · 모터 토크 곡선 · 모터 효율 맵 · 인버터 효율 맵 · 타이어 하중 감도 — 을 표로 넣는 탭입니다. 시뮬레이션 전에 여기서 표를 확인합니다.', t2TT('edit', 'course')],
-  ['#wb .t2-hr', '상수인가, 맵인가', '표가 비어 있으면 왼쪽 입력의 상수(모터 최대 토크 · 모터 효율 · 인버터 효율 · μ · 하중 감도)를 쓰고, 그림 위에 "왼쪽 입력 상수를 씁니다"가 뜹니다. 표에 값이 있으면 표를 쓰고 그 상수 칸은 막힙니다("맵 편집 탭 표 사용"). 숫자 하나만 넣어도 상수 표가 됩니다.', t2TT('edit', 'eM')],
+  ['#wb .wb-in', '입력', '입력 칸은 위 [편집] 탭에 항목별로 있습니다(자주 바꿔 보는 값만 나중에 이곳으로 꺼낼 예정). 여기에는 [대시보드 값으로 채우기]와 칸 앞 점의 뜻이 있습니다: 색 점 = 대시보드 값(확정 · 검토 중 · 가정 · 계산값 · 예시값), 고리 = 직접 고친 값, 회색 네모 = 도구 기본값.', t2TT('sim')],
+  ['#wb [data-t2tab="edit"]', '편집 탭', '모든 입력을 항목별로 넣는 탭입니다: 코스 · 차량 제원 · 타이어 · 에어로 · 모터 · 인버터 · 구동계 · 축전지. 항목마다 위에 상수 칸, 아래에 표 · 그림이 있습니다. 오른쪽 위 [모델 단계]: 0 = 기본, 1 = 롤센터로 하중 이동을 나누고 롤각 신호를 냄 (대시보드 반영은 늘 0).', t2TT('edit', 'course')],
+  ['#wb .t2-cg', '상수인가, 표인가', '표가 비어 있으면 위 상수 칸(모터 최대 토크 · 모터 효율 · 인버터 효율 · μ · 하중 감도)을 쓰고, 그림 위에 "상수 칸을 씁니다"가 뜹니다. 표에 값이 있으면 표를 쓰고 그 상수 칸은 막힙니다("아래 표 사용"). 숫자 하나만 넣어도 상수 표가 됩니다.', t2TT('edit', 'eM')],
   ['#wb .t2-tw', '표 고치기', '칸을 눌러 고치고 Enter(반영) · Esc(취소). 표 아래 [+ 줄] · [+ 행] · [+ 열]로 바로 늘리고 × 로 지웁니다. 빈 표에서 누르면 머리줄부터 만듭니다. 토크 표는 1열 회전수 · 2열 최대 토크 · 3열 연속 토크(디레이팅 하한)입니다.', t2TT('edit', 'mt')],
   ['#wb .t2-menu', '입력하기', '붙여넣기(창에 붙여 넣으면 표를 덮어씀 · 내 코스는 창 대신 표에 Ctrl+V) · 파일 가져오기(.xlsx 첫 시트 · .csv) · 양식 받기(쓰는 법이 양식 맨 위 # 줄에 있음) · 예시로 · 비우기.', t2TT('edit', 'mt')],
   ['#wb .t2-fbox', '그림으로 틀린 칸 찾기', '오른쪽 그림은 표로 그린 것입니다. 효율 맵에서 혼자 색이 튀는 칸, 곡선이 꺾인 곳, 코스가 엉뚱하게 꺾인 곳을 누르면 표에서 그 칸(행)으로 가서 강조합니다.', t2TT('edit', 'eM')],
   ['#wb .t2-tr', '코스', '공식 코스(오토크로스 · 내구 · 가속 · 스키드패드)는 회색 표로 보기만 합니다. 내 코스는 칸 고치기 · # 번호로 옮기기 · 각도 → 길이, 랩 수 2 이상이거나 출발 위치가 0이 아니면 닫힌 코스입니다. 비워 두면 계산하지 않습니다. 초록 = 출발(주행 방향 오른쪽), 빨강 = 결승(왼쪽), 화살표 = 방향. 내 코스는 구간마다 왼쪽 · 오른쪽 폭(빈칸 = 윗줄 값, 경계 콘은 지도에 자동)과 슬라럼 콘 간격(그 구간 가운데 선 위 콘, 직선 · 곡선 모두)을 넣을 수 있고, 엑셀에서 여러 칸을 복사해 표에 Ctrl+V 하면 표 전체가 바뀝니다.', t2TT('edit', 'course', 'free')],
-  ['#wb [data-t2tab="sim"]', '시뮬레이션 탭', '맵 편집과 왼쪽 입력으로 기록을 계산해 보는 탭입니다. 위에서 아래로: 기준 감속비 · 볼 랩 · 코스 → 결과 → 구동력 선도 · 코스 지도 → 신호 그래프.', t2TT('sim', null, 'end')],
-  ['#wb .t2-gm', '기준 감속비', '내 감속비 = 왼쪽 [최종 감속비] 입력, 최적 감속비 = 배점(가속 100 · 오토크로스 200 · 내구 350)을 가중해 고른 하나. 두 모드를 미리 계산해 두어 누르면 바로 바뀝니다.', t2TT('sim', null, 'end')],
+  ['#wb [data-t2tab="sim"]', '시뮬레이션 탭', '편집 탭의 입력으로 기록을 계산해 보는 탭입니다. 위에서 아래로: 기준 감속비 · 볼 랩 · 코스 → 결과 → 구동력 선도 · 코스 지도 → 신호 그래프.', t2TT('sim', null, 'end')],
+  ['#wb .t2-gm', '기준 감속비', '내 감속비 = 편집 탭 [구동계]의 [최종 감속비], 최적 감속비 = 배점(가속 100 · 오토크로스 200 · 내구 350)을 가중해 고른 하나. 두 모드를 미리 계산해 두어 누르면 바로 바뀝니다.', t2TT('sim', null, 'end')],
   ['#wb .t2-vw', '볼 랩 · 코스', '코스를 고르면 결과 2행 · 구동력 선도 · 코스 지도 · 신호 그래프가 그 코스로 바뀝니다. 내구는 26랩(드라이버당 13랩) 중 볼 랩을 고르고, [전체]는 26랩을 이어서 봅니다.', t2TT('sim', null, 'end')],
   ['#wb .t2-orow', '결과 1행', '감속비(종목마다 가장 빠른 감속비와 그때 기록) · 종목 기록(기준 감속비) · 차량 한계. 같은 종목이 같은 높이라 옆으로 비교합니다. ± = 가장 빠른 기록 대비, 초록은 빠름 · 빨강은 느림.', t2TT('sim', null, 'end')],
   ['#wb .t2-orow + .t2-orow', '결과 2행', '고른 코스 · 볼 랩의 기록, 축전지 · 모터(회전수 · 토크 · 출력 · 전압 · 모터 온도), 에너지(단자 · 소비 · SOC, 내구는 에너지 제한 · CO₂). 내구는 26랩 전체 단자 · 소비 에너지와, 출력 상한 없이 달렸을 때의 에너지(축전지 용량 가늠용)도 보입니다. 최적 모드에서 감속비는 그 코스에서 가장 빠른 값입니다.', t2TT('sim', null, 'end')],
   ['#wb .t2-ftw', '구동력 선도', '코스 커서 지점의 전압 · 모터 온도 · 횡가속도로 다시 그린 선도입니다(보기만, 눌러도 커서는 안 움직임). 세로선 = 그 점의 차속. 아래 글이 그 점의 구동력을 무엇이 정했는지(모터 곡선 · 출력 상한 · 뒤축 접지), 제동 한계, 앞축 여유를 알려 줍니다.', t2TT('sim', null, 'end')],
-  ['#wb .t2-mapw', '코스 지도', '휠로 확대, 끌어서 이동, 누르면 그 위치로 커서가 옮겨 갑니다. 색 = 차속(여러 랩이면 모든 랩 통틀어 같은 범위), 주황 콘 = 슬라럼. 색 선 = 계산한 주행선(코스 폭 안에서 곡률이 가장 작은 선을 구한 뒤, 랩타임이 줄어드는 쪽으로 조금씩 옮겨 다듬은 선. 슬라럼 콘은 번갈아 비켜 감), 점선 = 코스 가운데 선. 입력의 \'주행선\' 묶음에서 방식(2 · 1 · 0)과 차 전폭 · 여유를 바꿀 수 있습니다. 다듬기는 입력이 바뀔 때마다 다시 해서 계산이 몇 초 걸립니다.', t2TT('sim', null, 'end')],
+  ['#wb .t2-mapw', '코스 지도', '한 번 눌러 휠 확대를 켠 뒤(박스 테두리 강조, 박스 밖을 누르거나 Esc = 끔) 휠로 확대, 끌어서 이동(박스 밖으로 나가도 됨), 누르면 그 위치로 커서가 옮겨 갑니다. 색 = 차속(여러 랩이면 모든 랩 통틀어 같은 범위), 주황 콘 = 슬라럼. 색 선 = 계산한 주행선(코스 폭 안에서 곡률이 가장 작은 선을 구한 뒤, 랩타임이 줄어드는 쪽으로 조금씩 옮겨 다듬은 선. 슬라럼 콘은 번갈아 비켜 감), 점선 = 코스 가운데 선. 주행선 방식(다듬은 선 · 최소 곡률 · 가운데 선)과 여유는 편집 탭 [코스], 차 전폭은 [차량 제원]에서 바꿉니다. 다듬기는 입력이 바뀔 때마다 다시 해서 계산이 몇 초 걸립니다.', t2TT('sim', null, 'end')],
   ['#wbsl', '신호 고르기', '그래프를 누르면 그 칸이 강조되고, 여기 체크가 그 칸에 그릴 신호를 고릅니다. 이름을 누르면 그 신호의 눈금이 앞으로. 축 · 눈금 · 제목 · 값 글자는 선 색과 같습니다.', t2TT('sim')],
-  ['#wbsig', '그래프 칸', '그래프를 누르거나 끌면 커서(←/→ 한 칸씩). 아래 [+ 그래프 칸]으로 최대 3칸, 칸 오른쪽 위 × 로 지우고, 칸 아래 경계를 끌어 높이를 바꿉니다.', t2TT('sim')],
+  ['#wbsig', '그래프 칸', '칸마다 상자 하나. 위 오른쪽 단추줄: [커서] 누르거나 끌면 커서(←/→ 한 칸씩) · [이동] 끌어서 보기 범위 옮김 · [영역 확대] 끌어서 사각형 확대 · [+ · − · 맞춤]. 가로 범위는 모든 칸이 같이 움직이고 세로는 칸마다. 칸을 한 번 누르면 휠 = 가로 확대, Shift + 휠 = 세로 확대. 상자 아래 [+ 그래프 칸]으로 최대 3칸, × 로 지우고, 칸 아래 경계를 끌어 높이를 바꿉니다.', t2TT('sim')],
   ['#wbsl [data-wbxa]', '입력 훑기', '가로축을 [입력 훑기 → 최종 감속비] 등으로 바꾸면 그 입력을 바꿔 가며 다시 계산한 종목 기록 변화를 봅니다 (나머지 입력은 지금 값).', t2TT('sim')]
 ];
 
 /* ============================================================ 도구 정의 */
-const T2G = {car:'질량 · 무게중심', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', rl:'주행선', goal:'스키드패드 목표 (0 = 정하지 않음)'};
+/* 입력 묶음 (편집 탭 항목마다 그림: T2EG). ui:'edit' = 편집 탭에만, ui:'none' = 다른 곳(단추 · 결과 카드)에서 고침 → 왼쪽 입력 칸은 비움 */
+const T2G = {car:'질량 · 무게중심 · 치수', rc:'롤센터 · 롤 (모델 단계 1)', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', rl:'주행선 여유', goal:'스키드패드 목표 (0 = 정하지 않음)'};
+const T2EG = {course:[T2G.rl], car:[T2G.car, T2G.rc], tire:[T2G.tire], aero:[T2G.aero], mot:[T2G.mot, T2G.th], dt:[T2G.dt], bat:[T2G.bat]};
 WB_TOOLS['2'] = {
   no:'2', stage:'P0', name:'랩타임 시뮬레이터',
   x:{n:'거리', u:'m'},
@@ -633,6 +679,7 @@ WB_TOOLS['2'] = {
   inputs:[
     {k:'m', dk:'m', v:300, d:0, g:T2G.car}, {k:'fr', dk:'fr', v:47.5, d:1, g:T2G.car}, {k:'h', dk:'h', v:290, d:0, g:T2G.car},
     {k:'L', dk:'L', v:1550, d:0, g:T2G.car}, {k:'tf', dk:'tf', v:1200, d:0, g:T2G.car}, {k:'tr', dk:'tr', v:1180, d:0, g:T2G.car},
+    {k:'w_car', n:'차 전폭 (타이어 · 윙 포함 가장 넓은 곳, 0 = 입력 안 함)', u:'m', v:0, d:2, g:T2G.car},
     {k:'mu', dk:'mu', v:1.5, d:2, g:T2G.tire}, {k:'mu_s', dk:'mu_s', v:0, d:3, g:T2G.tire}, {k:'lltd', dk:'lltd', v:50, d:1, g:T2G.tire},
     {k:'r_eff', dk:'r_eff', v:229, d:0, g:T2G.tire}, {k:'crr', dk:'crr', v:0.015, d:3, g:T2G.tire},
     {k:'cla', dk:'cla', v:3.0, d:2, g:T2G.aero}, {k:'cda', dk:'cda', v:1.4, d:2, g:T2G.aero}, {k:'xcop', dk:'xcop', v:852, d:0, g:T2G.aero}, {k:'hcop', dk:'hcop', v:420, d:0, g:T2G.aero},
@@ -648,12 +695,13 @@ WB_TOOLS['2'] = {
     {k:'c_vmax', n:'셀 최대 전압 (만충)', u:'V', v:4.2, d:2, g:T2G.bat}, {k:'c_vmin', n:'셀 방전 종지 전압', u:'V', v:2.5, d:2, g:T2G.bat},
     {k:'c_vnom', n:'셀 공칭 전압', u:'V', v:3.6, d:2, g:T2G.bat}, {k:'c_ah', n:'셀 용량', u:'Ah', v:4.5, d:2, g:T2G.bat},
     {k:'r_pack', dk:'r_pack', v:180, d:0, g:T2G.bat}, {k:'i_bms_max', dk:'i_bms_max', v:270, d:0, g:T2G.bat}, {k:'e_target', dk:'e_target', v:0, d:2, g:T2G.bat},
-    {k:'rl_on', n:'주행선 (2 = 랩타임으로 다듬음, 1 = 최소 곡률, 0 = 가운데 선)', u:'', v:2, d:0, g:T2G.rl},
-    {k:'w_car', n:'차 전폭 (타이어 · 윙 포함 가장 넓은 곳, 0 = 입력 안 함)', u:'m', v:0, d:2, g:T2G.rl},
+    {k:'rl_on', n:'주행선 (2 = 랩타임으로 다듬음, 1 = 최소 곡률, 0 = 가운데 선)', u:'', v:2, d:0, g:T2G.rl, ui:'none'},
     {k:'rl_m', n:'여유 (차 옆면 ↔ 코스 경계 · 콘, 전폭이 있을 때)', u:'m', v:0.2, d:2, g:T2G.rl},
     {k:'rl_b', n:'경계 · 콘에서 차 중심까지 최소 거리 (전폭이 0 일 때)', u:'m', v:1.0, d:2, g:T2G.rl},
-    {k:'w_free', n:'내 코스 폭 (가운데 선 양쪽 같게)', u:'m', v:3.5, d:2, g:T2G.rl},
-    {k:'t_skid', dk:'t_skid', v:0, d:3, g:T2G.goal}
+    {k:'md', n:'모델 단계 (0 = 기본, 1 = 롤센터 · 롤)', u:'', v:0, d:0, g:T2G.rc, ui:'none'},
+    {k:'h_rcf', n:'앞 롤센터 높이', u:'mm', v:30, d:0, g:T2G.rc}, {k:'h_rcr', n:'뒤 롤센터 높이', u:'mm', v:50, d:0, g:T2G.rc},
+    {k:'k_roll', n:'롤강성 합 (앞 + 뒤, 롤각 신호용)', u:'N·m/°', v:500, d:0, g:T2G.rc},
+    {k:'t_skid', dk:'t_skid', v:0, d:3, g:T2G.goal, ui:'none'}
   ],
   /* 결과 칸은 outHTML 이 그림. outputs = 대시보드 반영 · 입력 훑기 · 검증표 이름 */
   outHTML: t2OutHTML,
@@ -664,18 +712,19 @@ WB_TOOLS['2'] = {
     {k:'gr_opt', dk:'gr', n:'제안 감속비 (배점 가중)', d:2, hide:true}, {k:'e_lap', dk:'e_lap', d:3, hide:true},
     {k:'t_free1', n:'내 코스 1번째 랩', u:'s', d:2, hide:true}, {k:'t_free2', n:'내 코스 2번째 랩', u:'s', d:4, hide:true}, {k:'t_freeavg', n:'내 코스 평균 랩', u:'s', d:4, hide:true},
     {k:'n_free', n:'내 코스 랩 수', u:'랩', d:0, hide:true}, {k:'e_free', n:'내 코스 2번째 랩 단자 에너지', u:'kWh', d:5, hide:true},
-    {k:'ax_0', n:'출발 종가속도', u:'g', d:2, hide:true}, {k:'cla_req', n:'필요 C_L·A', u:'m²', d:2, hide:true},
+    {k:'ax_0', n:'가속 출발 종가속도', u:'g', d:2, hide:true}, {k:'ax_max', n:'가속 최대 종가속도', u:'g', d:2, hide:true}, {k:'v_endtop', n:'내구 최고 차속', u:'km/h', d:1, hide:true}, {k:'skid_roll', n:'스키드패드 롤각 (모델 단계 1)', u:'°', d:3, hide:true}, {k:'cla_req', n:'필요 C_L·A', u:'m²', d:2, hide:true},
     {k:'v_load', n:'최대 전류 때 단자 전압', u:'V', d:1, hide:true}, {k:'p_max', n:'단자 출력 상한', u:'kW', d:3, hide:true}, {k:'n_base', n:'모터 기저 회전수', u:'rpm', d:0, hide:true},
     {k:'n_lap', n:'내구 랩 수', u:'랩', d:0, hide:true}, {k:'n_st1', n:'첫 드라이버 랩 수', u:'랩', d:0, hide:true}, {k:'e_ok', n:'에너지 한도 안 (1 = 예)', u:'', d:0, hide:true}, {k:'c_tm', n:'고른 코스 끝 모터 온도', u:'°C', d:3, hide:true}
   ],
   sigs:[
-    {k:'v', n:'차속', u:'km/h', d:1}, {k:'pw', n:'바퀴 출력 (구동 +, 제동 −)', u:'kW', d:1}, {k:'vlim', n:'코너 한계 속도', u:'km/h', d:1}, {k:'ax', n:'종가속도', u:'g', d:2}, {k:'ay', n:'횡가속도', u:'g', d:2},
-    {k:'fz_fo', n:'앞 바깥 바퀴 하중', u:'N', d:0}, {k:'fz_fi', n:'앞 안쪽 바퀴 하중', u:'N', d:0}, {k:'fz_ro', n:'뒤 바깥 바퀴 하중', u:'N', d:0}, {k:'fz_ri', n:'뒤 안쪽 바퀴 하중', u:'N', d:0},
+    {k:'v', n:'차속', u:'km/h', d:1}, {k:'pw', n:'바퀴 출력 (구동 +, 제동 −)', u:'kW', d:1}, {k:'vlim', n:'코너 한계 속도', u:'km/h', d:1}, {k:'ax', n:'종가속도', u:'g', d:2}, {k:'ay', n:'횡가속도 (왼쪽 선회 +)', u:'g', d:2},
+    {k:'fz_fl', n:'앞왼 바퀴 하중', u:'N', d:0}, {k:'fz_fr', n:'앞오 바퀴 하중', u:'N', d:0}, {k:'fz_rl', n:'뒤왼 바퀴 하중', u:'N', d:0}, {k:'fz_rr', n:'뒤오 바퀴 하중', u:'N', d:0}, {k:'roll', n:'롤각 (모델 단계 1, 왼쪽 선회 +)', u:'°', d:2},
     {k:'rpm', n:'모터 회전수', u:'rpm', d:0}, {k:'tq', n:'모터 토크', u:'N·m', d:1}, {k:'pbat', n:'축전지 단자 출력 (회생 제외)', u:'kW', d:1}, {k:'vbat', n:'축전지 단자 전압', u:'V', d:1},
     {k:'eta', n:'모터 × 인버터 효율', u:'%', d:1}, {k:'tmot', n:'모터 온도', u:'°C', d:1}, {k:'tlim', n:'모터 토크 한계 (디레이팅 포함)', u:'N·m', d:1}, {k:'grip', n:'그립 사용률 (차 전체)', u:'%', d:0}, {k:'t', n:'경과 시간', u:'s', d:2}, {k:'ecum', n:'누적 단자 에너지', u:'Wh', d:0}
   ],
   sigOn:['v', 'pw'],
-  extHTML: t2ExtHTML, midHTML: t2MidHTML, extraI: t2ExtraI, inLock: t2InLock,
+  extHTML: t2ExtHTML, midHTML: t2MidHTML, extraI: t2ExtraI, inLock: t2InLock, inExt: true, inPanel: false,
+  inEmpty: '<p class="muted wb-inempty">입력은 위 [편집] 탭에 항목별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>',
   extGet: () => ({course:T2.course, lap:{...T2.lap}, free:{...T2.free}, mtext:T2.mtext, eM:T2.eM, eI:T2.eI, tire:T2.tire, grMode:T2.grMode}),
   extSet(d){ if(!d || typeof d!=='object') return; t2Load(d); t2Save(); wbPaint(['ext', 'mid', 'in']); },
   /* 결과가 오면: 고른 모드를 꺼내 씀 (두 모드 모두 들어 있음) → 위 줄 · 지도 · 구동력 선도 */
@@ -685,7 +734,7 @@ WB_TOOLS['2'] = {
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
   tour: M2TOUR,
   verifyBase:{end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
-              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, rl_m:0.2, w_free:3.5, course:'acc', lap:'2', grMode:'my'},
+              th_k:0, th_t0:100, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, rl_m:0.2, md:0, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
   verify:[
     {n:'가속 · 접지 한계만 (μ = 1, CG 뒤축 위)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{t_acc_s:3.910309, ax_0:1}, src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
     {n:'가속 · 회전부 관성 J ÷ r²', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:1.25, r_eff:250, tmax:100, gr:4, eta_dt:100}, expect:{t_acc_s:5.477226}, src:'F = 100 × 4 ÷ 0.25 = 1600 N, 등가 질량 300 + 1.25 ÷ 0.25² = 320 kg → a = 5'},
@@ -716,14 +765,20 @@ WB_TOOLS['2'] = {
      src:'곡률 일정이면 Σ(k0 + e″)² 는 e 가 일정할 때 가장 작음 → 콘 때문에 e = +1 (안쪽 1 m) → 반경 19 m, 길이 = 2π × 19'},
     {n:'주행선 · 차 전폭으로 여유 (전폭 1.6 m + 여유 0.2 m)', I:{course:'end', rl_on:1, rl_b:5, w_car:1.6, rl_m:0.2, end:{seg:[[20, 0], [20, 0], [20, 0], [20, 0]], laps:1, stint:1, WL:[3, 3, 3, 3], WR:[3, 3, 3, 3], slalom:[1, 3]}}, expect:{c_len:80.119760, c_rlb:1},
      src:'b = 1.6 ÷ 2 + 0.2 = 1.0 (최소 거리 칸 5 m 는 안 씀) → 위 슬라럼 경우와 같은 길이'},
-    {n:'주행선 다듬기 · 둥근 코스는 안쪽 경계가 가장 빠름 (반경 20 m, 폭 6 m, 두 번째 랩)', I:{course:'free', lap:'2', rl_on:2, rl_b:1, w_free:6, mu:1, mu_s:0, crr:0, cla:0, cda:0, tmax:1e5, free:{seg:[[125.663706, 20]], closed:true, laps:2, s0:0}}, expect:{c_t:8.511020, c_len:113.097336},
+    {n:'주행선 다듬기 · 둥근 코스는 안쪽 경계가 가장 빠름 (반경 20 m, 폭 6 m, 두 번째 랩)', I:{course:'free', lap:'2', rl_on:2, rl_b:1, mu:1, mu_s:0, crr:0, cla:0, cda:0, tmax:1e5, free:{seg:[[125.663706, 20]], wl:[3], wr:[3], closed:true, laps:2, s0:0}}, expect:{c_t:8.511020, c_len:113.097336},
      src:'일정 반경 r 을 v = √(μgr) 로 돌면 한 바퀴 2πr ÷ √(μgr) ∝ √r → 가장 작은 r = 20 − (3 − 1) = 18 m: 2π·18 ÷ √(9.81·18) = 8.5110 s, 길이 2π·18 (최소 곡률은 가운데 선 8.9714 s)'},
     {n:'내구 · 출력 상한 없이 달렸을 때 에너지 (상한이 걸려도)', I:{crr:0.015, cla:0, cda:0, m:300, j_eq:0, eta_dt:100, nmax:6500, gr:3.55, r_eff:229, e_target:0.3, end:{seg:[[1000, 0]], laps:26, stint:13}}, expect:{e_nl_t:0.479488, e_nl_c:0.479488},
      src:'드라이버 2명 정지 출발 → 최고속 43.909 m/s (회전수 한계): 2 × ½ × 300 × 43.909² + 0.015 × 300 × 9.81 × 26 km = 1.7262 MJ = 0.4795 kWh (효율 100 %, 저항 0)'},
-    {n:'내 코스 · 슬라럼 콘 간격 (곧은 40 m 닫힌 코스, 간격 20 m, 폭 6 m)', I:{course:'free', rl_on:1, rl_b:1, w_free:6, free:{seg:[[40, 0]], sl:[20], closed:true, laps:1, s0:0}}, expect:{c_len:40.238099},
+    {n:'내 코스 · 슬라럼 콘 간격 (곧은 40 m 닫힌 코스, 간격 20 m, 폭 6 m)', I:{course:'free', rl_on:1, rl_b:1, free:{seg:[[40, 0]], wl:[3], wr:[3], sl:[20], closed:true, laps:1, s0:0}}, expect:{c_len:40.238099},
      src:"콘 = 10 m (+1) · 30 m (−1). Σ(e'')² 최소 → e(u) = a·u + c·u³ (u = x − 20), c = 1 ÷ (2·10³ + 10), a = −(3·10² + 1)·c → 길이 = Σ√(1 + Δe²)"},
-    {n:'내 코스 · 구간마다 폭 (반경 20 m 왼쪽 원, 왼쪽 4 m · 오른쪽 1 m)', I:{course:'free', lap:'2', rl_on:2, rl_b:1, w_free:6, mu:1, mu_s:0, crr:0, cla:0, cda:0, tmax:1e5, free:{seg:[[125.663706, 20]], wl:[4], wr:[1], closed:true, laps:2, s0:0}}, expect:{c_t:8.271225, c_len:106.814150},
-     src:'안쪽(왼쪽) 경계 = 4 − 1 = 3 m 안 → r = 17 m: 2π·17 ÷ √(9.81·17) = 8.2712 s, 길이 2π·17 ([내 코스 폭] 6 m 는 안 씀)'},
+    {n:'내 코스 · 구간마다 폭 (반경 20 m 왼쪽 원, 왼쪽 4 m · 오른쪽 1 m)', I:{course:'free', lap:'2', rl_on:2, rl_b:1, mu:1, mu_s:0, crr:0, cla:0, cda:0, tmax:1e5, free:{seg:[[125.663706, 20]], wl:[4], wr:[1], closed:true, laps:2, s0:0}}, expect:{c_t:8.271225, c_len:106.814150},
+     src:'안쪽(왼쪽) 경계 = 4 − 1 = 3 m 안 → r = 17 m: 2π·17 ÷ √(9.81·17) = 8.2712 s, 길이 2π·17'},
+    {n:'모델 단계 1 · 롤센터 = 무게중심 높이 → 하중 이동은 축 질량 몫 (롤강성 배분과 상관없음)', I:{md:1, h_rcf:300, h_rcr:300, m:300, fr:50, h:300, tf:1200, tr:1200, lltd:20, mu:1.5, mu_s:0.1, crr:0, cla:0, cda:0}, expect:{t_skid_s:10.276676},
+     src:'탄성 몫 = 0 → 앞 ΔF = m·0.5·ay·h ÷ t = 단계 0 에서 횡하중 이동 배분 50 % 와 같음 → [하중 감도 · 스키드패드] 경우와 같은 10.2767 s'},
+    {n:'모델 단계 1 · 롤각 (스키드패드)', I:{md:1, h_rcf:100, h_rcr:100, k_roll:1000, m:300, fr:50, h:300, mu:1.5, mu_s:0, crr:0, cla:0, cda:0}, expect:{ay_skid:1.5, skid_roll:0.882900},
+     src:'ay = μg = 14.715 m/s² → φ = m·ay·(h − 롤축 높이) ÷ 롤강성 = 300 × 14.715 × 0.2 ÷ 1000 = 0.8829°'},
+    {n:'스키드패드 횡가속도 = 기록 바퀴 평균 · 가속 최대 종가속도 (μ = 1)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{ax_max:1, ay_skid:1},
+     src:'접지 한계만이면 종가속도 = μg 일정 → 최대 1 g, 일정 반경 선회 ay = μg → 1 g'},
   ],
   calcLimit: 60,   /* 한 번 계산 제한 시간 [s] (주행선 다듬기 포함) */
   code:`// ================================================================
@@ -892,7 +947,17 @@ function car(I, gr, kP) {
   const Fres = v => cd * v * v + crr * (m * g + cl * v * v);                       // 항력 + 구름 저항 (무게 + 다운포스)
   const Fzf  = (v, ax) => m * g * fs + cl * v * v * fa - m * ax * h / L - cd * v * v * hc / L;           // 앞축 하중
   const Fzr  = (v, ax) => m * g * (1 - fs) + cl * v * v * (1 - fa) + m * ax * h / L + cd * v * v * hc / L; // 뒤축 하중
-  const dF   = (ay, front) => front ? lt * m * ay * h / tf : (1 - lt) * m * ay * h / tr;                 // 좌우 하중 이동 (바퀴 하나)
+  // 좌우 하중 이동 (바퀴 하나) [N]
+  //   모델 단계 0: 무게중심 높이 전체를 횡하중 이동 배분(앞 몫)으로 나눔
+  //   모델 단계 1: 롤센터 높이로 나눔 (Milliken & Milliken 18장) — 기하 몫 = 축 질량 × ay × 롤센터 높이 ÷ 윤거,
+  //               탄성 몫 = m × ay × (무게중심 − 롤축 높이) × 롤강성 앞 몫 ÷ 윤거.  롤센터가 0 이면 단계 0 과 같음
+  const md   = I.md >= 1 ? 1 : 0;                                                    // 모델 단계
+  const hrf  = md ? (I.h_rcf || 0) / 1000 : 0, hrr = md ? (I.h_rcr || 0) / 1000 : 0;  // 롤센터 높이 앞 · 뒤 [m]
+  const hra  = hrf + (hrr - hrf) * (1 - fs);                                           // 무게중심 자리 롤축 높이 [m]  (앞축에서 L(1 − fs))
+  const dF   = (ay, front) => front ? (m * fs * ay * hrf + lt * m * ay * (h - hra)) / tf
+                                    : (m * (1 - fs) * ay * hrr + (1 - lt) * m * ay * (h - hra)) / tr;
+  const kRoll = Math.max(1e-9, I.k_roll || 0);                                         // 롤강성 합 [N·m/°]
+  const rollAng = ay => md ? m * ay * (h - hra) / kRoll : NaN;                         // 롤각 [°] (스프링 위 · 아래 질량 구분 없음)
   const wheels = (Fz, d) => {                                                       // 축 하중 → [바깥, 안쪽] 바퀴
     let o = Fz / 2 + d, i = Fz / 2 - d;
     if (i < 0) { o = Fz; i = 0; }
@@ -972,7 +1037,7 @@ function car(I, gr, kP) {
     return { T, e, P, I: tr_.I, V: tr_.V, L: T * w * (1 / em - 1) };   // 모터 손실 = 축 출력 × (1 ÷ 모터 효율 − 1)
   }
 
-  return { m, meff, r, gr, eta, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR,
+  return { m, meff, r, gr, eta, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR, rollAng,
            vCorner, aDrive, aBrake, drive, elec, Tcurve, Voc, Epack, Ecap, ptMax, Rb, Imax, tmNext, thK, Tinit: I.th_init };
 }
 
@@ -1016,7 +1081,7 @@ const reverse = segs => segs.slice().reverse().map(([l, R]) => [l, -R]);
 //      옆으로 옮겨서 생기는 곡률 변화 k0² e 는 뺌: 넣으면 긴 원호에서 바깥 경계로만 밀려
 //      FSK 2026 내구 기록이 오히려 느려짐 (1487 → 1524 s, 오토크로스 53.9 → 56.2 s)
 //   경계: −(오른쪽 폭 − b) ≤ e ≤ 왼쪽 폭 − b  (b = 경계 · 콘에서 차 중심까지 최소 거리)
-//   슬라럼 콘(가운데 선 위): 콘 자리에서 e ≥ b 또는 e ≤ −b 를 번갈아 (첫 콘 방향은 제약 없이 푼 경로 쪽)
+//   슬라럼 콘(가운데 선 위): 콘 자리에서 e ≥ b 또는 e ≤ −b 를 번갈아 (묶음의 첫 콘은 왼쪽으로 지나감 = e ≥ b)
 //   풀이: ADMM + 원시-쌍대 능동 집합법, 5대각 행렬 분해. 닫힌 코스는 처음 ↔ 끝을 이어 주기 조건으로 풂
 //   결과: 1 m 안팎 조각의 [길이 m, 반경 m] — 길이 = h (1 − k0 e) √(1 + e'²), 곡률 = (k0 + e'') ÷ (1 − k0 e)
 const RLC = new Map();   // 코스마다 한 번만 (차량 입력과 상관없음)
@@ -1170,7 +1235,7 @@ function racingLine(segs, o) {
     // 콘 묶음: 주어지면 그대로 (내 코스 = 행마다), 아니면 구간 번호가 20 안쪽으로 이어지는 콘 (공식 코스 = 1 m 구간 → 약 20 m)
     const groups = o.groups && o.groups.length ? o.groups : [];
     if (!groups.length) cones.forEach(c => { const gl = groups[groups.length - 1]; if (gl && c - gl[gl.length - 1] < 20) gl.push(c); else groups.push([c]); });
-    groups.forEach(gp => { const sgn0 = e[segNode[gp[0]]] >= 0 ? 1 : -1;   // 묶음의 첫 콘 = 제약 없이 푼 경로 쪽
+    groups.forEach(gp => { const sgn0 = 1;   // 묶음의 첫 콘은 차가 왼쪽으로 지나감 (FSK 공식 코스 규칙, 내 코스도 같게)
       gp.forEach((c, j) => { const i = segNode[c], sg = j % 2 ? -sgn0 : sgn0; if (sg > 0) lo[i] = Math.max(lo[i], o.b); else hi[i] = Math.min(hi[i], -o.b); if (lo[i] > hi[i]) lo[i] = hi[i]; }); });
     e = boxQP(q0, q1, q2, g, lo, hi, e);
   }
@@ -1336,7 +1401,7 @@ function drivenSegs(I, which, segs, closed, fx) {
     return racingLine(segs, o);
   }
   // 내 코스: 구간마다 폭 (fx 없으면 [내 코스 폭] 을 양쪽 같게) · 슬라럼 콘 묶음
-  const w = Math.max(0, I.w_free) / 2, X = fx || { wl: [], wr: [], groups: [] };
+  const w = FREE_W, X = fx || { wl: [], wr: [], groups: [] };
   return racingLine(segs, { closed, b, wl: i => X.wl[i] != null ? X.wl[i] : w, wr: i => X.wr[i] != null ? X.wr[i] : w, groups: X.groups,
                             key: \`free|\${b}|\${w}|\${closed}|\${JSON.stringify(segs)}|\${JSON.stringify(X)}\` });
 }
@@ -1366,7 +1431,7 @@ function speed(C, G, V0, TM) {
 function walk(C, G, v, V0, rec, T0) {
   const N = v.length, tc = [0], et = [0], ec = [0], tm = [T0 != null ? T0 : C.Tinit];
   const S = rec ? { pw: [], ax: [], ay: [], rpm: [], tq: [], tlim: [], pbat: [], vbat: [], voc: [], eta: [], tmot: [], grip: [],
-                    fz_fo: [], fz_fi: [], fz_ro: [], fz_ri: [] } : null;
+                    roll: [], fz_fl: [], fz_fr: [], fz_rl: [], fz_rr: [] } : null;
   let vmin = Infinity;
   for (let i = 0; i < N - 1; i++) {
     const ds = G.s[i + 1] - G.s[i], vm = (v[i] + v[i + 1]) / 2, dt = vm > 0 ? ds / vm : Infinity;
@@ -1379,11 +1444,13 @@ function walk(C, G, v, V0, rec, T0) {
     tm.push(C.tmNext(tm[i], E.L, isFinite(dt) ? dt : 0));        // 모터 온도: 손실로 오르고 냉각으로 내림
     if (E.V < vmin) vmin = E.V;
     if (rec) {
-      const ay = vm * vm * Math.abs(G.k[i]);
+      const ays = vm * vm * G.k[i], ay = Math.abs(ays);           // 횡가속도 [m/s²] (왼쪽 선회 +, ISO 8855) · 크기
       const [fo, fi] = C.wheels(C.Fzf(vm, ax), C.dF(ay, true)), [ro, ri] = C.wheels(C.Fzr(vm, ax), C.dF(ay, false));
+      const lft = ays > 0;                                         // 왼쪽 선회 → 오른쪽 바퀴가 바깥
       S.pw.push(F * vm / 1000);        // 바퀴 출력 [kW]
       S.ax.push(ax / g);               // [g]
-      S.ay.push(ay / g);               // [g]
+      S.ay.push(ays / g);              // [g] (왼쪽 +)
+      S.roll.push(C.rollAng(ays));     // 롤각 [°] (모델 단계 1, 왼쪽 선회 +)
       S.rpm.push(C.rpm(v[i]));         // [rpm]
       S.tq.push(E.T);                  // [N·m]
       S.tlim.push(C.Tcurve(C.rpm(v[i]), V0[i], tm[i]));   // 그 순간 토크 한계 (디레이팅 포함) [N·m]
@@ -1393,7 +1460,7 @@ function walk(C, G, v, V0, rec, T0) {
       S.vbat.push(E.V);                // 단자 전압 [V]
       S.eta.push(E.P > 0 ? E.e * 100 : NaN);   // [%]
       S.grip.push(Math.hypot(C.m * ax, C.m * ay) / Math.max(1e-9, C.capF(vm, ax, ay) + C.capR(vm, ax, ay)) * 100);   // [%]
-      S.fz_fo.push(fo); S.fz_fi.push(fi); S.fz_ro.push(ro); S.fz_ri.push(ri);   // 바퀴 하중 [N]
+      S.fz_fl.push(lft ? fi : fo); S.fz_fr.push(lft ? fo : fi); S.fz_rl.push(lft ? ri : ro); S.fz_rr.push(lft ? ro : ri);   // 바퀴 하중 [N] 앞왼 · 앞오 · 뒤왼 · 뒤오
     }
   }
   if (rec) for (const k in S) S[k].push(S[k][S[k].length - 1]);
@@ -1515,10 +1582,11 @@ function runEnd(I, gr, full) {
 }
 
 // 내 코스: 랩 수 2 이상이거나 출발 위치가 0이 아니면 닫힌 코스 (끝 = 처음)
-//   구간마다 폭 (빈칸 = 윗줄 값, 첫 줄도 비면 [내 코스 폭] ÷ 2), 슬라럼 콘 간격이 있는 구간은 콘 자리에서 쪼갬 (첫 콘 = 시작 + 간격 ÷ 2)
+//   구간마다 폭 (빈칸 = 윗줄 값, 첫 줄도 비면 1.75 m = 전체 3.5 m), 슬라럼 콘 간격이 있는 구간은 콘 자리에서 쪼갬 (첫 콘 = 시작 + 간격 ÷ 2)
 //   조각 = [길이, 반경, 왼쪽 폭, 오른쪽 폭, 시작에 콘 (1/0), 원래 행 번호]
+const FREE_W = 1.75;   // 폭을 하나도 안 적은 내 코스: 가운데 선에서 양쪽 1.75 m [m]
 function freeSegs(I) {
-  const F = I.free || {}, seg = F.seg || [], hw = Math.max(0, I.w_free) / 2;
+  const F = I.free || {}, seg = F.seg || [], hw = FREE_W;
   let wl = hw, wr = hw;
   const items = [];
   seg.forEach(([l, R], k) => {
@@ -1556,13 +1624,19 @@ function lapStat(t, stand) {
   return { total: sum(t), first: t[0], avg: rest.length ? sum(rest) / rest.length : NaN, n: t.length };
 }
 
+// 스키드패드 횡가속도 [g]: 기록 바퀴 (오른쪽 · 왼쪽 일정 반경 한 바퀴씩) 의 시간 평균 — 진입 · 탈출은 넣지 않음
+const skidAy = E => (E.vR * E.vR * E.tR + E.vL * E.vL * E.tL) / (E.tR + E.tL) / SK_R / g;
+// 가속: 최대 종가속도 [g] (칸마다 (v₂² − v₁²) ÷ 2Δs)
+const accMax = A => { let a = 0; for (let i = 0; i + 1 < A.v.length; i++) a = Math.max(a, (A.v[i + 1] ** 2 - A.v[i] ** 2) / (2 * (A.G.s[i + 1] - A.G.s[i]))); return a / g; };
+
 // 종목 기록 한 벌 (감속비 gr).  fast = 줄여 셈 (감속비 찾기 · 입력 훑기)
 //   스키드패드 기록 = 오른쪽 한 바퀴 + 왼쪽 한 바퀴 [s]
 function events(I, gr, fast) {
   const ds = fast ? 3 : 1, C = car(I, gr, 1);
   const vR = skidV(C, -SK_R, C.Voc(1)), vL = skidV(C, SK_R, C.Voc(1));
   const X = runAx(I, C, ds), EN = runEnd(I, gr, !fast);
-  return { C, acc: runAcc(C).t[0], skid: SK_C / vR + SK_C / vL, tR: SK_C / vR, tL: SK_C / vL, vs: Math.min(vR, vL),
+  const A = runAcc(C);
+  return { C, acc: A.t[0], A, skid: SK_C / vR + SK_C / vL, tR: SK_C / vR, tL: SK_C / vL, vs: Math.min(vR, vL), vR, vL,
            ax: X ? X.t[0] : NaN, X, EN, end: EN ? EN.T : NaN };
 }
 
@@ -1652,8 +1726,11 @@ function modeRun(I, G2, G3, fast) {
     t_end1: end ? end.first : NaN, t_endavg: end ? end.avg : NaN, n_lap: EN ? EN.n : NaN, n_st1: EN ? EN.n1 : NaN,
     d_acc: E.acc - fast.acc, d_ax: E.ax - fast.ax, d_end: E.end - fast.end,
     // 차량 한계
-    vmax: C.vtop * 3.6, v_top: E.X ? Math.max(...E.X.v) * 3.6 : NaN, ay_skid: E.vs * E.vs / SK_R / g,
-    ax_0: C.aDrive(0, 0, 0, C.Voc(1), C.Tinit) / g, cla_req: claNeed(I, G2),
+    vmax: C.vtop * 3.6, v_top: E.X ? Math.max(...E.X.v) * 3.6 : NaN,
+    v_endtop: EN ? Math.max(...EN.A.v, ...EN.B.v) * 3.6 : NaN,                                       // 내구 최고 차속 [km/h]
+    ay_skid: skidAy(E),                                                                               // 기록 바퀴 평균 [g]
+    ax_0: C.aDrive(0, 0, 0, C.Voc(1), C.Tinit) / g, ax_max: accMax(E.A),                              // 가속: 출발 · 최대 종가속도 [g]
+    cla_req: claNeed(I, G2), skid_roll: C.rollAng(skidAy(E) * g),
     // 내구 (대시보드 반영 · 검증용)
     e_ok: EN ? (EN.Ec <= C.Ecap * 1.01 ? 1 : 0) : NaN, e_use: EN ? EN.Ec / 3.6e6 : NaN, p_lim: EN ? EN.k * 100 : NaN,
     e_lap: EN ? lapStat(EN.et, [0, EN.n1]).avg / 3.6e6 : NaN,
@@ -1712,6 +1789,9 @@ function modeRun(I, G2, G3, fast) {
     c_rpm: Math.max(...W.S.rpm), c_tq: Math.max(...W.S.tq), c_pbat: Math.max(...W.S.pbat), c_vmin: Math.min(...W.S.vbat),
     c_tm: W.tm.at(-1), c_tmax: Math.max(...W.tm),
     c_et: pick(le) / 3.6e6, c_ec: pick(lc) / 3.6e6,
+    // 에너지 카드 (모든 코스 같은 줄): 그 코스 전체 랩 합 · 출력 상한 없이 (내구 말고는 상한이 없어 전체와 같음) [kWh]
+    c_all_t: sum(le) / 3.6e6, c_all_c: sum(lc) / 3.6e6,
+    c_nl_t: c === 'end' ? out.e_nl_t : sum(le) / 3.6e6, c_nl_c: c === 'end' ? out.e_nl_c : sum(lc) / 3.6e6,
     c_soc: (jj >= 0 ? (soc[jj + 1] ?? socEnd) : socEnd) * 100,
     c_plim: K.k != null ? K.k * 100 : NaN,
     c_cap: K.EN ? K.C.Ecap / 3.6e6 : NaN,
@@ -1763,7 +1843,7 @@ function calc(I) {
     const E = events(I, I.gr, true);
     const NL = E.EN ? (E.EN.k < 1 ? endurance(I, car(I, I.gr, 1), false, 3) : E.EN) : null;   // 출력 상한 없이 (줄여 셈)
     return { out: { t_acc_s: E.acc, t_skid_s: E.skid, t_ax_s: E.ax, t_end_s: E.end, e_use: E.EN ? E.EN.Ec / 3.6e6 : NaN, e_nl_c: NL ? NL.Ec / 3.6e6 : NaN,
-                    p_lim: E.EN ? E.EN.k * 100 : NaN, vmax: E.C.vtop * 3.6, ay_skid: E.vs * E.vs / SK_R / g } };
+                    p_lim: E.EN ? E.EN.k * 100 : NaN, vmax: E.C.vtop * 3.6, ay_skid: skidAy(E) } };
   }
 
   // ---------- 주행선 다듬기 (I.rl_on = 2): 입력이 바뀌었을 때만
@@ -1824,12 +1904,12 @@ function calc(I) {
 /* ============================================================ 대시보드 '파트별 > 차량 목표 · 파워트레인'
    대시보드 값으로 도구 2를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
-const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'rl_m', 'rl_b', 'w_free'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
+const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'rl_m', 'rl_b', 'md', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
   T2GOAL.forEach(k => { const db = wbDash(k); I[k] = db ? db.v : 0; });
   try{ const s = JSON.parse(localStorage.getItem(wbStoreKey('2')) || '{}') || {}; T2ONLY.forEach(k => { if(typeof s[k]==='number' && isFinite(s[k])) I[k] = s[k]; }); }catch(e){}
-  return {...I, ...t2ExtraI(), course:'acc', lap:'1', grMode:'my'}; }
+  return {...I, ...t2ExtraI(), md:0, course:'acc', lap:'1', grMode:'my'}; }   // 대시보드 반영은 모델 단계 0
 function t2PartDirty(){ T2P.key = ''; if(typeof DASH!=='undefined' && (DASH.part==='goal' || DASH.part==='pt') && $('#t2part')) t2PartRun(); }
 function t2PartRun(){ const I = t2PartInputs(), key = JSON.stringify(I); if(key===T2P.key || T2P.busy) return; T2P.busy = true;
   try{ if(!T2P.w) T2P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['2'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); }catch(e){ T2P.busy = false; return; }
