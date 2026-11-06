@@ -3025,3 +3025,32 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2-mdc{display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap}
 .t2-mdc .dc-seg button{padding:2px 9px;font-size:11.5px}
+/* 편집 탭 [냉각]: 회로 카드 · 블럭 배치 */
+.t2-cool{display:flex;flex-direction:column;gap:14px}
+.t2-cbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px}
+.t2-cc{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.t2-cch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px}.t2-cch b{font-size:13.5px}
+.t2-cpal{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}.t2-cdel{color:#b42318}
+.t2-cbox{border:1px dashed var(--line);border-radius:7px;background:var(--panel-2)}
+.t2-csvg{width:100%;height:auto;display:block;touch-action:none;user-select:none}
+.t2-cb rect{fill:var(--panel);stroke:#9aa3b5;stroke-width:1.2}.t2-cb{cursor:grab}
+.t2-cb.rad rect{fill:#e8f1fb;stroke:#4a7bb7}.t2-cb.pump rect{fill:#eef6ee;stroke:#4f8a4f}.t2-cb.part rect{fill:#fbf1e6;stroke:#b7823e}.t2-cb.io rect{fill:#f1f1f4;stroke:#8a8f99;stroke-dasharray:4 3}
+.t2-cb.sel rect{stroke:#3d5a99;stroke-width:2.6}
+.t2-cbn{font-size:13px;font-weight:700;fill:var(--ink)}.t2-cbs{font-size:11px;fill:var(--muted)}
+.t2-cpi{fill:#fff;stroke:#8a8f99;stroke-width:1.4}.t2-cpo{fill:#3d5a99;stroke:#fff;stroke-width:1.5;cursor:crosshair}
+.t2-cl2{fill:none;stroke:#3d5a99;stroke-width:2}.t2-cah{fill:#3d5a99}
+.t2-clhit{fill:none;stroke:transparent;stroke-width:12;cursor:pointer}.t2-clhit:hover{stroke:rgba(220,38,38,.25)}
+.t2-cdrag{fill:none;stroke:#3d5a99;stroke-width:1.5;stroke-dasharray:5 4;pointer-events:none}
+.t2-cmsg{margin:0;font-size:12px}.t2-cmsg.bad{color:#b42318}.t2-cmsg.ok{color:#2f7d4f}
+.t2-cform{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12.5px}.t2-cform b{margin-right:4px}
+.t2-cfi{display:flex;align-items:center;gap:6px}.t2-cfi input{width:84px;font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px;text-align:right}.t2-cfi i{font-style:normal;color:var(--muted);font-size:11.5px}
+.t2-csel{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.t2-mdc b{font-size:12px}
+/* 냉각 배치 선 = 호스(수랭) · 덕트(공랭): 테두리 + 안쪽 색 + 흐름 방향 무늬 (애니메이션은 OS 설정과 상관없이) */
+.t2-hose path{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.t2-hose.water .o{stroke:#26303c;stroke-width:12}.t2-hose.water .i{stroke:#3f86d1;stroke-width:7.5}
+.t2-hose.water .f{stroke:rgba(255,255,255,.85);stroke-width:2.2;stroke-dasharray:3 12;animation:t2flow 1.1s linear infinite}
+.t2-hose.air .o{stroke:#7b828d;stroke-width:18;stroke-linecap:butt}.t2-hose.air .i{stroke:#eceef2;stroke-width:14;stroke-linecap:butt}
+.t2-hose.air .f{stroke:#9aa4b2;stroke-width:2;stroke-dasharray:6 10;animation:t2flow 1.4s linear infinite}
+@keyframes t2flow{to{stroke-dashoffset:-30}}
+.t2-clhit{stroke-width:16}
