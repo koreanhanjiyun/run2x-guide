@@ -2934,7 +2934,7 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .t2-mid .wb-h{min-height:38px;box-sizing:border-box;align-items:center}
 .t2-mid .t2-fbox{height:360px}
 /* 편집 탭: 상수 칸 (여러 열) · 주행선 단추 · 모델 단계 · 모터 표 고르기 */
-.t2-cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));column-gap:28px;row-gap:2px;margin:6px 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.t2-cg{margin:6px 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 .t2-cg .wb-ig{grid-column:1/-1;margin-top:8px}
 .t2-cg .wb-ig:first-child{margin-top:0}
 .t2-rlbar,.t2-sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
@@ -2959,3 +2959,13 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .wb-panes .wb-padd{padding:2px 0 4px}
 #wbsig[data-zm="pan"] .wb-hit{cursor:grab}#wbsig[data-zm="box"] .wb-hit{cursor:crosshair}
 .wb-zbox{fill:rgba(29,95,154,.10);stroke:var(--in);stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
+
+/* 편집 탭 상수: 비슷한 값끼리 작은 상자 (한 상자 = 한 열), 막힘 글은 같은 줄 오른쪽 → 줄 높이 같음 */
+.t2-sbs{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-start}
+.t2-sb{flex:1 1 480px;min-width:0;border:1px solid var(--line);border-radius:7px;padding:4px 4px 6px;background:var(--panel-2)}
+.t2-sbh{font-size:12px;font-weight:700;color:var(--ink-2);padding:3px 6px 4px}
+.t2-cg .wb-ir{grid-template-columns:minmax(0,1fr) 92px 50px 120px;min-height:34px;box-sizing:border-box}
+.t2-cg .wb-ir .wb-lk{grid-column:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-cnote{margin:10px 2px 0;font-size:12px}
+.t2-mth{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:4px 0 6px;font-size:13px}
+.t2-use{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12.5px}
