@@ -18,6 +18,15 @@ const H=require('./h.js');
   await p.mouse.up(); await W(300);
   console.log('relinked', JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)), await p.evaluate(()=>JSON.stringify(T2.cool.circuits[0].links)));
   await p.click('[data-t2cb="w1:k1"] rect'); await W(300); console.log('sel form', await p.locator('.t2-csel input').count());
+  { // 병렬: 펌프에서 모터로 호스 하나 더 → 갈라짐 · 번호 · 비율 · 지우기
+    const o=await (await p.$('[data-t2cpo="w1:k2"]')).boundingBox(), t=await (await p.$('[data-t2cb="w1:k4"] rect')).boundingBox();
+    await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+40,t.y+30,{steps:6}); await p.mouse.up(); await W(300);
+    console.log('branch', await p.locator('.t2-cbadge').count(), JSON.stringify(await p.evaluate(()=>T2.cool.circuits[0].links)), JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)));
+    await p.click('.t2-cbadge >> nth=0'); await W(300); const ri=await p.$('[data-t2crat]'); await ri.fill('30'); await ri.press('Enter'); await ri.dispatchEvent('change'); await W(300);
+    console.log('ratios', JSON.stringify(await p.evaluate(()=>T2.cool.circuits[0].links.filter(l=>l[0]==='k2').map(l=>+(+l[2]).toFixed(3)))), JSON.stringify(await p.evaluate(()=>t2CoolCompile().net.water[0].nodes.map(n=>[n.t,n.part||'',+n.q.toFixed(2)]))));
+    if(process.argv[2]) await p.screenshot({path:process.argv[2]+'/cool_par.png'});
+    await p.keyboard.press('Delete'); await W(300); console.log('after del', await p.locator('.t2-cbadge').count(), JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)));
+    await p.click('[data-t2cb="w1:k2"] rect'); await W(200); console.log('block sel', await p.evaluate(()=>T2.cool.circuits[0].sel)); }
   await p.click('[data-t2cnew="water"]'); await W(300); console.log('new circuit', await p.locator('.t2-cc').count(), JSON.stringify(await p.evaluate(()=>t2CoolCompile().err)));
   if(process.argv[2]) await p.screenshot({path:process.argv[2]+'/cool.png', fullPage:false});
   { const w0=await p.evaluate(()=>document.querySelector('svg[data-t2csvg="w2"]').getBoundingClientRect().width);
