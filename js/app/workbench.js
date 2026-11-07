@@ -346,7 +346,7 @@ function wbOpen(id, ret){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
   WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
-  wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && T.xiStart === 'end') { WB.xi = WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
+  wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
   wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); }
 function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = '';
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }

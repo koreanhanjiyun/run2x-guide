@@ -1,5 +1,5 @@
 /* ============================================================
-   도구 3 제동 시스템 사이징 (간이판) — docs/TOOLS-PLAN.md 5절
+   도구 3 제동 시스템 사이징  — docs/TOOLS-PLAN.md 5절
    - 질량 · 무게중심 · 타이어 μ 로 이상 제동 배분, 마스터실린더 · 밸런스 바 · 캘리퍼 · 패드 · 디스크로 실제 배분 · 라인 압력 · 제동력,
      잠김 순서 · 첫 잠김 감속도 · 네 바퀴 잠김 답력 (규정 제동 시험: 네 바퀴가 모두 잠겨야 함)
    - 기본값: 질량 · 무게중심은 다른 도구와 같은 예시, 유압 부품은 2024 Run2X 제동 시트 (마스터실린더 15.875 mm, 캘리퍼 피스톤 31.242 mm 한쪽 1 개,
@@ -25,12 +25,13 @@ const M3TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
   ['#wb .wb-in', '입력', '차(질량 · 무게중심 · 휠베이스 · 타이어 μ · 하중 반경, 다운포스는 시험 차속에서), 페달(설계 답력 · 페달비 · 밸런스 바), 유압(마스터실린더 · 캘리퍼 피스톤 면적), 마찰(패드 μ · 디스크 · 패드 높이)입니다.'],
   ['#wb #wbmain', '제동 배분 선도', '이상 배분 곡선과 지금 유압의 배분 직선, 먼저 잠기는 점을 그립니다.'],
+  ['#wb .wb-sig', '답력–감속도', '가로축 = 답력. 감속도 · 앞뒤 제동력 · 라인 압력입니다. 한 축이 잠기면 그 축 제동력은 μ F_z 에 묶이고 기울기가 꺾입니다.'],
   ['#wb #wbout', '결과', '이상 · 실제 배분, 설계 답력의 라인 압력 · 제동력 · 감속도, 먼저 잠기는 축 · 그 감속도 · 답력, 네 바퀴 잠김 답력(규정 제동 시험) · 최소 페달비입니다.'],
 ];
-const T3G = {car:'차 (1번 · 2번 도구)', ped:'페달', hyd:'유압 · 마찰'};
+const T3G = {car:'차 (1번 · 2번 도구)', ped:'페달', hyd:'유압 · 마찰', th:'디스크 온도'};
 WB_TOOLS['3'] = {
-  no:'3', stage:'P1 · P3-8', name:'제동 시스템 사이징 (간이판)',
-  noSig:true, mainTitle:'제동 배분 선도', mainMeta:'이상 곡선 · 실제 직선',
+  no:'3', stage:'P1 · P3-8', name:'제동 시스템 사이징 ',
+  x:{n:'답력', u:'N'}, mainTitle:'제동 배분 선도', mainMeta:'이상 곡선 · 실제 직선',
   inputs:[
     {k:'m', dk:'m', v:300, d:0, g:T3G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T3G.car}, {k:'h', dk:'h', v:290, d:0, g:T3G.car}, {k:'L', dk:'L', v:1550, d:0, g:T3G.car},
     {k:'mu', dk:'mu', v:1.5, d:2, g:T3G.car}, {k:'r_load', dk:'r_load', v:236, d:0, g:T3G.car},
@@ -41,6 +42,10 @@ WB_TOOLS['3'] = {
     {k:'cal_area_f', dk:'cal_area_f', n:'캘리퍼 피스톤 면적 (앞, 한쪽 합)', v:766.6, d:1, g:T3G.hyd}, {k:'cal_area_r', dk:'cal_area_r', n:'캘리퍼 피스톤 면적 (뒤, 한쪽 합)', v:766.6, d:1, g:T3G.hyd},
     {k:'pad_mu', dk:'pad_mu', v:0.32, d:2, g:T3G.hyd}, {k:'disc_d_f', dk:'disc_d_f', v:187, d:0, g:T3G.hyd}, {k:'disc_d_r', dk:'disc_d_r', v:187, d:0, g:T3G.hyd},
     {k:'pad_h', n:'패드 높이 (유효 반지름 = 바깥 반지름 − 패드 높이 ÷ 2)', u:'mm', v:0, d:1, g:T3G.hyd},
+    {k:'v_stop', n:'정지 시작 차속 (디스크 온도)', u:'km/h', v:100, d:0, g:T3G.th}, {k:'n_stop', n:'연속 정지 횟수 (사이 냉각 없음)', u:'회', v:5, d:0, g:T3G.th},
+    {k:'m_disc_f', n:'디스크 하나 질량 (앞)', u:'kg', v:0.45, d:3, g:T3G.th}, {k:'m_disc_r', n:'디스크 하나 질량 (뒤)', u:'kg', v:0.45, d:3, g:T3G.th},
+    {k:'c_disc', n:'디스크 비열 (강 460)', u:'J/(kg·K)', v:460, d:0, g:T3G.th},
+    {k:'f_probe', n:'탐침 답력 (곡선 위 한 점)', u:'N', v:1200, d:0, g:T3G.ped},
   ],
   outputs:[
     {k:'ideal_f', n:'이상 배분 (앞, 네 바퀴 동시 잠김)', u:'%', d:1, g:'배분'}, {k:'act_f', n:'실제 배분 (앞, 유압)', u:'%', d:1, g:'배분'}, {k:'a_max', n:'최대 감속도 (이상 배분)', u:'g', d:2, g:'배분'},
@@ -50,10 +55,17 @@ WB_TOOLS['3'] = {
     {k:'eff_b', n:'제동 효율 (첫 잠김 ÷ 최대 감속도)', u:'%', d:1, g:'잠김'},
     {k:'pedal_force', dk:'pedal_force', n:'네 바퀴 잠김 답력 (규정 제동 시험)', d:0, g:'규정 제동 시험'}, {k:'rule_lock', n:'설계 답력으로 네 바퀴 잠김', u:'', d:0, g:'규정 제동 시험', fmt:v => v === 1 ? '<b class="ok">가능</b>' : v === 0 ? '<b class="wb-err">못 잠금</b>' : '—'},
     {k:'pr_min', n:'최소 페달비 (설계 답력으로 네 바퀴 잠김)', u:'', d:2, g:'규정 제동 시험'},
+    {k:'bb_ideal', n:'이상 배분이 되는 밸런스 바 앞 몫', u:'%', d:1, g:'배분'},
+    {k:'e_stop', n:'한 번 정지 운동 에너지', u:'kJ', d:1, g:'디스크 온도'}, {k:'dt_f', n:'온도 상승 · 한 번 (앞 디스크)', u:'K', d:1, g:'디스크 온도'}, {k:'dt_r', n:'온도 상승 · 한 번 (뒤 디스크)', u:'K', d:1, g:'디스크 온도'},
+    {k:'dt_fn', n:'온도 상승 · 연속 (앞)', u:'K', d:0, g:'디스크 온도'}, {k:'dt_rn', n:'온도 상승 · 연속 (뒤)', u:'K', d:0, g:'디스크 온도'},
+    {k:'a_probe', n:'탐침 답력 감속도', u:'g', d:3, g:'설계 답력에서'}, {k:'st_probe', n:'탐침 답력 잠김 (0 없음 · 1 앞 · 2 뒤 · 3 둘 다)', u:'', d:0, g:'설계 답력에서', hide:true},
     {k:'kf', n:'답력 1 N 당 앞축 제동력', u:'N/N', d:3, g:'잠김', hide:true}, {k:'kr', n:'답력 1 N 당 뒤축 제동력', u:'N/N', d:3, g:'잠김', hide:true},
   ],
+  sigs:[{k:'a', n:'감속도', u:'g', d:3}, {k:'ff', n:'앞축 제동력', u:'N', d:0}, {k:'fr', n:'뒤축 제동력', u:'N', d:0}, {k:'pf', n:'라인 압력 (앞)', u:'bar', d:1}, {k:'prr', n:'라인 압력 (뒤)', u:'bar', d:1},
+        {k:'st', n:'잠김 (0 없음 · 1 앞 · 2 뒤 · 3 둘 다)', u:'', d:0}],
+  sigOn:['a'],
   figure: t3Fig, tour: M3TOUR,
-  verifyBase:{v_b:0, pad_h:0, eta_b:100},
+  verifyBase:{v_b:0, pad_h:0, eta_b:100, v_stop:100, n_stop:5, m_disc_f:0.45, m_disc_r:0.45, c_disc:460},
   verify: [
     {n:'이상 배분 · 네 바퀴 동시 잠김 (μ = 1.5, 다운포스 없음)', I:{}, expect:{ideal_f:75.564516, a_max:1.5},
      src:'앞 몫 = 앞 하중 비 + μ h ÷ L = 0.475 + 1.5 × 290 ÷ 1550 = 0.755645, 최대 감속 = μ g'},
@@ -68,10 +80,16 @@ WB_TOOLS['3'] = {
     {n:'다운포스 (60 km/h, C_L·A 3, 압력중심 휠베이스 가운데)', I:{v_b:60}, expect:{a_max:1.760151, ideal_f:75.934017},
      src:'D = ½ × 1.225 × 3 × 16.667² = 510.42 N (앞뒤 절반), 최대 감속 = μ (W + D) ÷ m = 1.5 × 3453.42 ÷ 300 = 17.267 m/s² = 1.7602 g, 앞 몫 = (W_f + D/2 + m a h ÷ L) ÷ (W + D)'},
     {n:'패드 높이 30 mm → 유효 반지름 78.5 mm', I:{pad_h:30}, expect:{pedal_force:1006.792279},
-     src:'제동력이 93.5 ÷ 78.5 배 줄어 답력은 845.27 × 93.5 ÷ 78.5 = 1006.79 N'}
+     src:'제동력이 93.5 ÷ 78.5 배 줄어 답력은 845.27 × 93.5 ÷ 78.5 = 1006.79 N'},
+    {n:'밸런스 바 맞춤 (앞뒤 같은 부품 → 이상 배분 몫 그대로)', I:{}, expect:{bb_ideal:75.564516},
+     src:'K_f = K_r 이면 b = β* = 75.56 %'},
+    {n:'답력–감속도 · 뒤 잠김 뒤 구간 (답력 820 N: 첫 잠김 793.6 N 과 네 바퀴 845.3 N 사이)', I:{f_probe:820}, expect:{a_probe:1.473535, st_probe:2},
+     src:'a = (k_f F + μ W_r) ÷ (m (1 + μ h ÷ L)) = (3.94640 × 820 + 1.5 × 1545.08) ÷ (300 × 1.28065) = 14.455 m/s² = 1.4735 g, 앞은 k_f F = 3236 < μ F_zf'},
+    {n:'디스크 온도 (100 km/h → 0, 디스크 0.45 kg, 강 460 J/(kg·K), 5 번 연속)', I:{}, expect:{e_stop:115.740741, dt_f:205.761317, dt_r:73.80569, dt_fn:1028.806584},
+     src:'E = ½ × 300 × 27.778² = 115.74 kJ, 앞 디스크 = 0.736 × E ÷ 2 ÷ (0.45 × 460) = 205.76 K, 뒤 = 0.264 × … = 73.81 K, 5 번 = 1028.8 K'}
   ],
   code: `// ================================================================
-// 도구 3 제동 시스템 사이징 — 계산 코드 (간이판: 정상 감속, 이상 배분 · 유압 · 잠김 순서)
+// 도구 3 제동 시스템 사이징 — 계산 코드 (정상 감속: 이상 배분 · 유압 · 잠김 순서 · 답력–감속도 곡선 · 밸런스 바 맞춤 · 디스크 온도)
 // ================================================================
 // 입력 I : m [kg], fr [%] 앞 하중, h [mm] 무게중심, L [mm] 휠베이스, mu [-] 타이어 μ, r_load [mm] 바퀴 하중 반경 (제동 토크 → 접지 힘),
 //          cla [m²] · xcop [mm] (뒤축에서 앞으로 압력중심) · v_b [km/h] 시험 차속 (다운포스만, 항력은 넣지 않음),
@@ -84,6 +102,11 @@ WB_TOOLS['3'] = {
 //   실제 배분 β = F_f ÷ (F_f + F_r) (답력과 상관없이 일정, 프로포셔닝 밸브 없음)
 //   잠김 감속: 앞 β m a = μ F_zf(a) → a_f = μ (W_f + D_f) ÷ (m (β − μ h ÷ L)),  뒤 (1 − β) m a = μ F_zr(a) → a_r = μ (W_r + D_r) ÷ (m (1 − β + μ h ÷ L))
 //   먼저 잠기는 축 = 작은 쪽, 그때 답력 = m a ÷ (축 제동력 합 ÷ 답력).  네 바퀴 잠김 (a = μ g 쪽) 답력 = max(μ F_zf* ÷ k_f, μ F_zr* ÷ k_r)  (k = 답력 1 N 당 축 제동력)
+//   답력–감속도 (잠긴 축은 μ F_z 로 묶임): 안 잠김 m a = (k_f + k_r) F,  앞 잠김 m a = μ (W_f + m a h ÷ L) + k_r F → a = (μ W_f + k_r F) ÷ (m (1 − μ h ÷ L)),
+//     뒤 잠김 m a = k_f F + μ (W_r − m a h ÷ L) → a = (k_f F + μ W_r) ÷ (m (1 + μ h ÷ L)),  둘 다 → a = μ W ÷ m
+//   밸런스 바 맞춤 (실제 = 이상): β(b) = b K_f ÷ (b K_f + (1 − b) K_r), K = A_캘리퍼 r_디스크 ÷ A_mc → b = β* K_r ÷ (K_f (1 − β*) + β* K_r)
+//   디스크 온도 (한 번 정지, 단열 · 보수적): E = ½ m v² (차속 v_stop → 0), 디스크 하나 = E × (앞 β, 뒤 1 − β) ÷ 2,  ΔT = E_디스크 ÷ (m_디스크 c),  c = 강 460 J/(kg·K)
+//     연속 정지 n_stop 번 (사이 냉각 없음) = n × ΔT  (FMVSS 135 페이드 시험처럼 보수적 상한)
 const g = 9.81, RHO = 1.225;
 function calc(I) {
   const pos = (v, nm) => { if (!(v > 0)) throw new Error(nm + ' 는 0 보다 커야 합니다.'); return v; };
@@ -106,6 +129,21 @@ function calc(I) {
   const first = af <= ar ? 1 : 2, aL = Math.min(af, ar, amax), Fp1 = m * aL / (kf + kr);
   const Fall = Math.max(mu * Fzf(amax) / kf, mu * Fzr(amax) / kr);
   const Fp = pos(I.f_ped, '설계 답력'), aP = Math.min((kf + kr) * Fp / m, aL);             // 설계 답력에서 감속 (잠기기 전까지 [m/s²])
+  // 답력 F 에서 감속 (잠김 반영) · 축 제동력
+  const decel = F => { const a0 = (kf + kr) * F / m, Ff0 = kf * F, Fr0 = kr * F;
+    const lockF = Ff0 > mu * Fzf(a0) + 1e-9, lockR = Fr0 > mu * Math.max(0, Fzr(a0)) + 1e-9;
+    if (!lockF && !lockR) return { a: a0, ff: Ff0, fr: Fr0, st: 0 };
+    let a = lockF ? (mu * Wf + kr * F) / (m * (1 - mu * h / L)) : (kf * F + mu * Wr) / (m * (1 + mu * h / L));
+    if (lockF && kr * F > mu * Fzr(a) - 1e-9) return { a: amax, ff: mu * Fzf(amax), fr: mu * Fzr(amax), st: 3 };
+    if (lockR && kf * F > mu * Fzf(a) - 1e-9) return { a: amax, ff: mu * Fzf(amax), fr: mu * Fzr(amax), st: 3 };
+    if (!(a > 0) || a > amax) a = amax;
+    return { a, ff: lockF ? mu * Fzf(a) : kf * F, fr: lockF ? kr * F : mu * Fzr(a), st: lockF ? 1 : 2 }; };
+  // 밸런스 바 맞춤
+  const KF = I.cal_area_f * rdf / Amf, KR = I.cal_area_r * rdr / Amr, bbI = ideal * KR / (KF * (1 - ideal) + ideal * KR);
+  // 디스크 온도
+  const vs = Math.max(0, I.v_stop || 0) / 3.6, E = 0.5 * m * vs * vs, cD = I.c_disc > 0 ? I.c_disc : 460, ns = Math.max(1, Math.round(I.n_stop || 1));
+  const dTf = I.m_disc_f > 0 ? E * beta / 2 / (I.m_disc_f * cD) : NaN, dTr = I.m_disc_r > 0 ? E * (1 - beta) / 2 / (I.m_disc_r * cD) : NaN;
+  const pr = decel(Math.max(0, I.f_probe || 0));
   const out = {
     ideal_f: ideal * 100, act_f: beta * 100, a_max: amax / g,
     p_f: pf1 * Fp * 10, p_r: pr1 * Fp * 10,                                                   // 설계 답력의 라인 압력 [bar]
@@ -113,10 +151,15 @@ function calc(I) {
     lock_first: first, a_lock: aL / g, f_lock1: Fp1, pedal_force: Fall, rule_lock: Fp >= Fall - 1e-9 ? 1 : 0,
     pr_min: PR * Fall / Fp, eff_b: aL / amax * 100,
     kf, kr, fzf_max: Fzf(amax), fzr_max: Fzr(amax),
+    bb_ideal: bbI * 100, e_stop: E / 1000, dt_f: dTf, dt_r: dTr, dt_fn: dTf * ns, dt_rn: dTr * ns,
+    a_probe: pr.a / g, st_probe: pr.st,
   };
+  // 답력–감속도 곡선 (0 ~ 네 바퀴 잠김 답력 × 1.3, 설계 답력 포함)
+  const Fm = Math.max(Fall * 1.3, Fp * 1.1), xs = [], sg = { a: [], ff: [], fr: [], pf: [], prr: [], st: [] };
+  for (let i = 0; i <= 60; i++) { const F = Fm * i / 60, q = decel(F); xs.push(+F.toFixed(2)); sg.a.push(q.a / g); sg.ff.push(q.ff); sg.fr.push(q.fr); sg.pf.push(pf1 * F * 10); sg.prr.push(pr1 * F * 10); sg.st.push(q.st); }
   // 이상 곡선 (a = 0 ~ a_max) · 실제 직선 (그림용)
   const id = Array.from({ length: 41 }, (_, i) => { const a = amax * i / 40, u = a * m / W; return [u * Fzf(a), u * Fzr(a)]; });   // 두 축 모두 같은 μ 사용 u
-  return { out, fig: { id, beta, lock: [beta * m * aL, (1 - beta) * m * aL], fmax: [mu * Fzf(amax), mu * Fzr(amax)] } };
+  return { out, x: { d: xs }, sig: sg, fig: { id, beta, lock: [beta * m * aL, (1 - beta) * m * aL], fmax: [mu * Fzf(amax), mu * Fzr(amax)] } };
 }
 `
 };
