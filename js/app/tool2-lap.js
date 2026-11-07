@@ -977,7 +977,7 @@ WB_TOOLS['2'] = {
     {k:'tire_c', dk:'tire_c', v:1.3, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'}, {k:'tire_e', dk:'tire_e', v:0, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
     {k:'tire_relax', dk:'tire_relax', v:0.3, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
     {k:'tr_ks', n:'경로 곡률 다듬기 거리 (요 가속도 · 힘 변화율 계산)', u:'m', v:2, d:1, g:T2G.rc, sb:'과도 (모델 3)'},
-    {k:'steer_ratio', dk:'steer_ratio', v:5, d:2, g:T2G.steer, sb:'조향비 · 최대 조향각 (모델 2)'}, {k:'delta_max', dk:'delta_max', n:'최대 조향각 (안쪽 바퀴, 0 = 확인 안 함)', v:0, d:1, g:T2G.steer, sb:'조향비 · 최대 조향각 (모델 2)'},
+    {k:'steer_ratio', dk:'steer_ratio', v:5, d:2, g:T2G.steer, sb:'조향비 · 최대 조향각 (모델 2)'}, {k:'delta_max', dk:'delta_max', n:'최대 조향각 (안쪽 바퀴, 0 = 확인 안 함)', v:34, d:1, g:T2G.steer, sb:'조향비 · 최대 조향각 (모델 2)'},
     {k:'izz', dk:'izz', v:70, d:1, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'ixx', dk:'ixx', v:30, d:1, g:T2G.rc, sb:'과도 (모델 3)'},
     {k:'m_us_f', dk:'m_us_f', v:12, d:1, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'m_us_r', dk:'m_us_r', v:12, d:1, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'c_roll', dk:'c_roll', v:30, d:1, g:T2G.rc, sb:'과도 (모델 3)'},
     {k:'v_test', n:'계단 조향 시험 차속', u:'km/h', v:60, d:0, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'ay_test', n:'계단 조향 정상 횡가속도', u:'g', v:0.4, d:2, g:T2G.rc, sb:'과도 (모델 3)'},
@@ -1023,7 +1023,7 @@ WB_TOOLS['2'] = {
     else if(T2.etab==='mt'){ const c = $('#t2mc'); if(c) c.innerHTML = t2EditPlot('mt'); const f = $('#wbext .t2-fcap'); if(f) f.innerHTML = t2EditCap('mt'); } },
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
   tour: M2TOUR,
-  verifyBase:{mu_s:0, tire_fz0:0, end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
+  verifyBase:{mu_s:0, tire_fz0:0, delta_max:0, end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
               dr_t0:80, dr_t1:100, c_pct:100, kt:0, i_pk:400, i_ct:200, i_cpct:100, di_t0:50, di_t1:85, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, oh_f:0, oh_r:0, rl_m:0.2, e_lim:1, rmin:0, md:0, th_on:1, cw_on:0, bt_on:0, in_on:0, m_cool:1, i_cool:1, b_cool:0, eff_mg:0, m_ha60:null, i_ha60:null, b_ha60:null, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
   verify:[
     {n:'가속 · 접지 한계만 (μ = 1, CG 뒤축 위)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{t_acc_s:3.910309, ax_0:1}, src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
