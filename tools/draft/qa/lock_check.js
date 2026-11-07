@@ -10,7 +10,10 @@ const H=require('./h.js');
   console.log('after on dr_t0', await V('dr_t0'), 'th_c', await V('th_c'));
   await p.click('[data-t2eg="bat"]'); await W(400); console.log('e_target', await V('e_target'), 'epack', await p.evaluate(()=>t2Epack().toFixed(4)));
   await p.click('[data-t2eg="sus"]'); await W(400); console.log('h_rcf', await V('h_rcf'), 'izz', await V('izz'));
-  await p.click('[data-t2eg="car"]'); await W(300); const w=await p.$('#wb input[data-wbi="w_car"]'); if(w){ await w.fill('0'); await w.dispatchEvent('input'); await W(300); console.log('w_car 0 → rl_b', await V('rl_b'), 'oh_f', await V('oh_f')); await w.fill('1.4'); await w.dispatchEvent('input'); await w.dispatchEvent('change'); await W(300); console.log('w_car 1.4 → rl_b', await V('rl_b')); }
+  await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2fs="wc_on"]'); await W(300); await p.click('[data-t2eg="car"]'); await W(300); console.log('wc_on 끔 → w_car', await V('w_car'), 'oh_f', await V('oh_f'));
+  await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2fs="wc_on"]'); await W(300); await p.click('[data-t2eg="car"]'); await W(300); console.log('wc_on 켬 → w_car', await V('w_car'), 'oh_f', await V('oh_f'));
+  await p.click('[data-t2eg="mot"]'); await W(400); await p.click('[data-t2ict="0"]'); await W(300); console.log('연속 전류 비율 → i_ct', await V('i_ct'), 'i_cpct', await V('i_cpct')); await p.click('[data-t2ict="1"]'); await W(300); console.log('값 입력 → i_ct', await V('i_ct'), 'i_cpct', await V('i_cpct'));
+  await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2fs="rg_on"]'); await W(300); await p.click('[data-t2eg="bat"]'); await W(300); console.log('회생 켬 → i_chg', await V('i_chg')); await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2fs="rg_on"]'); await W(300);
   await p.evaluate(()=>wbOpen('4')); await W(1200); await p.click('[data-t4auto="1"]'); await W(1200); console.log('t4 n_p auto', await V('n_p'), 'stored', await p.evaluate(()=>WB.I.n_p));
-  await p.click('[data-t4auto="0"]'); await W(800); console.log('t4 n_p manual', await V('n_p'));
+  await p.click('[data-t4auto="0"]'); await W(800); console.log('t4 n_p manual', await V('n_p'), 'i_lim', await V('i_lim'), 'v_inv', await V('v_inv'));
   console.log('errs', p.errs, p.cons); await b.close(); await H.end(); })();
