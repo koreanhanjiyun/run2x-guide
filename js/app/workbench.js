@@ -272,14 +272,40 @@ function wbPaneBar(sweep){ const P = sweep ? WB.panesO : WB.panes, pi = sweep ? 
 function wbSigListHTML(){ const R = WB.R; if(!R) return '';
   if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return wbAxisHTML() + (S && S.err ? `<p class="wb-err">${wbEsc(S.err)}</p>` : '');
     const d = wbT().inputs.find(o => o.k===S.k);
-    return wbAxisHTML() + wbPaneBar(true) + `<div class="wb-slh"><span>${wbInName(d)}</span><b>${wbFmt(S.X[WB.si], 3)} ${wbEsc(wbInUnit(d))}</b></div>` + wbT().outputs.filter(o => S.O[o.k] && S.O[o.k].some(isFinite)).map(o => `<div class="wb-sr${WB.actO===o.k?' act':''}">
+    return wbAxisHTML() + wbPaneBar(true) + `<div class="wb-slh"><span>${wbInName(d)}</span><b>${wbFmt(S.X[WB.si], 3)} ${wbEsc(wbInUnit(d))}</b></div>` + wbSlRows(wbT().outputs.filter(o => S.O[o.k]).map(o => ({o, k:o.k, n:wbOutName(o), g:o.g, nan:wbAllNaN(S.O[o.k])})), WB.selO, ({o}) => `<div class="wb-sr${WB.actO===o.k?' act':''}">
       <input type="checkbox" data-wbso="${o.k}"${WB.selO.has(o.k)?' checked':''} aria-label="${wbEsc(wbOutName(o))} 그리기"><i style="background:${wbOutColor(o.k)}"></i>
-      <button type="button" class="wb-sn" data-wbacto="${o.k}" title="이 결과의 눈금 보기">${wbOutName(o)}</button><b>${wbFmt(S.O[o.k][WB.si], o.d||0)}</b><span class="wb-u">${wbEsc(wbOutUnit(o))}</span></div>`).join('')
+      <button type="button" class="wb-sn" data-wbacto="${o.k}" title="이 결과의 눈금 보기">${wbOutName(o)}</button><b>${wbFmt(S.O[o.k][WB.si], o.d||0)}</b><span class="wb-u">${wbEsc(wbOutUnit(o))}</span></div>`)
       + `<p class="wb-swn">결과 숫자를 ${S.X.length}번 다시 계산해 그린 것입니다. 나머지 입력은 지금 값 그대로입니다.</p>`; }
   const xs = WB.xa.startsWith('sig:') ? wbSigDef(WB.xa.slice(4)) : null, xv = xs ? R.sig[xs.k][WB.xi] : R.x.d[WB.xi];
-  return wbAxisHTML() + wbPaneBar(false) + `<div class="wb-slh"><span>${wbEsc(xs ? xs.n : wbXDef().n)}</span><b>${wbFmt(xv, xs ? (xs.d||0) : 1)} ${wbEsc(xs ? xs.u : wbXDef().u)}</b></div>` + (wbT().sigs || []).filter(s => R.sig[s.k]).map(s => `<div class="wb-sr${WB.act===s.k?' act':''}">
+  return wbAxisHTML() + wbPaneBar(false) + `<div class="wb-slh"><span>${wbEsc(xs ? xs.n : wbXDef().n)}</span><b>${wbFmt(xv, xs ? (xs.d||0) : 1)} ${wbEsc(xs ? xs.u : wbXDef().u)}</b></div>` + wbSlRows((wbT().sigs || []).filter(s => R.sig[s.k]).map(s => ({s, k:s.k, n:wbEsc(s.n), g:s.g, nan:wbAllNaN(R.sig[s.k])})), WB.sel, ({s}) => `<div class="wb-sr${WB.act===s.k?' act':''}">
       <input type="checkbox" data-wbsg="${s.k}"${WB.sel.has(s.k)?' checked':''} aria-label="${wbEsc(s.n)} 그리기"><i style="background:${wbColor(s.k)}"></i>
-      <button type="button" class="wb-sn" data-wbact="${s.k}" title="이 신호의 눈금 보기">${wbEsc(s.n)}</button><b>${wbFmt(R.sig[s.k][WB.xi], s.d||0)}</b><span class="wb-u">${wbEsc(s.u)}</span></div>`).join(''); }
+      <button type="button" class="wb-sn" data-wbact="${s.k}" title="이 신호의 눈금 보기">${wbEsc(s.n)}</button><b>${wbFmt(R.sig[s.k][WB.xi], s.d||0)}</b><span class="wb-u">${wbEsc(s.u)}</span></div>`); }
+/* 신호 고르기 창 몸통: 찾기 칸 · 값이 하나도 없는 신호 숨김 (고른 것은 늘 보임) · 묶음(g) 머리를 눌러 접기. 위 축 · 프로브 값 줄은 스크롤 밖에 그대로
+   items = [{k, n (HTML 이름), g (묶음), nan (값이 하나도 없음)}], row = 한 줄 HTML. 묶음 순서 = 도구의 sigGroups, 없으면 처음 나온 차례 */
+const WBNAN = new WeakMap();
+function wbAllNaN(a){ if(!a || !a.length) return true; let v = WBNAN.get(a); if(v===undefined){ v = !Array.prototype.some.call(a, Number.isFinite); WBNAN.set(a, v); } return v; }
+function wbSlRows(items, sel, row){ const q = (WB.slq || '').trim().toLowerCase(), cz = WB.slc || (WB.slc = new Set()), ord = wbT().sigGroups || [];
+  const txt = h => String(h).replace(/<[^>]+>/g, '').toLowerCase(), hidN = items.filter(o => o.nan && !sel.has(o.k)).length;
+  const L = items.filter(o => (WB.slall || !o.nan || sel.has(o.k)) && (!q || txt(o.n).includes(q) || o.k.toLowerCase().includes(q)));
+  const oi = g => { const i = ord.indexOf(g); return i < 0 ? 1e3 : i; }, gs = [...new Set(L.map(o => o.g || ''))].sort((a, b) => oi(a) - oi(b)), head = gs.some(g => g);
+  let h = '';
+  gs.forEach(g => { const rs = L.filter(o => (o.g || '')===g), key = WB.id + '|' + g, shut = !q && cz.has(key), ns = rs.filter(o => sel.has(o.k)).length;
+    if(head) h += `<button type="button" class="wb-sgh" data-wbsgh="${wbEsc(key)}" aria-expanded="${!shut}"><span class="wb-sgc" aria-hidden="true">${shut ? '▸' : '▾'}</span>${wbEsc(g || '기타')}<span class="wb-sgn">${ns ? `${ns} / ` : ''}${rs.length}</span></button>`;
+    if(!shut) h += rs.map(row).join(''); });
+  if(!L.length){ const hq = q ? items.filter(o => o.nan && (txt(o.n).includes(q) || o.k.toLowerCase().includes(q))).length : 0;
+    h = `<p class="wb-swn">${hq ? `값이 하나도 없는 신호만 ${hq}개 맞습니다 (계산 설정에서 꺼짐) · 위 [안 쓰는 신호 보기]로 볼 수 있습니다.` : q ? '찾는 이름이 없습니다.' : '그릴 값이 없습니다.'}</p>`; }
+  const tb = `<div class="wb-slt"><input type="search" data-wbslq placeholder="이름으로 찾기" value="${wbEsc(WB.slq || '')}" aria-label="신호 찾기">`
+    + (hidN || WB.slall ? `<button type="button" class="wb-slx" data-wbslall aria-pressed="${!!WB.slall}" title="계산 설정에서 꺼져 값이 하나도 없는 신호">${WB.slall ? '안 쓰는 신호 숨기기' : `안 쓰는 신호 ${hidN}개 보기`}</button>` : '') + '</div>';
+  return tb + `<div class="wb-slb">${h}</div>`; }
+/* 신호 고르기 창을 다시 그림: 스크롤 위치 · 찾기 칸 글자 자리는 그대로 (프로브를 끌 때마다 다시 그림) */
+function wbSlPaint(){ const el = $('#wbsl'); if(!el) return; const b = el.querySelector('.wb-slb'), st = b ? b.scrollTop : 0, a = document.activeElement;
+  const q = a && a.matches && a.matches('#wbsl [data-wbslq]') ? [a.selectionStart, a.selectionEnd] : null;
+  el.innerHTML = wbSigListHTML(); const b2 = el.querySelector('.wb-slb'); if(b2) b2.scrollTop = st;
+  if(q){ const i = el.querySelector('[data-wbslq]'); if(i){ i.focus(); try{ i.setSelectionRange(q[0], q[1]); }catch(e){} } } }
+document.addEventListener('input', e => { const t = e.target; if(!t.matches || !t.matches('#wbsl [data-wbslq]')) return; WB.slq = t.value; wbSlPaint(); });
+document.addEventListener('click', e => { const t = e.target; if(!t.closest || !t.closest('#wbsl')) return;
+  const g = t.closest('[data-wbsgh]'); if(g){ const k = g.dataset.wbsgh, cz = WB.slc || (WB.slc = new Set()); cz.has(k) ? cz.delete(k) : cz.add(k); wbSlPaint(); return; }
+  if(t.closest('[data-wbslall]')){ WB.slall = !WB.slall; wbSlPaint(); } });
 function wbSigHTML(){ const R = WB.R; if(!R) return '';
   if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return '<p class="wb-empty">계산 중…</p>';
     const d = wbT().inputs.find(o => o.k===S.k), x = {d:S.X, n:wbInName(d).replace(/<[^>]+>/g, ''), u:wbInUnit(d)};
@@ -307,7 +333,7 @@ function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) re
   if((all || which.includes('main')) && $('#wbmain')){ $('#wbmain').innerHTML = wbMainHTML(); }   /* 도구가 그림(figure)을 줄 때만 있음. 선 그래프 결과는 신호 선택 그래프 하나로 */
   if((all || which.includes('ext')) && $('#wbext')) $('#wbext').innerHTML = wbT().extHTML();
   if((all || which.includes('ext') || which.includes('mid')) && $('#wbmid')) $('#wbmid').innerHTML = wbT().midHTML();   /* 도구 영역: 결과와 신호 그래프 사이 */
-  if((all || which.includes('sig')) && $('#wbsl')){ $('#wbsl').innerHTML = wbSigListHTML(); $('#wbsig').innerHTML = wbSigHTML(); }
+  if((all || which.includes('sig')) && $('#wbsl')){ wbSlPaint(); $('#wbsig').innerHTML = wbSigHTML(); }
   if(all || which.includes('stat')){ $('#wbstat').textContent = WB.err ? '' : (WB.R ? `계산 ${WB.ms < 1 ? '1 ms 미만' : Math.round(WB.ms) + ' ms'} · Web Worker` : ''); const c = $('#wbcodeon'); if(c) c.hidden = WB.code[WB.id] == null; } }
 
 /* ---------- 열기 · 닫기 · 입력 기억 ---------- */
@@ -317,7 +343,7 @@ function wbLoad(id){ const T = WB_TOOLS[id], I = {}; let saved = {};
   return I; }
 function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(WB.I)); }catch(e){} }
 function wbOpen(id, ret){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
-  WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0;
+  WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && T.xiStart === 'end') { WB.xi = WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
@@ -534,7 +560,7 @@ document.addEventListener('pointerdown', e => { if(e.button!==0 || !e.target.clo
   const ph = e.target.closest('#wb [data-wbph]'); if(ph){ e.preventDefault(); const i = +ph.dataset.wbph, n = (WB.xa.startsWith('in:') ? WB.panesO : WB.panes).length, svg = ph.parentElement.querySelector('svg');
     WB_PHD = {i, y:e.clientY, h0:wbPh(i, n), k: svg ? 1100/svg.getBoundingClientRect().width : 1}; return; }
   const pp = e.target.closest('#wb [data-wbpi]'); if(pp && !e.target.closest('[data-wbpdel]')){ const i = +pp.dataset.wbpi, sw = WB.xa.startsWith('in:');   /* 칸 고르기 */
-    if(sw ? WB.piO!==i : WB.pi!==i){ if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } const sl = $('#wbsl'); if(sl) sl.innerHTML = wbSigListHTML(); document.querySelectorAll('#wb [data-wbpi]').forEach(d => d.classList.toggle('on', +d.dataset.wbpi===i)); } }
+    if(sw ? WB.piO!==i : WB.pi!==i){ if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbSlPaint(); document.querySelectorAll('#wb [data-wbpi]').forEach(d => d.classList.toggle('on', +d.dataset.wbpi===i)); } }
   if(!WB.R) return; const svg = e.target.closest('#wb .wb-plot'); if(!svg || !svg.querySelector('.wb-hit')) return;   /* 표시 전용 그래프는 프로브와 상관없음 */
   if(svg.dataset.wbp==='sig' && (WB.zm || 'cur')!=='cur'){ e.preventDefault(); wbZDown(svg, e); return; }   /* 이동 · 영역 확대 모드 */
   e.preventDefault(); WB_DRAG = svg; wbPick(svg, e); const box = svg.closest('.wb-plotbox'); if(box) box.focus({preventScroll:true}); });

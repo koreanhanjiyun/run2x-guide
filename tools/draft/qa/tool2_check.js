@@ -80,8 +80,8 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.click('[data-t2menu="mt"]'); await W(200); await p.click('[data-t2act="ex"][data-t2k="mt"]'); await toSim(); console.log('torque reset acc', f((await R()).t_acc_s,3)); await toEdit('mt');
   // 디레이팅 켜기
   await p.click('[data-t2tab="sim"]'); await W(500); await p.click('.t2-hr [data-t2course="end"]'); await W(7000); const e0=(await R()).t_end_s;
-  await p.evaluate(()=>{ WB.I.th_on=1; WB.I.th_k=3; WB.I.th_t0=45; wbSave(); wbCalcSoon(); }); await idle(); o=await R(); console.log('derate end', f(e0,1), '->', f(o.t_end_s,1), 'tmax', f(o.c_tmax,1));
-  await p.evaluate(()=>{ WB.I.th_k=0; wbSave(); wbCalcSoon(); }); await idle();
+  await p.evaluate(()=>{ WB.I.th_on=1; WB.I.dr_t0=45; WB.I.dr_t1=60; wbSave(); wbCalcSoon(); }); await idle(); o=await R(); console.log('derate end', f(e0,1), '->', f(o.t_end_s,1), 'tmax', f(o.c_tmax,1));
+  await p.evaluate(()=>{ WB.I.dr_t0=80; WB.I.dr_t1=100; wbSave(); wbCalcSoon(); }); await idle();
   await p.fill('[data-t2skid]','9.2'); await p.press('[data-t2skid]','Enter'); await idle(); o=await R(); console.log('cla_req', f(o.cla_req)); await p.fill('[data-t2skid]','10.5'); await p.press('[data-t2skid]','Enter'); await idle(); console.log('cla_req neg', f((await R()).cla_req));
   console.log('edit groups', await (async()=>{ await p.click('[data-t2tab="edit"]'); await W(400); const r=[]; for(const g of ['model','course','car','sus','tire','aero','mot','dt','bat']){ await p.click(`[data-t2eg="${g}"]`); await W(300); r.push(g+':'+await p.locator('#wbext .t2-cg [data-wbi]').count()); } await p.click('[data-t2eg="course"]'); await W(300); await p.click('[data-t2tab="sim"]'); await W(400); return r.join(' '); })(), 'left inputs', await p.locator('#wbin [data-wbi]').count());
   { await p.click('.t2-hr [data-t2course="skid"]'); await idle(); const ay=await p.evaluate(()=>WB.R.sig.ay); console.log('skid ay sign', Math.min(...ay).toFixed(2), Math.max(...ay).toFixed(2), 'lim', await p.evaluate(()=>[WB.R.out.ax_max, WB.R.out.ay_skid, WB.R.out.v_endtop].map(v=>v.toFixed(2)).join(' '))); }
@@ -93,7 +93,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
     console.log('model page', await p.locator('.t2-mdop').count(), 'disabled', await p.locator('.t2-mdop:disabled').count(), 'top md seg', await p.locator('.t2-hr [data-t2md]').count());
     const th=()=>p.evaluate(()=>[WB.I.th_on,WB.I.cw_on,WB.I.bt_on].join(''));
     await p.click('[data-t2th="th_on"]'); await W(150); const s1=await th(); await p.click('[data-t2th="cw_on"]'); await W(150); const s2=await th(); await p.click('[data-t2th="th_on"]'); await W(150); const s3=await th();
-    console.log('th toggles', s1, s2, s3, 'lock th_k', await p.evaluate(()=>t2InLock('th_k')||'-'));
+    console.log('th toggles', s1, s2, s3, 'lock dr_t0', await p.evaluate(()=>t2InLock('dr_t0')||'-'));
     await p.click('[data-t2th="cw_on"]'); await W(150); await p.click('[data-t2th="bt_on"]'); await W(150); console.log('th all', await th(), 'lock b_c', await p.evaluate(()=>t2InLock('b_c')||'-'));
     await p.click('[data-t2tab="sim"]'); await idle(); o=await R();
     console.log('rmin row', await p.evaluate(()=>[WB.I.rmin, WB.R.out.c_rmn, WB.R.out.c_rbad, /가장 작은 반경/.test(document.querySelector('#wbout').textContent)]));

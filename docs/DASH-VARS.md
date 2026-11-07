@@ -162,7 +162,7 @@
 | `lsd_ramp_acc`, `lsd_ramp_dec` | LSD 램프각 (가속 · 감속) | deg | d_ramp | 팀 | 도구 2(선택) | — |
 | `regen_tmax` | 회생 토크 상한 | N·m | d_regen | 팀 | 도구 2(에너지), 도구 3 | — |
 | `slip_target` | 목표 슬립률 (TC · 런치) | % | d_tc, d_launch | 팀 | 도구 2 | — |
-| `derate_t0`, `derate_t1` | 디레이팅 시작 · 끝 온도 | °C | d_derate | 팀 | — | — |
+| `derate_t0`, `derate_t1` | 디레이팅 시작 · 끝 온도 | °C | d_derate | 팀 | 도구 2 (모터 온도 · 피크 → 연속 토크) | — |
 | `p_endur` | 내구 출력 상한 | kW | d_effic | 팀 → 도구 2 | 도구 2 | — |
 | `e_lap` | 랩별 에너지 예산 | kWh | d_effic | 도구 2 | — | — |
 | `e_pack` | 팩 용량 | kWh | p_cell, bat_elec | 도구 4 (셀, 직병렬) | 도구 2 | ○ |
