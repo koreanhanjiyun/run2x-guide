@@ -85,6 +85,7 @@ async function wbCalc(){ const T = wbT(); if(!T) return;
   else if(!r.r || !r.r.out || (r.r.x && !r.r.sig)){ WB.err = '계산 결과에 out(결과 숫자)이, x(가로축)가 있으면 sig(신호)도 있어야 합니다'; WB.R = null; }
   else { WB.err = ''; WB.R = r.r; WB.ms = r.ms; if(WB.R.x){ const n = WB.R.x.d.length; if(WB.xi >= n) WB.xi = n - 1; } else if(!WB.xa) WB.xa = 'in:' + (T.sweepFirst || T.inputs[0].k); }
   if(T.onResult) T.onResult(WB.R);   /* 도구 모듈이 자기 영역(표 · 그림)을 결과에 맞춰 고침 */
+  wbEffRefresh();                     /* 잠긴 칸: 결과에서 정해지는 실제 값 (자동 구성 등) */
   if(WB.xa.startsWith('in:') && !WB.err && !T.noSig) await wbSweep();
   if(my !== WB.cseq) return;
   WB.busy = false; wbBusy(false);
@@ -205,6 +206,17 @@ const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><
 function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2) */
   if(!list.length && T.inEmpty) return WB_INLEG + T.inEmpty;
   return WB_INLEG + wbInRows(list); }
+/* 잠긴 칸 값: 도구의 inEff(k) 가 undefined = 저장값 그대로, null = 계산에 안 씀 (—), 숫자 = 실제로 쓰는 값, '…' = 결과가 나오면 정해짐 */
+function wbEffVal(T, d){ const e = T.inEff ? T.inEff(d.k) : undefined, v = WB.I[d.k];
+  if(e===undefined) return {v:isFinite(v) ? v : '', ph:'', cls:'', t:'저장된 입력값'};
+  if(e===null) return {v:'', ph:'—', cls:'wb-eff none', t:`계산에 쓰지 않음 (입력해 둔 값 ${isFinite(v) ? wbFmt(v, d.d != null ? d.d : 2) : '없음'} 은 잠금이 풀리면 돌아옴)`};
+  if(e==='…') return {v:'', ph:'…', cls:'wb-eff', t:'계산이 끝나면 정해짐'};
+  const dd = d.d != null ? d.d : 2, x = (+e).toFixed(Number.isInteger(+e) ? 0 : Math.max(dd, 2));   // 계산값은 소수 둘째 자리 이상 (글자로, 끝 0 유지)
+  return {v:isFinite(+x) ? x : '', ph:'—', cls:'wb-eff', t:`실제로 쓰는 값 (입력해 둔 값 ${isFinite(v) ? wbFmt(v, dd) : '없음'} 은 잠금이 풀리면 돌아옴)`}; }
+/* 결과가 바뀌면 잠긴 칸의 실제 값만 그 자리에서 다시 (입력 칸 전체를 다시 그리지 않음) */
+function wbEffRefresh(){ const T = wbT(); if(!T || !T.inLock) return;
+  document.querySelectorAll('#wb input[data-wbi]:disabled').forEach(i => { const d = T.inputs.find(q => q.k===i.dataset.wbi); if(!d) return; const ev = wbEffVal(T, d);
+    i.value = ev.v; i.placeholder = ev.ph; i.className = ev.cls; i.title = ev.t; }); }
 function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
   return list.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
     const grp = head && d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
@@ -212,8 +224,9 @@ function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
     const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
     const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own);
     const lk = T.inLock ? T.inLock(d.k) : '';   /* 도구가 맵으로 대신 쓰는 입력: 칸을 막고 까닭을 적음 */
+    const ev = lk ? wbEffVal(T, d) : null;      /* 잠긴 칸에 보일 값: 실제로 계산에 쓰는 값 · 안 쓰면 — (저장값은 그대로 → 풀리면 되돌아옴) */
     const opt = T.inOpt ? T.inOpt(d.k) : '';   /* 도구가 이 칸 줄에 넣는 옵션 단추 (이름과 값 사이) */
-    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}"><span class="wb-in-n"><span class="wb-in-t">${dot}${nm}${viz}</span>${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${isFinite(v)?v:''}"${lk ? ' disabled' : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}"><span class="wb-in-n"><span class="wb-in-t">${dot}${nm}${viz}</span>${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */

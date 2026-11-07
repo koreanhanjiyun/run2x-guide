@@ -764,14 +764,22 @@ function t2InLock(k){ const L = '아래 표 사용';
     if(k==='inv_r') return WB.I.eff_mg === 1 ? '' : '효율 따로';
     if(k==='eta_inv' && WB.I.eff_mg === 1) return '모터 맵에 합침'; }
   return ''; }
+/* 잠긴 칸에 보일 값 (작업창 wbEffVal): 숫자 = 계산에 실제로 쓰는 값, null = 쓰지 않음 (—). 잠기지 않은 칸은 부르지 않음 */
+function t2InEff(k){ const I = WB.I;
+  if(k==='th_k') return 0;                                                   // 모터 열 끔 → 디레이팅 없음
+  if(k==='e_target') return t2ElOf()===1 ? t2Epack() : null;                 // 제원 용량 · 제한 없음
+  if(k==='rl_b') return I.w_car > 0 ? I.w_car / 2 + Math.max(0, I.rl_m || 0) : null;   // 전폭으로 계산한 직선 여유 b
+  if(k==='eta_inv' && I.eff_mg !== 1 && t2UseMap('eI')) return null;
+  return null; }
 /* 차 전폭을 바꾸면 그 자리에서 '최소 거리' · '여유' 칸 막힘을 다시 맞춤 (입력 칸 전체를 다시 그리면 글자 넣던 칸을 놓침) */
 function t2RlLock(){ ['rl_b', 'rl_m', 'oh_f', 'oh_r'].forEach(k => { const i = document.querySelector(`#wb [data-wbi="${k}"]`); if(!i) return; const r = i.closest('.wb-ir'), lk = t2InLock(k);
-  i.disabled = !!lk; r.classList.toggle('lock', !!lk); let s = r.querySelector('.wb-lk'); if(lk && !s){ s = document.createElement('span'); s.className = 'wb-lk'; i.parentNode.insertBefore(s, i.nextSibling.nextSibling); }
+  i.disabled = !!lk; r.classList.toggle('lock', !!lk); { const d = WB_TOOLS['2'].inputs.find(q => q.k===k), ev = lk ? wbEffVal(WB_TOOLS['2'], d) : {v:isFinite(WB.I[k]) ? WB.I[k] : '', ph:'', cls:'', t:''}; i.value = ev.v; i.placeholder = ev.ph; i.className = ev.cls; i.title = ev.t; }
+  let s = r.querySelector('.wb-lk'); if(lk && !s){ s = document.createElement('span'); s.className = 'wb-lk'; i.parentNode.insertBefore(s, i.nextSibling.nextSibling); }
   if(s){ if(lk) s.textContent = lk; else s.remove(); } }); }
 document.addEventListener('input', e => { if(WB.id==='2' && e.target.matches && e.target.matches('[data-wbi="w_car"]')) setTimeout(t2RlLock, 0); });
 /* 셀 구성 · 용량 · 전압을 바꾸면 [제원 용량 X kWh] 글자를 그 자리에서 맞춤 */
 document.addEventListener('input', e => { if(WB.id!=='2' || !e.target.matches || !e.target.matches('[data-wbi="n_s"],[data-wbi="n_p"],[data-wbi="c_ah"],[data-wbi="c_vnom"]')) return;
-  setTimeout(() => { const b = document.querySelector('#wb [data-t2el="1"]'); if(b) b.textContent = `제원 용량 ${wbFmt(t2Epack(), 2)} kWh`; }, 0); });
+  setTimeout(() => { const b = document.querySelector('#wb [data-t2el="1"]'); if(b) b.textContent = `제원 용량 ${wbFmt(t2Epack(), 2)} kWh`; wbEffRefresh(); }, 0); });
 
 /* ============================================================ 결과 칸 (도구가 직접 그림)
    1행: 감속비 · 종목 기록 · 차량 한계 (감속비 칸과 종목 기록 칸은 같은 종목이 같은 높이)
@@ -984,7 +992,7 @@ WB_TOOLS['2'] = {
     {k:'eta', n:'모터 × 인버터 효율', u:'%', d:1}, {k:'tmot', n:'모터 온도', u:'°C', d:1}, {k:'tlim', n:'모터 토크 한계 (디레이팅 포함)', u:'N·m', d:1}, {k:'grip', n:'그립 사용률 (차 전체)', u:'%', d:0}, {k:'t', n:'경과 시간', u:'s', d:2}, {k:'ecum', n:'누적 단자 에너지', u:'Wh', d:0}
   ],
   sigOn:['v', 'pw'],
-  extHTML: t2ExtHTML, midHTML: t2MidHTML, extraI: t2ExtraI, inLock: t2InLock, inOpt: t2InOpt, inExt: true, inPanel: false, deferCalc: () => T2.tab==='edit',   /* 편집 탭에서는 계산하지 않음 → 시뮬레이션 탭으로 갈 때 */
+  extHTML: t2ExtHTML, midHTML: t2MidHTML, extraI: t2ExtraI, inLock: t2InLock, inEff: t2InEff, inOpt: t2InOpt, inExt: true, inPanel: false, deferCalc: () => T2.tab==='edit',   /* 편집 탭에서는 계산하지 않음 → 시뮬레이션 탭으로 갈 때 */
   inEmpty: '<p class="muted wb-inempty">입력은 위 [편집] 탭에 항목별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>',
   extGet: () => ({course:T2.course, lap:{...T2.lap}, free:{...T2.free}, mtext:T2.mtext, eM:T2.eM, eI:T2.eI, tire:T2.tire, grMode:T2.grMode}),
   extSet(d){ if(!d || typeof d!=='object') return; t2Load(d); t2Save(); wbPaint(['ext', 'mid', 'in']); },

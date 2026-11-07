@@ -82,6 +82,7 @@ WB_TOOLS['4'] = {
     {k:'o_mode', n:'출력 표 전류 (0 제한 적용 · 1 셀 최대 · 2 직접)', u:'', v:0, d:0, g:T4G.add, ui:'none'}, {k:'o_i', n:'출력 표 전류 (직접)', u:'A', v:0, d:0, g:T4G.add, ui:'none'},
   ],
   inLock(k){ if(k==='n_p' && WB.I.auto===1) return '자동 (규정 안 최대)'; if(k==='s_seg' && WB.I.auto===2) return '자동 (규정 안 최대)'; return ''; },
+  inEff(k){ const o = WB.R && !WB.err && WB.R.out; if(k==='n_p') return o ? o.n_p_o : '…'; if(k==='s_seg') return o ? o.s_seg_o : '…'; return null; },   // 자동 구성으로 정해진 수
   outGroups:{'셀 값 (대시보드 반영 확인용)':{note:'입력한 셀 값 그대로. [대시보드에 반영]으로 도구 2 등이 받아 씀'}},
   outputs:[
     {k:'n_s', dk:'n_s', n:'전체 직렬 수 (S)', d:0, g:'팩'}, {k:'n_p_o', dk:'n_p', n:'병렬 수 (P)', d:0, g:'팩'}, {k:'cells', n:'셀 개수', u:'개', d:0, g:'팩'},

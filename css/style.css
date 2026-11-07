@@ -3100,3 +3100,4 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .m1-dim .m1-xyz input::placeholder{color:#b9bec8}
 .m1-dim .m1-xyz input{width:50px}.m1-dim{gap:4px 6px}
 .t2-trp{margin-top:8px;overflow-x:auto}
+.wb-ir.lock input.wb-eff{font-style:italic}.wb-ir.lock input.wb-eff.none::placeholder{color:var(--muted);font-style:normal}
