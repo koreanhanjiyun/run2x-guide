@@ -122,7 +122,7 @@ const DKEYS = [
   {"k": "cda_drs", "n": "C<sub>D</sub>·A (DRS 열림)", "u": "m²", "p": "에어로", "it": "g_aero", "calc": false, "def": "① DRS를 열었을 때의 C<sub>L</sub>A, C<sub>D</sub>A, CoP 위치. ② 해석. ③ 닫힘 값과 같은 기준 차고에서 잰다.", "fig": false},
   {"k": "xcop_drs", "n": "CoP 위치 (DRS 열림)", "u": "mm", "p": "에어로", "it": "g_aero", "calc": false, "def": "① DRS를 열었을 때의 C<sub>L</sub>A, C<sub>D</sub>A, CoP 위치. ② 해석. ③ 닫힘 값과 같은 기준 차고에서 잰다.", "fig": false},
   {"k": "pmax", "n": "최고 출력", "u": "kW", "p": "모터컨트롤러", "it": "d_torque", "calc": false, "def": "① 규정이 허용하는 축전지 출력 상한. ② 해당 연도 FSK 규정 원문. ③ 모터 정격 출력과 다르다.", "fig": false},
-  {"k": "tmax", "n": "모터 최대 토크", "u": "N·m", "p": "모터컨트롤러", "it": "p_motor", "calc": false, "def": "① 모터 축에서 낼 수 있는 최대 토크(인버터 전류 한계 포함). ② 제조사 자료. ③ 연속 토크와 순간(피크) 토크를 구분해 적는다.", "fig": false},
+  {"k": "tmax", "n": "모터 최대 토크", "u": "N·m", "p": "모터컨트롤러", "it": "p_motor", "calc": true, "def": "① 모터 축에서 낼 수 있는 최대 토크(인버터 전류 한계 포함). ② 제조사 자료. ③ 연속 토크와 순간(피크) 토크를 구분해 적는다.", "fig": false},
   {"k": "nmax", "n": "모터 최고 회전수", "u": "rpm", "p": "모터컨트롤러", "it": "p_motor", "calc": false, "def": "① 모터를 돌릴 수 있는 최고 회전수(제조사 한계와 인버터 설정 중 낮은 값). ② 제조사 · 인버터 설정. ③ 최고속은 이 값 · 감속비 · 유효 반경으로 정해진다.", "fig": false},
   {"k": "gr", "n": "최종 감속비", "u": "", "p": "구동계", "it": "p_ratio", "calc": false, "def": "① 모터 회전수 ÷ 바퀴 회전수(스프로킷 잇수 비 등). ② 팀이 정하고 도구 2가 최적값을 제안. ③ 1보다 크다.", "fig": false},
   {"k": "vmax", "n": "최고속 (회전수 한계)", "u": "km/h", "p": "구동계", "it": "d_inv", "calc": true, "def": "① 모터 최고 회전수에 닿는 차속. vmax[km/h] = 최고 회전수[rpm] ÷ 감속비 × 2π ÷ 60 × 유효 반경[m] × 3.6. ② 계산값. ③ 공기 저항으로 막히는 속도가 이보다 낮을 수 있다.", "fig": false},
