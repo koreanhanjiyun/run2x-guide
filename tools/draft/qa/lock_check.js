@@ -4,7 +4,7 @@ const H=require('./h.js');
   const V=k=>p.evaluate(k=>{ const i=document.querySelector(`#wb input[data-wbi="${k}"]`); return i ? [i.disabled?'잠김':'열림', i.value===''?i.placeholder:i.value].join(':') : '없음'; }, k);
   await p.evaluate(()=>{ localStorage.removeItem(wbStoreKey('2')); localStorage.removeItem(wbStoreKey('4')); showTab('tools'); }); await W(500);
   await p.evaluate(()=>wbOpen('2')); await W(9000); await p.click('[data-t2tab="edit"]'); await W(300);
-  await p.click('[data-t2eg="mot"]'); await W(400); console.log('th_k', await V('th_k'), 'th_c', await V('th_c'), 'stored', await p.evaluate(()=>WB.I.th_k));
+  await p.click('[data-t2eg="mot"]'); await W(400); console.log('th_k', await V('th_k'), 'th_c', await V('th_c'), 'tmax', await V('tmax'), 'stored', await p.evaluate(()=>WB.I.th_k));
   if(d) await p.screenshot({path:d+'/lock_mot.png'});
   await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2th="th_on"]'); await W(300); await p.click('[data-t2eg="mot"]'); await W(400);
   console.log('after on th_k', await V('th_k'), 'th_c', await V('th_c'));
