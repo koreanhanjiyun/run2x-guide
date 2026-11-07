@@ -746,7 +746,6 @@ function t2InLock(k){ const L = '아래 표 사용';
   if(k==='e_target') return t2ElOf()===2 ? '' : t2ElOf()===1 ? '제원 용량 사용' : '제한 없음';
   if(k==='rl_b') return WB.I.w_car > 0 ? '차 전폭으로 계산' : ''; if(k==='rl_m' || k==='oh_f' || k==='oh_r') return WB.I.w_car > 0 ? '' : '전폭이 0 이면 안 씀';
   if(['h_rcf', 'h_rcr', 'k_roll', 'rsd'].includes(k)) return WB.I.md >= 1 ? '' : '차량 모델 1 에서 씀';
-  if(k==='lltd') return WB.I.md >= 1 ? '모델 1 이상은 롤센터 · 롤강성 배분' : '';
   if(['tire_ca0', 'tire_cn', 'tire_c', 'tire_e', 'steer_ratio', 'delta_max'].includes(k)) return WB.I.md >= 2 ? '' : '차량 모델 2 에서 씀';
   if(['tire_relax', 'izz', 'ixx', 'm_us_f', 'm_us_r', 'c_roll', 'v_test', 'ay_test'].includes(k)) return WB.I.md >= 3 ? '' : '차량 모델 3 에서 씀';
   { const th = t2Th();
@@ -903,7 +902,7 @@ WB_TOOLS['2'] = {
     {k:'L', dk:'L', v:1550, d:0, g:T2G.car, sb:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:T2G.car, sb:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:T2G.car, sb:'치수'},
     {k:'w_car', n:'차 전폭 (타이어 · 윙 포함, 0 = 입력 안 함)', u:'m', v:1.4, d:2, g:T2G.car, sb:'치수'},
     {k:'oh_f', n:'앞 오버행 (앞축 ~ 차 앞 끝)', u:'m', v:0.6, d:2, g:T2G.car, sb:'치수'}, {k:'oh_r', n:'뒤 오버행 (뒤축 ~ 차 뒤 끝)', u:'m', v:0.4, d:2, g:T2G.car, sb:'치수'},
-    {k:'mu', dk:'mu', n:'타이어 μ (기준 하중)', v:1.5, d:2, g:T2G.tire, sb:'마찰 · 하중 이동'}, {k:'mu_s', dk:'mu_s', n:'μ 하중 감도', v:0, d:3, g:T2G.tire, sb:'마찰 · 하중 이동'}, {k:'lltd', dk:'lltd', v:50, d:1, g:T2G.tire, sb:'마찰 · 하중 이동'},
+    {k:'mu', dk:'mu', n:'타이어 μ (기준 하중)', v:1.5, d:2, g:T2G.tire, sb:'마찰 · 하중 이동'}, {k:'mu_s', dk:'mu_s', n:'μ 하중 감도', v:0, d:3, g:T2G.tire, sb:'마찰 · 하중 이동'},
     {k:'r_eff', dk:'r_eff', n:'바퀴 유효 반경 (동반경)', v:229, d:0, g:T2G.tire, sb:'바퀴'}, {k:'crr', dk:'crr', v:0.015, d:3, g:T2G.tire, sb:'바퀴'},
     {k:'cla', dk:'cla', n:'C<sub>L</sub>·A (다운포스)', v:3.0, d:2, g:T2G.aero, sb:'공력 계수'}, {k:'cda', dk:'cda', n:'C<sub>D</sub>·A (항력)', v:1.4, d:2, g:T2G.aero, sb:'공력 계수'},
     {k:'xcop', dk:'xcop', n:'압력중심 위치 (뒤축부터 앞으로)', v:698, d:0, g:T2G.aero, sb:'압력중심'}, {k:'hcop', dk:'hcop', n:'압력중심 높이 (항력 작용)', v:420, d:0, g:T2G.aero, sb:'압력중심'},
@@ -930,7 +929,7 @@ WB_TOOLS['2'] = {
     {k:'rl_m', n:'여유 (차 옆면 ↔ 코스 경계 · 콘, 전폭이 있을 때)', u:'m', v:0.2, d:2, g:T2G.rl, sb:'여유'},
     {k:'rl_b', n:'경계 · 콘에서 차 중심까지 최소 거리 (전폭이 0 일 때)', u:'m', v:1.0, d:2, g:T2G.rl, sb:'여유'},
     {k:'md', n:'차량 모델 단계 (0 = 기본, 1 = 롤센터 · 롤, 2 = 비선형 타이어, 3 = 과도)', u:'', v:0, d:0, g:T2G.rc, ui:'none'},
-    {k:'th_on', n:'열 모델 · 모터 열 (1 = 켬)', u:'', v:1, d:0, g:T2G.thm, ui:'none'}, {k:'cw_on', n:'열 모델 · 냉각수 온도 (1 = 켬, 수랭 부품이 있을 때)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
+    {k:'th_on', n:'열 모델 · 모터 열 (1 = 켬)', u:'', v:0, d:0, g:T2G.thm, ui:'none'}, {k:'cw_on', n:'열 모델 · 냉각수 온도 (1 = 켬, 수랭 부품이 있을 때)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
     {k:'in_on', n:'열 모델 · 인버터 온도 (1 = 켬)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
     {k:'m_cool', n:'모터 냉각 (0 = 공랭, 1 = 수랭)', u:'', v:1, d:0, g:T2G.thm, ui:'none'}, {k:'i_cool', n:'인버터 냉각 (0 = 공랭, 1 = 수랭)', u:'', v:1, d:0, g:T2G.thm, ui:'none'}, {k:'b_cool', n:'축전지 냉각 (0 = 공랭, 1 = 수랭)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
     {k:'i_c', n:'인버터 열용량', u:'J/K', v:2000, d:0, g:T2G.inv, sb:'인버터 열'}, {k:'i_r', n:'인버터 → 냉각수 열저항 (수랭)', u:'K/W', v:0.05, d:4, g:T2G.inv, sb:'인버터 열'},
@@ -1006,7 +1005,7 @@ WB_TOOLS['2'] = {
     {n:'스키드패드 · 다운포스 (앞뒤 몫 = 무게 배분)', I:{m:300, fr:50, L:1550, xcop:775, mu:1.5, crr:0, cla:3, cda:0}, expect:{t_skid_s:9.471806}, src:'mv²/R = μ(mg + ½ρC_LA v²) → v² = μmg ÷ (m/R − μ½ρC_LA), 좌우 한 바퀴씩 합'},
     {n:'스키드패드 목표 기록 → 필요 C_L·A', I:{m:300, fr:50, L:1550, xcop:775, mu:1.5, crr:0, cla:0, cda:0, t_skid:9.471806}, expect:{cla_req:3}, src:'위 경우를 거꾸로: 9.4718 s 에 필요한 C_L·A = 3'},
     {n:'스키드패드 목표가 느리면 필요 C_L·A 는 − (줄여도 됨)', I:{m:300, fr:50, L:1550, xcop:775, mu:1.5, crr:0, cla:0, cda:0, t_skid:10.302152}, expect:{cla_req:-3}, src:'C_L·A = −3 (양력)이면 v² = μmg·½ ÷ (m/R·½ − μ·½ρ(−3)·½) → 좌우 합 10.3022 s'},
-    {n:'하중 감도 0 → 횡하중 이동 배분과 상관없음', I:{mu:1.5, mu_s:0, lltd:20, crr:0, cla:0, cda:0}, expect:{t_skid_s:9.895692}, src:'μ 일정이면 축 힘 = μ × 축 하중 (좌우로 옮겨도 합은 같음)'},
+    {n:'하중 감도 0 → 좌우 하중 이동 배분(모델 0 = 무게 배분)과 상관없음', I:{mu:1.5, mu_s:0, fr:30, crr:0, cla:0, cda:0}, expect:{t_skid_s:9.895692}, src:'μ 일정이면 축 힘 = μ × 축 하중 (좌우로 옮겨도 합은 같음), 횡력 합 = μ m g'},
     {n:'하중 감도 · 스키드패드', I:{m:300, fr:50, h:300, tf:1200, tr:1200, lltd:50, mu:1.5, mu_s:0.1, crr:0, cla:0, cda:0}, expect:{t_skid_s:10.276676, ay_skid:1.390843}, src:'축 하나: m·ay/2 = μ0·W/2 − μs(2(W/4)² + 2ΔF²), ΔF = ½·m·ay·h/t 를 ay 에 대해 풂 (좌우 합)'},
     {n:'타이어 하중 감도 맵 = 같은 직선의 감도', I:{m:300, fr:50, h:300, tf:1200, tr:1200, lltd:50, mu:1.5, mu_s:0, tireMap:[[0, 1.5], [10000, 0.5]], crr:0, cla:0, cda:0}, expect:{t_skid_s:10.276676, ay_skid:1.390843}, src:'맵 μ(Fz) = 1.5 − 0.1 × Fz[kN] 은 위 하중 감도 0.1 과 같음'},
     {n:'내 코스 · 원 2번째 바퀴 = 스키드패드', I:{mu:1.5, crr:0, cla:0, cda:0, free:{seg:[[57.33407, 9.125]], closed:true, laps:2, s0:0}}, expect:{t_free2:4.947846}, src:'달리는 중 한 바퀴 = 2πR ÷ √(μgR)'},
@@ -1103,7 +1102,7 @@ WB_TOOLS['2'] = {
 //   I._sweep = 입력 훑기 중 (줄여 셈)
 //
 // 모델 : 점질량 준정적(QSS)
-//   - 앞뒤 하중 이동 (종가속 · 항력 높이 · 다운포스 앞뒤 몫), 좌우 하중 이동 (앞 몫 = lltd)
+//   - 앞뒤 하중 이동 (종가속 · 항력 높이 · 다운포스 앞뒤 몫), 좌우 하중 이동 (모델 0: 넘기려는 모멘트를 축 무게 몫대로, 모델 1 이상: 롤센터 · 롤강성 배분)
 //   - 바퀴마다 μ = μ0 − 하중 감도 × 하중 [kN] → 축이 낼 수 있는 힘 = Σ μ·Fz.  횡력은 무게 배분대로 앞뒤에 나눔
 //   - 뒤축 구동 (모터 1개, 축 단위 마찰원).  제동은 이상 배분 가정 (제동 장치 한계는 도구 3).  롤 · 회생 · 디퍼렌셜 없음
 //   - 모터 : 토크 곡선의 회전수 축을 (단자 전압 ÷ 기준 전압) ÷ 유도 전압 비 로 늘이고 줄임
@@ -1156,7 +1155,6 @@ function car(I, gr, kP) {
   const hc  = I.hcop / 1000;                // 항력 작용 높이 [m]
   const r   = I.r_eff / 1000;               // 바퀴 유효 반경 [m]
   const tf  = I.tf / 1000, tr = I.tr / 1000; // 앞 · 뒤 윤거 [m]
-  const lt  = I.lltd / 100;                 // 횡하중 이동 앞 몫 [-]
   const mu  = I.mu;                         // 타이어 μ [-]
   const mus = I.mu_s || 0;                  // μ 하중 감도 [1/kN]
   const fz0 = I.tire_fz0 > 0 ? I.tire_fz0 : 0;   // μ 기준 하중 [N]: μ(F_z) = mu − mu_s (F_z − F_z0) ÷ 1000  (0 이면 mu = 하중 0 의 μ, 예전 방식)
@@ -1294,10 +1292,10 @@ function car(I, gr, kP) {
   //   모델 단계 1 이상: 롤센터 높이로 나눔 (Milliken & Milliken 18장) — 기하 몫 = 축 질량 × ay × 롤센터 높이 ÷ 윤거,
   //               탄성 몫 = m × ay × (무게중심 − 롤축 높이) × 롤강성 앞 몫(rsd, 도구 7) ÷ 윤거.  롤센터가 0 이고 rsd = lltd 면 단계 0 과 같음
   const md   = I.md >= 1 ? 1 : 0;                                                    // 모델 단계 (롤센터 · 롤 켬)
-  const rsd  = Number.isFinite(I.rsd) ? I.rsd / 100 : lt;                            // 롤강성 앞 몫 [-] (없으면 lltd)
+  const rsd  = Number.isFinite(I.rsd) ? I.rsd / 100 : fs;                            // 롤강성 앞 몫 [-] (없으면 무게 배분)
   const hrf  = md ? (I.h_rcf || 0) / 1000 : 0, hrr = md ? (I.h_rcr || 0) / 1000 : 0;  // 롤센터 높이 앞 · 뒤 [m]
   const hra  = hrf + (hrr - hrf) * (1 - fs);                                           // 무게중심 자리 롤축 높이 [m]  (앞축에서 L(1 − fs))
-  const le   = md ? rsd : lt;                                                          // 탄성 몫 앞 비율 (단계 0 = lltd 전체)
+  const le   = md ? rsd : fs;                                                          // 탄성 몫 앞 비율 (단계 0 = 롤 정보 없음 → 무게 배분, 기하 몫과 합쳐 앞 몫 = 무게 배분)
   const dF   = (ay, front) => front ? (m * fs * ay * hrf + le * m * ay * (h - hra)) / tf
                                     : (m * (1 - fs) * ay * hrr + (1 - le) * m * ay * (h - hra)) / tr;
   const kRoll = Math.max(1e-9, I.k_roll || 0);                                         // 롤강성 합 [N·m/°]
@@ -2467,11 +2465,12 @@ function calc(I) {
    대시보드 값으로 도구 2를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
 const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'th_k', 'th_t0', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'oh_f', 'oh_r', 'rl_m', 'rl_b', 'e_lim', 'rm_on', 'md', 'th_on', 'cw_on', 'in_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'inv_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_ha60', 'b_r', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
+const T2SET = ['md', 'th_on', 'in_on', 'bt_on', 'cw_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'rl_on', 'rm_on', 'e_lim'];   // 이 도구에서 고른 계산 설정 (대시보드 파트 결과도 같은 설정으로)
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
   T2GOAL.forEach(k => { const db = wbDash(k); I[k] = db ? db.v : 0; });
-  try{ const s = JSON.parse(localStorage.getItem(wbStoreKey('2')) || '{}') || {}; T2ONLY.forEach(k => { if(typeof s[k]==='number' && isFinite(s[k])) I[k] = s[k]; }); }catch(e){}
-  return {...I, ...t2ExtraI(), md:0, th_on:1, cw_on:0, bt_on:0, in_on:0, course:'acc', lap:'1', grMode:'my'}; }   // 대시보드 반영은 차량 모델 0 · 열 모델 모터 열만
+  try{ const s = JSON.parse(localStorage.getItem(wbStoreKey('2')) || '{}') || {}; [...T2ONLY, ...T2SET].forEach(k => { if(typeof s[k]==='number' && isFinite(s[k])) I[k] = s[k]; }); }catch(e){}
+  return {...I, ...t2ExtraI(), course:'acc', lap:'1', grMode:'my'}; }   // 모델 단계 · 열 모델 켜고 끔은 이 도구에서 고른 설정 그대로 (화면 결과와 같은 기준)
 function t2PartDirty(){ T2P.key = ''; if(typeof DASH!=='undefined' && (DASH.part==='goal' || DASH.part==='pt') && $('#t2part')) t2PartRun(); }
 function t2PartRun(){ const I = t2PartInputs(), key = JSON.stringify(I); if(key===T2P.key || T2P.busy) return; T2P.busy = true;
   try{ if(!T2P.w) T2P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['2'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); }catch(e){ T2P.busy = false; return; }
