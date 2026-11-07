@@ -16,7 +16,7 @@ WB_TOOLS['T'] = {
   x:{n:'슬립각', u:'°'},
   sweepFirst:'ca0',
   inputs:[
-    {k:'mu', dk:'mu', v:1.5, d:2, g:TTG.mf}, {k:'mu_s', dk:'mu_s', v:0, d:3, g:TTG.mf}, {k:'fz0', dk:'tire_fz0', v:700, d:0, g:TTG.mf},
+    {k:'mu', dk:'mu', v:1.5, d:2, g:TTG.mf}, {k:'mu_s', dk:'mu_s', v:0.246, d:3, g:TTG.mf}, {k:'fz0', dk:'tire_fz0', v:736, d:0, g:TTG.mf},
     {k:'ca0', dk:'tire_ca0', v:450, d:0, g:TTG.mf}, {k:'cn', dk:'tire_cn', v:0.8, d:2, g:TTG.mf}, {k:'tc', dk:'tire_c', v:1.3, d:2, g:TTG.mf}, {k:'te', dk:'tire_e', v:0, d:2, g:TTG.mf},
     {k:'relax', dk:'tire_relax', v:0.3, d:2, g:TTG.mf},
     {k:'m', dk:'m', v:300, d:0, g:TTG.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:TTG.car},

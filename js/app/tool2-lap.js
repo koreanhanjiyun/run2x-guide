@@ -255,10 +255,10 @@ function t2InOpt(k){ if(WB.id!=='2') return '';
   if(k!=='e_target') return ''; const m = t2ElOf();
   return `<span class="t2-inopt" title="${T2EL[m]}">${t2Seg('data-t2el', String(m), [['1', `제원 용량 ${wbFmt(t2Epack(), 2)} kWh`], ['2', '임의 상한'], ['0', '제한 없음']])}</span>`; }
 /* 모델 단계: 차량 · 열 두 축을 따로 고름 */
-const T2MDV = [[0, '0 기본', '무게중심 높이 전체로 좌우 하중 이동을 계산합니다. 롤은 계산하지 않습니다.', '차량 제원 (무게중심 높이 · 트레드) · 타이어 (μ · 하중 감도)'],
+const T2MDV = [[0, '0 기본', '무게중심 높이 전체로 좌우 하중 이동을 계산하고, 바퀴마다 μ(하중) 로 그립을 셉니다 (하중 감도가 0 이면 하중 이동이 그립 합을 바꾸지 않음). 롤은 계산하지 않습니다.', '차량 제원 (무게중심 높이 · 트레드) · 타이어 (μ · 하중 감도)'],
                [1, '1 롤센터 · 롤', '앞 · 뒤 롤센터 높이로 하중 이동을 기하 몫(롤센터에서 바로 전달)과 탄성 몫(스프링 · 안티롤바)으로 나누고, 롤 강성으로 롤각을 계산합니다.', '차량 제원 · 서스 · 조향 › 롤센터 · 롤 (앞 · 뒤 롤센터 높이, 롤 강성)'],
                [2, '2 비선형 타이어', '모델 1 에 더해, 도구 T 의 타이어 곡선(Magic Formula 꼴)으로 축 횡 한계를 두 바퀴가 같은 슬립각일 때의 최댓값으로 셉니다. 좌우 하중이 달라 두 바퀴 최고점 슬립각이 어긋나면 Σ μ·F<sub>z</sub> 보다 작아 코너 한계 속도가 낮아집니다. 최대 조향각을 넣으면 필요한 안쪽 바퀴 조향각(기하 + 슬립각 차)이 최대를 넘는 코너는 속도를 낮추고, 아주 느려도 못 도는 코너가 있으면 계산을 멈춥니다. 슬립각 · 차체 각도 β · 조향각 · 언더스티어 구배도 계산합니다.', '타이어 › 타이어 곡선 (모델 2 · 3) · 서스 · 조향 › 조향비 · 최대 조향각'],
-               [3, '3 과도 (요 · 롤 운동)', '모델 2 에 더해, 주행선을 그대로 따라가는 데 드는 타이어 힘에 요 관성(요 가속도)과 타이어 이완 길이(힘이 늦게 따라옴)를 넣습니다. 정상 선회보다 더 써야 해서 한계를 넘는 곳은 속도를 낮추고 준정적을 다시 풀어(앞에서 더 일찍 감속) 기록에 반영합니다 (내구 · 오토크로스 · 내 코스). 일정 차속 계단 조향의 시간 응답(3 자유도 + 타이어 이완, ISO 7401 꼴)도 따로 보여 줍니다.', '서스 · 조향 › 과도 (모델 3: 요 · 롤 관성, 현가하질량, 롤 감쇠, 경로 곡률 다듬기 거리, 시험 차속 · 횡가속도) · 타이어 이완 길이']];
+               [3, '3 과도 (요 · 롤 운동)', '모델 2 에 더해, 주행선을 그대로 따라가는 데 드는 타이어 힘에 요 관성(요 가속도)과 타이어 이완 길이(힘이 늦게 따라옴)를 넣습니다. ① 곡률이 바뀌는 곳은 앞 · 뒤 축마다 등가 곡률로 코너 한계 속도를 낮추고, 주행선 다듬기도 이 한계로 랩타임을 비교해 모델 3 의 선을 따로 고릅니다. ② 속도가 바뀌며 생기는 몫은 정해진 선에서 한계를 넘는 곳만 속도를 더 낮추고 준정적을 다시 풉니다 (앞에서 더 일찍 감속). 내구 · 오토크로스 · 내 코스에 반영하고, 일정 차속 계단 조향의 시간 응답(3 자유도 + 타이어 이완, ISO 7401 꼴)도 따로 보여 줍니다.', '서스 · 조향 › 과도 (모델 3: 요 · 롤 관성, 현가하질량, 롤 감쇠, 경로 곡률 다듬기 거리, 시험 차속 · 횡가속도) · 타이어 이완 길이']];
 /* 열 모델: 노드마다 켜고 끔 (k = 입력 키), 부품마다 냉각 방식 [공랭 · 수랭] (c = 입력 키). 냉각수 온도는 수랭으로 열을 넣는 부품이 있어야 계산 */
 const T2MDT = [['th_on', 'm_cool', '모터 열', '모터 손실로 모터 온도가 오르고, 수랭이면 냉각수로 · 공랭이면 외기로 열을 내보냅니다. 모터 온도가 디레이팅 시작 ~ 끝 온도 사이면 회전수마다 피크에서 연속 토크 쪽으로 같은 비율만큼 내려갑니다. 끄면 모터 온도는 출발 온도 그대로이고 모터 디레이팅도 없습니다.', '모터 · 인버터 › 모터 열 · 디레이팅 (열용량 · 출발 온도 · 디레이팅 시작 · 끝 온도, 수랭 열저항 또는 공랭 hA)'],
                ['in_on', 'i_cool', '인버터 온도', '인버터 손실로 인버터 온도가 오르고, 수랭이면 냉각수로 · 공랭이면 외기로 열을 내보냅니다. 끄면 온도는 계산하지 않고, 수랭이면 손실을 냉각수에 바로 넣습니다. 출발 온도는 모터 출발 온도와 같게 둡니다.', '모터 · 인버터 › 인버터 열 (열용량, 수랭 열저항 또는 공랭 hA)'],
@@ -921,7 +921,7 @@ WB_TOOLS['2'] = {
     {k:'L', dk:'L', v:1550, d:0, g:T2G.car, sb:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:T2G.car, sb:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:T2G.car, sb:'치수'},
     {k:'w_car', n:'차 전폭 (타이어 · 윙 포함, 0 = 입력 안 함)', u:'m', v:1.4, d:2, g:T2G.car, sb:'치수'},
     {k:'oh_f', n:'앞 오버행 (앞축 ~ 차 앞 끝)', u:'m', v:0.6, d:2, g:T2G.car, sb:'치수'}, {k:'oh_r', n:'뒤 오버행 (뒤축 ~ 차 뒤 끝)', u:'m', v:0.4, d:2, g:T2G.car, sb:'치수'},
-    {k:'mu', dk:'mu', n:'타이어 μ (기준 하중)', v:1.5, d:2, g:T2G.tire, sb:'마찰 · 하중 이동'}, {k:'mu_s', dk:'mu_s', n:'μ 하중 감도', v:0, d:3, g:T2G.tire, sb:'마찰 · 하중 이동'},
+    {k:'mu', dk:'mu', n:'타이어 μ (기준 하중)', v:1.5, d:2, g:T2G.tire, sb:'마찰 · 하중 이동'}, {k:'mu_s', dk:'mu_s', n:'μ 하중 감도', v:0.246, d:3, g:T2G.tire, sb:'마찰 · 하중 이동'},
     {k:'r_eff', dk:'r_eff', n:'바퀴 유효 반경 (동반경)', v:229, d:0, g:T2G.tire, sb:'바퀴'}, {k:'crr', dk:'crr', v:0.015, d:3, g:T2G.tire, sb:'바퀴'},
     {k:'cla', dk:'cla', n:'C<sub>L</sub>·A (다운포스)', v:3.0, d:2, g:T2G.aero, sb:'공력 계수'}, {k:'cda', dk:'cda', n:'C<sub>D</sub>·A (항력)', v:1.4, d:2, g:T2G.aero, sb:'공력 계수'},
     {k:'xcop', dk:'xcop', n:'압력중심 위치 (뒤축부터 앞으로)', v:698, d:0, g:T2G.aero, sb:'압력중심'}, {k:'hcop', dk:'hcop', n:'압력중심 높이 (항력 작용)', v:420, d:0, g:T2G.aero, sb:'압력중심'},
@@ -969,7 +969,7 @@ WB_TOOLS['2'] = {
     {k:'h_rcf', dk:'rc_f', n:'롤센터 앞 높이', u:'mm', v:30, d:0, g:T2G.rc, sb:'롤센터 · 롤'}, {k:'h_rcr', dk:'rc_r', n:'롤센터 뒤 높이', u:'mm', v:50, d:0, g:T2G.rc, sb:'롤센터 · 롤'},
     {k:'k_roll', dk:'k_roll', n:'롤강성 합 (앞 + 뒤, 롤각 신호용)', u:'N·m/°', v:500, d:0, g:T2G.rc, sb:'롤센터 · 롤'}, {k:'rsd', dk:'rsd', n:'롤강성 앞 몫 (RSD, 탄성 하중 이동 배분)', v:50, d:1, g:T2G.rc, sb:'롤센터 · 롤'},
     // 차량 모델 2 · 3 (도구 T · 6 · 7 · 1 에서 받음)
-    {k:'tire_fz0', dk:'tire_fz0', n:'타이어 기준 하중 (0 = μ 는 하중 0 의 값, 코너링 강성은 정지 평균 하중 기준)', v:0, d:0, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
+    {k:'tire_fz0', dk:'tire_fz0', n:'타이어 기준 하중 (μ · 코너링 강성을 잰 하중, 0 = μ 는 하중 0 의 값 · 코너링 강성은 정지 평균 하중)', v:736, d:0, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
     {k:'tire_ca0', dk:'tire_ca0', v:450, d:0, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'}, {k:'tire_cn', dk:'tire_cn', v:0.8, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
     {k:'tire_c', dk:'tire_c', v:1.3, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'}, {k:'tire_e', dk:'tire_e', v:0, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
     {k:'tire_relax', dk:'tire_relax', v:0.3, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
@@ -1020,7 +1020,7 @@ WB_TOOLS['2'] = {
     else if(T2.etab==='mt'){ const c = $('#t2mc'); if(c) c.innerHTML = t2EditPlot('mt'); const f = $('#wbext .t2-fcap'); if(f) f.innerHTML = t2EditCap('mt'); } },
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
   tour: M2TOUR,
-  verifyBase:{end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
+  verifyBase:{mu_s:0, tire_fz0:0, end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
               dr_t0:80, dr_t1:100, c_pct:100, kt:0, i_pk:400, i_ct:200, i_cpct:100, di_t0:50, di_t1:85, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, oh_f:0, oh_r:0, rl_m:0.2, e_lim:1, rmin:0, md:0, th_on:1, cw_on:0, bt_on:0, in_on:0, m_cool:1, i_cool:1, b_cool:0, eff_mg:0, m_ha60:null, i_ha60:null, b_ha60:null, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
   verify:[
     {n:'가속 · 접지 한계만 (μ = 1, CG 뒤축 위)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{t_acc_s:3.910309, ax_0:1}, src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
@@ -1128,7 +1128,9 @@ WB_TOOLS['2'] = {
     {n:'모델 2 · 하중 지수 1 이면 두 바퀴 최고점 슬립각이 같아 Σ μ F_z', I:{md:2, m:300, fr:50, h:400, tf:1200, h_rcf:0, h_rcr:0, rsd:50, cla:0, cda:0, mu:1.5, mu_s:0, tire_ca0:450, tire_cn:1, tire_c:1.3, tire_e:0, tire_fz0:0, cp_v:10, cp_ay:10}, expect:{c_rho:1}, src:'C_α ∝ F_z → B 가 하중과 상관없음 → 같은 슬립각에서 두 바퀴 모두 최고'},
     {n:'모델 2 · 조향 한계 스키드패드 (안쪽 바퀴 각 = 기하 + α_f − α_r 이 최대에 닿는 차속)', I:{md:2, m:300, fr:60, h:0, L:1550, tf:1200, cla:0, cda:0, crr:0, mu:1.5, mu_s:0, tire_ca0:450, tire_cn:0.5, tire_c:1.3, tire_e:0, tire_fz0:0, delta_max:11.38, course:'skid'}, expect:{t_skid_s:10.064735}, src:'기하 = atan(1.55 ÷ (√(9.125² − 0.93²) − 0.6)) = 10.361°. 축 힘 몫 p 에서 α = tan(asin p ÷ 1.3) ÷ B (B ∝ F_z^−0.5, 앞 882.9 · 뒤 588.6 N) → 10.361 + α_f − α_r = 11.38 → p = 0.96669 → v = √(p × 1.5 × 9.81 × 9.125) = 11.393 m/s → 2 × 2π × 9.125 ÷ v'},
     {n:'모델 3 · 과도 축 힘 (요 관성 · 이완 길이) · 일정 차속', I:{md:3, m:300, fr:50, L:1550, h:0, cla:0, cda:0, crr:0, mu:1.5, izz:70, tire_relax:0.3, tp_v:15, tp_k:0.05, tp_dk:0.01, tp_ddk:0}, expect:{c_tpf:1890.3629, c_tpr:1687.1371, c_tpu:0.733478}, src:'a_y = 11.25, ṙ = v² κ\' = 2.25 → F_f = (300 × 11.25 × 0.775 + 70 × 2.25) ÷ 1.55 = 1789.11, dF_f/ds = 300 × 225 × 0.01 × 0.775 ÷ 1.55 = 337.5 → F_ss = 1789.11 + 0.3 × 337.5. 뒤 = (2615.6 − 157.5) ÷ 1.55 + 101.25. 사용 = (1890.36 ÷ 2207.25)²'},
-    {n:'모델 3 · 요 관성 · 이완 길이가 0 이면 과도 상한 없음 (모델 2 와 같음)', I:{md:3, izz:0, tire_relax:0, course:'free', free:{seg:[[30, 0], [31.4, 10], [30, 0]], laps:1, s0:0}}, expect:{c_trlen:0, c_trok:1}, src:'ṙ · dF/dt 항이 0 → 정상과 같은 힘'}
+    {n:'모델 3 · 요 관성 · 이완 길이가 0 이면 과도 상한 없음 (모델 2 와 같음)', I:{md:3, izz:0, tire_relax:0, course:'free', free:{seg:[[30, 0], [31.4, 10], [30, 0]], laps:1, s0:0}}, expect:{c_trlen:0, c_trok:1}, src:'ṙ · dF/dt 항이 0 → 정상과 같은 힘'},
+    {n:'모델 3 · 곡률이 바뀌는 코너의 한계 속도 (축마다 등가 곡률)', I:{md:3, m:300, fr:50, L:1550, h:0, cla:0, cda:0, crr:0, mu:1.5, izz:70, tire_relax:0.3, vp_k:0.05, vp_k1:0.01, vp_k2:0}, expect:{c_v3:16.20856}, src:'앞 κ_f = 0.05 + [70 × 0.01 + 0.3 (300 × 0.775 × 0.01)] ÷ (300 × 0.775) = 0.056011, 뒤 κ_r = 0.049989 → v = √(1.5 × 9.81 ÷ 0.056011) (하중 이동 0, μ 일정)'},
+    {n:'모델 3 · κ\'\' 가 있으면 앞뒤 등가 곡률이 더 벌어짐', I:{md:3, m:300, fr:50, L:1550, h:0, cla:0, cda:0, crr:0, mu:1.5, izz:70, tire_relax:0.3, vp_k:0.05, vp_k1:0.01, vp_k2:0.004}, expect:{c_v3:16.156536}, src:'κ_f = 0.05 + [0.7 + 0.3 (2.325 + 0.28)] ÷ 232.5 = 0.056372 → v = √(14.715 ÷ 0.056372)'}
   ],
   calcLimit: 60,   /* 한 번 계산 제한 시간 [s] (주행선 다듬기 포함) */
   code:`// ================================================================
@@ -1411,6 +1413,23 @@ function car(I, gr, kP) {
     if (VC) { VC.set(k, v); VCF.set(k, fl); }
     return v;
   }
+  // ---------- 모델 3: 주행선 곡률 변화로 생기는 과도 횡력을 축마다 '등가 곡률' 로 (일정 차속 역동역학)
+  //   앞: κ_f = κ + [I_z κ' + σ (m l_r κ' + I_z κ'')] ÷ (m l_r),  뒤: κ_r = κ + [−I_z κ' + σ (m l_f κ' − I_z κ'')] ÷ (m l_f)   (κ' = dκ/ds, ' 는 곡률을 다듬기 거리로 고른 값)
+  //   코너 한계 속도 = 앞 m v² κ_f l_r ÷ L ≤ 앞 횡 한계, 뒤 m v² κ_r l_f ÷ L ≤ 뒤 횡 한계 (하중 이동은 실제 κ) 와 모델 2 한계 중 작은 값.  속도 변화로 생기는 몫은 trCaps 가 따로
+  const md3 = I.md === 3, IzT = md3 ? Math.max(0, Number.isFinite(I.izz) ? I.izz : 70) : 0, sgT = md3 ? Math.max(0, I.tire_relax || 0) : 0, ltR = L * fs, ltF = L * (1 - fs);
+  const ksT = I.tr_ks > 0 ? I.tr_ks : 2;
+  const kEff = (k, k1, k2) => [k + (IzT * k1 + sgT * (m * ltR * k1 + IzT * k2)) / (m * ltR), k + (-IzT * k1 + sgT * (m * ltF * k1 - IzT * k2)) / (m * ltF)];
+  const V3 = new Map();
+  function vCorner3(k, k1, k2) {
+    const vs = vCorner(k); if (!md3 || (!k1 && !k2)) return vs;
+    const [kf0, kr0] = kEff(k, k1, k2), ka = Math.abs(k), kf = Math.abs(kf0), kr = Math.abs(kr0);
+    if (kf <= ka * (1 + 1e-9) && kr <= ka * (1 + 1e-9)) return vs;
+    const key = \`\${k.toPrecision(9)}|\${k1.toPrecision(7)}|\${k2.toPrecision(7)}\`; if (V3.has(key)) return V3.get(key);
+    const ok = u => { const ay = u * u * ka; return m * u * u * kf * ltR / L <= capFy(u, 0, ay) + 1e-9 && m * u * u * kr * ltF / L <= capRy(u, 0, ay) + 1e-9; };
+    let lo = 0, hi = Math.min(isFinite(vs) ? vs : 150, 150), v;
+    if (ok(hi)) v = isFinite(vs) ? vs : hi; else { for (let i = 0; i < 40; i++) { const u = (lo + hi) / 2; if (ok(u)) lo = u; else hi = u; } v = lo; }
+    V3.set(key, v); return v;
+  }
   const vFlag = k => { k = Math.abs(k); if (k < 1e-9) return 0; if (!(VCF && VCF.has(k))) vCorner(k); return VCF && VCF.has(k) ? VCF.get(k) : 0; };   // 0 없음 · 1 조향 한계로 느려짐 · 2 돌 수 없음
 
   // ---------- 가속 [m/s²]: 뒤축 마찰원 · 모터 힘, 앞축 횡력이 모자라면 줄임
@@ -1500,7 +1519,7 @@ function car(I, gr, kP) {
   const dReq = (v, k) => { const ay = v * v * Math.abs(k), [fo, fi] = wheels(Fzf(v, 0), dF(ay, true)), [ro, ri] = wheels(Fzr(v, 0), dF(ay, false));
     return dIn0(k) + slipA(fo, fi, m * ay * fs).a - slipA(ro, ri, m * ay * (1 - fs)).a; };
 
-  return { m, meff, r, gr, eta, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR, capFy, capRy, axPk, vFlag, dIn0, dReq, dmx, rollAng, md2, slipA, Ca, kUs, L, hra, tf, tr, muZ, FyT, sr: I.steer_ratio > 0 ? I.steer_ratio : 5,
+  return { m, meff, r, gr, eta, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR, capFy, capRy, axPk, vFlag, vCorner3, md3, ksT, dIn0, dReq, dmx, rollAng, md2, slipA, Ca, kUs, L, hra, tf, tr, muZ, FyT, sr: I.steer_ratio > 0 ? I.steer_ratio : 5,
            vCorner, aDrive, aBrake, drive, elec, Tcurve, Voc, Epack, Ecap, ptMax, Rb, Imax, tmNext, thStep, rS, thOn, cwOn, btOn, inOn, drOn, Tpk, Tct, Tinit: I.th_init,
            TH0: { m: I.th_init, i: I.th_init, w: I.th_cool, b: isFinite(I.b_t0) ? I.b_t0 : 25 } };   // 출발 온도 (모터 · 인버터 (= 모터 출발 온도) · 냉각수 · 축전지)
 }
@@ -1821,11 +1840,22 @@ function lapModel(C, M, V, flying) {
   let st = 0, v0 = 0, T = 0;                             // 출발 조각 · 출발 속도
   const pc = i => (i + st) % M;                          // 칸 i → 조각
   const kAt = i => i < 0 || i >= M ? (flying ? K[pc(((i % M) + M) % M)] : 0) : K[pc(i)], lAt = i => L[pc(i)];
-  const limAt = i => Math.min(C.vCorner(Math.max(Math.abs(kAt(i - 1)), Math.abs(kAt(i)))), C.vtop);
+  // 점 i (조각 i−1 과 i 사이) 둘레 [a, b] [m] 의 곡률 적분 (모델 3 곡률 변화용, 조각을 따라 걸음)
+  const intK = (i, a, b) => { let t = 0;
+    if (b > 0) { let x = 0, j = i; while (x < b && j < i + 4 * M) { const l = lAt(j), x1 = x + l, lo = Math.max(a, x), hi = Math.min(b, x1); if (hi > lo) t += kAt(j) * (hi - lo); x = x1; j++; } }
+    if (a < 0) { let x = 0, j = i - 1; while (x > a && j > i - 4 * M) { const l = lAt(j), x0 = x - l, lo = Math.max(a, x0), hi = Math.min(b, x); if (hi > lo) t += kAt(j) * (hi - lo); x = x0; j--; } }
+    return t; };
+  const hK = C.ksT / 2;
+  const limAt = i => { const a = kAt(i - 1), b = kAt(i), kp = Math.abs(a) > Math.abs(b) ? a : b;
+    if (!C.md3) return Math.min(C.vCorner(Math.abs(kp)), C.vtop);
+    const c = intK(i, -hK, hK) / (2 * hK), cp = intK(i, 0, 2 * hK) / (2 * hK), cm = intK(i, -2 * hK, 0) / (2 * hK);
+    return Math.min(C.vCorner3(kp, (cp - cm) / (2 * hK), (cp - 2 * c + cm) / (hK * hK)), C.vtop); };
   const vm = (vv, i) => (vv[i] + vv[i + 1]) / 2;
+  let R3 = 0;   // 모델 3: 조각 하나가 바뀌면 둘레 몇 칸의 한계가 바뀌나 (곡률 변화 창 2 × 다듬기 거리)
   const m = {
     L, K,
     full() {
+      if (C.md3 && !R3) { let mn = Infinity; for (let j = 0; j < M; j++) if (L[j] > 1e-6) mn = Math.min(mn, L[j]); R3 = Math.ceil(2 * C.ksT / Math.max(0.05, mn)) + 1; }
       if (flying) { let b = 0, bv = Infinity; st = 0; for (let i = 0; i < M; i++) { const x = limAt(i); if (x < bv) { bv = x; b = i; } } st = b; v0 = bv; }
       for (let i = 0; i < N; i++) lim[i] = limAt(i);
       vf[0] = Math.min(lim[0], v0); let a = 0;
@@ -1843,7 +1873,7 @@ function lapModel(C, M, V, flying) {
       S.lim.set(lim); S.vf.set(vf); S.af.set(af); S.v.set(v);
       const cell = j => (j - st + M) % M;
       let lo = N, hi = -1;
-      for (const j of js) { const i = cell(j); for (const k of [i, i + 1]) { S.lim[k] = limAt(k); lo = Math.min(lo, k); hi = Math.max(hi, k); }
+      for (const j of js) { const i = cell(j); for (let k = i - R3; k <= i + 1 + R3; k++) { if (k < 0 || k > N - 1) continue; S.lim[k] = limAt(k); lo = Math.min(lo, k); hi = Math.max(hi, k); }
         if (flying && i === 0) { S.lim[N - 1] = limAt(N - 1); hi = N - 1; } if (flying && i === M - 1) { S.lim[0] = limAt(0); lo = 0; } }
       // 앞으로 (가속): lo − 1 부터, hi 를 지나 예전 값과 같아지면 멈춤
       let i = Math.max(0, lo - 1), fEnd = hi, a = i > 0 ? S.af[i - 1] : 0;
@@ -1981,12 +2011,29 @@ function drivenSegs(I, which, segs, closed, fx) {
 }
 
 
+// 곡률 변화 (모델 3): 칸 곡률 k[i] (i → i+1, 구간마다 일정) 를 앞뒤 h = ks/2 로 고른 κ_s, κ' = (κ_s(s+h) − κ_s(s−h)) ÷ 2h, κ'' = (κ_s(s+h) − 2κ_s + κ_s(s−h)) ÷ h²  (적분으로 정확히, 칸 크기와 상관없음)
+function kDer(G, ks) {
+  if (G._kd && G._kd.ks === ks) return G._kd;
+  const N = G.s.length, Kc = new Float64Array(N); for (let i = 0; i < N - 1; i++) Kc[i + 1] = Kc[i] + G.k[i] * (G.s[i + 1] - G.s[i]);
+  const S0 = G.s[0], S1 = G.s[N - 1], kA = G.k[0] || 0, kB = G.k[N - 2] || 0;
+  let ip = 0;
+  const KcAt = x => { if (x <= S0) return (x - S0) * kA; if (x >= S1) return Kc[N - 1] + (x - S1) * kB;
+    if (G.s[ip] > x) { let lo = 0, hi = ip; while (hi - lo > 1) { const md = (lo + hi) >> 1; if (G.s[md] <= x) lo = md; else hi = md; } ip = lo; }
+    while (ip < N - 2 && G.s[ip + 1] <= x) ip++; return Kc[ip] + (x - G.s[ip]) * G.k[ip]; };
+  const h = ks / 2, avg = x => (KcAt(x + h) - KcAt(x - h)) / (2 * h);
+  const k1 = new Float64Array(N), k2 = new Float64Array(N);
+  for (let i = 0; i < N; i++) { const x = G.s[i], cm = avg(x - h), c = avg(x), cp = avg(x + h); k1[i] = (cp - cm) / (2 * h); k2[i] = (cp - 2 * c + cm) / (h * h); }
+  return (G._kd = { ks, k1, k2 });
+}
+
 // ================================================================ 주행
 // 차속 [m/s]: 코너 한계 → 앞으로 가속 (정지 출발) → 뒤에서 제동.  V0[i] = 칸마다 개방 전압 [V], TM[i] = 모터 온도 [°C]
 function speed(C, G, V0, TM, TW) {
   const N = G.s.length, v = new Array(N), lim = new Array(N);
+  const D3 = C.md3 ? kDer(G, C.ksT) : null;   // 모델 3: 점마다 곡률 변화 κ' · κ''
   for (let i = 0; i < N; i++) {
-    lim[i] = Math.min(C.vCorner(Math.max(Math.abs(G.k[i - 1] || 0), Math.abs(G.k[i] || 0))), C.vtop, G.vcap ? G.vcap[i] : Infinity);   // vcap = 모델 3 과도 상한
+    const a = G.k[i - 1] || 0, b = G.k[i] || 0, kp = Math.abs(a) > Math.abs(b) ? a : b;
+    lim[i] = Math.min(D3 ? C.vCorner3(kp, D3.k1[i], D3.k2[i]) : C.vCorner(Math.abs(kp)), C.vtop, G.vcap ? G.vcap[i] : Infinity);   // vcap = 모델 3 과도 상한 (속도 변화 몫)
   }
   v[0] = 0;
   let a = 0;
@@ -2489,6 +2536,7 @@ function modeRun(I, G2, G3, fast) {
       const C = K.C, v = I.tp_v, Iz = Math.max(0, Number.isFinite(I.izz) ? I.izz : 70), L = C.L, lf = L * (1 - C.fs), lr = L * C.fs, ay = v * v * I.tp_k, rd = v * v * I.tp_dk, rdd = v * v * v * (I.tp_ddk || 0);
       const Ff = (C.m * ay * lr + Iz * rd) / L, Fr = (C.m * ay * lf - Iz * rd) / L, dFf = (C.m * v * rd * lr + Iz * rdd) / L, dFr = (C.m * v * rd * lf - Iz * rdd) / L;   // d(a_y)/dt = v · v² κ' = v ṙ (일정 차속)
       const P = trPoint(C, Math.max(0, I.tire_relax || 0), v, 0, ay, Ff, Fr, dFf, dFr); return { c_tpf: P.Fsf, c_tpr: P.Fsr, c_tpu: P.uT }; })(),
+    c_v3: Number.isFinite(I.vp_k) ? K.C.vCorner3(I.vp_k, I.vp_k1 || 0, I.vp_k2 || 0) : NaN,   // 검증용 탐침 (모델 3): 곡률 κ · κ' · κ'' 의 코너 한계 속도 [m/s]
     c_rho: Number.isFinite(I.cp_v) ? K.C.capFy(I.cp_v, 0, I.cp_ay) / K.C.capF(I.cp_v, 0, I.cp_ay) : NaN,   // 검증용 탐침 (모델 2): 같은 슬립각 앞축 횡 한계 ÷ Σ μ F_z
     c_tqp: Number.isFinite(I.tq_n) ? K.C.Tcurve(I.tq_n, I.tq_V, I.tq_tm, I.tq_tw) : NaN,   // 검증용 탐침: 회전수 tq_n · 단자 전압 tq_V · 모터 온도 tq_tm · 냉각수 온도 tq_tw 의 최대 토크 [N·m]
     c_tm: K.C.thOn ? W.tm.at(-1) : NaN, c_tmax: K.C.thOn ? Math.max(...W.tm) : NaN,
