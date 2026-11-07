@@ -3113,7 +3113,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t4-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
 .t4-bar b{font-size:13px;margin-right:4px}.t4-bar select,.t4-bar input[type=text]{font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel)}
 .t4-bar input[type=text]{min-width:220px}.t4-bar .dc-seg button{padding:3px 10px;font-size:12px}
-.t4-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.t4-rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .t4-rule{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font-size:12px}
 .t4-rule b{font-size:17px}.t4-rule.bad{border-color:#e5a3a3;background:#fdf3f3}
 .t4-bg{display:block;height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}.t4-bg i{display:block;height:100%;background:#2f7d4f}.t4-rule.bad .t4-bg i{background:#b42318}
@@ -13822,7 +13822,7 @@ function t4ExtHTML(){ const w = $('#wb'); if(w) w.classList.remove('t2-edit');
 function t4Why(){ const R = WB.R; if(!R) return ''; const au = WB.I.auto;
   return au===1 ? `세그먼트 ${R.out.s_seg_o}S 기준 → 병렬 최대 ${R.out.n_p_o}P · ${R.why} 제한` : au===2 ? `병렬 ${R.out.n_p_o}P 기준 → 세그먼트 직렬 최대 ${R.out.s_seg_o}S · ${R.why} 제한` : '직렬과 병렬을 직접 넣습니다.'; }
 function t4Rules(){ const o = WB.R && WB.R.out; if(!o) return '';
-  return [['세그먼트 최대 전압', o.v_seg_max, 120, 'V'], ['세그먼트 규정 에너지', o.ej_seg, 6, 'MJ'], ['세그먼트 질량', o.m_seg, 12, 'kg']].map(([nm, v, mx, u]) => { const ok = v <= mx + 1e-9;
+  return [['세그먼트 최대 전압', o.v_seg_max, 120, 'V'], ['세그먼트 규정 에너지', o.ej_seg, 6, 'MJ'], ['세그먼트 질량', o.m_seg, 12, 'kg'], ...(o.v_inv_o > 0 ? [['팩 최대 전압 (인버터 한계)', o.v_pack_max, o.v_inv_o, 'V']] : [])].map(([nm, v, mx, u]) => { const ok = v <= mx + 1e-9;
     return `<div class="t4-rule${ok ? '' : ' bad'}"><small>${nm} / ${mx} ${u}</small><b>${t4F(v, 3)} ${u}</b><span class="t4-bg"><i style="width:${Math.min(100, v/mx*100).toFixed(1)}%"></i></span>
       <span class="${ok ? 'ok' : 'wb-err'}">${ok ? '충족 · 여유' : '초과'} ${t4F(Math.abs(mx - v), 3)} ${u} · ${t4F(v/mx*100, 1)} %</span></div>`; }).join(''); }
 /* 결과 아래: 전압 단계별 출력 표 */
@@ -13872,11 +13872,12 @@ WB_TOOLS['4'] = {
     {k:'c_ah', dk:'c_ah', v:4.5, d:2, g:T4G.cell}, {k:'c_imax', dk:'c_imax', v:45, d:1, g:T4G.cell}, {k:'c_r', dk:'c_r', v:15, d:2, g:T4G.cell}, {k:'c_g', dk:'c_g', v:70, d:1, g:T4G.cell},
     {k:'n_seg', dk:'n_seg', v:6, d:0, g:T4G.cfg}, {k:'s_seg', n:'세그먼트 직렬 수 (S)', u:'개', v:12, d:0, g:T4G.cfg}, {k:'n_p', dk:'n_p', n:'병렬 수 (P)', v:6, d:0, g:T4G.cfg},
     {k:'x_mseg', n:'세그먼트당 추가 무게 (버스바 · 케이스 등)', u:'kg', v:0, d:2, g:T4G.add}, {k:'x_mpack', n:'팩 전체 추가 무게 (박스 · 배선 등)', u:'kg', v:0, d:2, g:T4G.add},
+    {k:'v_inv', n:'인버터 최대 직류 전압 (0 = 확인 안 함)', u:'V', v:420, d:0, g:T4G.add},
     {k:'x_r', n:'팩 전체 추가 저항 (버스바 · 퓨즈 · 커넥터)', u:'mΩ', v:0, d:2, g:T4G.add}, {k:'i_lim', n:'팩 사용 전류 제한 (0 = 셀 사양 최대)', u:'A', v:0, d:0, g:T4G.add},
     {k:'auto', n:'구성 방식 (0 수동 · 1 병렬 자동 · 2 직렬 자동)', u:'', v:0, d:0, g:T4G.cfg, ui:'none'},
     {k:'o_mode', n:'출력 표 전류 (0 제한 적용 · 1 셀 최대 · 2 직접)', u:'', v:0, d:0, g:T4G.add, ui:'none'}, {k:'o_i', n:'출력 표 전류 (직접)', u:'A', v:0, d:0, g:T4G.add, ui:'none'},
   ],
-  inLock(k){ if(k==='n_p' && WB.I.auto===1) return '자동 (규정 안 최대)'; if(k==='s_seg' && WB.I.auto===2) return '자동 (규정 안 최대)'; return ''; },
+  inLock(k){ if(k==='n_p' && WB.I.auto===1) return '자동 (규정 안 최대)'; if(k==='s_seg' && WB.I.auto===2) return '자동 (규정 · 인버터 안 최대)'; return ''; },
   inEff(k){ const o = WB.R && !WB.err && WB.R.out; if(k==='n_p') return o ? o.n_p_o : '…'; if(k==='s_seg') return o ? o.s_seg_o : '…'; return null; },   // 자동 구성으로 정해진 수
   outGroups:{'셀 값 (대시보드 반영 확인용)':{note:'입력한 셀 값 그대로. [대시보드에 반영]으로 도구 2 등이 받아 씀'}},
   outputs:[
@@ -13890,6 +13891,7 @@ WB_TOOLS['4'] = {
     {k:'r_cell', n:'셀 구성으로 본 팩 저항', u:'mΩ', d:2, g:'전기'}, {k:'r_pack', dk:'r_pack', n:'팩 내부저항 (추가 저항 포함)', d:2, g:'전기'},
     {k:'i_cellmax', n:'셀 사양 팩 최대 전류', u:'A', d:1, g:'전기'}, {k:'i_bms_max', dk:'i_bms_max', n:'적용 전류 (방전 전류 한계)', d:1, g:'전기'}, {k:'i_cell', n:'셀당 적용 전류', u:'A', d:2, g:'전기'},
     {k:'i_short', n:'만충 이론 단락 전류', u:'A', d:0, g:'전기'},
+    {k:'rule_inv', n:'팩 최대 전압 ≤ 인버터 최대 전압 (1 = 충족)', u:'', d:0, g:'팩', hide:true}, {k:'v_inv_o', n:'인버터 최대 직류 전압', u:'V', d:0, g:'팩', hide:true},
     {k:'rule_v', n:'규정 세그먼트 120 V (1 = 충족)', u:'', d:0, g:'세그먼트', hide:true}, {k:'rule_e', n:'규정 세그먼트 6 MJ (1 = 충족)', u:'', d:0, g:'세그먼트', hide:true}, {k:'rule_m', n:'규정 세그먼트 12 kg (1 = 충족)', u:'', d:0, g:'세그먼트', hide:true},
     {k:'o_i', n:'출력 표 전류', u:'A', d:1, g:'전기', hide:true}, {k:'t_load_max', n:'부하 전압 (셀 최대 전압)', u:'V', d:2, g:'전기', hide:true}, {k:'t_p_max', n:'단자 출력 (셀 최대 전압)', u:'kW', d:3, g:'전기', hide:true},
     {k:'t_loss', n:'팩 저항 손실', u:'kW', d:3, g:'전기', hide:true}, {k:'t_p_nom', n:'단자 출력 (셀 공칭 전압)', u:'kW', d:3, g:'전기', hide:true},
@@ -13902,7 +13904,7 @@ WB_TOOLS['4'] = {
   onResult(){ const r = document.getElementById('t4rules'); if(r) r.innerHTML = t4Rules(); const y = document.getElementById('t4why'); if(y) y.textContent = t4Why();
     const m = document.getElementById('wbmid'); if(m) m.innerHTML = t4MidHTML(); },
   tour: M4TOUR,
-  verifyBase:{auto:0, o_mode:0, o_i:0, x_mseg:0, x_mpack:0, x_r:0, i_lim:0},
+  verifyBase:{auto:0, o_mode:0, o_i:0, x_mseg:0, x_mpack:0, x_r:0, i_lim:0, v_inv:0},
   verify: [
     {n:'기본 구성 · 6 세그먼트 × 12S6P (셀 4.2 / 3.6 / 2.5 V, 4.5 Ah, 45 A, 15 mΩ, 70 g)', I:{}, expect:{n_s:72, r_pack:180, i_bms_max:270, e_pack:6.9984, ej_seg:4.89888, m_seg:5.04, m_pack:30.24, v_pack_max:302.4, i_short:1680},
      src:'S = 6 × 12 = 72, R = (72 ÷ 6) × 15 = 180 mΩ, I = 45 × 6 = 270 A, 에너지 = 72 × 3.6 × 4.5 × 6 ÷ 1000 = 6.9984 kWh, 세그먼트 = 72 셀 × 4.2 × 4.5 × 0.0036 = 4.89888 MJ, 72 × 70 g = 5.04 kg (× 6 = 30.24 kg), 302.4 V ÷ 0.18 Ω = 1680 A'},
@@ -13915,13 +13917,20 @@ WB_TOOLS['4'] = {
     {n:'추가 저항 20 mΩ · 추가 무게 (세그먼트 1.5 kg, 팩 4 kg) · 전류 제한 200 A', I:{x_r:20, x_mseg:1.5, x_mpack:4, i_lim:200}, expect:{r_pack:200, i_bms_max:200, t_load_max:262.4, t_p_max:52.48, m_seg:6.54, m_pack:43.24, i_short:1512},
      src:'R = 180 + 20 = 200 mΩ, I = min(270, 200) = 200 A → 302.4 − 40 = 262.4 V, 52.48 kW. 세그먼트 5.04 + 1.5 = 6.54 kg, 팩 6.54 × 6 + 4 = 43.24 kg, 302.4 ÷ 0.2 = 1512 A'},
     {n:'출력 표 전류 직접 100 A', I:{o_mode:2, o_i:100}, expect:{o_i:100, t_load_max:284.4, t_loss:1.8},
-     src:'302.4 − 100 × 0.18 = 284.4 V, 손실 100² × 0.18 ÷ 1000 = 1.8 kW'}
+     src:'302.4 − 100 × 0.18 = 284.4 V, 손실 100² × 0.18 ÷ 1000 = 1.8 kW'},
+    {n:'인버터 최대 전압 · 기본 구성 302.4 V ≤ 420 V', I:{v_inv:420}, expect:{rule_inv:1, v_pack_max:302.4},
+     src:'72 × 4.2 = 302.4 V ≤ 420 V'},
+    {n:'인버터 최대 전압 · 수동 구성이 넘으면 0', I:{v_inv:300}, expect:{rule_inv:0},
+     src:'302.4 V > 300 V'},
+    {n:'직렬 자동 · 인버터 전압이 직렬 수를 정함', I:{auto:2, n_p:6, v_inv:300}, expect:{s_seg_o:11, n_s:66, v_pack_max:277.2, rule_inv:1},
+     src:'120 V → 28, 6 MJ → 14, 12 kg → 28, 인버터: ⌊300 ÷ (6 × 4.2)⌋ = ⌊11.90⌋ = 11 → 11S, 66 × 4.2 = 277.2 V'}
   ],
   code: `// ================================================================
 // 도구 4 축전지 팩 계산기 — 계산 코드
 //   팀원 Yechan Hyun 의 FSK Battery Calculator 1.0.1 (calculator.js) 계산을 그대로 옮김 (허락 받음)
 // ================================================================
 // 입력 I : 셀 c_vmax · c_vnom · c_vmin [V], c_ah [Ah], c_imax [A], c_r [mΩ], c_g [g]
+//          인버터 최대 직류 전압 v_inv [V] (0 = 확인 안 함 · 직렬 자동이면 팩 최대 전압이 이 값을 넘지 않게)
 //          구성 n_seg 세그먼트 수, s_seg 세그먼트 직렬 수, n_p 병렬 수, auto = 0 수동 · 1 병렬 자동 (직렬 입력) · 2 직렬 자동 (병렬 입력)
 //          추가 x_mseg 세그먼트당 무게 [kg], x_mpack 팩 전체 무게 [kg], x_r 팩 전체 저항 [mΩ], i_lim 팩 사용 전류 제한 [A] (0 = 없음)
 //          출력 표 전류 o_mode = 0 제한 적용 · 1 셀 사양 최대 · 2 직접 (o_i [A])
@@ -13944,6 +13953,7 @@ function calc(I) {
   const xm = Math.max(0, I.x_mseg || 0), xmp = Math.max(0, I.x_mpack || 0), xr = Math.max(0, I.x_r || 0), lim = I.i_lim > 0 ? I.i_lim : null;
   let n = Math.round(I.n_seg), s = Math.round(I.s_seg), p = Math.round(I.n_p), why = '';
   if (!(n >= 1)) throw new Error('세그먼트 개수는 1 이상의 정수로 입력하세요.');
+  const vinv = I.v_inv > 0 ? I.v_inv : 0;   // 인버터 최대 직류 전압 [V] (부품 한계, 규정 아님)
   // 자동 구성: 한쪽(직렬 또는 병렬)을 넣으면 규정 안에서 다른 쪽 최대
   if (I.auto === 1) {
     if (!(s >= 1)) throw new Error('세그먼트 직렬 수는 1 이상의 정수로 입력하세요.');
@@ -13953,7 +13963,7 @@ function calc(I) {
     if (p < 1) throw new Error('이 조건에서는 1개 이상의 셀 구성이 불가능합니다. 구성 또는 추가 무게를 줄이세요.');
   } else if (I.auto === 2) {
     if (!(p >= 1)) throw new Error('병렬 수는 1 이상의 정수로 입력하세요.');
-    const b = [['120 V 전압', fl(120 / c.vmax)], ['6 MJ 에너지', fl(6 / (p * c.vmax * c.ah * 0.0036))], ['12 kg 질량', fl((12 - xm) / (p * c.g / 1000))]];
+    const b = [['120 V 전압', fl(120 / c.vmax)], ['6 MJ 에너지', fl(6 / (p * c.vmax * c.ah * 0.0036))], ['12 kg 질량', fl((12 - xm) / (p * c.g / 1000))], ...(vinv ? [[\`인버터 \${vinv} V\`, fl(vinv / (n * c.vmax))]] : [])];
     s = Math.min(...b.map(z => z[1])); why = b.filter(z => z[1] === s).map(z => z[0]).join(' · ');
     if (s < 1) throw new Error('이 조건에서는 1개 이상의 셀 구성이 불가능합니다. 구성 또는 추가 무게를 줄이세요.');
   } else if (!(s >= 1) || !(p >= 1)) throw new Error('세그먼트 직렬, 병렬은 1 이상의 정수로 입력하세요.');
@@ -13972,6 +13982,7 @@ function calc(I) {
     cap_ah: c.ah * p, e_pack: S * c.vnom * c.ah * p / 1000, ej_seg: ej, ej_pack: ej * n,                     // [Ah] · [kWh] · [MJ]
     m_cells_seg: cells * c.g / 1000, m_seg: mseg, m_pack: mseg * n + xmp,                                     // [kg]
     r_cell: Rcell * 1000, r_pack: R * 1000, i_cellmax: maxI, i_bms_max: Iap, i_cell: Iap / p, i_short: S * c.vmax / R,   // [mΩ] · [A]
+    rule_inv: vinv ? (S * c.vmax <= vinv + 1e-9 ? 1 : 0) : NaN, v_inv_o: vinv || NaN,   // 팩 최대 전압 ≤ 인버터 최대 직류 전압 (1 = 충족, 0 = 확인 안 함이면 —)
     rule_v: s * c.vmax <= 120 + 1e-9 ? 1 : 0, rule_e: ej <= 6 + 1e-9 ? 1 : 0, rule_m: mseg <= 12 + 1e-9 ? 1 : 0,   // 규정 충족 (1 = 충족)
     o_i: Io, t_load_max: tab[0].load, t_p_max: tab[0].power, t_loss: tab[0].loss, t_p_nom: tab[1].power, t_ok10: tab[6].ok ? 1 : 0, t_cell10: tab[6].loadCell,
     c_vmax_o: c.vmax, c_vnom_o: c.vnom, c_vmin_o: c.vmin, c_ah_o: c.ah, c_imax_o: c.amps, c_r_o: c.r, c_g_o: c.g, n_seg_d: n,   // 셀 값 · 세그먼트 수 (대시보드 반영 확인용, 입력 그대로)
