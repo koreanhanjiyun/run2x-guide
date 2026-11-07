@@ -10375,7 +10375,7 @@ function wbOpen(id, ret){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
   WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
-  wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && T.xiStart === 'end') { WB.xi = WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
+  wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
   wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); }
 function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = '';
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
@@ -14878,27 +14878,33 @@ function calc(I) {
 <script>
 /* ============================================================
    도구 T 타이어 모델 (선택 도구) — docs/TOOLS-PLAN.md 5절 '선택 · 타이어 모델'
-   - 팀에 TTC 시험 데이터가 없으므로 Magic Formula 꼴 순수 횡슬립 모델을 직접 넣는 값(μ · 하중 감도 · 코너링 강성 · 하중 지수 · 모양 · 굽음 계수)으로 만듦
+   - 팀에 TTC 시험 데이터가 없으므로 Magic Formula 꼴 모델(횡 · 종 순수 슬립 + 코사인 가중 조합 슬립)을 직접 넣는 값으로 만들고, 스키드패드 기록으로 μ 를 거꾸로 셈
    - 결과: 하중별 슬립각–횡력 곡선, 정지 하중의 코너링 강성(앞 · 뒤), 최대 횡력 슬립각, 이완 길이
    - 대시보드로 모델 값을 보내면 도구 2 차량 모델 2 · 3 이 받아 씀 (도구 2 는 받기만)
    ============================================================ */
 const MTTOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영(타이어 모델 값 · 앞뒤 코너링 강성)이 있습니다.'],
-  ['#wb .wb-in', '입력', '시험 데이터가 없을 때는 문헌 · 비슷한 타이어 값으로 시작하고, 실주행(스키드패드 횡가속도 · 조향각)으로 맞춥니다. μ 는 기준 하중에서 값, 하중 감도는 하중 1 kN 이 늘 때 μ 가 줄어드는 양입니다.'],
+  ['#wb .wb-in', '입력', '시험 데이터가 없을 때는 문헌 · 비슷한 타이어 값으로 시작하고, 실주행(스키드패드 횡가속도 · 조향각)으로 맞춥니다. μ 는 기준 하중에서 값, 하중 감도는 하중 1 kN 이 늘 때 μ 가 줄어드는 양입니다. 스키드패드 기록을 넣으면 그 기록을 내는 μ 를 거꾸로 셈합니다.'],
   ['#wb #wbout', '결과', '정지 바퀴 하중(차 질량 · 앞 무게 비율)에서 코너링 강성 · μ · 최대 횡력 슬립각입니다. 탐침은 아무 슬립각 · 하중의 횡력을 보는 칸입니다.'],
-  ['#wb .wb-sig', '슬립각–횡력 곡선', '기준 하중의 0.5 · 1 · 1.5 배와 앞 · 뒤 정지 하중의 곡선입니다. 신호를 골라 μ(횡력 ÷ 하중) 곡선도 볼 수 있습니다.'],
+  ['#wb .wb-sig', '슬립 곡선', '기준 하중의 0.5 · 1 · 1.5 배와 앞 · 뒤 정지 하중의 슬립각–횡력 곡선입니다. 종력 곡선을 고르면 같은 가로 눈금을 슬립률 % 로 읽습니다. 조합 곡선은 탐침 슬립률 · 슬립각과 함께일 때입니다.'],
 ];
-const TTG = {mf:'모델 값 (바퀴 하나)', car:'정지 하중 (차)', pr:'탐침'};
+const TTG = {mf:'모델 값 (바퀴 하나)', lx:'종 방향 · 조합 슬립', car:'정지 하중 (차)', pr:'탐침', sk:'스키드패드 기록 → μ'};
 WB_TOOLS['T'] = {
   no:'T', stage:'P1', name:'타이어 모델',
-  x:{n:'슬립각', u:'°'},
+  x:{n:'슬립각 (°) · 종력 곡선은 슬립률 (%)', u:''},
   sweepFirst:'ca0',
   inputs:[
     {k:'mu', dk:'mu', v:1.5, d:2, g:TTG.mf}, {k:'mu_s', dk:'mu_s', v:0.246, d:3, g:TTG.mf}, {k:'fz0', dk:'tire_fz0', v:736, d:0, g:TTG.mf},
     {k:'ca0', dk:'tire_ca0', v:450, d:0, g:TTG.mf}, {k:'cn', dk:'tire_cn', v:0.8, d:2, g:TTG.mf}, {k:'tc', dk:'tire_c', v:1.3, d:2, g:TTG.mf}, {k:'te', dk:'tire_e', v:0, d:2, g:TTG.mf},
     {k:'relax', dk:'tire_relax', v:0.3, d:2, g:TTG.mf},
+    {k:'mux', n:'종 μ ÷ 횡 μ', u:'', v:1, d:2, g:TTG.lx}, {k:'ck0', n:'종 슬립 강성 ÷ 하중 (C_κ ÷ F_z)', u:'1/슬립', v:20, d:1, g:TTG.lx},
+    {k:'tcx', n:'종 모양 계수 C_x', u:'', v:1.65, d:2, g:TTG.lx}, {k:'tex', n:'종 굽음 계수 E_x', u:'', v:0, d:2, g:TTG.lx},
+    {k:'bxa', n:'조합 가중 B_xα (슬립각이 종력을 줄임)', u:'1/rad', v:8, d:1, g:TTG.lx}, {k:'byk', n:'조합 가중 B_yκ (슬립률이 횡력을 줄임)', u:'', v:8, d:1, g:TTG.lx},
     {k:'m', dk:'m', v:300, d:0, g:TTG.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:TTG.car},
-    {k:'a_p', n:'탐침 슬립각', u:'°', v:4, d:1, g:TTG.pr}, {k:'fz_p', n:'탐침 하중', u:'N', v:900, d:0, g:TTG.pr},
+    {k:'a_p', n:'탐침 슬립각', u:'°', v:4, d:1, g:TTG.pr}, {k:'fz_p', n:'탐침 하중', u:'N', v:900, d:0, g:TTG.pr}, {k:'k_p', n:'탐침 슬립률', u:'%', v:5, d:1, g:TTG.pr},
+    {k:'t_sk', n:'스키드패드 한 바퀴 기록', u:'s', v:5.086, d:3, g:TTG.sk}, {k:'r_sk', n:'주행 반경 (코스 중심선)', u:'m', v:9.125, d:3, g:TTG.sk},
+    {k:'h', dk:'h', v:290, d:0, g:TTG.sk}, {k:'L', dk:'L', v:1550, d:0, g:TTG.sk}, {k:'tf', dk:'tf', v:1200, d:0, g:TTG.sk}, {k:'tr', dk:'tr', v:1180, d:0, g:TTG.sk},
+    {k:'lltd', dk:'lltd', v:49.5, d:1, g:TTG.sk}, {k:'cla', dk:'cla', v:3, d:2, g:TTG.sk}, {k:'xcop', dk:'xcop', v:775, d:0, g:TTG.sk},
   ],
   outGroups:{'대시보드 반영 (모델 값)':{note:'입력 그대로. [대시보드에 반영]으로 도구 2 가 받아 씀'}},
   outputs:[
@@ -14911,17 +14917,24 @@ WB_TOOLS['T'] = {
     {k:'fy_inf', n:'큰 슬립각 끝 횡력 (E = 0 일 때)', u:'N', d:0, g:'기준 하중 · 탐침'},
     {k:'fy_p', n:'탐침 횡력', u:'N', d:1, g:'기준 하중 · 탐침'}, {k:'mu_p', n:'탐침 횡력 ÷ 하중', u:'', d:3, g:'기준 하중 · 탐침'},
     {k:'tau_60', n:'이완 시간 상수 (60 km/h)', u:'s', d:3, g:'기준 하중 · 탐침'},
+    {k:'c_kappa0', n:'종 슬립 강성 (기준 하중)', u:'N/슬립', d:0, g:'종 방향 · 조합'}, {k:'k_pk0', n:'최대 종력 슬립률 (기준 하중)', u:'%', d:2, g:'종 방향 · 조합'}, {k:'fx_pk0', n:'최대 종력 (기준 하중)', u:'N', d:0, g:'종 방향 · 조합'},
+    {k:'fx_p', n:'탐침 종력 (슬립률 · 슬립각 함께)', u:'N', d:1, g:'종 방향 · 조합'}, {k:'fy_pc', n:'탐침 횡력 (슬립률 · 슬립각 함께)', u:'N', d:1, g:'종 방향 · 조합'},
+    {k:'g_yk', n:'횡력 가중 G_yκ (탐침 슬립률)', u:'', d:4, g:'종 방향 · 조합'}, {k:'g_xa', n:'종력 가중 G_xα (탐침 슬립각)', u:'', d:4, g:'종 방향 · 조합'},
+    {k:'sk_v', n:'스키드패드 평균 차속', u:'km/h', d:2, g:'스키드패드 기록 → μ'}, {k:'sk_ay', n:'횡가속도', u:'g', d:3, g:'스키드패드 기록 → μ'},
+    {k:'sk_mue', n:'유효 μ (횡력 합 ÷ 하중 합)', u:'', d:3, g:'스키드패드 기록 → μ'}, {k:'sk_mu0', n:'기준 하중 μ₀ (하중 감도 반영)', u:'', d:3, g:'스키드패드 기록 → μ'},
     {k:'mu_o', dk:'mu', d:2, g:'대시보드 반영 (모델 값)', hide:true}, {k:'mu_s_o', dk:'mu_s', d:3, g:'대시보드 반영 (모델 값)', hide:true}, {k:'fz0_o', dk:'tire_fz0', d:0, g:'대시보드 반영 (모델 값)', hide:true},
     {k:'ca0_o', dk:'tire_ca0', d:0, g:'대시보드 반영 (모델 값)', hide:true}, {k:'cn_o', dk:'tire_cn', d:2, g:'대시보드 반영 (모델 값)', hide:true}, {k:'tc_o', dk:'tire_c', d:2, g:'대시보드 반영 (모델 값)', hide:true},
     {k:'te_o', dk:'tire_e', d:2, g:'대시보드 반영 (모델 값)', hide:true}, {k:'relax_o', dk:'tire_relax', d:2, g:'대시보드 반영 (모델 값)', hide:true},
   ],
   sigs:[
+    {k:'x05', n:'종력 · 기준 하중 × 0.5 (가로 = 슬립률 %)', u:'N', d:0}, {k:'x10', n:'종력 · 기준 하중 (가로 = 슬립률 %)', u:'N', d:0}, {k:'x15', n:'종력 · 기준 하중 × 1.5 (가로 = 슬립률 %)', u:'N', d:0},
+    {k:'yk', n:'횡력 · 기준 하중 · 탐침 슬립률과 함께', u:'N', d:0}, {k:'xa', n:'종력 · 기준 하중 · 탐침 슬립각과 함께 (가로 = 슬립률 %)', u:'N', d:0},
     {k:'f05', n:'횡력 · 기준 하중 × 0.5', u:'N', d:0}, {k:'f10', n:'횡력 · 기준 하중', u:'N', d:0}, {k:'f15', n:'횡력 · 기준 하중 × 1.5', u:'N', d:0},
     {k:'ff', n:'횡력 · 앞 정지 하중', u:'N', d:0}, {k:'fr', n:'횡력 · 뒤 정지 하중', u:'N', d:0}, {k:'mf', n:'횡력 ÷ 하중 · 앞', u:'', d:3}, {k:'mr', n:'횡력 ÷ 하중 · 뒤', u:'', d:3},
   ],
   sigOn:['f05', 'f10', 'f15'],
   tour: MTTOUR,
-  verifyBase:{mu:1.5, mu_s:0, fz0:700, ca0:450, cn:0.8, tc:1.3, te:0, relax:0.3, m:300, fr:47.5, a_p:4, fz_p:900},
+  verifyBase:{mu:1.5, mu_s:0, fz0:700, ca0:450, cn:0.8, tc:1.3, te:0, relax:0.3, m:300, fr:47.5, a_p:4, fz_p:900, mux:1, ck0:20, tcx:1.65, tex:0, bxa:8, byk:8, k_p:5, t_sk:5.086, r_sk:9.125, h:290, L:1550, tf:1200, tr:1180, lltd:49.5, cla:3, xcop:775},
   verify: [
     {n:'기준 하중 · 최대 횡력 = μ F_z, 최대 슬립각 = tan(π/2C) ÷ B (E = 0)', I:{mu:1.5, mu_s:0, fz0:700, ca0:450, cn:0.8, tc:1.3, te:0}, expect:{fy_pk0:1050, a_pk0:7.998243, fy_inf:935.556850},
      src:'D = 1.5 × 700 = 1050 N, B = C_α ÷ (C D) = (450 × 180/π) ÷ (1.3 × 1050) = 18.8887 /rad → α = tan(π ÷ 2.6) ÷ 18.8887 = 0.13959 rad = 7.9982°, 끝 값 = 1050 × sin(1.3 × π/2) = 935.557 N'},
@@ -14932,7 +14945,15 @@ WB_TOOLS['T'] = {
     {n:'탐침 · 하중 감도 0.15 /kN · 굽음 계수 E = 0.5 (4°, 900 N)', I:{mu:1.5, mu_s:0.15, fz0:700, ca0:450, cn:0.8, tc:1.3, te:0.5, a_p:4, fz_p:900}, expect:{fy_p:1166.246555, mu_p:1.295830},
      src:'μ = 1.5 − 0.15 × 0.2 = 1.47 → D = 1323 N, C_α = 450 × (900/700)^0.8 °→rad, B = C_α ÷ (1.3 D), x = B × 4° → F_y = D sin(1.3 atan(x − 0.5 (x − atan x))) = 1166.25 N'},
     {n:'이완 시간 상수 = σ ÷ v (σ 0.3 m, 60 km/h)', I:{relax:0.3}, expect:{tau_60:0.018},
-     src:'0.3 ÷ 16.667 = 0.018 s'}
+     src:'0.3 ÷ 16.667 = 0.018 s'},
+    {n:'종 방향 최대 (E_x = 0): 최대 종력 = μ_x F_z, 슬립률 = tan(π ÷ 2C_x) ÷ B_x', I:{}, expect:{fx_pk0:1050, k_pk0:17.378256, c_kappa0:14000},
+     src:'D_x = 1.5 × 700 = 1050 N, C_κ = 20 × 700 = 14000 N, B_x = 14000 ÷ (1.65 × 1050) = 8.0808 → κ = tan(π ÷ 3.3) ÷ 8.0808 = 0.17378'},
+    {n:'조합 가중 (B_yκ = 8 · 슬립률 5 %, B_xα = 8 /rad · 슬립각 4°)', I:{}, expect:{g_yk:0.928477, g_xa:0.873062},
+     src:'G_yκ = cos(atan(8 × 0.05)) = 1 ÷ √1.16 = 0.92848, G_xα = cos(atan(8 × 0.069813)) = 1 ÷ √1.31193 = 0.87306'},
+    {n:'스키드패드 기록 → μ (2026 E-Formula 순수 기록 10.172 s 의 한 바퀴 5.086 s, 반경 9.125 m, C_L·A 3)', I:{}, expect:{sk_v:40.582508, sk_ay:1.419616, sk_mue:1.315259, sk_mu0:1.315259},
+     src:'v = 2π × 9.125 ÷ 5.086 = 11.273 m/s, a_y = v² ÷ R = 13.926 m/s², D = ½ × 1.225 × 3 × v² = 233.5 N, μ = 300 × 13.926 ÷ (2943 + 233.5) = 1.3153 (하중 감도 0 이면 μ₀ 같음)'},
+    {n:'스키드패드 → 기준 하중 μ₀ (하중 감도 0.246 /kN, 하중 이동 LLTD 49.5 %)', I:{mu_s:0.246}, expect:{sk_mu0:1.419166},
+     src:'바퀴 하중 1257.1 · 257.6 · 1349.4 · 312.4 N (정지 + 다운포스 ± m a_y h × 몫 ÷ 윤거) → μ₀ = (m a_y + 0.246 × Σ (F_z − 700) F_z ÷ 1000) ÷ ΣF_z = 1.4192'}
   ],
   code: `// ================================================================
 // 도구 T 타이어 모델 — 계산 코드
@@ -14944,7 +14965,12 @@ WB_TOOLS['T'] = {
 //     C = 모양 계수 (횡 1.3 안팎), E = 굽음 계수 (≤ 1)
 //   E = 0 이면 최대 횡력 슬립각 α_peak = tan(π ÷ (2C)) ÷ B,  α → ∞ 에서 F_y → D sin(Cπ/2)
 //   이완 길이 σ [m]: 슬립각이 바뀐 뒤 횡력이 따라오는 거리 (과도 응답, 차량 모델 3) — 시간 상수 = σ ÷ v
-// 입력 I : mu, mu_s, fz0, ca0 [N/deg], cn, tc, te, relax [m] · 차 m [kg], fr [%] (정지 바퀴 하중) · 그래프 · 탐침 a_p [deg], fz_p [N]
+//   종 방향 (같은 꼴, 슬립률 κ): F_x(κ) = D_x sin(C_x atan(B_x κ − E_x(B_x κ − atan B_x κ))),  D_x = μ_x(F_z) F_z (μ_x = 비 mux × μ(F_z)),  B_x C_x D_x = C_κ = ck0 × F_z
+//   조합 슬립 (Pacejka 2012 4.3.2 의 코사인 가중 꼴): F_x = F_x0(κ) G_xα,  G_xα = cos(atan(B_xα α)),  F_y = F_y0(α) G_yκ,  G_yκ = cos(atan(B_yκ κ))
+//   스키드패드 기록 → μ: v = 2πR ÷ t, a_y = v² ÷ R, μ_유효 = m a_y ÷ (m g + D),  하중 감도를 넣은 기준 μ₀ = (m a_y + s Σ (F_zi − F_z0) F_zi ÷ 1000) ÷ ΣF_zi
+//     (F_zi = 정지 + 다운포스 몫 ± 횡하중 이동: 앞 ± m a_y h LLTD ÷ t_f, 뒤 ± m a_y h (1 − LLTD) ÷ t_r)
+// 입력 I : mu, mu_s, fz0, ca0 [N/deg], cn, tc, te, relax [m] · 종 mux, ck0 [1/슬립], tcx, tex · 조합 bxa [1/rad], byk · 차 m [kg], fr [%] · 탐침 a_p [deg], fz_p [N], k_p [%]
+//          스키드패드 t_sk [s, 한 바퀴], r_sk [m, 주행 반경], h, tf, tr [mm], lltd [%], cla [m²], xcop [mm]
 const RAD = Math.PI / 180, g = 9.81;
 function tyre(I) {
   const mu = Fz => Math.max(0.05, I.mu - (I.mu_s || 0) * (Fz - I.fz0) / 1000);
@@ -14952,7 +14978,10 @@ function tyre(I) {
   const C = I.tc, E = Math.min(1, I.te);
   const Fy = (aDeg, Fz) => { if (Fz <= 0) return 0; const D = mu(Fz) * Fz, B = Ca(Fz) / (C * D), x = B * aDeg * RAD;
     return D * Math.sin(C * Math.atan(x - E * (x - Math.atan(x)))); };
-  return { mu, Ca, Fy, C, E };
+  const Fx = (k, Fz) => { if (Fz <= 0) return 0; const D = (I.mux > 0 ? I.mux : 1) * mu(Fz) * Fz, Cx = I.tcx > 0 ? I.tcx : 1.65, Ex = Math.min(1, I.tex || 0), B = (I.ck0 > 0 ? I.ck0 : 20) * Fz / (Cx * D), x = B * k;
+    return D * Math.sin(Cx * Math.atan(x - Ex * (x - Math.atan(x)))); };
+  const Gxa = aDeg => Math.cos(Math.atan((I.bxa || 0) * aDeg * RAD)), Gyk = k => Math.cos(Math.atan((I.byk || 0) * k));
+  return { mu, Ca, Fy, Fx, Gxa, Gyk, C, E };
 }
 function calc(I) {
   if (!(I.fz0 > 0) || !(I.ca0 > 0) || !(I.tc > 0) || !(I.tc < 2) || !(I.mu > 0)) throw new Error('기준 하중 · 코너링 강성 · μ 는 0 보다 크고, 모양 계수 C 는 0 ~ 2 사이로 넣으세요.');
@@ -14963,9 +14992,22 @@ function calc(I) {
     let lo = Math.max(0, best - 0.01), hi = best + 0.01; for (let i = 0; i < 60; i++) { const m1 = lo + (hi - lo) * 0.382, m2 = lo + (hi - lo) * 0.618; if (T.Fy(m1, Fz) < T.Fy(m2, Fz)) lo = m1; else hi = m2; }
     const a = (lo + hi) / 2; return { a, F: T.Fy(a, Fz) }; };
   const pf = peak(Ff), pr = peak(Fr), p0 = peak(I.fz0);
+  // 종 방향 최대 (슬립률, 0.0001 간격 뒤 황금분할)
+  const peakX = Fz => { let best = 0, bv = -Infinity; for (let k = 0.0005; k <= 1; k += 0.0005) { const f = T.Fx(k, Fz); if (f > bv) { bv = f; best = k; } }
+    let lo = Math.max(0, best - 0.0005), hi = best + 0.0005; for (let i = 0; i < 60; i++) { const m1 = lo + (hi - lo) * 0.382, m2 = lo + (hi - lo) * 0.618; if (T.Fx(m1, Fz) < T.Fx(m2, Fz)) lo = m1; else hi = m2; }
+    const k = (lo + hi) / 2; return { k, F: T.Fx(k, Fz) }; };
+  const px0 = peakX(I.fz0), kp = (I.k_p || 0) / 100;
+  // 스키드패드 → μ
+  let sk = { ay: NaN, mue: NaN, mu0: NaN };
+  if (I.t_sk > 0 && I.r_sk > 0) { const v = 2 * Math.PI * I.r_sk / I.t_sk, ay = v * v / I.r_sk, D = 0.5 * 1.225 * Math.max(0, I.cla || 0) * v * v, fa = I.L > 0 && isFinite(I.xcop) ? I.xcop / I.L : I.fr / 100;
+    const fs = I.fr / 100, h = (I.h || 0) / 1000, ld = (isFinite(I.lltd) ? I.lltd : 50) / 100, tf = (I.tf || 1200) / 1000, tr = (I.tr || 1200) / 1000;
+    const Wf = (I.m * g * fs + D * fa) / 2, Wr = (I.m * g * (1 - fs) + D * (1 - fa)) / 2, dF = I.m * ay * h * ld / tf, dR = I.m * ay * h * (1 - ld) / tr;
+    const Z = [Wf + dF, Wf - dF, Wr + dR, Wr - dR], SZ = Z.reduce((a, b) => a + b, 0), s = I.mu_s || 0;
+    sk = { ay: ay / g, mue: I.m * ay / SZ, mu0: (I.m * ay + s * Z.reduce((a, z) => a + (z - I.fz0) * z, 0) / 1000) / SZ, v: v * 3.6 }; }
   const xs = []; for (let a = 0; a <= 20 + 1e-9; a += 0.1) xs.push(+a.toFixed(2));
   const L = [0.5, 1, 1.5].map(k => k * I.fz0);
-  const sig = { f05: xs.map(a => T.Fy(a, L[0])), f10: xs.map(a => T.Fy(a, L[1])), f15: xs.map(a => T.Fy(a, L[2])),
+  const sig = { x05: xs.map(k => T.Fx(k / 100, L[0])), x10: xs.map(k => T.Fx(k / 100, L[1])), x15: xs.map(k => T.Fx(k / 100, L[2])), yk: xs.map(a => T.Fy(a, L[1]) * T.Gyk(kp)), xa: xs.map(k => T.Fx(k / 100, L[1]) * T.Gxa(I.a_p)),
+                f05: xs.map(a => T.Fy(a, L[0])), f10: xs.map(a => T.Fy(a, L[1])), f15: xs.map(a => T.Fy(a, L[2])),
                 ff: xs.map(a => T.Fy(a, Ff)), fr: xs.map(a => T.Fy(a, Fr)), mf: xs.map(a => T.Fy(a, Ff) / Ff), mr: xs.map(a => T.Fy(a, Fr) / Fr) };
   const out = {
     fz_f: Ff, fz_r: Fr,
@@ -14974,7 +15016,10 @@ function calc(I) {
     fy_pk_f: pf.F, fy_pk_r: pr.F, fy_pk0: p0.F,                                     // 최대 횡력 [N]
     fy_p: T.Fy(I.a_p, I.fz_p), mu_p: T.Fy(I.a_p, I.fz_p) / I.fz_p,                  // 탐침 (슬립각 a_p, 하중 fz_p)
     fy_inf: I.te === 0 ? T.mu(I.fz0) * I.fz0 * Math.sin(I.tc * Math.PI / 2) : NaN,  // E = 0 일 때 큰 슬립각 끝 값 [N]
-    tau_60: I.relax / (60 / 3.6),                                                    // 60 km/h 에서 이완 시간 상수 [s]
+    tau_60: I.relax / (60 / 3.6),
+    c_kappa0: (I.ck0 > 0 ? I.ck0 : 20) * I.fz0, k_pk0: px0.k * 100, fx_pk0: px0.F,                                  // 종 방향 (기준 하중)
+    fx_p: T.Fx(kp, I.fz_p) * T.Gxa(I.a_p), fy_pc: T.Fy(I.a_p, I.fz_p) * T.Gyk(kp), g_yk: T.Gyk(kp), g_xa: T.Gxa(I.a_p),   // 조합 탐침
+    sk_v: sk.v, sk_ay: sk.ay, sk_mue: sk.mue, sk_mu0: sk.mu0,                                                    // 60 km/h 에서 이완 시간 상수 [s]
     mu_o: I.mu, mu_s_o: I.mu_s || 0, fz0_o: I.fz0, ca0_o: I.ca0, cn_o: I.cn, tc_o: I.tc, te_o: I.te, relax_o: I.relax,   // 대시보드 반영 (모델 값 그대로)
   };
   return { out, x: { d: xs }, sig };
@@ -14984,141 +15029,286 @@ function calc(I) {
 </script>
 <script>
 /* ============================================================
-   도구 5 서스 기하 (간이판: 정면 2D) — docs/TOOLS-PLAN.md 5절
-   - 더블 위시본 정면 하드포인트(축마다 4점)로 순간중심 · 롤센터 · 정면 스윙암 · 캠버 게인(범프 · 롤) · 킹핀 경사각 · 스크럽
-   - 3D 기구학 엔진(측면 안티 지오메트리, 범프 · 롤 스티어, 큰 움직임)은 나중에. 입출력 키는 3D 판과 같게 둠
-   - 대시보드로 rc_f · rc_r · camber_gain_f · camber_gain_r · kpi · scrub 를 보내면 도구 7 · 도구 2 차량 모델 1 이 받아 씀
+   도구 5 서스 기하 (3D 기구학) — docs/TOOLS-PLAN.md 5절
+   - 더블 위시본 3D 하드포인트(축마다 8 점)로 업라이트 자세를 풀어 롤센터 · 순간중심 · 캠버 게인 · KPI · 캐스터 · 스크럽 · 트레일 ·
+     범프 / 롤 스티어 · 안티다이브 · 안티리프트 · 안티스쿼트, 휠 트래블 곡선(캠버 · 토 · 롤센터 · 윤거 · KPI · 캐스터)
+   - 기본 점 = 2024 REF4 STEP(`REF4_Assy_07.22.STEP`) 왼쪽 바퀴 로드엔드 볼 중심 (차 좌표로 옮김: x = 앞 +, 바퀴 중심 0 · y = 바깥 + · z = 지면 위 +)
+   - 공통 엔진 K3D (계산 코드 맨 앞) 는 도구 6 · 7 · 8 도 같이 씀. 입력 칸 만드는 k3dIn · 기본 점 K3D_HP 도 여기서 정의 (도구 6 · 7 · 8 이 뒤에 읽힘)
    ============================================================ */
-/* 정면 그림: 축마다 오른쪽 절반 (중심선 왼쪽 끝), 위 · 아래 팔, 접지점 → 순간중심 선, 롤센터 */
-function t5Fig(I, R){ if(!R || !R.geo) return ''; const f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
-  const one = (G, nm, rc) => { const W = 360, H = 250, sc = 0.42, ox = 20, oy = H - 30, X = y => ox + y*sc, Y = z => oy - z*sc;
-    const line = (P, c, w, dash) => `<line x1="${X(P[0][0]).toFixed(1)}" y1="${Y(P[0][1]).toFixed(1)}" x2="${X(P[1][0]).toFixed(1)}" y2="${Y(P[1][1]).toFixed(1)}" stroke="${c}" stroke-width="${w}"${dash ? ' stroke-dasharray="5 4"' : ''}/>`;
-    const tw = 180, tr = 230;   // 바퀴 폭 · 반경 (그림용)
-    let s = `<svg viewBox="0 0 ${W} ${H}" class="t5-svg" role="img" aria-label="${nm} 정면 기하"><line x1="0" x2="${W}" y1="${oy}" y2="${oy}" stroke="#8a8f99"/>
-      <line x1="${X(0)}" x2="${X(0)}" y1="10" y2="${oy}" stroke="#b9bec8" stroke-dasharray="3 4"/><text x="${X(0) + 4}" y="20" class="t5-tx">중심선</text>
-      <rect x="${X(G.h - tw/2).toFixed(1)}" y="${Y(2*tr).toFixed(1)}" width="${(tw*sc).toFixed(1)}" height="${(2*tr*sc).toFixed(1)}" rx="6" fill="#e9ecf1" stroke="#9aa3b5"/>`;
-    // 접지점 → IC (그림 안까지), 롤센터
-    const cp = [G.h, 0];
-    if(G.ic){ s += line([cp, G.ic], '#6A4294', 1.2, true); s += line([G.L1[0], G.ic], '#c2c7d0', 1, true) + line([G.L2[0], G.ic], '#c2c7d0', 1, true); }
-    s += line(G.L1, '#1d5f9a', 3) + line(G.L2, '#c2410c', 3) + line([G.L1[1], G.L2[1]], '#5f6973', 2);
-    [G.L1[0], G.L1[1], G.L2[0], G.L2[1]].forEach(P => { s += `<circle cx="${X(P[0]).toFixed(1)}" cy="${Y(P[1]).toFixed(1)}" r="3.5" fill="#fff" stroke="#26303c" stroke-width="1.5"/>`; });
-    if(isFinite(rc)) s += `<circle cx="${X(0)}" cy="${Y(rc).toFixed(1)}" r="5" fill="#6A4294"/><text x="${X(0) + 8}" y="${(Y(rc) - 6).toFixed(1)}" class="t5-tx b">롤센터 ${f(rc, 1)} mm</text>`;
-    s += `<circle cx="${X(cp[0]).toFixed(1)}" cy="${oy}" r="3.5" fill="#26303c"/><text x="${X(cp[0]) - 10}" y="${oy + 16}" class="t5-tx">접지점</text>`;
-    return `<figure class="t5-fig"><figcaption>${nm}</figcaption>${s}</svg></figure>`; };
-  return `<div class="t5-figs">${one(R.geo.F, '앞축', R.out.rc_f)}${one(R.geo.R, '뒤축', R.out.rc_r)}</div>
-    <p class="muted t5-note">파랑 = 아래 팔, 주황 = 위 팔, 보라 점선 = 접지점 → 순간중심 (그림 밖에 있을 수 있음). 오른쪽 절반만, 축척 같음. 순간중심 · 롤센터는 대칭 · 작은 움직임 근사입니다.</p>`; }
+const K3D_PN = {lf:'아래 팔 안쪽 앞', lr:'아래 팔 안쪽 뒤', lo:'아래 볼조인트', uf:'위 팔 안쪽 앞', ur:'위 팔 안쪽 뒤', uo:'위 볼조인트', ti:'타이로드 안쪽', to:'타이로드 바깥',
+  pa:'푸시로드 팔 쪽', pr:'푸시로드 로커 쪽', rp:'로커 회전 중심', rq:'로커 회전축 위 다른 점', dr:'댐퍼 로커 쪽', db:'댐퍼 차체 쪽'};
+const K3D_PNR = {ti:'토 링크 안쪽', to:'토 링크 바깥'};
+/* 2024 REF4 STEP 왼쪽 바퀴 (STEP 좌표 X 바깥 · Y 위 (지면 −74) · Z 앞 → 차 좌표 x = Z − 바퀴 중심 Z (앞 929.8 · 뒤 −650), y = X, z = Y + 74) */
+const K3D_HP = {
+  f:{lf:[170.2, 212.7, 131.3], lr:[-179.8, 212.7, 131.3], lo:[2.0, 561.6, 151.2], uf:[170.2, 246.7, 288.0], ur:[-179.8, 246.7, 288.0], uo:[-11.6, 516.6, 346.0],
+     ti:[12.2, 220.7, 169.5], to:[56.3, 550.1, 199.9], pa:[-4.8, 462.2, 361.4], pr:[-4.8, 314.0, 566.2], rp:[-4.8, 253.0, 551.0], rq:[95.2, 253.0, 551.0], dr:[-4.8, 250.8, 619.9], db:[-4.8, 51.0, 610.5]},
+  r:{lf:[100, 218.1, 154.1], lr:[-25, 218.1, 154.1], lo:[-1, 539.6, 169.2], uf:[100, 251.6, 309.6], ur:[-25, 251.6, 309.6], uo:[-25, 501.5, 365.5],
+     ti:[160, 218.1, 154.1], to:[59, 539.2, 169.1], pa:[5, 488.4, 193.3], pr:[5, 260.4, 401.0], rp:[5, 218.0, 362.0], rq:[105, 218.0, 362.0], dr:[5, 201.6, 439.1], db:[5, 7.4, 391.3]}};
+/* 입력 칸: 축 s 의 점 목록 pts → 점마다 x · y · z (묶음 이름 = '앞 · 점 이름') */
+function k3dIn(s, pts){ const ax = s === 'f' ? '앞' : '뒤';
+  return pts.flatMap(p => { const nm = (s === 'r' && K3D_PNR[p]) || K3D_PN[p], g = `${ax} · ${nm} (x 앞 · y 바깥 · z 위)`;
+    return ['x', 'y', 'z'].map((c, j) => ({k:`${s}_${p}_${c}`, n:`${nm} ${c}`, u:'mm', v:K3D_HP[s][p][j], d:1, g})); }); }
+/* 정면 · 측면 그림: 축마다 (정면 = y–z, 오른쪽 절반 · 측면 = x–z) */
+function k3dView(G, nm, mode, extra){ const f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—', P = G.P, X = G.X;
+  const W = 360, H = 260, fr = mode === 'front', sc = fr ? 0.42 : 0.42, ox = fr ? 20 : W / 2, oy = H - 28;
+  const pj = p => fr ? [ox + p[1] * sc, oy - p[2] * sc] : [ox + p[0] * sc, oy - p[2] * sc];
+  const ln = (a, b, c, w, dash) => { const A = pj(a), B = pj(b); return `<line x1="${A[0].toFixed(1)}" y1="${A[1].toFixed(1)}" x2="${B[0].toFixed(1)}" y2="${B[1].toFixed(1)}" stroke="${c}" stroke-width="${w}"${dash ? ' stroke-dasharray="5 4"' : ''}/>`; };
+  const dt = (p, c) => { const A = pj(p); return `<circle cx="${A[0].toFixed(1)}" cy="${A[1].toFixed(1)}" r="3.2" fill="#fff" stroke="${c || '#26303c'}" stroke-width="1.4"/>`; };
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="t5-svg" role="img" aria-label="${nm}"><line x1="0" x2="${W}" y1="${oy}" y2="${oy}" stroke="#8a8f99"/>`;
+  if(fr) s += `<line x1="${ox}" x2="${ox}" y1="10" y2="${oy}" stroke="#b9bec8" stroke-dasharray="3 4"/><text x="${ox + 4}" y="20" class="t5-tx">중심선</text>`;
+  else s += `<line x1="${ox}" x2="${ox}" y1="10" y2="${oy}" stroke="#b9bec8" stroke-dasharray="3 4"/><text x="${ox + 4}" y="20" class="t5-tx">바퀴 중심 · 앞 →</text>`;
+  // 바퀴 (정면: 사각형 근사 · 측면: 원)
+  const wc = pj(X.WC), rr = G.X.WC[2] * sc;
+  s += fr ? `<rect x="${(wc[0] - 90 * sc).toFixed(1)}" y="${(wc[1] - rr).toFixed(1)}" width="${(180 * sc).toFixed(1)}" height="${(2 * rr).toFixed(1)}" rx="6" fill="#e9ecf1" stroke="#9aa3b5" transform="rotate(${(X.cam).toFixed(2)} ${wc[0].toFixed(1)} ${wc[1].toFixed(1)})"/>`
+          : `<circle cx="${wc[0].toFixed(1)}" cy="${wc[1].toFixed(1)}" r="${rr.toFixed(1)}" fill="#e9ecf1" stroke="#9aa3b5"/>`;
+  // 순간중심 선
+  const ic = fr ? G.ic : G.sv, cp = X.CP;
+  if(isFinite(ic[0]) && isFinite(ic[1])){ const I3 = fr ? [0, ic[0], ic[1]] : [ic[0], 0, ic[1]]; s += ln(cp, I3, '#6A4294', 1.2, true); }
+  s += ln(P.lf, X.LO, '#1d5f9a', 2.6) + ln(P.lr, X.LO, '#1d5f9a', 2.6) + ln(P.uf, X.UO, '#c2410c', 2.6) + ln(P.ur, X.UO, '#c2410c', 2.6) + ln(X.LO, X.UO, '#5f6973', 2) + ln(X.TI, X.TO, '#2e7d32', 2);
+  // 킹핀축 지면까지
+  const k = X.kp, tg = -X.LO[2] / k[2], Gp = [X.LO[0] + k[0] * tg, X.LO[1] + k[1] * tg, 0]; s += ln(X.UO, Gp, '#26303c', 1, true);
+  if(extra) s += extra(pj, ln, dt);
+  [P.lf, P.lr, X.LO, P.uf, P.ur, X.UO, X.TI, X.TO].forEach(p => s += dt(p));
+  const C = pj(cp); s += `<circle cx="${C[0].toFixed(1)}" cy="${oy}" r="3.2" fill="#26303c"/>`;
+  return `<figure class="t5-fig" style="max-width:440px"><figcaption>${nm}</figcaption>${s}</svg></figure>`; }
+function t5Fig(I, R){ if(!R || !R.geo) return ''; const G = R.geo, o = R.out, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
+  const rcm = rc => (pj) => { if(!isFinite(rc)) return ''; const A = pj([0, 0, rc]); return `<circle cx="${A[0].toFixed(1)}" cy="${A[1].toFixed(1)}" r="4.5" fill="#6A4294"/><text x="${(A[0] + 7).toFixed(1)}" y="${(A[1] - 6).toFixed(1)}" class="t5-tx b">롤센터 ${f(rc, 1)}</text>`; };
+  return `<div class="t5-figs">${k3dView(G.F, '앞축 정면', 'front', rcm(o.rc_f))}${k3dView(G.R, '뒤축 정면', 'front', rcm(o.rc_r))}${k3dView(G.F, '앞축 측면 (왼쪽 바퀴)', 'side')}${k3dView(G.R, '뒤축 측면 (왼쪽 바퀴)', 'side')}</div>
+    <p class="muted t5-note">파랑 = 아래 팔 (두 다리), 주황 = 위 팔, 초록 = 타이로드 · 토 링크, 회색 점선 = 킹핀축 (지면까지), 보라 점선 = 접지점 → 순간중심 (정면 · 측면, 그림 밖에 있을 수 있음). 같은 축척.</p>`; }
 const M5TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
-  ['#wb .wb-in', '입력', '축마다 위 · 아래 팔의 안쪽 · 바깥 점을 정면에서 넣습니다. y 는 차 중심선에서 바깥으로, z 는 지면에서 위로 [mm]. 바깥 점은 업라이트 볼조인트 중심입니다.'],
-  ['#wb #wbmain', '정면 그림', '팔 · 접지점 → 순간중심 선 · 롤센터를 그립니다.'],
-  ['#wb #wbout', '결과', '롤센터 높이, 순간중심, 정면 스윙암(FVSA), 범프 캠버 게인(°/mm) · 롤 캠버 게인(°/°, 바깥 바퀴 지면 기준), 킹핀 경사각 · 스크럽입니다.'],
+  ['#wb .wb-in', '입력', '축마다 하드포인트 8 점(아래 · 위 팔 안쪽 앞 · 뒤 · 볼조인트, 타이로드(뒤는 토 링크) 두 끝)을 3D 로 넣습니다. x 는 그 축의 바퀴 중심에서 앞 +, y 는 중심선에서 바깥 +, z 는 지면에서 위 + [mm]. 기본값은 2024 REF4 STEP 의 로드엔드 볼 중심입니다.'],
+  ['#wb #wbmain', '그림', '정면 · 측면에서 팔 · 킹핀축 · 순간중심 선 · 롤센터를 그립니다.'],
+  ['#wb #wbout', '결과', '정지 자세의 롤센터 · 캠버 게인 · KPI · 캐스터 · 스크럽 · 트레일 · 범프 / 롤 스티어 · 안티 지오메트리입니다. 작은 움직임(접선) 값이고, 큰 움직임은 아래 곡선에서 봅니다.'],
+  ['#wb .wb-sig', '트래블 곡선', '가로축 = 휠 트래블(바퀴 중심이 차체에 대해 오르면 +). 캠버 · 토 · 롤센터(양쪽 같이 오르내릴 때) · 윤거 반 변화 · KPI · 캐스터입니다.'],
 ];
-const T5G = {f:'앞축 정면 점 (y 바깥 +, z 위 +)', r:'뒤축 정면 점 (y 바깥 +, z 위 +)', t:'윤거'};
-const t5P = (s, G, v) => [['ly_i', '아래 팔 안쪽 y'], ['lz_i', '아래 팔 안쪽 z'], ['ly_o', '아래 팔 바깥 y'], ['lz_o', '아래 팔 바깥 z'], ['uy_i', '위 팔 안쪽 y'], ['uz_i', '위 팔 안쪽 z'], ['uy_o', '위 팔 바깥 y'], ['uz_o', '위 팔 바깥 z']]
-  .map(([k, n], j) => ({k:s + '_' + k, n, u:'mm', v:v[j], d:0, g:G}));
+const T5G = {car:'차 · 바퀴'};
+const t5Cv = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
 WB_TOOLS['5'] = {
-  no:'5', stage:'P3-1~3', name:'서스 기하 (정면 2D 간이판)',
-  noSig:true, mainTitle:'정면 기하', mainMeta:'오른쪽 절반 · 같은 축척',
+  no:'5', stage:'P3-1~3', name:'서스 기하 (3D 기구학)',
+  mainTitle:'정면 · 측면 기하', mainMeta:'왼쪽 바퀴 · 같은 축척',
+  x:{n:'휠 트래블', u:'mm'}, xiStart:'mid',
   inputs:[
-    {k:'tf', dk:'tf', v:1200, d:0, g:T5G.t}, {k:'tr', dk:'tr', v:1180, d:0, g:T5G.t},
-    ...t5P('f', T5G.f, [200, 120, 560, 130, 250, 290, 540, 330]), ...t5P('r', T5G.r, [200, 120, 555, 130, 250, 290, 535, 325]),
+    {k:'tf', dk:'tf', v:1200, d:0, g:T5G.car}, {k:'tr', dk:'tr', v:1180, d:0, g:T5G.car}, {k:'r_load', dk:'r_load', v:236, d:0, g:T5G.car},
+    {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T5G.car}, {k:'camber_r', dk:'camber_r', v:-2, d:2, g:T5G.car}, {k:'toe_f', dk:'toe_f', v:0, d:2, g:T5G.car}, {k:'toe_r', dk:'toe_r', v:0, d:2, g:T5G.car},
+    {k:'h', dk:'h', v:290, d:0, g:T5G.car}, {k:'L', dk:'L', v:1550, d:0, g:T5G.car}, {k:'brake_bias', dk:'brake_bias', v:73.6, d:1, g:T5G.car},
+    {k:'s_max', n:'그래프 트래블 범위 (±)', u:'mm', v:40, d:0, g:T5G.car},
+    ...k3dIn('f', t5Cv), ...k3dIn('r', t5Cv),
   ],
   outputs:[
-    {k:'rc_f', dk:'rc_f', d:1, g:'앞축'}, {k:'ic_y_f', n:'순간중심 y', u:'mm', d:0, g:'앞축'}, {k:'ic_z_f', n:'순간중심 z', u:'mm', d:0, g:'앞축'}, {k:'fvsa_f', n:'정면 스윙암 (FVSA, 평행이면 —)', u:'mm', d:0, g:'앞축'},
-    {k:'cgb_f', n:'범프 캠버 게인 (차체 기준)', u:'°/mm', d:4, g:'앞축'}, {k:'camber_gain_f', dk:'camber_gain_f', d:3, g:'앞축'}, {k:'kpi', dk:'kpi', d:2, g:'앞축'}, {k:'scrub', dk:'scrub', d:1, g:'앞축'},
-    {k:'rc_r', dk:'rc_r', d:1, g:'뒤축'}, {k:'ic_y_r', n:'순간중심 y', u:'mm', d:0, g:'뒤축'}, {k:'ic_z_r', n:'순간중심 z', u:'mm', d:0, g:'뒤축'}, {k:'fvsa_r', n:'정면 스윙암 (FVSA, 평행이면 —)', u:'mm', d:0, g:'뒤축'},
-    {k:'cgb_r', n:'범프 캠버 게인 (차체 기준)', u:'°/mm', d:4, g:'뒤축'}, {k:'camber_gain_r', dk:'camber_gain_r', d:3, g:'뒤축'}, {k:'kpi_r', n:'킹핀 경사각 (뒤)', u:'°', d:2, g:'뒤축'}, {k:'scrub_r', n:'스크럽 (뒤)', u:'mm', d:1, g:'뒤축'},
+    {k:'rc_f', dk:'rc_f', d:1, g:'앞축 정면'}, {k:'ic_y_f', n:'정면 순간중심 y', u:'mm', d:0, g:'앞축 정면'}, {k:'ic_z_f', n:'정면 순간중심 z', u:'mm', d:0, g:'앞축 정면'}, {k:'fvsa_f', n:'정면 스윙암 (FVSA)', u:'mm', d:0, g:'앞축 정면'},
+    {k:'cgb_f', n:'범프 캠버 게인 (차체 기준)', u:'°/mm', d:4, g:'앞축 정면'}, {k:'camber_gain_f', dk:'camber_gain_f', d:3, g:'앞축 정면'},
+    {k:'kpi', dk:'kpi', d:2, g:'앞축 킹핀 · 조향'}, {k:'caster', dk:'caster', d:2, g:'앞축 킹핀 · 조향'}, {k:'scrub', dk:'scrub', d:1, g:'앞축 킹핀 · 조향'}, {k:'trail', dk:'trail', d:1, g:'앞축 킹핀 · 조향'},
+    {k:'kpo_f', n:'바퀴 중심 킹핀 옵셋', u:'mm', d:1, g:'앞축 킹핀 · 조향'}, {k:'bs_f', n:'범프 스티어 (토인 +)', u:'°/mm', d:4, g:'앞축 킹핀 · 조향'}, {k:'rs_f', n:'롤 스티어 (바깥 바퀴, 토인 +)', u:'°/°', d:3, g:'앞축 킹핀 · 조향'},
+    {k:'sv_x_f', n:'측면 순간중심 x', u:'mm', d:0, g:'앞축 킹핀 · 조향'}, {k:'sv_z_f', n:'측면 순간중심 z', u:'mm', d:0, g:'앞축 킹핀 · 조향'}, {k:'anti_dive', dk:'anti_dive', d:1, g:'앞축 킹핀 · 조향'},
+    {k:'rc_r', dk:'rc_r', d:1, g:'뒤축 정면'}, {k:'ic_y_r', n:'정면 순간중심 y', u:'mm', d:0, g:'뒤축 정면'}, {k:'ic_z_r', n:'정면 순간중심 z', u:'mm', d:0, g:'뒤축 정면'}, {k:'fvsa_r', n:'정면 스윙암 (FVSA)', u:'mm', d:0, g:'뒤축 정면'},
+    {k:'cgb_r', n:'범프 캠버 게인 (차체 기준)', u:'°/mm', d:4, g:'뒤축 정면'}, {k:'camber_gain_r', dk:'camber_gain_r', d:3, g:'뒤축 정면'},
+    {k:'kpi_r', n:'킹핀 경사각 (뒤)', u:'°', d:2, g:'뒤축 킹핀 · 토'}, {k:'caster_r', n:'캐스터 (뒤)', u:'°', d:2, g:'뒤축 킹핀 · 토'}, {k:'scrub_r', n:'스크럽 (뒤)', u:'mm', d:1, g:'뒤축 킹핀 · 토'}, {k:'trail_r', n:'트레일 (뒤)', u:'mm', d:1, g:'뒤축 킹핀 · 토'},
+    {k:'kpo_r', n:'바퀴 중심 킹핀 옵셋 (뒤)', u:'mm', d:1, g:'뒤축 킹핀 · 토'}, {k:'bs_r', n:'범프 스티어 (토인 +)', u:'°/mm', d:4, g:'뒤축 킹핀 · 토'}, {k:'rs_r', n:'롤 스티어 (바깥 바퀴, 토인 +)', u:'°/°', d:3, g:'뒤축 킹핀 · 토'},
+    {k:'sv_x_r', n:'측면 순간중심 x', u:'mm', d:0, g:'뒤축 킹핀 · 토'}, {k:'sv_z_r', n:'측면 순간중심 z', u:'mm', d:0, g:'뒤축 킹핀 · 토'},
+    {k:'anti_lift', n:'안티리프트 (뒤, 제동)', u:'%', d:1, g:'뒤축 킹핀 · 토'}, {k:'anti_squat', dk:'anti_squat', d:1, g:'뒤축 킹핀 · 토'},
+    {k:'camber_f_o', dk:'camber_f', d:2, g:'앞축 정면', hide:true}, {k:'camber_r_o', dk:'camber_r', d:2, g:'앞축 정면', hide:true}, {k:'toe_f_o', dk:'toe_f', d:2, g:'앞축 정면', hide:true}, {k:'toe_r_o', dk:'toe_r', d:2, g:'앞축 정면', hide:true},
   ],
+  sigs:[{k:'cf', n:'캠버 (앞)', u:'°', d:3}, {k:'cr', n:'캠버 (뒤)', u:'°', d:3}, {k:'tf_', n:'토 (앞, 토인 +)', u:'°', d:3}, {k:'tr_', n:'토 (뒤, 토인 +)', u:'°', d:3},
+        {k:'rcf', n:'롤센터 (앞, 양쪽 같이)', u:'mm', d:1}, {k:'rcr', n:'롤센터 (뒤, 양쪽 같이)', u:'mm', d:1}, {k:'yf', n:'윤거 반 변화 (앞)', u:'mm', d:2}, {k:'yr', n:'윤거 반 변화 (뒤)', u:'mm', d:2},
+        {k:'kf', n:'KPI (앞)', u:'°', d:2}, {k:'cs', n:'캐스터 (앞)', u:'°', d:2}],
+  sigOn:['cf', 'cr'],
   figure: t5Fig, tour: M5TOUR,
-  verifyBase:{},
+  verifyBase:{camber_f:0, camber_r:0, toe_f:0, toe_r:0, tf:1200, tr:1200, h:290, L:1550, brake_bias:73.6},
   verify: [
-    {n:'위 · 아래 팔 수평 평행 → 롤센터 = 지면, 롤 캠버 게인 1 (바퀴가 차체와 같이 기욺)', I:{f_ly_i:200, f_lz_i:120, f_ly_o:560, f_lz_o:120, f_uy_i:250, f_uz_i:300, f_uy_o:550, f_uz_o:300}, expect:{rc_f:0, camber_gain_f:1, cgb_f:0},
-     src:'IC 무한대 → 접지점에서 수평선 → 중심선 높이 0. FVSA 무한대 → 범프 캠버 변화 0, 롤 1° 에 바깥 바퀴 지면 기준 +1°'},
-    {n:'순간중심 작도 (아래 수평 z = 100, 위 기울기 40/300, 윤거 1200)', I:{tf:1200, f_ly_i:200, f_lz_i:100, f_ly_o:560, f_lz_o:100, f_uy_i:250, f_uz_i:300, f_uy_o:550, f_uz_o:340}, expect:{ic_y_f:-1250, ic_z_f:100, fvsa_f:1850, rc_f:32.432432, camber_gain_f:0.675676, cgb_f:-0.030971},
-     src:'위 팔 z = 300 + (y − 250) × 0.1333 = 100 → y = −1250. FVSA = 600 + 1250 = 1850, 롤센터 = 100 × 600 ÷ 1850 = 32.432 mm, 롤 캠버 = 1 − 600 ÷ 1850 = 0.6757, 범프 = −(1 ÷ 1850) rad/mm = −0.03097 °/mm'},
-    {n:'킹핀 경사각 · 스크럽 (아래 바깥 560, 100 · 위 바깥 550, 340)', I:{tf:1200, f_ly_o:560, f_lz_o:100, f_uy_o:550, f_uz_o:340}, expect:{kpi:2.385944, scrub:35.833333},
-     src:'KPI = atan(10 ÷ 240) = 2.3859°, 킹핀축 지면 y = 560 + 10/240 × 100 = 564.17 → 스크럽 = 600 − 564.17 = 35.833 mm'},
-    {n:'팔이 평행하게 기울면 (기울기 0.1) → 롤센터 = −0.1 × t/2', I:{tr:1200, r_ly_i:200, r_lz_i:100, r_ly_o:560, r_lz_o:136, r_uy_i:250, r_uz_i:300, r_uy_o:550, r_uz_o:330}, expect:{rc_r:-60},
-     src:'IC 무한대 → 접지점 (600, 0) 에서 기울기 0.1 직선 → y = 0 에서 z = −60 mm'}
+    {n:'위 · 아래 팔 수평 평행 (앞뒤 다리 ±175) → 롤센터 = 지면, 롤 캠버 게인 1', I:{f_lf_x:175, f_lf_y:200, f_lf_z:120, f_lr_x:-175, f_lr_y:200, f_lr_z:120, f_lo_x:0, f_lo_y:560, f_lo_z:120, f_uf_x:175, f_uf_y:250, f_uf_z:300, f_ur_x:-175, f_ur_y:250, f_ur_z:300, f_uo_x:0, f_uo_y:550, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:120, f_to_x:-70, f_to_y:560, f_to_z:120}, expect:{rc_f:0, camber_gain_f:1, cgb_f:0},
+     src:'정면 투영이 평행 → 순간중심 무한대 → 접지점에서 수평선 → 중심선 높이 0. 롤 1° 에 바깥 바퀴 지면 기준 +1° (3D 에서 앞뒤 다리가 대칭이면 2D 와 같음)'},
+    {n:'정면 순간중심 작도 (아래 수평 z = 100, 위 기울기 40/300)', I:{f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:250, f_uf_z:300, f_ur_x:-175, f_ur_y:250, f_ur_z:300, f_uo_x:0, f_uo_y:550, f_uo_z:340, f_ti_x:-70, f_ti_y:200, f_ti_z:100, f_to_x:-70, f_to_y:560, f_to_z:100}, expect:{ic_y_f:-1250, ic_z_f:100, fvsa_f:1850, rc_f:32.432432, camber_gain_f:0.675676, cgb_f:-0.030971},
+     src:'위 팔 z = 300 + (y − 250) × 0.1333 = 100 → y = −1250. FVSA = 600 + 1250 = 1850, 롤센터 = 100 × 600 ÷ 1850, 롤 캠버 = 1 − 600 ÷ 1850, 범프 = −(1 ÷ 1850) rad/mm = −0.03097 °/mm'},
+    {n:'킹핀 경사각 · 스크럽 (아래 볼조인트 y 560, z 100 · 위 y 550, z 340)', I:{f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uo_x:0, f_uo_y:550, f_uo_z:340}, expect:{kpi:2.385944, scrub:35.833333, caster:0, trail:0},
+     src:'KPI = atan(10 ÷ 240) = 2.3859°, 킹핀축 지면 y = 560 + 10/240 × 100 = 564.17 → 스크럽 = 600 − 564.17 = 35.833 mm, 볼조인트 x 같음 → 캐스터 · 트레일 0'},
+    {n:'캐스터 · 트레일 (위 볼조인트가 20 mm 뒤)', I:{f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uo_x:-20, f_uo_y:560, f_uo_z:340}, expect:{caster:4.763642, trail:8.333333, kpi:0, scrub:40},
+     src:'캐스터 = atan(20 ÷ 240) = 4.7636°, 킹핀축 지면 x = 0 + 20/240 × 100 = 8.333 mm 앞 → 트레일 8.333 mm, 스크럽 = 600 − 560'},
+    {n:'팔이 평행하게 기울면 (뒤, 기울기 0.1) → 롤센터 = −0.1 × t/2', I:{r_lf_x:175, r_lf_y:200, r_lf_z:100, r_lr_x:-175, r_lr_y:200, r_lr_z:100, r_lo_x:0, r_lo_y:560, r_lo_z:136, r_uf_x:175, r_uf_y:250, r_uf_z:300, r_ur_x:-175, r_ur_y:250, r_ur_z:300, r_uo_x:0, r_uo_y:550, r_uo_z:330, r_ti_x:-70, r_ti_y:200, r_ti_z:100, r_to_x:-70, r_to_y:560, r_to_z:136}, expect:{rc_r:-60},
+     src:'순간중심 무한대 → 접지점 (600, 0) 에서 기울기 0.1 직선 → y = 0 에서 z = −60 mm'},
+    {n:'안티다이브 (앞: 위 팔 회전축이 측면에서 기울기 0.2, 아래 수평)', I:{f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:250, f_uf_z:335, f_ur_x:-175, f_ur_y:250, f_ur_z:265, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:100, f_to_x:-70, f_to_y:560, f_to_z:100}, expect:{sv_x_f:-1000, sv_z_f:100, anti_dive:39.337931},
+     src:'볼조인트는 측면에서 회전축과 평행하게 움직임 → 측면 순간중심 = 아래 선 z = 100 과 위 선 z = 300 + 0.2 x 의 교점 (−1000, 100). tanθ = 100 ÷ 1000, 안티다이브 = 0.1 × 1550 ÷ 290 × 0.736 = 39.338 %'},
+    {n:'안티리프트 · 안티스쿼트 (뒤: 위 팔 기울기 −0.2 → 순간중심 (1000, 100), 바퀴 중심 236)', I:{r_lf_x:175, r_lf_y:200, r_lf_z:100, r_lr_x:-175, r_lr_y:200, r_lr_z:100, r_lo_x:0, r_lo_y:560, r_lo_z:100, r_uf_x:175, r_uf_y:250, r_uf_z:265, r_ur_x:-175, r_ur_y:250, r_ur_z:335, r_uo_x:0, r_uo_y:560, r_uo_z:300, r_ti_x:-70, r_ti_y:200, r_ti_z:100, r_to_x:-70, r_to_y:560, r_to_z:100, r_load:236}, expect:{sv_x_r:1000, sv_z_r:100, anti_lift:14.110345, anti_squat:-72.689655},
+     src:'안티리프트 (접지점 기준) = 0.1 × 1550 ÷ 290 × 0.264 = 14.110 %, 안티스쿼트 (안쪽 구동 → 바퀴 중심 기준) tanθ = (100 − 236) ÷ 1000 = −0.136 → −0.136 × 1550 ÷ 290 = −72.69 %'},
+    {n:'범프 스티어 (팔 평행 · 같은 길이 360, 킹핀 수직, 타이로드 안쪽이 50 mm 높음, 너클암 70 mm 뒤)', I:{f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:200, f_uf_z:300, f_ur_x:-175, f_ur_y:200, f_ur_z:300, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:250, f_to_x:-70, f_to_y:560, f_to_z:200}, expect:{bs_f:0.113682, rs_f:1.190476},
+     src:'업라이트 평행 이동 (ω = 0) + 킹핀 둘레 ψ. 타이로드 길이 일정: 2 × 360 × (−70 dψ/ds) + 2 × (s − 50) = 0 (s = 0) → dψ/ds = −100 ÷ 50400 rad/mm → 토인 +0.11368 °/mm, 롤 스티어 = 0.11368 × 600 × π/180 = 1.1905 °/°'}
   ],
   code: `// ================================================================
-// 도구 5 서스 기하 (간이판: 정면 2D) — 계산 코드
+// 3D 서스 기구학 엔진 (도구 5 · 6 · 7 · 8 공통) — 더블 위시본, 왼쪽 바퀴 (오른쪽 = 거울)
 // ================================================================
-// 입력 I : 축마다 (앞 f · 뒤 r) 더블 위시본 정면 점 [mm] — y = 차 중심선에서 바깥으로 +, z = 지면에서 위로 +
-//          아래 팔 안쪽 (ly_i, lz_i) · 바깥 (ly_o, lz_o), 위 팔 안쪽 (uy_i, uz_i) · 바깥 (uy_o, uz_o), 윤거 tf · tr (접지점 y = t/2, z = 0)
-// 식 (Milliken & Milliken 17 장, 정면 순간중심 작도 — 대칭 · 작은 움직임 근사):
-//   순간중심 IC = 위 · 아래 팔 직선의 교점 (평행이면 무한대)
-//   롤센터 높이 = 접지점과 IC 를 이은 직선이 중심선 (y = 0) 과 만나는 높이 = z_IC × (t/2) ÷ (t/2 − y_IC)   (평행이면 접지점에서 팔 기울기로)
-//   정면 스윙암 FVSA = 접지점에서 IC 까지 수평 거리 = t/2 − y_IC (IC 가 안쪽이면 +)
-//   범프 캠버 게인 = −1 ÷ FVSA [rad/m] (바퀴가 오르면 IC 가 안쪽일 때 − 캠버, 차체 기준)
-//   롤 캠버 게인 (바깥 바퀴, 지면 기준) = 1 − (t/2) ÷ FVSA [deg/deg]  (롤 φ 에 바깥 바퀴가 φ t/2 오름 + 차체가 φ 기욺)
-//   킹핀 경사각 KPI = atan((y_아래바깥 − y_위바깥) ÷ (z_위바깥 − z_아래바깥)),  스크럽 = 접지점 y − 킹핀축이 지면과 만나는 y
-const D = Math.PI / 180;
-function axle(I, s, t) {
-  const L1 = [[I[s + '_ly_i'], I[s + '_lz_i']], [I[s + '_ly_o'], I[s + '_lz_o']]], L2 = [[I[s + '_uy_i'], I[s + '_uz_i']], [I[s + '_uy_o'], I[s + '_uz_o']]];
-  const h = t / 2, d1 = [L1[1][0] - L1[0][0], L1[1][1] - L1[0][1]], d2 = [L2[1][0] - L2[0][0], L2[1][1] - L2[0][1]], den = d1[0] * d2[1] - d1[1] * d2[0];
-  let ic = null, rc, fvsa;
-  if (Math.abs(den) < 1e-9 * Math.hypot(...d1) * Math.hypot(...d2)) {                    // 평행: IC 무한대 → 접지점에서 팔 방향 직선
-    const sl = d1[1] / d1[0]; rc = -sl * h; fvsa = Infinity;
-  } else {
-    const u = ((L2[0][0] - L1[0][0]) * d2[1] - (L2[0][1] - L1[0][1]) * d2[0]) / den;
-    ic = [L1[0][0] + u * d1[0], L1[0][1] + u * d1[1]]; fvsa = h - ic[0];
-    rc = Math.abs(fvsa) < 1e-9 ? NaN : ic[1] * h / fvsa;
+// 좌표 [mm]: x = 앞 +, y = 차 중심선에서 바깥 (왼쪽) +, z = 지면에서 위 +. x = 0 은 그 축의 바퀴 중심.
+// 점 (축 s = f · r): 아래 팔 안쪽 앞 LF · 뒤 LR, 바깥 (볼조인트) LO, 위 팔 UF · UR · UO, 타이로드 (뒤는 토 링크) 안쪽 TI · 바깥 TO
+//   입력 이름 = s_점_x · s_점_y · s_점_z (예: f_lf_x). 바퀴: 윤거 t (정지 접지점 y = t/2, z = 0), 하중 반경 r (접지점 → 바퀴 중심),
+//   정적 캠버 (위가 안쪽이면 −) · 정적 토 (토인 +) [deg]
+// 풀이: 아래 팔 각 θL (LF–LR 축 둘레), 위 팔 각 θU (UF–UR 축 둘레), 업라이트 킹핀 둘레 각 ψ 를 미지수로
+//   ① |UO − LO| = 처음 길이 (업라이트 강체)  ② |TO − (TI + 랙 이동)| = 타이로드 길이  ③ 바퀴 중심 z = 처음 + 휠 트래블
+//   를 뉴턴법 (수치 야코비안) 으로 풂. 업라이트 위 점 P → LO + R (P₀ − LO₀),  R = (킹핀축 둘레 ψ) ∘ (킹핀축 방향을 맞추는 최소 회전)
+// 순간 운동: 트래블 ±0.01 mm 중앙 차분으로 바퀴 중심 속도 · 업라이트 각속도 ω = ½ Σ eᵢ × ėᵢ → 업라이트에 붙은 접지점 속도 v = v_WC + ω × (CP − WC),
+//   정면 순간중심 = CP − (0, v_z/ω_x, −v_y/ω_x),  롤센터 (대칭) = 접지점 → 순간중심 선이 y = 0 과 만나는 높이 = CP_z + CP_y v_y ÷ v_z
+//   측면: 앞 안티다이브 tanθ = v_x ÷ v_z (접지점 경로, 바깥 브레이크), 뒤 안티리프트 tanθ = −v_x ÷ v_z, 뒤 안티스쿼트 tanθ = −v_x,WC ÷ v_z,WC (안쪽 구동)
+const K3D = (() => {
+  const D = Math.PI / 180;
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = a => Math.sqrt(dot(a, a)), unit = a => mul(a, 1 / norm(a));
+  const rot = (v, k, th) => { const c = Math.cos(th), s = Math.sin(th); return add(add(mul(v, c), mul(cross(k, v), s)), mul(k, dot(k, v) * (1 - c))); };
+  const rotAbout = (P, O, k, th) => add(O, rot(sub(P, O), k, th));
+  const PTS = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
+  // 입력 → 축 하드포인트 · 바퀴. ex = 같은 꼴의 덧점 (예: 푸시로드 pa · pr · 로커 rp · dr · db), 없으면 무시
+  function axle(I, s, t, r, cam, toe, ex) {
+    const P = {}; for (const n of PTS.concat(ex || [])) { const k = s + '_' + n; P[n] = [+I[k + '_x'], +I[k + '_y'], +I[k + '_z']];
+      if (!P[n].every(isFinite)) throw new Error(k + ' 좌표가 비었습니다.'); }
+    if (!(t > 0) || !(r > 0)) throw new Error('윤거 · 하중 반경은 0 보다 커야 합니다.');
+    const c = (cam || 0) * D, q = (toe || 0) * D;
+    // 바퀴 회전축 a (바깥 +): 캠버 − (위가 안쪽) → a_z = +sin(−캠버), 토인 → a_x = +sin(토)
+    const a = unit([Math.sin(q) * Math.cos(c), Math.cos(q) * Math.cos(c), -Math.sin(c)]);
+    const CP = [0, t / 2, 0], dn = unit(add([0, 0, -1], mul(a, a[2])));      // 바퀴 면 안 아래 방향
+    const WC = sub(CP, mul(dn, r / -dn[2]));                                      // 바퀴 중심 높이 = r (캠버가 있으면 바퀴 면을 따라)
+    const rw = norm(sub(WC, CP));
+    return { P, a0: a, CP0: CP, WC0: WC, rw, t };
   }
-  const kpi = Math.atan2(L1[1][0] - L2[1][0], L2[1][1] - L1[1][1]) / D;                   // 위로 갈수록 안쪽이면 +
-  const yk0 = L1[1][0] + (L1[1][0] - L2[1][0]) / (L2[1][1] - L1[1][1]) * L1[1][1];          // 킹핀축의 지면 y
-  return { ic, rc, fvsa, cgb: isFinite(fvsa) ? -1 / fvsa / D : 0, cgr: isFinite(fvsa) ? 1 - h / fvsa : 1, kpi, scrub: h - yk0, L1, L2, h };
-}
+  // 한 자세 풀이: sz = 바퀴 중심 위로 [mm] (차체 기준), rk = 랙 (타이로드 안쪽 점) y 이동 [mm]
+  function pose(A, sz, rk, q0) {
+    const P = A.P, kL = unit(sub(P.lr, P.lf)), kU = unit(sub(P.ur, P.uf)), d0 = norm(sub(P.uo, P.lo));
+    const TI = add(P.ti, [0, rk || 0, 0]), Lt = norm(sub(P.to, P.ti)), e0 = unit(sub(P.uo, P.lo));
+    const body = q => { const LO = rotAbout(P.lo, P.lf, kL, q[0]), UO = rotAbout(P.uo, P.uf, kU, q[1]), e = unit(sub(UO, LO));
+      // 최소 회전 e0 → e, 다음 킹핀축 둘레 ψ
+      const ax = cross(e0, e), sn = norm(ax), cs = dot(e0, e), R1 = v => sn < 1e-14 ? v : rot(v, mul(ax, 1 / sn), Math.atan2(sn, cs));
+      const T = p => add(LO, rot(R1(sub(p, P.lo)), e, q[2]));
+      return { LO, UO, T, e }; };
+    const res = q => { const B = body(q); return [norm(sub(B.UO, B.LO)) - d0, norm(sub(B.T(P.to), TI)) - Lt, B.T(A.WC0)[2] - A.WC0[2] - sz]; };
+    let q = q0 ? q0.slice() : [0, 0, 0];
+    for (let it = 0; it < 40; it++) {
+      const f = res(q); if (Math.abs(f[0]) + Math.abs(f[1]) + Math.abs(f[2]) < 1e-10) break;
+      const J = [[], [], []], h = 1e-7;
+      for (let j = 0; j < 3; j++) { const qp = q.slice(), qm = q.slice(); qp[j] += h; qm[j] -= h; const fp = res(qp), fm = res(qm); for (let i = 0; i < 3; i++) J[i][j] = (fp[i] - fm[i]) / (2 * h); }
+      const dq = solve3(J, f.map(x => -x)); if (!dq) throw new Error('기구 자세를 풀 수 없습니다 (점 배치 · 트래블 · 랙 이동을 확인하세요).');
+      q = add(q, dq);
+      if (it === 39) throw new Error('기구 자세가 수렴하지 않습니다 (트래블 · 랙 이동이 너무 큼).');
+    }
+    const B = body(q), a = unit(sub(B.T(add(A.WC0, A.a0)), B.T(A.WC0))), WC = B.T(A.WC0);
+    const dn = unit(add([0, 0, -1], mul(a, a[2]))), CP = add(WC, mul(dn, A.rw));
+    return { q, LO: B.LO, UO: B.UO, TO: B.T(P.to), TI, WC, CP, a, T: B.T, kp: B.e,
+      cam: -Math.asin(a[2]) / D, head: Math.atan2(-a[0], a[1]) / D };       // 캠버 (위가 안쪽 −) · 진행 방향 (왼쪽으로 +)
+  }
+  function solve3(A, b) {
+    const M = A.map((r, i) => r.concat([b[i]]));
+    for (let c = 0; c < 3; c++) { let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-14) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; } }
+    return [M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]];
+  }
+  // 업라이트 직교 3 축 (각속도 계산용)
+  const triad = X => { const e1 = unit(sub(X.UO, X.LO)), e2 = unit(cross(e1, sub(X.TO, X.LO))); return [e1, e2, cross(e1, e2)]; };
+  // 정지 자세 둘레 순간 운동 · 기하 값
+  function metrics(A, sz0, rk) {
+    const h = 0.01, X0 = pose(A, sz0 || 0, rk), Xp = pose(A, (sz0 || 0) + h, rk, X0.q), Xm = pose(A, (sz0 || 0) - h, rk, X0.q);
+    const vw = mul(sub(Xp.WC, Xm.WC), 1 / (2 * h));
+    const tp = triad(Xp), tm = triad(Xm), t0 = triad(X0);
+    let w = [0, 0, 0]; for (let i = 0; i < 3; i++) w = add(w, cross(t0[i], mul(sub(tp[i], tm[i]), 1 / (2 * h))));
+    w = mul(w, 0.5);                                                                     // [rad/mm]
+    const v = add(vw, cross(w, sub(X0.CP, X0.WC)));                                    // 업라이트에 붙은 접지점 (바퀴가 업라이트와 함께 도는 점) 속도
+    const CP = X0.CP, k = X0.kp;
+    const fin = (x, lim) => Math.abs(x) > lim ? NaN : x;
+    const icy = Math.abs(w[0]) > 1e-12 ? CP[1] - v[2] / w[0] : NaN, icz = Math.abs(w[0]) > 1e-12 ? CP[2] + v[1] / w[0] : NaN;
+    const icx = Math.abs(w[1]) > 1e-12 ? CP[0] + v[2] / w[1] : NaN, icz2 = Math.abs(w[1]) > 1e-12 ? CP[2] - v[0] / w[1] : NaN;
+    const rc = CP[2] + CP[1] * v[1] / v[2];
+    // 킹핀축 지면 교점 G
+    const tg = -X0.LO[2] / k[2], G = add(X0.LO, mul(k, tg));
+    return { X: X0, v, vw, w, icy: fin(icy, 1e6), icz: fin(icz, 1e6), icx: fin(icx, 1e6), icz_sv: fin(icz2, 1e6), rc,
+      fvsa: Math.abs(w[0]) > 1e-12 ? v[2] / w[0] : Infinity, svsa: Math.abs(w[1]) > 1e-12 ? -v[2] / w[1] : Infinity,
+      cgb: -w[0] / D,                                                                 // 범프 캠버 게인 [deg/mm] (차체 기준, = −ω_x)
+      bs: -(Xp.head - Xm.head) / (2 * h),                                             // 범프 스티어 [deg/mm] (토인 +)
+      kpi: Math.atan2(-k[1], k[2]) / D, caster: Math.atan2(-k[0], k[2]) / D, scrub: CP[1] - G[1], trail: G[0] - CP[0],
+      kpo: (() => { const s2 = (X0.WC[2] - X0.LO[2]) / k[2], Q = add(X0.LO, mul(k, s2)); return X0.WC[1] - Q[1]; })() };   // 바퀴 중심 높이 킹핀 옵셋 (정면)
+  }
+  const plain = X => { const o = {}; for (const k in X) if (typeof X[k] !== 'function') o[k] = X[k]; return o; };   // 작업자 → 화면으로 보낼 때 (함수 빼기)
+  return { plain, D, add, sub, mul, dot, cross, norm, unit, rot, rotAbout, axle, pose, metrics, solve3, PTS };
+})();
+
+// ================================================================
+// 도구 5 서스 기하 (3D 기구학) — 계산 코드. 엔진 K3D 는 위 (공통)
+// ================================================================
+// 입력 I : 축마다 (f 앞 · r 뒤) 하드포인트 8 점 (K3D 머리말), 윤거 tf · tr, 하중 반경 r_load, 정적 캠버 camber_f · r, 정적 토 toe_f · r,
+//          무게중심 h · 휠베이스 L · 밸런스 바 앞 몫 brake_bias (안티 % 용), 그래프 트래블 범위 s_max [mm]
+// 결과 (정지 자세, 작은 움직임): 롤센터 · 정면 순간중심 · FVSA, 범프 캠버 게인 [deg/mm], 롤 캠버 게인 (바깥 바퀴 · 지면 기준) = 1 + 범프 게인 × (t/2) × π/180 [deg/deg],
+//   KPI · 캐스터 · 스크럽 (접지점 y − 킹핀축 지면 y) · 트레일 (킹핀축 지면 x − 접지점 x), 바퀴 중심 킹핀 옵셋,
+//   범프 스티어 [deg/mm, 토인 +], 롤 스티어 (바깥 바퀴) = 범프 스티어 × (t/2) × π/180 [deg/deg],
+//   측면 순간중심 · 안티다이브 (앞, 바깥 브레이크) = tanθ × L/h × 앞 제동 몫, 안티리프트 (뒤, 바깥 브레이크) = tanθ × L/h × 뒤 몫, 안티스쿼트 (뒤, 안쪽 구동) = tanθ_WC × L/h
+// 그래프: 휠 트래블 −s_max ~ +s_max 에서 캠버 · 토 · 롤센터 (양쪽 같이 오르내림) · 윤거 반 변화 · 캐스터 · KPI
 function calc(I) {
-  const F = axle(I, 'f', I.tf), R = axle(I, 'r', I.tr), fin = x => isFinite(x) ? x : NaN;
+  const ax = (s, t, cam, toe) => K3D.axle(I, s, t, I.r_load, cam, toe);
+  const F = ax('f', I.tf, I.camber_f, I.toe_f), R = ax('r', I.tr, I.camber_r, I.toe_r);
+  const mF = K3D.metrics(F), mR = K3D.metrics(R), D = K3D.D, h = I.h, L = I.L, bb = (I.brake_bias || 0) / 100;
+  if (!(h > 0) || !(L > 0)) throw new Error('무게중심 높이 · 휠베이스는 0 보다 커야 합니다.');
+  const rg = (m, t) => 1 + m.cgb * (t / 2) * D, rs = (m, t) => m.bs * (t / 2) * D, fin = x => isFinite(x) ? x : NaN;
   const out = {
-    rc_f: fin(F.rc), rc_r: fin(R.rc), fvsa_f: fin(F.fvsa), fvsa_r: fin(R.fvsa),   // 평행 팔 = 스윙암 무한대 (—)
-    ic_y_f: F.ic ? F.ic[0] : NaN, ic_z_f: F.ic ? F.ic[1] : NaN, ic_y_r: R.ic ? R.ic[0] : NaN, ic_z_r: R.ic ? R.ic[1] : NaN,
-    cgb_f: F.cgb, cgb_r: R.cgb, camber_gain_f: F.cgr, camber_gain_r: R.cgr,     // 범프 [deg/mm] · 롤 [deg/deg]
-    kpi: F.kpi, scrub: F.scrub, kpi_r: R.kpi, scrub_r: R.scrub,
+    rc_f: mF.rc, ic_y_f: mF.icy, ic_z_f: mF.icz, fvsa_f: fin(mF.fvsa), cgb_f: mF.cgb, camber_gain_f: rg(mF, I.tf),
+    kpi: mF.kpi, caster: mF.caster, scrub: mF.scrub, trail: mF.trail, kpo_f: mF.kpo, bs_f: mF.bs, rs_f: rs(mF, I.tf),
+    sv_x_f: mF.icx, sv_z_f: mF.icz_sv, anti_dive: mF.v[0] / mF.v[2] * L / h * bb * 100,
+    rc_r: mR.rc, ic_y_r: mR.icy, ic_z_r: mR.icz, fvsa_r: fin(mR.fvsa), cgb_r: mR.cgb, camber_gain_r: rg(mR, I.tr),
+    kpi_r: mR.kpi, caster_r: mR.caster, scrub_r: mR.scrub, trail_r: mR.trail, kpo_r: mR.kpo, bs_r: mR.bs, rs_r: rs(mR, I.tr),
+    sv_x_r: mR.icx, sv_z_r: mR.icz_sv, anti_lift: -mR.v[0] / mR.v[2] * L / h * (1 - bb) * 100, anti_squat: -mR.vw[0] / mR.vw[2] * L / h * 100,
+    camber_f_o: I.camber_f, camber_r_o: I.camber_r, toe_f_o: I.toe_f, toe_r_o: I.toe_r,
   };
-  return { out, geo: { F, R } };
+  // 트래블 곡선
+  const sm = Math.max(5, I.s_max || 40), n = 40, xs = [], sig = { cf: [], cr: [], tf_: [], tr_: [], rcf: [], rcr: [], yf: [], yr: [], kf: [], cs: [] };
+  let qF = null, qR = null; const XF0 = K3D.plain(mF.X), XR0 = K3D.plain(mR.X);
+  for (let i = 0; i <= n; i++) { const s = -sm + 2 * sm * i / n; xs.push(+s.toFixed(3));
+    const a = K3D.metrics(F, s), b = K3D.metrics(R, s);
+    sig.cf.push(a.X.cam); sig.cr.push(b.X.cam); sig.tf_.push(-(a.X.head - XF0.head) + (I.toe_f || 0)); sig.tr_.push(-(b.X.head - XR0.head) + (I.toe_r || 0));
+    sig.rcf.push(a.rc - a.X.CP[2]); sig.rcr.push(b.rc - b.X.CP[2]); sig.yf.push(a.X.CP[1] - XF0.CP[1]); sig.yr.push(b.X.CP[1] - XR0.CP[1]); sig.kf.push(a.kpi); sig.cs.push(a.caster); }
+  const geo = { F: { P: F.P, X: XF0, t: I.tf, ic: [mF.icy, mF.icz], sv: [mF.icx, mF.icz_sv] }, R: { P: R.P, X: XR0, t: I.tr, ic: [mR.icy, mR.icz], sv: [mR.icx, mR.icz_sv] } };
+  return { out, x: { d: xs }, sig, geo };
 }
 `
 };
 </script>
 <script>
 /* ============================================================
-   도구 6 조향 (간이판: 윗면 2D 링크) — docs/TOOLS-PLAN.md 5절
-   - 랙 · 타이로드 · 너클암 평면 링크로 바퀴 조향각(안 · 바깥), 조향비, 애커먼 %, 최대 조향각, 최소 회전 반경(CG 경로 · 바깥 앞바퀴)
-   - 3D 킹핀축 · 범프 스티어 · 롤 스티어 · 슬립 반영은 5번 3D 엔진과 함께 나중에
-   - 대시보드로 steer_ratio · ackermann · delta_max · rmin · knuckle_l 을 보내면 도구 2 가 받아 씀 (rmin = 주행선 제약, steer_ratio = 차량 모델 2 · 3 핸들 각)
+   도구 6 조향 (3D 기구학) — docs/TOOLS-PLAN.md 5절
+   - 앞축 3D 하드포인트(도구 5 와 같은 8 점, 엔진 K3D)로 랙을 옮기며 업라이트 자세를 풀어 바퀴 조향각(안 · 바깥), 조향비, 애커먼 %, 최대 조향각, 최소 회전 반경,
+     최대 조향에서 캠버 · 잭킹, 유효 너클암, 범프 스티어
+   - 기본 점 = 2024 REF4 STEP (도구 5 의 K3D_HP). 킹핀이 수직 · 링크가 한 평면이면 예전 윗면 2D 결과와 같아짐 (검증표)
+   - 대시보드로 steer_ratio · ackermann · delta_max · rmin · knuckle_l 을 보내면 도구 2 가 받아 씀
    ============================================================ */
 const M6TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
-  ['#wb .wb-in', '입력', '위에서 본 왼쪽 바퀴 기준 점입니다(오른쪽은 거울). 킹핀은 중심선에서 y, 너클암 끝은 킹핀에서 (앞 +, 바깥 +), 랙 볼은 차 기준(앞 +, 중심선에서). 너클암이 차축 뒤면 x 가 − 입니다.'],
-  ['#wb #wbout', '결과', '링크 길이 · 조향비, 기준 조향각(두 바퀴 평균)에서 안 · 바깥 각과 애커먼 %, 최대 이송에서 최대 조향각 · 최소 회전 반경입니다. 최소 회전 반경은 아주 느릴 때(슬립 없음) 자전거 등가 각으로 셈합니다.'],
-  ['#wb .wb-sig', '조향각 곡선', '가로축 = 핸들 각. 안쪽 · 바깥 바퀴 각과 완전 애커먼일 때 안쪽 각, 애커먼 % 입니다. 작은 각에서는 애커먼 % 가 크게 흔들립니다.'],
+  ['#wb .wb-in', '입력', '앞 왼쪽 바퀴의 하드포인트 8 점(도구 5 와 같은 좌표: x 앞 +, y 바깥 +, z 지면 위 +)과 랙 이송비 · 최대 이송입니다. 타이로드 안쪽 점이 랙 끝(볼)입니다. 오른쪽 바퀴는 거울로 셈합니다.'],
+  ['#wb #wbout', '결과', '링크 길이 · 조향비, 기준 조향각(두 바퀴 평균)에서 안 · 바깥 각과 애커먼 %, 최대 이송에서 최대 조향각 · 최소 회전 반경입니다. 최소 회전 반경은 아주 느릴 때(슬립 없음) 자전거 등가 각으로 셈합니다. 캠버 · 잭킹은 바퀴 중심 높이를 고정하고 본 값입니다.'],
+  ['#wb .wb-sig', '조향각 곡선', '가로축 = 핸들 각. 안쪽 · 바깥 바퀴 각과 완전 애커먼일 때 안쪽 각, 애커먼 %, 조향에 따른 캠버 · 잭킹입니다. 작은 각에서는 애커먼 % 가 크게 흔들립니다.'],
 ];
-const T6G = {car:'차', geo:'링크 (위에서, 왼쪽 바퀴, mm)', rack:'랙 · 기준'};
+const T6G = {car:'차 · 바퀴', rack:'랙 · 기준'};
+const t6Pt = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
 WB_TOOLS['6'] = {
-  no:'6', stage:'P3-4~5', name:'조향 (윗면 2D 간이판)',
+  no:'6', stage:'P3-4~5', name:'조향 (3D 기구학)',
   x:{n:'핸들 각', u:'°'},
   sweepFirst:'ay',
   inputs:[
     {k:'L', dk:'L', v:1550, d:0, g:T6G.car}, {k:'tf', dk:'tf', v:1200, d:0, g:T6G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T6G.car},
-    {k:'kp_y', n:'킹핀 y (중심선에서, 지면 높이)', u:'mm', v:560, d:0, g:T6G.geo}, {k:'ax', n:'너클암 끝 x (킹핀에서, 앞 +)', u:'mm', v:-70, d:1, g:T6G.geo},
-    {k:'ay', n:'너클암 끝 y (킹핀에서, 바깥 +)', u:'mm', v:-15, d:1, g:T6G.geo}, {k:'rx', n:'랙 볼 x (차축에서, 앞 +)', u:'mm', v:-70, d:1, g:T6G.geo}, {k:'ry', n:'랙 볼 y (중심선에서)', u:'mm', v:200, d:1, g:T6G.geo},
+    {k:'r_load', dk:'r_load', v:236, d:0, g:T6G.car}, {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T6G.car}, {k:'toe_f', dk:'toe_f', v:0, d:2, g:T6G.car},
     {k:'rack_c', dk:'rack_c', v:90, d:1, g:T6G.rack}, {k:'rack_travel', dk:'rack_travel', v:30, d:1, g:T6G.rack}, {k:'d_ref', n:'애커먼 기준 조향각 (두 바퀴 평균)', u:'°', v:15, d:1, g:T6G.rack},
+    ...k3dIn('f', t6Pt),
   ],
   outputs:[
-    {k:'tie_l', n:'타이로드 길이', u:'mm', d:1, g:'링크 · 조향비'}, {k:'arm_l', n:'너클암 (킹핀 ~ 볼 직선)', u:'mm', d:1, g:'링크 · 조향비'}, {k:'knuckle_l', dk:'knuckle_l', d:1, g:'링크 · 조향비'},
+    {k:'tie_l', n:'타이로드 길이', u:'mm', d:1, g:'링크 · 조향비'}, {k:'arm_l', n:'너클암 (킹핀축 ~ 타이로드 바깥 볼)', u:'mm', d:1, g:'링크 · 조향비'}, {k:'knuckle_l', dk:'knuckle_l', d:1, g:'링크 · 조향비'},
     {k:'steer_ratio', dk:'steer_ratio', d:2, g:'링크 · 조향비'}, {k:'hw_max', n:'핸들 최대 각 (한쪽)', u:'°', d:0, g:'링크 · 조향비'},
     {k:'d_in_ref', n:'안쪽 바퀴', u:'°', d:2, g:'기준 조향각에서'}, {k:'d_out_ref', n:'바깥 바퀴', u:'°', d:2, g:'기준 조향각에서'}, {k:'d_ideal_ref', n:'완전 애커먼 안쪽 각', u:'°', d:2, g:'기준 조향각에서'},
     {k:'ackermann', dk:'ackermann', d:1, g:'기준 조향각에서'},
     {k:'delta_max', dk:'delta_max', d:2, g:'최대 이송에서'}, {k:'d_out_max', n:'최대 조향각 (바깥 바퀴)', u:'°', d:2, g:'최대 이송에서'}, {k:'ack_max', n:'애커먼 (최대 이송)', u:'%', d:1, g:'최대 이송에서'},
     {k:'r_axle', n:'뒤축 가운데 회전 반경', u:'m', d:2, g:'최대 이송에서'}, {k:'rmin', dk:'rmin', d:2, g:'최대 이송에서'}, {k:'r_outer', n:'바깥 앞바퀴 회전 반경', u:'m', d:2, g:'최대 이송에서'},
+    {k:'cam_in_max', n:'캠버 · 안쪽 바퀴 (차체 기준)', u:'°', d:2, g:'최대 이송에서'}, {k:'cam_out_max', n:'캠버 · 바깥 바퀴 (차체 기준)', u:'°', d:2, g:'최대 이송에서'},
+    {k:'jack_in', n:'잭킹 · 안쪽 바퀴 (차체가 들림 +)', u:'mm', d:2, g:'최대 이송에서'}, {k:'jack_out', n:'잭킹 · 바깥 바퀴 (차체가 들림 +)', u:'mm', d:2, g:'최대 이송에서'},
+    {k:'y_g', n:'킹핀축 지면 y (애커먼 기준 반 윤거)', u:'mm', d:1, g:'킹핀 (도구 5 와 같은 식)'}, {k:'kpi_o', n:'KPI', u:'°', d:2, g:'킹핀 (도구 5 와 같은 식)'}, {k:'caster_o', n:'캐스터', u:'°', d:2, g:'킹핀 (도구 5 와 같은 식)'},
+    {k:'trail_o', n:'트레일', u:'mm', d:1, g:'킹핀 (도구 5 와 같은 식)'}, {k:'scrub_o', n:'스크럽', u:'mm', d:1, g:'킹핀 (도구 5 와 같은 식)'}, {k:'bs_o', n:'범프 스티어 (토인 +)', u:'°/mm', d:4, g:'킹핀 (도구 5 와 같은 식)'},
     {k:'rack_c_o', dk:'rack_c', d:1, g:'링크 · 조향비', hide:true}, {k:'rack_travel_o', dk:'rack_travel', d:1, g:'링크 · 조향비', hide:true},
   ],
-  sigs:[{k:'di', n:'안쪽 바퀴 조향각', u:'°', d:2}, {k:'dout', n:'바깥 바퀴 조향각', u:'°', d:2}, {k:'dideal', n:'완전 애커먼 안쪽 각', u:'°', d:2}, {k:'ack', n:'애커먼', u:'%', d:1}],
+  sigs:[{k:'di', n:'안쪽 바퀴 조향각', u:'°', d:2}, {k:'dout', n:'바깥 바퀴 조향각', u:'°', d:2}, {k:'dideal', n:'완전 애커먼 안쪽 각', u:'°', d:2}, {k:'ack', n:'애커먼', u:'%', d:1},
+        {k:'ci', n:'캠버 · 안쪽 바퀴', u:'°', d:2}, {k:'co', n:'캠버 · 바깥 바퀴', u:'°', d:2}, {k:'ji', n:'잭킹 · 안쪽 바퀴', u:'mm', d:2}, {k:'jo', n:'잭킹 · 바깥 바퀴', u:'mm', d:2}],
   sigOn:['di', 'dout', 'dideal'], xiStart:'end',
   tour: M6TOUR,
-  verifyBase:{},
+  verifyBase:{camber_f:0, toe_f:0, tf:1200, r_load:236, L:1550, fr:47.5, rack_c:90, rack_travel:30, d_ref:15,
+    f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:200, f_uf_z:300, f_ur_x:-175, f_ur_y:200, f_ur_z:300, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:200, f_to_x:-70, f_to_y:545, f_to_z:200},   // 검증 기본 = 킹핀 수직 · 링크 한 평면 (예전 윗면 2D 와 같은 꼴)
   verify: [
     {n:'조향비 (가운데) = 2π × 너클암 길이 ÷ 랙 이송비', I:{}, expect:{knuckle_l:70, steer_ratio:4.886922},
      src:'타이로드가 옆으로 곧고 너클암 수직 거리 70 mm → 작은 각에서 δ = s ÷ 70 [rad], 핸들 = s ÷ 90 × 360° → 조향비 = 360 × 70 ÷ (90 × 180/π) = 4.8869'},
@@ -15127,92 +15317,200 @@ WB_TOOLS['6'] = {
     {n:'완전 애커먼 안쪽 각 · 최소 회전 반경 식 (링크로 구한 안쪽 27.1688° · 바깥 24.1895°)', I:{}, expect:{d_ideal_ref:17.700383, r_axle:3.235308, rmin:3.318023, r_outer:4.136676},
      src:'완전: cot δ안 = cot 14.5389° − 1120 ÷ 1550 → 17.7004°. 최대: cot δe = (cot 27.1688° + cot 24.1895°) ÷ 2 → 뒤축 반경 1.55 cot δe = 3.2353 m, CG = √(3.2353² + (1.55 × 0.475)²) = 3.3180 m, 바깥 앞바퀴 = √((3.2353 + 0.6)² + 1.55²) = 4.1367 m'},
     {n:'핸들 최대 각 = 랙 최대 이송 ÷ 이송비 × 360°', I:{rack_travel:30, rack_c:90}, expect:{hw_max:120},
-     src:'30 ÷ 90 × 360 = 120°'}
+     src:'30 ÷ 90 × 360 = 120°'},
+    {n:'3D → 2D: 킹핀 수직 (볼조인트 y 560) · 링크가 z 200 한 평면이면 예전 윗면 2D 결과 그대로', I:{}, expect:{y_g:560, kpi_o:0, caster_o:0, cam_in_max:0, jack_in:0, d_in_ref:15.46114, d_out_ref:14.53886},
+     src:'예전 2D 도구 (킹핀 y 560 · 너클암 끝 (−70, −15) · 랙 볼 (−70, 200)) 의 기준 조향각 안 · 바깥 값과 같음, 캐스터 · KPI 0 → 캠버 · 잭킹 0'},
+    {n:'캐스터 8.53° (위 볼조인트 30 mm 뒤) · 랙 30 mm → 안 · 바깥 조향각 · 캠버 · 잭킹 (독립 구현 비교)', I:{f_uo_x:-30, f_uf_x:145, f_ur_x:-205}, expect:{caster_o:8.530766, trail_o:15, delta_max:38.363619, d_out_max:30.555175, cam_in_max:5.318763, cam_out_max:-4.360661, jack_in:-1.016123, jack_out:-0.683175},
+     src:'캐스터 = atan(30 ÷ 200), 트레일 = 30 × 100 ÷ 200 = 15 mm. 조향 값은 업라이트 6 자유도 (회전 벡터 + 이동) 를 거리 구속 6 개 (팔 다리 4 · 타이로드 · 바퀴 중심 높이) 로 따로 푼 Python (scipy fsolve) 결과. 캐스터 + 이면 안쪽 바퀴 캠버 +, 바깥 −'}
   ],
   code: `// ================================================================
-// 도구 6 조향 (간이판: 윗면 2D 링크) — 계산 코드
+// 3D 서스 기구학 엔진 (도구 5 · 6 · 7 · 8 공통) — 더블 위시본, 왼쪽 바퀴 (오른쪽 = 거울)
 // ================================================================
-// 입력 I : L · tf [mm], fr [%] (무게중심 앞뒤), 킹핀 y kp_y [mm] (중심선에서), 너클암 끝 (킹핀 기준) ax · ay [mm] (x 앞 +, y 바깥 +),
-//          랙 안쪽 볼 (차 기준) rx [mm] (앞 +) · ry [mm] (중심선에서), 랙 이송비 rack_c [mm/rev], 랙 최대 이송 rack_travel [mm] (가운데에서 한쪽), 기준 조향각 d_ref [deg]
-// 링크: 왼쪽 바퀴 킹핀 K = (0, kp_y), 너클암 끝 A₀ = K + (ax, ay), 랙 볼 B₀ = (rx, ry), 타이로드 길이 = |A₀ − B₀| (오른쪽은 거울)
-//   랙이 왼쪽(+y)으로 s 움직이면 B = (rx, ±ry + s), 바퀴는 |A(δ) − B| = 타이로드 길이 가 되는 δ (직진에서 이어지는 해, 이분법)
-//   조향각 + = 위에서 반시계 (왼쪽 선회)
+// 좌표 [mm]: x = 앞 +, y = 차 중심선에서 바깥 (왼쪽) +, z = 지면에서 위 +. x = 0 은 그 축의 바퀴 중심.
+// 점 (축 s = f · r): 아래 팔 안쪽 앞 LF · 뒤 LR, 바깥 (볼조인트) LO, 위 팔 UF · UR · UO, 타이로드 (뒤는 토 링크) 안쪽 TI · 바깥 TO
+//   입력 이름 = s_점_x · s_점_y · s_점_z (예: f_lf_x). 바퀴: 윤거 t (정지 접지점 y = t/2, z = 0), 하중 반경 r (접지점 → 바퀴 중심),
+//   정적 캠버 (위가 안쪽이면 −) · 정적 토 (토인 +) [deg]
+// 풀이: 아래 팔 각 θL (LF–LR 축 둘레), 위 팔 각 θU (UF–UR 축 둘레), 업라이트 킹핀 둘레 각 ψ 를 미지수로
+//   ① |UO − LO| = 처음 길이 (업라이트 강체)  ② |TO − (TI + 랙 이동)| = 타이로드 길이  ③ 바퀴 중심 z = 처음 + 휠 트래블
+//   를 뉴턴법 (수치 야코비안) 으로 풂. 업라이트 위 점 P → LO + R (P₀ − LO₀),  R = (킹핀축 둘레 ψ) ∘ (킹핀축 방향을 맞추는 최소 회전)
+// 순간 운동: 트래블 ±0.01 mm 중앙 차분으로 바퀴 중심 속도 · 업라이트 각속도 ω = ½ Σ eᵢ × ėᵢ → 업라이트에 붙은 접지점 속도 v = v_WC + ω × (CP − WC),
+//   정면 순간중심 = CP − (0, v_z/ω_x, −v_y/ω_x),  롤센터 (대칭) = 접지점 → 순간중심 선이 y = 0 과 만나는 높이 = CP_z + CP_y v_y ÷ v_z
+//   측면: 앞 안티다이브 tanθ = v_x ÷ v_z (접지점 경로, 바깥 브레이크), 뒤 안티리프트 tanθ = −v_x ÷ v_z, 뒤 안티스쿼트 tanθ = −v_x,WC ÷ v_z,WC (안쪽 구동)
+const K3D = (() => {
+  const D = Math.PI / 180;
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = a => Math.sqrt(dot(a, a)), unit = a => mul(a, 1 / norm(a));
+  const rot = (v, k, th) => { const c = Math.cos(th), s = Math.sin(th); return add(add(mul(v, c), mul(cross(k, v), s)), mul(k, dot(k, v) * (1 - c))); };
+  const rotAbout = (P, O, k, th) => add(O, rot(sub(P, O), k, th));
+  const PTS = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
+  // 입력 → 축 하드포인트 · 바퀴. ex = 같은 꼴의 덧점 (예: 푸시로드 pa · pr · 로커 rp · dr · db), 없으면 무시
+  function axle(I, s, t, r, cam, toe, ex) {
+    const P = {}; for (const n of PTS.concat(ex || [])) { const k = s + '_' + n; P[n] = [+I[k + '_x'], +I[k + '_y'], +I[k + '_z']];
+      if (!P[n].every(isFinite)) throw new Error(k + ' 좌표가 비었습니다.'); }
+    if (!(t > 0) || !(r > 0)) throw new Error('윤거 · 하중 반경은 0 보다 커야 합니다.');
+    const c = (cam || 0) * D, q = (toe || 0) * D;
+    // 바퀴 회전축 a (바깥 +): 캠버 − (위가 안쪽) → a_z = +sin(−캠버), 토인 → a_x = +sin(토)
+    const a = unit([Math.sin(q) * Math.cos(c), Math.cos(q) * Math.cos(c), -Math.sin(c)]);
+    const CP = [0, t / 2, 0], dn = unit(add([0, 0, -1], mul(a, a[2])));      // 바퀴 면 안 아래 방향
+    const WC = sub(CP, mul(dn, r / -dn[2]));                                      // 바퀴 중심 높이 = r (캠버가 있으면 바퀴 면을 따라)
+    const rw = norm(sub(WC, CP));
+    return { P, a0: a, CP0: CP, WC0: WC, rw, t };
+  }
+  // 한 자세 풀이: sz = 바퀴 중심 위로 [mm] (차체 기준), rk = 랙 (타이로드 안쪽 점) y 이동 [mm]
+  function pose(A, sz, rk, q0) {
+    const P = A.P, kL = unit(sub(P.lr, P.lf)), kU = unit(sub(P.ur, P.uf)), d0 = norm(sub(P.uo, P.lo));
+    const TI = add(P.ti, [0, rk || 0, 0]), Lt = norm(sub(P.to, P.ti)), e0 = unit(sub(P.uo, P.lo));
+    const body = q => { const LO = rotAbout(P.lo, P.lf, kL, q[0]), UO = rotAbout(P.uo, P.uf, kU, q[1]), e = unit(sub(UO, LO));
+      // 최소 회전 e0 → e, 다음 킹핀축 둘레 ψ
+      const ax = cross(e0, e), sn = norm(ax), cs = dot(e0, e), R1 = v => sn < 1e-14 ? v : rot(v, mul(ax, 1 / sn), Math.atan2(sn, cs));
+      const T = p => add(LO, rot(R1(sub(p, P.lo)), e, q[2]));
+      return { LO, UO, T, e }; };
+    const res = q => { const B = body(q); return [norm(sub(B.UO, B.LO)) - d0, norm(sub(B.T(P.to), TI)) - Lt, B.T(A.WC0)[2] - A.WC0[2] - sz]; };
+    let q = q0 ? q0.slice() : [0, 0, 0];
+    for (let it = 0; it < 40; it++) {
+      const f = res(q); if (Math.abs(f[0]) + Math.abs(f[1]) + Math.abs(f[2]) < 1e-10) break;
+      const J = [[], [], []], h = 1e-7;
+      for (let j = 0; j < 3; j++) { const qp = q.slice(), qm = q.slice(); qp[j] += h; qm[j] -= h; const fp = res(qp), fm = res(qm); for (let i = 0; i < 3; i++) J[i][j] = (fp[i] - fm[i]) / (2 * h); }
+      const dq = solve3(J, f.map(x => -x)); if (!dq) throw new Error('기구 자세를 풀 수 없습니다 (점 배치 · 트래블 · 랙 이동을 확인하세요).');
+      q = add(q, dq);
+      if (it === 39) throw new Error('기구 자세가 수렴하지 않습니다 (트래블 · 랙 이동이 너무 큼).');
+    }
+    const B = body(q), a = unit(sub(B.T(add(A.WC0, A.a0)), B.T(A.WC0))), WC = B.T(A.WC0);
+    const dn = unit(add([0, 0, -1], mul(a, a[2]))), CP = add(WC, mul(dn, A.rw));
+    return { q, LO: B.LO, UO: B.UO, TO: B.T(P.to), TI, WC, CP, a, T: B.T, kp: B.e,
+      cam: -Math.asin(a[2]) / D, head: Math.atan2(-a[0], a[1]) / D };       // 캠버 (위가 안쪽 −) · 진행 방향 (왼쪽으로 +)
+  }
+  function solve3(A, b) {
+    const M = A.map((r, i) => r.concat([b[i]]));
+    for (let c = 0; c < 3; c++) { let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-14) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; } }
+    return [M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]];
+  }
+  // 업라이트 직교 3 축 (각속도 계산용)
+  const triad = X => { const e1 = unit(sub(X.UO, X.LO)), e2 = unit(cross(e1, sub(X.TO, X.LO))); return [e1, e2, cross(e1, e2)]; };
+  // 정지 자세 둘레 순간 운동 · 기하 값
+  function metrics(A, sz0, rk) {
+    const h = 0.01, X0 = pose(A, sz0 || 0, rk), Xp = pose(A, (sz0 || 0) + h, rk, X0.q), Xm = pose(A, (sz0 || 0) - h, rk, X0.q);
+    const vw = mul(sub(Xp.WC, Xm.WC), 1 / (2 * h));
+    const tp = triad(Xp), tm = triad(Xm), t0 = triad(X0);
+    let w = [0, 0, 0]; for (let i = 0; i < 3; i++) w = add(w, cross(t0[i], mul(sub(tp[i], tm[i]), 1 / (2 * h))));
+    w = mul(w, 0.5);                                                                     // [rad/mm]
+    const v = add(vw, cross(w, sub(X0.CP, X0.WC)));                                    // 업라이트에 붙은 접지점 (바퀴가 업라이트와 함께 도는 점) 속도
+    const CP = X0.CP, k = X0.kp;
+    const fin = (x, lim) => Math.abs(x) > lim ? NaN : x;
+    const icy = Math.abs(w[0]) > 1e-12 ? CP[1] - v[2] / w[0] : NaN, icz = Math.abs(w[0]) > 1e-12 ? CP[2] + v[1] / w[0] : NaN;
+    const icx = Math.abs(w[1]) > 1e-12 ? CP[0] + v[2] / w[1] : NaN, icz2 = Math.abs(w[1]) > 1e-12 ? CP[2] - v[0] / w[1] : NaN;
+    const rc = CP[2] + CP[1] * v[1] / v[2];
+    // 킹핀축 지면 교점 G
+    const tg = -X0.LO[2] / k[2], G = add(X0.LO, mul(k, tg));
+    return { X: X0, v, vw, w, icy: fin(icy, 1e6), icz: fin(icz, 1e6), icx: fin(icx, 1e6), icz_sv: fin(icz2, 1e6), rc,
+      fvsa: Math.abs(w[0]) > 1e-12 ? v[2] / w[0] : Infinity, svsa: Math.abs(w[1]) > 1e-12 ? -v[2] / w[1] : Infinity,
+      cgb: -w[0] / D,                                                                 // 범프 캠버 게인 [deg/mm] (차체 기준, = −ω_x)
+      bs: -(Xp.head - Xm.head) / (2 * h),                                             // 범프 스티어 [deg/mm] (토인 +)
+      kpi: Math.atan2(-k[1], k[2]) / D, caster: Math.atan2(-k[0], k[2]) / D, scrub: CP[1] - G[1], trail: G[0] - CP[0],
+      kpo: (() => { const s2 = (X0.WC[2] - X0.LO[2]) / k[2], Q = add(X0.LO, mul(k, s2)); return X0.WC[1] - Q[1]; })() };   // 바퀴 중심 높이 킹핀 옵셋 (정면)
+  }
+  const plain = X => { const o = {}; for (const k in X) if (typeof X[k] !== 'function') o[k] = X[k]; return o; };   // 작업자 → 화면으로 보낼 때 (함수 빼기)
+  return { plain, D, add, sub, mul, dot, cross, norm, unit, rot, rotAbout, axle, pose, metrics, solve3, PTS };
+})();
+
+// ================================================================
+// 도구 6 조향 (3D 기구학) — 계산 코드. 엔진 K3D 는 위 (공통)
+// ================================================================
+// 입력 I : 앞축 하드포인트 8 점 (f_…), 윤거 tf · 하중 반경 r_load · 정적 캠버 camber_f · 토 toe_f, 휠베이스 L, 앞 하중 비율 fr,
+//          랙 이송비 rack_c [mm/rev], 랙 최대 이송 rack_travel [mm, 가운데에서 한쪽], 기준 조향각 d_ref [deg, 두 바퀴 평균]
+// 조향: 타이로드 안쪽 점을 y 로 s 만큼 옮기고 (휠 트래블 0 = 바퀴 중심 높이 고정) 업라이트 자세를 풂. 바퀴 조향각 = 지면에서 본 진행 방향 변화.
+//   오른쪽 바퀴 (거울) 의 조향각 (랙 s) = −(왼쪽 바퀴, 랙 −s). 조향각 + = 위에서 반시계 (왼쪽 선회)
 // 결과: 조향비 = 핸들 각 ÷ 두 바퀴 평균 조향각 (s → 0),  핸들 각 = s ÷ rack_c × 360
-//   애커먼 % = (δ_안 − δ_바깥) ÷ (δ_안,완전 − δ_바깥) × 100,  완전: cot δ_바깥 − cot δ_안 = 2 kp_y ÷ L (회전 중심이 뒤축 연장선)
-//   최소 회전 반경 (CG 경로, 아주 느리게): 자전거 등가 cot δ_e = (cot δ_안 + cot δ_바깥) ÷ 2 → 뒤축 가운데 반경 R = L cot δ_e, CG = √(R² + (L × 앞 무게 몫)²)
-//     바깥 앞바퀴 반경 = √((R + t/2)² + L²)
-//   너클암 길이 = 킹핀에서 타이로드 선까지 수직 거리 (직진)
-const D = Math.PI / 180;
+//   애커먼 % = (δ안 − δ바깥) ÷ (δ안,완전 − δ바깥) × 100,  완전: cot δ바깥 − cot δ안 = 2 y_G ÷ L  (y_G = 킹핀축이 지면과 만나는 y)
+//   최소 회전 반경 (CG 경로, 아주 느리게): 자전거 등가 cot δe = (cot δ안 + cot δ바깥) ÷ 2 → 뒤축 가운데 R = L cot δe, CG = √(R² + (L × 앞 무게 몫)²), 바깥 앞바퀴 = √((R + t/2)² + L²)
+//   유효 너클암 = 킹핀축 둘레 타이로드 힘의 팔 = |((TO − LO) × u_타이로드) · k|,  너클암 (직선) = 킹핀축에서 TO 까지 거리 |k × (TO − LO)|
+//   최대 조향에서 캠버 (차체 기준) · 잭킹 (접지점이 차체에 대해 내려가는 양 = 그 바퀴에서 차체가 들리는 양, 바퀴 중심 높이 고정일 때)
 function calc(I) {
-  const kp = I.kp_y, A0 = [I.ax, kp + I.ay], Ltr = Math.hypot(A0[0] - I.rx, A0[1] - I.ry), arm = Math.hypot(I.ax, I.ay);
-  if (!(arm > 0) || !(Ltr > 0) || !(I.rack_c > 0)) throw new Error('너클암 · 타이로드 길이와 랙 이송비는 0 보다 커야 합니다.');
-  // 한쪽 바퀴: 킹핀 (0, sgn·kp), 너클암 (ax, sgn·ay), 랙 볼 (rx, sgn·ry + s)
-  const wheel = (sgn, s) => { const K = [0, sgn * kp], a = [I.ax, sgn * I.ay], B = [I.rx, sgn * I.ry + s];
-    const f = d => { const c = Math.cos(d), n = Math.sin(d), A = [K[0] + c * a[0] - n * a[1], K[1] + n * a[0] + c * a[1]]; return Math.hypot(A[0] - B[0], A[1] - B[1]) - Ltr; };
-    // 직진(0)에서 양쪽으로 0.1° 씩 넓혀 가며 먼저 부호가 바뀌는 쪽 (직진에서 이어지는 가까운 해)
-    const flo = f(0); if (Math.abs(flo) < 1e-12) return 0;
-    let pp = [0, flo], pm = [0, flo];
-    const bis = (x, y, fx) => { for (let i = 0; i < 80; i++) { const m = (x + y) / 2, fm = f(m); if (fx * fm <= 0) y = m; else { x = m; fx = fm; } } return (x + y) / 2 / D; };
-    for (let k = 1; k <= 1200; k++) { const a2 = k * 0.1 * D, fp = f(a2), fm = f(-a2);
-      if (pp[1] * fp <= 0) return bis(pp[0], a2, pp[1]); if (pm[1] * fm <= 0) return bis(pm[0], -a2, pm[1]); pp = [a2, fp]; pm = [-a2, fm]; }
-    return NaN; };
-  const both = s => { const l = wheel(1, s), r = wheel(-1, s); return { l, r }; };
-  // 조향비 (가운데)
-  const ds = 0.01, c0 = both(ds), dm = (c0.l + c0.r) / 2, hw = ds / I.rack_c * 360;
-  const ratio = hw / Math.abs(dm);
-  const turnLeft = dm > 0;                                   // 랙 +y 가 왼쪽 선회인가
-  // 바깥 · 안쪽 (왼쪽 선회면 왼쪽 바퀴가 안쪽)
-  const io = s => { const w = both(s); const i = Math.abs(turnLeft ? w.l : w.r), o = Math.abs(turnLeft ? w.r : w.l); return { i, o, s }; };
+  if (!(I.rack_c > 0) || !(I.rack_travel > 0) || !(I.L > 0)) throw new Error('랙 이송비 · 최대 이송 · 휠베이스는 0 보다 커야 합니다.');
+  const A = K3D.axle(I, 'f', I.tf, I.r_load, I.camber_f, I.toe_f), X0 = K3D.pose(A, 0, 0), D = K3D.D;
+  const { sub, cross, dot, norm, unit, mul, add } = K3D;
+  const k = X0.kp, tg = -X0.LO[2] / k[2], yG = X0.LO[1] + k[1] * tg;
+  const ut = unit(sub(X0.TO, X0.TI)), r0 = sub(X0.TO, X0.LO);
+  const kn = Math.abs(dot(cross(r0, ut), k)), arm = norm(cross(k, r0)), Ltr = norm(sub(X0.TO, X0.TI));
+  // 왼쪽 바퀴 랙 s → 자세 (앞 결과를 시작값으로)
+  // 랙 s 까지 2 mm 씩 이어 풂 (뉴턴 시작값 = 앞 자세). 기구가 못 가는 이송이면 NaN
+  const L1 = s => { const n = Math.max(1, Math.ceil(Math.abs(s) / 2)); let q = null, X;
+    try { for (let j = 1; j <= n; j++) { X = K3D.pose(A, 0, s * j / n, q); q = X.q; } } catch (e) { return { d: NaN, cam: NaN, jack: NaN }; }
+    return { d: X.head - X0.head, cam: X.cam, jack: X0.CP[2] - X.CP[2] }; };
+  const both = s => { const l = L1(s), rr = L1(-s); return { l: l.d, r: -rr.d, lc: l.cam, rc: rr.cam, lj: l.jack, rj: rr.jack }; };
+  const ds = 0.01, c0 = both(ds), dm = (c0.l + c0.r) / 2, ratio = (ds / I.rack_c * 360) / Math.abs(dm);
+  const turnLeft = dm > 0;
+  // 안쪽 · 바깥 (왼쪽 선회면 왼쪽 바퀴가 안쪽), 캠버 · 잭킹
+  const io = s => { const w = both(turnLeft ? s : -s);   // 늘 왼쪽 선회 쪽으로
+    return { i: Math.abs(w.l), o: Math.abs(w.r), ci: w.lc, co: w.rc, ji: w.lj, jo: w.rj }; };
   const cot = x => 1 / Math.tan(x * D), acotd = x => Math.atan2(1, x) / D;
-  const ideal = o => acotd(cot(o) - 2 * kp / I.L);           // 바깥 각 → 완전 애커먼 안쪽 각
-  const ack = q => (q.i - q.o) / (ideal(q.o) - q.o) * 100;
-  // 기준 조향각: 두 바퀴 평균이 d_ref 인 랙 이송
-  let lo = 0, hi = Math.max(1, I.rack_travel * 3);
-  const mean = s => { const q = io(s); return (q.i + q.o) / 2; };
-  for (let i = 0; i < 70; i++) { const m = (lo + hi) / 2; if (mean(m) < I.d_ref) lo = m; else hi = m; }
+  const ideal = o => acotd(cot(o) - 2 * yG / I.L), ack = q => (q.i - q.o) / (ideal(q.o) - q.o) * 100;
+  let lo = 0, hi = I.rack_travel * 3; const mean = s => { const q = io(s); return (q.i + q.o) / 2; };
+  for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; if (mean(m) < I.d_ref) lo = m; else hi = m; }   // 못 가는 이송 (NaN) 은 '넘음' 쪽
   const qr = io((lo + hi) / 2), qm = io(I.rack_travel);
-  const Rr = q => I.L / 1000 / Math.tan(acotd((cot(q.i) + cot(q.o)) / 2) * D);          // 뒤축 가운데 반경 [m]
-  const lr = I.L / 1000 * I.fr / 100, R0 = Rr(qm);
-  // 직진 너클암 길이: 킹핀 (0, kp) 에서 타이로드 선 (A₀ → B₀) 까지 수직 거리
-  const ux = (I.rx - A0[0]) / Ltr, uy = (I.ry - A0[1]) / Ltr, kn = Math.abs((0 - A0[0]) * uy - (kp - A0[1]) * ux);
-  // 그래프: 랙 이송 0 ~ 최대에서 안쪽 · 바깥 · 완전 애커먼 안쪽 각
-  const xs = [], si = [], so = [], sid = [], sa = [];
-  for (let k = 0; k <= 60; k++) { const s = I.rack_travel * k / 60, q = io(s); xs.push(s / I.rack_c * 360); si.push(q.i); so.push(q.o); sid.push(k ? ideal(q.o) : 0); sa.push(k ? ack(q) : NaN); }
+  if (!isFinite(qm.i) || !isFinite(qm.o)) throw new Error('랙 최대 이송까지 기구가 움직이지 못합니다 (타이로드 · 너클암이 일직선을 넘음). 랙 최대 이송을 줄이세요.');
+  const Rr = q => I.L / 1000 / Math.tan(acotd((cot(q.i) + cot(q.o)) / 2) * D), lr = I.L / 1000 * I.fr / 100, R0 = Rr(qm);
+  const m5 = K3D.metrics(A);
+  const xs = [], sg = { di: [], dout: [], dideal: [], ack: [], ci: [], co: [], ji: [], jo: [] };
+  for (let j = 0; j <= 40; j++) { const s = I.rack_travel * j / 40, q = io(s); xs.push(s / I.rack_c * 360);
+    sg.di.push(q.i); sg.dout.push(q.o); sg.dideal.push(j ? ideal(q.o) : 0); sg.ack.push(j ? ack(q) : NaN); sg.ci.push(q.ci); sg.co.push(q.co); sg.ji.push(q.ji); sg.jo.push(q.jo); }
   const out = {
     tie_l: Ltr, arm_l: arm, knuckle_l: kn, steer_ratio: ratio, hw_max: I.rack_travel / I.rack_c * 360,
     d_in_ref: qr.i, d_out_ref: qr.o, d_ideal_ref: ideal(qr.o), ackermann: ack(qr),
     delta_max: qm.i, d_out_max: qm.o, ack_max: ack(qm), r_axle: R0, rmin: Math.sqrt(R0 * R0 + lr * lr), r_outer: Math.sqrt((R0 + I.tf / 2000) ** 2 + (I.L / 1000) ** 2),
+    cam_in_max: qm.ci, cam_out_max: qm.co, jack_in: qm.ji, jack_out: qm.jo, y_g: yG,
+    kpi_o: m5.kpi, caster_o: m5.caster, trail_o: m5.trail, scrub_o: m5.scrub, bs_o: m5.bs,
     rack_c_o: I.rack_c, rack_travel_o: I.rack_travel,
   };
-  return { out, x: { d: xs }, sig: { di: si, dout: so, dideal: sid, ack: sa } };
+  return { out, x: { d: xs }, sig: sg };
 }
 `
 };
 </script>
 <script>
 /* ============================================================
-   도구 7 액추에이션 · 스프링 (간이판) — docs/TOOLS-PLAN.md 5절
-   - 모션비를 상수로 넣고(로커 · 푸시로드 기하로 모션비 곡선을 구하는 것은 5번 3D 엔진과 함께 나중에) 휠 · 라이드 레이트, 라이드 주파수, 롤강성 · 롤 구배,
+   도구 7 액추에이션 · 스프링 — docs/TOOLS-PLAN.md 5절
+   - 모션비: [기하] 3D 하드포인트 + 푸시로드 · 로커 · 댐퍼 점으로 휠 트래블마다 모션비 곡선 (엔진 K3D, 기본 점 = 2024 REF4 STEP) · [상수] 직접 입력
+   - 휠 · 라이드 레이트, 라이드 주파수, 롤강성 · 롤 구배,
      횡하중 이동 배분(LLTD) · 롤강성 배분(RSD), 감쇠비 · 롤 감쇠를 계산
    - 대시보드로 kw · f_ride · k_roll · roll_grad · lltd · rsd · c_roll 을 보내면 도구 2 차량 모델 1 · 2 · 3 이 받아 씀
    ============================================================ */
 const M7TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
-  ['#wb .wb-in', '입력', '차 질량 · 무게중심 · 현가하질량(1번 도구), 롤센터(5번 도구), 스프링 · 모션비 · ARB · 타이어 수직 강성 · 댐퍼입니다. 모션비는 스프링 ÷ 바퀴(바퀴 1 mm 에 스프링이 줄어드는 양)입니다.'],
+  ['#wb .wb-in', '입력', '차 질량 · 무게중심 · 현가하질량(1번 도구), 롤센터(5번 도구), 스프링 · 모션비 · ARB · 타이어 수직 강성 · 댐퍼입니다. 모션비는 스프링 ÷ 바퀴(바퀴 1 mm 에 스프링이 줄어드는 양)이고, [기하]를 고르면 아래 푸시로드 · 로커 · 댐퍼 점(도구 5 와 같은 좌표)으로 셈합니다.'],
+  ['#wb .wb-sig', '모션비 곡선', '가로축 = 휠 트래블(바퀴 중심이 차체에 대해 오르면 +). 기하 모션비 · 휠 레이트 · 댐퍼 줄어듦 · 로커 회전입니다. 상수 모션비면 평평합니다.'],
   ['#wb #wbout', '결과', '레이트 · 주파수, 롤(롤강성 · 롤 구배 · 롤 축 높이), 하중 이동(LLTD · RSD · 1 g 바퀴 하나 이동량), 감쇠입니다. LLTD 는 롤센터 경로 · 스프링 경로 · 현가하 몫을 모두 더한 전체 횡하중 이동의 앞 몫이고, RSD 는 롤강성만의 앞 몫입니다.'],
 ];
-const T7G = {car:'차 (1번 · 5번 도구)', spr:'스프링 · ARB · 타이어', dmp:'댐퍼'};
+const T7G = {car:'차 (1번 · 5번 도구)', spr:'스프링 · ARB · 타이어', dmp:'댐퍼', geo:'기하 모션비 (바퀴)'};
+const t7Pt = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to', 'pa', 'pr', 'rp', 'rq', 'dr', 'db'];
+const T7GEO = new RegExp('^[fr]_(' + t7Pt.join('|') + ')_[xyz]$');
+document.addEventListener('click', e => { if(WB.id!=='7' || !e.target.closest) return; const t = e.target;
+  const m = t.closest('[data-t7mr]'); if(m){ WB.I.mr_m = +m.dataset.t7mr; wbSave(); wbPaint(['in']); wbCalcSoon(); return; }
+  const a = t.closest('[data-t7pa]'); if(a){ const [s, v] = a.dataset.t7pa.split(':'); WB.I['pa_arm_' + s] = +v; wbSave(); wbPaint(['in']); wbCalcSoon(); return; } });
 WB_TOOLS['7'] = {
   no:'7', stage:'P3-6~7', name:'액추에이션 · 스프링',
-  noSig:true,
+  x:{n:'휠 트래블', u:'mm'}, xiStart:'mid',
+  inLock(k){ if((k==='mr_f' || k==='mr_r') && WB.I.mr_m === 1) return '기하로 셈'; if(WB.I.mr_m !== 1 && T7GEO.test(k)) return '상수 모션비'; return ''; },
+  inEff(k){ const o = WB.R && !WB.err && WB.R.out; if(k==='mr_f') return o ? o.mr_f_o : '…'; if(k==='mr_r') return o ? o.mr_r_o : '…'; return undefined; },
+  inOpt(k){ const seg = (attr, cur, items) => `<span class="dc-seg" role="group">${items.map(([v, t]) => `<button type="button" ${attr}="${v}" aria-pressed="${cur===v}">${t}</button>`).join('')}</span>`;
+    if(k==='mr_f') return `<span class="t2-inopt">${seg('data-t7mr', WB.I.mr_m === 1 ? 1 : 0, [[1, '기하'], [0, '상수']])}</span>`;
+    const pm = /^([fr])_pa_x$/.exec(k); if(pm){ const s = pm[1], cur = s + ':' + (WB.I['pa_arm_' + s] === 1 ? 1 : 0); return `<span class="t2-inopt">${seg('data-t7pa', cur, [[s + ':0', '아래 팔'], [s + ':1', '위 팔']])}</span>`; }
+    return ''; },
   inputs:[
     {k:'m', dk:'m', v:300, d:0, g:T7G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T7G.car}, {k:'h', dk:'h', v:290, d:0, g:T7G.car}, {k:'h_s', dk:'h_s', v:300, d:0, g:T7G.car},
     {k:'L', dk:'L', v:1550, d:0, g:T7G.car}, {k:'tf', dk:'tf', v:1200, d:0, g:T7G.car}, {k:'tr', dk:'tr', v:1180, d:0, g:T7G.car},
-    {k:'m_us_f', dk:'m_us_f', v:12, d:1, g:T7G.car}, {k:'m_us_r', dk:'m_us_r', v:12, d:1, g:T7G.car}, {k:'r_load', dk:'r_load', n:'현가하 CG 높이 (하중 반경)', v:220, d:0, g:T7G.car},
+    {k:'m_us_f', dk:'m_us_f', v:12, d:1, g:T7G.car}, {k:'m_us_r', dk:'m_us_r', v:12, d:1, g:T7G.car}, {k:'r_load', dk:'r_load', n:'현가하 CG 높이 (하중 반경)', v:236, d:0, g:T7G.car},
     {k:'rc_f', dk:'rc_f', v:30, d:0, g:T7G.car}, {k:'rc_r', dk:'rc_r', v:50, d:0, g:T7G.car}, {k:'ixx', dk:'ixx', n:'롤 관성 모멘트 (롤 감쇠비용)', v:30, d:1, g:T7G.car},
     {k:'ks_f', dk:'ks_f', v:45, d:1, g:T7G.spr}, {k:'ks_r', dk:'ks_r', v:50, d:1, g:T7G.spr}, {k:'mr_f', dk:'mr_f', v:0.9, d:3, g:T7G.spr}, {k:'mr_r', dk:'mr_r', v:0.9, d:3, g:T7G.spr},
     {k:'karb_f', dk:'karb_f', v:150, d:0, g:T7G.spr}, {k:'karb_r', dk:'karb_r', v:100, d:0, g:T7G.spr}, {k:'kt', dk:'kt_tire', v:100, d:0, g:T7G.spr},
     {k:'cd_f', dk:'cd_f', v:1500, d:0, g:T7G.dmp}, {k:'cd_r', dk:'cd_r', v:1500, d:0, g:T7G.dmp},
+    {k:'mr_m', n:'모션비 (1 = 기하, 0 = 상수)', u:'', v:1, d:0, g:T7G.spr, ui:'none'},
+    {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T7G.geo}, {k:'camber_r', dk:'camber_r', v:-2, d:2, g:T7G.geo}, {k:'s_max', n:'그래프 트래블 범위 (±)', u:'mm', v:30, d:0, g:T7G.geo},
+    {k:'pa_arm_f', n:'앞 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:1, d:0, g:T7G.geo, ui:'none'}, {k:'pa_arm_r', n:'뒤 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:0, d:0, g:T7G.geo, ui:'none'},
+    ...k3dIn('f', t7Pt), ...k3dIn('r', t7Pt),
   ],
   outputs:[
     {k:'kw_f', dk:'kw_f', d:2, g:'레이트 · 주파수'}, {k:'kw_r', dk:'kw_r', d:2, g:'레이트 · 주파수'}, {k:'kr_f', n:'라이드 레이트 (앞, 타이어 직렬)', u:'N/mm', d:2, g:'레이트 · 주파수'},
@@ -15222,11 +15520,19 @@ WB_TOOLS['7'] = {
     {k:'h_ra', n:'롤 축 높이 (현가상 CG 자리)', u:'mm', d:1, g:'롤'}, {k:'h_arm', n:'롤 팔 (현가상 CG − 롤 축)', u:'mm', d:1, g:'롤'}, {k:'roll_grad', dk:'roll_grad', d:3, g:'롤'},
     {k:'lltd', dk:'lltd', d:1, g:'하중 이동'}, {k:'rsd', dk:'rsd', d:1, g:'하중 이동'}, {k:'dfz_f', n:'1 g 횡하중 이동 (앞 바퀴 하나)', u:'N', d:0, g:'하중 이동'}, {k:'dfz_r', n:'1 g 횡하중 이동 (뒤 바퀴 하나)', u:'N', d:0, g:'하중 이동'},
     {k:'z_f', n:'라이드 감쇠비 (앞)', u:'', d:3, g:'감쇠'}, {k:'z_r', n:'라이드 감쇠비 (뒤)', u:'', d:3, g:'감쇠'}, {k:'c_roll', dk:'c_roll', d:2, g:'감쇠'}, {k:'z_roll', n:'롤 감쇠비', u:'', d:3, g:'감쇠'},
+    {k:'mr_f_g', n:'모션비 (앞, 정지)', u:'mm/mm', d:3, g:'모션비 (기하)'}, {k:'mr_r_g', n:'모션비 (뒤, 정지)', u:'mm/mm', d:3, g:'모션비 (기하)'},
+    {k:'prog_f', n:'모션비 변화 (앞, −s ~ +s, 정지 대비)', u:'%', d:1, g:'모션비 (기하)'}, {k:'prog_r', n:'모션비 변화 (뒤, −s ~ +s, 정지 대비)', u:'%', d:1, g:'모션비 (기하)'},
+    {k:'ld0_f', n:'댐퍼 길이 (앞, 정지 · 눈 중심 사이)', u:'mm', d:1, g:'모션비 (기하)'}, {k:'ld0_r', n:'댐퍼 길이 (뒤, 정지)', u:'mm', d:1, g:'모션비 (기하)'},
+    {k:'dl_f', n:'댐퍼 줄어듦 (앞, +s 범프)', u:'mm', d:1, g:'모션비 (기하)'}, {k:'dl_r', n:'댐퍼 줄어듦 (뒤, +s 범프)', u:'mm', d:1, g:'모션비 (기하)'},
+    {k:'rk_f', n:'로커 회전 (앞, +s 범프)', u:'°', d:2, g:'모션비 (기하)'}, {k:'rk_r', n:'로커 회전 (뒤, +s 범프)', u:'°', d:2, g:'모션비 (기하)'},
     {k:'ks_f_o', dk:'ks_f', d:1, g:'감쇠', hide:true}, {k:'ks_r_o', dk:'ks_r', d:1, g:'감쇠', hide:true}, {k:'mr_f_o', dk:'mr_f', d:3, g:'감쇠', hide:true}, {k:'mr_r_o', dk:'mr_r', d:3, g:'감쇠', hide:true},
     {k:'karb_f_o', dk:'karb_f', d:0, g:'감쇠', hide:true}, {k:'karb_r_o', dk:'karb_r', d:0, g:'감쇠', hide:true}, {k:'cd_f_o', dk:'cd_f', d:0, g:'감쇠', hide:true}, {k:'cd_r_o', dk:'cd_r', d:0, g:'감쇠', hide:true},
   ],
+  sigs:[{k:'mrf', n:'모션비 (앞)', u:'mm/mm', d:3}, {k:'mrr', n:'모션비 (뒤)', u:'mm/mm', d:3}, {k:'kwf', n:'휠 레이트 (앞)', u:'N/mm', d:2}, {k:'kwr', n:'휠 레이트 (뒤)', u:'N/mm', d:2},
+        {k:'dlf', n:'댐퍼 줄어듦 (앞)', u:'mm', d:2}, {k:'dlr', n:'댐퍼 줄어듦 (뒤)', u:'mm', d:2}, {k:'rkf', n:'로커 회전 (앞)', u:'°', d:2}, {k:'rkr', n:'로커 회전 (뒤)', u:'°', d:2}],
+  sigOn:['mrf', 'mrr'],
   tour: M7TOUR,
-  verifyBase:{},
+  verifyBase:{mr_m:0, r_load:220},   // 예전 손계산 (모션비 상수) 그대로, 기하 경우는 mr_m 1 로 따로
   verify: [
     {n:'휠 레이트 = 스프링 × 모션비², 타이어가 아주 단단하면 라이드 레이트 = 휠 레이트', I:{ks_f:40, mr_f:0.8, kt:1e9}, expect:{kw_f:25.6, kr_f:25.6},
      src:'40 × 0.8² = 25.6 N/mm, 25.6 × k_t ÷ (25.6 + k_t) → 25.6 (k_t → ∞)'},
@@ -15235,14 +15541,116 @@ WB_TOOLS['7'] = {
     {n:'롤센터 0 · 현가하 거의 0 · 같은 윤거 · 단단한 타이어 → LLTD = 롤강성 배분', I:{rc_f:0, rc_r:0, m_us_f:0.001, m_us_r:0.001, tr:1200, kt:1e9, h_s:290}, expect:{lltd:49.963278, rsd:49.963278, h_ra:0},
      src:'기하 몫 · 현가하 몫이 0 이면 횡하중 이동은 탄성 몫뿐 → 앞 몫 = K_φf ÷ ΣK_φ (Milliken 18 장)'},
     {n:'1 g 앞 바퀴 하나 횡하중 이동 합 = m h g 와 맞음 (기본값, 앞 바퀴)', I:{}, expect:{dfz_f:343.281035},
-     src:'ΔF_f = [118.5 × 9.81 × 0.03 + 252 × 9.81 × 0.2594 × 0.5072 + 2 × 12 × 9.81 × 0.22] ÷ 1.2 = 343.28 N'}
+     src:'ΔF_f = [118.5 × 9.81 × 0.03 + 252 × 9.81 × 0.2594 × 0.5072 + 2 × 12 × 9.81 × 0.22] ÷ 1.2 = 343.28 N'},
+    {n:'기하 모션비 손계산 (팔 평행 · 같은 길이 360, 푸시로드가 아래 팔 y 400 에서 수직, 로커 팔 100 · 100 직각, 댐퍼 수평)', I:{mr_m:1, pa_arm_f:0, camber_f:0, tf:1200, r_load:236, ks_f:45, f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:200, f_uf_z:300, f_ur_x:-175, f_ur_y:200, f_ur_z:300, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:100, f_to_x:-70, f_to_y:560, f_to_z:100, f_pa_x:0, f_pa_y:400, f_pa_z:100, f_pr_x:0, f_pr_y:400, f_pr_z:300, f_rp_x:0, f_rp_y:300, f_rp_z:300, f_rq_x:100, f_rq_y:300, f_rq_z:300, f_dr_x:0, f_dr_y:300, f_dr_z:400, f_db_x:0, f_db_y:100, f_db_z:400}, expect:{mr_f_g:0.555556, kw_f:13.888889},
+     src:'바퀴 1 mm 오름 → 아래 팔 끝 (반경 360) 1 mm → 푸시로드 점 (반경 200) 200/360 mm 위로 → 로커 (팔 100) 회전 200/360 ÷ 100 rad → 댐퍼 점 (팔 100) 200/360 mm 수평 → MR = 0.5556, 휠 레이트 = 45 × 0.5556² = 13.889 N/mm'},
+    {n:'기본 점 (2024 STEP) 기하 모션비 · 독립 구현 비교', I:{mr_m:1, pa_arm_f:1, pa_arm_r:0, camber_f:-3, camber_r:-2, tf:1200, tr:1180, r_load:236}, expect:{mr_f_g:0.901663, mr_r_g:0.869474},
+     src:'업라이트 6 자유도를 거리 구속 6 개로 따로 푼 Python (scipy root lm) → 볼조인트 위치에서 팔 각 → 로커 각 (brentq) → 댐퍼 길이 중앙 차분 (±0.5 mm)'}
   ],
   code: `// ================================================================
-// 도구 7 액추에이션 · 스프링 — 계산 코드 (간이판: 모션비는 상수로 넣음, 로커 기하로 구하는 것은 나중에)
+// 3D 서스 기구학 엔진 (도구 5 · 6 · 7 · 8 공통) — 더블 위시본, 왼쪽 바퀴 (오른쪽 = 거울)
+// ================================================================
+// 좌표 [mm]: x = 앞 +, y = 차 중심선에서 바깥 (왼쪽) +, z = 지면에서 위 +. x = 0 은 그 축의 바퀴 중심.
+// 점 (축 s = f · r): 아래 팔 안쪽 앞 LF · 뒤 LR, 바깥 (볼조인트) LO, 위 팔 UF · UR · UO, 타이로드 (뒤는 토 링크) 안쪽 TI · 바깥 TO
+//   입력 이름 = s_점_x · s_점_y · s_점_z (예: f_lf_x). 바퀴: 윤거 t (정지 접지점 y = t/2, z = 0), 하중 반경 r (접지점 → 바퀴 중심),
+//   정적 캠버 (위가 안쪽이면 −) · 정적 토 (토인 +) [deg]
+// 풀이: 아래 팔 각 θL (LF–LR 축 둘레), 위 팔 각 θU (UF–UR 축 둘레), 업라이트 킹핀 둘레 각 ψ 를 미지수로
+//   ① |UO − LO| = 처음 길이 (업라이트 강체)  ② |TO − (TI + 랙 이동)| = 타이로드 길이  ③ 바퀴 중심 z = 처음 + 휠 트래블
+//   를 뉴턴법 (수치 야코비안) 으로 풂. 업라이트 위 점 P → LO + R (P₀ − LO₀),  R = (킹핀축 둘레 ψ) ∘ (킹핀축 방향을 맞추는 최소 회전)
+// 순간 운동: 트래블 ±0.01 mm 중앙 차분으로 바퀴 중심 속도 · 업라이트 각속도 ω = ½ Σ eᵢ × ėᵢ → 업라이트에 붙은 접지점 속도 v = v_WC + ω × (CP − WC),
+//   정면 순간중심 = CP − (0, v_z/ω_x, −v_y/ω_x),  롤센터 (대칭) = 접지점 → 순간중심 선이 y = 0 과 만나는 높이 = CP_z + CP_y v_y ÷ v_z
+//   측면: 앞 안티다이브 tanθ = v_x ÷ v_z (접지점 경로, 바깥 브레이크), 뒤 안티리프트 tanθ = −v_x ÷ v_z, 뒤 안티스쿼트 tanθ = −v_x,WC ÷ v_z,WC (안쪽 구동)
+const K3D = (() => {
+  const D = Math.PI / 180;
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = a => Math.sqrt(dot(a, a)), unit = a => mul(a, 1 / norm(a));
+  const rot = (v, k, th) => { const c = Math.cos(th), s = Math.sin(th); return add(add(mul(v, c), mul(cross(k, v), s)), mul(k, dot(k, v) * (1 - c))); };
+  const rotAbout = (P, O, k, th) => add(O, rot(sub(P, O), k, th));
+  const PTS = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
+  // 입력 → 축 하드포인트 · 바퀴. ex = 같은 꼴의 덧점 (예: 푸시로드 pa · pr · 로커 rp · dr · db), 없으면 무시
+  function axle(I, s, t, r, cam, toe, ex) {
+    const P = {}; for (const n of PTS.concat(ex || [])) { const k = s + '_' + n; P[n] = [+I[k + '_x'], +I[k + '_y'], +I[k + '_z']];
+      if (!P[n].every(isFinite)) throw new Error(k + ' 좌표가 비었습니다.'); }
+    if (!(t > 0) || !(r > 0)) throw new Error('윤거 · 하중 반경은 0 보다 커야 합니다.');
+    const c = (cam || 0) * D, q = (toe || 0) * D;
+    // 바퀴 회전축 a (바깥 +): 캠버 − (위가 안쪽) → a_z = +sin(−캠버), 토인 → a_x = +sin(토)
+    const a = unit([Math.sin(q) * Math.cos(c), Math.cos(q) * Math.cos(c), -Math.sin(c)]);
+    const CP = [0, t / 2, 0], dn = unit(add([0, 0, -1], mul(a, a[2])));      // 바퀴 면 안 아래 방향
+    const WC = sub(CP, mul(dn, r / -dn[2]));                                      // 바퀴 중심 높이 = r (캠버가 있으면 바퀴 면을 따라)
+    const rw = norm(sub(WC, CP));
+    return { P, a0: a, CP0: CP, WC0: WC, rw, t };
+  }
+  // 한 자세 풀이: sz = 바퀴 중심 위로 [mm] (차체 기준), rk = 랙 (타이로드 안쪽 점) y 이동 [mm]
+  function pose(A, sz, rk, q0) {
+    const P = A.P, kL = unit(sub(P.lr, P.lf)), kU = unit(sub(P.ur, P.uf)), d0 = norm(sub(P.uo, P.lo));
+    const TI = add(P.ti, [0, rk || 0, 0]), Lt = norm(sub(P.to, P.ti)), e0 = unit(sub(P.uo, P.lo));
+    const body = q => { const LO = rotAbout(P.lo, P.lf, kL, q[0]), UO = rotAbout(P.uo, P.uf, kU, q[1]), e = unit(sub(UO, LO));
+      // 최소 회전 e0 → e, 다음 킹핀축 둘레 ψ
+      const ax = cross(e0, e), sn = norm(ax), cs = dot(e0, e), R1 = v => sn < 1e-14 ? v : rot(v, mul(ax, 1 / sn), Math.atan2(sn, cs));
+      const T = p => add(LO, rot(R1(sub(p, P.lo)), e, q[2]));
+      return { LO, UO, T, e }; };
+    const res = q => { const B = body(q); return [norm(sub(B.UO, B.LO)) - d0, norm(sub(B.T(P.to), TI)) - Lt, B.T(A.WC0)[2] - A.WC0[2] - sz]; };
+    let q = q0 ? q0.slice() : [0, 0, 0];
+    for (let it = 0; it < 40; it++) {
+      const f = res(q); if (Math.abs(f[0]) + Math.abs(f[1]) + Math.abs(f[2]) < 1e-10) break;
+      const J = [[], [], []], h = 1e-7;
+      for (let j = 0; j < 3; j++) { const qp = q.slice(), qm = q.slice(); qp[j] += h; qm[j] -= h; const fp = res(qp), fm = res(qm); for (let i = 0; i < 3; i++) J[i][j] = (fp[i] - fm[i]) / (2 * h); }
+      const dq = solve3(J, f.map(x => -x)); if (!dq) throw new Error('기구 자세를 풀 수 없습니다 (점 배치 · 트래블 · 랙 이동을 확인하세요).');
+      q = add(q, dq);
+      if (it === 39) throw new Error('기구 자세가 수렴하지 않습니다 (트래블 · 랙 이동이 너무 큼).');
+    }
+    const B = body(q), a = unit(sub(B.T(add(A.WC0, A.a0)), B.T(A.WC0))), WC = B.T(A.WC0);
+    const dn = unit(add([0, 0, -1], mul(a, a[2]))), CP = add(WC, mul(dn, A.rw));
+    return { q, LO: B.LO, UO: B.UO, TO: B.T(P.to), TI, WC, CP, a, T: B.T, kp: B.e,
+      cam: -Math.asin(a[2]) / D, head: Math.atan2(-a[0], a[1]) / D };       // 캠버 (위가 안쪽 −) · 진행 방향 (왼쪽으로 +)
+  }
+  function solve3(A, b) {
+    const M = A.map((r, i) => r.concat([b[i]]));
+    for (let c = 0; c < 3; c++) { let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-14) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; } }
+    return [M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]];
+  }
+  // 업라이트 직교 3 축 (각속도 계산용)
+  const triad = X => { const e1 = unit(sub(X.UO, X.LO)), e2 = unit(cross(e1, sub(X.TO, X.LO))); return [e1, e2, cross(e1, e2)]; };
+  // 정지 자세 둘레 순간 운동 · 기하 값
+  function metrics(A, sz0, rk) {
+    const h = 0.01, X0 = pose(A, sz0 || 0, rk), Xp = pose(A, (sz0 || 0) + h, rk, X0.q), Xm = pose(A, (sz0 || 0) - h, rk, X0.q);
+    const vw = mul(sub(Xp.WC, Xm.WC), 1 / (2 * h));
+    const tp = triad(Xp), tm = triad(Xm), t0 = triad(X0);
+    let w = [0, 0, 0]; for (let i = 0; i < 3; i++) w = add(w, cross(t0[i], mul(sub(tp[i], tm[i]), 1 / (2 * h))));
+    w = mul(w, 0.5);                                                                     // [rad/mm]
+    const v = add(vw, cross(w, sub(X0.CP, X0.WC)));                                    // 업라이트에 붙은 접지점 (바퀴가 업라이트와 함께 도는 점) 속도
+    const CP = X0.CP, k = X0.kp;
+    const fin = (x, lim) => Math.abs(x) > lim ? NaN : x;
+    const icy = Math.abs(w[0]) > 1e-12 ? CP[1] - v[2] / w[0] : NaN, icz = Math.abs(w[0]) > 1e-12 ? CP[2] + v[1] / w[0] : NaN;
+    const icx = Math.abs(w[1]) > 1e-12 ? CP[0] + v[2] / w[1] : NaN, icz2 = Math.abs(w[1]) > 1e-12 ? CP[2] - v[0] / w[1] : NaN;
+    const rc = CP[2] + CP[1] * v[1] / v[2];
+    // 킹핀축 지면 교점 G
+    const tg = -X0.LO[2] / k[2], G = add(X0.LO, mul(k, tg));
+    return { X: X0, v, vw, w, icy: fin(icy, 1e6), icz: fin(icz, 1e6), icx: fin(icx, 1e6), icz_sv: fin(icz2, 1e6), rc,
+      fvsa: Math.abs(w[0]) > 1e-12 ? v[2] / w[0] : Infinity, svsa: Math.abs(w[1]) > 1e-12 ? -v[2] / w[1] : Infinity,
+      cgb: -w[0] / D,                                                                 // 범프 캠버 게인 [deg/mm] (차체 기준, = −ω_x)
+      bs: -(Xp.head - Xm.head) / (2 * h),                                             // 범프 스티어 [deg/mm] (토인 +)
+      kpi: Math.atan2(-k[1], k[2]) / D, caster: Math.atan2(-k[0], k[2]) / D, scrub: CP[1] - G[1], trail: G[0] - CP[0],
+      kpo: (() => { const s2 = (X0.WC[2] - X0.LO[2]) / k[2], Q = add(X0.LO, mul(k, s2)); return X0.WC[1] - Q[1]; })() };   // 바퀴 중심 높이 킹핀 옵셋 (정면)
+  }
+  const plain = X => { const o = {}; for (const k in X) if (typeof X[k] !== 'function') o[k] = X[k]; return o; };   // 작업자 → 화면으로 보낼 때 (함수 빼기)
+  return { plain, D, add, sub, mul, dot, cross, norm, unit, rot, rotAbout, axle, pose, metrics, solve3, PTS };
+})();
+
+// ================================================================
+// 도구 7 액추에이션 · 스프링 — 계산 코드. 엔진 K3D 는 위 (공통)
 // ================================================================
 // 입력 I : m [kg], fr [%], h · h_s [mm], L · tf · tr [mm], m_us_f · m_us_r [kg, 바퀴 하나], r_load [mm] (현가하 CG ≈ 바퀴 중심 높이),
 //          rc_f · rc_r [mm] 롤센터, ks_f · ks_r [N/mm] 스프링, mr_f · mr_r [-] 모션비 (스프링 ÷ 바퀴), karb_f · karb_r [N·m/deg] ARB (바퀴 위치 롤강성),
 //          kt [N/mm] 타이어 수직 강성, cd_f · cd_r [N·s/m] 댐퍼 감쇠 (댐퍼 위치), ixx [kg·m²] 롤 관성 (현가상, 롤 감쇠비용)
+//          mr_m = 1 이면 모션비를 기하로: 축마다 하드포인트 8 점 + 푸시로드 팔 쪽 pa (붙은 팔 pa_arm_f · r: 0 아래 · 1 위) · 로커 쪽 pr, 로커 회전 중심 rp · 축 위 다른 점 rq,
+//          댐퍼 로커 쪽 dr · 차체 쪽 db, 윤거 · 하중 반경 r_load · 정적 캠버 (바퀴 중심 자리), 그래프 트래블 범위 s_max
+// 기하 모션비 (Milliken 17 장 · 가상일): 휠 트래블 s 마다 K3D 로 팔 각 θ 를 풀고, 팔에 붙은 푸시로드 끝 PA(θ) → 푸시로드 길이 일정 |PA − PR(β)| = L_p 로 로커 각 β (뉴턴),
+//   댐퍼 길이 l_d(s) = |DB − DR(β)|, 모션비 MR(s) = −dl_d/ds (바퀴가 1 mm 오를 때 댐퍼가 줄어드는 양, 중앙 차분). 정지 자세 MR 을 아래 식에 씀.
+//   휠 레이트 곡선 k_w(s) = k_s MR(s)² (스프링 힘 × dMR/ds 항은 뺌 — 예압이 작을 때 근사)
 // 식 (Milliken & Milliken, Race Car Vehicle Dynamics 16 · 18 장):
 //   휠 레이트 k_w = k_s × MR²,  라이드 레이트 k_r = k_w k_t ÷ (k_w + k_t)  (타이어와 직렬)
 //   현가상 코너 질량 m_c = (축 질량 − 2 m_us) ÷ 2,  라이드 주파수 f = √(k_r ÷ m_c) ÷ 2π
@@ -15254,7 +15662,31 @@ WB_TOOLS['7'] = {
 //   감쇠: 바퀴 위치 c_w = c_d × MR², 라이드 감쇠비 ζ = c_w ÷ (2 √(k_r m_c)) (타이어 직렬 근사 무시 · 휠 레이트 기준이면 k_w), 롤 감쇠 C_φ = c_w t² ÷ 2 (앞 + 뒤),
 //         롤 감쇠비 ζ_φ = ΣC_φ ÷ (2 √(ΣK_φ I_xx))
 const g = 9.81, D = Math.PI / 180;
+function mrGeo(I, s, t, cam) {
+  const A = K3D.axle(I, s, t, I.r_load, cam, 0, ['pa', 'pr', 'rp', 'rq', 'dr', 'db']), P = A.P, { sub, norm, unit, rotAbout } = K3D;
+  const up = I['pa_arm_' + s] === 1, piv = up ? P.uf : P.lf, kA = unit(sub(up ? P.ur : P.lr, piv)), n = unit(sub(P.rq, P.rp));
+  const Lp = norm(sub(P.pr, P.pa)), ld0 = norm(sub(P.db, P.dr));
+  if (!(norm(sub(P.rq, P.rp)) > 0) || !(Lp > 0) || !(ld0 > 0)) throw new Error((s === 'f' ? '앞' : '뒤') + ' 로커 축 · 푸시로드 · 댐퍼 점이 겹칩니다.');
+  let q = null, b = 0;
+  const at = sz => { const X = K3D.pose(A, sz, 0, q); q = X.q; const PA = rotAbout(P.pa, piv, kA, up ? X.q[1] : X.q[0]);
+    const g = bb => norm(sub(PA, rotAbout(P.pr, P.rp, n, bb))) - Lp;
+    for (let i = 0; i < 40; i++) { const f = g(b), d = (g(b + 1e-7) - g(b - 1e-7)) / 2e-7; if (!(Math.abs(d) > 1e-12)) throw new Error('로커가 푸시로드 방향으로 돌지 못합니다 (점 배치 확인).'); const db = -f / d; b += db; if (Math.abs(db) < 1e-13) break; }
+    return { ld: norm(sub(P.db, rotAbout(P.dr, P.rp, n, b))), b }; };
+  const mr = sz => { const h = 0.01, qq = q, bq = b, p = at(sz + h), m = at(sz - h); q = qq; b = bq; return -(p.ld - m.ld) / (2 * h); };
+  const mr0 = mr(0);
+  return { mr0, ld0, at, mr, curve(sm, nn) { const xs = [], m = [], dl = [], rk = []; q = null; b = 0; const z = at(0);
+    for (let i = 0; i <= nn; i++) { const sz = -sm + 2 * sm * i / nn; q = null; b = 0;
+      // 0 에서 sz 까지 이어 풂
+      const st = Math.max(1, Math.ceil(Math.abs(sz) / 5)); let r; for (let j = 1; j <= st; j++) r = at(sz * j / st);
+      xs.push(+sz.toFixed(3)); m.push(mr(sz)); dl.push(ld0 - r.ld); rk.push((r.b - z.b) / K3D.D); }
+    return { xs, m, dl, rk }; } };
+}
 function calc(I) {
+  const geo = I.mr_m === 1, sm = Math.max(5, I.s_max || 30);
+  let GF = null, GR = null, mrf = I.mr_f, mrr = I.mr_r;
+  if (geo) { GF = mrGeo(I, 'f', I.tf, I.camber_f); GR = mrGeo(I, 'r', I.tr, I.camber_r); mrf = GF.mr0; mrr = GR.mr0;
+    if (!(mrf > 0) || !(mrr > 0)) throw new Error('기하 모션비가 0 이하입니다 (바퀴가 오를 때 댐퍼가 늘어남). 점 배치를 확인하세요.'); }
+  I = Object.assign({}, I, { mr_f: mrf, mr_r: mrr });
   const L = I.L / 1000, tf = I.tf / 1000, tr = I.tr / 1000, h = I.h / 1000, hs = (I.h_s > 0 ? I.h_s : I.h) / 1000, rl = I.r_load / 1000;
   const rf = I.rc_f / 1000, rr = I.rc_r / 1000, fs = I.fr / 100, muf = I.m_us_f, mur = I.m_us_r;
   const ms = I.m - 2 * muf - 2 * mur, msf = I.m * fs - 2 * muf, msr = I.m * (1 - fs) - 2 * mur;
@@ -15281,14 +15713,19 @@ function calc(I) {
     z_roll: I.ixx > 0 ? Cphi / (2 * Math.sqrt(K * I.ixx)) : NaN,
     ms: ms, ks_f_o: I.ks_f, ks_r_o: I.ks_r, mr_f_o: I.mr_f, mr_r_o: I.mr_r, karb_f_o: I.karb_f, karb_r_o: I.karb_r, cd_f_o: I.cd_f, cd_r_o: I.cd_r,
   };
-  return { out };
+  out.mr_geo = geo ? 1 : 0; out.mr_f_g = geo ? mrf : NaN; out.mr_r_g = geo ? mrr : NaN;
+  if (!geo) { const xs = [], N = 30; for (let i = 0; i <= N; i++) xs.push(+(-sm + 2 * sm * i / N).toFixed(3)); const cst = v => xs.map(() => v), dl = (m) => xs.map(x => m * x);
+    return { out, x: { d: xs }, sig: { mrf: cst(mrf), mrr: cst(mrr), kwf: cst(I.ks_f * mrf * mrf), kwr: cst(I.ks_r * mrr * mrr), dlf: dl(mrf), dlr: dl(mrr), rkf: cst(NaN), rkr: cst(NaN) } }; }
+  const cF = GF.curve(sm, 30), cR = GR.curve(sm, 30), pr = (c) => (c.m[c.m.length - 1] - c.m[0]) / c.m[(c.m.length - 1) / 2] * 100;
+  Object.assign(out, { prog_f: pr(cF), prog_r: pr(cR), ld0_f: GF.ld0, ld0_r: GR.ld0, dl_f: cF.dl[cF.dl.length - 1], dl_r: cR.dl[cR.dl.length - 1], rk_f: cF.rk[cF.rk.length - 1], rk_r: cR.rk[cR.rk.length - 1] });
+  return { out, x: { d: cF.xs }, sig: { mrf: cF.m, mrr: cR.m, kwf: cF.m.map(m => I.ks_f * m * m), kwr: cR.m.map(m => I.ks_r * m * m), dlf: cF.dl, dlr: cR.dl, rkf: cF.rk, rkr: cR.rk } };
 }
 `
 };
 </script>
 <script>
 /* ============================================================
-   도구 3 제동 시스템 사이징 (간이판) — docs/TOOLS-PLAN.md 5절
+   도구 3 제동 시스템 사이징  — docs/TOOLS-PLAN.md 5절
    - 질량 · 무게중심 · 타이어 μ 로 이상 제동 배분, 마스터실린더 · 밸런스 바 · 캘리퍼 · 패드 · 디스크로 실제 배분 · 라인 압력 · 제동력,
      잠김 순서 · 첫 잠김 감속도 · 네 바퀴 잠김 답력 (규정 제동 시험: 네 바퀴가 모두 잠겨야 함)
    - 기본값: 질량 · 무게중심은 다른 도구와 같은 예시, 유압 부품은 2024 Run2X 제동 시트 (마스터실린더 15.875 mm, 캘리퍼 피스톤 31.242 mm 한쪽 1 개,
@@ -15314,12 +15751,13 @@ const M3TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
   ['#wb .wb-in', '입력', '차(질량 · 무게중심 · 휠베이스 · 타이어 μ · 하중 반경, 다운포스는 시험 차속에서), 페달(설계 답력 · 페달비 · 밸런스 바), 유압(마스터실린더 · 캘리퍼 피스톤 면적), 마찰(패드 μ · 디스크 · 패드 높이)입니다.'],
   ['#wb #wbmain', '제동 배분 선도', '이상 배분 곡선과 지금 유압의 배분 직선, 먼저 잠기는 점을 그립니다.'],
+  ['#wb .wb-sig', '답력–감속도', '가로축 = 답력. 감속도 · 앞뒤 제동력 · 라인 압력입니다. 한 축이 잠기면 그 축 제동력은 μ F_z 에 묶이고 기울기가 꺾입니다.'],
   ['#wb #wbout', '결과', '이상 · 실제 배분, 설계 답력의 라인 압력 · 제동력 · 감속도, 먼저 잠기는 축 · 그 감속도 · 답력, 네 바퀴 잠김 답력(규정 제동 시험) · 최소 페달비입니다.'],
 ];
-const T3G = {car:'차 (1번 · 2번 도구)', ped:'페달', hyd:'유압 · 마찰'};
+const T3G = {car:'차 (1번 · 2번 도구)', ped:'페달', hyd:'유압 · 마찰', th:'디스크 온도'};
 WB_TOOLS['3'] = {
-  no:'3', stage:'P1 · P3-8', name:'제동 시스템 사이징 (간이판)',
-  noSig:true, mainTitle:'제동 배분 선도', mainMeta:'이상 곡선 · 실제 직선',
+  no:'3', stage:'P1 · P3-8', name:'제동 시스템 사이징 ',
+  x:{n:'답력', u:'N'}, mainTitle:'제동 배분 선도', mainMeta:'이상 곡선 · 실제 직선',
   inputs:[
     {k:'m', dk:'m', v:300, d:0, g:T3G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T3G.car}, {k:'h', dk:'h', v:290, d:0, g:T3G.car}, {k:'L', dk:'L', v:1550, d:0, g:T3G.car},
     {k:'mu', dk:'mu', v:1.5, d:2, g:T3G.car}, {k:'r_load', dk:'r_load', v:236, d:0, g:T3G.car},
@@ -15330,6 +15768,10 @@ WB_TOOLS['3'] = {
     {k:'cal_area_f', dk:'cal_area_f', n:'캘리퍼 피스톤 면적 (앞, 한쪽 합)', v:766.6, d:1, g:T3G.hyd}, {k:'cal_area_r', dk:'cal_area_r', n:'캘리퍼 피스톤 면적 (뒤, 한쪽 합)', v:766.6, d:1, g:T3G.hyd},
     {k:'pad_mu', dk:'pad_mu', v:0.32, d:2, g:T3G.hyd}, {k:'disc_d_f', dk:'disc_d_f', v:187, d:0, g:T3G.hyd}, {k:'disc_d_r', dk:'disc_d_r', v:187, d:0, g:T3G.hyd},
     {k:'pad_h', n:'패드 높이 (유효 반지름 = 바깥 반지름 − 패드 높이 ÷ 2)', u:'mm', v:0, d:1, g:T3G.hyd},
+    {k:'v_stop', n:'정지 시작 차속 (디스크 온도)', u:'km/h', v:100, d:0, g:T3G.th}, {k:'n_stop', n:'연속 정지 횟수 (사이 냉각 없음)', u:'회', v:5, d:0, g:T3G.th},
+    {k:'m_disc_f', n:'디스크 하나 질량 (앞)', u:'kg', v:0.45, d:3, g:T3G.th}, {k:'m_disc_r', n:'디스크 하나 질량 (뒤)', u:'kg', v:0.45, d:3, g:T3G.th},
+    {k:'c_disc', n:'디스크 비열 (강 460)', u:'J/(kg·K)', v:460, d:0, g:T3G.th},
+    {k:'f_probe', n:'탐침 답력 (곡선 위 한 점)', u:'N', v:1200, d:0, g:T3G.ped},
   ],
   outputs:[
     {k:'ideal_f', n:'이상 배분 (앞, 네 바퀴 동시 잠김)', u:'%', d:1, g:'배분'}, {k:'act_f', n:'실제 배분 (앞, 유압)', u:'%', d:1, g:'배분'}, {k:'a_max', n:'최대 감속도 (이상 배분)', u:'g', d:2, g:'배분'},
@@ -15339,10 +15781,17 @@ WB_TOOLS['3'] = {
     {k:'eff_b', n:'제동 효율 (첫 잠김 ÷ 최대 감속도)', u:'%', d:1, g:'잠김'},
     {k:'pedal_force', dk:'pedal_force', n:'네 바퀴 잠김 답력 (규정 제동 시험)', d:0, g:'규정 제동 시험'}, {k:'rule_lock', n:'설계 답력으로 네 바퀴 잠김', u:'', d:0, g:'규정 제동 시험', fmt:v => v === 1 ? '<b class="ok">가능</b>' : v === 0 ? '<b class="wb-err">못 잠금</b>' : '—'},
     {k:'pr_min', n:'최소 페달비 (설계 답력으로 네 바퀴 잠김)', u:'', d:2, g:'규정 제동 시험'},
+    {k:'bb_ideal', n:'이상 배분이 되는 밸런스 바 앞 몫', u:'%', d:1, g:'배분'},
+    {k:'e_stop', n:'한 번 정지 운동 에너지', u:'kJ', d:1, g:'디스크 온도'}, {k:'dt_f', n:'온도 상승 · 한 번 (앞 디스크)', u:'K', d:1, g:'디스크 온도'}, {k:'dt_r', n:'온도 상승 · 한 번 (뒤 디스크)', u:'K', d:1, g:'디스크 온도'},
+    {k:'dt_fn', n:'온도 상승 · 연속 (앞)', u:'K', d:0, g:'디스크 온도'}, {k:'dt_rn', n:'온도 상승 · 연속 (뒤)', u:'K', d:0, g:'디스크 온도'},
+    {k:'a_probe', n:'탐침 답력 감속도', u:'g', d:3, g:'설계 답력에서'}, {k:'st_probe', n:'탐침 답력 잠김 (0 없음 · 1 앞 · 2 뒤 · 3 둘 다)', u:'', d:0, g:'설계 답력에서', hide:true},
     {k:'kf', n:'답력 1 N 당 앞축 제동력', u:'N/N', d:3, g:'잠김', hide:true}, {k:'kr', n:'답력 1 N 당 뒤축 제동력', u:'N/N', d:3, g:'잠김', hide:true},
   ],
+  sigs:[{k:'a', n:'감속도', u:'g', d:3}, {k:'ff', n:'앞축 제동력', u:'N', d:0}, {k:'fr', n:'뒤축 제동력', u:'N', d:0}, {k:'pf', n:'라인 압력 (앞)', u:'bar', d:1}, {k:'prr', n:'라인 압력 (뒤)', u:'bar', d:1},
+        {k:'st', n:'잠김 (0 없음 · 1 앞 · 2 뒤 · 3 둘 다)', u:'', d:0}],
+  sigOn:['a'],
   figure: t3Fig, tour: M3TOUR,
-  verifyBase:{v_b:0, pad_h:0, eta_b:100},
+  verifyBase:{v_b:0, pad_h:0, eta_b:100, v_stop:100, n_stop:5, m_disc_f:0.45, m_disc_r:0.45, c_disc:460},
   verify: [
     {n:'이상 배분 · 네 바퀴 동시 잠김 (μ = 1.5, 다운포스 없음)', I:{}, expect:{ideal_f:75.564516, a_max:1.5},
      src:'앞 몫 = 앞 하중 비 + μ h ÷ L = 0.475 + 1.5 × 290 ÷ 1550 = 0.755645, 최대 감속 = μ g'},
@@ -15357,10 +15806,16 @@ WB_TOOLS['3'] = {
     {n:'다운포스 (60 km/h, C_L·A 3, 압력중심 휠베이스 가운데)', I:{v_b:60}, expect:{a_max:1.760151, ideal_f:75.934017},
      src:'D = ½ × 1.225 × 3 × 16.667² = 510.42 N (앞뒤 절반), 최대 감속 = μ (W + D) ÷ m = 1.5 × 3453.42 ÷ 300 = 17.267 m/s² = 1.7602 g, 앞 몫 = (W_f + D/2 + m a h ÷ L) ÷ (W + D)'},
     {n:'패드 높이 30 mm → 유효 반지름 78.5 mm', I:{pad_h:30}, expect:{pedal_force:1006.792279},
-     src:'제동력이 93.5 ÷ 78.5 배 줄어 답력은 845.27 × 93.5 ÷ 78.5 = 1006.79 N'}
+     src:'제동력이 93.5 ÷ 78.5 배 줄어 답력은 845.27 × 93.5 ÷ 78.5 = 1006.79 N'},
+    {n:'밸런스 바 맞춤 (앞뒤 같은 부품 → 이상 배분 몫 그대로)', I:{}, expect:{bb_ideal:75.564516},
+     src:'K_f = K_r 이면 b = β* = 75.56 %'},
+    {n:'답력–감속도 · 뒤 잠김 뒤 구간 (답력 820 N: 첫 잠김 793.6 N 과 네 바퀴 845.3 N 사이)', I:{f_probe:820}, expect:{a_probe:1.473535, st_probe:2},
+     src:'a = (k_f F + μ W_r) ÷ (m (1 + μ h ÷ L)) = (3.94640 × 820 + 1.5 × 1545.08) ÷ (300 × 1.28065) = 14.455 m/s² = 1.4735 g, 앞은 k_f F = 3236 < μ F_zf'},
+    {n:'디스크 온도 (100 km/h → 0, 디스크 0.45 kg, 강 460 J/(kg·K), 5 번 연속)', I:{}, expect:{e_stop:115.740741, dt_f:205.761317, dt_r:73.80569, dt_fn:1028.806584},
+     src:'E = ½ × 300 × 27.778² = 115.74 kJ, 앞 디스크 = 0.736 × E ÷ 2 ÷ (0.45 × 460) = 205.76 K, 뒤 = 0.264 × … = 73.81 K, 5 번 = 1028.8 K'}
   ],
   code: `// ================================================================
-// 도구 3 제동 시스템 사이징 — 계산 코드 (간이판: 정상 감속, 이상 배분 · 유압 · 잠김 순서)
+// 도구 3 제동 시스템 사이징 — 계산 코드 (정상 감속: 이상 배분 · 유압 · 잠김 순서 · 답력–감속도 곡선 · 밸런스 바 맞춤 · 디스크 온도)
 // ================================================================
 // 입력 I : m [kg], fr [%] 앞 하중, h [mm] 무게중심, L [mm] 휠베이스, mu [-] 타이어 μ, r_load [mm] 바퀴 하중 반경 (제동 토크 → 접지 힘),
 //          cla [m²] · xcop [mm] (뒤축에서 앞으로 압력중심) · v_b [km/h] 시험 차속 (다운포스만, 항력은 넣지 않음),
@@ -15373,6 +15828,11 @@ WB_TOOLS['3'] = {
 //   실제 배분 β = F_f ÷ (F_f + F_r) (답력과 상관없이 일정, 프로포셔닝 밸브 없음)
 //   잠김 감속: 앞 β m a = μ F_zf(a) → a_f = μ (W_f + D_f) ÷ (m (β − μ h ÷ L)),  뒤 (1 − β) m a = μ F_zr(a) → a_r = μ (W_r + D_r) ÷ (m (1 − β + μ h ÷ L))
 //   먼저 잠기는 축 = 작은 쪽, 그때 답력 = m a ÷ (축 제동력 합 ÷ 답력).  네 바퀴 잠김 (a = μ g 쪽) 답력 = max(μ F_zf* ÷ k_f, μ F_zr* ÷ k_r)  (k = 답력 1 N 당 축 제동력)
+//   답력–감속도 (잠긴 축은 μ F_z 로 묶임): 안 잠김 m a = (k_f + k_r) F,  앞 잠김 m a = μ (W_f + m a h ÷ L) + k_r F → a = (μ W_f + k_r F) ÷ (m (1 − μ h ÷ L)),
+//     뒤 잠김 m a = k_f F + μ (W_r − m a h ÷ L) → a = (k_f F + μ W_r) ÷ (m (1 + μ h ÷ L)),  둘 다 → a = μ W ÷ m
+//   밸런스 바 맞춤 (실제 = 이상): β(b) = b K_f ÷ (b K_f + (1 − b) K_r), K = A_캘리퍼 r_디스크 ÷ A_mc → b = β* K_r ÷ (K_f (1 − β*) + β* K_r)
+//   디스크 온도 (한 번 정지, 단열 · 보수적): E = ½ m v² (차속 v_stop → 0), 디스크 하나 = E × (앞 β, 뒤 1 − β) ÷ 2,  ΔT = E_디스크 ÷ (m_디스크 c),  c = 강 460 J/(kg·K)
+//     연속 정지 n_stop 번 (사이 냉각 없음) = n × ΔT  (FMVSS 135 페이드 시험처럼 보수적 상한)
 const g = 9.81, RHO = 1.225;
 function calc(I) {
   const pos = (v, nm) => { if (!(v > 0)) throw new Error(nm + ' 는 0 보다 커야 합니다.'); return v; };
@@ -15395,6 +15855,21 @@ function calc(I) {
   const first = af <= ar ? 1 : 2, aL = Math.min(af, ar, amax), Fp1 = m * aL / (kf + kr);
   const Fall = Math.max(mu * Fzf(amax) / kf, mu * Fzr(amax) / kr);
   const Fp = pos(I.f_ped, '설계 답력'), aP = Math.min((kf + kr) * Fp / m, aL);             // 설계 답력에서 감속 (잠기기 전까지 [m/s²])
+  // 답력 F 에서 감속 (잠김 반영) · 축 제동력
+  const decel = F => { const a0 = (kf + kr) * F / m, Ff0 = kf * F, Fr0 = kr * F;
+    const lockF = Ff0 > mu * Fzf(a0) + 1e-9, lockR = Fr0 > mu * Math.max(0, Fzr(a0)) + 1e-9;
+    if (!lockF && !lockR) return { a: a0, ff: Ff0, fr: Fr0, st: 0 };
+    let a = lockF ? (mu * Wf + kr * F) / (m * (1 - mu * h / L)) : (kf * F + mu * Wr) / (m * (1 + mu * h / L));
+    if (lockF && kr * F > mu * Fzr(a) - 1e-9) return { a: amax, ff: mu * Fzf(amax), fr: mu * Fzr(amax), st: 3 };
+    if (lockR && kf * F > mu * Fzf(a) - 1e-9) return { a: amax, ff: mu * Fzf(amax), fr: mu * Fzr(amax), st: 3 };
+    if (!(a > 0) || a > amax) a = amax;
+    return { a, ff: lockF ? mu * Fzf(a) : kf * F, fr: lockF ? kr * F : mu * Fzr(a), st: lockF ? 1 : 2 }; };
+  // 밸런스 바 맞춤
+  const KF = I.cal_area_f * rdf / Amf, KR = I.cal_area_r * rdr / Amr, bbI = ideal * KR / (KF * (1 - ideal) + ideal * KR);
+  // 디스크 온도
+  const vs = Math.max(0, I.v_stop || 0) / 3.6, E = 0.5 * m * vs * vs, cD = I.c_disc > 0 ? I.c_disc : 460, ns = Math.max(1, Math.round(I.n_stop || 1));
+  const dTf = I.m_disc_f > 0 ? E * beta / 2 / (I.m_disc_f * cD) : NaN, dTr = I.m_disc_r > 0 ? E * (1 - beta) / 2 / (I.m_disc_r * cD) : NaN;
+  const pr = decel(Math.max(0, I.f_probe || 0));
   const out = {
     ideal_f: ideal * 100, act_f: beta * 100, a_max: amax / g,
     p_f: pf1 * Fp * 10, p_r: pr1 * Fp * 10,                                                   // 설계 답력의 라인 압력 [bar]
@@ -15402,127 +15877,255 @@ function calc(I) {
     lock_first: first, a_lock: aL / g, f_lock1: Fp1, pedal_force: Fall, rule_lock: Fp >= Fall - 1e-9 ? 1 : 0,
     pr_min: PR * Fall / Fp, eff_b: aL / amax * 100,
     kf, kr, fzf_max: Fzf(amax), fzr_max: Fzr(amax),
+    bb_ideal: bbI * 100, e_stop: E / 1000, dt_f: dTf, dt_r: dTr, dt_fn: dTf * ns, dt_rn: dTr * ns,
+    a_probe: pr.a / g, st_probe: pr.st,
   };
+  // 답력–감속도 곡선 (0 ~ 네 바퀴 잠김 답력 × 1.3, 설계 답력 포함)
+  const Fm = Math.max(Fall * 1.3, Fp * 1.1), xs = [], sg = { a: [], ff: [], fr: [], pf: [], prr: [], st: [] };
+  for (let i = 0; i <= 60; i++) { const F = Fm * i / 60, q = decel(F); xs.push(+F.toFixed(2)); sg.a.push(q.a / g); sg.ff.push(q.ff); sg.fr.push(q.fr); sg.pf.push(pf1 * F * 10); sg.prr.push(pr1 * F * 10); sg.st.push(q.st); }
   // 이상 곡선 (a = 0 ~ a_max) · 실제 직선 (그림용)
   const id = Array.from({ length: 41 }, (_, i) => { const a = amax * i / 40, u = a * m / W; return [u * Fzf(a), u * Fzr(a)]; });   // 두 축 모두 같은 μ 사용 u
-  return { out, fig: { id, beta, lock: [beta * m * aL, (1 - beta) * m * aL], fmax: [mu * Fzf(amax), mu * Fzr(amax)] } };
+  return { out, x: { d: xs }, sig: sg, fig: { id, beta, lock: [beta * m * aL, (1 - beta) * m * aL], fmax: [mu * Fzf(amax), mu * Fzr(amax)] } };
 }
 `
 };
 </script>
 <script>
 /* ============================================================
-   도구 8 하중 산출 (간이판) — docs/TOOLS-PLAN.md 5절
-   - 정상 상태 하중 경우 4 개 (정지 · 최대 선회 · 최대 제동 · 조합) 의 바퀴 접지력 (F_z · F_y · F_x, 바깥 앞 · 뒤 바퀴)
-   - 앞 바깥 바퀴의 정면 2D 부재력: 아래 팔 축력, 푸시로드 축력 (위 팔에 붙음), 위 볼조인트 힘, 위 팔 안쪽 반력
-   - 기본 정면 점 = 2024 REF4 STEP 의 앞 왼쪽 로드엔드 볼 중심 (지면 = 타이어 아래 끝), 하중 이동 배분 = 도구 7 기본 결과 48.7 %
-   - 나중에: 3D (A 암 두 다리 · 타이로드 · 종력), 범프 · 동적 하중 (수직 배율로만 대신), 뒤 서스 부재력
+   도구 8 하중 산출 (3D) — docs/TOOLS-PLAN.md 5절
+   - 정상 상태 하중 경우 5 개 (정지 · 최대 선회 · 최대 제동 · 가속 · 조합) 의 바깥 바퀴 접지력과, 앞 · 뒤 서스 부재력 (3D 정적 평형):
+     팔 다리 축력 (두 힘 부재) · 푸시로드가 붙은 팔의 안쪽 점 힘 · 볼조인트 힘 · 타이로드 (토 링크) · 푸시로드 축력
+   - 기본 점 = 2024 REF4 STEP (도구 5 의 K3D_HP), 하중 이동 배분 기본 = 도구 7 기본 결과. 수직 배율 nz 로 범프 · 노면 충격을 대신
+   - 나중에: 동적 하중 (댐퍼 · 관성), 변형 반영, 뒤 안쪽 바퀴
    ============================================================ */
-function t8Fig(I, R){ if(!R || !R.geo) return ''; const G = R.geo, o = R.out, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
-  const W = 700, H = 420, sc = 0.62, ox = 40, oy = H - 34, X = y => ox + y*sc, Y = z => oy - z*sc;
-  const ln = (A, B, c, w, lab, up) => { const mx = (X(A[0]) + X(B[0])) / 2, my = (Y(A[1]) + Y(B[1])) / 2;
-    return `<line x1="${X(A[0]).toFixed(1)}" y1="${Y(A[1]).toFixed(1)}" x2="${X(B[0]).toFixed(1)}" y2="${Y(B[1]).toFixed(1)}" stroke="${c}" stroke-width="${w}"/>${lab ? `<text x="${mx.toFixed(1)}" y="${(my + (up ? -8 : 14)).toFixed(1)}" text-anchor="middle" class="t5-tx b" style="font-size:13px">${lab}</text>` : ''}`; };
-  const tc = v => v >= 0 ? '#1d5f9a' : '#c2410c', tl = v => `${f(Math.abs(v), 0)} N ${v >= 0 ? '인장' : '압축'}`;
-  let s = `<svg viewBox="0 0 ${W} ${H}" class="t5-svg" role="img" aria-label="앞 바깥 바퀴 정면 부재력 (최대 선회)"><line x1="0" x2="${W}" y1="${oy}" y2="${oy}" stroke="#8a8f99"/>
-    <line x1="${X(0)}" x2="${X(0)}" y1="10" y2="${oy}" stroke="#b9bec8" stroke-dasharray="3 4"/><text x="${X(0) + 4}" y="20" class="t5-tx" style="font-size:12px">중심선</text>`;
-  s += ln(G.Li, G.Lo, tc(o.c_fl), 3, '아래 팔 ' + tl(o.c_fl), false) + ln(G.Ui, G.Uo, '#5f6973', 3, '', true) + ln(G.Pa, G.Pr, tc(o.c_fp), 3, '푸시로드 ' + tl(o.c_fp), true) + ln(G.Lo, G.Uo, '#26303c', 2, '', false);
-  [G.Li, G.Lo, G.Ui, G.Uo, G.Pa, G.Pr].forEach(P => { s += `<circle cx="${X(P[0]).toFixed(1)}" cy="${Y(P[1]).toFixed(1)}" r="3.5" fill="#fff" stroke="#26303c" stroke-width="1.5"/>`; });
-  const c = [X(G.C[0]), oy], kz = 0.03, kx = 0.03;
-  s += `<line x1="${c[0]}" y1="${oy}" x2="${c[0]}" y2="${(oy - o.c_fz_f * kz).toFixed(1)}" stroke="#2e7d32" stroke-width="2.5"/><line x1="${c[0]}" y1="${oy}" x2="${(c[0] - o.c_fy_f * kx).toFixed(1)}" y2="${oy}" stroke="#2e7d32" stroke-width="2.5"/>
-    <text x="${c[0] + 6}" y="${(oy - o.c_fz_f * kz).toFixed(1)}" class="t5-tx" style="font-size:13px">F<tspan baseline-shift="sub">z</tspan> ${f(o.c_fz_f, 0)} N</text><text x="${(c[0] - o.c_fy_f * kx).toFixed(1)}" y="${oy + 16}" class="t5-tx" style="font-size:13px" text-anchor="middle">F<tspan baseline-shift="sub">y</tspan> ${f(o.c_fy_f, 0)} N</text></svg>`;
-  return `<div class="t5-figs"><figure class="t5-fig" style="max-width:760px"><figcaption>앞 바깥 바퀴 · 최대 선회 (a<sub>y</sub> = ${f(I.mu, 2)} g)</figcaption>${s}</figure></div>
-    <p class="muted t5-note">파랑 = 인장, 주황 = 압축, 회색 = 위 팔 (푸시로드가 붙어 세 힘 부재), 초록 = 접지력. 정면 성분만 (A 암 두 다리 합), 오른쪽 절반, 같은 축척.</p>`; }
+const T8N = {lf:'아래 팔 앞 다리', lr:'아래 팔 뒤 다리', uf:'위 팔 앞 다리', ur:'위 팔 뒤 다리', ti:'타이로드', pu:'푸시로드', lo:'아래 볼조인트 힘', uo:'위 볼조인트 힘'};
+const T8C = {s:'정지', c:'최대 선회', b:'최대 제동', a:'가속', x:'조합'};
+function t8Fig(I, R){ if(!R || !R.tab) return ''; const T = R.tab, f = v => isFinite(v) ? wbFmt(Math.abs(v) < 0.5 ? 0 : v, 0) : '—';
+  const one = (s, nm, up) => { const two = up ? ['lf', 'lr'] : ['uf', 'ur'], jt = up ? ['uf', 'ur'] : ['lf', 'lr'];
+    const lab = q => (s === 'r' && q === 'ti') ? '토 링크' : (jt.includes(q) ? T8N[q].replace('다리', '안쪽 점 힘') : T8N[q]);
+    const rows = ['lf', 'lr', 'uf', 'ur', 'ti', 'pu', 'lo', 'uo'].map(q => { const sgn = two.includes(q) || q === 'ti' || q === 'pu', vals = T.cases.map(k => T.tab[k][s === 'f' ? 'F' : 'R'][q]);
+      const mx = Math.max(...vals.map(Math.abs));
+      return `<tr><th>${lab(q)}${sgn ? '' : ' <span class="muted">(크기)</span>'}</th>${vals.map(v => `<td class="${sgn ? (v >= 0 ? 't8-t' : 't8-c') : ''}${Math.abs(v) === mx ? ' t8-mx' : ''}">${f(v)}</td>`).join('')}</tr>`; }).join('');
+    return `<section class="t8-sec"><h4>${nm} <span class="muted">(푸시로드 = ${up ? '위' : '아래'} 팔)</span></h4><div class="t4-tw"><table class="dvi-t t8-tab"><thead><tr><th>부재 [N]</th>${T.cases.map(k => `<th>${T8C[k]}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></section>`; };
+  return `<style>.t8-tab td{text-align:right;font-variant-numeric:tabular-nums}.t8-t{color:#1d5f9a}.t8-c{color:#c2410c}.t8-mx{font-weight:700;text-decoration:underline}.t8-sec h4{margin:4px 0 6px;font-size:13px}</style>
+    ${one('f', '앞 바깥 바퀴', T.upF)}${one('r', '뒤 바깥 바퀴', T.upR)}
+    <p class="muted t5-note">파랑 = 인장 (+), 주황 = 압축 (−), 굵은 밑줄 = 그 부재의 경우 중 최대. 푸시로드가 붙은 팔은 굽힘을 받아 안쪽 두 점 힘을 크기로 보입니다 (회전축 방향 몫은 반씩 나눈 가정).</p>`; }
 const M8TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
-  ['#wb .wb-in', '입력', '차(질량 · 무게중심 · 윤거 · 하중 이동 배분 · 타이어 μ · 다운포스 · 수직 배율)와 앞 서스 정면 점(아래 · 위 팔 안쪽 · 바깥, 푸시로드 두 끝)입니다. 정면 점은 도구 5 와 같은 좌표(y 바깥 +, z 지면에서 위 +)입니다.'],
-  ['#wb #wbmain', '정면 부재력', '최대 선회일 때 앞 바깥 바퀴의 팔 · 푸시로드 힘을 그립니다.'],
-  ['#wb #wbout', '결과', '하중 경우마다 앞 · 뒤 바깥 바퀴 접지력(F_z · F_y · F_x)과 앞 바깥 바퀴 부재력(아래 팔 · 푸시로드 축력, 위 볼조인트 · 위 팔 안쪽 반력)입니다. 축력 + = 인장, − = 압축.'],
+  ['#wb .wb-in', '입력', '차(질량 · 무게중심 · 윤거 · 하중 이동 배분 · 타이어 μ · 다운포스 · 수직 배율)와 앞 · 뒤 하드포인트(도구 5 와 같은 좌표, 푸시로드 두 끝 포함)입니다.'],
+  ['#wb #wbmain', '부재력 표', '하중 경우마다 앞 · 뒤 바깥 바퀴의 부재력입니다. 부재마다 가장 큰 경우가 굵게 표시됩니다.'],
+  ['#wb #wbout', '결과', '하중 경우마다 앞 · 뒤 바깥 바퀴 접지력(F_z · F_y · F_x)과 부재마다 설계 하중(경우 중 절댓값 최대, 부호 그대로)입니다.'],
 ];
-const T8G = {car:'차 (1번 · 7번 도구)', f:'앞 정면 점 (y 바깥 +, z 위 +)'};
-const t8P = [['l_yi', '아래 팔 안쪽 y', 212.7], ['l_zi', '아래 팔 안쪽 z', 131.3], ['l_yo', '아래 팔 바깥 y (볼조인트)', 561.6], ['l_zo', '아래 팔 바깥 z', 151.2],
-             ['u_yi', '위 팔 안쪽 y', 246.7], ['u_zi', '위 팔 안쪽 z', 288.0], ['u_yo', '위 팔 바깥 y (볼조인트)', 516.6], ['u_zo', '위 팔 바깥 z', 346.0],
-             ['p_ya', '푸시로드 위 팔 쪽 y', 462.2], ['p_za', '푸시로드 위 팔 쪽 z', 361.4], ['p_yr', '푸시로드 로커 쪽 y', 314.0], ['p_zr', '푸시로드 로커 쪽 z', 566.2]]
-  .map(([k, n, v]) => ({k, n, u:'mm', v, d:1, g:T8G.f}));
-const t8Case = [['s', '정지'], ['c', '최대 선회 (a_y = μ g)'], ['b', '최대 제동 (a_x = μ g)'], ['x', '조합 (마찰원 45°)']];
+const T8G = {car:'차 (1번 · 7번 도구)'};
+const t8Pt = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to', 'pa', 'pr'];
+document.addEventListener('click', e => { if(WB.id!=='8' || !e.target.closest) return;
+  const a = e.target.closest('[data-t8pa]'); if(a){ const [s, v] = a.dataset.t8pa.split(':'); WB.I['pa_arm_' + s] = +v; wbSave(); wbPaint(['in']); wbCalcSoon(); } });
+const t8Case = [['s', '정지'], ['c', '최대 선회 (a_y = μ g)'], ['b', '최대 제동 (a_x = μ g)'], ['a', '가속 (뒤 구동 접지 한계)'], ['x', '조합 (제동 + 선회, 마찰원 45°)']];
 WB_TOOLS['8'] = {
-  no:'8', stage:'P4-1', name:'하중 산출 (간이판)',
-  noSig:true, mainTitle:'정면 부재력', mainMeta:'앞 바깥 바퀴 · 최대 선회',
+  no:'8', stage:'P4-1', name:'하중 산출 (3D)',
+  noSig:true, mainTitle:'부재력 표', mainMeta:'바깥 바퀴 · 경우별',
+  inOpt(k){ const pm = /^([fr])_pa_x$/.exec(k); if(!pm) return ''; const s = pm[1], cur = s + ':' + (WB.I['pa_arm_' + s] === 1 ? 1 : 0);
+    return `<span class="t2-inopt"><span class="dc-seg" role="group">${[[s + ':0', '아래 팔'], [s + ':1', '위 팔']].map(([v, t]) => `<button type="button" data-t8pa="${v}" aria-pressed="${cur===v}">${t}</button>`).join('')}</span></span>`; },
   inputs:[
     {k:'m', dk:'m', v:300, d:0, g:T8G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T8G.car}, {k:'h', dk:'h', v:290, d:0, g:T8G.car}, {k:'L', dk:'L', v:1550, d:0, g:T8G.car},
-    {k:'tf', dk:'tf', v:1200, d:0, g:T8G.car}, {k:'tr', dk:'tr', v:1180, d:0, g:T8G.car}, {k:'lltd', dk:'lltd', v:48.7, d:1, g:T8G.car}, {k:'mu', dk:'mu', v:1.5, d:2, g:T8G.car},
+    {k:'tf', dk:'tf', v:1200, d:0, g:T8G.car}, {k:'tr', dk:'tr', v:1180, d:0, g:T8G.car}, {k:'lltd', dk:'lltd', v:49.5, d:1, g:T8G.car}, {k:'mu', dk:'mu', v:1.5, d:2, g:T8G.car},
     {k:'cla', dk:'cla', v:3, d:2, g:T8G.car}, {k:'xcop', dk:'xcop', v:775, d:0, g:T8G.car}, {k:'v_c', n:'하중 경우 차속 (다운포스)', u:'km/h', v:0, d:0, g:T8G.car},
     {k:'nz', n:'수직 하중 배율 (범프 · 노면 충격, 1 = 정적)', u:'', v:1, d:2, g:T8G.car},
-    ...t8P,
+    {k:'r_load', dk:'r_load', v:236, d:0, g:T8G.car}, {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T8G.car}, {k:'camber_r', dk:'camber_r', v:-2, d:2, g:T8G.car},
+    {k:'pa_arm_f', n:'앞 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:1, d:0, g:T8G.car, ui:'none'}, {k:'pa_arm_r', n:'뒤 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:0, d:0, g:T8G.car, ui:'none'},
+    ...k3dIn('f', t8Pt), ...k3dIn('r', t8Pt),
   ],
   outputs:[
     ...t8Case.flatMap(([k, nm]) => [
-      {k:k + '_fz_f', n:'앞 바깥 F_z', u:'N', d:0, g:nm}, {k:k + '_fy_f', n:'앞 바깥 F_y', u:'N', d:0, g:nm}, {k:k + '_fx_f', n:'앞 바깥 F_x (제동)', u:'N', d:0, g:nm},
-      {k:k + '_fz_r', n:'뒤 바깥 F_z', u:'N', d:0, g:nm}, {k:k + '_fy_r', n:'뒤 바깥 F_y', u:'N', d:0, g:nm}, {k:k + '_fx_r', n:'뒤 바깥 F_x (제동)', u:'N', d:0, g:nm},
-      {k:k + '_fl', n:'아래 팔 축력 (+ 인장)', u:'N', d:0, g:nm}, {k:k + '_fp', n:'푸시로드 축력 (+ 인장)', u:'N', d:0, g:nm},
-      {k:k + '_u', n:'위 볼조인트 힘', u:'N', d:0, g:nm}, {k:k + '_r', n:'위 팔 안쪽 반력', u:'N', d:0, g:nm}]),
-    {k:'c_fz_fi', n:'최대 선회 안쪽 앞 F_z (0 아래 = 들림)', u:'N', d:0, g:t8Case[1][1]}, {k:'lift', n:'안쪽 앞바퀴 들림 (1 = 예)', u:'', d:0, g:t8Case[1][1], hide:true},
+      {k:k + '_fz_f', n:'앞 바깥 F_z', u:'N', d:0, g:nm}, {k:k + '_fy_f', n:'앞 바깥 F_y (안쪽으로)', u:'N', d:0, g:nm}, {k:k + '_fx_f', n:'앞 바깥 F_x (앞 +)', u:'N', d:0, g:nm},
+      {k:k + '_fz_r', n:'뒤 바깥 F_z', u:'N', d:0, g:nm}, {k:k + '_fy_r', n:'뒤 바깥 F_y (안쪽으로)', u:'N', d:0, g:nm}, {k:k + '_fx_r', n:'뒤 바깥 F_x (앞 +)', u:'N', d:0, g:nm}]),
+    {k:'c_fz_fi', n:'최대 선회 안쪽 앞 F_z (0 아래 = 들림)', u:'N', d:0, g:t8Case[1][1]}, {k:'c_fz_ri', n:'최대 선회 안쪽 뒤 F_z', u:'N', d:0, g:t8Case[1][1]},
+    {k:'a_acc', n:'가속 경우 종가속도', u:'g', d:3, g:t8Case[3][1]},
+    ...['f', 'r'].flatMap(s => ['lf', 'lr', 'uf', 'ur', 'ti', 'pu', 'lo', 'uo'].map(q => ({k:`e_${s}_${q}`, n:(s === 'r' && q === 'ti' ? '토 링크' : T8N[q]) + (q === 'lo' || q === 'uo' ? '' : ' (+ 인장)'), u:'N', d:0, g:(s === 'f' ? '앞' : '뒤') + ' 설계 하중 (경우 중 최대)'}))),
+    ...t8Case.flatMap(([k]) => ['f', 'r'].flatMap(s => ['lf', 'lr', 'uf', 'ur', 'ti', 'pu', 'lo', 'uo'].map(q => ({k:`${k}_${s}_${q}`, n:`${T8C[k]} · ${s === 'f' ? '앞' : '뒤'} · ${T8N[q]}`, u:'N', d:0, g:'경우별 부재력', hide:true})))),
+    {k:'lift', n:'안쪽 앞바퀴 들림 (1 = 예)', u:'', d:0, g:t8Case[1][1], hide:true},
   ],
   figure: t8Fig, tour: M8TOUR,
-  verifyBase:{v_c:0, nz:1},
+  verifyBase:{v_c:0, nz:1, camber_f:0, camber_r:0, r_load:236},
   verify: [
-    {n:'부재력 손계산 · 수평 팔 · 수직 푸시로드 (아래 200 ~ 500 · z 100, 위 250 ~ 450 · z 300, 푸시로드 y 350 위로, 접지 y 550, F_z = 1000 N)', I:{m:407.7472, fr:50, h:0, tf:1100, l_yi:200, l_zi:100, l_yo:500, l_zo:100, u_yi:250, u_zi:300, u_yo:450, u_zo:300, p_ya:350, p_za:300, p_yr:350, p_zr:500}, expect:{s_fz_f:1000, s_fl:500, s_fp:-2000, s_u:1118.033989, s_r:1118.033989},
-     src:'업라이트: 위 볼조인트 둘레 모멘트 50 × 0 − (−200)(−F_L) + 100 × 1000 = 0 → F_L = 500 N 인장, U = (500, −1000). 위 팔: 안쪽 둘레 200 × 1000 + 100 F_P = 0 → F_P = −2000 N (압축), R = U − F_P e_P = (500, 1000) → |R| = 1118 N'},
-    {n:'바퀴 하중 · 최대 선회 (μ = 1.5, LLTD 48.7 %)', I:{}, expect:{c_fz_f:1218.512, c_fy_f:1827.769, c_fz_r:1329.101, s_fz_f:698.962},
-     src:'앞 바깥 = 300 × 9.81 × 0.475 ÷ 2 + 300 × 14.715 × 0.29 × 0.487 ÷ 1.2 = 698.96 + 519.55, 횡력 = 300 × 14.715 × 0.475 × 1218.51 ÷ 1397.93, 뒤 바깥 = 772.54 + 300 × 14.715 × 0.29 × 0.513 ÷ 1.18'},
-    {n:'바퀴 하중 · 최대 제동 (종 하중 이동 m a h ÷ L, 제동력은 F_z 비례)', I:{}, expect:{b_fz_f:1111.932, b_fx_f:1667.898, b_fz_r:359.568},
-     src:'앞축 = 1397.93 + 300 × 14.715 × 0.29 ÷ 1.55 = 2223.86 → 바퀴 1111.93, F_x = 300 × 14.715 × 1111.93 ÷ 2943'},
-    {n:'기본 정면 점 (2024 STEP) · 최대 선회 부재력', I:{}, expect:{c_fl:-2693.701, c_fp:-1471.895, c_u:1620.001, c_r:1733.761},
-     src:'같은 식을 기본 점에 (접지력 F_y 1827.77 N 안쪽, F_z 1218.51 N): 아래 팔 2694 N 압축, 푸시로드 1472 N 압축'},
-    {n:'수직 하중 배율 2 · 정지 → 접지력 · 부재력 2 배', I:{nz:2}, expect:{s_fz_f:1397.924, s_fp:-1849.452},
-     src:'정지 앞 바퀴 698.962 × 2, 푸시로드 −924.726 × 2 (선형)'}
+    {n:'정지 손계산 · 수평 팔 (앞뒤 다리 ±175) · 수직 푸시로드 (위 팔 y 350), 접지 y 550, F_z = 1000 N', I:{m:407.7472, fr:50, h:0, tf:1100, pa_arm_f:1,
+       f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:500, f_lo_z:100, f_uf_x:175, f_uf_y:250, f_uf_z:300, f_ur_x:-175, f_ur_y:250, f_ur_z:300, f_uo_x:0, f_uo_y:450, f_uo_z:300,
+       f_ti_x:-70, f_ti_y:200, f_ti_z:200, f_to_x:-70, f_to_y:480, f_to_z:200, f_pa_x:0, f_pa_y:350, f_pa_z:300, f_pr_x:0, f_pr_y:350, f_pr_z:500},
+     expect:{s_fz_f:1000, s_f_lf:289.425916, s_f_lr:289.425916, s_f_pu:-2000, s_f_uo:1118.033989, s_f_uf:559.016994, s_f_ur:559.016994, s_f_ti:0},
+     src:'정면: 위 볼조인트 둘레 모멘트 → 아래 팔 합 500 N 인장 → 다리마다 250 × 347.31 ÷ 300 = 289.43 N. 위 팔 안쪽 둘레 → 푸시로드 −2000 N, 위 볼조인트 |(500, −1000)| = 1118 N, 안쪽 반력 |(500, 1000)| 을 앞뒤 반씩 559 N. F_z 와 킹핀축이 한 평면 → 타이로드 0'},
+    {n:'제동 → 타이로드 축력 (킹핀 수직 y 500, 스크럽 50, 너클암 70 mm 뒤, F_x = −1000 N)', I:{m:407.7472, fr:50, h:0, tf:1100, mu:1, pa_arm_f:1,
+       f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:500, f_lo_z:100, f_uf_x:175, f_uf_y:250, f_uf_z:300, f_ur_x:-175, f_ur_y:250, f_ur_z:300, f_uo_x:0, f_uo_y:500, f_uo_z:300,
+       f_ti_x:-70, f_ti_y:200, f_ti_z:200, f_to_x:-70, f_to_y:500, f_to_z:200, f_pa_x:0, f_pa_y:350, f_pa_z:300, f_pr_x:0, f_pr_y:350, f_pr_z:500},
+     expect:{b_fz_f:1000, b_fx_f:-1000, b_f_ti:-714.285714},
+     src:'킹핀축 (z 축, y = 500) 둘레 모멘트: 제동력 −1000 N × 팔 50 mm + 타이로드 t × 70 mm = 0 → t = −714.29 N (압축). 볼조인트 힘은 킹핀축 위라 모멘트 없음'},
+    {n:'가속 (안쪽 구동 → 바퀴 중심 236 에 F_x = +1000 N) · 뒤 토 링크 · 위 팔 다리 (푸시로드 = 아래 팔)', I:{m:407.7472, fr:50, h:0, tr:1100, mu:1, pa_arm_r:0, r_load:236,
+       r_lf_x:175, r_lf_y:200, r_lf_z:100, r_lr_x:-175, r_lr_y:200, r_lr_z:100, r_lo_x:0, r_lo_y:500, r_lo_z:100, r_uf_x:175, r_uf_y:300, r_uf_z:300, r_ur_x:-175, r_ur_y:300, r_ur_z:300, r_uo_x:0, r_uo_y:500, r_uo_z:300,
+       r_ti_x:-70, r_ti_y:200, r_ti_z:200, r_to_x:-70, r_to_y:500, r_to_z:200, r_pa_x:0, r_pa_y:350, r_pa_z:100, r_pr_x:0, r_pr_y:350, r_pr_z:300},
+     expect:{a_fz_r:1000, a_fx_r:1000, a_r_ti:714.285714, a_r_uf:-919.697437, a_r_ur:112.945299},
+     src:'a_x = μ W_r ÷ m = 0.5 g → 바퀴마다 1000 N. 킹핀 둘레: −50 × 1000 + 70 t = 0 → t = 714.29 N. 아래 볼조인트 지나는 y 축 둘레: 136 × 1000 + 200 F_ux = 0 → F_ux = −680, x 축 둘레: 50 × 1000 + 100 t − 200 F_uy = 0 → F_uy = 607.14. 다리 (±175, −200): u1 − u2 = −680 × 265.75 ÷ 175, u1 + u2 = −607.14 × 265.75 ÷ 200'},
+    {n:'수직 하중 배율 2 · 정지 → 접지력 · 부재력 2 배 (선형)', I:{nz:2}, expect:{s_fz_f:1397.924},
+     src:'정지 앞 바퀴 698.962 × 2'}
   ],
   code: `// ================================================================
-// 도구 8 하중 산출 — 계산 코드 (간이판: 정상 상태 하중 경우 4 개, 바퀴 접지력 · 앞 바깥 바퀴 정면 2D 부재력)
+// 3D 서스 기구학 엔진 (도구 5 · 6 · 7 · 8 공통) — 더블 위시본, 왼쪽 바퀴 (오른쪽 = 거울)
 // ================================================================
-// 입력 I : m [kg], fr [%], h [mm], L [mm], tf · tr [mm], lltd [%] 앞 횡하중 이동 배분 (도구 7), mu [-] 타이어 μ (하중 경우의 가속도 크기),
-//          cla [m²] · xcop [mm] · v_c [km/h] 다운포스 (시험 차속), nz [-] 수직 하중 배율 (범프 · 노면 충격, 1 = 정적)
-//          앞 정면 점 [mm] (y = 차 중심선에서 바깥 +, z = 지면에서 위 +): 아래 팔 안쪽 · 바깥, 위 팔 안쪽 · 바깥 (바깥 = 볼조인트),
-//          푸시로드 위 팔 쪽 끝 (p_ya, p_za) · 로커 쪽 끝 (p_yr, p_zr), 접지점 = (tf ÷ 2, 0)
-// 하중 경우 (Milliken 18 장 · 정상 상태): 정지 (0, 0) · 최대 선회 (a_y = μ g) · 최대 제동 (a_x = μ g) · 조합 (마찰원 45°: a_x = a_y = μ g ÷ √2)
-//   축 하중: F_zf = n_z W_f + D_f + m a_x h ÷ L,  F_zr = n_z W_r + D_r − m a_x h ÷ L   (a_x = 감속 +)
-//   바깥 바퀴: F_z = 축 하중 ÷ 2 + m a_y h × (앞: LLTD ÷ t_f, 뒤: (1 − LLTD) ÷ t_r)
-//   횡력: 축 = m a_y × (앞: 앞 무게 비, 뒤: 뒤 무게 비) (요 평형), 바퀴 = 축 횡력 × 바퀴 F_z ÷ 축 F_z.  종력 (제동): 바퀴 = m a_x × 바퀴 F_z ÷ ΣF_z
-// 부재력 (정면 2D, 앞 바깥 바퀴): 업라이트 = 아래 팔 (두 힘 부재, 축력 F_L) · 위 볼조인트 힘 U · 접지력 C 의 평형, 위 팔 = U · 푸시로드 축력 F_P · 안쪽 반력 R 의 평형
-//   위 볼조인트 둘레 모멘트로 F_L → U = −C − F_L e_L,  위 팔 안쪽 둘레 모멘트로 F_P → R = U − F_P e_P.  축력 + = 인장, − = 압축
-//   (A 암 두 다리 합 · 정면 성분만. 종력 · 측면 기하 · 바퀴 무게 · 동적 하중은 넣지 않음 — 3D 엔진 (도구 5) 과 함께 나중에)
-const g = 9.81, RHO = 1.225;
-const cr = (a, b) => a[0] * b[1] - a[1] * b[0], sub = (a, b) => [a[0] - b[0], a[1] - b[1]], unit = a => { const n = Math.hypot(a[0], a[1]); return [a[0] / n, a[1] / n]; };
-function members(P, C) {
-  const eL = unit(sub(P.Li, P.Lo)), eP = unit(sub(P.Pr, P.Pa));
-  const rL = sub(P.Lo, P.Uo), rC = sub(P.C, P.Uo), k = cr(rL, eL);
-  if (Math.abs(k) < 1e-9) throw new Error('아래 팔이 위 볼조인트를 지나 부재력을 정할 수 없습니다.');
-  const FL = -cr(rC, C) / k, U = [-C[0] - FL * eL[0], -C[1] - FL * eL[1]];
-  const mU = cr(sub(P.Uo, P.Ui), [-U[0], -U[1]]), kP = cr(sub(P.Pa, P.Ui), eP);
-  if (Math.abs(kP) < 1e-9) throw new Error('푸시로드가 위 팔 안쪽 점을 지나 부재력을 정할 수 없습니다.');
-  const FP = -mU / kP, R = [U[0] - FP * eP[0], U[1] - FP * eP[1]];
-  return { FL, FP, U: Math.hypot(U[0], U[1]), R: Math.hypot(R[0], R[1]) };
+// 좌표 [mm]: x = 앞 +, y = 차 중심선에서 바깥 (왼쪽) +, z = 지면에서 위 +. x = 0 은 그 축의 바퀴 중심.
+// 점 (축 s = f · r): 아래 팔 안쪽 앞 LF · 뒤 LR, 바깥 (볼조인트) LO, 위 팔 UF · UR · UO, 타이로드 (뒤는 토 링크) 안쪽 TI · 바깥 TO
+//   입력 이름 = s_점_x · s_점_y · s_점_z (예: f_lf_x). 바퀴: 윤거 t (정지 접지점 y = t/2, z = 0), 하중 반경 r (접지점 → 바퀴 중심),
+//   정적 캠버 (위가 안쪽이면 −) · 정적 토 (토인 +) [deg]
+// 풀이: 아래 팔 각 θL (LF–LR 축 둘레), 위 팔 각 θU (UF–UR 축 둘레), 업라이트 킹핀 둘레 각 ψ 를 미지수로
+//   ① |UO − LO| = 처음 길이 (업라이트 강체)  ② |TO − (TI + 랙 이동)| = 타이로드 길이  ③ 바퀴 중심 z = 처음 + 휠 트래블
+//   를 뉴턴법 (수치 야코비안) 으로 풂. 업라이트 위 점 P → LO + R (P₀ − LO₀),  R = (킹핀축 둘레 ψ) ∘ (킹핀축 방향을 맞추는 최소 회전)
+// 순간 운동: 트래블 ±0.01 mm 중앙 차분으로 바퀴 중심 속도 · 업라이트 각속도 ω = ½ Σ eᵢ × ėᵢ → 업라이트에 붙은 접지점 속도 v = v_WC + ω × (CP − WC),
+//   정면 순간중심 = CP − (0, v_z/ω_x, −v_y/ω_x),  롤센터 (대칭) = 접지점 → 순간중심 선이 y = 0 과 만나는 높이 = CP_z + CP_y v_y ÷ v_z
+//   측면: 앞 안티다이브 tanθ = v_x ÷ v_z (접지점 경로, 바깥 브레이크), 뒤 안티리프트 tanθ = −v_x ÷ v_z, 뒤 안티스쿼트 tanθ = −v_x,WC ÷ v_z,WC (안쪽 구동)
+const K3D = (() => {
+  const D = Math.PI / 180;
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = a => Math.sqrt(dot(a, a)), unit = a => mul(a, 1 / norm(a));
+  const rot = (v, k, th) => { const c = Math.cos(th), s = Math.sin(th); return add(add(mul(v, c), mul(cross(k, v), s)), mul(k, dot(k, v) * (1 - c))); };
+  const rotAbout = (P, O, k, th) => add(O, rot(sub(P, O), k, th));
+  const PTS = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
+  // 입력 → 축 하드포인트 · 바퀴. ex = 같은 꼴의 덧점 (예: 푸시로드 pa · pr · 로커 rp · dr · db), 없으면 무시
+  function axle(I, s, t, r, cam, toe, ex) {
+    const P = {}; for (const n of PTS.concat(ex || [])) { const k = s + '_' + n; P[n] = [+I[k + '_x'], +I[k + '_y'], +I[k + '_z']];
+      if (!P[n].every(isFinite)) throw new Error(k + ' 좌표가 비었습니다.'); }
+    if (!(t > 0) || !(r > 0)) throw new Error('윤거 · 하중 반경은 0 보다 커야 합니다.');
+    const c = (cam || 0) * D, q = (toe || 0) * D;
+    // 바퀴 회전축 a (바깥 +): 캠버 − (위가 안쪽) → a_z = +sin(−캠버), 토인 → a_x = +sin(토)
+    const a = unit([Math.sin(q) * Math.cos(c), Math.cos(q) * Math.cos(c), -Math.sin(c)]);
+    const CP = [0, t / 2, 0], dn = unit(add([0, 0, -1], mul(a, a[2])));      // 바퀴 면 안 아래 방향
+    const WC = sub(CP, mul(dn, r / -dn[2]));                                      // 바퀴 중심 높이 = r (캠버가 있으면 바퀴 면을 따라)
+    const rw = norm(sub(WC, CP));
+    return { P, a0: a, CP0: CP, WC0: WC, rw, t };
+  }
+  // 한 자세 풀이: sz = 바퀴 중심 위로 [mm] (차체 기준), rk = 랙 (타이로드 안쪽 점) y 이동 [mm]
+  function pose(A, sz, rk, q0) {
+    const P = A.P, kL = unit(sub(P.lr, P.lf)), kU = unit(sub(P.ur, P.uf)), d0 = norm(sub(P.uo, P.lo));
+    const TI = add(P.ti, [0, rk || 0, 0]), Lt = norm(sub(P.to, P.ti)), e0 = unit(sub(P.uo, P.lo));
+    const body = q => { const LO = rotAbout(P.lo, P.lf, kL, q[0]), UO = rotAbout(P.uo, P.uf, kU, q[1]), e = unit(sub(UO, LO));
+      // 최소 회전 e0 → e, 다음 킹핀축 둘레 ψ
+      const ax = cross(e0, e), sn = norm(ax), cs = dot(e0, e), R1 = v => sn < 1e-14 ? v : rot(v, mul(ax, 1 / sn), Math.atan2(sn, cs));
+      const T = p => add(LO, rot(R1(sub(p, P.lo)), e, q[2]));
+      return { LO, UO, T, e }; };
+    const res = q => { const B = body(q); return [norm(sub(B.UO, B.LO)) - d0, norm(sub(B.T(P.to), TI)) - Lt, B.T(A.WC0)[2] - A.WC0[2] - sz]; };
+    let q = q0 ? q0.slice() : [0, 0, 0];
+    for (let it = 0; it < 40; it++) {
+      const f = res(q); if (Math.abs(f[0]) + Math.abs(f[1]) + Math.abs(f[2]) < 1e-10) break;
+      const J = [[], [], []], h = 1e-7;
+      for (let j = 0; j < 3; j++) { const qp = q.slice(), qm = q.slice(); qp[j] += h; qm[j] -= h; const fp = res(qp), fm = res(qm); for (let i = 0; i < 3; i++) J[i][j] = (fp[i] - fm[i]) / (2 * h); }
+      const dq = solve3(J, f.map(x => -x)); if (!dq) throw new Error('기구 자세를 풀 수 없습니다 (점 배치 · 트래블 · 랙 이동을 확인하세요).');
+      q = add(q, dq);
+      if (it === 39) throw new Error('기구 자세가 수렴하지 않습니다 (트래블 · 랙 이동이 너무 큼).');
+    }
+    const B = body(q), a = unit(sub(B.T(add(A.WC0, A.a0)), B.T(A.WC0))), WC = B.T(A.WC0);
+    const dn = unit(add([0, 0, -1], mul(a, a[2]))), CP = add(WC, mul(dn, A.rw));
+    return { q, LO: B.LO, UO: B.UO, TO: B.T(P.to), TI, WC, CP, a, T: B.T, kp: B.e,
+      cam: -Math.asin(a[2]) / D, head: Math.atan2(-a[0], a[1]) / D };       // 캠버 (위가 안쪽 −) · 진행 방향 (왼쪽으로 +)
+  }
+  function solve3(A, b) {
+    const M = A.map((r, i) => r.concat([b[i]]));
+    for (let c = 0; c < 3; c++) { let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-14) return null; [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; } }
+    return [M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]];
+  }
+  // 업라이트 직교 3 축 (각속도 계산용)
+  const triad = X => { const e1 = unit(sub(X.UO, X.LO)), e2 = unit(cross(e1, sub(X.TO, X.LO))); return [e1, e2, cross(e1, e2)]; };
+  // 정지 자세 둘레 순간 운동 · 기하 값
+  function metrics(A, sz0, rk) {
+    const h = 0.01, X0 = pose(A, sz0 || 0, rk), Xp = pose(A, (sz0 || 0) + h, rk, X0.q), Xm = pose(A, (sz0 || 0) - h, rk, X0.q);
+    const vw = mul(sub(Xp.WC, Xm.WC), 1 / (2 * h));
+    const tp = triad(Xp), tm = triad(Xm), t0 = triad(X0);
+    let w = [0, 0, 0]; for (let i = 0; i < 3; i++) w = add(w, cross(t0[i], mul(sub(tp[i], tm[i]), 1 / (2 * h))));
+    w = mul(w, 0.5);                                                                     // [rad/mm]
+    const v = add(vw, cross(w, sub(X0.CP, X0.WC)));                                    // 업라이트에 붙은 접지점 (바퀴가 업라이트와 함께 도는 점) 속도
+    const CP = X0.CP, k = X0.kp;
+    const fin = (x, lim) => Math.abs(x) > lim ? NaN : x;
+    const icy = Math.abs(w[0]) > 1e-12 ? CP[1] - v[2] / w[0] : NaN, icz = Math.abs(w[0]) > 1e-12 ? CP[2] + v[1] / w[0] : NaN;
+    const icx = Math.abs(w[1]) > 1e-12 ? CP[0] + v[2] / w[1] : NaN, icz2 = Math.abs(w[1]) > 1e-12 ? CP[2] - v[0] / w[1] : NaN;
+    const rc = CP[2] + CP[1] * v[1] / v[2];
+    // 킹핀축 지면 교점 G
+    const tg = -X0.LO[2] / k[2], G = add(X0.LO, mul(k, tg));
+    return { X: X0, v, vw, w, icy: fin(icy, 1e6), icz: fin(icz, 1e6), icx: fin(icx, 1e6), icz_sv: fin(icz2, 1e6), rc,
+      fvsa: Math.abs(w[0]) > 1e-12 ? v[2] / w[0] : Infinity, svsa: Math.abs(w[1]) > 1e-12 ? -v[2] / w[1] : Infinity,
+      cgb: -w[0] / D,                                                                 // 범프 캠버 게인 [deg/mm] (차체 기준, = −ω_x)
+      bs: -(Xp.head - Xm.head) / (2 * h),                                             // 범프 스티어 [deg/mm] (토인 +)
+      kpi: Math.atan2(-k[1], k[2]) / D, caster: Math.atan2(-k[0], k[2]) / D, scrub: CP[1] - G[1], trail: G[0] - CP[0],
+      kpo: (() => { const s2 = (X0.WC[2] - X0.LO[2]) / k[2], Q = add(X0.LO, mul(k, s2)); return X0.WC[1] - Q[1]; })() };   // 바퀴 중심 높이 킹핀 옵셋 (정면)
+  }
+  const plain = X => { const o = {}; for (const k in X) if (typeof X[k] !== 'function') o[k] = X[k]; return o; };   // 작업자 → 화면으로 보낼 때 (함수 빼기)
+  return { plain, D, add, sub, mul, dot, cross, norm, unit, rot, rotAbout, axle, pose, metrics, solve3, PTS };
+})();
+
+// ================================================================
+// 도구 8 하중 산출 (3D) — 계산 코드. 엔진 K3D 는 위 (공통)
+// ================================================================
+// 입력 I : m [kg], fr [%], h · L · tf · tr [mm], lltd [%] 앞 횡하중 이동 배분 (도구 7), mu [-] 하중 경우 가속도 크기, cla [m²] · xcop [mm] · v_c [km/h] 다운포스,
+//          nz [-] 수직 하중 배율 (범프 · 노면 충격), r_load [mm] · camber_f · r [deg] (바퀴 중심 · 접지점 자리),
+//          축마다 하드포인트 8 점 + 푸시로드 팔 쪽 pa · 로커 쪽 pr (붙은 팔 pa_arm_f · r: 1 위 · 0 아래)
+// 하중 경우 (Milliken 18 장 · 정상 상태, 바깥 = 왼쪽 바퀴 · 오른쪽 선회): 정지 s · 최대 선회 c (a_y = μ g) · 최대 제동 b (a_x = μ g) · 가속 a (뒤 구동 접지 한계) · 조합 x (마찰원 45°, 제동 + 선회)
+//   축 하중 F_zf = n_z W_f + D_f + m a_x h ÷ L (감속 +), 바깥 바퀴 F_z = 축 ÷ 2 + m a_y h × (앞 LLTD ÷ t_f, 뒤 (1 − LLTD) ÷ t_r)
+//   횡력 축 = m a_y × 무게 비, 바퀴 = 축 × F_z 비.  제동력 = m a_x × F_z ÷ ΣF_z (바깥 브레이크 → 접지점).  가속 a_x = μ (n_z W_r + D_r) ÷ (m (1 − μ h ÷ L)) (≤ μ g), 뒤 바퀴마다 m a_x ÷ 2 (안쪽 구동 → 바퀴 중심에 걸림)
+// 부재력 (정지 자세 3D 정적 평형, 힘 + = 인장):
+//   업라이트 6 식 (힘 · 모멘트) ← 미지수 6: 푸시로드가 안 붙은 팔의 두 다리 축력 2 (두 힘 부재), 푸시로드가 붙은 팔의 볼조인트 힘 3, 타이로드 (토 링크) 축력 1
+//   푸시로드가 붙은 팔: 회전축 (안쪽 두 점) 둘레 모멘트 = 0 → 푸시로드 축력, 안쪽 두 점 힘 = 나머지 힘 · 모멘트 평형 (축 방향 몫은 반씩 나눔 — 부정정이라 가정)
+function solveN(A, b) {
+  const n = b.length, M = A.map((r, i) => r.concat([b[i]]));
+  for (let c = 0; c < n; c++) { let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    if (Math.abs(M[p][c]) < 1e-9) return null; [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < n + 1; k++) M[r][k] -= f * M[c][k]; } }
+  return M.map((r, i) => r[n] / r[i]);
 }
+function members(A, up, Fcp, Fwc) {
+  const { sub, add, mul, cross, dot, unit, norm } = K3D, P = A.P, CP = A.CP0, WC = A.WC0;
+  const tw = up ? ['lf', 'lr', 'lo'] : ['uf', 'ur', 'uo'], ar = up ? ['uf', 'ur', 'uo'] : ['lf', 'lr', 'lo'];
+  const e1 = unit(sub(P[tw[0]], P[tw[2]])), e2 = unit(sub(P[tw[1]], P[tw[2]])), B2 = P[tw[2]], BA = P[ar[2]], et = unit(sub(P.ti, P.to));
+  // 미지수 [l1, l2, Fx, Fy, Fz, t] 의 열: 힘 (3) · 원점 둘레 모멘트 (3)
+  const col = (r, f) => f.concat(cross(r, f)), cols = [col(B2, e1), col(B2, e2), col(BA, [1, 0, 0]), col(BA, [0, 1, 0]), col(BA, [0, 0, 1]), col(P.to, et)];
+  const ec = col(CP, Fcp), ew = col(WC, Fwc || [0, 0, 0]), ext = ec.map((v, i) => v + ew[i]), A6 = [0, 1, 2, 3, 4, 5].map(i => cols.map(c => c[i]));
+  const x = solveN(A6, ext.map(v => -v)); if (!x) throw new Error('부재력을 정할 수 없습니다 (팔 · 타이로드 방향이 겹침).');
+  const [l1, l2, , , , t] = x, FB = [x[2], x[3], x[4]];
+  // 푸시로드가 붙은 팔
+  const F0 = P[ar[0]], d = sub(P[ar[1]], F0), n = unit(d), ep = unit(sub(P.pr, P.pa));
+  const den = dot(n, cross(sub(P.pa, F0), ep)); if (Math.abs(den) < 1e-9) throw new Error('푸시로드가 팔 회전축을 지나 축력을 정할 수 없습니다.');
+  const p = dot(n, cross(sub(BA, F0), FB)) / den;
+  const S = sub(FB, mul(ep, p)), Mv = sub(cross(sub(BA, F0), FB), cross(sub(P.pa, F0), mul(ep, p)));
+  const dd = dot(d, d), f2 = add(mul(cross(Mv, d), 1 / dd), mul(d, dot(S, n) / (2 * norm(d)))), f1 = sub(S, f2);
+  const r = { ti: t, pu: p, [tw[0]]: l1, [tw[1]]: l2, [ar[0]]: norm(f1), [ar[1]]: norm(f2), [tw[2]]: norm(add(mul(e1, l1), mul(e2, l2))), [ar[2]]: norm(FB) };
+  return r;
+}
+const T8M = ['lf', 'lr', 'uf', 'ur', 'ti', 'pu', 'lo', 'uo'];
 function calc(I) {
-  const pos = (v, nm) => { if (!(v > 0)) throw new Error(nm + ' 는 0 보다 커야 합니다.'); return v; };
+  const g = 9.81, RHO = 1.225, pos = (v, nm) => { if (!(v > 0)) throw new Error(nm + ' 는 0 보다 커야 합니다.'); return v; };
   const m = pos(I.m, '질량'), L = pos(I.L, '휠베이스') / 1000, h = Math.max(0, I.h) / 1000, fs = I.fr / 100, tf = pos(I.tf, '앞 윤거') / 1000, tr = pos(I.tr, '뒤 윤거') / 1000;
   const ld = I.lltd / 100, mu = pos(I.mu, '타이어 μ'), nz = pos(I.nz, '수직 하중 배율');
   const v = Math.max(0, I.v_c || 0) / 3.6, D = 0.5 * RHO * Math.max(0, I.cla || 0) * v * v, fa = isFinite(I.xcop) ? I.xcop / I.L : fs;
-  const P = { Li: [I.l_yi, I.l_zi], Lo: [I.l_yo, I.l_zo], Ui: [I.u_yi, I.u_zi], Uo: [I.u_yo, I.u_zo], Pa: [I.p_ya, I.p_za], Pr: [I.p_yr, I.p_zr], C: [I.tf / 2, 0] };
-  const cases = [['s', 0, 0], ['c', mu, 0], ['b', 0, mu], ['x', mu / Math.SQRT2, mu / Math.SQRT2]];   // [키, a_y [g], a_x [g]]
-  const out = {};
-  for (const [k, ayg, axg] of cases) {
-    const ay = ayg * g, ax = axg * g;
-    const Fzf = nz * m * g * fs + D * fa + m * ax * h / L, Fzr = nz * m * g * (1 - fs) + D * (1 - fa) - m * ax * h / L;
+  const AF = K3D.axle(I, 'f', I.tf, I.r_load, I.camber_f, 0, ['pa', 'pr']), AR = K3D.axle(I, 'r', I.tr, I.r_load, I.camber_r, 0, ['pa', 'pr']);
+  const upF = I.pa_arm_f === 1, upR = I.pa_arm_r === 1;
+  const Wf = nz * m * g * fs + D * fa, Wr = nz * m * g * (1 - fs) + D * (1 - fa);
+  const aa = Math.min(mu * g, mu * h / L < 1 ? mu * Wr / (m * (1 - mu * h / L)) : Infinity);       // 가속 (뒤 접지 한계)
+  const cases = [['s', 0, 0, 0], ['c', mu, 0, 0], ['b', 0, mu, 0], ['a', 0, 0, aa / g], ['x', mu / Math.SQRT2, mu / Math.SQRT2, 0]];   // [키, a_y, a_x 제동, a_x 가속] [g]
+  const out = {}, tab = {};
+  for (const [k, ayg, axg, acg] of cases) {
+    const ay = ayg * g, ax = axg * g - acg * g;                                                      // ax: 감속 +
+    const Fzf = Wf + m * ax * h / L, Fzr = Wr - m * ax * h / L;
     const fo = Fzf / 2 + m * ay * h * ld / tf, ro = Fzr / 2 + m * ay * h * (1 - ld) / tr;
-    const Fyf = m * ay * fs, Fyr = m * ay * (1 - fs), yo = Fyf * fo / Fzf, yr = Fyr * ro / Fzr;
-    const xo = m * ax * fo / (Fzf + Fzr), xr = m * ax * ro / (Fzf + Fzr);
-    const M = members(P, [-yo, fo]);                                                    // 바깥 바퀴 횡력 = 안쪽 (−y) 방향
-    Object.assign(out, { [k + '_fz_f']: fo, [k + '_fy_f']: yo, [k + '_fx_f']: xo, [k + '_fz_r']: ro, [k + '_fy_r']: yr, [k + '_fx_r']: xr,
-                         [k + '_fl']: M.FL, [k + '_fp']: M.FP, [k + '_u']: M.U, [k + '_r']: M.R });
-    if (k === 'c') out.c_fz_fi = Fzf - fo;                                              // 선회 안쪽 앞 바퀴 (0 아래면 들림)
+    const yo = m * ay * fs * fo / Fzf, yr = m * ay * (1 - fs) * ro / Fzr;
+    const xo = axg > 0 ? m * axg * g * fo / (Fzf + Fzr) : 0, xr = axg > 0 ? m * axg * g * ro / (Fzf + Fzr) : 0, dr = acg > 0 ? m * acg * g / 2 : 0;
+    const MF = members(AF, upF, [-xo, -yo, fo]), MR = members(AR, upR, [-xr, -yr, ro], [dr, 0, 0]);
+    Object.assign(out, { [k + '_fz_f']: fo, [k + '_fy_f']: yo, [k + '_fx_f']: -xo, [k + '_fz_r']: ro, [k + '_fy_r']: yr, [k + '_fx_r']: dr - xr });
+    for (const q of T8M) { out[k + '_f_' + q] = MF[q]; out[k + '_r_' + q] = MR[q]; }
+    if (k === 'c') { out.c_fz_fi = Fzf - fo; out.c_fz_ri = Fzr - ro; }
+    tab[k] = { F: MF, R: MR };
   }
-  out.lift = out.c_fz_fi < 0 ? 1 : 0;
-  return { out, geo: P };
+  // 경우 중 절댓값 최대 (부호 그대로)
+  for (const s of ['f', 'r']) for (const q of T8M) { let best = 0; for (const [k] of cases) { const v = out[k + '_' + s + '_' + q]; if (Math.abs(v) > Math.abs(best)) best = v; } out['e_' + s + '_' + q] = best; }
+  for (const k in out) out[k] += 0;                                                                   // −0 → 0
+  for (const k in tab) for (const s of ['F', 'R']) for (const q in tab[k][s]) tab[k][s][q] += 0;
+  out.lift = out.c_fz_fi < 0 ? 1 : 0; out.a_acc = aa / g;
+  return { out, tab: { cases: cases.map(c => c[0]), upF, upR, tab } };
 }
 `
 };
