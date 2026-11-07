@@ -13822,7 +13822,7 @@ function t4ExtHTML(){ const w = $('#wb'); if(w) w.classList.remove('t2-edit');
 function t4Why(){ const R = WB.R; if(!R) return ''; const au = WB.I.auto;
   return au===1 ? `세그먼트 ${R.out.s_seg_o}S 기준 → 병렬 최대 ${R.out.n_p_o}P · ${R.why} 제한` : au===2 ? `병렬 ${R.out.n_p_o}P 기준 → 세그먼트 직렬 최대 ${R.out.s_seg_o}S · ${R.why} 제한` : '직렬과 병렬을 직접 넣습니다.'; }
 function t4Rules(){ const o = WB.R && WB.R.out; if(!o) return '';
-  return [['세그먼트 최대 전압', o.v_seg_max, 120, 'V'], ['세그먼트 규정 에너지', o.ej_seg, 6, 'MJ'], ['세그먼트 질량', o.m_seg, 12, 'kg'], ['팩 최대 전압', o.v_pack_max, 600, 'V'], ...(o.v_inv_o > 0 ? [['팩 최대 전압 (인버터 한계)', o.v_pack_max, o.v_inv_o, 'V']] : [])].map(([nm, v, mx, u]) => { const ok = v <= mx + 1e-9;
+  return [['세그먼트 최대 전압', o.v_seg_max, 120, 'V'], ['세그먼트 규정 에너지', o.ej_seg, 6, 'MJ'], ['세그먼트 질량', o.m_seg, 12, 'kg'], ['팩 최대 전압', o.v_pack_max, 600, 'V'], ...(o.v_inv_o > 0 ? [['팩 최대 전압 · 부품 정격 이상 (인버터)', o.v_pack_max, o.v_inv_o, 'V']] : [])].map(([nm, v, mx, u]) => { const ok = v <= mx + 1e-9;
     return `<div class="t4-rule${ok ? '' : ' bad'}"><small>${nm} / ${mx} ${u}</small><b>${t4F(v, 3)} ${u}</b><span class="t4-bg"><i style="width:${Math.min(100, v/mx*100).toFixed(1)}%"></i></span>
       <span class="${ok ? 'ok' : 'wb-err'}">${ok ? '충족 · 여유' : '초과'} ${t4F(Math.abs(mx - v), 3)} ${u} · ${t4F(v/mx*100, 1)} %</span></div>`; }).join(''); }
 /* 결과 아래: 전압 단계별 출력 표 */
@@ -13872,7 +13872,7 @@ WB_TOOLS['4'] = {
     {k:'c_ah', dk:'c_ah', v:4.5, d:2, g:T4G.cell}, {k:'c_imax', dk:'c_imax', v:45, d:1, g:T4G.cell}, {k:'c_r', dk:'c_r', v:15, d:2, g:T4G.cell}, {k:'c_g', dk:'c_g', v:70, d:1, g:T4G.cell},
     {k:'n_seg', dk:'n_seg', v:6, d:0, g:T4G.cfg}, {k:'s_seg', n:'세그먼트 직렬 수 (S)', u:'개', v:12, d:0, g:T4G.cfg}, {k:'n_p', dk:'n_p', n:'병렬 수 (P)', v:6, d:0, g:T4G.cfg},
     {k:'x_mseg', n:'세그먼트당 추가 무게 (버스바 · 케이스 등)', u:'kg', v:0, d:2, g:T4G.add}, {k:'x_mpack', n:'팩 전체 추가 무게 (박스 · 배선 등)', u:'kg', v:0, d:2, g:T4G.add},
-    {k:'v_inv', n:'인버터 최대 직류 전압 (0 = 확인 안 함)', u:'V', v:420, d:0, g:T4G.add},
+    {k:'v_inv', n:'인버터 최대 직류 전압 (구동계 부품 정격은 축전지 최대 전압 이상, 0 = 확인 안 함)', u:'V', v:420, d:0, g:T4G.add},
     {k:'x_r', n:'팩 전체 추가 저항 (버스바 · 퓨즈 · 커넥터)', u:'mΩ', v:0, d:2, g:T4G.add}, {k:'i_lim', n:'팩 사용 전류 제한 (0 = 셀 사양 최대)', u:'A', v:0, d:0, g:T4G.add},
     {k:'auto', n:'구성 방식 (0 수동 · 1 병렬 자동 · 2 직렬 자동)', u:'', v:0, d:0, g:T4G.cfg, ui:'none'},
     {k:'o_mode', n:'출력 표 전류 (0 제한 적용 · 1 셀 최대 · 2 직접)', u:'', v:0, d:0, g:T4G.add, ui:'none'}, {k:'o_i', n:'출력 표 전류 (직접)', u:'A', v:0, d:0, g:T4G.add, ui:'none'},
@@ -13891,7 +13891,7 @@ WB_TOOLS['4'] = {
     {k:'r_cell', n:'셀 구성으로 본 팩 저항', u:'mΩ', d:2, g:'전기'}, {k:'r_pack', dk:'r_pack', n:'팩 내부저항 (추가 저항 포함)', d:2, g:'전기'},
     {k:'i_cellmax', n:'셀 사양 팩 최대 전류', u:'A', d:1, g:'전기'}, {k:'i_bms_max', dk:'i_bms_max', n:'적용 전류 (방전 전류 한계)', d:1, g:'전기'}, {k:'i_cell', n:'셀당 적용 전류', u:'A', d:2, g:'전기'},
     {k:'i_short', n:'만충 이론 단락 전류', u:'A', d:0, g:'전기'},
-    {k:'rule_vp', n:'규정 팩 600 V (1 = 충족)', u:'', d:0, g:'팩', hide:true}, {k:'rule_inv', n:'팩 최대 전압 ≤ 인버터 최대 전압 (1 = 충족)', u:'', d:0, g:'팩', hide:true}, {k:'v_inv_o', n:'인버터 최대 직류 전압', u:'V', d:0, g:'팩', hide:true},
+    {k:'rule_vp', n:'규정 팩 600 V (1 = 충족)', u:'', d:0, g:'팩', hide:true}, {k:'rule_inv', n:'규정 부품 정격 · 팩 최대 전압 ≤ 인버터 최대 전압 (1 = 충족)', u:'', d:0, g:'팩', hide:true}, {k:'v_inv_o', n:'인버터 최대 직류 전압', u:'V', d:0, g:'팩', hide:true},
     {k:'rule_v', n:'규정 세그먼트 120 V (1 = 충족)', u:'', d:0, g:'세그먼트', hide:true}, {k:'rule_e', n:'규정 세그먼트 6 MJ (1 = 충족)', u:'', d:0, g:'세그먼트', hide:true}, {k:'rule_m', n:'규정 세그먼트 12 kg (1 = 충족)', u:'', d:0, g:'세그먼트', hide:true},
     {k:'o_i', n:'출력 표 전류', u:'A', d:1, g:'전기', hide:true}, {k:'t_load_max', n:'부하 전압 (셀 최대 전압)', u:'V', d:2, g:'전기', hide:true}, {k:'t_p_max', n:'단자 출력 (셀 최대 전압)', u:'kW', d:3, g:'전기', hide:true},
     {k:'t_loss', n:'팩 저항 손실', u:'kW', d:3, g:'전기', hide:true}, {k:'t_p_nom', n:'단자 출력 (셀 공칭 전압)', u:'kW', d:3, g:'전기', hide:true},
