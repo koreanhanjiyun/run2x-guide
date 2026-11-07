@@ -257,7 +257,7 @@ function t2InOpt(k){ if(WB.id!=='2') return '';
 /* 모델 단계: 차량 · 열 두 축을 따로 고름 */
 const T2MDV = [[0, '0 기본', '무게중심 높이 전체로 좌우 하중 이동을 계산하고, 바퀴마다 μ(하중) 로 그립을 셉니다 (하중 감도가 0 이면 하중 이동이 그립 합을 바꾸지 않음). 롤은 계산하지 않습니다.', '차량 제원 (무게중심 높이 · 트레드) · 타이어 (μ · 하중 감도)'],
                [1, '1 롤센터 · 롤', '앞 · 뒤 롤센터 높이로 하중 이동을 기하 몫(롤센터에서 바로 전달)과 탄성 몫(스프링 · 안티롤바)으로 나누고, 롤 강성으로 롤각을 계산합니다.', '차량 제원 · 서스 · 조향 › 롤센터 · 롤 (앞 · 뒤 롤센터 높이, 롤 강성)'],
-               [2, '2 비선형 타이어', '모델 1 에 더해, 도구 T 의 타이어 곡선(Magic Formula 꼴)으로 축 횡 한계를 두 바퀴가 같은 슬립각일 때의 최댓값으로 셉니다. 좌우 하중이 달라 두 바퀴 최고점 슬립각이 어긋나면 Σ μ·F<sub>z</sub> 보다 작아 코너 한계 속도가 낮아집니다. 최대 조향각을 넣으면 필요한 안쪽 바퀴 조향각(기하 + 슬립각 차)이 최대를 넘는 코너는 속도를 낮추고, 아주 느려도 못 도는 코너가 있으면 계산을 멈춥니다. 전폭을 넣으면 속도에 따른 차체 각도(저속 기구학 − 뒷바퀴 슬립각)로 차 사각형을 놓아 코스 경계나 슬라럼 콘(반지름 포함)에 닿는 곳은 속도를 낮춥니다. 슬립각 · 차체 각도 β · 조향각 · 언더스티어 구배도 계산합니다.', '타이어 › 타이어 곡선 (모델 2 · 3) · 서스 · 조향 › 조향비 · 최대 조향각'],
+               [2, '2 비선형 타이어', '모델 1 에 더해, 도구 T 의 타이어 곡선(Magic Formula 꼴)으로 축 횡 한계를 두 바퀴가 같은 슬립각일 때의 최댓값으로 셉니다. 좌우 하중이 달라 두 바퀴 최고점 슬립각이 어긋나면 Σ μ·F<sub>z</sub> 보다 작아 코너 한계 속도가 낮아집니다. 최대 조향각을 넣으면 필요한 안쪽 바퀴 조향각(기하 + 슬립각 차)이 최대를 넘는 코너는 속도를 낮추고, 아주 느려도 못 도는 코너가 있으면 계산을 멈춥니다. 전폭을 넣으면 속도에 따른 차체 각도(저속 기구학 − 뒷바퀴 슬립각)로 차 사각형을 놓아 코스 경계나 슬라럼 콘(중심)에 닿는 곳은 속도를 낮춥니다. 슬립각 · 차체 각도 β · 조향각 · 언더스티어 구배도 계산합니다.', '타이어 › 타이어 곡선 (모델 2 · 3) · 서스 · 조향 › 조향비 · 최대 조향각'],
                [3, '3 과도 (요 · 롤 운동)', '모델 2 에 더해, 주행선을 그대로 따라가는 데 드는 타이어 힘에 요 관성(요 가속도)과 타이어 이완 길이(힘이 늦게 따라옴)를 넣습니다. ① 곡률이 바뀌는 곳은 앞 · 뒤 축마다 등가 곡률로 코너 한계 속도를 낮추고, 주행선 다듬기도 이 한계로 랩타임을 비교해 모델 3 의 선을 따로 고릅니다. ② 속도가 바뀌며 생기는 몫은 정해진 선에서 한계를 넘는 곳만 속도를 더 낮추고 준정적을 다시 풉니다 (앞에서 더 일찍 감속). 내구 · 오토크로스 · 내 코스에 반영하고, 일정 차속 계단 조향의 시간 응답(3 자유도 + 타이어 이완, ISO 7401 꼴)도 따로 보여 줍니다.', '서스 · 조향 › 과도 (모델 3: 요 · 롤 관성, 현가하질량, 롤 감쇠, 경로 곡률 다듬기 거리, 시험 차속 · 횡가속도) · 타이어 이완 길이']];
 /* 열 모델: 노드마다 켜고 끔 (k = 입력 키), 부품마다 냉각 방식 [공랭 · 수랭] (c = 입력 키). 냉각수 온도는 수랭으로 열을 넣는 부품이 있어야 계산 */
 const T2MDT = [['th_on', 'm_cool', '모터 열', '모터 손실로 모터 온도가 오르고, 수랭이면 냉각수로 · 공랭이면 외기로 열을 내보냅니다. 모터 온도가 디레이팅 시작 ~ 끝 온도 사이면 회전수마다 피크에서 연속 토크 쪽으로 같은 비율만큼 내려갑니다. 끄면 모터 온도는 출발 온도 그대로이고 모터 디레이팅도 없습니다.', '모터 · 인버터 › 모터 열 · 디레이팅 (열용량 · 출발 온도 · 디레이팅 시작 · 끝 온도, 수랭 열저항 또는 공랭 hA)'],
@@ -953,7 +953,7 @@ WB_TOOLS['2'] = {
     {k:'rl_on', n:'주행선 (2 = 레코드 라인, 1 = 최소 곡률 라인, 0 = 중심 라인)', u:'', v:2, d:0, g:T2G.rl, ui:'none'},
     {k:'rmin', dk:'rmin', n:'최소 회전 반경 (CG 경로)', u:'m', v:3.0, d:1, g:T2G.steer, sb:'최소 회전 반경'},
     {k:'rm_on', n:'최소 회전 반경 고려 (1 = 고려, 0 = 고려 안 함)', u:'', v:1, d:0, g:T2G.steer, ui:'none'},
-    {k:'rl_m', n:'여유 (차 옆면 ↔ 코스 경계 · 콘, 전폭이 있을 때)', u:'m', v:0.2, d:2, g:T2G.rl, sb:'여유'}, {k:'cone_r', n:'슬라럼 콘 반지름 (차체 확인, 0 = 콘 중심까지)', u:'m', v:0, d:2, g:T2G.rl, sb:'여유'},
+    {k:'rl_m', n:'여유 (차 옆면 ↔ 코스 경계 · 콘, 전폭이 있을 때)', u:'m', v:0.2, d:2, g:T2G.rl, sb:'여유'},
     {k:'rl_b', n:'경계 · 콘에서 차 중심까지 최소 거리 (전폭이 0 일 때)', u:'m', v:1.0, d:2, g:T2G.rl, sb:'여유'},
     {k:'md', n:'차량 모델 단계 (0 = 기본, 1 = 롤센터 · 롤, 2 = 비선형 타이어, 3 = 과도)', u:'', v:0, d:0, g:T2G.rc, ui:'none'},
     {k:'th_on', n:'열 모델 · 모터 열 (1 = 켬)', u:'', v:0, d:0, g:T2G.thm, ui:'none'}, {k:'cw_on', n:'열 모델 · 냉각수 온도 (1 = 켬, 수랭 부품이 있을 때)', u:'', v:0, d:0, g:T2G.thm, ui:'none'},
@@ -1865,7 +1865,8 @@ function coneDist(I, C, n, psi, k, dx, dy) {
 let BDC = new Map(), BDC_LAST = { key: '', m: new Map(), info: {} }, BDI = {};
 function bodyCaps(I, C, RL, closed, LC) {
   const g = RL.geo, segs = RL.segs, M = segs.length, eN = RL.eN, sN = [0]; for (const [l] of segs) sN.push(sN.at(-1) + l);
-  const rc = Math.max(0, I.cone_r || 0), near = i => LC ? LC.cones.filter(q => Math.abs(q.s - sN[i]) <= 6) : [];   // 콘 반지름 · 그 점 둘레 콘
+  const rc = 0, near =   // 콘 = 점 (코스 경계와 같은 기준: 콘 중심)
+    i => LC ? LC.cones.filter(q => Math.abs(q.s - sN[i]) <= 6) : [];   // 콘 반지름 · 그 점 둘레 콘
   let ctouch = 0; const ctSeen = new Set();
   const len = sN[M], cap = new Array(M + 1).fill(Infinity), lr = C.L * C.fs; let n = 0, dmax = 0;
   const kp = i => { const a = segs[Math.max(0, i - 1)][1], b = segs[Math.min(M - 1, i)][1], ka = a ? 1 / a : 0, kb = b ? 1 / b : 0; return Math.abs(ka) > Math.abs(kb) ? ka : kb; };
@@ -2794,7 +2795,7 @@ function calc(I) {
 /* ============================================================ 대시보드 '파트별 > 차량 목표 · 파워트레인'
    대시보드 값으로 도구 2를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
-const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'c_pct', 'kt', 'i_pk', 'i_ct', 'i_cpct', 'di_t0', 'di_t1', 'tr_ks', 'cone_r', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'oh_f', 'oh_r', 'rl_m', 'rl_b', 'e_lim', 'rm_on', 'md', 'th_on', 'cw_on', 'in_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'inv_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_ha60', 'b_r', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
+const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'c_pct', 'kt', 'i_pk', 'i_ct', 'i_cpct', 'di_t0', 'di_t1', 'tr_ks', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'oh_f', 'oh_r', 'rl_m', 'rl_b', 'e_lim', 'rm_on', 'md', 'th_on', 'cw_on', 'in_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'inv_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_ha60', 'b_r', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
 const T2SET = ['md', 'th_on', 'in_on', 'bt_on', 'cw_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'rl_on', 'rm_on', 'e_lim'];   // 이 도구에서 고른 계산 설정 (대시보드 파트 결과도 같은 설정으로)
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
