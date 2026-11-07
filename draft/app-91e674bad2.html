@@ -11987,6 +11987,7 @@ function t2InLock(k){ const L = '아래 표 사용';
 /* 잠긴 칸에 보일 값 (작업창 wbEffVal): 숫자 = 계산에 실제로 쓰는 값, null = 쓰지 않음 (—). 잠기지 않은 칸은 부르지 않음 */
 function t2InEff(k){ const I = WB.I;
   if(k==='th_k') return 0;                                                   // 모터 열 끔 → 디레이팅 없음
+  if(k==='tmax'){ const P = t2MotorParse(T2.mtext || ''); const t = P.pts.map(q => q[1]).filter(Number.isFinite); return t.length ? Math.max(...t) : null; }   // 토크 곡선 최댓값 (기준 전압)
   if(k==='e_target') return t2ElOf()===1 ? t2Epack() : null;                 // 제원 용량 · 제한 없음
   if(k==='rl_b') return I.w_car > 0 ? I.w_car / 2 + Math.max(0, I.rl_m || 0) : null;   // 전폭으로 계산한 직선 여유 b
   if(k==='eta_inv' && I.eff_mg !== 1 && t2UseMap('eI')) return null;
@@ -12481,7 +12482,7 @@ function car(I, gr, kP) {
       const floor = tqC.length ? fromTab(tqC, n, V) : 0;
       T = Math.max(Math.min(T, floor), T - thK * (Tm - thT0));
     }
-    return Math.min(T, I.tmax);
+    return T;                                     // 표가 있으면 표만 (모터 최대 토크 입력은 표가 없을 때의 일정 토크)
   }
   const eM  = (n, T) => (I.effM ? bil(I.effM, n, Math.abs(T)) : I.eta_mot) / 100;   // 모터 효율 [-]
   const effMg = I.eff_mg === 1, rInv = Math.max(0, Math.min(1, (isFinite(I.inv_r) ? I.inv_r : 30) / 100));   // 모터 맵에 인버터를 합쳤으면 인버터 효율 = 1, 손실 중 인버터 몫 rInv
