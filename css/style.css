@@ -3090,7 +3090,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t4-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
 .t4-bar b{font-size:13px;margin-right:4px}.t4-bar select,.t4-bar input[type=text]{font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel)}
 .t4-bar input[type=text]{min-width:220px}.t4-bar .dc-seg button{padding:3px 10px;font-size:12px}
-.t4-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.t4-rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .t4-rule{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font-size:12px}
 .t4-rule b{font-size:17px}.t4-rule.bad{border-color:#e5a3a3;background:#fdf3f3}
 .t4-bg{display:block;height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}.t4-bg i{display:block;height:100%;background:#2f7d4f}.t4-rule.bad .t4-bg i{background:#b42318}
