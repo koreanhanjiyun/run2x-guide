@@ -2,7 +2,7 @@
    도구 4 축전지 팩 계산기 — docs/TOOLS-PLAN.md 5절 (설계 단계 P1 셀 선정 · P4-5 축전지)
    - 팀원 Yechan Hyun 의 FSK Battery Calculator 1.0.1 을 작업창 도구로 옮김 (계산식 그대로, 허락 받음)
    - 셀 사양 · 세그먼트 구성 → 팩 전압 · 용량 · 질량 · 내부저항 · 전류, 규정(세그먼트 120 V · 6 MJ · 12 kg, 팩 600 V) 확인, 전압 단계별 부하 전압 · 출력 · 손실
-   - 결과(직렬 · 병렬 수, 셀 값, 팩 저항 · 전류 한계 등)를 대시보드로 → 도구 2 는 받기만 함
+   - 결과(직렬 · 병렬 수, 셀 값, 팩 저항 · 전류 한계 등)를 대시보드로 → 도구 2P 는 받기만 함
    - 셀 프리셋: 이 브라우저에 이름 붙여 저장 (run2x.t4.presets)
    ============================================================ */
 const T4PK = 'run2x.t4.presets';
@@ -23,7 +23,7 @@ function t4ExtHTML(){ const w = $('#wb'); if(w) w.classList.remove('t2-edit');
     <div class="t4-bar"><b>구성 방식</b>${t4Seg('data-t4auto', au, [[0, '수동 (직렬 · 병렬 직접)'], [1, '병렬 자동 (세그먼트 직렬 입력)'], [2, '직렬 자동 (병렬 입력)']])}
       <span class="muted" id="t4why">${t4Why()}</span></div>
     <div class="t4-rules" id="t4rules">${t4Rules()}</div>
-    <p class="muted t4-note">계산식은 팀원 Yechan Hyun 의 FSK Battery Calculator 1.0.1 과 같습니다. [대시보드에 반영]은 직렬 · 병렬 수, 팩 공칭 전압 · 에너지 · 내부저항 · 무게, 적용 전류(방전 전류 한계) · 충전 전류 한계, 셀 값을 보내고, 도구 2 는 이 값을 받아 씁니다.</p></div>`; }
+    <p class="muted t4-note">계산식은 팀원 Yechan Hyun 의 FSK Battery Calculator 1.0.1 과 같습니다. [대시보드에 반영]은 직렬 · 병렬 수, 팩 공칭 전압 · 에너지 · 내부저항 · 무게, 적용 전류(방전 전류 한계) · 충전 전류 한계, 셀 값을 보내고, 도구 2P 는 이 값을 받아 씁니다.</p></div>`; }
 function t4Why(){ const R = WB.R; if(!R) return ''; const au = WB.I.auto;
   return au===1 ? `세그먼트 ${R.out.s_seg_o}S 기준 → 병렬 최대 ${R.out.n_p_o}P · ${R.why} 제한` : au===2 ? `병렬 ${R.out.n_p_o}P 기준 → 세그먼트 직렬 최대 ${R.out.s_seg_o}S · ${R.why} 제한` : '직렬과 병렬을 직접 넣습니다.'; }
 function t4Rules(){ const o = WB.R && WB.R.out; if(!o) return '';
@@ -88,7 +88,7 @@ WB_TOOLS['4'] = {
   inLock(k){ if(k==='n_p' && WB.I.auto===1) return '자동 (규정 안 최대)'; if(k==='s_seg' && WB.I.auto===2) return '자동 (규정 · 인버터 안 최대)'; if(k==='i_lim' && WB.I.il_on !== 1) return '셀 사양 최대'; if(k==='v_inv' && WB.I.vi_on === 0) return '확인 안 함'; return ''; },
   inOpt(k){ if(k==='i_lim') return `<span class="t2-inopt">${t4Seg('data-t4il', WB.I.il_on===1 ? 1 : 0, [[1, '제한 적용'], [0, '셀 사양 최대']])}</span>`; if(k==='v_inv') return `<span class="t2-inopt">${t4Seg('data-t4vi', WB.I.vi_on===0 ? 0 : 1, [[1, '확인'], [0, '확인 안 함']])}</span>`; return ''; },
   inEff(k){ const o = WB.R && !WB.err && WB.R.out; if(k==='n_p') return o ? o.n_p_o : '…'; if(k==='s_seg') return o ? o.s_seg_o : '…'; if(k==='i_lim') return o ? o.i_cellmax : '…'; return null; },   // 자동 구성으로 정해진 수
-  outGroups:{'셀 값 (대시보드 반영 확인용)':{note:'입력한 셀 값 그대로. [대시보드에 반영]으로 도구 2 등이 받아 씀'}},
+  outGroups:{'셀 값 (대시보드 반영 확인용)':{note:'입력한 셀 값 그대로. [대시보드에 반영]으로 도구 2P 등이 받아 씀'}},
   outputs:[
     {k:'n_s', dk:'n_s', n:'전체 직렬 수 (S)', d:0, g:'팩'}, {k:'n_p_o', dk:'n_p', n:'병렬 수 (P)', d:0, g:'팩'}, {k:'cells', n:'셀 개수', u:'개', d:0, g:'팩'},
     {k:'v_pack_max', n:'팩 최대 전압', u:'V', d:1, g:'팩'}, {k:'v_pack', dk:'v_pack', d:1, g:'팩'}, {k:'v_pack_min', n:'팩 최소 전압', u:'V', d:1, g:'팩'},

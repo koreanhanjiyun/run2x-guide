@@ -3125,3 +3125,18 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wb-ech{font-size:12.5px;font-weight:700;color:var(--ink-2);padding:3px 4px 6px}
 .wb-ecard .wb-ir{grid-template-columns:minmax(0,1fr) 92px 46px;min-height:36px;box-sizing:border-box}
 .wb-efig{margin-top:14px}
+/* 도구 2P 감도 탭 */
+.t2-sens{display:flex;flex-direction:column;gap:10px;padding:4px 0}
+.t2s-rel{width:64px}
+.t2s-top{margin:6px 0 0;padding-left:22px;columns:2;column-gap:28px;font-size:13.5px}
+.t2s-top li{break-inside:avoid;margin:2px 0}
+.t2s-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+.t2s-tab{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.t2s-tab th,.t2s-tab td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.t2s-tab th:first-child,.t2s-tab td:first-child{text-align:left;white-space:normal;min-width:220px}
+.t2s-tab thead th{position:sticky;top:0;background:var(--panel-2)}
+.t2s-tab th .lnk[aria-pressed="true"]{color:var(--accent);font-weight:700}
+.t2s-tab td.t2s-md{background:var(--accent-soft)}
+.t2s-tab td.t2s-hi{background:var(--accent-soft);color:var(--accent);font-weight:700}
+@media (max-width:700px){.t2s-top{columns:1}}
+.t2s-base{font-size:13.5px;margin:0}

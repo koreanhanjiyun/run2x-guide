@@ -17,7 +17,7 @@ const wbT = () => WB_TOOLS[WB.id];
 const wbEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wbFmt = (x, d) => (typeof x==='number' && isFinite(x)) ? x.toLocaleString('ko-KR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
 const wbStoreKey = id => 'run2x.wb.' + id;
-/* [결과 | 편집] 탭 (도구 2 는 자체 [시뮬레이션 | 편집]). 입력은 모두 편집 탭에 묶음 카드로, 왼쪽 입력 칸은 key:true 인 핵심 입력만 (없으면 안내).
+/* [결과 | 편집] 탭 (도구 2P 는 자체 [시뮬레이션 | 편집]). 입력은 모두 편집 탭에 묶음 카드로, 왼쪽 입력 칸은 key:true 인 핵심 입력만 (없으면 안내).
    ext (도구가 그리는 큰 입력 화면: 도구 1 표 · 도구 4 셀 · 도구 9 회로) 는 편집 탭, mid · 그림 · 신호 그래프 · 결과 카드는 결과 탭. 그림을 편집에도 두려면 editFig:true */
 const wbTabs = T => !!T && T.inPanel !== false;
 const WBTAB_KEY = 'run2x.wb.tab';
@@ -40,7 +40,7 @@ const wbInUnit = d => d.u != null ? d.u : (d.dk && DK[d.dk] ? DK[d.dk].u : '');
 function wbWorker(src){
   if(WB.worker && WB.wsrc===src) return WB.worker;
   if(WB.worker) WB.worker.terminate();
-  /* wbProg(0~1, 글): 계산 코드가 진행 상황을 알림 (도구 2 주행선 다듬기 등) */
+  /* wbProg(0~1, 글): 계산 코드가 진행 상황을 알림 (도구 2P 주행선 다듬기 등) */
   const body = src + `\n;let WBID = 0; const wbProg = (f, msg) => postMessage({id:WBID, prog:f, msg});
     self.onmessage = e => { const t0 = performance.now(); WBID = e.data.id;
     try { if(e.data.Is){ const outs = e.data.Is.map(I => { const r = calc(I); return (r && r.out) || {}; }); postMessage({id:e.data.id, ok:true, outs, ms:performance.now()-t0}); return; }
@@ -107,7 +107,7 @@ async function wbSweep(){ const k = WB.xa.slice(3), d = wbT().inputs.find(o => o
   const base = wbInputs(), r = await wbRun(X.map(x => ({...base, [k]:x, _sweep:true})), wbCode());   /* _sweep: 도구가 훑기 중에 무거운 부가 계산을 건너뛸 수 있게 */
   if(r.cancelled) return; if(!r.ok){ S.X = null; S.err = r.err; return; } S.err = ''; S.X = X; S.O = {}; wbT().outputs.forEach(o => { S.O[o.k] = r.outs.map(t => t[o.k]); });
   if(WB.si >= n) WB.si = n - 1; if(!WB.panesO.length) wbSelReset([], true); if(!WB.panesO.some(P => P.size)) wbT().outputs.filter(o => !o.hide).slice(0, 2).forEach(o => WB.selO.add(o.k)); }
-/* 도구가 deferCalc() = true 를 주는 동안(도구 2 편집 탭)은 계산하지 않고 표시만 해 둠 → 도구가 나중에 wbCalc() */
+/* 도구가 deferCalc() = true 를 주는 동안(도구 2P 편집 탭)은 계산하지 않고 표시만 해 둠 → 도구가 나중에 wbCalc() */
 const wbCalcSoon = () => { const T = wbT(); if(T && T.deferCalc && T.deferCalc()){ WB.dirty = true; return; } clearTimeout(WB.timer); WB.timer = setTimeout(wbCalc, 120); };
 
 /* ---------- 그래프 (SVG) ---------- */
@@ -175,7 +175,7 @@ function wbShellHTML(){ const T = wbT();
       <span class="wb-no">${wbEsc(T.no)}</span><span class="wb-stage">${wbEsc(T.stage)}</span><b id="wb-t">${wbEsc(T.name)}</b>
       <span class="wb-code-on" id="wbcodeon" hidden>코드 고침 (저장 안 됨)</span>
       <span class="wb-acts">
-        ${T.tour ? `<button type="button" class="wb-help" data-tour="wb:${wbEsc(T.no)}" title="이 작업창의 버튼 위치와 기능을 차례로 안내합니다"><b aria-hidden="true">?</b><span>이 탭 사용법</span></button><i class="wb-sep" aria-hidden="true"></i>` : ''}
+        ${T.tour ? `<button type="button" class="wb-help" data-tour="wb:${wbEsc(WB.id)}" title="이 작업창의 버튼 위치와 기능을 차례로 안내합니다"><b aria-hidden="true">?</b><span>이 탭 사용법</span></button><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small" data-coordopen title="차량 좌표계 (원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)">좌표계</button>
         ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}<i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
@@ -213,8 +213,8 @@ function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[
   return `<i class="wb-st dv-s s-${db.st}${own ? ' own' : ''}" title="${wbEsc(tip)}"></i>`; }
 const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ex"></i>예시값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
-   도구가 입력을 자기 화면(도구 2 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
-function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2) · 탭 도구 = 핵심 입력(key:true)만 */
+   도구가 입력을 자기 화면(도구 2P 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
+function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2P) · 탭 도구 = 핵심 입력(key:true)만 */
   if(!list.length) return WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
   if(!list.length && T.inEmpty) return WB_INLEG + T.inEmpty;
   return WB_INLEG + wbInRows(list); }
@@ -259,7 +259,7 @@ function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
   if(!R) return '<p class="wb-empty">계산 중…</p>';
-  if(T.outHTML) return T.outHTML(R);   /* 도구가 결과 칸을 직접 그림 (도구 2) */
+  if(T.outHTML) return T.outHTML(R);   /* 도구가 결과 칸을 직접 그림 (도구 2P) */
   return wbOutCards(T, R, WB.cmp); }
 /* 결과 카드: 도구가 정한 묶음마다. d.hide = 화면에 안 보임(검증 · 반영용), d.fmt(v, out) = 값 칸 HTML(단위 포함),
    outGroups[묶음].render(out) = 카드 본문을 도구가 직접 그림, .wide = 두 칸 너비. 대시보드 '파트별'도 같은 함수(비교 없이) */

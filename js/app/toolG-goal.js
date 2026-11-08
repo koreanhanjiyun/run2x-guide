@@ -1,23 +1,27 @@
 /* ============================================================
-   도구 G 목표 · 요구값 (경량 시뮬) — 설계 초반 (도구 1 직후) 목표 정하기
+   도구 2 목표 · 요구값 (경량 시뮬) — 설계 초반 (도구 1 직후) 목표 정하기
    - 입력은 그때 정해진 것만 (질량 · 무게중심 · 휠베이스 · 트레드 · 바퀴 반경 · 모터 토크 선도 · 감속비). 아직 안 정해진 계통 (축전지 · 인버터 · 서스 · 열)은 이상화하고
      다른 파트 값 (C_L·A · 질량 · 모터 토크 · 타이어 μ · 무게중심 높이 · 무게 배분 · 감속비) 은 손잡이로 훑어 '목표 기록 → 요구값' 그래프로 보임
-   - 계산은 도구 2 계산 코드 그대로 (차량 모델 0, 줄여 셈). 정밀 확인은 도구 2 에서
+   - 계산은 도구 2P 계산 코드 그대로 (차량 모델 0, 줄여 셈). 정밀 확인은 도구 2P 에서
    ============================================================ */
 const GG = {car:'차 (도구 1 · 치수)', tire:'타이어 · 구동계', mot:'모터', aero:'에어로 (기본 · 묶음)', drv:'운전자 (현실 범위)', tg:'목표'};
-const GTGN = [['0', '가속'], ['1', '스키드패드'], ['2', '오토크로스'], ['3', '내구']];
+const GTGN = [['0', '가속'], ['1', '스키드패드'], ['2', '오토크로스'], ['3', '내구'], ['4', '출발 g'], ['5', '횡 g'], ['6', '내구 에너지']];
+/* 가로축 목표의 이름 · 단위 (계산 코드 GTG 와 같은 순서) */
+const GTGU = [['목표 기록 · 가속', 's', 3], ['목표 기록 · 스키드패드', 's', 3], ['목표 기록 · 오토크로스', 's', 2], ['목표 기록 · 내구', 's', 0],
+              ['목표 출발 종가속도', 'g', 3], ['목표 스키드패드 횡가속도', 'g', 3], ['목표 내구 에너지', 'kWh', 2]];
+const gTgU = () => GTGU[Math.max(0, Math.min(GTGU.length - 1, Math.round((typeof WB!=='undefined' && WB.I && WB.I.tg) || 0)))];
 document.addEventListener('click', e => { if(WB.id!=='G' || !e.target.closest) return;
   const a = e.target.closest('[data-gtg]'); if(a){ WB.I.tg = +a.dataset.gtg; WB.I.tg_v = 0; wbSave(); wbPaint(['in']); wbCalcSoon(); return; }
   const c = e.target.closest('[data-gcop]'); if(c){ WB.I.cop_m = +c.dataset.gcop; wbSave(); wbPaint(['in']); wbCalcSoon(); } });
 const MGTOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기가 있습니다.'],
-  ['#wb .wb-in', '입력', '설계 초반에 정해진 것(도구 1 질량 · 무게중심, 치수, 모터 토크)만 넣습니다. 축전지 · 인버터 · 서스 · 열은 이상화하고(축전지 = 이상 전원), 다운포스는 양항비로 항력과 묶습니다. 맨 위 [목표]에서 가로축 종목을 고르고, 목표값을 넣으면 그 값의 요구값이 결과에 나옵니다.'],
+  ['#wb .wb-in', '입력', '설계 초반에 정해진 것(도구 1 질량 · 무게중심, 치수, 모터 토크)만 넣습니다. 축전지 · 인버터 · 서스 · 열은 이상화하고(축전지 = 이상 전원), 다운포스는 양항비로 항력과 묶습니다. 맨 위 [목표]에서 가로축(종목 기록 · 출발 종가속도 · 스키드패드 횡가속도 · 내구 에너지)을 고르고, 목표값을 넣으면 그 값의 요구값이 결과에 나옵니다.'],
   ['#wb #wbout', '결과', '기본값 차의 종목 기록과, 목표값에서 손잡이마다 필요한 값(나머지는 기본값 그대로일 때)입니다. 빈칸은 그 손잡이 하나로는 닿지 못하는 목표입니다.'],
-  ['#wb .wb-sig', '목표 → 요구값', '가로축 = 고른 종목 기록. 손잡이마다 그 기록을 내는 데 필요한 값과, 그때 딸려 바뀌는 값(다운포스 · 항력 · 내구 에너지 · 평균 출력 · 바퀴 토크)입니다. 신호를 여러 개 켜 같은 목표에서 비교합니다.'],
+  ['#wb .wb-sig', '목표 → 요구값', '가로축 = 고른 목표(종목 기록 · 가속도 · 내구 에너지). 손잡이마다 그 기록을 내는 데 필요한 값과, 그때 딸려 바뀌는 값(다운포스 · 항력 · 내구 에너지 · 평균 출력 · 바퀴 토크)입니다. 신호를 여러 개 켜 같은 목표에서 비교합니다.'],
 ];
 WB_TOOLS['G'] = {
-  no:'G', stage:'P0', name:'목표 · 요구값 (경량 시뮬)',
-  x:{n:'목표 기록', u:'s'}, xiStart:'mid',
+  no:'2', stage:'P0', name:'목표 · 요구값 (경량 시뮬)',
+  x:{ get n(){ return gTgU()[0]; }, get u(){ return gTgU()[1]; } }, xiStart:'mid',
   extraI: () => ({ base: typeof t2PartInputs === 'function' ? t2PartInputs() : {} }),
   inLock(k){ if(k==='xcop') return WB.I.cop_m !== 0 ? '무게 배분과 같게' : ''; return ''; },
   inOpt(k){ const seg = (attr, cur, items) => `<span class="t2-inopt"><span class="dc-seg" role="group">${items.map(([v, t]) => `<button type="button" ${attr}="${v}" aria-pressed="${String(cur)===v}">${t}</button>`).join('')}</span></span>`;
@@ -25,8 +29,8 @@ WB_TOOLS['G'] = {
     if(k==='xcop') return seg('data-gcop', WB.I.cop_m !== 0 ? 1 : 0, [['1', '무게 배분'], ['0', '직접']]);
     return ''; },
   inputs:[
-    {k:'tg', n:'가로축 목표 (0 가속 · 1 스키드패드 · 2 오토크로스 · 3 내구)', u:'', v:1, d:0, g:GG.tg, ui:'none'},
-    {k:'tg_v', n:'목표값 (0 = 기본 차 기록)', u:'s', v:0, d:3, g:GG.tg},
+    {k:'tg', n:'가로축 목표 (0 가속 · 1 스키드패드 · 2 오토크로스 · 3 내구 · 4 출발 종가속도 · 5 횡가속도 · 6 내구 에너지)', u:'', v:1, d:0, g:GG.tg, ui:'none'},
+    {k:'tg_v', n:'목표값 (0 = 기본 차 값)', get u(){ return gTgU()[1]; }, v:0, d:3, g:GG.tg},
     {k:'m', dk:'m', v:300, d:0, g:GG.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:GG.car}, {k:'h', dk:'h', v:290, d:0, g:GG.car},
     {k:'L', dk:'L', v:1550, d:0, g:GG.car}, {k:'tf', dk:'tf', v:1200, d:0, g:GG.car}, {k:'tr', dk:'tr', v:1180, d:0, g:GG.car},
     {k:'r_eff', dk:'r_eff', n:'바퀴 유효 반경 (타이어 외경에서)', v:229, d:0, g:GG.tire}, {k:'mu', dk:'mu', n:'타이어 μ (문헌 · 예전 차)', v:1.5, d:2, g:GG.tire},
@@ -46,9 +50,9 @@ WB_TOOLS['G'] = {
     {k:'b_e', n:'내구 단자 에너지', u:'kWh', d:2, g:'기본 차 요구값'}, {k:'b_e_r', n:'내구 단자 에너지 · 현실 운전자', u:'kWh', d:2, g:'기본 차 요구값'},
     {k:'b_p', n:'내구 평균 출력 (단자)', u:'kW', d:1, g:'기본 차 요구값'}, {k:'i_avg', n:'내구 평균 전류 (모터 기준 전압)', u:'A', d:0, g:'기본 차 요구값'},
     {k:'q_heat', n:'모터 + 인버터 평균 발열', u:'kW', d:2, g:'기본 차 요구값'}, {k:'b_tw', n:'바퀴 최대 구동력 (모터 토크 × 감속비)', u:'N', d:0, g:'기본 차 요구값'},
-    {k:'b_ay', n:'스키드패드 횡가속도', u:'g', d:2, g:'기본 차 요구값'}, {k:'b_df', n:'다운포스 (100 km/h)', u:'N', d:0, g:'기본 차 요구값'},
+    {k:'b_ay', n:'스키드패드 횡가속도', u:'g', d:2, g:'기본 차 요구값'}, {k:'b_ax0', n:'출발 종가속도 (정지에서 최대)', u:'g', d:2, g:'기본 차 요구값'}, {k:'b_df', n:'다운포스 (100 km/h)', u:'N', d:0, g:'기본 차 요구값'},
     {k:'b_dr', n:'항력 (100 km/h)', u:'N', d:0, g:'기본 차 요구값'}, {k:'b_cda', n:'C_D·A (차체 + 날개)', u:'m²', d:2, g:'기본 차 요구값'}, {k:'b_xcop', n:'압력중심 (뒤축부터)', u:'mm', d:0, g:'기본 차 요구값'},
-    {k:'tg_v_o', n:'목표값', u:'s', d:3, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'},
+    {k:'tg_v_o', n:'목표값', get u(){ return gTgU()[1]; }, d:3, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'},
     {k:'p_cla', n:'C_L·A', u:'m²', d:2, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'}, {k:'p_df', n:'→ 다운포스 (100 km/h)', u:'N', d:0, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'},
     {k:'p_cda', n:'→ C_D·A', u:'m²', d:2, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'}, {k:'p_e', n:'→ 내구 에너지', u:'kWh', d:2, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'},
     {k:'p_m', n:'질량', u:'kg', d:0, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'}, {k:'p_tq', n:'모터 토크 배율', u:'%', d:0, g:'목표값에서 손잡이마다 필요한 값 (하나만 움직일 때)'},
@@ -67,17 +71,21 @@ WB_TOOLS['G'] = {
   sigOn:['q_cla', 'q_m', 'q_tq'],
   tour: MGTOUR,
   verifyBase:{tg:1, tg_v:0, mu_s:0, crr:0, cop_m:1, cda0:0, ld:1e9,
-    base: Object.assign(Object.fromEntries(WB_TOOLS['2'].inputs.map(d => [d.k, d.v])), WB_TOOLS['2'].verifyBase)},   // 검증: 도구 2 기본값 · 검증 기본 (코스 없음)
+    base: Object.assign(Object.fromEntries(WB_TOOLS['2'].inputs.map(d => [d.k, d.v])), WB_TOOLS['2'].verifyBase)},   // 검증: 도구 2P 기본값 · 검증 기본 (코스 없음)
   verify: [
     {n:'기본 차 · 스키드패드 (에어로 없음, μ 1.5)', I:{cla:0, mu:1.5}, expect:{b_skid:9.895692, b_ay:1.5},
-     src:'v = √(μgR), R = 9.125 m → 좌우 한 바퀴씩 합 = 2 × 2πR ÷ v (도구 2 와 같은 식)'},
+     src:'v = √(μgR), R = 9.125 m → 좌우 한 바퀴씩 합 = 2 × 2πR ÷ v (도구 2P 와 같은 식)'},
     {n:'목표 스키드패드 9.471806 s → 필요 C_L·A = 3 (CoP = 무게 배분, 항력 없음)', I:{cla:0, m:300, fr:50, L:1550, mu:1.5, tg_v:9.471806}, expect:{p_cla:3, p_df:1417.824074},
-     src:'mv²/R = μ(mg + ½ρC_LA v²) 를 C_L·A = 3 에 대해 푼 기록 (도구 2 검증과 같은 경우) → 거꾸로 3. 다운포스 = ½ × 1.225 × 3 × (100/3.6)² = 1417.82 N'},
+     src:'mv²/R = μ(mg + ½ρC_LA v²) 를 C_L·A = 3 에 대해 푼 기록 (도구 2P 검증과 같은 경우) → 거꾸로 3. 다운포스 = ½ × 1.225 × 3 × (100/3.6)² = 1417.82 N'},
     {n:'기본 차 · 가속 접지 한계만 (μ 1, CG 뒤축 위, 출력 · 토크 한계 없음)', I:{cla:0, m:300, fr:0, h:0, mu:1, j_eq:0, tmax:1e5, motor:[], pmax:1e4, tg:0}, expect:{b_acc:3.910309},
-     src:'a = μg → t = √(2 × 75 ÷ 9.81)'}
+     src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
+    {n:'출발 종가속도 = μg (μ 1, CG 뒤축 위, 토크 한계 없음)', I:{cla:0, m:300, fr:0, h:0, mu:1, j_eq:0, tmax:1e5, motor:[], pmax:1e4, tg:0}, expect:{b_ax0:1},
+     src:'뒤축에 무게 전부 · 하중 이동 없음 → 구동 한계 = μ m g → a = μ g = 1 g'},
+    {n:'목표 스키드패드 횡가속도 1.637261 g → 필요 C_L·A = 3 (경우 2 와 같은 차)', I:{cla:0, m:300, fr:50, L:1550, mu:1.5, tg:5, tg_v:1.637261}, expect:{p_cla:3},
+     src:'경우 2 의 기록 9.471806 s → v = 2 × 2π × 9.125 ÷ 9.471806 = 12.1063 m/s → a_y = v² ÷ (gR) = 1.637261 g. 가로축 = 횡가속도로 거꾸로 풀면 3'}
   ],
   code: `// ================================================================
-// 도구 2 랩타임 시뮬레이터 — 계산 코드
+// 도구 2P 랩타임 시뮬레이터 — 계산 코드
 // ================================================================
 // 입력 I : 왼쪽 입력 칸 (단위 그대로: kg, mm, %, 1/kN, rpm, N·m, kW, V, Ah, mΩ, A, kWh, s)과 작업창 위 표
 //   I.end   = {seg:[[길이 m, 반경 m], …], laps, stint, WL · WR (점마다 폭, 공식 코스는 실제 콘 위치로), slalom (콘 점 번호), slat (콘 옆 거리)}   공식 내구 코스 (오토크로스 = 거꾸로 한 바퀴)
@@ -203,6 +211,12 @@ function car(I, gr, kP, lam) {
   const thOn = I.th_on !== 0, inOn = I.in_on === 1, btOn = I.bt_on === 1;
   // 냉각수는 한 덩어리 (모든 수랭 부품이 같은 냉각수): 열용량 cw_c, 라디에이터 UA(v). 회로 구성 · 라디 · 펌프 선정은 도구 9 냉각 계통 계산기 (그 등가값을 여기에 넣음)
   const cwOn = I.cw_on === 1 && ((thOn && mW) || iW || (btOn && bW));   // 냉각수 온도: 켰고 수랭으로 열을 넣는 부품이 있을 때만 (아니면 고정값)
+  // 직렬 회로 (cw_ser 1, 도구 9 의 회로 하나 · 갈라짐 없음 · 라디 하나): 라디 → 부품 순서대로 냉각수가 데워짐 (앞 부품이 데운 냉각수를 뒤 부품이 받음)
+  //   냉각수 상태 st.w = 라디 입구 온도, 열용량 cw_c.  라디 방열 Q_r = G(v) (T_ri − T_외기), G = cw_g0 ~ cw_g60 (≤ C_c),  라디 출구 T_ro = T_ri − Q_r ÷ C_c
+  //   부품 k 점 (잘 섞인 덩어리 = 그 점 출구, 도구 9 와 같음): T_k = T_(k−1) + Q_k ÷ C_c,  Q_k = (T_부품 − T_(k−1)) ÷ (R_k + 1/C_c)
+  //   냉각수가 회로를 도는 시간은 랩보다 짧다고 보고 점마다 열용량은 두지 않음 (모두 cw_c 한 덩어리). 순서 cw_om · cw_oi · cw_ob (1 = 라디 바로 뒤, 0 = 맨 끝)
+  const cwSer = cwOn && I.cw_ser === 1 && I.cw_cc > 0, Ccw = cwSer ? I.cw_cc : 0;
+  const cwOrd = cwSer ? [['m', I.cw_om], ['i', I.cw_oi], ['b', I.cw_ob]].map(([p, o], j) => [p, o > 0 ? o : 99 + j]).sort((x, y) => x[1] - y[1]).map(x => x[0]) : [];
   // ---------- 디레이팅 (회전수마다 피크 ~ 연속 사이를 같은 비율 r 로)
   //   모터: r_m = (T_m − 시작) ÷ (끝 − 시작) 을 0 ~ 1 로 → T(n) = T_피크(n) − r_m (T_피크(n) − T_연속(n))   (모터 열을 켰을 때만, 끝 온도 위로는 연속 그대로)
   //   표에 연속 열이 없으면 T_연속 = T_피크 × 연속 비율, 피크 열이 없으면 T_피크 = T_연속 ÷ 연속 비율 (비율 100 % = 디레이팅 없음)
@@ -241,6 +255,19 @@ function car(I, gr, kP, lam) {
     const i = !inOn ? st.i : iW ? toward(st.i, Tw + Li * Ri, 1 / (Ri * Ci), dt) : air(st.i, Li, hV(I.i_ha0, I.i_ha60, v), Ci, dt);
     const b = !btOn ? st.b : bW ? toward(st.b, Tw + Qb * Rbt, 1 / (Rbt * Cb), dt) : air(st.b, Qb, hV(I.b_ha, I.b_ha60, v), Cb, dt);
     let w = thCo;
+    if (cwSer) {   // 직렬 회로: 부품마다 그 자리 냉각수 온도로 (위 m · i · b 수랭 식 대신)
+      const G = Math.min(Ccw, Math.max(1e-6, hV(I.cw_g0, I.cw_g60, v)));
+      let base = st.w - G * (st.w - Tamb) / Ccw, Qs = 0; const nx = { m, i, b };
+      for (const p of cwOrd) {
+        let Q = 0;
+        if (p === 'm' && thOn && mW) { const Re = thR + 1 / Ccw; Q = (st.m - base) / Re; nx.m = toward(st.m, base + Lm * Re, 1 / (Re * thC), dt); }
+        else if (p === 'i' && iW) { if (inOn) { const Re = Ri + 1 / Ccw; Q = (st.i - base) / Re; nx.i = toward(st.i, base + Li * Re, 1 / (Re * Ci), dt); } else Q = Li; }
+        else if (p === 'b' && btOn && bW) { const Re = Rbt + 1 / Ccw; Q = (st.b - base) / Re; nx.b = toward(st.b, base + Qb * Re, 1 / (Re * Cb), dt); }
+        else continue;
+        Qs += Q; base += Q / Ccw; }
+      w = toward(st.w, Tamb + Qs / G, G / Cw, dt);
+      return { m: nx.m, i: nx.i, w, b: nx.b };
+    }
     if (cwOn) { const UA = Math.max(1e-6, hV(ua0, ua60, v)),
                       Q = (thOn && mW ? (st.m - st.w) / thR : 0) + (iW ? (inOn ? (st.i - st.w) / Ri : Li) : 0) + (btOn && bW ? (st.b - st.w) / Rbt : 0);
                 w = toward(st.w, Tamb + Q / UA, UA / Cw, dt); }
@@ -413,7 +440,7 @@ function car(I, gr, kP, lam) {
   }
 
   // ---------- 회생 제동 (rg_on): 제동 힘 중 뒤축 몫(이상 배분 = 뒤축 하중 비) 을 모터가 받음.  모터 축 토크 ≤ min(회생 토크 상한, 그 회전수의 최대 토크 곡선 · 인버터 한계)
-  //   전기 = 축 출력 × 모터 효율 × 인버터 효율 (같은 맵), 충전 전류 ≤ i_chg → 단자 출력 ≤ (V0 + i_chg R) i_chg.  나머지 제동은 마찰 브레이크.  저속 회생 차단 · 회생 토크 곡선은 없음 (도구 2 수준)
+  //   전기 = 축 출력 × 모터 효율 × 인버터 효율 (같은 맵), 충전 전류 ≤ i_chg → 단자 출력 ≤ (V0 + i_chg R) i_chg.  나머지 제동은 마찰 브레이크.  저속 회생 차단 · 회생 토크 곡선은 없음 (도구 2P 수준)
   const rgOn = I.rg_on === 1, rgT = Math.max(0, I.rg_tmax || 0), Ich = Math.max(0, I.i_chg || 0);
   function regen(F, v, V0, rs, ax, Tm, Ti) {
     const n = rpm(v), w = n * 2 * Math.PI / 60; if (!(w > 0) || n > nmax) return null;
@@ -1847,17 +1874,17 @@ function calcT2(I) {
 }
 
 // ================================================================
-// 도구 G 목표 · 요구값 (경량 시뮬) — 계산 코드. 위는 도구 2 계산 코드 그대로 (calc → calcT2)
+// 도구 2 목표 · 요구값 (경량 시뮬) — 계산 코드. 위는 도구 2P 계산 코드 그대로 (calc → calcT2)
 // ================================================================
 // 목적: 설계 초반 (도구 1 직후: 질량 · 무게중심 · 휠베이스 · 트레드 · 타이어 외경 · 모터 토크 선도만 있을 때) 종목 목표를 정하면
 //       그 목표를 내려면 다른 파트가 무엇을 얼마나 해야 하는지 (요구값) 를 목표 축 위에 함께 보임.
 // 이상화 (아직 정해지지 않은 계통): 축전지 = 이상 전원 (전압 = 모터 기준 전압, 내부 저항 0, 전류 한계 없음, 에너지 상한 없음) → 필요한 에너지 · 출력 · 전류를 결과로,
 //   인버터 전류 한계 없음, 열 모델 끔, 차량 모델 0, 주행선 = 최소 곡률 선, 효율 = 상수. 다운포스 → 항력은 양항비 LD 로 묶음 (C_D·A = 차체 C_D·A + C_L·A ÷ LD)
 // 계산: 설계 손잡이 (C_L·A · 질량 · 모터 토크 배율 · 타이어 μ · 무게중심 높이 · 앞 무게 비율 · 감속비) 를 하나씩 기본값에서 훑어 (나머지는 기본값)
-//   매 점의 종목 기록 (도구 2 줄여 셈: 내구 3 랩 근사) · 내구 에너지 · 평균 출력 등을 기록 → 가로축을 고른 종목 기록으로 뒤집어 (단조 구간 선형 보간)
+//   매 점의 종목 기록 (도구 2P 줄여 셈: 내구 3 랩 근사) · 내구 에너지 · 평균 출력 등을 기록 → 가로축을 고른 종목 기록으로 뒤집어 (단조 구간 선형 보간)
 //   '이 기록을 내려면 그 손잡이가 얼마여야 하나' 를 목표 격자 위에 모든 손잡이 같이 그림. 닿지 못하는 목표는 빈칸.
 //   스키드패드 목표에는 CoP 를 무게 배분에서 ±5 %p 옮긴 C_L·A 곡선을 같이 (한쪽 축이 먼저 한계 → 다운포스가 더 필요)
-// 현실 운전자 (도구 2 와 같은 k_s · k_e) 의 내구 시간 · 에너지를 같이 계산 (범위)
+// 현실 운전자 (도구 2P 와 같은 k_s · k_e) 의 내구 시간 · 에너지를 같이 계산 (범위)
 const RHO_G = 1.225;
 const GLV = [
   ['cla', 'C_L·A', 'm²', I => { const a = []; for (let x = 0; x <= 6.0001; x += 0.5) a.push(+x.toFixed(2)); return a; }],
@@ -1868,7 +1895,9 @@ const GLV = [
   ['fr', '앞 무게 비율', '%', I => [35, 40, 45, 47.5, 50, 55]],
   ['gr', '감속비', '', I => [2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]],
 ];
-const GTG = [['acc', '가속', 's'], ['skid', '스키드패드 (좌우 합)', 's'], ['ax', '오토크로스', 's'], ['end', '내구 (이상 운전자)', 's']];
+// 가로축 목표: [키, 이름, 단위, 좋은 쪽 (−1 = 작을수록 · +1 = 클수록)]
+const GTG = [['acc', '가속', 's', -1], ['skid', '스키드패드 (좌우 합)', 's', -1], ['ax', '오토크로스', 's', -1], ['end', '내구 (이상 운전자)', 's', -1],
+             ['ax0', '출발 종가속도 (정지에서 최대)', 'g', 1], ['ay', '스키드패드 횡가속도', 'g', 1], ['e_end', '내구 단자 에너지 (이상 운전자)', 'kWh', -1]];
 function gBase(I) {
   const B = I.base || {}, X = { ...B };
   ['m', 'fr', 'h', 'L', 'tf', 'tr', 'r_eff', 'mu', 'mu_s', 'crr', 'gr', 'eta_dt', 'eta_mot', 'eta_inv', 'pmax', 'nmax', 'tmax', 'xcop', 'hcop', 'lltd', 'j_eq', 'dr_ks', 'dr_ke'].forEach(k => { if (isFinite(I[k])) X[k] = I[k]; });
@@ -1882,7 +1911,7 @@ function gBase(I) {
     motorC: [], course: 'end', grMode: 'my', _sweep: 0, _probe: 0 });
   return X;
 }
-// xcop: 뒤축에서 앞으로 거리 [mm] (도구 2 정의). CoP = 무게 배분이면 앞축 몫 = 앞 무게 비율 → 뒤축에서 L × 앞 몫
+// xcop: 뒤축에서 앞으로 거리 [mm] (도구 2P 정의). CoP = 무게 배분이면 앞축 몫 = 앞 무게 비율 → 뒤축에서 L × 앞 몫
 const copW = X => X.L * X.fr / 100;
 function gEval(X, real) {
   VC = new Map(); VCF = new Map();
@@ -1891,7 +1920,8 @@ function gEval(X, real) {
   const r = { acc: E.acc, skid: E.skid, ax: E.ax, end: EN ? EN.T : NaN, e_end: EN ? EN.Et / 3.6e6 : NaN,
     p_avg: EN && EN.T > 0 ? EN.Et / EN.T / 1000 : NaN, ay: E.vs > 0 ? E.vs * E.vs / SK_R / g : NaN,
     df100: 0.5 * RHO_G * X.cla * (100 / 3.6) ** 2, dr100: 0.5 * RHO_G * X.cda * (100 / 3.6) ** 2,
-    tw: (X.tmax || 0) * X.gr * (X.eta_dt / 100) / (X.r_eff / 1000) };
+    tw: (X.tmax || 0) * X.gr * (X.eta_dt / 100) / (X.r_eff / 1000),
+    ax0: C && C.aDrive ? C.aDrive(0, 0, 0, C.Voc(1), C.Tinit) / g : NaN };   // 출발 종가속도: 정지에서 구동 한계 (접지 · 토크 중 작은 쪽, 도구 2P 의 ax_0 와 같은 식)
   if (real) { VC = new Map(); VCF = new Map(); const R = runEnd({ ...X, dr_real: 1 }, X.gr, false); r.end_r = R ? R.T : NaN; r.e_end_r = R ? R.Et / 3.6e6 : NaN; }
   return r;
 }
@@ -1918,7 +1948,7 @@ function calc(I) {
   prog(0.02, '주행선 (최소 곡률) 준비 중');
   prepLines(X0, false);
   const base = gEval(X0, true);
-  const tg = GTG[Math.max(0, Math.min(3, Math.round(I.tg || 0)))][0];
+  const TG = GTG[Math.max(0, Math.min(GTG.length - 1, Math.round(I.tg || 0)))], tg = TG[0];
   // 손잡이마다 앞으로 훑기
   const SW = {}; let done = 0; const tot = GLV.reduce((a, L) => a + L[3](X0).length + 1, 0) + 2 * 13;
   const bx = k => k === 'tq' ? 100 : X0[k];   // 기본값 (손잡이 격자에 넣음)
@@ -1933,7 +1963,8 @@ function calc(I) {
   // 목표 격자: 모든 손잡이가 닿는 기록 범위 (기본 기록 ± 일부)
   const all = Object.values(SW).flatMap(s => s.rows.map(r => r[tg])).filter(isFinite);
   const lo = Math.min(...all), hi = Math.max(...all), y0 = base[tg];
-  const a = Math.max(lo, y0 * 0.75), b = Math.min(hi, y0 * 1.15), N = 60, ys = [];
+  // 시간 · 에너지 (작을수록 좋음) = 기본의 0.75 ~ 1.15 배, 가속도 (클수록 좋음) = 0.85 ~ 1.25 배
+  const a = Math.max(lo, y0 * (TG[3] > 0 ? 0.85 : 0.75)), b = Math.min(hi, y0 * (TG[3] > 0 ? 1.25 : 1.15)), N = 60, ys = [];
   for (let i = 0; i <= N; i++) ys.push(a + (b - a) * i / N);
   const sig = {};
   for (const [k] of GLV) { const s = SW[k], rec = s.rows.map(r => r[tg]); sig['q_' + k] = ys.map(y => gInv(s.xs, rec, y, bx(k))); }
@@ -1951,7 +1982,7 @@ function calc(I) {
   out.p_cda = isFinite(out.p_cla) ? X0.__cda0 + out.p_cla / X0.__ld : NaN;
   out.p_e = gInterp(SW.cla.xs, SW.cla.rows.map(r => r.e_end), out.p_cla);
   Object.assign(out, { b_acc: base.acc, b_skid: base.skid, b_ax: base.ax, b_end: base.end, b_e: base.e_end, b_end_r: base.end_r, b_e_r: base.e_end_r,
-    b_p: base.p_avg, b_ay: base.ay, b_df: base.df100, b_dr: base.dr100, b_cda: X0.cda, b_xcop: X0.xcop, b_tw: base.tw,
+    b_p: base.p_avg, b_ay: base.ay, b_df: base.df100, b_dr: base.dr100, b_cda: X0.cda, b_xcop: X0.xcop, b_tw: base.tw, b_ax0: base.ax0,
     q_heat: base.p_avg * (1 - (X0.eta_mot / 100) * (X0.eta_inv / 100)), i_avg: base.p_avg * 1000 / (X0.n_s * X0.c_vnom), tg_v_o: pv });
   prog(1, '');
   return { out, x: { d: ys }, sig };
