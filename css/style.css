@@ -3141,3 +3141,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 @media (max-width:700px){.t2s-top{columns:1}}
 .t2s-base{font-size:13.5px;margin:0}
 .wb-hpbar{display:inline-flex;align-items:center;gap:6px}
+/* 도구 2P 켬 · 끔 카드: 카드 아무 곳이나 눌러 바꿈 */
+.t2-mdop.t2-card{cursor:pointer}
+.t2-mdop.t2-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.t2-mdop.t2-card .t2-tgb{pointer-events:none}

@@ -206,17 +206,17 @@ function car(I, gr, kP, lam) {
   };
 
   // ---------- 모터 열 · 디레이팅 (아래 '디레이팅' 참고)
-  // 열 모델 켜기: 모터 열 · 인버터 온도 · 축전지 온도 · 냉각수 온도.  냉각 방식 (0 = 공랭, 1 = 수랭): 모터 · 인버터 기본 수랭, 축전지 기본 공랭
-  const mW = I.m_cool !== 0, iW = I.i_cool !== 0, bW = I.b_cool === 1;
+  // 열 모델 켜기: 모터 열 · 인버터 온도 · 축전지 온도 · 냉각수 온도.
+  // 수랭 방식 cw_mode: 0 = 부품별 독립 회로 (수랭 부품마다 자기 냉각수 · 라디, 냉각 방식은 m_cool · i_cool · b_cool),
+  //                    1 = 도구 9 회로 (I.cw9 = 도구 9 배치를 그대로: 수랭 회로 여러 개 · 직렬 · 병렬 갈라짐 · 합침 · 라디 여러 개 · 공랭 덕트. 부품 위치도 도구 9 가 정함)
+  const NET = I.cw_mode === 1 && I.cw9 && Array.isArray(I.cw9.water) ? I.cw9 : null;
+  const where = {};   // 도구 9 회로: 부품 → {w 회로, k 점} · {a 덕트, j 순서}, 없으면 외기
+  if (NET) { NET.water.forEach((Cc, w) => Cc.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
+             (NET.air || []).forEach((D, a) => D.parts.forEach((p, j) => { if (!where[p]) where[p] = { a, j }; })); }
+  const inW = p => !!(where[p] && where[p].w != null);
+  const mW = NET ? inW('m') : I.m_cool !== 0, iW = NET ? inW('i') : I.i_cool !== 0, bW = NET ? inW('b') : I.b_cool === 1;
   const thOn = I.th_on !== 0, inOn = I.in_on === 1, btOn = I.bt_on === 1;
-  // 냉각수는 한 덩어리 (모든 수랭 부품이 같은 냉각수): 열용량 cw_c, 라디에이터 UA(v). 회로 구성 · 라디 · 펌프 선정은 도구 9 냉각 계통 계산기 (그 등가값을 여기에 넣음)
   const cwOn = I.cw_on === 1 && ((thOn && mW) || iW || (btOn && bW));   // 냉각수 온도: 켰고 수랭으로 열을 넣는 부품이 있을 때만 (아니면 고정값)
-  // 직렬 회로 (cw_ser 1, 도구 9 의 회로 하나 · 갈라짐 없음 · 라디 하나): 라디 → 부품 순서대로 냉각수가 데워짐 (앞 부품이 데운 냉각수를 뒤 부품이 받음)
-  //   냉각수 상태 st.w = 라디 입구 온도, 열용량 cw_c.  라디 방열 Q_r = G(v) (T_ri − T_외기), G = cw_g0 ~ cw_g60 (≤ C_c),  라디 출구 T_ro = T_ri − Q_r ÷ C_c
-  //   부품 k 점 (잘 섞인 덩어리 = 그 점 출구, 도구 9 와 같음): T_k = T_(k−1) + Q_k ÷ C_c,  Q_k = (T_부품 − T_(k−1)) ÷ (R_k + 1/C_c)
-  //   냉각수가 회로를 도는 시간은 랩보다 짧다고 보고 점마다 열용량은 두지 않음 (모두 cw_c 한 덩어리). 순서 cw_om · cw_oi · cw_ob (1 = 라디 바로 뒤, 0 = 맨 끝)
-  const cwSer = cwOn && I.cw_ser === 1 && I.cw_cc > 0, Ccw = cwSer ? I.cw_cc : 0;
-  const cwOrd = cwSer ? [['m', I.cw_om], ['i', I.cw_oi], ['b', I.cw_ob]].map(([p, o], j) => [p, o > 0 ? o : 99 + j]).sort((x, y) => x[1] - y[1]).map(x => x[0]) : [];
   // ---------- 디레이팅 (회전수마다 피크 ~ 연속 사이를 같은 비율 r 로)
   //   모터: r_m = (T_m − 시작) ÷ (끝 − 시작) 을 0 ~ 1 로 → T(n) = T_피크(n) − r_m (T_피크(n) − T_연속(n))   (모터 열을 켰을 때만, 끝 온도 위로는 연속 그대로)
   //   표에 연속 열이 없으면 T_연속 = T_피크 × 연속 비율, 피크 열이 없으면 T_피크 = T_연속 ÷ 연속 비율 (비율 100 % = 디레이팅 없음)
@@ -238,42 +238,67 @@ function car(I, gr, kP, lam) {
   //   모터    : C_m dT_m/dt = 모터 손실 − 냉각.  수랭 (T_m − T_w) ÷ R_m,  공랭 hA_m(v) (T_m − T_외기).  끄면 출발 온도 그대로 · 디레이팅 없음
   //   인버터  : C_i dT_i/dt = 인버터 손실 − 냉각.  수랭 (T_i − T_w) ÷ R_i,  공랭 hA_i(v) (T_i − T_외기).  끄면 온도는 안 셈 (수랭이면 손실을 냉각수에 바로)
   //   축전지  : C_b dT_b/dt = I² R(T_b) − 냉각.  공랭 hA_b(v) (T_b − T_외기),  수랭 (T_b − T_w) ÷ R_b.  R(T) = R_25 (1 + α (25 − T)) (0.3 R_25 아래로는 안 감)
-  //   냉각수  : C_w dT_w/dt = 수랭 부품에서 들어오는 열 − UA(v) (T_w − T_외기).  끄면 냉각수 온도 고정
+  //   냉각수 · 부품별 독립 (cw_mode 0): 수랭 부품 p 마다 C_wp dT_wp/dt = 부품에서 들어오는 열 − UA_p(v) (T_wp − T_외기)  (모터 cw_c · ua0 · ua60, 인버터 i_wc · i_ua0 · i_ua60, 축전지 b_wc · b_ua0 · b_ua60)
+  //   냉각수 · 도구 9 회로 (cw_mode 1): 도구 9 와 같은 점 모델 — 점 k (잘 섞인 덩어리, 열용량 C_k): C_k dT_k/dt = q_k C_c (T_섞임 − T_k) + (T_부품 − T_k) ÷ R,
+  //     라디 점: C_k dT_k/dt = q_k C_c (T_섞임 − T_k) − ε C_min (T_섞임 − T_외기) (교차류 ε-NTU, 공기 = 주행풍 A k_d v + 팬), 공랭 덕트는 블럭 순서대로 공기가 데워짐.
+  //     점 · 부품을 흐름 순서대로 0.25 s 이하 작은 칸으로 나눠 지수 적분 (도구 9 와 같은 방식). 끄면 냉각수 온도 고정
   //   방열 능력은 모두 h(v) = h_0 + (h_60 − h_0) × v ÷ 60 km/h (정지 값 · 60 km/h 값, 선형; 팬이면 정지 값을 크게, 주행풍이면 60 km/h 값을 크게)
   //   칸마다 지수 적분 (그 칸 동안 다른 노드 온도 · 손실은 고정) → dt 가 커도 안정
+  //   st.w = 가장 뜨거운 냉각수 온도 (신호 · 결과용), st.x = 냉각수 상태 (독립: [모터 · 인버터 · 축전지 회로], 도구 9: 회로마다 점 온도)
   const Tamb = isFinite(I.t_amb) ? I.t_amb : 25;                         // 외기 온도 [°C]
-  const Cw   = Math.max(1, I.cw_c || 1), ua0 = Math.max(0, I.ua0 || 0), ua60 = Math.max(0, I.ua60 || 0);   // 냉각수 열용량 [J/K] · 라디에이터 UA [W/K]
   const Cb   = Math.max(1, I.b_c || 1), alp = I.b_alpha || 0, Rbt = Math.max(1e-9, I.b_r || 0.05);         // 축전지 열용량 [J/K] · 저항 온도 계수 [1/°C] · 수랭 열저항 [K/W]
   const Ci   = Math.max(1, I.i_c || 1), Ri = Math.max(1e-9, I.i_r || 0.05);                                   // 인버터 열용량 [J/K] · 수랭 열저항 [K/W]
   const hV   = (h0, h60, v) => Math.max(0, (h0 || 0) + ((Number.isFinite(h60) ? h60 : (h0 || 0)) - (h0 || 0)) * v / (60 / 3.6));   // 방열 능력 [W/K] (60 km/h 값이 없으면 일정)
   const rS   = Tb => btOn ? Math.max(0.3, 1 + alp * (25 - Tb)) : 1;  // 내부저항 배율
   const toward = (T, Teq, k, dt) => Teq + (T - Teq) * Math.exp(-k * dt);   // dT/dt = k (Teq − T) 의 해
   const air = (T, Q, h, C, dt) => h > 0 ? toward(T, Tamb + Q / h, h / C, dt) : T + Q * dt / C;          // 외기로 식는 노드
+  // 부품별 독립 회로: [열용량, UA 정지, UA 60 km/h] (모터 · 인버터 · 축전지)
+  const CWI = { m: [Math.max(1, I.cw_c || 1), Math.max(0, I.ua0 || 0), Math.max(0, I.ua60 || 0)],
+                i: [Math.max(1, I.i_wc || 1), Math.max(0, I.i_ua0 || 0), Math.max(0, I.i_ua60 || 0)],
+                b: [Math.max(1, I.b_wc || 1), Math.max(0, I.b_ua0 || 0), Math.max(0, I.b_ua60 || 0)] };
+  const PJ = ['m', 'i', 'b'], PR = { m: thR, i: Ri, b: Rbt }, PC = { m: thC, i: Ci, b: Cb }, PON = { m: thOn, i: inOn, b: btOn };
+  const PH = { m: v => hV(I.m_ha0, I.m_ha60, v), i: v => hV(I.i_ha0, I.i_ha60, v), b: v => hV(I.b_ha, I.b_ha60, v) };
+  const RHOA = 1.2, CPA = 1005;
+  const epsX = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));
+  const radA = (Cc, nd, v) => { const F = (nd.q || 1) * Cc.Cc, qa = Math.max(0, nd.A * nd.kd * v + nd.fan), Ca = RHOA * CPA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
+    const UA = Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0, Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? epsX(UA / Cm, Cm / Cx) : 0;
+    return F > 0 ? e * Cm / F : 0; };
+  const mixOf = (nd, c, k, N) => { const ins = nd.ins || [[(k - 1 + N) % N, 1]]; let fs = 0, ft = 0; ins.forEach(([j, f]) => { fs += f; ft += f * c[j]; }); return fs > 0 ? ft / fs : c[k]; };
+  const X0 = NET ? NET.water.map(Cc => Cc.nodes.map(() => I.th_cool)) : [I.th_cool, I.th_cool, I.th_cool];
   function thStep(st, Lm, Li, Ib, v, dt) {
-    const Tw = cwOn ? st.w : thCo, Qb = Ib * Ib * Rb * rS(st.b);
-    const m = !thOn ? st.m : mW ? toward(st.m, Tw + Lm * thR, 1 / (thR * thC), dt) : air(st.m, Lm, hV(I.m_ha0, I.m_ha60, v), thC, dt);
-    const i = !inOn ? st.i : iW ? toward(st.i, Tw + Li * Ri, 1 / (Ri * Ci), dt) : air(st.i, Li, hV(I.i_ha0, I.i_ha60, v), Ci, dt);
-    const b = !btOn ? st.b : bW ? toward(st.b, Tw + Qb * Rbt, 1 / (Rbt * Cb), dt) : air(st.b, Qb, hV(I.b_ha, I.b_ha60, v), Cb, dt);
-    let w = thCo;
-    if (cwSer) {   // 직렬 회로: 부품마다 그 자리 냉각수 온도로 (위 m · i · b 수랭 식 대신)
-      const G = Math.min(Ccw, Math.max(1e-6, hV(I.cw_g0, I.cw_g60, v)));
-      let base = st.w - G * (st.w - Tamb) / Ccw, Qs = 0; const nx = { m, i, b };
-      for (const p of cwOrd) {
-        let Q = 0;
-        if (p === 'm' && thOn && mW) { const Re = thR + 1 / Ccw; Q = (st.m - base) / Re; nx.m = toward(st.m, base + Lm * Re, 1 / (Re * thC), dt); }
-        else if (p === 'i' && iW) { if (inOn) { const Re = Ri + 1 / Ccw; Q = (st.i - base) / Re; nx.i = toward(st.i, base + Li * Re, 1 / (Re * Ci), dt); } else Q = Li; }
-        else if (p === 'b' && btOn && bW) { const Re = Rbt + 1 / Ccw; Q = (st.b - base) / Re; nx.b = toward(st.b, base + Qb * Re, 1 / (Re * Cb), dt); }
-        else continue;
-        Qs += Q; base += Q / Ccw; }
-      w = toward(st.w, Tamb + Qs / G, G / Cw, dt);
-      return { m: nx.m, i: nx.i, w, b: nx.b };
+    const Qb = Ib * Ib * Rb * rS(st.b), L = { m: Lm, i: Li, b: Qb }, x = st.x || X0;
+    if (!NET) {   // 부품별 독립 회로
+      const Tw = p => cwOn ? x[PJ.indexOf(p)] : thCo, nx = x.slice();
+      const m = !thOn ? st.m : mW ? toward(st.m, Tw('m') + Lm * thR, 1 / (thR * thC), dt) : air(st.m, Lm, PH.m(v), thC, dt);
+      const i = !inOn ? st.i : iW ? toward(st.i, Tw('i') + Li * Ri, 1 / (Ri * Ci), dt) : air(st.i, Li, PH.i(v), Ci, dt);
+      const b = !btOn ? st.b : bW ? toward(st.b, Tw('b') + Qb * Rbt, 1 / (Rbt * Cb), dt) : air(st.b, Qb, PH.b(v), Cb, dt);
+      let w = cwOn ? -Infinity : thCo;
+      if (cwOn) PJ.forEach((p, j) => { const wat = p === 'm' ? thOn && mW : p === 'i' ? iW : btOn && bW; if (!wat) return;
+        const [Cw, u0, u60] = CWI[p], UA = Math.max(1e-6, hV(u0, u60, v)), Q = p === 'i' && !inOn ? Li : (st[p] - x[j]) / PR[p];
+        nx[j] = toward(x[j], Tamb + Q / UA, UA / Cw, dt); w = Math.max(w, nx[j]); });
+      return { m, i, w, b, x: nx };
     }
-    if (cwOn) { const UA = Math.max(1e-6, hV(ua0, ua60, v)),
-                      Q = (thOn && mW ? (st.m - st.w) / thR : 0) + (iW ? (inOn ? (st.i - st.w) / Ri : Li) : 0) + (btOn && bW ? (st.b - st.w) / Rbt : 0);
-                w = toward(st.w, Tamb + Q / UA, UA / Cw, dt); }
-    return { m, i, w, b };
+    // 도구 9 회로
+    const T = { m: st.m, i: st.i, b: st.b }, c = x.map(a => a.slice()), n = Math.max(1, Math.ceil(dt / 0.25)), h = dt / n;
+    const aK = NET.water.map(Cc => Cc.nodes.map(nd => nd.t === 'rad' ? radA(Cc, nd, v) : 0));
+    for (let s = 0; s < n; s++) {
+      if (cwOn) NET.water.forEach((Cc, w) => { const N = Cc.nodes.length;
+        for (let k = 0; k < N; k++) { const nd = Cc.nodes[k], mix = mixOf(nd, c[w], k, N), F = (nd.q || 1) * Cc.Cc, Cn = Math.max(1, nd.C || 1);
+          if (nd.t === 'rad') { c[w][k] = toward(c[w][k], mix - aK[w][k] * (mix - Tamb), F / Cn, h); continue; }
+          const p = nd.part;
+          if (p && PON[p]) { const G = 1 / PR[p]; c[w][k] = toward(c[w][k], (F * mix + G * T[p]) / (F + G), (F + G) / Cn, h); }
+          else if (p === 'i' && F > 0) c[w][k] = toward(c[w][k], mix + Li / F, F / Cn, h);   // 인버터 온도 끔: 손실을 냉각수에 바로
+          else if (F > 0) c[w][k] = toward(c[w][k], mix, F / Cn, h); } });
+      for (const p of PJ) { if (!PON[p]) continue; const wh = where[p];
+        if (wh && wh.w != null) T[p] = toward(T[p], (cwOn ? c[wh.w][wh.k] : thCo) + L[p] * PR[p], 1 / (PR[p] * PC[p]), h);
+        else if (!wh) T[p] = air(T[p], L[p], PH[p](v), PC[p], h); }
+      (NET.air || []).forEach(D => { const Ca = RHOA * CPA * Math.max(0, D.A * D.kd * v + D.fan); let Ta = Tamb;
+        D.parts.forEach(p => { if (!PON[p]) return; const G = Ca > 0 ? Ca * (1 - Math.exp(-PH[p](v) / Ca)) : 0;
+          T[p] = G > 0 ? toward(T[p], Ta + L[p] / G, G / PC[p], h) : T[p] + L[p] * h / PC[p]; if (Ca > 0) Ta += G * (T[p] - Ta) / Ca; }); }); }
+    const w = cwOn && c.length ? Math.max(...c.map(a => Math.max(...a))) : thCo;
+    return { m: T.m, i: T.i, w, b: T.b, x: c };
   }
-  const tmNext = (Tm, Ploss, dt) => thStep({ m: Tm, i: Tm, w: thCo, b: 25 }, Ploss, 0, 0, 0, dt).m;   // 예전 이름 (모터만)
+  const tmNext = (Tm, Ploss, dt) => thStep({ m: Tm, i: Tm, w: thCo, b: 25, x: X0 }, Ploss, 0, 0, 0, dt).m;   // 예전 이름 (모터만)
 
   // 단자 전압 V 에서 회전수 n 의 피크 · 연속 토크 [N·m]  (표가 둘 다 없으면 모터 최대 토크 일정 — 검증용, 화면에서는 표가 꼭 있음)
   if (I.motorReq === 1 && !tq.length && !tqC.length) throw new Error('모터 토크 표가 비어 있습니다. 편집 › 모터에서 피크 또는 연속 토크를 넣으세요.');
@@ -514,7 +539,7 @@ function car(I, gr, kP, lam) {
 
   return { m, meff, r, gr, eta, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR, capFy, capRy, axPk, vFlag, vCorner3, md3, ksT, dIn0, dReq, dmx, rollAng, md2, slipA, Ca, kUs, L, hra, tf, tr, muZ, FyT, sr: I.steer_ratio > 0 ? I.steer_ratio : 5,
            vCorner, aDrive, aBrake, drive, elec, Tcurve, Voc, Epack, Ecap, ptMax, Rb, Imax, tmNext, thStep, rS, thOn, cwOn, btOn, inOn, drOn, Tpk, Tct, Tinit: I.th_init, rgOn, lam: lam > 0 ? lam : 0,
-           TH0: { m: I.th_init, i: Number.isFinite(I.i_init) ? I.i_init : I.th_init, w: I.th_cool, b: isFinite(I.b_t0) ? I.b_t0 : 25 } };   // 출발 온도 (모터 · 인버터 · 냉각수 · 축전지)
+           TH0: { m: I.th_init, i: Number.isFinite(I.i_init) ? I.i_init : I.th_init, w: I.th_cool, b: isFinite(I.b_t0) ? I.b_t0 : 25, x: X0 } };   // 출발 온도 (모터 · 인버터 · 냉각수 · 축전지)
 }
 
 
@@ -1162,7 +1187,7 @@ function coastLift(C, G, v, V0, TM, TI) {
 //   T0 = 출발 온도 {m, w, b} (모터 · 냉각수 · 축전지, 숫자면 모터만) [°C]
 const th0 = (C, T0) => T0 == null ? { ...C.TH0 } : typeof T0 === 'number' ? { ...C.TH0, m: T0 } : { ...T0 };
 function walk(C, G, v, V0, rec, T0) {
-  const t0 = th0(C, T0), N = v.length, tc = [0], et = [0], ec = [0], tm = [t0.m], ti = [t0.i], tw = [t0.w], tb = [t0.b];
+  const t0 = th0(C, T0), N = v.length, tc = [0], et = [0], ec = [0], tm = [t0.m], ti = [t0.i], tw = [t0.w], tb = [t0.b], tx = [t0.x];
   let qm = 0, qi = 0, qb = 0, tq = 0, er = 0;   // 손실 · 발열 시간 적분 [J] (도구 9 냉각 계통 계산기에 넘길 평균 발열), 그 시간 [s]
   const S = rec ? { pw: [], ax: [], ay: [], rpm: [], tq: [], tlim: [], pbat: [], vbat: [], voc: [], eta: [], tmot: [], grip: [],
                     roll: [], tcool: [], tbat: [], tinv: [], fz_fl: [], fz_fr: [], fz_rl: [], fz_rr: [], af: [], ar: [], beta: [], sw: [], dw: [], sat: [], dst: [] } : null;
@@ -1176,8 +1201,8 @@ function walk(C, G, v, V0, rec, T0) {
     et.push(et[i] + E.P * dt);
     ec.push(ec[i] + V0[i] * E.I * dt);
     if (E.I < 0 && isFinite(dt)) er -= V0[i] * E.I * dt;          // 회생으로 셀에 돌려준 에너지 [J]
-    const st = C.thStep({ m: tm[i], i: ti[i], w: tw[i], b: tb[i] }, E.L, E.Li, E.I, vm, isFinite(dt) ? dt : 0);   // 온도: 손실로 오르고 냉각으로 내림
-    tm.push(st.m); ti.push(st.i); tw.push(st.w); tb.push(st.b);
+    const st = C.thStep({ m: tm[i], i: ti[i], w: tw[i], b: tb[i], x: tx[i] }, E.L, E.Li, E.I, vm, isFinite(dt) ? dt : 0);   // 온도: 손실로 오르고 냉각으로 내림
+    tm.push(st.m); ti.push(st.i); tw.push(st.w); tb.push(st.b); tx.push(st.x);
     if (isFinite(dt)) { qm += E.L * dt; qi += E.Li * dt; qb += E.I * E.I * C.Rb * C.rS(tb[i]) * dt; tq += dt; }
     if (E.V < vmin) vmin = E.V;
     if (rec) {
@@ -1208,7 +1233,7 @@ function walk(C, G, v, V0, rec, T0) {
     }
   }
   if (rec) for (const k in S) S[k].push(S[k][S[k].length - 1]);
-  return { tc, et, ec, tm, ti, tw, tb, S, vmin, er, Q: { m: qm, i: qi, b: qb, t: tq }, T1: { m: tm.at(-1), i: ti.at(-1), w: tw.at(-1), b: tb.at(-1) } };
+  return { tc, et, ec, tm, ti, tw, tb, tx, S, vmin, er, Q: { m: qm, i: qi, b: qb, t: tq }, T1: { m: tm.at(-1), i: ti.at(-1), w: tw.at(-1), b: tb.at(-1), x: tx.at(-1) } };
 }
 
 // 랩 m개를 이어서 정지 출발.  랩마다 SOC → 개방 전압, 칸마다 모터 온도 (두 번: 처음은 출발 값 그대로, 다음은 앞 계산으로 고침)
@@ -1237,7 +1262,7 @@ function laps(C, segs, m, ds, soc0, fixedV, T0) {
     Ec.push(W.ec[(j + 1) * P] - W.ec[j * P]);
   }
   const soc1 = soc0 - Ec.reduce((a, b) => a + b, 0) / C.Epack;
-  return { G, v: sp.v, lim: sp.lim, V0, TM: W.tm, TI: W.ti, TW: W.tw, TB: W.tb, T0: t0, P, t, Et, Ec, socs, vmin: W.vmin, soc1, T1: W.T1, Q: W.Q, Er: W.er, len: G.s.at(-1) };
+  return { G, v: sp.v, lim: sp.lim, V0, TM: W.tm, TI: W.ti, TW: W.tw, TB: W.tb, TX: W.tx, T0: t0, P, t, Et, Ec, socs, vmin: W.vmin, soc1, T1: W.T1, Q: W.Q, Er: W.er, len: G.s.at(-1) };
 }
 
 const sum = a => a.reduce((x, y) => x + y, 0);
@@ -1346,7 +1371,7 @@ const endI = I => I.dr_real === 1 ? { ...I, __end: 1 } : I, accI = I => I.dr_rea
 function runAcc(C) {
   const G = grid([[ACC_L, 0]], 0.5), V = new Array(G.s.length).fill(C.Voc(1)), sp = speed(C, G, V, null), W = walk(C, G, sp.v, V, false);
   const Ec = W.ec.at(-1);
-  return { G, v: sp.v, lim: sp.lim, V0: V, TM: W.tm, TI: W.ti, TW: W.tw, TB: W.tb, T0: { ...C.TH0 }, P: G.s.length - 1, t: [W.tc.at(-1)], Et: [W.et.at(-1)], Ec: [Ec], socs: [1],
+  return { G, v: sp.v, lim: sp.lim, V0: V, TM: W.tm, TI: W.ti, TW: W.tw, TB: W.tb, TX: W.tx, T0: { ...C.TH0 }, P: G.s.length - 1, t: [W.tc.at(-1)], Et: [W.et.at(-1)], Ec: [Ec], socs: [1],
            soc1: 1 - Ec / C.Epack, T1: W.T1 };
 }
 
@@ -1622,7 +1647,7 @@ function modeRun(I, G2, G3, fast) {
   if (!K) return { out, x: { d: [0] }, sig: {}, map: null };
 
   // 볼 랩 고르기: 내구는 드라이버 A · B 두 줄을 이어 붙임
-  let G, v, lim, V0, TM, TI, TW, TB, from = 0, to, P, n;
+  let G, v, lim, V0, TM, TI, TW, TB, TX, from = 0, to, P, n;
   if (K.EN) {
     const A = K.EN.A, B = K.EN.B, off = A.G.s.at(-1);
     G   = { s: [...A.G.s, ...B.G.s.slice(1).map(x => x + off)], k: [...A.G.k, ...B.G.k] };
@@ -1632,10 +1657,11 @@ function modeRun(I, G2, G3, fast) {
     TM  = [...A.TM, ...B.TM.slice(1)];
     TW  = [...A.TW, ...B.TW.slice(1)];
     TB  = [...A.TB, ...B.TB.slice(1)];
+    TX  = [...A.TX, ...B.TX.slice(1)];
     TI  = [...A.TI, ...B.TI.slice(1)];
     P = A.P; n = K.EN.n;
   } else {
-    ({ G, v, lim, V0, TM, TI, TW, TB, P } = K.L); n = K.L.t.length;
+    ({ G, v, lim, V0, TM, TI, TW, TB, TX, P } = K.L); n = K.L.t.length;
   }
   const j = I.lap === 'all' || n === 1 ? -1 : Math.max(1, Math.min(n, parseInt(I.lap) || 1)) - 1;
   if (j >= 0) { from = j * P; to = (j + 1) * P; } else to = G.s.length - 1;
@@ -1657,7 +1683,7 @@ function modeRun(I, G2, G3, fast) {
 
   const sl = a => a.slice(from, to + 1);
   const Gs = { s: sl(G.s).map(x => x - G.s[from]), k: G.k.slice(from, to) }, vv = sl(v);
-  const W  = walk(K.C, Gs, vv, sl(V0), true, { m: TM[from], i: TI[from], w: TW[from], b: TB[from] });
+  const W  = walk(K.C, Gs, vv, sl(V0), true, { m: TM[from], i: TI[from], w: TW[from], b: TB[from], x: TX ? TX[from] : undefined });
 
   // ---------- 고른 코스 결과 (볼 랩)
   const lt = K.EN ? K.EN.t : K.L.t, le = K.EN ? K.EN.et : K.L.Et, lc = K.EN ? K.EN.ec : K.L.Ec, soc = K.EN ? K.EN.soc : K.L.socs;

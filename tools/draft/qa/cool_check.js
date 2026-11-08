@@ -47,15 +47,16 @@ const H=require('./h.js');
   await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.links=[['k1','k2'],['k2','k3'],['k3','kp2'],['kp2','k4'],['k4','k1'],['k2','k4']]; C.selL=-1; t9Save(); wbPaint(['ext']); }); await W(300);
   console.log('bad pumps', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)));
   await p.evaluate(()=>{ T9.cool=T9COOL_DEF(); t9Save(); wbPaint(['ext']); wbCalcSoon(); }); await W(800);
-  // 도구 2 에 등가값 넣기 → 도구 2 저장값
+  // 도구 2P 에서 이 회로 쓰기 → 도구 2P 저장값 (수랭 방식 1)
   await p.evaluate(()=>{ localStorage.removeItem(wbStoreKey('2')); }); await W(100); await p.click('[data-t9x="put"]'); await W(300);
-  console.log('put', await p.evaluate(()=>{ const s=JSON.parse(localStorage.getItem(wbStoreKey('2'))||'{}'); return JSON.stringify([s.cw_c,s.ua0,s.ua60,s.m_cool,s.i_cool,s.b_cool,s.cw_on]); }));
+  console.log('put', await p.evaluate(()=>{ const s=JSON.parse(localStorage.getItem(wbStoreKey('2'))||'{}'); return JSON.stringify([s.cw_mode,s.m_cool,s.i_cool,s.b_cool,s.cw_on]); }));
   await p.click('[data-t9x="get"]'); await W(300); console.log('get th_c', await p.evaluate(()=>WB.I.th_c));
   // 도구 2: 모델 단계 공랭 / 수랭 단추 · [냉각] 탭 · 평균 발열 보내기
   await p.evaluate(()=>wbOpen('2')); await W(9000);
-  console.log('t2 out', await p.evaluate(()=>{ const o=WB.R.out; return [o.c_qm,o.c_qi,o.c_qb,o.c_vavg,o.c_trun,o.c_tw,o.c_tm].map(v=>+(+v).toFixed(2)); }), 'I', await p.evaluate(()=>JSON.stringify([WB.I.cw_c,WB.I.ua0,WB.I.ua60,WB.I.cw_on])));
+  console.log('t2 out', await p.evaluate(()=>{ const o=WB.R.out; return [o.c_qm,o.c_qi,o.c_qb,o.c_vavg,o.c_trun,o.c_tw,o.c_tm].map(v=>+(+v).toFixed(2)); }), 'I', await p.evaluate(()=>JSON.stringify([WB.I.cw_mode,WB.I.cw_on])));
   await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2eg="model"]'); await W(300);
   console.log('model cool seg', await p.evaluate(()=>[...document.querySelectorAll('.t2-mdc .dc-seg')].map(g=>[...g.querySelectorAll('button')].map(x=>x.textContent+(x.getAttribute('aria-pressed')==='true'?'*':'')).join('/')).join(' | ')));
+  console.log('t2 mode (도구 9 회로 = 1)', await p.evaluate(()=>WB.I.cw_mode)); await p.click('[data-t2cwm="0"]'); await W(300);
   await p.click('[data-t2cool-b_cool="1"]'); await W(300); console.log('b_cool', await p.evaluate(()=>WB.I.b_cool)); await p.click('[data-t2cool-b_cool="0"]'); await W(200);
   await p.click('[data-t2eg="cool"]'); await W(300); console.log('t2 cool tab', await p.locator('.t2-coolq .wb-ir').count(), await p.evaluate(()=>document.querySelector('.t2-cq').textContent.replace(/\s+/g,' ').slice(0,260)));
   if(process.argv[2]) await p.screenshot({path:process.argv[2]+'/cool_t2.png'});
