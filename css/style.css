@@ -3140,3 +3140,4 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2s-tab td.t2s-hi{background:var(--accent-soft);color:var(--accent);font-weight:700}
 @media (max-width:700px){.t2s-top{columns:1}}
 .t2s-base{font-size:13.5px;margin:0}
+.wb-hpbar{display:inline-flex;align-items:center;gap:6px}

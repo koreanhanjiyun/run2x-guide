@@ -14,7 +14,7 @@ const M6TOUR = [
 const T6G = {car:'차 · 바퀴', rack:'랙 · 기준'};
 const t6Pt = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
 WB_TOOLS['6'] = {
-  no:'6', stage:'P3-4~5', name:'조향 (3D 기구학)',
+  share:'hp', no:'6', stage:'P3-4~5', name:'조향 (3D 기구학)',
   x:{n:'핸들 각', u:'°'},
   sweepFirst:'ay',
   inputs:[

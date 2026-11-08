@@ -55,7 +55,7 @@ const M5TOUR = [
 const T5G = {car:'차 · 바퀴'};
 const t5Cv = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
 WB_TOOLS['5'] = {
-  no:'5', stage:'P3-1~3', name:'서스 기하 (3D 기구학)',
+  share:'hp', no:'5', stage:'P3-1~3', name:'서스 기하 (3D 기구학)',
   mainTitle:'정면 · 측면 기하', mainMeta:'왼쪽 바퀴 · 같은 축척',
   x:{n:'휠 트래블', u:'mm'}, xiStart:'mid',
   inputs:[

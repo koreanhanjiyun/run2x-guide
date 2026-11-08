@@ -18,7 +18,7 @@ document.addEventListener('click', e => { if(WB.id!=='7' || !e.target.closest) r
   const m = t.closest('[data-t7mr]'); if(m){ WB.I.mr_m = +m.dataset.t7mr; wbSave(); wbPaint(['in']); wbCalcSoon(); return; }
   const a = t.closest('[data-t7pa]'); if(a){ const [s, v] = a.dataset.t7pa.split(':'); WB.I['pa_arm_' + s] = +v; wbSave(); wbPaint(['in']); wbCalcSoon(); return; } });
 WB_TOOLS['7'] = {
-  no:'7', stage:'P3-6~7', name:'액추에이션 · 스프링',
+  share:'hp', no:'7', stage:'P3-6~7', name:'액추에이션 · 스프링',
   x:{n:'휠 트래블', u:'mm'}, xiStart:'mid',
   inLock(k){ if((k==='mr_f' || k==='mr_r') && WB.I.mr_m === 1) return '기하로 셈'; if(WB.I.mr_m !== 1 && T7GEO.test(k)) return '상수 모션비'; return ''; },
   inEff(k){ const o = WB.R && !WB.err && WB.R.out; if(k==='mr_f') return o ? o.mr_f_o : '…'; if(k==='mr_r') return o ? o.mr_r_o : '…'; return undefined; },
