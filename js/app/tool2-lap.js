@@ -221,7 +221,7 @@ const t2Seg = (attr, cur, items) => `<span class="dc-seg" role="group">${items.m
 function t2ExtHTML(){ const sim = T2.tab==='sim', w = $('#wb'); if(w) w.classList.toggle('t2-edit', !sim);
   const R = WB.id==='2' ? WB.R : null, go = R && R.modes ? R.modes.opt.out.gr_use : NaN;
   const bar = sim
-    ? `<span class="t2-mdl" title="계산에 쓴 모델 · 기능 (편집 탭 [모델 단계]에서 바꿈)">모델 · 차량 ${Math.max(0, Math.min(3, Math.round(WB.I.md || 0)))} · 운전자 ${WB.I.drv === 1 ? '타력' : '최대'} · 열 ${t2ThName()}${WB.I.rg_on === 1 ? ' · 회생' : ''}</span><span class="t2-gm"><span class="muted">기준 감속비</span>${t2Seg('data-t2gm', T2.grMode, [['my', `내 감속비 ${wbFmt(WB.I.gr, 2)}`], ['opt', `최적 감속비 ${isFinite(go) ? wbFmt(go, 2) : '…'}`]])}</span>
+    ? `<span class="t2-mdl" title="계산에 쓴 모델 · 기능 (편집 탭 [모델 단계]에서 바꿈)">모델 · 차량 ${Math.max(0, Math.min(3, Math.round(WB.I.md || 0)))} · 운전자 ${WB.I.dr_real === 1 ? '현실 · ' : ''}${WB.I.drv === 1 ? '타력' : '최대'} · 열 ${t2ThName()}${WB.I.rg_on === 1 ? ' · 회생' : ''}</span><span class="t2-gm"><span class="muted">기준 감속비</span>${t2Seg('data-t2gm', T2.grMode, [['my', `내 감속비 ${wbFmt(WB.I.gr, 2)}`], ['opt', `최적 감속비 ${isFinite(go) ? wbFmt(go, 2) : '…'}`]])}</span>
        <span class="t2-vw"><label class="t2-lapl">볼 랩 <span id="t2lapw">${t2LapSel()}</span></label><span class="muted">코스</span>${t2Seg('data-t2course', T2.course, T2COURSES.map(k => [k, T2CN[k]]))}</span>`
     : `<span class="t2-vw"><span class="muted">편집할 항목</span>${t2Seg('data-t2eg', t2Grp(T2.etab), T2EI)}</span>
 `;
@@ -279,12 +279,15 @@ function t2ModelPage(){ const md = Math.max(0, Math.min(3, Math.round(WB.I.md ||
       return `<div class="t2-mdop tg${on[k] ? ' on' : ''}"><b><button type="button" class="t2-tgb" data-t2th="${k}" aria-pressed="${on[k]}">${on[k] ? '켬' : '끔'}</button>${t}</b>
         ${c ? (() => { const wv = c==='b_cool' ? (WB.I.b_cool === 1 ? 1 : 0) : (WB.I[c] !== 0 ? 1 : 0); return `<span class="t2-mdc"><span class="muted">냉각</span><span class="dc-seg" role="group">${[[0, '공랭'], [1, '수랭']].map(([q, nm]) => `<button type="button" data-t2cool-${c}="${q}" aria-pressed="${wv===q}">${nm}</button>`).join('')}</span></span>`; })() : `<span class="t2-mdc muted">${th.src ? '수랭 부품 있음' : '수랭 부품 없음 → 계산 안 함'}${dead ? ' (켜 두었지만 고정값 사용)' : ''}</span>`}
         <span class="t2-mdd">${d}</span><span class="t2-mdu">쓰는 입력: ${u}</span></div>`; }).join('')}</div></div>`;
-  const dv = WB.I.drv === 1 ? 1 : 0;
-  const drv = `<div class="t2-mdax">${head('운전자 모델', '하나 고름 · 내구에서만 다름 (가속 · 스키드패드 · 오토크로스는 늘 최대)')}<div class="t2-mdops two">${T2DRV.map(([k, t, d, u]) => `<button type="button" class="t2-mdop" data-t2drv="${k}" aria-pressed="${dv===k}"><b>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">쓰는 입력: ${u}</span></button>`).join('')}</div></div>`;
+  const dv = WB.I.drv === 1 ? 1 : 0, dr = WB.I.dr_real === 1 ? 1 : 0;
+  const drv = `<div class="t2-mdax">${head('운전자 모델', '운전 실력 하나 + 에너지 상한 대응 하나를 고름')}<div class="t2-mdops two">${T2DRR.map(([k, t, d, u]) => `<button type="button" class="t2-mdop" data-t2drr="${k}" aria-pressed="${dr===k}"><b>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">쓰는 입력: ${u}</span></button>`).join('')}</div>
+    <div class="t2-mdops two">${T2DRV.map(([k, t, d, u]) => `<button type="button" class="t2-mdop" data-t2drv="${k}" aria-pressed="${dv===k}"><b>${t}</b><span class="t2-mdd">${d}</span><span class="t2-mdu">쓰는 입력: ${u}</span></button>`).join('')}</div></div>`;
   const fset = `<div class="t2-mdax">${head('기능 설정', '기능마다 고려 · 고려 안 함 (값은 각 입력 칸, 0 은 끔이 아니라 실제 0)')}<div class="t2-mdops">${t2FsCards()}</div></div>`;
   return `<div class="t2-model"><p class="muted t2-mdnote">차량 모델 · 운전자 모델은 하나를 고르고, 열 모델은 계통마다, 기능은 하나씩 켜고 끕니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 [모델 · 차량 N · 운전자 … · 열 …]으로 보입니다. 대시보드로 보내는 값은 늘 차량 0 · 열 모델 모터 열만으로 계산합니다. 차가 차지하는 폭(전장 · 저속 선회 때 차체 각도 β = atan(l_r ÷ R))은 기하라서 차량 모델 단계와 상관없이 [차 크기]를 고려하면 넣습니다.</p>
     ${veh}${drv}${thm}${fset}${t2Consts('model')}</div>`; }
-/* 운전자 모델 */
+/* 운전자 모델 · 운전 실력 */
+const T2DRR = [[0, '이상 (운전 실력)', '타이어가 낼 수 있는 힘을 모두 씁니다 (마찰 타원 경계). 차의 한계 성능입니다.', '—'],
+               [1, '현실 (운전 실력)', '실제 FSK 기록 수준으로 그립을 덜 씁니다. 마찰 타원에 기본 그립 사용률 k_s 를 곱하고, 내구에는 내구 페이스 k_e 를 더 곱합니다 (장시간 · 추월 대기 · 피로 등). 가속은 WOT 라 그대로입니다. 기본값은 2025 · 2026 E-Formula 완주 팀 기록(오토크로스 중앙값, 내구 랩 ÷ 오토크로스 중앙값)에 차량 모델 3 으로 맞춘 값입니다.', '운전자 › 기본 그립 사용률 · 내구 페이스']];
 const T2DRV = [[0, '최대', '코너마다 한계까지 가속하고 최대로 제동합니다 (최소 랩타임). 내구 에너지 상한에 걸리면 단자 출력 상한을 내구 전체에 같은 배율로 낮춰 맞춥니다.', '축전지 › 내구 에너지 상한'],
                [1, '타력', '내구 에너지 상한에 맞추되, 출력을 깎지 않고 제동 앞에서 미리 가속 페달을 떼고 타력으로 달립니다. 제동 구간마다 [시간 + λ × 소비 에너지]가 가장 작은 곳에서 떼고, λ(에너지 1 kWh 의 시간 값)는 소비가 상한과 같아지게 정합니다 (에너지 제한 최소 시간 문제의 최대 구동 · 타력 · 제동 구조). 상한이 없으면 최대와 같습니다.', '축전지 › 내구 에너지 상한']];
 /* 기능 설정 카드 */
@@ -747,6 +750,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const et = t.closest('[data-t2et]'); if(et){ T2.etab = et.dataset.t2et; if(T2MOT.includes(T2.etab)) T2.emot = T2.etab; T2.menu = ''; t2Save(); wbPaint(['ext']); return; }
   const eg = t.closest('[data-t2eg]'); if(eg){ const g = eg.dataset.t2eg; T2.etab = g==='mot' ? (T2MOT.includes(T2.etab) ? T2.etab : (T2.emot || 'mt')) : g; T2.menu = ''; t2Save(); wbPaint(['ext']); return; }
   const rl = t.closest('[data-t2rl]'); if(rl){ WB.I.rl_on = +rl.dataset.t2rl; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
+  const drr = t.closest('[data-t2drr]'); if(drr){ WB.I.dr_real = +drr.dataset.t2drr; wbSave(); wbPaint(['ext', 'in']); wbCalcSoon(); return; }
   const drb = t.closest('[data-t2drv]'); if(drb){ WB.I.drv = +drb.dataset.t2drv; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
   const fsb = t.closest('[data-t2fs]'); if(fsb){ const k = fsb.dataset.t2fs, on = k==='rg_on' ? WB.I[k] === 1 : WB.I[k] !== 0; WB.I[k] = on ? 0 : 1; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
   const icb = t.closest('[data-t2ict]'); if(icb){ WB.I.ict_m = +icb.dataset.t2ict; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
@@ -773,6 +777,7 @@ function t2InLock(k){ const L = '아래 표 사용';
   if(k==='tire_fz0') return WB.I.fz0_m !== 0 ? '' : '정지 평균 하중 사용';
   if(k==='rg_tmax' || k==='i_chg') return WB.I.rg_on === 1 ? '' : '회생 제동 고려 안 함';
   if(k==='w_car') return WB.I.wc_on !== 0 ? '' : '차 크기 고려 안 함';
+  if(k==='dr_ks' || k==='dr_ke') return WB.I.dr_real === 1 ? '' : '이상 운전자';
   if(k==='delta_max') return !(WB.I.md >= 2) ? '차량 모델 2 에서 씀' : WB.I.dl_on !== 0 ? '' : '조향 한계 고려 안 함';
   if(k==='mu' || k==='mu_s') return t2UseMap('tire') ? L : '';
   if(k==='rmin') return WB.I.rm_on === 0 ? '고려 안 함' : '';
@@ -940,7 +945,7 @@ const M2TOUR = [
 
 /* ============================================================ 도구 정의 */
 /* 입력 묶음 (편집 탭 항목마다 그림: T2EG). ui:'edit' = 편집 탭에만, ui:'none' = 다른 곳(단추 · 결과 카드)에서 고침 → 왼쪽 입력 칸은 비움 */
-const T2G = {thm:'외기', cool:'냉각수 · 라디에이터 (열 모델 냉각수 온도)', bth:'축전지 열 (열 모델 축전지 온도)', inv:'인버터 열 (열 모델 인버터 온도)', car:'차량 제원', rc:'롤센터 · 롤 (차량 모델 1)', steer:'조향', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', rl:'주행선 여유 · 경계', goal:'스키드패드 목표 (0 = 정하지 않음)'};
+const T2G = {thm:'외기', cool:'냉각수 · 라디에이터 (열 모델 냉각수 온도)', bth:'축전지 열 (열 모델 축전지 온도)', inv:'인버터 열 (열 모델 인버터 온도)', car:'차량 제원', rc:'롤센터 · 롤 (차량 모델 1)', steer:'조향', tire:'타이어 · 하중 이동', aero:'에어로', mot:'모터 · 인버터', th:'모터 열 · 디레이팅', dt:'구동계', bat:'축전지', drv:'운전자 (현실 운전자 그립 사용률)', rl:'주행선 여유 · 경계', goal:'스키드패드 목표 (0 = 정하지 않음)'};
 const T2EG = {course:[T2G.rl], car:[T2G.car], sus:[T2G.steer, T2G.rc], tire:[T2G.tire], aero:[T2G.aero], mot:[T2G.mot, T2G.th, T2G.inv], cool:[T2G.thm, T2G.cool], dt:[T2G.dt], bat:[T2G.bat, T2G.bth], model:[]};
 WB_TOOLS['2'] = {
   no:'2', stage:'P0', name:'랩타임 시뮬레이터',
@@ -981,6 +986,9 @@ WB_TOOLS['2'] = {
     {k:'e_target', dk:'e_target', n:'내구 에너지 상한', v:0, d:2, g:T2G.bat, sb:'셀 용량 · 팩'},
     {k:'e_lim', n:'내구 에너지 상한 (0 = 제한 없음, 1 = 제원 용량, 2 = 임의 상한)', u:'', v:0, d:0, g:T2G.bat, ui:'none'},
     {k:'drv', n:'운전자 모델 (0 = 최대, 1 = 타력)', u:'', v:0, d:0, g:T2G.bat, ui:'none'},
+    {k:'dr_real', n:'운전 실력 (0 = 이상, 1 = 현실)', u:'', v:0, d:0, g:T2G.drv, ui:'none'},
+    {k:'dr_ks', n:'기본 그립 사용률 k_s (스키드패드 · 오토크로스 · 내구)', u:'', v:0.9, d:2, g:T2G.drv},
+    {k:'dr_ke', n:'내구 페이스 k_e (내구에만 더 곱함)', u:'', v:0.7, d:2, g:T2G.drv},
     {k:'rg_on', n:'회생 제동 (1 = 켬, 0 = 끔)', u:'', v:0, d:0, g:T2G.mot, ui:'none'},
     {k:'wc_on', n:'차 크기 고려 (1 = 전폭 · 오버행, 0 = 최소 거리)', u:'', v:1, d:0, g:T2G.car, ui:'none'},
     {k:'dl_on', n:'조향 한계 (1 = 고려, 0 = 고려 안 함)', u:'', v:1, d:0, g:T2G.steer, ui:'none'},
@@ -1058,7 +1066,7 @@ WB_TOOLS['2'] = {
     else if(T2.etab==='mt'){ const c = $('#t2mc'); if(c) c.innerHTML = t2EditPlot('mt'); const f = $('#wbext .t2-fcap'); if(f) f.innerHTML = t2EditCap('mt'); } },
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
   tour: M2TOUR,
-  verifyBase:{mu_s:0, tire_fz0:0, fz0_m:0, delta_max:0, dl_on:0, drv:0, rg_on:0, wc_on:0, ict_m:1, i_init:40, end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
+  verifyBase:{mu_s:0, tire_fz0:0, fz0_m:0, delta_max:0, dl_on:0, drv:0, dr_real:0, dr_ks:0.9, dr_ke:0.7, rg_on:0, wc_on:0, ict_m:1, i_init:40, end:{seg:[], laps:26, stint:13}, free:{seg:[], laps:1, s0:0}, motor:[], motorC:[], effM:null, effI:null, tireMap:null, r_pack:0, i_bms_max:1e9, pmax:1e6, eta_mot:100, eta_inv:100,
               dr_t0:80, dr_t1:100, c_pct:100, kt:0.64, i_pk:1e9, i_ct:1e9, i_cpct:100, di_t0:50, di_t1:85, th_c:6000, th_r:0.02, th_cool:40, th_init:40, rl_on:0, rl_b:1, w_car:0, oh_f:0, oh_r:0, rl_m:0.2, e_lim:1, rmin:0, md:0, th_on:1, cw_on:0, bt_on:0, in_on:0, m_cool:1, i_cool:1, b_cool:0, eff_mg:0, m_ha60:null, i_ha60:null, b_ha60:null, h_rcf:0, h_rcr:0, k_roll:500, course:'acc', lap:'2', grMode:'my'},
   verify:[
     {n:'가속 · 접지 한계만 (μ = 1, CG 뒤축 위)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5}, expect:{t_acc_s:3.910309, ax_0:1}, src:'a = μg → t = √(2 × 75 ÷ 9.81)'},
@@ -1178,7 +1186,13 @@ WB_TOOLS['2'] = {
     {n:'회생 · 팩 충전 전류 한계 10 A (단자 294 V)', I:{m:300, fr:50, h:0, mu:1, mu_s:0, crr:0, cla:0, cda:0, j_eq:0, eta_dt:100, nmax:20000, r_eff:229, gr:3.55, n_s:70, c_vmax:4.2, rg_on:1, rg_tmax:230, i_chg:10, free:{seg:[[400, 0], [5, 10]], laps:1, s0:0}}, expect:{e_free:0.1069026}, src:'회생 전력 = 294 × 10 = 2940 W 일정 (모든 차속에서 걸림) × 제동 시간 (51.4655 − 9.9045) ÷ g = 4.23659 s = 12455.6 J → 순 384849 J'},
     {n:'회생 끔 = 마찰 제동만', I:{m:300, fr:50, h:0, mu:1, mu_s:0, crr:0, cla:0, cda:0, j_eq:0, eta_dt:100, nmax:20000, r_eff:229, gr:3.55, n_s:70, c_vmax:4.2, rg_on:0, free:{seg:[[400, 0], [5, 10]], laps:1, s0:0}}, expect:{e_free:0.1103625}, src:'구동 m (g/2) × 270 = 397305 J'},
     {n:'타력 운전자 · 에너지 상한에 맞춘 페달 떼기 (저항 0 → 타력 = 일정 차속)', I:{m:300, fr:50, h:0, mu:1, mu_s:0, crr:0, cla:0, cda:0, j_eq:0, eta_dt:100, nmax:20000, r_eff:229, gr:3.55, n_s:70, c_vmax:4.2, end:{seg:[[400, 0], [31.4159, 10], [400, 0], [31.4159, 10]], laps:26, stint:13}, e_lim:2, e_target:1.745625, drv:1, course:'end'}, expect:{t_end_s:968.668, e_use:1.745625}, src:'구간마다 시간 + λ × 에너지 최소 → 일정 차속 u 로 순항: dT/dE = −(순항 거리) ÷ (m u³) 가 모든 구간에서 같음. 달리는 구간 50 개 u = 30.0105, 정지 출발 2 개 u = 29.7373 m/s 가 에너지 50 × ½m(u² − v_c²) + 2 × ½m u² = 1.745625 kWh 를 맞춤 → 시간 합 968.668 s'},
-    {n:'인버터 연속 상전류 0 = 실제 0 (뜨거우면 토크 0)', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:0, r_eff:250, gr:4, eta_dt:100, nmax:10000, v_ref:300, ke_ratio:1, th_c:1e9, th_r:1e9, th_init:30, th_cool:30, dr_t0:40, dr_t1:60, tq_V:300, motor:[[0, 200], [10000, 200]], motorC:[], kt:0.5, i_pk:300, ict_m:1, i_ct:0, di_t0:50, di_t1:70, in_on:1, tq_n:3000, tq_tm:30, tq_ti:60}, expect:{c_tqp:75}, src:'r_i = 0.5 → I = 300 − 0.5 × 300 = 150 A → 0.5 × 150 = 75 N·m (비율이 아니라 0 A 쪽으로)'}
+    {n:'인버터 연속 상전류 0 = 실제 0 (뜨거우면 토크 0)', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:0, r_eff:250, gr:4, eta_dt:100, nmax:10000, v_ref:300, ke_ratio:1, th_c:1e9, th_r:1e9, th_init:30, th_cool:30, dr_t0:40, dr_t1:60, tq_V:300, motor:[[0, 200], [10000, 200]], motorC:[], kt:0.5, i_pk:300, ict_m:1, i_ct:0, di_t0:50, di_t1:70, in_on:1, tq_n:3000, tq_tm:30, tq_ti:60}, expect:{c_tqp:75}, src:'r_i = 0.5 → I = 300 − 0.5 × 300 = 150 A → 0.5 × 150 = 75 N·m (비율이 아니라 0 A 쪽으로)'},
+    {n:'현실 운전자 · 스키드패드 = 그립 k_s 배 → 시간 ÷ √k_s (k_s 0.81)', I:{mu:1.5, crr:0, cla:0, cda:0, dr_real:1, dr_ks:0.81, dr_ke:0.5}, expect:{t_skid_s:10.995213, ay_skid:1.215},
+     src:'v = √(k_s μ g R) → 시간 = 9.895692 ÷ √0.81 = 10.9952 s, 횡가속도 = 0.81 × 1.5 g'},
+    {n:'현실 운전자 · 가속은 그대로 (WOT, 배율 없음)', I:{m:300, fr:0, h:0, mu:1, crr:0, cla:0, cda:0, j_eq:0, tmax:1e5, dr_real:1, dr_ks:0.5, dr_ke:0.5}, expect:{t_acc_s:3.910309, ax_0:1},
+     src:'가속 경우 1 과 같음: a = μg → t = √(2 × 75 ÷ 9.81)'},
+    {n:'현실 운전자 · 원 코스 (반경 10 m) 최고 차속: 오토크로스 √(k_s μ g R), 내구 √(k_s k_e μ g R)', I:{m:300, fr:50, h:0, mu:1.5, crr:0, cla:0, cda:0, rl_on:0, md:0, dr_real:1, dr_ks:0.81, dr_ke:0.5, end:{seg:[[62.831853, 10]], laps:4, stint:2}}, expect:{v_top:39.302969, v_endtop:27.791381},
+     src:'오토크로스 √(0.81 × 1.5 × 9.81 × 10) = 10.9175 m/s = 39.30 km/h, 내구 √(0.405 × 1.5 × 9.81 × 10) = 7.7198 m/s = 27.79 km/h'}
   ],
   calcLimit: 60,   /* 한 번 계산 제한 시간 [s] (주행선 다듬기 포함) */
   code:`// ================================================================
@@ -1202,6 +1216,9 @@ WB_TOOLS['2'] = {
 //   - 축전지 : 개방 전압 = 직렬 수 × (셀 최소 + (셀 최대 − 셀 최소) × SOC) (선형 근사),  단자 전압 = 개방 − 전류 × 저항
 //   - 단자 출력 ≤ min(규정 출력 상한, 전류 한계).  모터 축 출력 = 단자 출력 × 모터 효율 × 인버터 효율
 //   - 내구 에너지 제한 : 소비 (개방 전압 × 전류, 저항 손실 포함)가 쓸 수 있는 에너지를 넘으면 단자 출력 상한을 같은 비율로 낮춤
+//   - 현실 운전자 (dr_real 1): 마찰 타원 (종 · 횡 한계 모두) 에 그립 사용률을 곱함. 스키드패드 · 오토크로스 · 내 코스 = k_s (dr_ks),
+//     내구 = k_s × k_e (dr_ke, 장시간 · 추월 대기 · 피로 등 내구 페이스), 가속 = 1 (WOT, 운전자 요소 없음)
+//     기본값 근거 (HANDOFF 41 ~ 42차, 모델 3): k_s = 오토크로스 E-Formula 완주 팀 중앙값 맞춤, k_e = 실제 기록끼리의 '내구 랩 ÷ 오토크로스' 중앙값 맞춤
 
 const g = 9.81;      // 중력가속도 [m/s²]
 const RHO = 1.225;   // 공기 밀도 [kg/m³]
@@ -1419,23 +1436,27 @@ function car(I, gr, kP, lam) {
     const [o, i] = wheels(Fz, d), f = z => muZ(z) * z;
     return f(o) + f(i);
   };
-  const capF = (v, ax, ay) => cap(Fzf(v, ax), dF(ay, true));     // 축 종 방향 한계 Σ μ·F_z (바퀴마다 최고)
-  const capR = (v, ax, ay) => cap(Fzr(v, ax), dF(ay, false));
-  const capFy = (v, ax, ay) => capY(Fzf(v, ax), dF(ay, true));   // 축 횡 방향 한계 (모델 2 이상: 같은 슬립각 최댓값, 아니면 capF 와 같음)
-  const capRy = (v, ax, ay) => capY(Fzr(v, ax), dF(ay, false));
+  // 현실 운전자 그립 사용률 (가속 · 이상 운전자 = 1). 곡률별 코너 한계 속도 기억은 배율마다 따로 (같은 계산 안에서 종목마다 배율이 다름)
+  const kG = I.dr_real === 1 && !I.__acc ? Math.max(0.05, I.dr_ks > 0 ? I.dr_ks : 1) * (I.__end ? Math.max(0.05, I.dr_ke > 0 ? I.dr_ke : 1) : 1) : 1;
+  const vcOf = M => { if (!M) return null; const q = 'g' + kG; if (!M.has(q)) M.set(q, new Map()); return M.get(q); };
+  const VCk = vcOf(VC), VCFk = vcOf(VCF);
+  const capF = (v, ax, ay) => kG * cap(Fzf(v, ax), dF(ay, true));     // 축 종 방향 한계 Σ μ·F_z (바퀴마다 최고)
+  const capR = (v, ax, ay) => kG * cap(Fzr(v, ax), dF(ay, false));
+  const capFy = (v, ax, ay) => kG * capY(Fzf(v, ax), dF(ay, true));   // 축 횡 방향 한계 (모델 2 이상: 같은 슬립각 최댓값, 아니면 capF 와 같음)
+  const capRy = (v, ax, ay) => kG * capY(Fzr(v, ax), dF(ay, false));
 
   // ---------- 코너 한계 속도 [m/s] (곡률 k [1/m])
   function vCorner(k) {
     k = Math.abs(k);
     if (k < 1e-9) return Infinity;
-    if (VC && VC.has(k)) return VC.get(k);
+    if (VCk && VCk.has(k)) return VCk.get(k);
     let v;
     if (!nonlin && !md2) {            // μ 일정: 앞 · 뒤 축 각각 닫힌 식
       let v2 = Infinity;
-      const cf = m * k * fs - mu * (cl * fa - cd * hc / L);
-      const cr = m * k * (1 - fs) - mu * (cl * (1 - fa) + cd * hc / L);
-      if (fs > 0 && cf > 0) v2 = Math.min(v2, mu * m * g * fs / cf);
-      if (fs < 1 && cr > 0) v2 = Math.min(v2, mu * m * g * (1 - fs) / cr);
+      const cf = m * k * fs - (mu * kG) * (cl * fa - cd * hc / L);
+      const cr = m * k * (1 - fs) - (mu * kG) * (cl * (1 - fa) + cd * hc / L);
+      if (fs > 0 && cf > 0) v2 = Math.min(v2, (mu * kG) * m * g * fs / cf);
+      if (fs < 1 && cr > 0) v2 = Math.min(v2, (mu * kG) * m * g * (1 - fs) / cr);
       v = Math.sqrt(v2);
     } else {                          // 하중 감도 · 맵: 이분법
       const ok = u => {
@@ -1459,7 +1480,7 @@ function car(I, gr, kP, lam) {
         v = lo; fl = 1;
       }
     }
-    if (VC) { VC.set(k, v); VCF.set(k, fl); }
+    if (VCk) { VCk.set(k, v); VCFk.set(k, fl); }
     return v;
   }
   // ---------- 모델 3: 주행선 곡률 변화로 생기는 과도 횡력을 축마다 '등가 곡률' 로 (일정 차속 역동역학)
@@ -1479,7 +1500,7 @@ function car(I, gr, kP, lam) {
     if (ok(hi)) v = isFinite(vs) ? vs : hi; else { for (let i = 0; i < 40; i++) { const u = (lo + hi) / 2; if (ok(u)) lo = u; else hi = u; } v = lo; }
     V3.set(key, v); return v;
   }
-  const vFlag = k => { k = Math.abs(k); if (k < 1e-9) return 0; if (!(VCF && VCF.has(k))) vCorner(k); return VCF && VCF.has(k) ? VCF.get(k) : 0; };   // 0 없음 · 1 조향 한계로 느려짐 · 2 돌 수 없음
+  const vFlag = k => { k = Math.abs(k); if (k < 1e-9) return 0; if (!(VCFk && VCFk.has(k))) vCorner(k); return VCFk && VCFk.has(k) ? VCFk.get(k) : 0; };   // 0 없음 · 1 조향 한계로 느려짐 · 2 돌 수 없음
 
   // ---------- 가속 [m/s²]: 뒤축 마찰원 · 모터 힘, 앞축 횡력이 모자라면 줄임
   function aDrive(v, k, a0, V0, Tm, Ti) {
@@ -1955,7 +1976,7 @@ function prepBody(I, sweep) {
   const C = car(I, I.gr, 1), E = I.end || {}, jobs = [];
   if ((E.seg || []).length) jobs.push(['end', drivenSegs(I, 'end', E.seg, true), true], ['ax', drivenSegs(I, 'ax', reverse(E.seg), true), true]);
   { const F = freeSegs(I); if (F && F.rl && F.rl.geo) jobs.push(['free', F.rl, F.m > 1]); }
-  for (const [w, RL, closed] of jobs) { if (!RL || !RL.geo || !RL.eN) continue; const B = bodyCaps(I, C, RL, closed, lineCourse(I, w, RL)); BDC.set(segKey(RL.segs), B); BDI[w] = B.info; }
+  for (const [w, RL, closed] of jobs) { if (!RL || !RL.geo || !RL.eN) continue; const Cw = w === 'end' && I.dr_real === 1 ? car(endI(I), I.gr, 1) : C, B = bodyCaps(I, Cw, RL, closed, lineCourse(I, w, RL)); BDC.set(segKey(RL.segs), B); BDI[w] = B.info; }
   BDC_LAST = { key, m: BDC, info: BDI };
 }
 const bdAt = segs => { const B = BDC.get(segKey(segs)); return B ? B.at : null; };
@@ -2385,7 +2406,7 @@ function prepTrans(I, sweep) {
   if ((E.seg || []).length) jobs.push(['end', '내구', () => drivenSegs(I, 'end', E.seg, true).segs, true], ['ax', '오토크로스', () => drivenSegs(I, 'ax', reverse(E.seg), true).segs, false]);
   { const F = freeSegs(I); if (F && F.segs.length) jobs.push(['free', '내 코스', () => F.segs, F.m > 1]); }
   jobs.forEach(([w, name, segsF, closed], k) => { prog(PG0 + (1 - PG0) * 0.02 * k, \`과도 (요 관성 · 타이어 이완) 반영 중 · \${name}\`);
-    const segs = segsF(), R = trCaps(I, C, segs, closed, V); TRC.set(segKey(segs), R); TRI[w] = R.info; });
+    const segs = segsF(), Cw = w === 'end' && I.dr_real === 1 ? car(endI(I), I.gr, 1) : C, R = trCaps(I, Cw, segs, closed, V); TRC.set(segKey(segs), R); TRI[w] = R.info; });
   TRC_LAST = { key, m: TRC, info: TRI };
 }
 // 모델 2 이상 · 최대 조향각이 있을 때: 아주 느려도 안쪽 바퀴 조향각이 최대를 넘는 코너가 있으면 계산을 멈춤 (다시 설계)
@@ -2412,6 +2433,8 @@ const SKID  = [[SK_IN, 0], [SK_C, -SK_R], [SK_C, -SK_R], [SK_C, SK_R], [SK_C, SK
 const W_PT  = { acc: 100, ax: 200, end: 350 };   // 감속비 제안에 쓰는 배점 (스키드패드는 감속비와 거의 상관없어 뺌)
 
 // 가속: 75 m 정지 출발, SOC 100 %  → 시간 [s]
+// 현실 운전자: 내구는 I 에 __end (k_s × k_e), 가속은 __acc (배율 없음)
+const endI = I => I.dr_real === 1 ? { ...I, __end: 1 } : I, accI = I => I.dr_real === 1 ? { ...I, __acc: 1 } : I;
 function runAcc(C) {
   const G = grid([[ACC_L, 0]], 0.5), V = new Array(G.s.length).fill(C.Voc(1)), sp = speed(C, G, V, null), W = walk(C, G, sp.v, V, false);
   const Ec = W.ec.at(-1);
@@ -2464,6 +2487,7 @@ function endurance(I, C, full, ds) {
 
 // 내구 에너지 제한: 소비가 쓸 수 있는 에너지를 넘으면 단자 출력 상한 배율 k 를 찾음 (할선법, 줄여 셈)
 function powerCut(I, gr) {
+  I = endI(I);
   const C1 = car(I, gr, 1), E1 = endurance(I, C1, false, 3);
   if (!E1 || E1.Ec <= C1.Ecap) return 1;
   const over = k => endurance(I, car(I, gr, k), false, 3).Ec - C1.Ecap;
@@ -2480,6 +2504,7 @@ function powerCut(I, gr) {
 //   타력만으로 한도에 못 미치면 (λ 최대에서도 넘음) 그 λ 에 출력 상한 배율을 더함
 const LAM_MAX = 1;   // [s/J] = 3.6e6 s/kWh (사실상 끝까지 타력)
 function coastCut(I, gr, full) {
+  I = endI(I);
   const C1 = car(I, gr, 1), cap = C1.Ecap, E0 = endurance(I, C1, false, 3);
   if (!E0 || !(E0.Ec > cap)) return { lam: 0, k: 1 };
   const ec = (lam, f) => endurance(I, car(I, gr, 1, lam), f, f ? 1 : 3).Ec;
@@ -2501,6 +2526,7 @@ function coastCut(I, gr, full) {
 
 // 내구 (에너지 제한 포함). full 이면 줄여 셈과 다 셈의 차이를 한 번 더 맞춤.  drv 1 = 타력 운전자 (λ), 0 = 최대 운전자 (출력 상한 배율 k)
 function runEnd(I, gr, full) {
+  I = endI(I);
   const C = car(I, gr, 1);
   if (I.drv === 1 && isFinite(C.Ecap)) {
     const Q = coastCut(I, gr, full);
@@ -2573,7 +2599,7 @@ function events(I, gr, fast) {
   const ds = fast ? 3 : 1, C = car(I, gr, 1);
   const vR = skidV(C, -SK_R, C.Voc(1)), vL = skidV(C, SK_R, C.Voc(1));
   const X = runAx(I, C, ds), EN = runEnd(I, gr, !fast);
-  const A = runAcc(C);
+  const A = runAcc(I.dr_real === 1 ? car(accI(I), gr, 1) : C);
   return { C, acc: A.t[0], A, skid: SK_C / vR + SK_C / vL, tR: SK_C / vR, tL: SK_C / vL, vs: Math.min(vR, vL), vR, vL,
            ax: X ? X.t[0] : NaN, X, EN, end: EN ? EN.T : NaN };
 }
@@ -2643,7 +2669,7 @@ function nBase(I, C) {
 // 감속비 gr 로 고른 코스를 다 계산.  {L: 랩 결과, C: 차량, stand: 정지 출발 랩, rev: 지도 방향, k: 출력 상한 배율}
 function runCourse(I, c, gr) {
   const C = car(I, gr, 1);
-  if (c === 'acc')  return { L: runAcc(C), C, stand: [0] };
+  if (c === 'acc')  { const CA = car(accI(I), gr, 1); return { L: runAcc(CA), C: CA, stand: [0] }; }
   if (c === 'skid') return { L: laps(C, SKID, 1, 0.5, 1, C.Voc(1)), C, stand: [0], skid: true };
   if (c === 'ax')   { const X = runAx(I, C, 1); return X && { L: X, C, stand: [0], rev: true }; }
   if (c === 'free') { const F = runFree(I, C, 0.5, false); return F && { L: F, C, stand: [0] }; }
@@ -2667,7 +2693,7 @@ function modeRun(I, G2, G3, fast) {
     vmax: C.vtop * 3.6, v_top: E.X ? Math.max(...E.X.v) * 3.6 : NaN,
     v_endtop: EN ? Math.max(...EN.A.v, ...EN.B.v) * 3.6 : NaN,                                       // 내구 최고 차속 [km/h]
     ay_skid: skidAy(E),                                                                               // 기록 바퀴 평균 [g]
-    ax_0: C.aDrive(0, 0, 0, C.Voc(1), C.Tinit) / g, ax_max: accMax(E.A),                              // 가속: 출발 · 최대 종가속도 [g]
+    ax_0: (CA => CA.aDrive(0, 0, 0, CA.Voc(1), CA.Tinit))(I.dr_real === 1 ? car(accI(I), G2, 1) : C) / g, ax_max: accMax(E.A),                              // 가속: 출발 · 최대 종가속도 [g]
     cla_req: claNeed(I, G2), skid_roll: C.rollAng(skidAy(E) * g),
     // 내구 (대시보드 반영 · 검증용)
     e_ok: EN ? (EN.Ec <= C.Ecap * 1.01 ? 1 : 0) : NaN, e_use: EN ? EN.Ec / 3.6e6 : NaN, p_lim: EN ? EN.k * 100 : NaN,
@@ -2679,7 +2705,7 @@ function modeRun(I, G2, G3, fast) {
     // 내구 전체 에너지 [kWh]: 지금 설정 그대로 (에너지 상한이 걸리면 출력을 낮춘 값) · 출력 상한 없이 (배율 1) 달렸을 때
     e_end_t: EN ? EN.Et / 3.6e6 : NaN, e_end_c: EN ? EN.Ec / 3.6e6 : NaN,
     ...(() => { if (!EN) return { e_nl_t: NaN, e_nl_c: NaN };
-                const F = EN.k < 1 || EN.lam > 0 ? endurance(I, car(I, G2, 1), true, 1) : EN;
+                const F = EN.k < 1 || EN.lam > 0 ? endurance(endI(I), car(endI(I), G2, 1), true, 1) : EN;
                 return { e_nl_t: F.Et / 3.6e6, e_nl_c: F.Ec / 3.6e6 }; })(),
   };
 
@@ -2865,7 +2891,7 @@ function calc(I) {
   if (I._sweep) {
     prepLines(I, true); prepBody(I, true); prepTrans(I, true);
     const E = events(I, I.gr, true);
-    const NL = E.EN ? (E.EN.k < 1 || E.EN.lam > 0 ? endurance(I, car(I, I.gr, 1), false, 3) : E.EN) : null;   // 출력 상한 · 타력 없이 (줄여 셈)
+    const NL = E.EN ? (E.EN.k < 1 || E.EN.lam > 0 ? endurance(endI(I), car(endI(I), I.gr, 1), false, 3) : E.EN) : null;   // 출력 상한 · 타력 없이 (줄여 셈)
     return { out: { t_acc_s: E.acc, t_skid_s: E.skid, t_ax_s: E.ax, t_end_s: E.end, e_use: E.EN ? E.EN.Ec / 3.6e6 : NaN, e_nl_c: NL ? NL.Ec / 3.6e6 : NaN,
                     p_lim: E.EN ? E.EN.k * 100 : NaN, vmax: E.C.vtop * 3.6, ay_skid: skidAy(E) } };
   }
@@ -2886,7 +2912,7 @@ function calc(I) {
   const ENb  = runEnd(I, B.end, true);                   // 내구가 가장 빠른 감속비에서 다 계산
   const endb = ENb ? lapStat(ENb.t, [0, ENb.n1]) : null;
   const fast = {
-    acc: runAcc(car(I, B.acc, 1)).t[0],
+    acc: runAcc(car(accI(I), B.acc, 1)).t[0],
     ax:  (runAx(I, car(I, B.ax, 1), 1) || { t: [NaN] }).t[0],
     end: ENb ? ENb.T : NaN,
   };
@@ -2945,7 +2971,7 @@ function calc(I) {
    대시보드 값으로 도구 2를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
 const T2ONLY = ['v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'c_pct', 'kt', 'i_pk', 'i_ct', 'i_cpct', 'i_init', 'tr_ks', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'oh_f', 'oh_r', 'rl_m', 'rl_b', 'e_lim', 'rm_on', 'md', 'th_on', 'cw_on', 'in_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'inv_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_ha60', 'b_r', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
-const T2SET = ['md', 'th_on', 'in_on', 'bt_on', 'cw_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'rl_on', 'rm_on', 'e_lim', 'drv', 'rg_on', 'wc_on', 'dl_on', 'fz0_m', 'ict_m'];   // 이 도구에서 고른 계산 설정 (대시보드 파트 결과도 같은 설정으로)
+const T2SET = ['md', 'th_on', 'in_on', 'bt_on', 'cw_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'rl_on', 'rm_on', 'e_lim', 'drv', 'dr_real', 'rg_on', 'wc_on', 'dl_on', 'fz0_m', 'ict_m'];   // 이 도구에서 고른 계산 설정 (대시보드 파트 결과도 같은 설정으로)
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
   T2GOAL.forEach(k => { const db = wbDash(k); I[k] = db ? db.v : 0; });
