@@ -289,6 +289,8 @@ function tgClicks(o){ const c=[]; let vmDone=false;
   if(o.sub && typeof TT!=='undefined'){ const vis=document.querySelector(`#v-team [data-ttp="${o.sub}"]:not([hidden])`); if(!vis || (o.tab && TAB!==o.tab)) c.push({sel:`#v-team .tt-nav [data-tts="${o.sub}"]`, run:()=>{ TT.sub=o.sub; TT.picked=1; renderTeamTab(); }}); }
   if(o.vm && !vmDone && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
   if(o.press) c.push({sel:o.press, run:()=>{}});
+  /* 작업창 [결과 | 편집] 탭 */
+  if(o.wbtab && typeof WB!=='undefined' && WB.id && (WB.tab || 'res')!==o.wbtab) c.push({sel:`#wb [data-wbtab="${o.wbtab}"]`, run:()=>{ if(typeof wbTabSet==='function') wbTabSet(o.wbtab); }});
   /* 화면 안 버튼(예: 작업창의 표 탭): need() 가 참일 때만 누르는 모습 → run() */
   if(o.click && (!o.click.need || o.click.need())) c.push({sel:o.click.sel, run:o.click.run});
   return c; }

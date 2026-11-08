@@ -1,7 +1,7 @@
 // 도구 9 냉각 계통 계산기 점검: 기본 회로 · 끌기 · 선 끊고 잇기 · 블럭 입력 · 갈라짐 · 회로 추가 · 결과 · 도구 2 와 주고받기 (등가값 넣기 · 평균 발열 보내기 · 모델 단계 공랭 / 수랭).  node cool_check.js [스크린샷 폴더]
 const H=require('./h.js');
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead'); const W=H.sleep;
-  await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>wbOpen('9')); await W(1500);
+  await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>{ wbOpen('9'); wbTabSet('edit'); }); await W(1500);
   console.log('net', JSON.stringify(await p.evaluate(()=>t9CoolCompile())).slice(0,400));
   console.log('t9 out', await p.evaluate(()=>JSON.stringify(WB.R && WB.R.out, (k,v)=>typeof v==='number'?+v.toFixed(2):v)), 'sig', await p.locator('#wbsig path').count());
   console.log('cards', await p.locator('.t9-cc').count(), 'blocks', await p.locator('.t9-cb').count(), 'links', await p.locator('.t9-clhit').count());

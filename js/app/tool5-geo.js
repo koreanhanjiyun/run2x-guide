@@ -83,7 +83,7 @@ WB_TOOLS['5'] = {
         {k:'rcf', n:'롤센터 (앞, 양쪽 같이)', u:'mm', d:1}, {k:'rcr', n:'롤센터 (뒤, 양쪽 같이)', u:'mm', d:1}, {k:'yf', n:'윤거 반 변화 (앞)', u:'mm', d:2}, {k:'yr', n:'윤거 반 변화 (뒤)', u:'mm', d:2},
         {k:'kf', n:'KPI (앞)', u:'°', d:2}, {k:'cs', n:'캐스터 (앞)', u:'°', d:2}],
   sigOn:['cf', 'cr'],
-  figure: t5Fig, tour: M5TOUR,
+  figure: t5Fig, editFig:true, tour: M5TOUR,
   verifyBase:{camber_f:0, camber_r:0, toe_f:0, toe_r:0, tf:1200, tr:1200, h:290, L:1550, brake_bias:73.6},
   verify: [
     {n:'위 · 아래 팔 수평 평행 (앞뒤 다리 ±175) → 롤센터 = 지면, 롤 캠버 게인 1', I:{f_lf_x:175, f_lf_y:200, f_lf_z:120, f_lr_x:-175, f_lr_y:200, f_lr_z:120, f_lo_x:0, f_lo_y:560, f_lo_z:120, f_uf_x:175, f_uf_y:250, f_uf_z:300, f_ur_x:-175, f_ur_y:250, f_ur_z:300, f_uo_x:0, f_uo_y:550, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:120, f_to_x:-70, f_to_y:560, f_to_z:120}, expect:{rc_f:0, camber_gain_f:1, cgb_f:0},

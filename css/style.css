@@ -3113,3 +3113,15 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .m1-dim .m1-xyz input{width:50px}.m1-dim{gap:4px 6px}
 .t2-trp{margin-top:8px;overflow-x:auto}
 .wb-ir.lock input.wb-eff{font-style:italic}.wb-ir.lock input.wb-eff.none::placeholder{color:var(--muted);font-style:normal}
+
+/* 작업창 [결과 | 편집] 탭 (도구 2 를 뺀 모든 도구) */
+#wb.wb-tabbed.wb-edit .wb-sec[aria-label="결과"],#wb.wb-tabbed.wb-edit #wbmid,#wb.wb-tabbed.wb-edit .wb-two,#wb.wb-tabbed.wb-edit .wb-sec[aria-label="신호 선택 그래프"]{display:none}
+#wb.wb-tabbed.wb-res #wbedit,#wb.wb-tabbed.wb-res #wbext{display:none}
+.wb-tabsec .wb-h{align-items:center;gap:12px;flex-wrap:wrap}
+.wb-ebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:4px 0 12px}
+.wb-esec{display:flex;align-items:center;gap:8px}
+.wb-ecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px 14px;align-items:start}
+.wb-ecard{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:6px 8px 8px;min-width:0}
+.wb-ech{font-size:12.5px;font-weight:700;color:var(--ink-2);padding:3px 4px 6px}
+.wb-ecard .wb-ir{grid-template-columns:minmax(0,1fr) 92px 46px;min-height:36px;box-sizing:border-box}
+.wb-efig{margin-top:14px}

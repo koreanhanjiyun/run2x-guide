@@ -17,6 +17,15 @@ const wbT = () => WB_TOOLS[WB.id];
 const wbEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wbFmt = (x, d) => (typeof x==='number' && isFinite(x)) ? x.toLocaleString('ko-KR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
 const wbStoreKey = id => 'run2x.wb.' + id;
+/* [결과 | 편집] 탭 (도구 2 는 자체 [시뮬레이션 | 편집]). 입력은 모두 편집 탭에 묶음 카드로, 왼쪽 입력 칸은 key:true 인 핵심 입력만 (없으면 안내).
+   ext (도구가 그리는 큰 입력 화면: 도구 1 표 · 도구 4 셀 · 도구 9 회로) 는 편집 탭, mid · 그림 · 신호 그래프 · 결과 카드는 결과 탭. 그림을 편집에도 두려면 editFig:true */
+const wbTabs = T => !!T && T.inPanel !== false;
+const WBTAB_KEY = 'run2x.wb.tab';
+function wbTabGet(id){ try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; return m[id]==='edit' ? 'edit' : 'res'; }catch(e){ return 'res'; } }
+function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res';
+  try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; m[WB.id] = WB.tab; localStorage.setItem(WBTAB_KEY, JSON.stringify(m)); }catch(e){}
+  const w = $('#wb'); if(w){ w.classList.toggle('wb-edit', WB.tab==='edit'); w.classList.toggle('wb-res', WB.tab!=='edit'); }
+  wbPaint(['tabs']); if(WB.tab==='res'){ wbPaint(['out', 'main', 'sig', 'mid']); wb3dUpdate && wb3dUpdate(); } }
 
 /* ---------- 대시보드 값 (입력 채우기 · 비교 · 반영) ---------- */
 function wbDash(dk){ if(!dk) return null;
@@ -179,7 +188,9 @@ function wbShellHTML(){ const T = wbT();
     <div class="wb-main">
       <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button></div><div id="wbin"></div></aside>
       <div class="wb-right">
+        ${wbTabs(T) ? `<section class="wb-sec wb-tabsec" aria-label="결과 · 편집"><div class="wb-h"><div class="m1-tabs" role="tablist" id="wbtabs"></div><span class="wb-meta" id="wbtabm"></span></div></section>` : ''}
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
+        ${wbTabs(T) ? '<section class="wb-sec" id="wbedit" aria-label="편집 입력"></section>' : ''}
         <section class="wb-sec" aria-label="결과"><div class="wb-h"><h3>결과</h3><span class="wb-stat" id="wbstat"></span>${T.outHTML ? '' : `<button type="button" class="btn small wb-cmp" data-wbcmp aria-pressed="false">대시보드와 비교</button>`}</div><div id="wbout"></div></section>
         ${T.midHTML ? '<div id="wbmid"></div>' : ''}
         ${T.figure || T.view3d ? `<div class="wb-two${T.view3d ? '' : ' one'}">
@@ -203,9 +214,24 @@ function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[
 const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ex"></i>예시값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
    도구가 입력을 자기 화면(도구 2 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
-function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2) */
+function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2) · 탭 도구 = 핵심 입력(key:true)만 */
+  if(!list.length) return WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
   if(!list.length && T.inEmpty) return WB_INLEG + T.inEmpty;
   return WB_INLEG + wbInRows(list); }
+/* 편집 탭 본문: 입력 묶음(d.g)마다 카드 (묶음 이름이 '앞 · ' · '뒤 · ' 로 시작하면 [차 · 공통 | 앞 | 뒤] 로 나눔) */
+function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') return '';
+  const list = T.inputs.filter(d => !d.ui), sides = list.some(d => /^(앞|뒤) · /.test(d.g || ''));
+  const sec = d => /^앞 · /.test(d.g || '') ? 'f' : /^뒤 · /.test(d.g || '') ? 'r' : 'c';
+  if(sides && !['c', 'f', 'r'].includes(WB.esec)) WB.esec = 'c';
+  const show = sides ? list.filter(d => sec(d)===WB.esec) : list;
+  const groups = []; show.forEach(d => { let G = groups.find(x => x.g===(d.g || '')); if(!G){ G = {g:d.g || '', ds:[]}; groups.push(G); } G.ds.push(d); });
+  const nav = sides ? `<div class="wb-esec"><span class="muted">보기</span><span class="dc-seg" role="group">${[['c', '차 · 공통'], ['f', '앞'], ['r', '뒤']].map(([k, t]) => `<button type="button" data-wbesec="${k}" aria-pressed="${WB.esec===k}">${t}</button>`).join('')}</span></div>` : '';
+  const cut = g => sides ? g.replace(/^(앞|뒤) · /, '') : g;
+  return `<div class="wb-ebar"><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button>${nav}</div>
+    ${groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
+    ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }
+function wbTabsHTML(){ const T = wbT(); if(!wbTabs(T)) return '';
+  return [['res', '결과'], ['edit', '편집']].map(([k, t]) => `<button type="button" role="tab" data-wbtab="${k}" aria-selected="${(WB.tab || 'res')===k}">${t}</button>`).join(''); }
 /* 잠긴 칸 값: 도구의 inEff(k) 가 undefined = 저장값 그대로, null = 계산에 안 씀 (—), 숫자 = 실제로 쓰는 값, '…' = 결과가 나오면 정해짐 */
 function wbEffVal(T, d){ const e = T.inEff ? T.inEff(d.k) : undefined, v = WB.I[d.k];
   if(e===undefined) return {v:isFinite(v) ? v : '', ph:'', cls:'', t:'저장된 입력값'};
@@ -328,14 +354,23 @@ function wbPanes(P, pi, mk, x, xi, act, label, what){ const zm = WB.zm || 'cur';
     return `<div class="wb-pp${P.length > 1 && i===pi ? ' on' : ''}" data-wbpi="${i}" data-zoombox="pane${i}">${tb}${body}${hint}<div class="wb-ph" data-wbph="${i}" title="끌어서 높이 조절" aria-hidden="true"></div></div>`; }).join('')
     + (P.length < 3 ? '<div class="wb-padd"><button type="button" class="btn small" data-wbpadd>+ 그래프 칸</button></div>' : ''); }
 function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) return;
+  if((all || which.includes('tabs')) && $('#wbtabs')){ $('#wbtabs').innerHTML = wbTabsHTML(); const mt = $('#wbtabm'); if(mt) mt.textContent = WB.tab==='edit' ? '입력을 고치면 바로 다시 계산합니다 (결과는 [결과] 탭)' : ''; }
+  if((all || which.includes('tabs') || which.includes('in')) && $('#wbedit')){ const a = document.activeElement, k = a && a.dataset ? a.dataset.wbi : null; $('#wbedit').innerHTML = wbEditHTML(); if(k){ const n = $('#wbedit').querySelector(`[data-wbi="${k}"]`); if(n) n.focus(); } }
+  if((which && which.includes('tabs')) && $('#wbext') && wbT().extHTML){ $('#wbext').innerHTML = wbT().extHTML(); }
   if(all || which.includes('in')){ $('#wbin').innerHTML = wbInHTML(); if(!all && !which.includes('ext') && wbT().inExt && $('#wbext')) $('#wbext').innerHTML = wbT().extHTML(); }   /* 입력을 도구 화면에 그리는 도구: 그 화면도 다시 */
   if(all || which.includes('out')) $('#wbout').innerHTML = wbOutHTML();
-  if((all || which.includes('main')) && $('#wbmain')){ $('#wbmain').innerHTML = wbMainHTML(); }   /* 도구가 그림(figure)을 줄 때만 있음. 선 그래프 결과는 신호 선택 그래프 하나로 */
+  if((all || which.includes('main')) && $('#wbmain')){ $('#wbmain').innerHTML = wbMainHTML(); if(wbT().editFig && WB.tab==='edit' && $('#wbedit')) $('#wbedit').innerHTML = wbEditHTML(); }   /* 도구가 그림(figure)을 줄 때만 있음. 선 그래프 결과는 신호 선택 그래프 하나로 */
   if((all || which.includes('ext')) && $('#wbext')) $('#wbext').innerHTML = wbT().extHTML();
   if((all || which.includes('ext') || which.includes('mid')) && $('#wbmid')) $('#wbmid').innerHTML = wbT().midHTML();   /* 도구 영역: 결과와 신호 그래프 사이 */
   if((all || which.includes('sig')) && $('#wbsl')){ wbSlPaint(); $('#wbsig').innerHTML = wbSigHTML(); }
   if(all || which.includes('stat')){ $('#wbstat').textContent = WB.err ? '' : (WB.R ? `계산 ${WB.ms < 1 ? '1 ms 미만' : Math.round(WB.ms) + ' ms'} · Web Worker` : ''); const c = $('#wbcodeon'); if(c) c.hidden = WB.code[WB.id] == null; } }
 
+/* ---------- 사용법 단계의 탭: 결과 쪽 선택자면 결과, 입력 · 도구 입력 화면이면 편집 ---------- */
+function wbTourTabs(T){ if(!T || !T.tour || T.__tt || !wbTabs(T)) return; T.__tt = true;
+  T.tour = T.tour.map(st => { const sel = String(st[0] || ''); if(/wb-bar|wb-tabsec/.test(sel)) return st;
+    const res = /wbout|wbmain|wb-sig|wbsig|wbmid|wb-two|wbstat|t4-pw/.test(sel), tab = res ? 'res' : 'edit';
+    const sel2 = /\.wb-in\b/.test(sel) ? '#wb #wbedit' : sel;
+    return [sel2, st[1], st[2], {...(st[3] || {}), wbtab:tab}, ...st.slice(4)]; }); }
 /* ---------- 열기 · 닫기 · 입력 기억 ---------- */
 function wbLoad(id){ const T = WB_TOOLS[id], I = {}; let saved = {};
   try{ saved = JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ saved = {}; }
@@ -345,10 +380,12 @@ function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(W
 function wbOpen(id, ret){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
   WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
+  WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
+  m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
   wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); }
-function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = '';
+function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = ''; m.classList.remove('wb-tabbed', 'wb-edit', 'wb-res');
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
   if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null; }
 
@@ -478,6 +515,8 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
     wbCalc().then(() => { const mm = $('#wbcmsg'); if(mm) mm.textContent = WB.err ? WB.err : '계산했습니다. 결과는 작업창에 보입니다.'; }); return; }
   if(t.closest('[data-wbexp]')){ wbExport(); return; }
   if(t.closest('[data-wbimp]')){ $('#wbfile').click(); return; }
+  { const tb = t.closest('[data-wbtab]'); if(tb){ wbTabSet(tb.dataset.wbtab); return; } }
+  { const es = t.closest('[data-wbesec]'); if(es){ WB.esec = es.dataset.wbesec; wbPaint(['tabs']); return; } }
   if(t.closest('[data-wbput]')){ wbPutOpen(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }

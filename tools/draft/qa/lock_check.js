@@ -14,6 +14,6 @@ const H=require('./h.js');
   await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2fs="wc_on"]'); await W(300); await p.click('[data-t2eg="car"]'); await W(300); console.log('wc_on 켬 → w_car', await V('w_car'), 'oh_f', await V('oh_f'));
   await p.click('[data-t2eg="mot"]'); await W(400); await p.click('[data-t2ict="0"]'); await W(300); console.log('연속 전류 비율 → i_ct', await V('i_ct'), 'i_cpct', await V('i_cpct')); await p.click('[data-t2ict="1"]'); await W(300); console.log('값 입력 → i_ct', await V('i_ct'), 'i_cpct', await V('i_cpct'));
   await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2fs="rg_on"]'); await W(300); await p.click('[data-t2eg="bat"]'); await W(300); console.log('회생 켬 → i_chg', await V('i_chg')); await p.click('[data-t2eg="model"]'); await W(300); await p.click('[data-t2fs="rg_on"]'); await W(300);
-  await p.evaluate(()=>wbOpen('4')); await W(1200); await p.click('[data-t4auto="1"]'); await W(1200); console.log('t4 n_p auto', await V('n_p'), 'stored', await p.evaluate(()=>WB.I.n_p));
+  await p.evaluate(()=>{ wbOpen('4'); wbTabSet('edit'); }); await W(1200); await p.click('[data-t4auto="1"]'); await W(1200); console.log('t4 n_p auto', await V('n_p'), 'stored', await p.evaluate(()=>WB.I.n_p));
   await p.click('[data-t4auto="0"]'); await W(800); console.log('t4 n_p manual', await V('n_p'), 'i_lim', await V('i_lim'), 'v_inv', await V('v_inv'));
   console.log('errs', p.errs, p.cons); await b.close(); await H.end(); })();
