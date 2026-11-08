@@ -2459,6 +2459,16 @@ html.wb-lock,html.wb-lock body{overflow:hidden}
 .wb-sr b{font-variant-numeric:tabular-nums;text-align:right}
 .wb-sn{font:inherit;font-size:13px;text-align:left;background:none;border:0;padding:0;color:var(--ink);cursor:pointer}
 .wb-sn:hover,.wb-sn:focus-visible{color:var(--accent);text-decoration:underline;outline:none}
+.wb-slt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:2px 2px 6px}
+.wb-slt input{flex:1 1 140px;min-width:0;font:inherit;font-size:12.5px;padding:3px 7px;border:1px solid var(--line-2);border-radius:5px;background:#fff;color:#1d2128;color-scheme:light}
+.wb-slx{font:inherit;font-size:11.5px;background:none;border:0;padding:1px 0;color:var(--accent);cursor:pointer}
+.wb-slx:hover,.wb-slx:focus-visible{text-decoration:underline;outline:none}
+.wb-slb{max-height:min(60vh,520px);overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
+.wb-sgh{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:5px;width:100%;font:inherit;font-size:12px;font-weight:600;text-align:left;color:var(--ink-2);background:var(--panel);border:0;border-top:1px solid var(--line);padding:6px 4px 3px;cursor:pointer}
+.wb-slb>.wb-sgh:first-child{border-top:0}
+.wb-sgh:hover,.wb-sgh:focus-visible{color:var(--accent);outline:none}
+.wb-sgc{width:10px;color:var(--muted)}
+.wb-sgn{margin-left:auto;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
 .wb-wide{width:min(980px,100%)}
 .wb-codebox{height:calc(100vh - var(--tabh) - 38px)}
 .wb-cnote{font-size:12.5px;margin:0 0 10px;line-height:1.6}
@@ -2470,7 +2480,10 @@ html.wb-lock,html.wb-lock body{overflow:hidden}
 .wb-vt td:nth-child(3),.wb-vt td:nth-child(4){font-variant-numeric:tabular-nums}
 html.wb-lock #tip{z-index:95}
 .wb-ot th,.wb-ot td{background:none}
-.wb-vt td:first-child,.wb-vt th:first-child{width:auto;white-space:nowrap}
+/* 검증표: 경우 · 근거 열은 넓게(줄바꿈), 숫자 · 단위 · 판정 열은 내용만큼 */
+.wb-vt{table-layout:fixed;width:100%}
+.wb-vt th:nth-child(1){width:27%}.wb-vt th:nth-child(2){width:14%}.wb-vt th:nth-child(3),.wb-vt th:nth-child(4){width:9%}.wb-vt th:nth-child(5){width:7%}.wb-vt th:nth-child(6){width:6%}.wb-vt th:nth-child(7){width:28%}
+.wb-vt td{white-space:normal;overflow-wrap:anywhere;vertical-align:top}
 /* 도구 1: 표 입력 (부품 질량 표 · 드라이버 모델) */
 .m1 .wb-h{align-items:center}
 .m1-ptabs{display:flex;flex-wrap:wrap;gap:6px}
@@ -2760,3 +2773,370 @@ html.wb-lock #tip{z-index:95}
 .shp-guide{stroke:#d92d20;stroke-width:1.5;stroke-dasharray:6 4;pointer-events:none}
 .shp-ln line{stroke:#d92d20;stroke-width:2}
 .shp-ln text{fill:#d92d20;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px}
+/* 도구 2: 트랙 · 모터 곡선 표, 트랙 지도 */
+.t2-h{flex-wrap:wrap;gap:10px 16px}
+.t2-vw{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12.5px}
+.t2-map,.t2-mc{margin:0;display:flex;flex-direction:column;gap:4px;min-width:0}
+.t2-line{fill:none;stroke:#7d8394;stroke-width:3;stroke-linejoin:round}
+.t2-cl{fill:none;stroke:#7d8394;stroke-width:1.2;stroke-dasharray:4 3;opacity:.8}
+.t2-cur{fill:#fff;stroke:#232731;stroke-width:2.5}
+.t2-map figcaption{font-size:12px;display:flex;align-items:center;gap:6px}
+.t2-grad{display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(to right,hsl(230 75% 45%),hsl(115 75% 45%),hsl(0 75% 45%))}
+.t2-gt td.ok{color:#257a47}.t2-gt .t2-sum td{border-top:2px solid var(--line-2)}
+.t2-part .dp-plots{grid-template-columns:minmax(0,820px)}
+.wb-viz{display:inline-grid;place-items:center;width:20px;height:18px;margin-left:5px;padding:0;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);cursor:pointer;vertical-align:-3px}
+.wb-viz svg{width:13px;height:13px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.wb-viz:hover,.wb-viz[aria-expanded="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.wb-vzp{position:fixed;z-index:1200;width:380px;padding:8px 10px 10px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,16,32,.18)}
+.wb-vzh{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:2px}.wb-vzh .dvi-x{margin-left:auto}
+.wb-vzn{margin:4px 0 0;font-size:12px;color:var(--ink-2);line-height:1.5}
+.wb-pv{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
+.wb-ctabs{margin:0 0 6px}
+.wb-pane{display:flex;align-items:center;gap:4px;margin:6px 0 2px;font-size:12px}
+.wb-pane button{font:inherit;font-size:12px;min-width:26px;height:24px;padding:0 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);cursor:pointer;color:var(--ink-2)}
+.wb-pane button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.wb-pp{position:relative;border-left:3px solid transparent;padding-left:4px}.wb-pp.on{border-left-color:var(--accent)}
+.wb-ppn{position:absolute;left:8px;top:2px;font:inherit;font-size:11px;padding:1px 6px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);cursor:pointer;color:var(--ink-2);z-index:1}
+.wb-ppn[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
+.wb-st{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;flex:none;cursor:help}
+.wb-st.sq{border-radius:1.5px;background:#c3c7cf}
+.wb-st.own{outline:2px solid var(--accent);outline-offset:1.5px}
+.wb-ir.own input{border-color:var(--accent);background:#faf7ff}
+.wb-inleg{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 6px;font-size:11.5px;color:var(--muted)}.wb-inleg span{display:inline-flex;align-items:center}
+/* 도구 2: 코스 고르기 · 공식 코스 지도 · 랩별 기록 · 모터 탭 */
+.t2-sk{fill:none;stroke:#9aa0ab;stroke-width:1;stroke-dasharray:3 3}
+.t2-cone{stroke:none}.t2-cone.R{fill:#2563eb}.t2-cone.L{fill:#e0a800}.t2-cone.C{fill:#ea580c;stroke:#fff;stroke-width:.6px;vector-effect:non-scaling-stroke}
+.t2-sl{stroke:#16a34a;stroke-width:3.5;stroke-linecap:round}.t2-fin{stroke:#dc2626;stroke-width:3.5;stroke-linecap:round}
+.t2-arr{fill:#232731;stroke:#fff;stroke-width:1}
+.t2-cur{fill:#fff;stroke:#232731;stroke-width:2}
+.t2-hm{display:flex;flex-direction:column;gap:4px;font-size:12.5px}.t2-heat{width:100%;max-width:560px}
+
+/* 도구 2 (2026-11-05 개편): 탭 공통 모양 = 설정 줄 + 표(높이 고정) + 그림 · 결과 3행 */
+.t2-tr{display:grid;grid-template-columns:minmax(360px,1fr) minmax(380px,1.1fr);gap:18px;align-items:start}
+.t2-set{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:12.5px;margin-bottom:6px}
+.t2-set label{display:inline-flex;align-items:center;gap:6px}
+.t2-set input[type=number]{width:72px;font:inherit;padding:2px 6px;border:1px solid var(--line-2);border-radius:5px;text-align:right;background:var(--panel);color:var(--ink)}
+.t2-set select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink)}
+.t2-set input:disabled,.t2-set select:disabled{opacity:.5;background:var(--panel-2)}
+.t2-sum{color:var(--ink-2)}
+.t2-rule{font-size:12px;margin:0 0 8px;line-height:1.55}
+.t2-menu{position:relative;align-self:flex-start}
+.t2-mn{position:absolute;left:0;top:calc(100% + 4px);z-index:20;display:flex;flex-direction:column;min-width:230px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.14);padding:4px}
+.t2-mn button,.t2-mi{font:inherit;font-size:12.5px;text-align:left;padding:6px 10px;border:0;background:none;color:var(--ink);border-radius:5px;cursor:pointer}
+.t2-mn button:hover,.t2-mi:hover{background:var(--panel-2)}
+.t2-pm{position:fixed;inset:0;z-index:60;background:rgba(20,24,40,.35);display:flex;align-items:center;justify-content:center}
+.t2-pmb{width:min(640px,92vw);background:var(--panel);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 16px 48px rgba(20,24,40,.25)}
+.t2-pmb h4{margin:0;font-size:14px}.t2-pmb p{margin:0;font-size:12px}
+.t2-pmb textarea{width:100%;box-sizing:border-box;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
+.t2-btns{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.t2-tw{height:330px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.t2-tt{width:100%;border-collapse:collapse;font-size:12.5px}
+.t2-tt th{position:sticky;top:0;background:var(--panel-2);font-weight:600;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);z-index:1;white-space:nowrap}
+.t2-tt td{padding:3px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.t2-tt td.n,.t2-gtab td{text-align:right;font-variant-numeric:tabular-nums}
+.t2-gtab.map th:first-child,.t2-gtab td.t2-rh{position:sticky;left:0;background:var(--panel-2);font-weight:600}
+.t2-gtab.map th:first-child{z-index:2}
+.t2-e{cursor:text}.t2-e:hover{background:#f1effa;box-shadow:inset 0 0 0 1px var(--line-2)}
+.t2-ci{font:inherit;font-size:12.5px;width:100%;min-width:64px;box-sizing:border-box;padding:1px 4px;border:1px solid var(--accent);border-radius:4px;background:var(--panel);color:var(--ink)}
+.t2-x{font:inherit;width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:4px;background:none;color:var(--muted);cursor:pointer}
+.t2-x:hover{border-color:#e4b4b0;color:#b42318}
+.t2-add{margin:6px}
+.t2-empty{padding:12px;font-size:12.5px;margin:0}
+.t2-msvg{width:100%;height:330px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px}
+.t2-map figcaption{flex-wrap:wrap}
+.t2-mleg{display:inline-flex;align-items:center;gap:5px;margin-left:10px}
+.t2-mleg i{display:inline-block;width:14px;height:3.5px;border-radius:2px}.t2-mleg i.sl{background:#16a34a}.t2-mleg i.fin{background:#dc2626;margin-left:6px}
+.t2-mleg i.arr{width:auto;height:auto;background:none;font-style:normal;font-size:10px;color:#232731;margin-left:6px}
+.t2-gm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:12.5px;margin-bottom:10px}
+.t2-out{display:flex;flex-direction:column;gap:12px}
+.t2-orow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.t2-orow.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.t2-out .wb-oc{min-width:0}
+.t2-grt{border-collapse:collapse;font-size:13px;width:100%}
+.t2-grt th,.t2-grt td{padding:5px 10px;border-bottom:1px solid #eeecf3;text-align:right;font-variant-numeric:tabular-nums}
+.t2-grt thead th{font-size:12px;color:var(--ink-2);font-weight:600}.t2-grt tbody th{text-align:left;font-weight:400;color:var(--ink-2)}
+.t2-grt tr:last-child th,.t2-grt tr:last-child td{border-bottom:0}
+.t2-sub{grid-column:1 / -1;font-size:11.5px;text-align:right}
+.t2-dt.ok{color:#257a47}.t2-dt.bad{color:#b42318}.t2-dt em{font-style:normal;color:var(--muted)}
+/* 도구 2 (2026-11-05 2차): [시뮬레이션 | 맵 편집] · 결과 줄 맞춤 · 구동력 선도 프로브 · 지도 확대 */
+.t2-hr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;flex:1;min-width:0}
+.t2-h{flex-wrap:wrap;gap:8px 18px}
+.t2-gm,.t2-vw{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px}
+.t2-lapl{display:inline-flex;align-items:center;gap:6px;font-size:12.5px}
+.t2-lapl select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink)}
+.t2-lapl select:disabled{opacity:.5}
+.t2-tl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.t2-menu .btn:disabled{opacity:.45;cursor:not-allowed;background:var(--panel-2);color:var(--muted);border-color:var(--line)}
+#wb.t2-edit .wb-sec[aria-label="결과"],#wb.t2-edit #wbmid,#wb.t2-edit .wb-sec[aria-label="신호 선택 그래프"]{display:none}
+.t2-mid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.t2-ftbox{position:relative;min-height:280px}
+.t2-ftov{position:absolute;top:10px;right:12px;padding:4px 10px;border-radius:6px;background:rgba(35,39,49,.78);color:#fff;font-size:12px;font-weight:600}
+.t2-ftv .t2-cap,.t2-cap{font-size:12px;line-height:1.6;margin:6px 0 0;color:var(--ink-2)}
+.t2-zb{display:inline-flex;gap:4px;margin-left:auto}.t2-zb .btn{min-width:30px}
+.t2-mapw .t2-msvg{height:330px}
+.t2-msvg.live{cursor:crosshair;touch-action:none}
+.t2-mc{margin:0;min-width:0}
+.t2-oc .t2-rs{display:flex;flex-direction:column}
+.t2-r{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(78px,auto);align-items:center;gap:10px;height:30px;border-bottom:1px solid #eeecf3;font-size:12.5px}
+.t2-r:last-child{border-bottom:0}
+.t2-r.x3{height:90px}
+.t2-r .n{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t2-r .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.t2-r .v b{font-size:13.5px}.t2-r .v i{font-style:normal;color:var(--muted);font-size:11.5px}
+.t2-r .d{text-align:right;color:var(--ink-2);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.t2-dt{font-weight:600}
+.wb-ir.lock input{background:var(--panel-2);color:var(--muted)}
+.wb-in-n{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0}.wb-in-t{min-width:0}
+.wb-ir .wb-lk{margin-left:auto;font-size:11.5px;color:var(--accent);white-space:nowrap}
+.t2-oc h4 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-oc.g .t2-r .d{font-size:13.5px;font-weight:700;color:var(--ink)}.t2-oc.g .t2-r .d .muted{font-size:11.5px;font-weight:400}
+/* 도구 2 (2026-11-06 3차): 탭 안 고르기 줄 · 표 상자 = 그림 상자 높이 · 그림 → 표 · 그래프 칸 */
+.t2-ext > .t2-hr{padding:4px 0 10px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.t2-tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.t2-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.t2-top{min-height:30px;display:flex;align-items:center;gap:8px;font-size:12px}
+.t2-tw,.t2-fbox{height:360px;box-sizing:border-box}
+.t2-fbox{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.t2-fbox > svg,.t2-fbox > div > svg{width:100%;height:100%;display:block}
+.t2-fbox .t2-msvg{border:0;border-radius:0;height:100%}
+.t2-mapw .t2-msvg{height:100%}
+.t2-ftbox > #t2ft{width:100%;height:100%}
+.t2-fcap{font-size:12px;line-height:1.6;display:flex;flex-wrap:wrap;gap:4px 12px}
+.t2-fcap i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.t2-const{color:var(--accent);font-weight:600}
+.t2-fconst{font-size:15px;font-weight:600;text-align:center;line-height:1.7}
+.t2-adds{display:flex;gap:6px;justify-content:center;padding:8px}
+.t2-tw.ro .t2-tt td{color:var(--muted);background:var(--panel-2)}
+.t2-tw.ro{background:var(--panel-2)}
+.t2-tt .t2-hl,.t2-tt tr.t2-hl td{background:#fde68a !important;box-shadow:inset 0 0 0 2px #d97706}
+.t2-arrl{stroke:#232731;stroke-width:2}.t2-arrh{fill:none;stroke:#232731;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.t2-mleg i.arr{color:#232731}
+.t2-r.gopt .d{font-weight:400}
+.wb-pp{position:relative;border:1.5px solid transparent;border-radius:8px;padding:2px 4px 0;margin-bottom:6px}
+.wb-pp.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(106,66,148,.10)}
+.wb-ppx{position:absolute;right:6px;top:4px;z-index:2;width:22px;height:22px;padding:0;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--muted);cursor:pointer;font:inherit}
+.wb-ppx:hover{color:#b42318;border-color:#e4b4b0}
+.wb-ph{height:8px;margin:0 -4px;cursor:ns-resize;border-radius:0 0 8px 8px;background:linear-gradient(var(--line),var(--line)) center/40px 3px no-repeat}
+.wb-ph:hover{background-color:var(--panel-2)}
+.wb-padd{display:flex;justify-content:center;padding:4px 0 2px}
+.wb-pnote b{color:var(--accent)}
+.t2-pick{fill:transparent;cursor:crosshair}
+.t2-hr.left{justify-content:flex-start}
+.t2-ftv{font-size:12px;line-height:1.6}
+
+/* 계산 중 진행 막대: 화면 위쪽에 고정 (스크롤과 상관없이 보임) */
+.wb-prog{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:60;width:min(460px,60vw);height:26px;border-radius:7px;background:var(--panel);border:1px solid var(--line-2);box-shadow:0 4px 16px rgba(0,0,0,.14);overflow:hidden;font-size:12.5px}
+.wb-prog i{position:absolute;inset:0 auto 0 0;width:0;background:var(--in);opacity:.25;transition:width .25s ease}
+.wb-prog.ind i{width:35%!important;animation:wbprog 1.1s linear infinite}
+.wb-prog span{position:relative;display:block;padding:4px 12px;color:var(--ink-2);font-weight:600}
+@keyframes wbprog{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
+/* 계산 중 오른쪽 화면 회색 · 끝나면 결과 · 그래프 한 번 깜빡임 (OS 애니메이션 줄이기 설정과 상관없이) */
+#wb.wb-busy .wb-right{opacity:.55;filter:grayscale(.5);transition:opacity .15s,filter .15s}
+#wb.wb-flash #wbout,#wb.wb-flash #wbmid,#wb.wb-flash #wbsig{animation:wbflash .8s ease-out}
+@keyframes wbflash{0%{box-shadow:0 0 0 3px var(--in);background-color:var(--in-soft)}100%{box-shadow:0 0 0 0 transparent;background-color:transparent}}
+/* 휠 확대 상자: 눌러야 켜짐 */
+[data-zoombox]{position:relative}
+[data-zoombox].zact{box-shadow:inset 0 0 0 2px var(--in)}
+[data-zoombox]:not(.zact):hover::after{content:'눌러서 휠 확대 켜기';position:absolute;right:8px;bottom:6px;font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:1px 6px;border-radius:4px;pointer-events:none}
+body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-select:none!important}
+/* 맵 편집 표: 빈 칸도 줄 높이 유지, 칸 표(토크 · 효율 · 타이어)는 내용만큼 폭 (빈 표에 줄 · 열을 더해도 납작 · 넓적하지 않게) */
+.t2-tt td,.t2-tt th{height:27px;box-sizing:border-box}
+.t2-gtab{width:auto}
+.t2-gtab td,.t2-gtab th{min-width:76px}
+.t2-inh{color:var(--muted);opacity:.7}
+.t2-cdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea7a12;vertical-align:middle}
+.t2-pvh{margin-left:10px;font-size:12px}
+/* 시뮬레이션: 구동력 선도 · 코스 지도 두 박스의 머리 · 그림 위아래를 맞춤 */
+.t2-mid .wb-h{min-height:38px;box-sizing:border-box;align-items:center}
+.t2-mid .t2-fbox{height:360px}
+/* 편집 탭: 상수 칸 (여러 열) · 주행선 단추 · 모델 단계 · 모터 표 고르기 */
+.t2-cg{margin:6px 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.t2-cg .wb-ig{grid-column:1/-1;margin-top:8px}
+.t2-cg .wb-ig:first-child{margin-top:0}
+.t2-rlbar,.t2-sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
+.t2-rlnote{font-size:12px}
+.t2-md{display:inline-flex;align-items:center;gap:8px;margin-left:auto}
+.wb-inempty{font-size:13px;line-height:1.6;padding:12px 4px}
+.t2-ski{width:74px;text-align:right;font:inherit;padding:2px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel)}
+.t2-dp{font-weight:700}.t2-dp.up{color:#b91c1c}.t2-dp.dn{color:#15803d}
+.t2-hr.left .t2-vw{margin-left:0}
+
+/* 신호 선택 그래프: 칸마다 상자, 위 오른쪽 보기 단추줄 (커서 · 이동 · 영역 확대 · + · − · 맞춤 · ×), [+ 그래프 칸]은 상자 바깥 아래 */
+#wbsig.wb-panes{background:none;border:none;padding:0}
+.wb-panes .wb-pp{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:30px 8px 0;margin-bottom:10px}
+.wb-panes .wb-pp.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(106,66,148,.10)}
+.wb-panes .wb-pp.zact{box-shadow:inset 0 0 0 2px var(--in)}
+.wb-ptb{position:absolute;right:8px;top:5px;display:flex;align-items:center;gap:3px;z-index:2}
+.wb-ptb button{font:inherit;font-size:11.5px;height:22px;min-width:24px;padding:0 7px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink-2);cursor:pointer}
+.wb-ptb button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.wb-ptb i{width:1px;height:16px;background:var(--line);margin:0 3px}
+.wb-ptb .wb-ppx{position:static;width:22px;padding:0}
+.wb-pempty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;font-size:12.5px;color:var(--muted);pointer-events:none;background:var(--panel);padding:2px 8px;border-radius:4px}
+.wb-panes .wb-padd{padding:2px 0 4px}
+#wbsig[data-zm="pan"] .wb-hit{cursor:grab}#wbsig[data-zm="box"] .wb-hit{cursor:crosshair}
+.wb-zbox{fill:rgba(29,95,154,.10);stroke:var(--in);stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
+
+/* 편집 탭 상수: 비슷한 값끼리 작은 상자 (한 상자 = 한 열), 막힘 글은 같은 줄 오른쪽 → 줄 높이 같음 */
+.t2-sbs{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-start}
+.t2-sb{flex:1 1 480px;min-width:0;border:1px solid var(--line);border-radius:7px;padding:4px 4px 6px;background:var(--panel-2)}
+.t2-sbh{font-size:12px;font-weight:700;color:var(--ink-2);padding:3px 6px 4px}
+.t2-cg .wb-ir{grid-template-columns:minmax(0,1fr) 92px 46px;min-height:36px;box-sizing:border-box}
+.t2-cnote{margin:10px 2px 0;font-size:12px}
+.t2-mth{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:4px 0 6px;font-size:13px}
+.t2-use{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12.5px}
+/* 도구 2 편집 표: 모든 칸 구분선 · 가운데 · 행 · 열 모양 추가 단추 */
+.t2-gtab{margin:0 auto;border-collapse:collapse}
+.t2-gtab td,.t2-gtab th{border:1px solid var(--line)}
+.t2-gtab td.t2-xc,.t2-gtab th.t2-xc{min-width:30px;width:30px;padding:0;text-align:center}
+.t2-gtab tr.t2-delc td{background:var(--panel-2);height:26px}
+.t2-tt tr.t2-addr td{padding:0;border:1px dashed var(--line);background:var(--panel-2)}
+.t2-tt tr.t2-addr button,.t2-gtab th.t2-addc button{font:inherit;font-size:12.5px;width:100%;height:100%;min-height:27px;border:0;background:none;color:var(--accent,#3d5a99);cursor:pointer;font-weight:600}
+.t2-tt tr.t2-addr button:hover,.t2-gtab th.t2-addc button:hover{background:var(--panel)}
+.t2-gtab th.t2-addc{min-width:58px;width:58px;padding:0;border:1px dashed var(--line);background:var(--panel-2);vertical-align:middle;position:static}
+.t2-gtab th.t2-addc button span{font-weight:400;color:var(--muted);font-size:11px}
+.t2-gtab td.t2-empty{white-space:normal;max-width:420px}
+.t2-pvh{margin:6px 2px 0;font-size:12px}
+.t2-heat .t2-hg{stroke:rgba(255,255,255,.55);stroke-width:1;pointer-events:none}
+.t2-heat .t2-hf{fill:none;stroke:var(--line);pointer-events:none}
+/* 입력 행 안 옵션 · 상자 맨 위 옵션 행 */
+.t2-inopt{margin-left:8px;flex:0 0 auto}.t2-inopt .dc-seg button{padding:2px 8px;font-size:11.5px}
+.t2-optrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 6px 8px;border-bottom:1px dashed var(--line);margin-bottom:4px}
+.t2-optn{font-size:12.5px;font-weight:600}.t2-optd{flex:1 1 100%;margin:0;font-size:12px}
+/* 모델 단계 */
+.t2-model{display:flex;flex-direction:column;gap:14px}
+.t2-mdnote{margin:2px 0 0;font-size:12.5px}
+.t2-mdh{font-size:13px;font-weight:700;margin-bottom:6px}
+.t2-mdops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.t2-mdop{font:inherit;text-align:left;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;color:var(--ink)}
+.t2-mdop b{font-size:13.5px}.t2-mdd{font-size:12.5px;line-height:1.5}.t2-mdu{font-size:11.5px;color:var(--muted);line-height:1.45}
+.t2-mdop:hover{border-color:#9fb0d6}
+.t2-mdop[aria-pressed="true"]{border-color:#3d5a99;box-shadow:inset 0 0 0 1px #3d5a99;background:#f2f5fc}
+.t2-mdop:disabled{opacity:.45;cursor:not-allowed}
+.t2-mdl{font-size:12px;font-weight:600;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2);white-space:nowrap}
+.t2-mdhn{font-weight:400;font-size:12px;margin-left:8px}
+.t2-mdop.tg b{display:flex;align-items:center;gap:8px}
+.t2-tgb{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--panel-2)}
+.t2-mdop.tg[aria-pressed="true"] .t2-tgb{background:#3d5a99;border-color:#3d5a99;color:#fff}
+/* [+ 열] = 표 오른쪽 끝 세로 띠 (모든 행 높이), 편집 탭 상자 = 1행 3열 고정 */
+.t2-gtab th.t2-addc{position:relative}
+.t2-gtab th.t2-addc button{position:absolute;inset:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.t2-sbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;align-items:start}
+.t2-sb{flex:none}
+.t2-msvg .t2-rbad{stroke:#dc2626;stroke-width:9;stroke-linecap:round;fill:none;opacity:.45;pointer-events:none}
+.t2-rbadl{color:#b91c1c}
+.t2-inopt{margin-left:0;max-width:100%}.t2-inopt .dc-seg{flex-wrap:wrap;max-width:100%}
+.t2-gtab td.t2-empty{text-align:left}
+/* 지도: 차가 지나간 영역 (어두운 무채색, 묶음에 한 번 투명도 → 겹쳐도 같은 진하기) */
+.t2-msvg .t2-sweep{opacity:.3;pointer-events:none}.t2-msvg .t2-sweep polygon{fill:#2f3338;stroke:none}
+.t2-swl i{display:inline-block;width:14px;height:8px;background:#2f3338;opacity:.35;border-radius:2px;margin-right:4px;vertical-align:middle}
+.t2-msvg .t2-corr{fill:#2f3338;opacity:.14;stroke:none;pointer-events:none}
+/* 모델 단계 · 열 모델: 카드 4개 (켜고 끄는 단추 + 냉각 방식) */
+.t2-mdops.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.t2-mdops.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.t2-tgb[aria-pressed="true"]{background:#3d5a99;border-color:#3d5a99;color:#fff}
+.t2-mdop.tg{cursor:default}
+.t2-mdop.tg.on{border-color:#3d5a99;box-shadow:inset 0 0 0 1px #3d5a99;background:#f2f5fc}
+button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.t2-mdc{display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap}
+.t2-mdc .dc-seg button{padding:2px 9px;font-size:11.5px}
+/* 도구 9 냉각 계통 계산기: 회로 카드 · 블럭 배치 (모델 단계 편집 탭 [냉각] 은 .t2-coolq) */
+.t9-cool{display:flex;flex-direction:column;gap:14px}
+.t9-cbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px}
+.t9-cc{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.t9-cch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px}.t9-cch b{font-size:13.5px}
+.t9-cpal{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}.t9-cdel{color:#b42318}
+.t9-cbox{border:1px dashed var(--line);border-radius:7px;background:var(--panel-2)}
+.t9-csvg{width:100%;height:auto;display:block;touch-action:none;user-select:none}
+.t9-cb rect{fill:var(--panel);stroke:#9aa3b5;stroke-width:1.2}.t9-cb{cursor:grab}
+.t9-cb.rad rect{fill:#e8f1fb;stroke:#4a7bb7}.t9-cb.pump rect{fill:#eef6ee;stroke:#4f8a4f}.t9-cb.part rect{fill:#fbf1e6;stroke:#b7823e}.t9-cb.io rect{fill:#f1f1f4;stroke:#8a8f99;stroke-dasharray:4 3}
+.t9-cb.sel rect{stroke:#3d5a99;stroke-width:2.6}
+.t9-cbn{font-size:13px;font-weight:700;fill:var(--ink)}.t9-cbs{font-size:11px;fill:var(--muted)}
+.t9-cpi{fill:#fff;stroke:#8a8f99;stroke-width:1.4}.t9-cpo{fill:#3d5a99;stroke:#fff;stroke-width:1.5;cursor:crosshair}
+.t9-cl2{fill:none;stroke:#3d5a99;stroke-width:2}.t9-cah{fill:#3d5a99}
+.t9-clhit{fill:none;stroke:transparent;stroke-width:12;cursor:pointer}.t9-clhit:hover{stroke:rgba(220,38,38,.25)}
+.t9-cdrag{fill:none;stroke:#3d5a99;stroke-width:1.5;stroke-dasharray:5 4;pointer-events:none}
+.t9-cmsg{margin:0;font-size:12px}.t9-cmsg.bad{color:#b42318}.t9-cmsg.ok{color:#2f7d4f}
+.t9-cform{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12.5px}.t9-cform b{margin-right:4px}
+.t9-cfi{display:flex;align-items:center;gap:6px}.t9-cfi input{width:84px;font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px;text-align:right}.t9-cfi i{font-style:normal;color:var(--muted);font-size:11.5px}
+.t9-csel{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.t2-mdc b{font-size:12px}
+/* 냉각 배치 선 = 호스(수랭) · 덕트(공랭): 테두리 + 안쪽 색 + 흐름 방향 무늬 (애니메이션은 OS 설정과 상관없이) */
+.t9-hose path{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.t9-hose.water .o{stroke:#26303c;stroke-width:12}.t9-hose.water .i{stroke:#3f86d1;stroke-width:7.5}
+.t9-hose.water .f{stroke:rgba(255,255,255,.85);stroke-width:2.2;stroke-dasharray:3 12;animation:t9flow 1.1s linear infinite}
+.t9-hose.air .o{stroke:#7b828d;stroke-width:18;stroke-linecap:butt}.t9-hose.air .i{stroke:#eceef2;stroke-width:14;stroke-linecap:butt}
+.t9-hose.air .f{stroke:#9aa4b2;stroke-width:2;stroke-dasharray:6 10;animation:t9flow 1.4s linear infinite}
+@keyframes t9flow{to{stroke-dashoffset:-30}}
+.t9-clhit{stroke-width:16}
+.t9-hose.drag path{pointer-events:none}.t9-hose.drag .o{opacity:.9}
+.t9-cend{pointer-events:none;stroke-width:2.5}.t9-cend.water{fill:#3f86d1;stroke:#26303c}.t9-cend.air{fill:#eceef2;stroke:#7b828d}
+.t9-cb.tgt rect{stroke:#2f9e5b;stroke-width:3;fill:#eaf7ef}
+.t9-cpo{transition:r .12s}.t9-cpo:hover{r:10}
+.t9-cb:active{cursor:grabbing}
+.t9-cbox{overflow:auto;max-height:520px}.t9-csvg{width:auto;max-width:none}
+.t9-cpal .btn:disabled{opacity:.4;cursor:not-allowed}
+.t9-cguide{stroke:#e0559b;stroke-width:1.2;stroke-dasharray:5 4;pointer-events:none}
+.t9-hose.sel .o{stroke:#e0559b}.t9-hose.air.sel .o{stroke:#e0559b}
+.t9-cbadge{cursor:pointer}.t9-cbadge circle{fill:#fff;stroke:#26303c;stroke-width:2}.t9-cbadge text{font-size:12px;font-weight:700;fill:#26303c}
+.t9-cbadge.sel circle{stroke:#e0559b;stroke-width:3}
+.t9-hose .o.sel{stroke:#e0559b}
+.t9-tee{stroke-width:2;pointer-events:none}.t9-tee.water{fill:#26303c;stroke:#26303c}.t9-tee.air{fill:#7b828d;stroke:#7b828d}
+/* 도구 9: 도구 2 와 주고받기 줄 · 도구 2 편집 탭 [냉각] 안내 */
+.t9-x{display:flex;flex-direction:column;gap:14px;margin-bottom:14px}
+.t9-xbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.t9-xbar b{font-size:13.5px;margin-right:4px}
+.t2-coolq{display:flex;flex-direction:column;gap:4px}
+.t2-cq{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font-size:12.5px;display:flex;flex-direction:column;gap:6px}
+.t2-cq b{font-size:13.5px}.t2-cq p{margin:0}
+.t2-cqb{display:flex;gap:8px;flex-wrap:wrap}
+/* 도구 4 축전지 팩 계산기 */
+.t4-x{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.t4-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.t4-bar b{font-size:13px;margin-right:4px}.t4-bar select,.t4-bar input[type=text]{font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel)}
+.t4-bar input[type=text]{min-width:220px}.t4-bar .dc-seg button{padding:3px 10px;font-size:12px}
+.t4-rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.t4-rule{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font-size:12px}
+.t4-rule b{font-size:17px}.t4-rule.bad{border-color:#e5a3a3;background:#fdf3f3}
+.t4-bg{display:block;height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}.t4-bg i{display:block;height:100%;background:#2f7d4f}.t4-rule.bad .t4-bg i{background:#b42318}
+.t4-rule .ok{color:#2f7d4f}
+.t4-note{margin:0;font-size:12px}
+.t4-pw{margin-top:14px}.t4-tw{overflow-x:auto}.t4-t{min-width:760px}.t4-t td,.t4-t th{text-align:right;white-space:nowrap}.t4-t td:first-child,.t4-t th:first-child{text-align:left}
+.t4-t td .ok{color:#2f7d4f}
+.t4-oi input{width:90px;font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px}
+/* 도구 5 정면 그림 */
+.t5-figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.t5-fig{margin:0}.t5-fig figcaption{font-size:12.5px;font-weight:700;margin-bottom:4px}
+.t5-svg{width:100%;height:auto;display:block;background:var(--panel-2);border-radius:7px}
+.t5-tx{font-size:8px;fill:var(--muted)}.t5-tx.b{fill:#6A4294;font-weight:700}
+.t5-note{font-size:12px;margin:8px 0 0}
+/* 도구 1: 어셈블리 크기 (자체 관성) */
+.m1-dim{opacity:.9}.m1-dim .m1-cat.ro{color:var(--muted);font-size:11.5px;border:none;background:none;padding-left:0}
+.m1-dim .m1-xyz input::placeholder{color:#b9bec8}
+.m1-dim .m1-xyz input{width:50px}.m1-dim{gap:4px 6px}
+.t2-trp{margin-top:8px;overflow-x:auto}
+.wb-ir.lock input.wb-eff{font-style:italic}.wb-ir.lock input.wb-eff.none::placeholder{color:var(--muted);font-style:normal}
+
+/* 작업창 [결과 | 편집] 탭 (도구 2 를 뺀 모든 도구) */
+#wb.wb-tabbed.wb-edit .wb-sec[aria-label="결과"],#wb.wb-tabbed.wb-edit #wbmid,#wb.wb-tabbed.wb-edit .wb-two,#wb.wb-tabbed.wb-edit .wb-sec[aria-label="신호 선택 그래프"]{display:none}
+#wb.wb-tabbed.wb-res #wbedit,#wb.wb-tabbed.wb-res #wbext{display:none}
+.wb-tabsec .wb-h{align-items:center;gap:12px;flex-wrap:wrap}
+.wb-ebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:4px 0 12px}
+.wb-esec{display:flex;align-items:center;gap:8px}
+.wb-ecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px 14px;align-items:start}
+.wb-ecard{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:6px 8px 8px;min-width:0}
+.wb-ech{font-size:12.5px;font-weight:700;color:var(--ink-2);padding:3px 4px 6px}
+.wb-ecard .wb-ir{grid-template-columns:minmax(0,1fr) 92px 46px;min-height:36px;box-sizing:border-box}
+.wb-efig{margin-top:14px}
+/* 도구 2P 감도 탭 */
+.t2-sens{display:flex;flex-direction:column;gap:10px;padding:4px 0}
+.t2s-rel{width:64px}
+.t2s-top{margin:6px 0 0;padding-left:22px;columns:2;column-gap:28px;font-size:13.5px}
+.t2s-top li{break-inside:avoid;margin:2px 0}
+.t2s-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+.t2s-tab{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.t2s-tab th,.t2s-tab td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.t2s-tab th:first-child,.t2s-tab td:first-child{text-align:left;white-space:normal;min-width:220px}
+.t2s-tab thead th{position:sticky;top:0;background:var(--panel-2)}
+.t2s-tab th .lnk[aria-pressed="true"]{color:var(--accent);font-weight:700}
+.t2s-tab td.t2s-md{background:var(--accent-soft)}
+.t2s-tab td.t2s-hi{background:var(--accent-soft);color:var(--accent);font-weight:700}
+@media (max-width:700px){.t2s-top{columns:1}}
+.t2s-base{font-size:13.5px;margin:0}

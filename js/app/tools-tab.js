@@ -10,7 +10,7 @@ const DASH = (() => {
   const GROUPS = [
     ['질량 · 무게중심', [['m',0,300],['fr',1,47.5],['left',1,50],['h',0,290]]],
     ['치수', [['L',0,1550],['tf',0,1200],['tr',0,1180],['r_eff',0,229],['r_load',0,220]]],
-    ['에어로', [['cla',2,3.0],['cda',2,1.4],['xcop',0,852],['hcop',0,420]]],
+    ['에어로', [['cla',2,3.0],['cda',2,1.4],['xcop',0,698],['hcop',0,420]]],
     ['타이어 · 서스 · 조향', [['mu',2,1.5],['lltd',1,50],['rmin',1,3.0]]],
     ['파워트레인', [['pmax',0,80],['gr',2,3.55],['nmax',0,6500]]]
   ];
@@ -57,17 +57,22 @@ function dashSync(){ DASH.GROUPS.forEach(g => g[1].forEach(([k, , ex]) => { cons
   DASH.P.rt = DASH.P.r_eff; }   /* 그림 코드(dash-figs.js)는 유효 반경을 rt 로 읽음 */
 const TOOL_LIST = [
   ['1','질량·무게중심 계산기','P0','부품별 질량·위치','총질량, 무게중심, 앞뒤·좌우 배분'],
-  ['2','랩타임·점수 시뮬레이터','P0','질량, 에어로, 모터 곡선, 트랙','종목별 랩타임·점수, 최적 기어비'],
+  ['G','목표 · 요구값 (경량 시뮬)','P0','도구 1 질량 · 무게중심, 치수, 모터 토크','종목 목표 → 에어로 · 질량 · 모터 · 타이어 요구값, 내구 에너지 · 평균 출력 · 발열'],
+  ['2','랩타임 시뮬레이터 (정밀)','P0','질량, 에어로, 모터 · 효율, 축전지, 코스','종목별 기록과 목표 차이, 감속비 선택, 내구 에너지'],
   ['3','제동 시스템 사이징','P1','질량·무게중심, 마스터실린더·캘리퍼','제동 배분, 페달력, 잠김 순서'],
-  ['4','서스 기하 3D','P3-1~3','하드포인트','캠버 게인, 롤센터, 안티 지오메트리'],
-  ['5','조향 기구 + 3D 검증','P3-4~5','도구 4, 랙·너클암','조향각 곡선, 애커먼, 범프 스티어'],
-  ['6','액추에이션·스프링','P3-6~7','로커·푸시로드, 스프링·ARB','모션비, 휠 레이트, 롤강성 배분'],
-  ['7','하중 산출','P4-1','도구 1·4·6, 하중 케이스','하드포인트별 부재력'],
-  ['8','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교']
+  ['4','축전지 팩 계산기','P1','셀 사양, 직렬·병렬, 세그먼트','팩 전압·용량·저항, 규정 확인, 부하 전압·출력'],
+  ['5','서스 기하 3D','P3-1~3','하드포인트','캠버 게인, 롤센터, 안티 지오메트리'],
+  ['6','조향 기구 + 3D 검증','P3-4~5','도구 5, 랙·너클암','조향각 곡선, 애커먼, 범프 스티어'],
+  ['7','액추에이션·스프링','P3-6~7','로커·푸시로드, 스프링·ARB','모션비, 휠 레이트, 롤강성 배분'],
+  ['8','하중 산출','P4-1','도구 1·5·7, 하중 케이스','하드포인트별 부재력'],
+  ['9','냉각 계통 계산기','P4-5','회로 배치(라디 · 펌프 · 부품), 주행 평균 발열 · 차속','부품 · 냉각수 정상 온도, 주행 중 온도, 도구 2P 등가값'],
+  ['10','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교'],
+  ['T','타이어 모델 (선택)','P1','μ · 하중 감도 · 코너링 강성 (시험 데이터가 없을 때 직접)','슬립각–횡력 곡선, 앞뒤 코너링 강성, 이완 길이']
 ];
 /* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
-  const rows = TOOL_LIST.map(r => [...r, W[r[0]] ? r[0] : '']);
+  /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
+  const rows = TOOL_LIST.map(r => [W[r[0]] && W[r[0]].no ? W[r[0]].no : r[0], ...r.slice(1), W[r[0]] ? r[0] : '']);
   return rows.map(([n,t,s,i,o,id]) => id ? `<li class="tt-on" data-wb="${id}" tabindex="0" role="button" aria-label="${t} 작업창 열기"><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">열기 →</span></li>`
     : `<li><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">준비 중</span></li>`).join(''); }
 const dashVmax = P => P.nmax/P.gr*2*Math.PI*(P.rt/1000)*60/1000;   /* 모터 회전수 한계 최고속 [km/h] */
@@ -113,9 +118,9 @@ function dashBipolar(){ const sl = document.querySelector('#dcond input[data-dc=
   const pc = (parseFloat(sl.value) - sl.min)/(sl.max - sl.min)*100, a = Math.min(50, pc), b = Math.max(50, pc), tr = '#dcd9e5', ac = '#6A4294';
   sl.style.background = `linear-gradient(to right, transparent calc(50% - 1px), #4a4458 calc(50% - 1px), #4a4458 calc(50% + 1px), transparent calc(50% + 1px)), linear-gradient(to right, ${tr} 0%, ${tr} ${a}%, ${ac} ${a}%, ${ac} ${b}%, ${tr} ${b}%, ${tr} 100%)`; }
 function dashPartHTML(){ const P = DASH.P, C = DASH.C;
-  const tabs = [['frame','질량 · 무게중심',''],['aero','에어로',''],['goal','차량 목표','도구 2'],['pt','파워트레인','도구 2'],['brake','제동','도구 3'],['susp','서스 기하','도구 4'],['steer','조향','도구 5'],['spring','스프링·ARB','도구 6']];
+  const tabs = [['frame','질량 · 무게중심',''],['aero','에어로',''],['goal','차량 목표',''],['pt','파워트레인',''],['brake','제동','도구 3'],['susp','서스 기하','도구 5'],['steer','조향','도구 6'],['spring','스프링·ARB','도구 7']];
   return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+'을 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
-    <div class="dp-body">${DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
+    <div class="dp-body">${DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : (DASH.part==='goal' || DASH.part==='pt') && typeof t2PartHTML==='function' ? t2PartHTML(DASH.part) : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
 }
 function dashFigsHTML(){ const K = dashCalc(), P = DASH.P, C = DASH.C;
   return `<figure class="df-f"><figcaption><b>옆에서</b><span>축하중 · 무게중심 · 압력 중심</span></figcaption>${CARFIG.side(P, C, K)}</figure>

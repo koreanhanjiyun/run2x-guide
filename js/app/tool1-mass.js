@@ -92,6 +92,7 @@ function m1MassHTML(){ const gs = m1Groups(), ed = m1CanEdit(), D = WB.R && WB.R
         <span class="m1-sum">${wbFmt(m1GSum(g), 2)} kg</span>
         ${ed ? `<span class="m1-acts"><button type="button" class="m1-ib" data-m1gcopy aria-label="좌우 바꿔 복사" title="복사본 만들기 (y 부호 · 이름의 왼/오른을 바꿈)">${M1IC.copy}</button><button type="button" class="m1-ib del" data-m1gdel aria-label="어셈블리 지우기" title="어셈블리 지우기">${M1IC.del}</button></span>` : ''}</div>
       <div class="m1-cm">${ed ? `<select data-m1gf="cat" class="m1-cat" aria-label="범주">${M1CAT.map(([k, t]) => `<option value="${k}"${(g.cat||'s')===k?' selected':''}>${t}</option>`).join('')}</select>` : `<span class="m1-cat">${(M1CAT.find(c => c[0]===(g.cat||'s'))||[])[1]}</span>`}${xyz(g)}<i class="m1-u">mm</i></div>
+      <div class="m1-cm m1-dim" title="어셈블리를 이 크기의 직육면체(질량 고르게)로 보고 자체 관성을 더함. 비우면 점질량"><span class="m1-cat ro">크기</span>${[['lx', '길이 x'], ['ly', '폭 y'], ['lz', '높이 z']].map(([f, n]) => `<label class="m1-xyz"><span>${n.split(' ')[1]}</span>${ed ? m1Num(g[f], `data-m1gf="${f}" aria-label="${n} [mm] (자체 관성용, 선택)" placeholder="—"`) : `<b>${g[f]!=null ? wbFmt(g[f], 0) : '—'}</b>`}</label>`).join('')}<i class="m1-u">mm</i></div>
       <div class="m1-ci">${(g.items||[]).map((it, i) => `<div class="m1-ir${m1N(it)===0 ? ' off' : ''}">${ed ? `<input type="text" data-m1if="name" data-m1ii="${i}" value="${wbEsc(it.name||'')}" placeholder="항목" aria-label="항목 이름">${m1Num(it.m, `data-m1if="m" data-m1ii="${i}" aria-label="한 개 질량 [kg]"`)}<i>kg ×</i>${m1Num(it.n==null ? 1 : it.n, `data-m1if="n" data-m1ii="${i}" min="0" step="1" aria-label="개수"`)}<label class="m1-half" title="${wbEsc(HT)}"><input type="checkbox" data-m1if="half" data-m1ii="${i}"${it.half ? ' checked' : ''} aria-label="걸침 (절반은 반대쪽)">½</label><button type="button" class="m1-ix" data-m1idel="${i}" aria-label="항목 지우기" title="항목 지우기">×</button>`
           : `<span>${wbEsc(it.name||'')}</span><b>${wbFmt(it.m, 2)}</b><i>kg × ${m1N(it)}</i><span class="m1-half ro" title="${wbEsc(HT)}">${it.half ? '½' : ''}</span><span></span>`}</div>`).join('')}${ed ? `<button type="button" class="m1-add" data-m1iadd>+ 항목</button>` : ''}</div></div>`; }).join('')}${ed ? slots.join('') : ''}</div>
     ${ed ? `<button type="button" class="m1-gadd" data-m1gadd>+ 어셈블리</button>` : ''}
@@ -329,7 +330,7 @@ document.addEventListener('pointerup', () => { M1.drag = null; });
 
 /* ---------- 계산에 넘길 값 ---------- */
 function m1ExtraI(){ const gs = m1Groups(), items = gs.map(g => { const mh = (g.items || []).reduce((a, it) => a + (it.half && isFinite(it.m) && it.m!==null ? +it.m*m1N(it) : 0), 0);
-    return {m:m1GSum(g), mh, to:m1HalfTo(g, gs).cat, hue:g.hue, x:+g.x||0, y:+g.y||0, z:+g.z||0, cat:g.cat||'s', name:g.name||''}; }).filter(it => it.m > 0);
+    return {m:m1GSum(g), mh, to:m1HalfTo(g, gs).cat, hue:g.hue, x:+g.x||0, y:+g.y||0, z:+g.z||0, lx:+g.lx||0, ly:+g.ly||0, lz:+g.lz||0, cat:g.cat||'s', name:g.name||''}; }).filter(it => it.m > 0);
   const drv = {}; Object.keys(M1DRV).forEach(k => { drv[k] = m1Drv(k) || M1DDEF(); });
   return {items, drv, dsel:M1.dsel}; }
 
@@ -371,7 +372,7 @@ function m1TourTab(tab){ if(!M1.tourUndo && typeof tgUndo==='function'){ const t
   if(M1.tab!==tab){ M1.tab = tab; wbPaint(['ext']); } }
 const m1TT = tab => ({click:{sel:`#wb [data-m1tab="${tab}"]`, need:() => M1.tab!==tab, run:() => m1TourTab(tab)}, inner:'#wb .wb-right'});
 const M1TOUR = [
-  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 차 형상, 검증표(손계산과 비교), 코드 보기, 입력 내보내기 · 가져오기, 대시보드에 반영입니다.', m1TT('mass')],
+  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 차 형상, 코드 · 검증(계산 코드와 손계산 비교표), 입력 내보내기 · 가져오기, 대시보드에 반영입니다.', m1TT('mass')],
   ['#wb .wb-bar [data-coordopen]', '좌표계', '모든 좌표는 사이트 차량 좌표계입니다. 원점은 뒤 차축 중심 · 차량 중심면 · 지면, x는 앞으로 +, y는 왼쪽 +, z는 위로 + [mm]입니다. 누르면 설계 탭과 같은 좌표계 그림이 열립니다. 차 안 부품은 대부분 x가 + 라서 숫자만 넣으면 됩니다.', m1TT('mass')],
   ['#wb .wb-bar [data-shpopen]', '차 형상', '우리 차 측면도 · 윗면도를 이미지(.png .jpg .webp)나 CAD 도면(.dxf)으로 올리면, 질량 분포와 드라이버 모델 그림의 차 대신 씁니다. 올린 뒤 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심(윗면은 차축 가운데) 두 점만 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 계산에는 쓰지 않고, 올리지 않거나 되돌리면 기본 차 그림입니다.', m1TT('mass')],
   ['#wb .wb-in', '입력', '휠베이스와 트레드입니다. [대시보드 값으로 채우기]를 누르면 대시보드 설계값이 들어옵니다.', m1TT('mass')],
@@ -403,7 +404,7 @@ WB_TOOLS['1'] = {
   no:'1', stage:'P0', name:'질량 · 무게중심 계산기', mainTitle:'질량 분포', mainMeta:'차 윤곽은 예시 차량 (휠베이스에 맞춤) · 원 넓이 ∝ 질량',
   noSig:true,
   inputs:[ {k:'L', dk:'L', v:1550, d:0, g:'치수'}, {k:'tf', dk:'tf', v:1200, d:0, g:'치수'}, {k:'tr', dk:'tr', v:1180, d:0, g:'치수'}, {k:'r_load', dk:'r_load', v:220, d:0, g:'치수'} ],   /* r_load: 그림의 지면 높이(바퀴 중심 − r_load)만, 계산에는 안 씀 */
-  outGroups:{'정지 코너웨이트':{wide:true, render:o => m1CwCard(o)}, '관성 모멘트':{note:'점질량 근사 · 부품 자체 관성 제외 → 실제보다 작음'}},
+  outGroups:{'정지 코너웨이트':{wide:true, render:o => m1CwCard(o)}, '관성 모멘트':{note:'평행축 + 크기를 넣은 어셈블리의 자체 관성(고른 직육면체). 크기가 빈 어셈블리는 점질량 → 실제보다 작을 수 있음'}},
   outputs:[
     {k:'m', n:'총질량 (드라이버 포함)', u:'kg', d:1, g:'질량'}, {k:'m_empty', n:'공차중량 (드라이버 제외)', u:'kg', d:1, g:'질량'}, {k:'m_s', dk:'m_s', d:1, g:'질량'}, {k:'m_us_f', dk:'m_us_f', d:2, g:'질량'}, {k:'m_us_r', dk:'m_us_r', d:2, g:'질량'},
     {k:'m_drv', n:'드라이버 (고른 사람, 장비 포함)', u:'kg', d:1, g:'질량', hide:true}, {k:'h_est', n:'체절 길이로 본 키', u:'cm', d:1, g:'질량', hide:true},
@@ -419,102 +420,197 @@ WB_TOOLS['1'] = {
       const sg = $('#m1segs'); if(sg) sg.innerHTML = m1SegTable(R.drv && R.drv[M1.drv]); const ds = $('#m1dsum'), DD = R.drv && R.drv[M1.drv]; if(ds && DD) ds.textContent = wbFmt(DD.m, 1); const he = $('#m1dhest'); if(he && DD){ he.hidden = !DD.segSet; he.textContent = m1HestTxt(DD); } }
     else if(M1.tab==='mass'){ const a = document.activeElement; if(!M1.pick && !M1.mv && !(a && a.closest && a.closest('#wbext') && a.matches('input, select'))){ const b = $('#m1body'); if(b) b.innerHTML = m1MassHTML(); } } },
   verifyBase:{items:[], drv:{d1:M1DDEF(), d2:M1DDEF(), d3:M1DDEF()}, dsel:'d1'},
-  code:`// 입력 I: L · tf · tr [mm], items = 어셈블리 [{m, x, y, z, cat, mh, to}] (cat: s 현가상 · uf 현가하 앞 · ur 현가하 뒤, mh = 걸침 항목 질량 합, to = 현가상일 때 절반이 갈 현가하),
-//        drv = {d1, d2, d3} 드라이버 모델 입력 (키 cm, 장비 gear = 헬멧 · 드라이버 복 · 안전벨트 kg), dsel = 고른 드라이버
-// 좌표: x = 뒤 차축 중심에서 앞으로 +, y = 차 중심선에서 왼쪽 +, z = 지면에서 위로 + [mm] (ISO 8855 방향, 원점 = 뒤 차축 중심 · 지면)
-// 드라이버 자세는 안에서 '앞 차축에서 뒤로 +' 좌표(xd = L − x)로 계산하고, 체절 무게중심만 다시 x 로 돌려 줌
-// 체절 표 (de Leva 1996, Zatsiorsky-Seluyanov 보정값): [평균 체형 길이 mm, 체중 대비 질량 비율, 무게중심 위치 = 시작점에서 비율]
-//   시작점: 머리 · 목 = 정수리(정수리 ~ 경추 7번, 그중 머리 = 정수리 ~ 아래턱 각 hd, 나머지 = 목), 몸통 = 경추 7번 ~ 엉덩이 관절 가운데(CERV–MIDH), 팔다리 = 몸 쪽 관절,
-//   정강이 = 무릎 관절 ~ 바깥 복사뼈(KJC–LMAL, 발목 점 = 복사뼈와 같게), 손 = 손목 ~ 셋째 손허리뼈 머리, 발 = 뒤꿈치 ~ 발끝 (de Leva 1996 표 4)
+  code:`// ================================================================
+// 도구 1 질량 · 무게중심 계산기 — 계산 코드
+// ================================================================
+// 입력 I : L · tf · tr [mm]
+//   items = 어셈블리 [{m [kg], x, y, z [mm], cat, mh, to}]
+//           cat: s 현가상 · uf 현가하 앞 · ur 현가하 뒤,  mh = 걸침 항목 질량 합 [kg],  to = 현가상일 때 절반이 갈 현가하
+//   drv   = {d1, d2, d3} 드라이버 모델 입력 (키 cm, 장비 gear = 헬멧 · 드라이버 복 · 안전벨트 kg),  dsel = 고른 드라이버
+// 좌표 : x = 뒤 차축 중심에서 앞으로 +, y = 차 중심선에서 왼쪽 +, z = 지면에서 위로 + [mm] (ISO 8855 방향, 원점 = 뒤 차축 중심 · 지면)
+//   드라이버 자세는 안에서 '앞 차축에서 뒤로 +' 좌표(xd = L − x)로 계산하고, 체절 무게중심만 다시 x 로 돌려 줌
+
+
+// ---------------------------------------------------------------- 체절 표
+// de Leva 1996 (Zatsiorsky-Seluyanov 보정값): [평균 체형 길이 mm, 체중 대비 질량 비율, 무게중심 위치 = 시작점에서 비율]
+//   시작점: 머리 · 목 = 정수리 (정수리 ~ 경추 7번, 그중 머리 = 정수리 ~ 아래턱 각 hd, 나머지 = 목),
+//           몸통 = 경추 7번 ~ 엉덩이 관절 가운데 (CERV–MIDH), 팔다리 = 몸 쪽 관절,
+//           정강이 = 무릎 관절 ~ 바깥 복사뼈 (KJC–LMAL, 발목 점 = 복사뼈와 같게), 손 = 손목 ~ 셋째 손허리뼈 머리, 발 = 뒤꿈치 ~ 발끝 (de Leva 1996 표 4)
 const SEGT = {
-  m: { st:1741, hd:203.3, head:[242.9, .0694, .5002], trunk:[603.3, .4346, .5138], uarm:[281.7, .0271, .5772], farm:[268.9, .0162, .4574],
-       hand:[86.2, .0061, .7900], thigh:[422.2, .1416, .4095], shank:[434.0, .0433, .4459], foot:[258.1, .0137, .4415] },
-  f: { st:1735, hd:200.2, head:[243.7, .0668, .4841], trunk:[614.8, .4257, .4964], uarm:[275.1, .0255, .5754], farm:[264.3, .0138, .4559],
-       hand:[78.0, .0056, .7474], thigh:[368.5, .1478, .3612], shank:[432.3, .0481, .4416], foot:[228.3, .0129, .4014] } };
-const add = (a, b) => [a[0] + b[0], a[1] + b[1]], sub = (a, b) => [a[0] - b[0], a[1] - b[1]], mul = (a, k) => [a[0]*k, a[1]*k];
-const len = a => Math.hypot(a[0], a[1]), lerp = (a, b, t) => add(a, mul(sub(b, a), t));
-// 두 마디 팔 · 다리: A 에서 B 까지 길이 l1, l2. up = 관절이 위로(무릎) / 아래로(팔꿈치)
-function twoLink(A, B, l1, l2, up, warn, what){
+  m: { st: 1741, hd: 203.3,
+       head: [242.9, .0694, .5002], trunk: [603.3, .4346, .5138], uarm: [281.7, .0271, .5772], farm: [268.9, .0162, .4574],
+       hand: [86.2, .0061, .7900], thigh: [422.2, .1416, .4095], shank: [434.0, .0433, .4459], foot: [258.1, .0137, .4415] },
+  f: { st: 1735, hd: 200.2,
+       head: [243.7, .0668, .4841], trunk: [614.8, .4257, .4964], uarm: [275.1, .0255, .5754], farm: [264.3, .0138, .4559],
+       hand: [78.0, .0056, .7474], thigh: [368.5, .1478, .3612], shank: [432.3, .0481, .4416], foot: [228.3, .0129, .4014] } };
+
+
+// ---------------------------------------------------------------- 2차원 벡터 [mm]
+const add  = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const sub  = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const mul  = (a, k) => [a[0] * k, a[1] * k];
+const len  = a => Math.hypot(a[0], a[1]);
+const lerp = (a, b, t) => add(a, mul(sub(b, a), t));
+
+// 두 마디 팔 · 다리: A 에서 B 까지 길이 l1, l2.  up = 관절이 위로(무릎) / 아래로(팔꿈치)
+function twoLink(A, B, l1, l2, up, warn, what) {
   const d = sub(B, A), r = len(d), ph = Math.atan2(d[1], d[0]);
-  if(r >= l1 + l2){ warn.push(what + '에 닿지 않음 (' + Math.round(r - l1 - l2) + ' mm 모자람)'); return [add(A, mul(d, l1/r)), add(A, mul(d, (l1 + l2)/r))]; }
-  if(r <= Math.abs(l1 - l2)) warn.push(what + '이 너무 가까움');
-  const a = Math.acos(Math.max(-1, Math.min(1, (l1*l1 + r*r - l2*l2)/(2*l1*r))));
-  const J1 = add(A, [l1*Math.cos(ph + a), l1*Math.sin(ph + a)]), J2 = add(A, [l1*Math.cos(ph - a), l1*Math.sin(ph - a)]);
+  if (r >= l1 + l2) {
+    warn.push(what + '에 닿지 않음 (' + Math.round(r - l1 - l2) + ' mm 모자람)');
+    return [add(A, mul(d, l1 / r)), add(A, mul(d, (l1 + l2) / r))];
+  }
+  if (r <= Math.abs(l1 - l2)) warn.push(what + '이 너무 가까움');
+  const a  = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + r * r - l2 * l2) / (2 * l1 * r))));   // 코사인 법칙
+  const J1 = add(A, [l1 * Math.cos(ph + a), l1 * Math.sin(ph + a)]);
+  const J2 = add(A, [l1 * Math.cos(ph - a), l1 * Math.sin(ph - a)]);
   return [(J1[1] > J2[1]) === up ? J1 : J2, B];
 }
-function driver(d, Lw){
-  const TB = SEGT[d.sex === 'f' ? 'f' : 'm'], k = d.height*10/TB.st, warn = [], th = d.back*Math.PI/180;
-  const L0 = s => s==='head' ? TB.hd*k : s==='neck' ? (TB.head[0] - TB.hd)*k : TB[s][0]*k, L = s => (d.seg && d.seg[s] > 0) ? d.seg[s] : L0(s);
-  const LHN = L('head') + L('neck');                                           // 머리 · 목 체절 길이 (정수리 ~ 경추 7번)
-  const fsum = ['head','trunk'].reduce((a, s) => a + TB[s][1], 0) + 2*['uarm','farm','hand','thigh','shank','foot'].reduce((a, s) => a + TB[s][1], 0);
-  const frac = s => TB[s][1]/fsum;                                             // 비율 합을 1로 맞춤 (반올림 차이)
-  const H = [Lw - d.hip.x, d.hip.z];
-  const S = add(H, [L('trunk')*Math.sin(th), L('trunk')*Math.cos(th)]);        // 경추 7번: 등받이를 따라 뒤로 누움 (x 는 뒤로 +)
-  const Sh = lerp(S, H, .15);                                                   // 어깨 관절: 경추 7번에서 몸통 길이 15 % 아래 (근사)
-  // 목 · 머리: 어깨 위 경추 7번 높이(B)를 축으로 머리 · 목을 한 덩어리로 기울임. neck = 수직에서 뒤로 젖힌 각도 [°] (등받이와 같은 방향, 앞으로 숙이면 −. de Leva 표는 머리 · 목이 한 체절)
-  const na = (isFinite(d.neck) ? d.neck : 0)*Math.PI/180, nu = [Math.sin(na), Math.cos(na)], B = [Sh[0], S[1]];   // 그림 좌표는 x 뒤 + 이므로 뒤로 = +x
-  const N = add(B, mul(nu, L('neck')));                                          // 목 위끝
-  const V = add(B, mul(nu, L('neck') + L('head'))), HC = add(B, mul(nu, L('neck') + L('head')/2));   // 정수리, 머리 가운데(그림의 헬멧 중심)
-  const [E, Wr] = twoLink(Sh, [Lw - d.sw.x, d.sw.z], L('uarm'), L('farm'), false, warn, '핸들');
-  const [K, A] = twoLink(H, [Lw - d.pedal.x, d.pedal.z], L('thigh'), L('shank'), true, warn, '페달');
-  // 발: 뒤꿈치가 직각인 사다리꼴(발바닥 · 뒤꿈치 뒤 모서리가 직각). 페달 점 = 발목(복사뼈) 중심, 발바닥은 수직에서 foot° 앞으로 누워 페달에 닿음
-  //   발 안에서 발목 위치: 발바닥에서 높이 0.039 H, 발 길이 0.152 H (Drillis · Contini 1966, Winter 2009 그림 4.1) → 발 길이의 0.257배
-  //   뒤꿈치 뒤에서 발목까지(발바닥 방향) = 발 길이의 0.22배 (근사). 정강이 방향과 상관없이 발 자체 치수로만 그림
-  const fa = (isFinite(d.foot) ? d.foot : 20)*Math.PI/180, fd = [-Math.sin(fa), Math.cos(fa)], fu = [Math.cos(fa), Math.sin(fa)];   // 발끝 방향(발바닥을 따라), 발바닥에서 발등 쪽
-  const Lf = L('foot'), ah = Lf*.039/.152, ax = .22*Lf;
-  const B0 = sub(sub(A, mul(fd, ax)), mul(fu, ah)), T0 = add(B0, mul(fd, Lf)), T1 = add(T0, mul(fu, .45*ah)), B1 = add(B0, mul(fu, 1.5*ah));   // 뒤꿈치 바닥 · 발끝 바닥 · 발끝 위 · 뒤꿈치 위
-  const Hl = lerp(B0, B1, .5);                                                  // 뒤꿈치 (발 체절 시작점)
-  const hd = sub(Wr, E), hu = mul(hd, 1/len(hd));
+
+
+// ================================================================ 드라이버 모델 (옆에서 본 2차원, 앞 차축에서 뒤로 + 좌표)
+function driver(d, Lw) {
+  const TB = SEGT[d.sex === 'f' ? 'f' : 'm'];
+  const k  = d.height * 10 / TB.st;                 // 키 비율 (입력 키 ÷ 표 키)
+  const th = d.back * Math.PI / 180;                // 등받이 각도 [rad]
+  const warn = [];
+
+  // ---------- 체절 길이 [mm]: 직접 넣은 값이 있으면 그것, 없으면 표 × 키 비율
+  const L0 = s => s === 'head' ? TB.hd * k : s === 'neck' ? (TB.head[0] - TB.hd) * k : TB[s][0] * k;
+  const L  = s => (d.seg && d.seg[s] > 0) ? d.seg[s] : L0(s);
+  const LHN = L('head') + L('neck');                // 머리 · 목 체절 길이 (정수리 ~ 경추 7번)
+
+  // ---------- 체절 질량 비율 (합을 1로 맞춤: 반올림 차이)
+  const fsum = ['head', 'trunk'].reduce((a, s) => a + TB[s][1], 0)
+             + 2 * ['uarm', 'farm', 'hand', 'thigh', 'shank', 'foot'].reduce((a, s) => a + TB[s][1], 0);
+  const frac = s => TB[s][1] / fsum;
+
+  // ---------- 관절 위치
+  const H  = [Lw - d.hip.x, d.hip.z];                                        // 엉덩이 관절
+  const S  = add(H, [L('trunk') * Math.sin(th), L('trunk') * Math.cos(th)]); // 경추 7번: 등받이를 따라 뒤로 누움
+  const Sh = lerp(S, H, .15);                                                // 어깨 관절: 경추 7번에서 몸통 길이 15 % 아래 (근사)
+
+  // 목 · 머리: 어깨 위 경추 7번 높이(B)를 축으로 한 덩어리로 기울임. neck = 수직에서 뒤로 젖힌 각도 [°] (앞으로 숙이면 −)
+  const na = (isFinite(d.neck) ? d.neck : 0) * Math.PI / 180;
+  const nu = [Math.sin(na), Math.cos(na)];
+  const B  = [Sh[0], S[1]];
+  const N  = add(B, mul(nu, L('neck')));                                     // 목 위끝
+  const V  = add(B, mul(nu, L('neck') + L('head')));                         // 정수리
+  const HC = add(B, mul(nu, L('neck') + L('head') / 2));                     // 머리 가운데 (그림의 헬멧 중심)
+
+  const [E, Wr] = twoLink(Sh, [Lw - d.sw.x, d.sw.z], L('uarm'), L('farm'), false, warn, '핸들');    // 팔꿈치 · 손목
+  const [K, A]  = twoLink(H, [Lw - d.pedal.x, d.pedal.z], L('thigh'), L('shank'), true, warn, '페달'); // 무릎 · 발목
+
+  // ---------- 발: 뒤꿈치가 직각인 사다리꼴. 페달 점 = 발목(복사뼈) 중심, 발바닥은 수직에서 foot° 앞으로 누워 페달에 닿음
+  //   발 안에서 발목: 발바닥에서 높이 0.039 H, 발 길이 0.152 H (Drillis · Contini 1966, Winter 2009 그림 4.1) → 발 길이의 0.257배
+  //   뒤꿈치 뒤에서 발목까지(발바닥 방향) = 발 길이의 0.22배 (근사)
+  const fa = (isFinite(d.foot) ? d.foot : 20) * Math.PI / 180;
+  const fd = [-Math.sin(fa), Math.cos(fa)];       // 발끝 방향 (발바닥을 따라)
+  const fu = [Math.cos(fa), Math.sin(fa)];        // 발바닥에서 발등 쪽
+  const Lf = L('foot'), ah = Lf * .039 / .152, ax = .22 * Lf;
+  const B0 = sub(sub(A, mul(fd, ax)), mul(fu, ah));   // 뒤꿈치 바닥
+  const T0 = add(B0, mul(fd, Lf));                    // 발끝 바닥
+  const T1 = add(T0, mul(fu, .45 * ah));              // 발끝 위
+  const B1 = add(B0, mul(fu, 1.5 * ah));              // 뒤꿈치 위
+  const Hl = lerp(B0, B1, .5);                        // 뒤꿈치 (발 체절 시작점)
+  const hu = mul(sub(Wr, E), 1 / len(sub(Wr, E)));    // 손 방향 (하완을 따라)
+
+  // ---------- 체절 무게중심 · 질량 [kg] (드라이버 복은 몸무게처럼 비율로 나눔, 헬멧 · 벨트는 머리 · 몸통에)
   const g = d.gear || {}, suit = +g.suit || 0;
-  const segs = [ ['머리 · 목', 'head', sub(V, mul(nu, TB.head[2]*LHN)), 1, +g.helmet || 0], ['몸통', 'trunk', lerp(S, H, TB.trunk[2]), 1, +g.belt || 0],
-    ['상완 ×2', 'uarm', lerp(Sh, E, TB.uarm[2]), 2, 0], ['하완 ×2', 'farm', lerp(E, Wr, TB.farm[2]), 2, 0], ['손 ×2', 'hand', add(Wr, mul(hu, TB.hand[2]*L('hand'))), 2, 0],
-    ['허벅지 ×2', 'thigh', lerp(H, K, TB.thigh[2]), 2, 0], ['정강이 ×2', 'shank', lerp(K, A, TB.shank[2]), 2, 0], ['발 ×2', 'foot', add(Hl, mul(fd, TB.foot[2]*Lf)), 2, 0] ]
-    .map(([n, s, c, q, ex]) => ({n, m: (d.mass + suit)*frac(s)*q + ex, x: Lw - c[0], z: c[1]}));   // 드라이버 복은 몸무게처럼 비율로 나눔
-  const m = segs.reduce((a, s) => a + s.m, 0), model = m > 0 ? [segs.reduce((a, s) => a + s.m*s.x, 0)/m, segs.reduce((a, s) => a + s.m*s.z, 0)/m] : [0, 0];
-  const lens = {}, lensDef = {}; for(const s of ['head','neck','trunk','uarm','farm','hand','thigh','shank','foot']){ lens[s] = L(s); lensDef[s] = L0(s); }
-  // 체절 길이로 본 키: 표 기준 키 × (세로 체절 합 ÷ 표 체절 합). 세로 체절 = 머리 · 목, 몸통, 허벅지, 정강이 (기본값이면 입력한 키와 같음)
-  if(d.helm > 0 && d.helm < L('head')) warn.push('헬멧 바깥 지름이 머리 길이보다 작음');
-  const VS = ['head','neck','trunk','thigh','shank'], hEst = VS.reduce((a, s) => a + L(s), 0)/(TB.head[0] + TB.trunk[0] + TB.thigh[0] + TB.shank[0])*TB.st/10;
+  const segs = [
+    ['머리 · 목', 'head',  sub(V, mul(nu, TB.head[2] * LHN)),           1, +g.helmet || 0],
+    ['몸통',      'trunk', lerp(S, H, TB.trunk[2]),                     1, +g.belt || 0],
+    ['상완 ×2',   'uarm',  lerp(Sh, E, TB.uarm[2]),                     2, 0],
+    ['하완 ×2',   'farm',  lerp(E, Wr, TB.farm[2]),                     2, 0],
+    ['손 ×2',     'hand',  add(Wr, mul(hu, TB.hand[2] * L('hand'))),    2, 0],
+    ['허벅지 ×2', 'thigh', lerp(H, K, TB.thigh[2]),                     2, 0],
+    ['정강이 ×2', 'shank', lerp(K, A, TB.shank[2]),                     2, 0],
+    ['발 ×2',     'foot',  add(Hl, mul(fd, TB.foot[2] * Lf)),           2, 0],
+  ].map(([n, s, c, q, ex]) => ({ n, m: (d.mass + suit) * frac(s) * q + ex, x: Lw - c[0], z: c[1] }));
+
+  // ---------- 드라이버 전체 질량 [kg] · 무게중심 [x, z mm]
+  const m = segs.reduce((a, s) => a + s.m, 0);
+  const model = m > 0 ? [segs.reduce((a, s) => a + s.m * s.x, 0) / m, segs.reduce((a, s) => a + s.m * s.z, 0) / m] : [0, 0];
+
+  const lens = {}, lensDef = {};
+  for (const s of ['head', 'neck', 'trunk', 'uarm', 'farm', 'hand', 'thigh', 'shank', 'foot']) { lens[s] = L(s); lensDef[s] = L0(s); }
+  if (d.helm > 0 && d.helm < L('head')) warn.push('헬멧 바깥 지름이 머리 길이보다 작음');
+
+  // ---------- 체절 길이로 본 키 [cm]: 표 키 × (세로 체절 합 ÷ 표 체절 합). 기본값이면 입력한 키와 같음
+  const VS = ['head', 'neck', 'trunk', 'thigh', 'shank'];
+  const hEst = VS.reduce((a, s) => a + L(s), 0) / (TB.head[0] + TB.trunk[0] + TB.thigh[0] + TB.shank[0]) * TB.st / 10;
   const segSet = VS.some(s => d.seg && d.seg[s] > 0);
+
   return { m, model, cg: model, hEst, segSet, back: th, warn, segs, len: lens, lenDef: lensDef,
-    j: {H, S, V, N, Sh, HC, na, E, W: Wr, K, A, F: [B0, T0, T1, B1], P: [Lw - d.pedal.x, d.pedal.z], G: [Lw - d.sw.x, d.sw.z]} };   // j: 그림 좌표(앞 차축에서 뒤로)
+    j: { H, S, V, N, Sh, HC, na, E, W: Wr, K, A, F: [B0, T0, T1, B1], P: [Lw - d.pedal.x, d.pedal.z], G: [Lw - d.sw.x, d.sw.z] } };   // j: 그림 좌표
 }
-function calc(I){
-  const drv = {}; for(const k in I.drv) drv[k] = driver(I.drv[k], I.L);
-  const D = drv[I.dsel] || drv.d1, me = D.m > 0 ? D.m : 0;
-  const di = {m: me, x: D.cg[0], y: 0, z: D.cg[1], cat: 'd', name: '드라이버'};   // 드라이버는 중심선 위 (좌우 대칭)
-  // 걸침(½): 어셈블리 안에서 체크한 항목 질량 mh 의 절반을 반대쪽 범주로 (좌표는 어셈블리 한 점)
-  const items = [];
-  I.items.forEach(it => { const h = it.mh > 0 ? it.mh/2 : 0; if(!h){ items.push(it); return; }
-    const other = it.cat === 's' ? (it.to === 'uf' || it.to === 'ur' ? it.to : (it.x > I.L/2 ? 'uf' : 'ur')) : 's';
-    items.push({...it, m: it.m - h}, {...it, m: h, cat: other}); });
-  const all = items.concat(me > 0 ? [di] : []);
+
+
+// ================================================================ 계산
+function calc(I) {
   const sum = (arr, f) => arr.reduce((a, it) => a + f(it), 0);
+
+  // ---------- 드라이버: 고른 드라이버를 중심선 위 점질량 하나로 (좌우 대칭)
+  const drv = {};
+  for (const k in I.drv) drv[k] = driver(I.drv[k], I.L);
+  const D  = drv[I.dsel] || drv.d1, me = D.m > 0 ? D.m : 0;
+  const di = { m: me, x: D.cg[0], y: 0, z: D.cg[1], cat: 'd', name: '드라이버' };
+
+  // ---------- 걸침(½): 어셈블리 안에서 체크한 항목 질량 mh 의 절반을 반대쪽 범주로 (좌표는 어셈블리 한 점)
+  const items = [];
+  I.items.forEach(it => {
+    const h = it.mh > 0 ? it.mh / 2 : 0;
+    if (!h) { items.push(it); return; }
+    const other = it.cat === 's' ? (it.to === 'uf' || it.to === 'ur' ? it.to : (it.x > I.L / 2 ? 'uf' : 'ur')) : 's';
+    items.push({ ...it, m: it.m - h }, { ...it, m: h, cat: other });
+  });
+  const all = items.concat(me > 0 ? [di] : []);
+
+  // ---------- 전체 질량 [kg] · 무게중심 [mm]
   const m = sum(all, it => it.m);
-  if(!(m > 0)) return { out: { m: 0 }, drv, drvItem: di };
-  const xc = sum(all, it => it.m*it.x)/m, yc = sum(all, it => it.m*it.y)/m, zc = sum(all, it => it.m*it.z)/m;
-  const sp = all.filter(it => it.cat === 's' || it.cat === 'd'), ms = sum(sp, it => it.m);
-  const muf = sum(all.filter(it => it.cat === 'uf'), it => it.m), mur = sum(all.filter(it => it.cat === 'ur'), it => it.m);
-  const fr = xc/I.L*100;                                                       // 앞 하중 배분 = CG 의 뒤 차축에서 거리 ÷ 휠베이스
-  const Wf = m*fr/100, Wr = m - Wf;
-  const cw = { fl: Wf*(.5 + yc/I.tf), fr: Wf*(.5 - yc/I.tf), rl: Wr*(.5 + yc/I.tr), rr: Wr*(.5 - yc/I.tr) };
-  // 공차 상태(드라이버 빼고): 같은 식으로 코너웨이트
-  const e = items, m0 = sum(e, it => it.m), x0 = m0 > 0 ? sum(e, it => it.m*it.x)/m0 : NaN, y0 = m0 > 0 ? sum(e, it => it.m*it.y)/m0 : NaN;
-  const Wf0 = m0*x0/I.L, Wr0 = m0 - Wf0, cw0 = { fl: Wf0*(.5 + y0/I.tf), fr: Wf0*(.5 - y0/I.tf), rl: Wr0*(.5 + y0/I.tr), rr: Wr0*(.5 - y0/I.tr) };
-  // 관성 모멘트: CG 둘레, 어셈블리를 점질량으로 (어셈블리 자체 관성 제외 → 실제보다 작게 나옴) [kg·m²]
-  const I2 = f => sum(all, it => it.m*f(it))/1e6;
+  if (!(m > 0)) return { out: { m: 0 }, drv, drvItem: di };
+  const xc = sum(all, it => it.m * it.x) / m;
+  const yc = sum(all, it => it.m * it.y) / m;
+  const zc = sum(all, it => it.m * it.z) / m;
+
+  // ---------- 현가상 · 현가하 [kg]
+  const sp  = all.filter(it => it.cat === 's' || it.cat === 'd'), ms = sum(sp, it => it.m);
+  const muf = sum(all.filter(it => it.cat === 'uf'), it => it.m);
+  const mur = sum(all.filter(it => it.cat === 'ur'), it => it.m);
+
+  // ---------- 하중 배분 · 코너웨이트 [kg]
+  const fr = xc / I.L * 100;                        // 앞 하중 배분 [%] = CG 의 뒤 차축에서 거리 ÷ 휠베이스
+  const Wf = m * fr / 100, Wr = m - Wf;
+  const cw = { fl: Wf * (.5 + yc / I.tf), fr: Wf * (.5 - yc / I.tf), rl: Wr * (.5 + yc / I.tr), rr: Wr * (.5 - yc / I.tr) };
+
+  // ---------- 공차 상태 (드라이버 빼고): 같은 식으로 코너웨이트
+  const m0 = sum(items, it => it.m);
+  const x0 = m0 > 0 ? sum(items, it => it.m * it.x) / m0 : NaN;
+  const y0 = m0 > 0 ? sum(items, it => it.m * it.y) / m0 : NaN;
+  const Wf0 = m0 * x0 / I.L, Wr0 = m0 - Wf0;
+  const cw0 = { fl: Wf0 * (.5 + y0 / I.tf), fr: Wf0 * (.5 - y0 / I.tf), rl: Wr0 * (.5 + y0 / I.tr), rr: Wr0 * (.5 - y0 / I.tr) };
+
+  // ---------- 관성 모멘트 [kg·m²]: CG 둘레 = 평행축 (점질량 m d²) + 어셈블리 자체 (크기 lx · ly · lz 를 넣으면 고른 직육면체 m (b² + c²) ÷ 12, 비우면 0)
+  const I2 = (f, g) => sum(all, it => it.m * (f(it) + g(it) / 12)) / 1e6;
+  const sq = v => (+v || 0) ** 2;
+
   return {
-    out: { m, fr, left: (cw.fl + cw.rl)/m*100, h: zc, x_cg: xc, y_cg: yc, m_s: ms, h_s: ms > 0 ? sum(sp, it => it.m*it.z)/ms : NaN, x_s: ms > 0 ? sum(sp, it => it.m*it.x)/ms : NaN,
-           m_us_f: muf/2, m_us_r: mur/2, m_drv: me, h_est: D.hEst, m_empty: m0,
-           cw0_fl: cw0.fl, cw0_fr: cw0.fr, cw0_rl: cw0.rl, cw0_rr: cw0.rr, cross0: m0 > 0 ? (cw0.fr + cw0.rl)/m0*100 : NaN,
-           ixx: I2(it => (it.y - yc)**2 + (it.z - zc)**2), iyy: I2(it => (it.x - xc)**2 + (it.z - zc)**2), izz: I2(it => (it.x - xc)**2 + (it.y - yc)**2),
-           cw_fl: cw.fl, cw_fr: cw.fr, cw_rl: cw.rl, cw_rr: cw.rr, cross: (cw.fr + cw.rl)/m*100 },
-    drv, drvItem: di
+    out: {
+      m, fr, left: (cw.fl + cw.rl) / m * 100, h: zc, x_cg: xc, y_cg: yc,
+      m_s: ms, h_s: ms > 0 ? sum(sp, it => it.m * it.z) / ms : NaN, x_s: ms > 0 ? sum(sp, it => it.m * it.x) / ms : NaN,
+      m_us_f: muf / 2, m_us_r: mur / 2, m_drv: me, h_est: D.hEst, m_empty: m0,
+      cw0_fl: cw0.fl, cw0_fr: cw0.fr, cw0_rl: cw0.rl, cw0_rr: cw0.rr, cross0: m0 > 0 ? (cw0.fr + cw0.rl) / m0 * 100 : NaN,
+      ixx: I2(it => (it.y - yc) ** 2 + (it.z - zc) ** 2, it => sq(it.ly) + sq(it.lz)),
+      iyy: I2(it => (it.x - xc) ** 2 + (it.z - zc) ** 2, it => sq(it.lx) + sq(it.lz)),
+      izz: I2(it => (it.x - xc) ** 2 + (it.y - yc) ** 2, it => sq(it.lx) + sq(it.ly)),
+      cw_fl: cw.fl, cw_fr: cw.fr, cw_rl: cw.rl, cw_rr: cw.rr, cross: (cw.fr + cw.rl) / m * 100,
+    },
+    drv, drvItem: di,
   };
 }
 `,
   verify:[
     {n:'어셈블리 하나', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:400, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:100, fr:25, left:50, h:300, m_s:100}, src:'뒤 차축에서 400 ÷ 1600 = 25 %'},
+    {n:'어셈블리 자체 관성 · 고른 직육면체 1000 × 600 × 300 mm, 100 kg (CG 자리)', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:0, z:300, lx:1000, ly:600, lz:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{ixx:3.75, iyy:9.083333, izz:11.333333}, src:'Ixx = 100 × (0.6² + 0.3²) ÷ 12 = 3.75, Iyy = 100 × (1² + 0.3²) ÷ 12 = 9.0833, Izz = 100 × (1² + 0.6²) ÷ 12 = 11.3333 kg·m² (평행축 몫 0)'},
     {n:'좌우 대칭 두 어셈블리', I:{L:1600, tf:1200, tr:1200, items:[{m:50, x:800, y:300, z:300, cat:'s'}, {m:50, x:800, y:-300, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:50, fr:50, ixx:9, izz:9, iyy:0}, src:'Ixx = 2 × 50 × 0.3² = 9 kg·m²'},
     {n:'왼쪽으로 60 mm', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:55, cw_fl:27.5, cw_rr:22.5, cross:50}, src:'50 + 60 ÷ 1200 × 100 = 55 %'},
     {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:1600, y:0, z:230, cat:'uf'}, {m:34, x:0, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},

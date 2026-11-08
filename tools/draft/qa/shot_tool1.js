@@ -5,6 +5,6 @@ const {start,sleep,chromium,PORT,end,S}=require('./h'); const {fpage}=require('.
  await (await p.$('#wb .wb-sec[aria-label="결과"]')).screenshot({path:S+'/shot_out.png'});
  await (await p.$('#wbmain')).screenshot({path:S+'/shot_main.png'});
  await p.click('[data-m1tab="drv"]'); await sleep(900); await (await p.$('#wbext')).screenshot({path:S+'/shot_drv.png'});
- await p.click('[data-wbver]'); await sleep(1500); console.log('verify', await ev(p,()=>document.querySelector('#wbm .dvi-foot span').textContent.trim())); await ev(p,()=>wbModalClose());
+ await p.click('.wb-bar [data-wbcode]'); await sleep(300); await p.click('#wbm [data-wbver]'); await sleep(1500); console.log('verify', await ev(p,()=>document.querySelector('#wbm .dvi-foot span').textContent.trim())); await ev(p,()=>wbModalClose());
  await p.click('[data-wbcmp]'); await sleep(600); await (await p.$('#wb .wb-sec[aria-label="결과"]')).screenshot({path:S+'/shot_cmp.png'});
  console.log('errs',p.errs,p.cons); await p.context().close(); await b.close(); await end(); })();
