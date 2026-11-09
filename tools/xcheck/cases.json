@@ -1,5 +1,5 @@
 {
- "made": "2026-11-08T16:57:54.589Z",
+ "made": "2026-11-09T05:31:18.076Z",
  "cases": [
   {
    "id": "base",
@@ -357,7 +357,8 @@
       null
      ],
      "laps": 1,
-     "s0": 0
+     "s0": 0,
+     "end": 0
     },
     "motor": [
      [
@@ -1345,6 +1346,9 @@
     },
     "effI": null,
     "tireMap": null,
+    "bOcv": null,
+    "bRes": null,
+    "bCap": null,
     "course": "end",
     "lap": "all",
     "grMode": "my",
@@ -1427,7 +1431,7 @@
     "t_skid_s": 9.884201071526377,
     "t_ax_s": 31.90637950298704,
     "t_end_s": 310.28005294401044,
-    "e_use": 2.7629935907068175,
+    "e_use": 2.762993590706818,
     "p_lim": 100,
     "c_tm": null,
     "c_ti": null,
@@ -1792,7 +1796,8 @@
       null
      ],
      "laps": 1,
-     "s0": 0
+     "s0": 0,
+     "end": 0
     },
     "motor": [
      [
@@ -2074,6 +2079,9 @@
     "effM": null,
     "effI": null,
     "tireMap": null,
+    "bOcv": null,
+    "bRes": null,
+    "bCap": null,
     "course": "end",
     "lap": "all",
     "grMode": "my",
@@ -2156,7 +2164,7 @@
     "t_skid_s": 9.884201071526377,
     "t_ax_s": 31.888667250887977,
     "t_end_s": 310.1580445440716,
-    "e_use": 2.729996147297626,
+    "e_use": 2.7299961472976255,
     "p_lim": 100,
     "c_tm": null,
     "c_ti": null,
@@ -2521,7 +2529,8 @@
       null
      ],
      "laps": 1,
-     "s0": 0
+     "s0": 0,
+     "end": 0
     },
     "motor": [
      [
@@ -3509,6 +3518,9 @@
     },
     "effI": null,
     "tireMap": null,
+    "bOcv": null,
+    "bRes": null,
+    "bCap": null,
     "course": "end",
     "lap": "all",
     "grMode": "my",
@@ -3956,7 +3968,8 @@
       null
      ],
      "laps": 1,
-     "s0": 0
+     "s0": 0,
+     "end": 0
     },
     "motor": [
      [
@@ -4944,6 +4957,9 @@
     },
     "effI": null,
     "tireMap": null,
+    "bOcv": null,
+    "bRes": null,
+    "bCap": null,
     "course": "end",
     "lap": "all",
     "grMode": "my",
@@ -5391,7 +5407,8 @@
       null
      ],
      "laps": 1,
-     "s0": 0
+     "s0": 0,
+     "end": 0
     },
     "motor": [
      [
@@ -6379,6 +6396,9 @@
     },
     "effI": null,
     "tireMap": null,
+    "bOcv": null,
+    "bRes": null,
+    "bCap": null,
     "course": "end",
     "lap": "all",
     "grMode": "my",
@@ -6826,7 +6846,8 @@
       null
      ],
      "laps": 1,
-     "s0": 0
+     "s0": 0,
+     "end": 0
     },
     "motor": [
      [
@@ -7814,6 +7835,9 @@
     },
     "effI": null,
     "tireMap": null,
+    "bOcv": null,
+    "bRes": null,
+    "bCap": null,
     "course": "end",
     "lap": "all",
     "grMode": "my",

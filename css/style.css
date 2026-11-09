@@ -3145,3 +3145,53 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2-mdop.t2-card{cursor:pointer}
 .t2-mdop.t2-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .t2-mdop.t2-card .t2-tgb{pointer-events:none}
+/* ---------- 도구 2P 모델 단계 카드 (48차): 제목 · 핵심 한 줄 · 달라지는 것 · [자세히] · 입력 · 아래 줄 (선택 표시 / 토글) */
+.t2-mdops .t2c{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);min-width:0}
+.t2c[role]{cursor:pointer}
+.t2c[role]:hover{border-color:#9fb0d6}
+.t2c[role]:focus-visible{outline:2px solid #3d5a99;outline-offset:2px}
+.t2c.on{border-color:#3d5a99;box-shadow:inset 0 0 0 1px #3d5a99;background:#f2f5fc}
+.t2c.tog:not(.on){background:var(--panel)}
+.t2c-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.t2c-h b{font-size:13.5px}
+.t2c-core{font-size:13px;font-weight:600;color:var(--ink-2)}
+.t2c-dif{margin:0;padding-left:16px;font-size:12.5px;line-height:1.5;display:flex;flex-direction:column;gap:2px}
+.t2c-dif code{font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.t2c-more{font-size:12px;color:var(--muted);line-height:1.5}
+.t2c-more summary{cursor:pointer;color:#3d5a99;font-size:12px;width:max-content}
+.t2c-more div{margin-top:4px}
+.t2c-foot{margin-top:auto;padding-top:6px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px}
+.t2c-use{color:var(--muted);line-height:1.45}
+.t2c-use .muted{font-weight:700;margin-right:4px}
+.t2c-pk{flex:0 0 auto;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);background:var(--panel-2);white-space:nowrap}
+.t2c.on .t2c-pk{background:#3d5a99;border-color:#3d5a99;color:#fff}
+/* 토글 스위치 */
+.t2c-sw{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}
+.t2sw{position:relative;width:34px;height:19px;border-radius:999px;background:var(--line-2);transition:background .15s}
+.t2sw i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.t2sw.on{background:#3d5a99}
+.t2sw.on i{left:17px}
+.t2sw-t{font-size:11.5px;font-weight:700;color:var(--muted);min-width:4.5em;text-align:right}
+.t2c.on .t2sw-t{color:#3d5a99}
+.t2-fend{display:inline-flex;align-items:center;gap:6px}
+@media (max-width:1100px){.t2-mdops.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.t2-mdops.four,.t2-mdops.two,.t2-mdops{grid-template-columns:1fr}}
+/* 계산 전 자리 표시 (스켈레톤) */
+.wb-skel{display:flex;flex-direction:column;gap:10px;padding:12px}
+.wb-skel i{display:block;height:14px;border-radius:6px;background:linear-gradient(90deg,var(--panel-2) 0%,var(--line) 50%,var(--panel-2) 100%);background-size:200% 100%;animation:wbsk 1.2s linear infinite}
+.wb-skel i.b{height:120px}
+.wb-skel i.s{width:60%}
+.wb-skel .r{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.wb-skel .r i{height:54px}
+@keyframes wbsk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+/* 도구 4 셀 표 */
+.t4-cboxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0}
+.t4-cbox{display:flex;flex-direction:column;gap:6px;min-width:0}
+.t4-cbh{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px}
+.t4-cbox textarea{width:100%;box-sizing:border-box;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:6px;padding:6px;background:var(--panel);color:var(--ink);resize:vertical}
+@media (max-width:900px){.t4-cboxes{grid-template-columns:1fr}}
+.t2c details.t2c-more{border:0;background:none;border-radius:0}
+.t2c details.t2c-more>summary{padding:0;gap:6px;color:#3d5a99;font-size:12px;width:max-content}
+.t2c details.t2c-more>summary::before{width:6px;height:6px;border-right-width:1.5px;border-bottom-width:1.5px;border-color:#3d5a99}
+.t2c details.t2c-more>summary:hover{background:none;text-decoration:underline}
+.t2c-eq{font-weight:600;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}

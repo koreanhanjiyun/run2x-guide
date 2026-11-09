@@ -63,6 +63,9 @@ const wbInputs = () => ({...WB.I, ...(wbT().extraI ? wbT().extraI() : {})});
 /* 도구 모듈이 표 등을 고친 뒤 부름: 다시 계산 */
 const wbRefresh = () => { if(WB.id) wbCalcSoon(); };
 const wbCode = () => WB.code[WB.id] != null ? WB.code[WB.id] : wbT().code;
+/* 계산 전 자리 표시 (스켈레톤): cards = 결과 카드 줄, plot = 그래프 상자 */
+function wbSkel(kind){ return kind==='plot' ? '<div class="wb-skel" aria-label="계산 중"><i class="s"></i><i class="b"></i></div>'
+  : '<div class="wb-skel" aria-label="계산 중"><i class="s"></i><div class="r"><i></i><i></i><i></i><i></i><i></i><i></i></div><i class="s"></i><div class="r"><i></i><i></i><i></i></div></div>'; }
 /* 계산 중 표시: 0.3초 넘게 걸리면 결과 칸 위에 진행 막대 + 이전 결과 흐리게. 새 계산이 오면 하던 계산은 버림 */
 function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = false; p.classList.toggle('ind', f == null);
   const b = p.querySelector('i'); if(b && f != null){ const w = Math.round(Math.max(0, Math.min(1, f))*100), w0 = parseFloat(b.style.width) || 0;
@@ -260,7 +263,7 @@ function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
-  if(!R) return '<p class="wb-empty">계산 중…</p>';
+  if(!R) return wbSkel('cards');
   if(T.outHTML) return T.outHTML(R);   /* 도구가 결과 칸을 직접 그림 (도구 2P) */
   return wbOutCards(T, R, WB.cmp); }
 /* 결과 카드: 도구가 정한 묶음마다. d.hide = 화면에 안 보임(검증 · 반영용), d.fmt(v, out) = 값 칸 HTML(단위 포함),
@@ -335,7 +338,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest || !
   const g = t.closest('[data-wbsgh]'); if(g){ const k = g.dataset.wbsgh, cz = WB.slc || (WB.slc = new Set()); cz.has(k) ? cz.delete(k) : cz.add(k); wbSlPaint(); return; }
   if(t.closest('[data-wbslall]')){ WB.slall = !WB.slall; wbSlPaint(); } });
 function wbSigHTML(){ const R = WB.R; if(!R) return '';
-  if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return '<p class="wb-empty">계산 중…</p>';
+  if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return wbSkel('plot');
     const d = wbT().inputs.find(o => o.k===S.k), x = {d:S.X, n:wbInName(d).replace(/<[^>]+>/g, ''), u:wbInUnit(d)};
     return wbPanes(WB.panesO, WB.piO, P => [...P].map(k => wbOutDef(k)).filter(Boolean).map(o => ({k:o.k, d:S.O[o.k], c:wbOutColor(o.k), n:wbOutName(o).replace(/<[^>]+>/g, ''), u:wbOutUnit(o), dd:o.d})), x, WB.si, WB.actO, '입력 훑기 그래프', '결과'); }
   const xs = WB.xa.startsWith('sig:') ? wbSigDef(WB.xa.slice(4)) : null, x = xs ? {d:R.sig[xs.k], n:xs.n, u:xs.u} : {d:R.x.d, ...wbXDef()};

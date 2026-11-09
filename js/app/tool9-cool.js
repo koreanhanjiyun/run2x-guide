@@ -74,8 +74,8 @@ function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.bloc
 function t9PumpSplit(C, by){ const L = C.links.filter(([a, b]) => by.has(a) && by.has(b));
   for(const B of C.blocks){ const o = L.filter(l => l[0]===B.id); if(o.length >= 2 && o.every(l => by.get(l[1]).t==='pump')) return B.id; } return ''; }
 /* 배치 → 계산용 회로 + 오류 */
-function t9CoolCompile(){ const out = {water:[], air:[]}, err = {}, used = {}, mode = {};
-  (T9.cool.circuits || []).forEach(C => { const E = [], by = new Map(C.blocks.map(b => [b.id, b])), nx = new Map(), pv = new Map();
+function t9CoolCompile(S){ S = S || t9S(); const out = {water:[], air:[]}, err = {}, used = {}, mode = {};
+  (S.cool.circuits || []).forEach(C => { const E = [], by = new Map(C.blocks.map(b => [b.id, b])), nx = new Map(), pv = new Map();
     C.links.forEach(([a, b]) => { if(by.has(a) && by.has(b)){ nx.set(a, b); pv.set(b, a); } });
     C.blocks.forEach(b => { if(T9CB[b.t] && T9CB[b.t][1]==='part'){ if(used[b.t]) E.push(`${T9CB[b.t][0]}이 다른 회로에도 있음`); used[b.t] = true; } });
     if(C.kind==='water'){ const r = t9CWater(C, by); E.push(...r.E); if(!r.E.length){ out.water.push(r.net); if(r.mode) mode[C.id] = r.mode; } }
@@ -88,7 +88,10 @@ function t9CoolCompile(){ const out = {water:[], air:[]}, err = {}, used = {}, m
     if(E.length) err[C.id] = E; });
   return {net:out, err, mode}; }
 /* 부품이 어디서 식는지: 'w1' 처럼 회로 id + 종류, 없으면 null (오류 회로는 안 침) */
-function t9CoolWhere(p){ const ok = t9CoolCompile().err; for(const C of T9.cool.circuits){ if(ok[C.id]) continue; if(C.blocks.some(b => b.t===p)) return C; } return null; }
+function t9CoolWhere(p){ const ok = t9CoolCompile().err; for(const C of t9S().cool.circuits){ if(ok[C.id]) continue; if(C.blocks.some(b => b.t===p)) return C; } return null; }
+/* 편집기 상태: 도구 9 = T9 (run2x.t9), 도구 2P = 2P 자체 회로 (T2 저장, 도구 9 와 따로). 편집기가 화면에 있을 때만 단추 · 끌기 · 키를 받음 */
+function t9S(){ return typeof WB!=='undefined' && WB.id==='2' && typeof t2Cwc==='function' ? t2Cwc() : T9; }
+function t9On(){ return typeof WB!=='undefined' && (WB.id==='9' || WB.id==='2') && !!document.querySelector('#wb .t9-cool'); }
 const T9CBW = 150, T9CBH = 58;   // 블럭 크기 (그림 좌표)
 /* 꺾은선 → 꺾이는 곳을 반지름 r 로 둥글게 한 경로 */
 function t9Ortho(P, r){ let d = `M${P[0][0]},${P[0][1]}`;
@@ -134,12 +137,12 @@ function t9CoolSVG(C){ const by = new Map(C.blocks.map(b => [b.id, b])), W = Mat
       ${b.t!=='in' ? `<circle cx="0" cy="${T9CBH/2}" r="6" class="t9-cpi"/>` : ''}${b.t!=='out' ? `<circle cx="${T9CBW}" cy="${T9CBH/2}" r="7" class="t9-cpo" data-t9cpo="${C.id}:${b.id}"><title>끌어서 다음 블럭에 이음</title></circle>` : ''}</g>`; });
   if(T9CG && T9CG.cid===C.id){ if(T9CG.gx!=null) s += `<line x1="${T9CG.gx}" x2="${T9CG.gx}" y1="0" y2="${H2}" class="t9-cguide"/>`; if(T9CG.gy!=null) s += `<line y1="${T9CG.gy}" y2="${T9CG.gy}" x1="0" x2="${W}" class="t9-cguide"/>`; }   // 정렬 안내선
   return s + `<g class="t9-hose ${C.kind} drag" style="display:none"><path class="o"/><path class="i"/><path class="f"/></g><circle class="t9-cend ${C.kind}" r="9" style="display:none"/></svg>`; }   // 끄는 중인 호스 · 끝 (커서 따라감)
-function t9CoolPage(){ const CC = T9.cool.circuits, nw = CC.filter(c => c.kind==='water').length, na = CC.filter(c => c.kind==='air').length, comp = t9CoolCompile(), used = new Set(CC.flatMap(c => c.blocks.map(b => b.t)));
+function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kind==='water').length, na = CC.filter(c => c.kind==='air').length, comp = t9CoolCompile(), used = new Set(CC.flatMap(c => c.blocks.map(b => b.t)));
   const card = C => { const E = comp.err[C.id], B = C.blocks.find(b => b.id===C.sel), pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b'] : ['m', 'i', 'b'];
     const form = (title, def, obj, attr) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
         return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"><i>${u}</i></label>`; }).join('')}</div>`;
     return `<div class="t9-cc" data-t9cc="${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b><span class="muted">${C.kind==='water' ? '선 방향 = 냉각수 흐름 · 라디에서 나와 라디로 (갈라짐 · 합쳐짐 가능)' : '선 방향 = 공기 흐름 · 입구 → 출구'}</span>
-        <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? T9.cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = T9CB[t][1]==='part' && here;
+        <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? t9S().cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = T9CB[t][1]==='part' && here;
       return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${T9CB[t][0]}은 이 회로에 이미 있음 (부품은 한 곳에만)"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
         <button type="button" class="btn small t9-cdel" data-t9cdel="${C.id}">회로 지우기</button></div>
       ${C.kind==='water' ? form('냉각수', T9CP.water, C.p, `data-t9cwp="${C.id}"`) : ''}
@@ -158,17 +161,17 @@ function t9CoolPage(){ const CC = T9.cool.circuits, nw = CC.filter(c => c.kind==
       <span class="muted">수랭 · 공랭 각각 최대 3개. ${free.length ? `회로에 없는 부품(${free.join(' · ')})은 외기로 바로 식습니다 (부품 hA).` : ''} 라디에이터 · 펌프는 여러 개 넣을 수 있습니다. 처음 넣은 라디에이터가 회로의 기준(출발점)이고, 펌프가 모두 직렬이면 큰 유량, 한 곳에서 갈라진 갈래마다 하나씩이면 유량 합(갈래 비율 = 펌프 유량 비)입니다.</span></div>
     ${CC.map(card).join('')}</div>`; }
 /* 고친 뒤: 저장 · 다시 그림 · (시뮬레이션 탭으로 갈 때) 계산 */
-const t9CoolSet = (paint = true) => { t9Save(); if(paint) wbPaint(['ext']); wbCalcSoon(); };
-const t9CC = id => T9.cool.circuits.find(c => c.id===id);
+const t9CoolSet = (paint = true) => { if(WB.id==='2' && typeof t2Save==='function') t2Save(); else t9Save(); if(paint) wbPaint(['ext']); wbCalcSoon(); };
+const t9CC = id => t9S().cool.circuits.find(c => c.id===id);
 const t9Cid = (C, p) => { let k = 1; while(C.some(x => x.id===p + k)) k++; return p + k; };
-document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) return; const t = e.target;
-  const nw = t.closest('[data-t9cnew]'); if(nw){ const kind = nw.dataset.t9cnew, CC = T9.cool.circuits, n = CC.filter(c => c.kind===kind).length + 1, id = t9Cid(CC, kind==='water' ? 'w' : 'a');
+document.addEventListener('click', e => { if(!t9On() || !e.target.closest) return; const t = e.target;
+  const nw = t.closest('[data-t9cnew]'); if(nw){ const kind = nw.dataset.t9cnew, CC = t9S().cool.circuits, n = CC.filter(c => c.kind===kind).length + 1, id = t9Cid(CC, kind==='water' ? 'w' : 'a');
     CC.push(kind==='water' ? {id, kind, name:`수랭 회로 ${n}`, p:{cp:4180, rho:1000}, sel:'', blocks:[{id:id + 'r', t:'rad', x:40, y:70, p:{}}, {id:id + 'p', t:'pump', x:300, y:70, p:{}}], links:[[id + 'r', id + 'p'], [id + 'p', id + 'r']]}
                            : {id, kind, name:`공랭 덕트 ${n}`, p:{}, sel:'', blocks:[{id:id + 'i', t:'in', x:40, y:70, p:{}}, {id:id + 'o', t:'out', x:680, y:70, p:{}}], links:[[id + 'i', id + 'o']]});
     t9CoolSet(); return; }
-  const dl = t.closest('[data-t9cdel]'); if(dl){ T9.cool.circuits = T9.cool.circuits.filter(c => c.id!==dl.dataset.t9cdel); t9CoolSet(); return; }
-  const ad = t.closest('[data-t9cadd]'); if(ad && !ad.disabled){ const [cid, ty] = ad.dataset.t9cadd.split(':'), C = t9CC(cid), id = t9Cid(T9.cool.circuits.flatMap(c => c.blocks), 'k');
-    if(T9CB[ty][1]==='part') T9.cool.circuits.forEach(c => { if(c===C) return; const ids = c.blocks.filter(b => b.t===ty).map(b => b.id); if(!ids.length) return;   // 부품은 한 곳에만: 다른 회로에 있으면 빼 옴
+  const dl = t.closest('[data-t9cdel]'); if(dl){ t9S().cool.circuits = t9S().cool.circuits.filter(c => c.id!==dl.dataset.t9cdel); t9CoolSet(); return; }
+  const ad = t.closest('[data-t9cadd]'); if(ad && !ad.disabled){ const [cid, ty] = ad.dataset.t9cadd.split(':'), C = t9CC(cid), id = t9Cid(t9S().cool.circuits.flatMap(c => c.blocks), 'k');
+    if(T9CB[ty][1]==='part') t9S().cool.circuits.forEach(c => { if(c===C) return; const ids = c.blocks.filter(b => b.t===ty).map(b => b.id); if(!ids.length) return;   // 부품은 한 곳에만: 다른 회로에 있으면 빼 옴
       c.blocks = c.blocks.filter(b => !ids.includes(b.id)); c.links = c.links.filter(([a, b]) => !ids.includes(a) && !ids.includes(b)); });
     const xr = C.blocks.length ? Math.max(...C.blocks.map(b => b.x)) + T9CBW + 50 : 40, y0 = C.blocks.length ? C.blocks[0].y : 70;   // 맨 오른쪽 블럭 옆에 (그림이 넓어짐)
     C.blocks.push({id, t:ty, x:xr, y:y0, p:{}}); C.sel = id; t9CoolSet(); return; }
@@ -179,15 +182,15 @@ document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) r
 function t9CDelLink(C){ if(!C || !(C.selL >= 0)) return; const [l] = C.links.splice(C.selL, 1); C.selL = -1; const o = C.links.filter(q => q[0]===l[0]);
   const s = o.reduce((a, q) => a + (+q[2] > 0 ? +q[2] : 0), 0); o.forEach(q => { q[2] = o.length > 1 ? (s > 0 && +q[2] > 0 ? +q[2]/s : 1/o.length) : undefined; }); t9CoolSet(); }
 /* Delete · Backspace: 고른 블럭 · 호스 지우기 (입력 칸에서는 안 함) */
-document.addEventListener('keydown', e => { if(WB.id!=='9' || !['Delete', 'Backspace'].includes(e.key) || (e.target.matches && e.target.matches('input,textarea,select'))) return;
-  const C = T9.cool.circuits.find(c => c.selL >= 0 || c.sel); if(!C) return; e.preventDefault();
+document.addEventListener('keydown', e => { if(!t9On() || !['Delete', 'Backspace'].includes(e.key) || (e.target.matches && e.target.matches('input,textarea,select'))) return;
+  const C = t9S().cool.circuits.find(c => c.selL >= 0 || c.sel); if(!C) return; e.preventDefault();
   if(C.selL >= 0){ t9CDelLink(C); return; } const B = C.blocks.find(b => b.id===C.sel); if(!B || B.t==='in' || B.t==='out') return;
   C.blocks = C.blocks.filter(b => b.id!==B.id); C.links = C.links.filter(([a, b]) => a!==B.id && b!==B.id); C.sel = ''; t9CoolSet(); });
 /* 갈라진 호스 비율 입력 (%): 하나를 바꾸면 나머지를 그 비율대로 줄이거나 늘려 합 100 % */
-document.addEventListener('change', e => { if(WB.id!=='9' || !e.target.matches || !e.target.matches('[data-t9crat]')) return; const [cid, j] = e.target.dataset.t9crat.split(':'), C = t9CC(cid), l = C.links[+j];
+document.addEventListener('change', e => { if(!t9On() || !e.target.matches || !e.target.matches('[data-t9crat]')) return; const [cid, j] = e.target.dataset.t9crat.split(':'), C = t9CC(cid), l = C.links[+j];
   const o = C.links.filter(q => q[0]===l[0]), r = Math.max(0.01, Math.min(0.99, (+e.target.value || 0)/100)), rest = o.filter(q => q!==l), rs = rest.reduce((a, q) => a + (+q[2] || 0), 0);
   l[2] = r; rest.forEach(q => { q[2] = rs > 0 ? (+q[2] || 0)/rs*(1 - r) : (1 - r)/rest.length; }); t9CoolSet(); });
-document.addEventListener('change', e => { if(WB.id!=='9' || !e.target.matches) return; const t = e.target;
+document.addEventListener('change', e => { if(!t9On() || !e.target.matches) return; const t = e.target;
   if(t.matches('[data-t9cbp]')){ const [cid, bid] = t.dataset.t9cbp.split(':'), B = t9CC(cid).blocks.find(b => b.id===bid); B.p = B.p || {}; B.p[t.name] = +t.value; }
   else if(t.matches('[data-t9cwp]')){ const C = t9CC(t.dataset.t9cwp); C.p = C.p || {}; C.p[t.name] = +t.value; }
   else return; t9CoolSet(); });
@@ -197,7 +200,7 @@ const t9CPt = (svg, e) => { const r = svg.getBoundingClientRect(), vb = svg.view
 function t9CoolRe(cid){ const old = document.querySelector(`svg[data-t9csvg="${cid}"]`); if(!old) return null; const tmp = document.createElement('div'); tmp.innerHTML = t9CoolSVG(t9CC(cid)); const n = tmp.firstElementChild; old.replaceWith(n); return n; }
 const t9CTarget = (e, cid, from) => { const el = document.elementFromPoint(e.clientX, e.clientY), g = el && el.closest && el.closest('[data-t9cb]'), to = g && g.dataset.t9cb.split(':');
   if(!to || to[0]!==cid || to[1]===from) return null; const B = t9CC(cid).blocks.find(b => b.id===to[1]); return B && B.t!=='in' ? {g, id:to[1]} : null; };
-document.addEventListener('pointerdown', e => { if(WB.id!=='9' || !e.target.closest) return; const svg = e.target.closest('svg[data-t9csvg]'); if(!svg) return;
+document.addEventListener('pointerdown', e => { if(!t9On() || !e.target.closest) return; const svg = e.target.closest('svg[data-t9csvg]'); if(!svg) return;
   const po = e.target.closest('[data-t9cpo]');
   if(po){ const [cid, bid] = po.dataset.t9cpo.split(':'), C = t9CC(cid), old = C.kind==='air' ? C.links.filter(([a]) => a===bid) : [];
     if(C.kind==='air') C.links = C.links.filter(([a]) => a!==bid);               // 공랭 덕트(직렬): 나가던 덕트를 빼서 끌고 다님. 수랭: 새 호스를 하나 더 (갈라짐)
@@ -241,21 +244,22 @@ function t9ExtHTML(){ const w = $('#wb'); if(w) w.classList.remove('t2-edit');  
 function t9XBar(){ const o = WB.R && WB.R.out, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—', nW = T9.cool.circuits.filter(c => c.kind==='water').length;
   return `<div class="t9-xbar"><b>도구 2P 와 주고받기</b>
       <button type="button" class="btn small" data-t9x="get" title="도구 2P 에 저장된 부품 열용량 · 열저항 · 공랭 hA · 외기 온도를 왼쪽 칸으로">도구 2P 부품 열 값 가져오기</button>
-      <button type="button" class="btn small pri" data-t9x="put"${o && (o.n_w > 0 || o.n_a > 0) ? '' : ' disabled title="수랭 회로나 공랭 덕트가 계산에 들어가야 씀"'} title="도구 2P 의 수랭 방식을 [도구 9 회로]로 바꿈 (이 배치를 그대로, 바꾸면 도구 2P 다음 계산부터 반영)">도구 2P 에서 이 회로 쓰기</button>
-      <span class="muted">${o && (o.n_w > 0 || o.n_a > 0) ? `도구 2P 가 쓸 배치: 수랭 회로 ${o.n_w}개 · 공랭 덕트 ${o.n_a}개 · 모터 ${t9IsWater('m') ? '수랭' : '공랭'} · 인버터 ${t9IsWater('i') ? '수랭' : '공랭'} · 축전지 ${t9IsWater('b') ? '수랭' : '공랭'} (직렬 · 병렬 · 회로 여러 개 그대로)` : '도구 2P [편집 › 냉각]의 [평균 발열 · 차속을 도구 9 로 보내기]로 왼쪽 발열 · 차속을 채울 수 있습니다.'}</span></div>`; }
+      <button type="button" class="btn small pri" data-t9x="put"${o && (o.n_w > 0 || o.n_a > 0) ? '' : ' disabled title="수랭 회로나 공랭 덕트가 계산에 들어가야 씀"'} title="이 배치를 도구 2P 의 냉각 회로로 복사 (그 뒤로는 도구 2P 에서 따로 고침)">도구 2P 로 회로 보내기</button>
+      <span class="muted">${o && (o.n_w > 0 || o.n_a > 0) ? `도구 2P 로 보낼 배치: 수랭 회로 ${o.n_w}개 · 공랭 덕트 ${o.n_a}개 · 모터 ${t9IsWater('m') ? '수랭' : '공랭'} · 인버터 ${t9IsWater('i') ? '수랭' : '공랭'} · 축전지 ${t9IsWater('b') ? '수랭' : '공랭'} (직렬 · 병렬 · 회로 여러 개 그대로)` : '도구 2P [편집 › 냉각]의 [평균 발열 · 차속을 도구 9 로 보내기]로 왼쪽 발열 · 차속을 채울 수 있습니다.'}</span></div>`; }
 document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) return; const b = e.target.closest('[data-t9x]'); if(!b || b.disabled) return;
   if(b.dataset.t9x==='get'){ const s = t9Read('2'), D = WB_TOOLS['2'] ? WB_TOOLS['2'].inputs : []; let n = 0;
     T9PART.forEach(k => { const d = D.find(q => q.k===k), v = typeof s[k]==='number' && isFinite(s[k]) ? s[k] : d ? d.v : NaN; if(Number.isFinite(v)){ WB.I[k] = v; n++; } });
     wbSave(); wbPaint(['in']); wbCalcSoon(); toast(`도구 2P 의 부품 열 값 ${n}개를 가져왔습니다.`); return; }
   if(b.dataset.t9x==='put'){ const o = WB.R && WB.R.out; if(!o || !(o.n_w > 0 || o.n_a > 0)) return; const s = t9Read('2');
     Object.assign(s, {cw_mode:1, m_cool:t9IsWater('m'), i_cool:t9IsWater('i'), b_cool:t9IsWater('b'), cw_on:1, t_amb:WB.I.t_amb});   /* 공랭 / 수랭 단추도 맞춰 둠 (부품별 독립으로 돌아갈 때) */
-    try{ localStorage.setItem(wbStoreKey('2'), JSON.stringify(s)); toast('도구 2P 가 이 회로 배치를 씁니다 (수랭 방식 = 도구 9 회로, 냉각수 온도 계산 켬). 배치를 바꾸면 도구 2P 다음 계산부터 반영됩니다.'); }catch(err){ toast('저장하지 못했습니다.'); } } });
+    try{ localStorage.setItem(wbStoreKey('2'), JSON.stringify(s)); if(typeof t2Cwc==='function'){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); t2Save(); }   /* 배치는 도구 2P 자체 회로로 복사 (그 뒤로는 따로) */
+      toast('이 회로 배치를 도구 2P 로 복사했습니다 (수랭 방식 = 냉각 회로, 냉각수 온도 계산 켬). 도구 2P 에서 고쳐도 이 도구에는 영향이 없습니다.'); }catch(err){ toast('저장하지 못했습니다.'); } } });
 
 /* ============================================================ 이 탭 사용법 */
 const M9TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 코드 · 검증(계산 코드와 손계산 비교표), 입력 내보내기 · 가져오기입니다. 냉각 배치는 이 브라우저에 기억됩니다.'],
   ['#wb .wb-in', '입력', '주행 조건(외기 · 평균 차속 · 주행 시간 · 출발 온도), 주행 평균 발열(모터 · 인버터 손실, 축전지 발열), 부품 열 값(열용량 · 냉각수까지 열저항 · 공랭 hA)입니다. 발열은 일정하다고 봅니다. 도구 2P 에서 보내거나 [도구 2P 부품 열 값 가져오기]로 채웁니다.'],
-  ['#wb .t9-xbar', '도구 2P 와 주고받기', '[도구 2P 에서 이 회로 쓰기]를 누르면 도구 2P 랩타임 시뮬레이터가 이 배치(수랭 회로 · 라디 · 펌프 · 공랭 덕트)를 그대로 써서 주행 중 온도를 셉니다 (수랭 방식 = 도구 9 회로). [도구 2P 에서 가져오기]는 도구 2P 의 부품 열 값을 이 도구로 가져옵니다. 결과의 등가값은 회로를 냉각수 하나로 줄인 참고값 (대시보드 냉각 값)입니다.'],
+  ['#wb .t9-xbar', '도구 2P 와 주고받기', '[도구 2P 로 회로 보내기]를 누르면 이 배치(수랭 회로 · 라디 · 펌프 · 공랭 덕트)가 도구 2P 의 냉각 회로로 복사됩니다 (도구 2P 에서도 같은 편집기로 따로 고칠 수 있음). [도구 2P 에서 가져오기]는 도구 2P 의 부품 열 값을 이 도구로 가져옵니다. 결과의 등가값은 회로를 냉각수 하나로 줄인 참고값 (대시보드 냉각 값)입니다.'],
   ['#wb .t9-cool', '냉각 배치', '수랭 회로 · 공랭 덕트를 블럭으로 놓고 오른쪽 점을 끌어 다음 블럭에 이어 줍니다(선 방향 = 냉각수 · 공기 흐름). 블럭은 끌어서 옮기고(다른 블럭과 줄이 맞으면 붙음), 누르면 입력(라디 면적 · UA · 팬, 펌프 유량, 냉각수 양)이 나옵니다. 한 블럭에서 호스를 둘 이상 끌어내면 갈라지고(번호 · 비율 %), 여러 호스가 한 블럭으로 들어오면 합쳐집니다. 호스 · 블럭을 누르고 Delete 키로 지웁니다. 수랭은 라디에이터 1개 이상(처음 넣은 라디가 기준) · 펌프 1개, 공랭은 입구 → 부품 → 출구. 회로에 없는 부품은 외기로 바로 식습니다.'],
   ['#wb #wbout', '결과', '정상 온도(평균 차속에서 발열이 계속될 때), 주행 시간 뒤 온도(출발 온도에서), 도구 2P 등가값입니다. 수랭 회로 1 의 라디 입구는 들어오는 냉각수가 섞인 온도, 출구는 기준 라디에서 나가는 온도입니다.'],
   ['#wb .wb-sig', '온도 그래프', '출발 온도에서 주행 시간 동안 부품 · 냉각수(회로마다 라디 입구) 온도입니다. 가로축을 입력 훑기로 바꾸면 평균 차속 · 발열 등을 바꿔 가며 정상 온도를 볼 수 있습니다.'],
@@ -278,7 +282,7 @@ WB_TOOLS['9'] = {
     {k:'b_c', n:'축전지 열용량', u:'J/K', v:30000, d:0, g:T9G.b}, {k:'b_r', n:'축전지 → 냉각수 열저항 (수랭)', u:'K/W', v:0.05, d:4, g:T9G.b},
     {k:'b_ha', n:'축전지 공랭 hA (정지)', u:'W/K', v:15, d:1, g:T9G.b}, {k:'b_ha60', n:'축전지 공랭 hA (60 km/h)', u:'W/K', v:15, d:1, g:T9G.b},
   ],
-  outGroups:{'한 덩어리로 줄인 등가값 (대시보드 · 참고)':{note:'회로를 냉각수 하나로 줄인 값 (UA = 냉각수로 버린 열 ÷ (손실 가중 평균 냉각수 온도 − 외기)). 도구 2P 는 [도구 9 회로] 방식이면 배치를 그대로 쓰고, 이 값은 대시보드 냉각 값으로만 씀'}},
+  outGroups:{'한 덩어리로 줄인 등가값 (대시보드 · 참고)':{note:'회로를 냉각수 하나로 줄인 값 (UA = 냉각수로 버린 열 ÷ (손실 가중 평균 냉각수 온도 − 외기)). 도구 2P 는 [냉각 회로] 방식이면 배치를 그대로 쓰고, 이 값은 대시보드 냉각 값으로만 씀'}},
   outputs:[
     {k:'s_tm', n:'모터', u:'°C', d:1, g:'정상 온도 (평균 차속, 발열 일정)'}, {k:'s_ti', n:'인버터', u:'°C', d:1, g:'정상 온도 (평균 차속, 발열 일정)'}, {k:'s_tb', n:'축전지', u:'°C', d:1, g:'정상 온도 (평균 차속, 발열 일정)'},
     {k:'s_win', n:'라디 입구 (수랭 회로 1, 섞인 온도)', u:'°C', d:2, g:'정상 온도 (평균 차속, 발열 일정)'}, {k:'s_wout', n:'라디 출구 (수랭 회로 1 기준 라디)', u:'°C', d:2, g:'정상 온도 (평균 차속, 발열 일정)'},
