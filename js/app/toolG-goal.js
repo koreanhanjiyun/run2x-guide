@@ -90,7 +90,7 @@ WB_TOOLS['G'] = {
 // 입력 I : 왼쪽 입력 칸 (단위 그대로: kg, mm, %, 1/kN, rpm, N·m, kW, V, Ah, mΩ, A, kWh, s)과 작업창 위 표
 //   I.end   = {seg:[[길이 m, 반경 m], …], laps, stint, WL · WR (점마다 폭, 공식 코스는 실제 콘 위치로), slalom (콘 점 번호), slat (콘 옆 거리)}   공식 내구 코스 (오토크로스 = 거꾸로 한 바퀴)
 //   I.th_on · I.in_on · I.bt_on · I.cw_on = 열 모델 켜기 (모터 열 · 인버터 · 축전지 · 냉각수 온도), I.m_cool · I.i_cool · I.b_cool = 0 공랭 · 1 수랭, I.eff_mg = 1 이면 모터 맵에 인버터 합침 (손실 중 인버터 몫 I.inv_r %), I.md = 차량 모델 단계 (0 · 1 롤센터)
-//   I.rmin  = 최소 회전 반경 [m], I.rm_on = 고려 (1) · 안 함 (0) (주행선 |곡률| ≤ 1/rmin 을 제약으로 풀고, 못 지킨 구간은 c_rbad 로 알림; 0 = 제약 없음),  I.e_lim = 내구 에너지 상한 (0 없음 · 1 제원 용량 · 2 임의 e_target)
+//   최소 회전 반경 = 최대 조향각에서 (rKin, dl_on 1 이고 delta_max > 0 일 때, 모든 차량 모델: 주행선 |곡률| ≤ 1/R 을 제약으로 풀고, 못 지킨 구간은 c_rbad 로 알림),  I.e_lim = 내구 에너지 상한 (0 없음 · 1 제원 용량 · 2 임의 e_target)
 //   I.free  = {seg, wl, wr, sl, laps, s0}               내 코스 (반경: 왼쪽 회전 +, 오른쪽 −, 직선 0 · 구간마다 왼쪽 · 오른쪽 폭 [m], 슬라럼 콘 간격 [m], null = 빈칸)
 //   I.motor = [[회전수 rpm, 토크 N·m], …]                모터 토크 곡선 (기준 전압 I.v_ref 에서. 비면 최대 토크 일정)
 //   I.effM · I.effI = 효율 맵 {n:[rpm], t:[N·m], e:[[%]]} 또는 null (→ 상수 I.eta_mot · I.eta_inv)
@@ -824,8 +824,12 @@ function racingLine(segs, o) {
 }
 
 // 경계 · 콘에서 차 중심까지 최소 거리 b [m]: 차 전폭이 있으면 전폭 ÷ 2 + 여유, 없으면 (0 · 빈칸) 직접 넣은 최소 거리
-// 최소 회전 반경 rmin [m] → 주행선 최대 곡률 [1/m] (0 · 빈칸 = 제약 없음)
-const rkMax = I => I.rm_on !== 0 && I.rmin > 0 ? 1 / I.rmin : 0;   // rm_on 0 = 최소 회전 반경 고려 안 함
+// 최소 회전 반경 [m] = 최대 조향각에서 (아주 느리게, 슬립각 0, 100 % 애커먼 — 모델 2 조향 한계 dIn0 의 역함수):
+//   R_뒤축 = L ÷ tan δ_max + t_f ÷ 2,  R (CG 경로) = √(R_뒤축² + l_r²),  l_r = L × 앞 하중 비율   (조향 한계 고려 안 함 · δ_max 0 = 제약 없음)
+const rKin = I => { if (I.dl_on === 0 || !(I.delta_max > 0) || !(I.delta_max < 90)) return 0;
+  const L = I.L / 1000, lr = L * I.fr / 100, Rr = L / Math.tan(I.delta_max * Math.PI / 180) + I.tf / 2000;
+  return Math.sqrt(Rr * Rr + lr * lr); };
+const rkMax = I => { const R = rKin(I); return R > 0 ? 1 / R : 0; };   // 주행선 최대 곡률 [1/m] (0 = 제약 없음)
 // 달리는 선에서 최소 회전 반경보다 급한 구간: {r: 가장 작은 반경 [m], bad: 급한 구간 길이 합 [m]}
 function rTight(segs, rmin) { let r = Infinity, bad = 0;
   (segs || []).forEach(([l, R]) => { if (!R) return; const a = Math.abs(R); if (a < r) r = a; if (rmin > 0 && a < rmin * (1 - 1e-3)) bad += l; });
@@ -1688,8 +1692,8 @@ function modeRun(I, G2, G3, fast) {
   if (RL && RL.eN) {
     const Lc = RL.sN.at(-1);                               // 오토크로스는 거꾸로 달리므로 거리 · 좌우를 되돌림
     map.rl = c === 'ax' ? { s: RL.sN.map(x => Lc - x).reverse(), e: RL.eN.map(x => -x).reverse() } : { s: RL.sN, e: RL.eN };
-    // 최소 회전 반경보다 급한 조각: 가운데 선 거리 [시작, 끝] (코스 원래 방향)
-    const rmE = I.rm_on !== 0 && I.rmin > 0 ? I.rmin : 0, iv = [];
+    // 최소 회전 반경(최대 조향각에서)보다 급한 조각: 가운데 선 거리 [시작, 끝] (코스 원래 방향)
+    const rmE = rKin(I), iv = [];
     if (rmE) RL.segs.forEach(([, R], j) => { if (R && Math.abs(R) < rmE * (1 - 1e-3)) iv.push([RL.sN[j], RL.sN[j + 1]]); });
     map.rbad = c === 'ax' ? iv.map(([a, b]) => [Lc - b, Lc - a]) : iv;
   }
@@ -1705,7 +1709,8 @@ function modeRun(I, G2, G3, fast) {
   const socEnd = K.EN ? K.EN.soc1 : (K.L.soc1 != null ? K.L.soc1 : NaN);
   Object.assign(out, {
     c_gr: G3, c_n: lt.length, c_lap: jj + 1, c_len: RL ? RL.len : NaN, c_ltot: RL ? RL.len * lt.length : NaN, c_rl: RL && RL.eN ? (RL.gain != null ? 2 : 1) : 0, c_rlg: RL && RL.gain != null ? RL.gain : NaN, c_rlb: rlB(I),   // 한 랩 · 총 거리 [m]
-    ...(() => { const rmE = I.rm_on !== 0 ? I.rmin : 0, T = RL ? rTight(RL.segs, rmE) : c === 'skid' ? rTight([[1, 9.125]], rmE) : { r: Infinity, bad: 0 };
+    c_rkin: rKin(I) || NaN,   // 최대 조향각에서 정한 최소 회전 반경 [m]
+    ...(() => { const rmE = rKin(I), T = RL ? rTight(RL.segs, rmE) : c === 'skid' ? rTight([[1, 9.125]], rmE) : { r: Infinity, bad: 0 };
                 const bk = bodyBk(I), bb = bk && isFinite(T.r) ? bk(1 / T.r) : [NaN, NaN];
                 return { c_rmn: isFinite(T.r) ? T.r : NaN, c_rbad: T.bad, c_ctight: RL && RL.ctight ? RL.ctight : 0,
                          c_bo: Math.max(bb[0], bb[1]), c_bi: Math.min(bb[0], bb[1]) }; })(),   // 가장 급한 곳에서 차 바깥 · 안쪽 여유 [m] (전폭이 있을 때)   // c_ctight = 여유를 못 지킨 콘 수                       // 달리는 선 가장 작은 반경 · 최소 회전 반경보다 급한 길이 [m]
