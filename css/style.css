@@ -2824,10 +2824,6 @@ html.wb-lock #tip{z-index:95}
 .t2-mn{position:absolute;left:0;top:calc(100% + 4px);z-index:20;display:flex;flex-direction:column;min-width:230px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.14);padding:4px}
 .t2-mn button,.t2-mi{font:inherit;font-size:12.5px;text-align:left;padding:6px 10px;border:0;background:none;color:var(--ink);border-radius:5px;cursor:pointer}
 .t2-mn button:hover,.t2-mi:hover{background:var(--panel-2)}
-.t2-pm{position:fixed;inset:0;z-index:60;background:rgba(20,24,40,.35);display:flex;align-items:center;justify-content:center}
-.t2-pmb{width:min(640px,92vw);background:var(--panel);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 16px 48px rgba(20,24,40,.25)}
-.t2-pmb h4{margin:0;font-size:14px}.t2-pmb p{margin:0;font-size:12px}
-.t2-pmb textarea{width:100%;box-sizing:border-box;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
 .t2-btns{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .t2-tw{height:330px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 .t2-tt{width:100%;border-collapse:collapse;font-size:12.5px}
@@ -3171,8 +3167,6 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2sw i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
 .t2sw.on{background:#3d5a99}
 .t2sw.on i{left:17px}
-.t2sw-t{font-size:11.5px;font-weight:700;color:var(--muted);min-width:4.5em;text-align:right}
-.t2c.on .t2sw-t{color:#3d5a99}
 .t2-fend{display:inline-flex;align-items:center;gap:6px}
 @media (max-width:1100px){.t2-mdops.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.t2-mdops.four,.t2-mdops.two,.t2-mdops{grid-template-columns:1fr}}
