@@ -84,7 +84,84 @@ WB_TOOLS['G'] = {
     {n:'목표 스키드패드 횡가속도 1.637261 g → 필요 C_L·A = 3 (경우 2 와 같은 차)', I:{cla:0, m:300, fr:50, L:1550, mu:1.5, tg:5, tg_v:1.637261}, expect:{p_cla:3},
      src:'경우 2 의 기록 9.471806 s → v = 2 × 2π × 9.125 ÷ 9.471806 = 12.1063 m/s → a_y = v² ÷ (gR) = 1.637261 g. 가로축 = 횡가속도로 거꾸로 풀면 3'}
   ],
-  code: `// ================================================================
+  code: `// ================================================================ 냉각 회로 공통 (도구 9 · 도구 2P 계산과 냉각 편집기가 같이 씀)
+// 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
+//   호스  : ΔP = f (L ÷ D) ρ u² ÷ 2,  u = Q ÷ (π D² ÷ 4),  Re = ρ u D ÷ μ,  f = max(64 ÷ Re, 0.3164 Re^(−1/4))   (층류 · 매끈한 관 Blasius 난류, Re ≈ 1188 에서 이어짐)
+//   블럭  : ΔP = ΔP_기준 (Q ÷ Q_기준)²  (넣었을 때만, 0 = 없음)
+//   펌프  : 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량). 펌프 곡선은 넣지 않음
+//   블럭마다 들어감 · 나감 두 이음점 (압력 강하가 없는 블럭은 한 점), 이음점마다 들어오는 유량 = 나가는 유량 → 이음점 압력을 뉴턴법으로 풂
+//   hyd = {Vt [L/min], rho [kg/m³], mu [Pa·s], links: [{a, b, d [mm], len [m]}] (점 번호), blk: [{dp [kPa], dq [L/min]}] (점마다), src: [{k, flow [L/min]}] (펌프 점)}
+//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null)
+function coolHydSolve(H) {
+  const N = H.blk.length, rho = H.rho > 0 ? H.rho : 1000, mu = H.mu > 0 ? H.mu : 1e-3, Vt = H.Vt / 60000;
+  if (!(Vt > 0) || !N) return null;
+  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000]));
+  // 이음점: 들어감 = 2k, 나감 = 2k + 1, 압력 강하도 펌프도 아닌 블럭은 같은 점
+  const par = Array.from({ length: 2 * N }, (_, i) => i), fd = i => par[i] === i ? i : (par[i] = fd(par[i]));
+  const hasDP = k => H.blk[k] && H.blk[k].dp > 0 && H.blk[k].dq > 0;
+  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
+  const ids = [...new Set(par.map((_, i) => fd(i)))], ix = new Map(ids.map((r, j) => [r, j])), M = ids.length, nd = i => ix.get(fd(i));
+  // 저항 요소: [u, v, ΔP(Q) (Q ≥ 0, m³/s → Pa)]
+  const E = [];
+  H.links.forEach((l, li) => { const D = Math.max(1e-3, (l.d > 0 ? l.d : 10) / 1000), Lh = Math.max(1e-3, l.len > 0 ? l.len : 0.5), A = Math.PI * D * D / 4;
+    E.push({ u: nd(2 * l.a + 1), v: nd(2 * l.b), li, dP: Q => { const u = Q / A, Re = rho * u * D / mu; if (Re <= 0) return 0;
+      const f = Math.max(64 / Re, 0.3164 * Math.pow(Re, -0.25)); return f * Lh / D * rho * u * u / 2; } }); });
+  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
+    E.push({ u: nd(2 * k), v: nd(2 * k + 1), li: -1, dP: Q => P0 * ((Q / Q0) ** 2 + 1e-3 * Q / Q0) }); }   // 아주 작은 1차 항: Q = 0 근처에서도 풀리게
+  // ΔP → Q (단조 증가, 이분법)
+  const inv = (e, p) => { if (p <= 0) return 0; let hi = Vt; while (e.dP(hi) < p && hi < 1e3) hi *= 2; let lo = 0;
+    for (let it = 0; it < 80; it++) { const m = (lo + hi) / 2; if (e.dP(m) < p) lo = m; else hi = m; } return (lo + hi) / 2; };
+  const flow = (e, P) => { const d = P[e.u] - P[e.v]; return Math.sign(d) * inv(e, Math.abs(d)); };
+  const cond = (e, Q) => { const q = Math.max(Math.abs(Q), 1e-6 * Vt), h = q * 1e-4; return 2 * h / Math.max(1e-30, e.dP(q + h) - e.dP(Math.max(0, q - h))); };   // dQ/dΔP
+  const P = new Array(M).fill(0), ref = 0;
+  const resid = (P, Qs) => { const r = new Array(M).fill(0); E.forEach((e, j) => { r[e.u] -= Qs[j]; r[e.v] += Qs[j]; });
+    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); return r; };
+  for (let it = 0; it < 200; it++) {
+    const Qs = E.map(e => flow(e, P)), r = resid(P, Qs), err = Math.max(...r.map((x, j) => j === ref ? 0 : Math.abs(x)));
+    if (err < 1e-10 * Vt) return H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vt; });
+    // J ΔP = −r  (J = 이음점 사이 dQ/dΔP 로 만든 라플라스 행렬), 기준점 압력 0
+    const n = M - 1, map = j => j < ref ? j : j - 1, J = Array.from({ length: n }, () => new Array(n + 1).fill(0));
+    E.forEach((e, j) => { const g = cond(e, Qs[j]); [[e.u, e.v], [e.v, e.u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; }); });
+    for (let a = 0; a < M; a++) if (a !== ref) J[map(a)][n] = r[a];   // 들어오는 유량 합 − 나가는 합 → 압력을 올리면 나가는 유량이 늚
+    const d = coolGauss(J, n); if (!d) return null;
+    let s = 1; const Pn = () => P.map((p, a) => a === ref ? 0 : p + s * d[map(a)]);
+    for (let b = 0; b < 30; b++) { const P2 = Pn(), Q2 = E.map(e => flow(e, P2)), r2 = resid(P2, Q2), e2 = Math.max(...r2.map((x, j) => j === ref ? 0 : Math.abs(x)));
+      if (e2 < err || b === 29) { P.splice(0, M, ...P2); break; } s /= 2; }
+  }
+  return null;
+}
+function coolGauss(M, N) { const a = M.map(r => r.slice());
+  for (let c = 0; c < N; c++) { let p = c; for (let r = c + 1; r < N; r++) if (Math.abs(a[r][c]) > Math.abs(a[p][c])) p = r;
+    if (Math.abs(a[p][c]) < 1e-30) return null; [a[c], a[p]] = [a[p], a[c]];
+    for (let r = 0; r < N; r++) { if (r === c) continue; const f = a[r][c] / a[c][c]; if (f) for (let q = c; q <= N; q++) a[r][q] -= f * a[c][q]; } }
+  return a.map((r, k) => r[N] / r[k]); }
+// 계산 앞 정리 (넘겨받은 회로를 고침):
+//   수랭: hyd 가 있으면 호스 유량 몫으로 점마다 들어오는 몫 (ins 셋째 값 = 호스 번호) · 흐름 q 를 다시 정함
+//   공랭: 예전 꼴 (parts = 직렬 순서) 이면 점 꼴로 — 점 = {part, q, ins: [[앞 점, 몫]]} (앞 점 −1 = 입구 외기), 흐름 순서대로
+function coolPrep(NET) {
+  if (!NET) return NET;
+  (NET.water || []).forEach(C => { if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+    C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
+      if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
+  (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
+  return NET;
+}
+// 공랭 덕트 한 칸: 점마다 들어오는 공기 = 앞 점에서 나온 공기를 몫으로 섞음, 부품 → 공기 G = C_q (1 − e^(−hA ÷ C_q)) (C_q = 그 갈래 공기 열용량 흐름 = C_a q)
+//   정상: 부품 = 들어온 공기 + L ÷ G,  나가는 공기 = 들어온 공기 + L ÷ C_q
+//   시간: 부품 온도를 들어온 공기 + L ÷ G 쪽으로 지수 적분, 나가는 공기 = 들어온 공기 + G (부품 − 들어온 공기) ÷ C_q
+//   ss = true 면 정상 온도를 T 에 넣음, 아니면 (T, h, PC, on, toward) 로 한 칸
+function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
+  const out = [];
+  D.nodes.forEach((n, k) => { let fs = 0, ft = 0; n.ins.forEach(([j, f]) => { fs += f; ft += f * (j < 0 ? Ta : out[j]); });
+    const Tin = fs > 0 ? ft / fs : Ta, Cq = Ca * (n.q > 0 ? n.q : 1), p = n.part, G = Cq > 0 ? Cq * (1 - Math.exp(-hA(p) / Cq)) : 0;
+    if (ss) { T[p] = G > 0 ? Tin + L[p] / G : (L[p] > 0 ? Infinity : Tin); out[k] = Cq > 0 ? Tin + L[p] / Cq : Infinity; return; }
+    if (on && !on[p]) { out[k] = Tin; return; }
+    T[p] = G > 0 ? toward(T[p], Tin + L[p] / G, G / PC[p], h) : T[p] + L[p] * h / PC[p];
+    out[k] = Cq > 0 ? Tin + G * (T[p] - Tin) / Cq : Tin; });
+  return out;
+}
+
+// ================================================================
 // 도구 2P 랩타임 시뮬레이터 — 계산 코드
 // ================================================================
 // 입력 I : 왼쪽 입력 칸 (단위 그대로: kg, mm, %, 1/kN, rpm, N·m, kW, V, Ah, mΩ, A, kWh, s)과 작업창 위 표
@@ -217,10 +294,10 @@ function car(I, gr, kP, lam) {
   // 열 모델 켜기: 모터 열 · 인버터 온도 · 축전지 온도 · 냉각수 온도.
   // 수랭 방식 cw_mode: 0 = 부품별 독립 회로 (수랭 부품마다 자기 냉각수 · 라디, 냉각 방식은 m_cool · i_cool · b_cool),
   //                    1 = 냉각 회로 (I.cw9 = 도구 2P 자체 배치, 도구 9 와 같은 형식: 수랭 회로 여러 개 · 직렬 · 병렬 갈라짐 · 합침 · 라디 여러 개 · 공랭 덕트. 부품 위치도 도구 9 가 정함)
-  const NET = I.cw_mode === 1 && I.cw9 && Array.isArray(I.cw9.water) ? I.cw9 : null;
+  const NET = I.cw_mode === 1 && I.cw9 && Array.isArray(I.cw9.water) ? coolPrep(I.cw9) : null;   // 갈래 몫 (호스 압력 강하) · 공랭 덕트 점 꼴로
   const where = {};   // 냉각 회로: 부품 → {w 회로, k 점} · {a 덕트, j 순서}, 없으면 외기
   if (NET) { NET.water.forEach((Cc, w) => Cc.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
-             (NET.air || []).forEach((D, a) => D.parts.forEach((p, j) => { if (!where[p]) where[p] = { a, j }; })); }
+             (NET.air || []).forEach((D, a) => D.nodes.forEach((n, j) => { if (!where[n.part]) where[n.part] = { a, j }; })); }
   const inW = p => !!(where[p] && where[p].w != null);
   const mW = NET ? inW('m') : I.m_cool !== 0, iW = NET ? inW('i') : I.i_cool !== 0, bW = NET ? inW('b') : I.b_cool === 1;
   const thOn = I.th_on !== 0, inOn = I.in_on === 1, btOn = I.bt_on === 1;
@@ -248,7 +325,8 @@ function car(I, gr, kP, lam) {
   //   축전지  : C_b dT_b/dt = I² R(T_b) − 냉각.  공랭 hA_b(v) (T_b − T_외기),  수랭 (T_b − T_w) ÷ R_b.  R(T) = R_25 (1 + α (25 − T)) (0.3 R_25 아래로는 안 감)
   //   냉각수 · 부품별 독립 (cw_mode 0): 수랭 부품 p 마다 C_wp dT_wp/dt = 부품에서 들어오는 열 − UA_p(v) (T_wp − T_외기)  (모터 cw_c · ua0 · ua60, 인버터 i_wc · i_ua0 · i_ua60, 축전지 b_wc · b_ua0 · b_ua60)
   //   냉각수 · 냉각 회로 (cw_mode 1): 도구 9 와 같은 점 모델 — 점 k (잘 섞인 덩어리, 열용량 C_k): C_k dT_k/dt = q_k C_c (T_섞임 − T_k) + (T_부품 − T_k) ÷ R,
-  //     라디 점: C_k dT_k/dt = q_k C_c (T_섞임 − T_k) − ε C_min (T_섞임 − T_외기) (교차류 ε-NTU, 공기 = 주행풍 A k_d v + 팬), 공랭 덕트는 블럭 순서대로 공기가 데워짐.
+  //     라디 점: C_k dT_k/dt = q_k C_c (T_섞임 − T_k) − ε C_min (T_섞임 − T_외기) (교차류 ε-NTU, 공기 = 주행풍 A k_d v + 팬), 공랭 덕트는 흐름 순서대로 공기가 데워짐 (갈래 · 합침, coolAir).
+//     갈래 유량 몫은 호스 안지름 · 길이와 블럭 압력 강하로 (coolHydSolve).
   //     점 · 부품을 흐름 순서대로 0.25 s 이하 작은 칸으로 나눠 지수 적분 (도구 9 와 같은 방식). 끄면 냉각수 온도 고정
   //   방열 능력은 모두 h(v) = h_0 + (h_60 − h_0) × v ÷ 60 km/h (정지 값 · 60 km/h 값, 선형; 팬이면 정지 값을 크게, 주행풍이면 60 km/h 값을 크게)
   //   칸마다 지수 적분 (그 칸 동안 다른 노드 온도 · 손실은 고정) → dt 가 커도 안정
@@ -300,9 +378,7 @@ function car(I, gr, kP, lam) {
       for (const p of PJ) { if (!PON[p]) continue; const wh = where[p];
         if (wh && wh.w != null) T[p] = toward(T[p], (cwOn ? c[wh.w][wh.k] : thCo) + L[p] * PR[p], 1 / (PR[p] * PC[p]), h);
         else if (!wh) T[p] = air(T[p], L[p], PH[p](v), PC[p], h); }
-      (NET.air || []).forEach(D => { const Ca = RHOA * CPA * Math.max(0, D.A * D.kd * v + D.fan); let Ta = Tamb;
-        D.parts.forEach(p => { if (!PON[p]) return; const G = Ca > 0 ? Ca * (1 - Math.exp(-PH[p](v) / Ca)) : 0;
-          T[p] = G > 0 ? toward(T[p], Ta + L[p] / G, G / PC[p], h) : T[p] + L[p] * h / PC[p]; if (Ca > 0) Ta += G * (T[p] - Ta) / Ca; }); }); }
+      (NET.air || []).forEach(D => coolAir(D, RHOA * CPA * Math.max(0, D.A * D.kd * v + D.fan), Tamb, T, L, p => PH[p](v), false, h, PC, PON, toward)); }   // 공랭 덕트 (갈래 · 합침, 앞 부품이 데운 공기)
     const w = cwOn && c.length ? Math.max(...c.map(a => Math.max(...a))) : thCo;
     return { m: T.m, i: T.i, w, b: T.b, x: c };
   }
@@ -1822,6 +1898,7 @@ function stepSteer(I, C) {
 // 입력 확인: 값은 실제 크기만 뜻함 (0 · 음수 = 계산 불가). 기능을 끄는 것은 각 단추
 function checkIn(I) {
   const bad = (c, msg) => { if (c) throw new Error(msg); };
+  bad(!(I.n_s > 0) || !(I.n_p > 0) || !(I.c_ah > 0) || !(I.c_vnom > 0), '축전지: 직렬 수 · 병렬 수 · 셀 용량 · 셀 공칭 전압이 0 보다 크거나, 직렬 수 0 이면 팩 최대 전압 · 팩 용량이 0 보다 커야 합니다 (축전지).');
   bad(!(I.i_pk > 0), '인버터 피크 상전류는 0 보다 커야 합니다 (모터 · 인버터 › 인버터 전류 한계).');
   bad(!(I.kt > 0), '모터 토크 상수 K_t 는 0 보다 커야 합니다 (모터 · 인버터 › 모터 한계).');
   bad(I.ict_m !== 0 && !(I.i_ct >= 0), '인버터 연속 상전류를 넣으세요.');
@@ -1832,8 +1909,13 @@ function checkIn(I) {
   bad(I.rg_on === 1 && !(I.i_chg > 0), '회생 제동이 켜져 있으면 팩 충전 전류 한계는 0 보다 커야 합니다.');
 }
 
+// 팩 값 직접 입력 (직렬 수 0): 팩 최대 · 공칭 · 최소 전압 [V] · 팩 용량 [Ah] → 같은 셀 값으로 바꿔 아래 계산을 그대로 씀
+//   직렬 수 = 팩 최대 ÷ 셀 최대 (정수가 아니어도 됨, 셀 표 OCV 의 크기 기준), 셀 공칭 · 최소 = 팩 값 ÷ 직렬 수, 병렬 1 · 셀 용량 = 팩 용량
+function packCell(I) { if (I.n_s > 0 || !(I.p_vmax > 0)) return I;
+  const cv = I.c_vmax > 0 ? I.c_vmax : 4.2, Ns = I.p_vmax / cv;
+  return Object.assign(I, { n_s: Ns, n_p: 1, c_vmax: cv, c_vnom: (I.p_vnom > 0 ? I.p_vnom : I.p_vmax) / Ns, c_vmin: (I.p_vmin > 0 ? I.p_vmin : I.p_vmax) / Ns, c_ah: I.p_ah }); }
 function calcT2(I) {
-  VC = new Map(); VCF = new Map();
+  VC = new Map(); VCF = new Map(); packCell(I);
   if (!I._probe) checkIn(I);
 
   // ---------- 구동력 선도 프로브: 그 점의 감속비 · 전압 · 모터 온도 · 가속도로 선도만

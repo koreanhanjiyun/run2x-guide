@@ -3067,7 +3067,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-cb.tgt rect{stroke:#2f9e5b;stroke-width:3;fill:#eaf7ef}
 .t9-cpo{transition:r .12s}.t9-cpo:hover{r:10}
 .t9-cb:active{cursor:grabbing}
-.t9-cbox{overflow:auto;max-height:520px}.t9-csvg{width:auto;max-width:none}
+.t9-cbox{overflow:hidden}.t9-csvg{width:100%;max-width:none;aspect-ratio:1/0.36;cursor:default}
 .t9-cpal .btn:disabled{opacity:.4;cursor:not-allowed}
 .t9-cguide{stroke:#e0559b;stroke-width:1.2;stroke-dasharray:5 4;pointer-events:none}
 .t9-hose.sel .o{stroke:#e0559b}.t9-hose.air.sel .o{stroke:#e0559b}
@@ -3189,3 +3189,11 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2c details.t2c-more>summary::before{width:6px;height:6px;border-right-width:1.5px;border-bottom-width:1.5px;border-color:#3d5a99}
 .t2c details.t2c-more>summary:hover{background:none;text-decoration:underline}
 .t2c-eq{font-weight:600;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}
+
+/* 냉각 편집기 (시뮬링크식, 2026-11-09): 동그라미 블럭 · 토막 옮기기 네모 · 영역 고르기 · 열 모델 머리의 냉각 배치 */
+.t9-cb.rd circle:first-child{stroke-width:1.4}.t9-cb.pump.rd circle:first-child{fill:#eef6ee;stroke:#4f8a4f}.t9-cb.io.rd circle:first-child{fill:#f1f1f4;stroke:#8a8f99;stroke-dasharray:4 3}
+.t9-cb.sel.rd circle:first-child{stroke:#3d5a99;stroke-width:2.6}.t9-cb.tgt circle:first-child{stroke:#2f9e5b;stroke-width:3}
+.t9-cbn.sm{font-size:12px}.t9-cbs.sm{font-size:10px}
+.t9-cseg{fill:#fff;stroke:#e0559b;stroke-width:2}.t9-cseg.v{cursor:ew-resize}.t9-cseg.h{cursor:ns-resize}
+.t9-cmq{fill:rgba(61,90,153,.08);stroke:#3d5a99;stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
+.t2-mdh{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}.t2-mdh .t2-mdhn{margin-left:0}.t2-mdhc{margin-left:auto;font-weight:400;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
