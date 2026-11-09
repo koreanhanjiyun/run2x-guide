@@ -2847,10 +2847,6 @@ html.wb-lock #tip{z-index:95}
 .t2-mn{position:absolute;left:0;top:calc(100% + 4px);z-index:20;display:flex;flex-direction:column;min-width:230px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.14);padding:4px}
 .t2-mn button,.t2-mi{font:inherit;font-size:12.5px;text-align:left;padding:6px 10px;border:0;background:none;color:var(--ink);border-radius:5px;cursor:pointer}
 .t2-mn button:hover,.t2-mi:hover{background:var(--panel-2)}
-.t2-pm{position:fixed;inset:0;z-index:60;background:rgba(20,24,40,.35);display:flex;align-items:center;justify-content:center}
-.t2-pmb{width:min(640px,92vw);background:var(--panel);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 16px 48px rgba(20,24,40,.25)}
-.t2-pmb h4{margin:0;font-size:14px}.t2-pmb p{margin:0;font-size:12px}
-.t2-pmb textarea{width:100%;box-sizing:border-box;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
 .t2-btns{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .t2-tw{height:330px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 .t2-tt{width:100%;border-collapse:collapse;font-size:12.5px}
@@ -3194,8 +3190,6 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2sw i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
 .t2sw.on{background:#3d5a99}
 .t2sw.on i{left:17px}
-.t2sw-t{font-size:11.5px;font-weight:700;color:var(--muted);min-width:4.5em;text-align:right}
-.t2c.on .t2sw-t{color:#3d5a99}
 .t2-fend{display:inline-flex;align-items:center;gap:6px}
 @media (max-width:1100px){.t2-mdops.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.t2-mdops.four,.t2-mdops.two,.t2-mdops{grid-template-columns:1fr}}
@@ -11680,7 +11674,7 @@ function t2ExtHTML(){ const sim = T2.tab==='sim', sens = T2.tab==='sens', w = $(
 `;
   return `<section class="wb-sec t2-ext" aria-label="시뮬레이션 · 편집"><div class="wb-h t2-h"><div class="m1-tabs" role="tablist">${[['sim', '시뮬레이션'], ['edit', '편집'], ['sens', '감도']].map(([k, t]) => `<button type="button" role="tab" data-t2tab="${k}" aria-selected="${T2.tab===k}">${t}</button>`).join('')}</div></div>
     <div class="t2-hr${sim ? '' : ' left'}">${bar}</div>
-    ${sim ? '' : sens ? t2SensHTML() : t2EditBody()}${t2PasteHTML()}</section>`; }
+    ${sim ? '' : sens ? t2SensHTML() : t2EditBody()}</section>`; }
 /* ---------- 감도 탭: 입력을 하나씩 조금 바꿔 (나머지는 지금 값) 종목 기록 · 내구 에너지가 얼마나 바뀌는지 (입력 훑기와 같은 줄여 셈, 내 감속비)
    바꾸는 양: 지금 값의 +δ % (온도 [°C] 는 +δ °C). 0 인 값 · 잠긴 칸 · 단추로 고르는 값 · 회로 순서는 건너뜀.
    영향 = 기록 변화율 (%) ÷ 입력 변화율 (%) (탄력도). 종합 = 네 종목 탄력도 절댓값 평균 → 큰 순서가 핵심 입력 후보 */
@@ -11755,7 +11749,7 @@ function t2InOpt(k){ if(WB.id!=='2') return '';
    o = {kind:'pick' 하나 고름 | 'tog' 켬 · 끔 | 'info' 안쪽 단추로 고름, attr, on, title, core, dif:[], ctl, more, use, onTxt, offTxt}
    카드 아무 곳이나 눌러 고르거나 켬 · 끔 (안쪽 단추 · [자세히] · 링크는 제외), Enter · Space 로도 */
 function t2Card(o){ const tog = o.kind==='tog', pick = o.kind==='pick';
-  const sw = tog ? `<span class="t2sw${o.on ? ' on' : ''}" aria-hidden="true"><i></i></span><span class="t2sw-t">${o.on ? (o.onTxt || '켬') : (o.offTxt || '끔')}</span>` : '';
+  const sw = tog ? `<span class="t2sw${o.on ? ' on' : ''}" aria-hidden="true"><i></i></span>` : '';
   return `<div class="t2c${o.on ? ' on' : ''}${pick ? ' pick' : ''}${tog ? ' tog' : ''}"${o.attr ? ` ${o.attr}` : ''}${pick || tog ? ` role="${pick ? 'radio' : 'switch'}" tabindex="0" aria-checked="${!!o.on}"` : ''}>
     <div class="t2c-h"><b>${o.title}</b>${tog ? `<span class="t2c-sw">${sw}</span>` : ''}</div>
     <div class="t2c-core">${o.core}</div>
@@ -11880,20 +11874,12 @@ function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
 
 /* ---------- [입력하기 ▾] 메뉴: 표 k = track · mt · eM · eI · tire.  on = false 면 회색으로 막음 */
 function t2MenuHTML(k, label, on){ const tpl = k==='track' ? 'track' : k==='mt' ? 'motor' : k==='tire' ? 'tire' : k==='bO' ? 'bocv' : k==='bR' ? 'bres' : k==='bC' ? 'bcap' : 'eff';
-  const items = [k==='track' ? '' : `<button type="button" data-t2act="paste" data-t2k="${k}">붙여넣기</button>`, `<label class="t2-mi">파일 가져오기 (.xlsx · .csv)<input type="file" accept=".xlsx,.csv,.txt,.tsv" data-t2file="${k}" hidden></label>`,
+  const items = [`<label class="t2-mi">파일 가져오기 (.xlsx · .csv)<input type="file" accept=".xlsx,.csv,.txt,.tsv" data-t2file="${k}" hidden></label>`,
     `<button type="button" data-t2act="tpl" data-t2tpl="${tpl}.xlsx">양식 받기 (.xlsx)</button>`, `<button type="button" data-t2act="tpl" data-t2tpl="${tpl}.csv">양식 받기 (.csv)</button>`,
     k==='track' ? `<button type="button" data-t2act="ex" data-t2k="track">예시 코스로</button>` : '',
     k==='mt' ? `<button type="button" data-t2act="ex" data-t2k="mt">예시 곡선으로</button>` : '', k==='eM' ? `<button type="button" data-t2act="ex" data-t2k="eM">예시 효율 맵으로</button>` : '',
     `<button type="button" data-t2act="clear" data-t2k="${k}">${k==='track' ? '비우기 (내 코스 없음)' : '비우기 (왼쪽 상수 칸 사용)'}</button>`].filter(Boolean);
   return `<div class="t2-menu"><button type="button" class="btn small" data-t2menu="${k}" aria-expanded="${T2.menu===k}"${on ? '' : ' disabled title="공식 코스는 고칠 수 없습니다"'}>${label} ▾</button>${T2.menu===k && on ? `<div class="t2-mn" role="menu">${items.join('')}</div>` : ''}</div>`; }
-
-/* ---------- 붙여넣기 창 (넣으면 표를 덮어씀) */
-function t2PasteHTML(){ const k = T2.paste; if(!k) return '';
-  const ph = k==='mt' ? T2MOTOR_PH : k==='tire' ? T2TIRE_PH : k==='bC' ? '셀 온도 °C, 용량 Ah\n0, 3.6\n25, 4.0\n45, 4.05' : k==='bO' || k==='bR' ? 'SOC % \\ 셀 온도 °C, 0, 25, 45\n0, ...\n50, ...\n100, ...' : T2EFF_PH, nm = T2ET[k];
-  return `<div class="t2-pm" role="dialog" aria-label="${nm} 붙여넣기"><div class="t2-pmb"><h4>${nm} 붙여넣기</h4>
-      <textarea id="t2pta" spellcheck="false" rows="12" placeholder="${wbEsc(ph)}"></textarea>
-      <p class="muted">[넣기]를 누르면 지금 표를 덮어씁니다.</p>
-      <div class="t2-btns"><button type="button" class="btn small primary" data-t2pok>넣기</button><button type="button" class="btn small" data-t2px>닫기</button></div></div></div>`; }
 
 /* ============================================================ 맵 편집: 코스 */
 const T2INFO = {
@@ -12006,14 +11992,14 @@ function t2MotorMsg(M){ const P = M.pts.length ? M.pts : M.ptsC, c = Math.max(1,
 /* 칸 표: 행 지우기 ×(행 끝) · [+ 행](표 아래 한 행) · 맵은 열 지우기 ×(맨 아래 행) · [+ 열](표 오른쪽 한 열) */
 function t2GridTable(k, txt){ const g = t2Grid(txt), map = k==='eM' || k==='eI' || k==='bO' || k==='bR', bm = k==='bO' || k==='bR';
   const addRow = n => `<tr class="t2-addr"><td colspan="${n}"><button type="button" data-t2gadd="row">+ 행${bm ? ' (SOC)' : map ? ' (토크)' : ''}</button></td></tr>`;
-  if(!g.length) return `<table class="t2-tt t2-gtab"><tbody><tr><td class="t2-empty muted">비어 있습니다. 아래 [+ 행]으로 바로 만들거나 [입력하기]로 붙여 넣기 · 파일 가져오기.</td></tr>${addRow(1)}</tbody></table>`;
+  if(!g.length) return `<table class="t2-tt t2-gtab" data-t2gk="${k}"><tbody><tr><td class="t2-empty muted">비어 있습니다. 엑셀 표를 복사해 이 표를 누르고 Ctrl+V, 또는 아래 [+ 행] · [입력하기]의 파일 가져오기.</td></tr>${addRow(1)}</tbody></table>`;
   const head = !isFinite(parseFloat(g[0][0])) || (map && g.length > 1), rows = head ? g.slice(1) : g, off = head ? 1 : 0, nc = g.reduce((a, r) => Math.max(a, r.length), 0);
   const cell = (r, c, v, th) => `<${th ? 'th' : 'td'} class="t2-e${c===0 && map && !th ? ' t2-rh' : ''}" data-t2e="${r},${c}" data-t2g="1" tabindex="0">${wbEsc(v ?? '')}</${th ? 'th' : 'td'}>`;
   const nr = (head ? 1 : 0) + rows.length + (map ? 1 : 0);
   const addCol = map ? `<th class="t2-addc" rowspan="${nr}"><button type="button" data-t2gadd="col">+ 열<br><span>(${bm ? '온도' : '회전수'})</span></button></th>` : '';
   const x = (i, lab) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdel="${i}" aria-label="${lab} 지우기" title="${lab} 지우기">×</button></td>`;
   // 머리 행도 tbody 안에 둠: [+ 열] 칸의 rowspan 이 행 묶음(thead · tbody)을 넘지 못하므로
-  return `<table class="t2-tt t2-gtab${map ? ' map' : ''}"><tbody>${head ? `<tr class="t2-hrow">${Array.from({length:nc}, (_, c) => cell(0, c, g[0][c], true)).join('')}<th class="t2-xc"></th>${addCol}</tr>` : ''}
+  return `<table class="t2-tt t2-gtab${map ? ' map' : ''}" data-t2gk="${k}"><tbody>${head ? `<tr class="t2-hrow">${Array.from({length:nc}, (_, c) => cell(0, c, g[0][c], true)).join('')}<th class="t2-xc"></th>${addCol}</tr>` : ''}
     ${rows.map((r, i) => `<tr data-t2row="${i + off}">${Array.from({length:nc}, (_, c) => cell(i + off, c, r[c])).join('')}${x(i + off, `${i + 1}번 행`)}${!head && i===0 ? addCol : ''}</tr>`).join('')}
     ${map ? `<tr class="t2-delc"><td class="t2-xc"></td>${Array.from({length:nc - 1}, (_, c) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdelc="${c + 1}" aria-label="${c + 1}번 열 지우기" title="${c + 1}번 열 (${wbEsc(g[0][c + 1] ?? '')} ${bm ? '°C' : 'rpm'}) 지우기">×</button></td>`).join('')}<td class="t2-xc"></td></tr>` : ''}
     ${addRow(nc + 1 + (map ? 1 : 0))}</tbody></table>`; }
@@ -12153,6 +12139,19 @@ function t2Bounds(c){
 function t2SlalomTight(rows){ const I = WB.I, b = I.wc_on !== 0 ? I.w_car/2 + Math.max(0, I.rl_m || 0) : Math.max(0, I.rl_b), W = t2Widths(rows);
   return rows.map((r, i) => isFinite(r.sl) && (W[i][0] < 2*b - 1e-9 || W[i][1] < 2*b - 1e-9) ? i + 1 : 0).filter(Boolean); }
 /* 내 코스 표에 Ctrl+V: 엑셀에서 복사한 여러 칸(탭 · 줄바꿈)이면 표 전체를 바꿈. 첫 행에 열 이름이 있으면 그 이름으로, 없으면 양식 열 순서로 읽음 */
+/* 표에 Ctrl+V (모터 · 효율 · 타이어 · 셀 표): 엑셀 여러 칸이면 표 전체를 바꿈 (한 칸이면 그 칸 입력에 그대로). 붙여넣기 창은 없음 (48차 · 내 코스와 같게) */
+function t2ApplyText(k, v){
+  if(k==='mt'){ if(!t2MotorParse(v).pts.length){ toast('회전수 · 토크 행을 읽지 못했습니다.'); return false; } T2.mtext = v; }
+  else if(k==='tire'){ if(!t2TireParse(v).map){ toast('하중 · μ 행을 읽지 못했습니다.'); return false; } T2.tire = v; }
+  else if(k==='bO' || k==='bR'){ if(!t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 셀 온도 °C, 첫 열 = SOC %.'); return false; } T2[k] = v; }
+  else if(k==='bC'){ if(!t2PairParse(v).map){ toast('온도 · 용량 행을 읽지 못했습니다.'); return false; } T2.bC = v; }
+  else if(k==='eM' || k==='eI'){ if(!t2EffParse(v).map){ toast('효율을 읽지 못했습니다. 숫자 하나 또는 맵(첫 행 회전수, 첫 열 토크)이어야 합니다.'); return false; } T2[k] = v; }
+  else return false;
+  t2Save(); t2Repaint(); t2Soon(); wbPaint(['in']); return true; }
+document.addEventListener('paste', e => { if(WB.id!=='2' || T2.tab!=='edit' || !e.target.closest) return; const tb = e.target.closest('[data-t2gk]'); if(!tb) return;
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return;   // 한 칸 붙이기는 그 칸 입력에 그대로
+  e.preventDefault(); const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
+  if(t2ApplyText(tb.dataset.t2gk, v)) toast(`붙인 내용으로 ${T2ET[tb.dataset.t2gk] || '표'}를 바꿨습니다 (표 전체).`); });
 document.addEventListener('paste', e => { if(WB.id!=='2' || T2.tab!=='edit' || T2.etab!=='course' || T2.ecourse!=='free') return;
   const tw = e.target.closest && e.target.closest('#t2tt'); if(!tw) return; const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || '';
   if(!/[\t\n]/.test(txt.trim())) return;                       // 한 칸 붙이기는 그 칸 입력에 그대로
@@ -12298,22 +12297,13 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const gm = t.closest('[data-t2gm]'); if(gm){ t2SetGrMode(gm.dataset.t2gm); return; }
   const mn = t.closest('[data-t2menu]'); if(mn){ if(mn.disabled) return; T2.menu = T2.menu===mn.dataset.t2menu ? '' : mn.dataset.t2menu; t2Repaint(); return; }
   const ac = t.closest('[data-t2act]'); if(ac){ const a = ac.dataset.t2act, k = ac.dataset.t2k; T2.menu = '';
-    if(a==='paste'){ T2.paste = k; t2Repaint(); setTimeout(() => { const ta = $('#t2pta'); if(ta) ta.focus(); }, 0); return; }
     if(a==='tpl'){ const [kk, f] = ac.dataset.t2tpl.split('.'); t2Template(kk, f); t2Repaint(); return; }
     if(a==='ex'){ if(k==='track'){ T2.free.text = T2TRACK_EX; T2.free.s0 = 0; T2.free.laps = 1; } else if(k==='mt') T2.mtext = EMRAX228.torque; else T2.eM = EMRAX228.eff; }
     if(a==='clear'){ if(k==='track') T2.free.text = ''; else if(k==='mt') T2.mtext = ''; else T2[k] = ''; }
     t2Repaint(); t2Soon(); wbPaint(['in']); return; }
   if(t.closest('.t2-mi') || t.closest('.t2-mn')) return;
   if(T2.menu){ T2.menu = ''; t2Repaint(); }
-  if(t.closest('[data-t2px]')){ T2.paste = ''; t2Repaint(); return; }
-  if(t.closest('[data-t2pok]')){ const ta = $('#t2pta'), v = ta ? ta.value : '', k = T2.paste;
-    if(k==='track'){ T2.paste = ''; t2Repaint(); return; }   // 내 코스는 붙여넣기 창 없음 (표에 Ctrl+V)
-    else if(k==='mt'){ if(!t2MotorParse(v).pts.length){ toast('회전수 · 토크 행을 읽지 못했습니다.'); return; } T2.mtext = v; }
-    else if(k==='tire'){ if(v.trim() && !t2TireParse(v).map){ toast('하중 · μ 행을 읽지 못했습니다.'); return; } T2.tire = v; }
-    else if(k==='bO' || k==='bR'){ if(v.trim() && !t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 셀 온도 °C, 첫 열 = SOC %.'); return; } T2[k] = v; }
-    else if(k==='bC'){ if(v.trim() && !t2PairParse(v).map){ toast('온도 · 용량 행을 읽지 못했습니다.'); return; } T2.bC = v; }
-    else { if(v.trim() && !t2EffParse(v).map){ toast('효율을 읽지 못했습니다. 숫자 하나 또는 맵(첫 행 회전수, 첫 열 토크)이어야 합니다.'); return; } T2[k] = v; }
-    T2.paste = ''; t2Repaint(); t2Soon(); wbPaint(['in']); return; }
+
   const tb = t.closest('[data-t2tab]'); if(tb){ T2.tab = tb.dataset.t2tab; T2.menu = ''; t2Save(); wbPaint(['ext']);
     if(T2.tab==='sim'){ t2MapRepaint(); t2PfSoon(); if(WB.dirty){ WB.dirty = false; wbCalc(); } } return; }   // 편집에서 바꾼 것이 있으면 이제 계산
   const ec = t.closest('[data-t2ecourse]'); if(ec){ T2.ecourse = ec.dataset.t2ecourse; T2.menu = ''; T2.zoomE = {k:1, cx:.5, cy:.5}; t2Save(); wbPaint(['ext']); return; }
@@ -12342,7 +12332,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const ga = t.closest('[data-t2gadd]'); if(ga){ t2GridAdd(T2.etab, ga.dataset.t2gadd); return; }
   const ce = t.closest('td[data-t2e], th[data-t2e]'); if(ce){ t2CellOpen(ce); return; } });
 document.addEventListener('keydown', e => { const ce = e.target.closest && e.target.closest('#wbext td[data-t2e], #wbext th[data-t2e]'); if(ce && e.key==='Enter' && !e.target.matches('input,select')){ e.preventDefault(); t2CellOpen(ce); }
-  if(e.key==='Escape' && WB.id==='2' && (T2.paste || T2.menu)){ e.preventDefault(); e.stopImmediatePropagation(); T2.paste = ''; T2.menu = ''; t2Repaint(); } }, true);
+  if(e.key==='Escape' && WB.id==='2' && T2.menu){ e.preventDefault(); e.stopImmediatePropagation(); T2.menu = ''; t2Repaint(); } }, true);
 /* 편집 탭에 표가 있으면 그 상수 칸은 막음 */
 function t2InLock(k){ const L = '아래 표 사용';
   if(k==='eta_mot') return t2UseMap('eM') ? L : ''; if(k==='eta_inv') return WB.I.eff_mg === 1 ? '모터 맵에 합침' : t2UseMap('eI') ? L : ''; if(k==='tmax') return '토크 표 최댓값';
@@ -12505,7 +12495,7 @@ const M2TOUR = [
   ['#wb .t2-sens', '감도', '입력을 하나씩 조금(기본 +5 %) 바꿔 종목 기록 · 내구 에너지가 몇 % 바뀌는지(탄력도) 봅니다. [감도 계산]을 누르면 지금 입력 · 모델 단계로 계산하고, 열 이름을 눌러 그 종목 순으로 정렬합니다. 종합이 큰 입력이 자주 바꿔 비교할 핵심 입력 후보입니다.', t2TT('sens')],
   ['#wb .t2-cg', '상수인가, 표인가', '모터 토크는 늘 표로 셉니다 (피크 · 연속 중 한 열은 비워도 됨). 효율 · 타이어 표가 비어 있으면 위 상수 칸(모터 효율 · 인버터 효율 · μ · 하중 감도)을 쓰고, 그림 위에 "상수 칸을 씁니다"가 뜹니다. 표 제목 옆 [계산에 쓸 값]에서 [아래 표 · 위 상수]를 고릅니다. 표를 쓰면 그 상수 칸은 막힙니다("아래 표 사용"). 숫자 하나만 넣어도 상수 표가 됩니다.', t2TT('edit', 'eM')],
   ['#wb .t2-tw', '표 고치기', '칸을 눌러 고치고 Enter(반영) · Esc(취소). 표 맨 아래 [+ 행] 행, 효율 맵은 오른쪽 [+ 열] 열로 늘리고, 행 끝 × 로 행을, 맵 맨 아래 × 로 열을 지웁니다. 빈 표에서 누르면 머리 행부터 만듭니다. 토크 표는 1열 회전수 · 2열 최대 토크 · 3열 연속 토크(디레이팅 하한)입니다.', t2TT('edit', 'mt')],
-  ['#wb .t2-menu', '입력하기', '붙여넣기(창에 붙여 넣으면 표를 덮어씀 · 내 코스는 창 대신 표에 Ctrl+V) · 파일 가져오기(.xlsx 첫 시트 · .csv) · 양식 받기(쓰는 법이 양식 맨 위 # 행에 있음) · 예시로 · 비우기.', t2TT('edit', 'mt')],
+  ['#wb .t2-menu', '입력하기', '엑셀에서 여러 칸을 복사해 표를 누르고 Ctrl+V 하면 표 전체를 바꿈 (모든 표 같음) · 파일 가져오기(.xlsx 첫 시트 · .csv) · 양식 받기(쓰는 법이 양식 맨 위 # 행에 있음) · 예시로 · 비우기.', t2TT('edit', 'mt')],
   ['#wb .t2-fbox', '그림으로 틀린 칸 찾기', '오른쪽 그림은 표로 그린 것입니다. 효율 맵에서 혼자 색이 튀는 칸, 곡선이 꺾인 곳, 코스가 엉뚱하게 꺾인 곳을 누르면 표에서 그 칸(행)으로 가서 강조합니다.', t2TT('edit', 'eM')],
   ['#wb .t2-tr', '코스', '공식 코스(오토크로스 · 내구 · 가속 · 스키드패드)는 회색 표로 보기만 합니다. 내 코스는 칸 고치기 · # 번호로 옮기기 · 각도 → 길이, 랩 수 2 이상이거나 출발 위치가 0이 아니면 닫힌 코스입니다. 비워 두면 계산하지 않습니다. 초록 = 출발(주행 방향 오른쪽), 빨강 = 결승(왼쪽), 화살표 = 방향. 내 코스는 구간마다 왼쪽 · 오른쪽 폭(빈칸 = 윗 행 값, 경계 콘은 지도에 자동)과 슬라럼 콘 간격(그 구간 가운데 선 위 콘, 직선 · 곡선 모두)을 넣을 수 있고, 엑셀에서 여러 칸을 복사해 표에 Ctrl+V 하면 표 전체가 바뀝니다.', t2TT('edit', 'course', 'free')],
   ['#wb [data-t2tab="sim"]', '시뮬레이션 탭', '편집 탭의 입력으로 기록을 계산해 보는 탭입니다. 위에서 아래로: 기준 감속비 · 볼 랩 · 코스 → 결과 → 구동력 선도 · 코스 지도 → 신호 그래프.', t2TT('sim', null, 'end')],
