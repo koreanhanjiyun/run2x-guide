@@ -11593,6 +11593,7 @@ function t2ConeBounds(){ if(T2CW) return T2CW; const X = FSK26.X, Y = FSK26.Y, N
   const WL = [], WR = []; for(let i = 0; i < N; i++){ const l = interp(side.L, S[i]), r = interp(side.R, S[i]); WL.push(isFinite(l) ? l : FSK26.WL[i]); WR.push(isFinite(r) ? r : FSK26.WR[i]); }
   return T2CW = {WL, WR, slalom:sl.map(q => q[0]), slat:sl.map(q => q[1]), sds:sl.map(q => q[2])}; }
 const t2ExtraI = () => ({ wc_on: 1,   /* 차 크기는 2P 에서 항상 고려 (검증표만 끔) */
+  tr_ks: 2, v_test: 60, ay_test: 0.4,   /* 고정값 (설계 변수 아님, 2026-11-09 관리자 결정): 곡률 다듬기 거리 [m] · 계단 조향 시험 차속 [km/h] · 정상 횡가속도 [g] */
   stab: Array.isArray(T2.stab) && T2.stab.length ? T2.stab : null,   /* 도구 6 조향각 표 [[핸들 °, 안쪽 °, 바깥 °]] (도구 6 에서 보냄) */
   end: typeof FSK26!=='undefined' ? (() => { const B = t2ConeBounds(); return {seg:FSK26.seg, laps:FSK26.laps, stint:FSK26.stint, WL:B.WL, WR:B.WR, slalom:B.slalom, slat:B.slat, sds:B.sds}; })() : {seg:[]},
   /* 맵: [위 상수]를 고르면 표가 있어도 넘기지 않음 */
@@ -12616,11 +12617,11 @@ WB_TOOLS['2'] = {
     {k:'tire_ca0', dk:'tire_ca0', v:450, d:0, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'}, {k:'tire_cn', dk:'tire_cn', v:0.8, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
     {k:'tire_c', dk:'tire_c', v:1.3, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'}, {k:'tire_e', dk:'tire_e', v:0, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
     {k:'tire_relax', dk:'tire_relax', v:0.3, d:2, g:T2G.tire, sb:'타이어 곡선 (모델 2 · 3)'},
-    {k:'tr_ks', n:'경로 곡률 다듬기 거리 (요 가속도 · 힘 변화율 계산)', u:'m', v:2, d:1, g:T2G.rc, sb:'과도 (모델 3)'},
+    {k:'tr_ks', n:'경로 곡률 다듬기 거리 (고정 2 m, 화면에 없음)', u:'m', v:2, d:1, g:T2G.rc, sb:'과도 (모델 3)', ui:'none'},
     {k:'steer_ratio', dk:'steer_ratio', n:'조향비 (핸들 각 ÷ 바퀴 각, 가운데)', v:5, d:2, g:T2G.steer, sb:'최대 조향각'}, {k:'delta_max', dk:'delta_max', n:'최대 조향각 (안쪽 바퀴, 최소 회전 반경도 이 값으로)', v:34, d:1, g:T2G.steer, sb:'최대 조향각'},
     {k:'izz', dk:'izz', v:70, d:1, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'ixx', dk:'ixx', v:30, d:1, g:T2G.rc, sb:'과도 (모델 3)'},
     {k:'m_us_f', dk:'m_us_f', v:12, d:1, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'m_us_r', dk:'m_us_r', v:12, d:1, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'c_roll', dk:'c_roll', v:30, d:1, g:T2G.rc, sb:'과도 (모델 3)'},
-    {k:'v_test', n:'계단 조향 시험 차속', u:'km/h', v:60, d:0, g:T2G.rc, sb:'과도 (모델 3)'}, {k:'ay_test', n:'계단 조향 정상 횡가속도', u:'g', v:0.4, d:2, g:T2G.rc, sb:'과도 (모델 3)'},
+    {k:'v_test', n:'계단 조향 시험 차속 (고정 60 km/h, 화면에 없음)', u:'km/h', v:60, d:0, g:T2G.rc, sb:'과도 (모델 3)', ui:'none'}, {k:'ay_test', n:'계단 조향 정상 횡가속도 (고정 0.4 g, 화면에 없음)', u:'g', v:0.4, d:2, g:T2G.rc, sb:'과도 (모델 3)', ui:'none'},
     {k:'t_skid', dk:'t_skid', v:0, d:3, g:T2G.goal, ui:'none'}
   ],
   /* 결과 칸은 outHTML 이 그림. outputs = 대시보드 반영 · 입력 훑기 · 검증표 이름 */
