@@ -44,7 +44,7 @@ WB_TOOLS['G'] = {
     {k:'cla', dk:'cla', n:'기본 C<sub>L</sub>·A (훑기 기준점)', v:3.0, d:2, g:GG.aero}, {k:'ld', n:'양항비 L/D (다운포스 ÷ 날개 항력)', u:'', v:2.5, d:2, g:GG.aero},
     {k:'cda0', n:'차체 C<sub>D</sub>·A (날개 없이)', u:'m²', v:0.2, d:2, g:GG.aero},
     {k:'cop_m', n:'압력중심 (1 = 무게 배분과 같게, 0 = 직접)', u:'', v:1, d:0, g:GG.aero, ui:'none'}, {k:'xcop', dk:'xcop', n:'압력중심 위치 (뒤축부터 앞으로)', v:698, d:0, g:GG.aero},
-    {k:'dr_ks', n:'현실 운전자 그립 사용률 k_s', u:'', v:0.9, d:2, g:GG.drv, keep:true}, {k:'dr_ke', n:'현실 운전자 내구 페이스 k_e', u:'', v:0.7, d:2, g:GG.drv, keep:true},
+    {k:'dr_ks', n:'현실 운전자 그립 사용률 k_s', u:'', v:0.95, d:2, g:GG.drv, keep:true}, {k:'dr_ke', n:'현실 운전자 내구 페이스 k_e', u:'', v:0.7, d:2, g:GG.drv, keep:true},
   ],
   outputs:[
     {k:'b_acc', n:'가속', u:'s', d:3, g:'기본 차 기록 (이상 운전자)'}, {k:'b_skid', n:'스키드패드 (좌우 합)', u:'s', d:3, g:'기본 차 기록 (이상 운전자)'},

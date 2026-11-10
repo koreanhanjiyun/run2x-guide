@@ -20,7 +20,7 @@ document.addEventListener('click', e => { if(WB.id!=='7' || !e.target.closest) r
 WB_TOOLS['7'] = {
   share:'hp', no:'7', stage:'P3-6~7', name:'액추에이션 · 스프링',
   x:{n:'휠 트래블', u:'mm'}, xiStart:'mid',
-  inLock(k){ if((k==='mr_f' || k==='mr_r') && WB.I.mr_m === 1) return '기하로 셈'; if(WB.I.mr_m !== 1 && T7GEO.test(k)) return '상수 모션비'; return ''; },
+  inLock(k){ if((k==='mr_f' || k==='mr_r') && WB.I.mr_m === 1) return '기하로 셈'; if(WB.I.mr_m !== 1 && (T7GEO.test(k) || /^sh_[ls]_[fr]$/.test(k))) return '상수 모션비'; return ''; },
   inEff(k){ const o = WB.R && !WB.err && WB.R.out; if(k==='mr_f') return o ? o.mr_f_o : '…'; if(k==='mr_r') return o ? o.mr_r_o : '…'; return undefined; },
   inOpt(k){ const seg = (attr, cur, items) => `<span class="dc-seg" role="group">${items.map(([v, t]) => `<button type="button" ${attr}="${v}" aria-pressed="${cur===v}">${t}</button>`).join('')}</span>`;
     if(k==='mr_f') return `<span class="t2-inopt">${seg('data-t7mr', WB.I.mr_m === 1 ? 1 : 0, [[1, '기하'], [0, '상수']])}</span>`;
@@ -34,6 +34,9 @@ WB_TOOLS['7'] = {
     {k:'ks_f', dk:'ks_f', v:45, d:1, g:T7G.spr}, {k:'ks_r', dk:'ks_r', v:50, d:1, g:T7G.spr}, {k:'mr_f', dk:'mr_f', v:0.9, d:3, g:T7G.spr}, {k:'mr_r', dk:'mr_r', v:0.9, d:3, g:T7G.spr},
     {k:'karb_f', dk:'karb_f', v:150, d:0, g:T7G.spr}, {k:'karb_r', dk:'karb_r', v:100, d:0, g:T7G.spr}, {k:'kt', dk:'kt_tire', v:100, d:0, g:T7G.spr},
     {k:'cd_f', dk:'cd_f', v:1500, d:0, g:T7G.dmp}, {k:'cd_r', dk:'cd_r', v:1500, d:0, g:T7G.dmp},
+    /* 댐퍼 규격 (예제 = Fox DHX 2023 신품 (관리자) → 2022+ DHX 눈-눈 규격에서 CAD 정지 길이 202.4 · 185.0 mm 바로 위: 앞 210 · 뒤 190, 스트로크는 확인 못 함 → 가정 앞 55 · 뒤 45) */
+    {k:'sh_l_f', n:'댐퍼 규격 길이 (앞, 다 늘어난 눈 사이)', u:'mm', v:210, d:1, g:T7G.dmp}, {k:'sh_s_f', n:'댐퍼 스트로크 (앞)', u:'mm', v:55, d:1, g:T7G.dmp},
+    {k:'sh_l_r', n:'댐퍼 규격 길이 (뒤, 다 늘어난 눈 사이)', u:'mm', v:190, d:1, g:T7G.dmp}, {k:'sh_s_r', n:'댐퍼 스트로크 (뒤)', u:'mm', v:45, d:1, g:T7G.dmp},
     {k:'mr_m', n:'모션비 (1 = 기하, 0 = 상수)', u:'', v:1, d:0, g:T7G.spr, ui:'none'},
     {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T7G.geo}, {k:'camber_r', dk:'camber_r', v:-2, d:2, g:T7G.geo}, {k:'s_max', n:'그래프 트래블 범위 (±)', u:'mm', v:30, d:0, g:T7G.geo},
     {k:'pa_arm_f', n:'앞 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:1, d:0, g:T7G.geo, ui:'none'}, {k:'pa_arm_r', n:'뒤 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:0, d:0, g:T7G.geo, ui:'none'},
@@ -50,6 +53,9 @@ WB_TOOLS['7'] = {
     {k:'mr_f_g', n:'모션비 (앞, 정지)', u:'mm/mm', d:3, g:'모션비 (기하)'}, {k:'mr_r_g', n:'모션비 (뒤, 정지)', u:'mm/mm', d:3, g:'모션비 (기하)'},
     {k:'prog_f', n:'모션비 변화 (앞, −s ~ +s, 정지 대비)', u:'%', d:1, g:'모션비 (기하)'}, {k:'prog_r', n:'모션비 변화 (뒤, −s ~ +s, 정지 대비)', u:'%', d:1, g:'모션비 (기하)'},
     {k:'ld0_f', n:'댐퍼 길이 (앞, 정지 · 눈 중심 사이)', u:'mm', d:1, g:'모션비 (기하)'}, {k:'ld0_r', n:'댐퍼 길이 (뒤, 정지)', u:'mm', d:1, g:'모션비 (기하)'},
+    {k:'sh_sag_f', n:'댐퍼 정지 눌림 (앞, 규격 길이 − 정지 길이)', u:'mm', d:1, g:'댐퍼 트래블'}, {k:'sh_sag_r', n:'댐퍼 정지 눌림 (뒤)', u:'mm', d:1, g:'댐퍼 트래블'},
+    {k:'sh_bump_f', n:'바퀴 범프 여유 (앞, 댐퍼 바닥까지)', u:'mm', d:1, g:'댐퍼 트래블'}, {k:'sh_bump_r', n:'바퀴 범프 여유 (뒤, 댐퍼 바닥까지)', u:'mm', d:1, g:'댐퍼 트래블'},
+    {k:'sh_reb_f', n:'바퀴 리바운드 여유 (앞, 댐퍼 끝까지 늘어남)', u:'mm', d:1, g:'댐퍼 트래블'}, {k:'sh_reb_r', n:'바퀴 리바운드 여유 (뒤, 댐퍼 끝까지 늘어남)', u:'mm', d:1, g:'댐퍼 트래블'},
     {k:'dl_f', n:'댐퍼 줄어듦 (앞, +s 범프)', u:'mm', d:1, g:'모션비 (기하)'}, {k:'dl_r', n:'댐퍼 줄어듦 (뒤, +s 범프)', u:'mm', d:1, g:'모션비 (기하)'},
     {k:'rk_f', n:'로커 회전 (앞, +s 범프)', u:'°', d:2, g:'모션비 (기하)'}, {k:'rk_r', n:'로커 회전 (뒤, +s 범프)', u:'°', d:2, g:'모션비 (기하)'},
     {k:'ks_f_o', dk:'ks_f', d:1, g:'감쇠', hide:true}, {k:'ks_r_o', dk:'ks_r', d:1, g:'감쇠', hide:true}, {k:'mr_f_o', dk:'mr_f', d:3, g:'감쇠', hide:true}, {k:'mr_r_o', dk:'mr_r', d:3, g:'감쇠', hide:true},
@@ -71,6 +77,7 @@ WB_TOOLS['7'] = {
      src:'ΔF_f = [118.5 × 9.81 × 0.03 + 252 × 9.81 × 0.2594 × 0.5072 + 2 × 12 × 9.81 × 0.22] ÷ 1.2 = 343.28 N'},
     {n:'기하 모션비 손계산 (팔 평행 · 같은 길이 360, 푸시로드가 아래 팔 y 400 에서 수직, 로커 팔 100 · 100 직각, 댐퍼 수평)', I:{mr_m:1, pa_arm_f:0, camber_f:0, tf:1200, r_load:236, ks_f:45, f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:200, f_uf_z:300, f_ur_x:-175, f_ur_y:200, f_ur_z:300, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:100, f_to_x:-70, f_to_y:560, f_to_z:100, f_pa_x:0, f_pa_y:400, f_pa_z:100, f_pr_x:0, f_pr_y:400, f_pr_z:300, f_rp_x:0, f_rp_y:300, f_rp_z:300, f_rq_x:100, f_rq_y:300, f_rq_z:300, f_dr_x:0, f_dr_y:300, f_dr_z:400, f_db_x:0, f_db_y:100, f_db_z:400}, expect:{mr_f_g:0.555556, kw_f:13.888889},
      src:'바퀴 1 mm 오름 → 아래 팔 끝 (반경 360) 1 mm → 푸시로드 점 (반경 200) 200/360 mm 위로 → 로커 (팔 100) 회전 200/360 ÷ 100 rad → 댐퍼 점 (팔 100) 200/360 mm 수평 → MR = 0.5556, 휠 레이트 = 45 × 0.5556² = 13.889 N/mm'},
+    {n:'댐퍼 규격 손계산 (같은 기하 · 규격 210 · 스트로크 50 → 정지 눌림 10, 바닥 = 댐퍼 160 · 끝 = 210 mm 에서 로커 각 → 푸시로드 원 교점 → 바퀴 360 sin φ)', I:{sh_l_f:210, sh_s_f:50, mr_m:1, pa_arm_f:0, camber_f:0, tf:1200, r_load:236, ks_f:45, f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:200, f_uf_z:300, f_ur_x:-175, f_ur_y:200, f_ur_z:300, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:100, f_to_x:-70, f_to_y:560, f_to_z:100, f_pa_x:0, f_pa_y:400, f_pa_z:100, f_pr_x:0, f_pr_y:400, f_pr_z:300, f_rp_x:0, f_rp_y:300, f_rp_z:300, f_rq_x:100, f_rq_y:300, f_rq_z:300, f_dr_x:0, f_dr_y:300, f_dr_z:400, f_db_x:0, f_db_y:100, f_db_z:400}, expect:{sh_sag_f:10, sh_bump_f:72.486715, sh_reb_f:17.998640}, src:'ld(β) = |(200 − 100 sin β, 100 cos β − 100)|, |pa(φ) − pr(β)| = 200 (닫힌 식 원 교점, Python 확인)'},
     {n:'기본 점 (2024 STEP) 기하 모션비 · 독립 구현 비교', I:{mr_m:1, pa_arm_f:1, pa_arm_r:0, camber_f:-3, camber_r:-2, tf:1200, tr:1180, r_load:236}, expect:{mr_f_g:0.901663, mr_r_g:0.869474},
      src:'업라이트 6 자유도를 거리 구속 6 개로 따로 푼 Python (scipy root lm) → 볼조인트 위치에서 팔 각 → 로커 각 (brentq) → 댐퍼 길이 중앙 차분 (±0.5 mm)'}
   ],
@@ -201,7 +208,13 @@ function mrGeo(I, s, t, cam) {
     return { ld: norm(sub(P.db, rotAbout(P.dr, P.rp, n, b))), b }; };
   const mr = sz => { const h = 0.01, qq = q, bq = b, p = at(sz + h), m = at(sz - h); q = qq; b = bq; return -(p.ld - m.ld) / (2 * h); };
   const mr0 = mr(0);
-  return { mr0, ld0, at, mr, curve(sm, nn) { const xs = [], m = [], dl = [], rk = []; q = null; b = 0; const z = at(0);
+  /* 댐퍼 길이가 tgt 가 되는 바퀴 트래블 [mm] (dir +1 범프 · −1 리바운드). 0 에서 1 mm 씩 이어 풀다 지나치면 반으로 나눠 좁힘, 200 mm 안에 없으면 NaN */
+  const reach = (tgt, dir) => { q = null; b = 0; let pl = ld0, ps = 0;
+    for (let s = 1; s <= 200; s++) { const l = at(dir * s).ld;
+      if ((l - tgt) * (pl - tgt) <= 0) { let a = ps, c = s, la = pl; for (let k = 0; k < 40; k++) { const m = (a + c) / 2, lm = at(dir * m).ld; if ((lm - tgt) * (la - tgt) <= 0) c = m; else { a = m; la = lm; } } return (a + c) / 2; }
+      pl = l; ps = s; }
+    return NaN; };
+  return { mr0, ld0, at, mr, reach, curve(sm, nn) { const xs = [], m = [], dl = [], rk = []; q = null; b = 0; const z = at(0);
     for (let i = 0; i <= nn; i++) { const sz = -sm + 2 * sm * i / nn; q = null; b = 0;
       // 0 에서 sz 까지 이어 풂
       const st = Math.max(1, Math.ceil(Math.abs(sz) / 5)); let r; for (let j = 1; j <= st; j++) r = at(sz * j / st);
@@ -244,6 +257,11 @@ function calc(I) {
   if (!geo) { const xs = [], N = 30; for (let i = 0; i <= N; i++) xs.push(+(-sm + 2 * sm * i / N).toFixed(3)); const cst = v => xs.map(() => v), dl = (m) => xs.map(x => m * x);
     return { out, x: { d: xs }, sig: { mrf: cst(mrf), mrr: cst(mrr), kwf: cst(I.ks_f * mrf * mrf), kwr: cst(I.ks_r * mrr * mrr), dlf: dl(mrf), dlr: dl(mrr), rkf: cst(NaN), rkr: cst(NaN) } }; }
   const cF = GF.curve(sm, 30), cR = GR.curve(sm, 30), pr = (c) => (c.m[c.m.length - 1] - c.m[0]) / c.m[(c.m.length - 1) / 2] * 100;
+  /* 댐퍼 규격 (다 늘어난 눈 사이 길이 Lf · 스트로크 S): 정지 눌림 = Lf − ld0, 범프 여유 = 댐퍼가 S − 눌림 만큼 더 줄어드는 바퀴 트래블 (바닥), 리바운드 여유 = 댐퍼가 Lf 까지 늘어나는 바퀴 트래블 (끝까지 늘어남) */
+  const shk = (G, Lf, S) => { const sag = Lf - G.ld0; if (!(Lf > 0) || !(S > 0)) return [NaN, NaN, NaN];
+    return [sag, sag < S ? G.reach(Lf - S, 1) : 0, sag > 0 ? G.reach(Lf, -1) : 0]; };
+  { const [sf, bf, rf2] = shk(GF, I.sh_l_f, I.sh_s_f), [sr, br, rr2] = shk(GR, I.sh_l_r, I.sh_s_r);
+    Object.assign(out, { sh_sag_f: sf, sh_bump_f: bf, sh_reb_f: rf2, sh_sag_r: sr, sh_bump_r: br, sh_reb_r: rr2 }); }
   Object.assign(out, { prog_f: pr(cF), prog_r: pr(cR), ld0_f: GF.ld0, ld0_r: GR.ld0, dl_f: cF.dl[cF.dl.length - 1], dl_r: cR.dl[cR.dl.length - 1], rk_f: cF.rk[cF.rk.length - 1], rk_r: cR.rk[cR.rk.length - 1] });
   return { out, x: { d: cF.xs }, sig: { mrf: cF.m, mrr: cR.m, kwf: cF.m.map(m => I.ks_f * m * m), kwr: cR.m.map(m => I.ks_r * m * m), dlf: cF.dl, dlr: cR.dl, rkf: cF.rk, rkr: cR.rk } };
 }
