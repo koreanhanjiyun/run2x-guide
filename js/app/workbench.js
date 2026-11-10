@@ -502,12 +502,13 @@ async function wbVerify(){ const T = wbT(), code = wbCode(); wbModal(wbMHead('�
   const rows = []; let pass = 0, n = 0;
   for(const c of (T.verify || [])){ const I = {...T.inputs.reduce((o, d) => (o[d.k] = d.v, o), {}), ...(T.verifyBase || {}), ...c.I}, r = await wbRun(I, code);
     Object.entries(c.expect).forEach(([k, ex]) => { const d = T.outputs.find(o => o.k===k) || {n:k, u:'', d:3}, got = r.ok && r.r.out ? r.r.out[k] : NaN;
-      const tol = c.tol != null ? c.tol : 0.001, ok = isFinite(got) && Math.abs(got - ex) <= tol*Math.max(1, Math.abs(ex)); n++; if(ok) pass++;
+      /* 허용 오차: 상대 0.1 % (값이 1 보다 작으면 절대 0.001). 온도 [°C] 는 절대 ±0.001 °C (°C 는 0 점이 임의라 상대 오차가 뜻이 없음 — 30 °C 의 0.1 % = 0.03 K 지만 300 K 로 보면 0.3 K) */
+      const uu = d.u || (d.dk && DK[d.dk] ? DK[d.dk].u : ''), tC = uu==='°C', tol = c.tol != null ? c.tol : 0.001, ok = isFinite(got) && (tC && c.tol == null ? Math.abs(got - ex) <= 0.001 : Math.abs(got - ex) <= tol*Math.max(1, Math.abs(ex))); n++; if(ok) pass++;
       rows.push(`<tr class="${ok?'ok':'ng'}"><td>${wbEsc(c.n)}</td><td>${d.dk && DK[d.dk] ? DK[d.dk].n : wbEsc(d.n)}</td><td>${wbFmt(ex, (d.d||0)+1)}</td><td>${r.ok ? wbFmt(got, (d.d||0)+1) : '<span class="wb-err">' + wbEsc(r.err) + '</span>'}</td><td>${wbEsc(d.u || (d.dk && DK[d.dk] ? DK[d.dk].u : ''))}</td><td>${ok?'통과':'<b>다름</b>'}</td><td class="muted">${wbEsc(c.src||'')}</td></tr>`); }); }
   const m = $('#wbm'); if(!m || m.hidden) return;
   if(!m.querySelector('[data-wbver][aria-selected="true"]')) return;
   m.querySelector('.dvm-box').innerHTML = wbMHead('코드 · 검증') + wbCTabs('ver') + `<p class="wb-cnote muted">답을 이미 아는 단순한 경우(해석해 · 손계산)에서 지금 코드의 결과가 같은지 봅니다. 코드를 고친 뒤 기존 식이 깨지지 않았는지 확인하는 용도입니다.</p><div class="dvi-body"><table class="dvi-t wb-vt"><thead><tr><th>경우</th><th>항목</th><th>기대값</th><th>계산값</th><th>단위</th><th>판정</th><th>기대값 근거</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
-    <div class="dvi-foot"><span class="muted">${pass} / ${n} 통과 · 허용 오차 상대 0.1 %${WB.code[WB.id]!=null ? ' · 고친 코드로 계산' : ''}</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`; }
+    <div class="dvi-foot"><span class="muted">${pass} / ${n} 통과 · 허용 오차 상대 0.1 % (온도 °C 는 ±0.001 °C)${WB.code[WB.id]!=null ? ' · 고친 코드로 계산' : ''}</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`; }
 /* 코드 보기: 고친 코드는 이 창을 닫아도 작업창이 열려 있는 동안만 쓰이고, 다시 열면 원래 코드 */
 function wbCodeOpen(){ wbModal(wbMHead('코드 · 검증') + wbCTabs('code') + `<p class="wb-cnote muted">입력 <code>I</code>(왼쪽 입력 칸의 키)를 받아 <code>out</code>(결과 숫자) · <code>x</code>(가로축) · <code>sig</code>(신호) · <code>main</code>(결과 그래프에 그릴 신호)를 돌려주는 <code>calc(I)</code> 함수입니다. 고친 코드는 저장되지 않으며, 작업창을 다시 열면 원래 코드로 돌아갑니다. 계산은 페이지와 떨어진 Web Worker에서 돌아갑니다.</p>
     <div class="dvi-body"><textarea class="wb-ta" spellcheck="false" aria-label="계산 코드">${wbEsc(wbCode())}</textarea></div>

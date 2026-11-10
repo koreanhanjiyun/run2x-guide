@@ -28,7 +28,7 @@ WB_TOOLS['6'] = {
   inputs:[
     {k:'L', dk:'L', v:1550, d:0, g:T6G.car}, {k:'tf', dk:'tf', v:1200, d:0, g:T6G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T6G.car},
     {k:'r_load', dk:'r_load', v:236, d:0, g:T6G.car}, {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T6G.car}, {k:'toe_f', dk:'toe_f', v:0, d:2, g:T6G.car},
-    {k:'rack_c', dk:'rack_c', v:90, d:1, g:T6G.rack}, {k:'rack_travel', dk:'rack_travel', v:30, d:1, g:T6G.rack}, {k:'d_ref', n:'애커먼 기준 조향각 (두 바퀴 평균)', u:'°', v:15, d:1, g:T6G.rack},
+    {k:'rack_c', dk:'rack_c', v:90, d:1, g:T6G.rack}, {k:'rack_travel', dk:'rack_travel', v:31.74, d:2, g:T6G.rack}, {k:'d_ref', n:'애커먼 기준 조향각 (두 바퀴 평균)', u:'°', v:15, d:1, g:T6G.rack},
     ...k3dIn('f', t6Pt),
   ],
   outputs:[
