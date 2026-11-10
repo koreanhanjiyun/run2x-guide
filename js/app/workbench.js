@@ -131,7 +131,12 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
      축 폭 = 눈금 숫자 폭 + 세로 제목 폭 (겹치지 않게). 색: 신호 하나면 축 · 눈금 · 제목 모두 그 선 색, 여럿이면 제목만 신호마다 제 색 */
   const dg = r => Math.abs(r.t[1] - r.t[0]) < 1 ? (Math.abs(r.t[1] - r.t[0]) < 0.1 ? 2 : 1) : 0;
   groups.forEach(G => { let lo = Infinity, hi = -Infinity; G.ys.forEach(y => y.d.forEach(v => { if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
-    if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5);
+    if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5); });
+  /* y = 0 맞춤: 0 을 지나는 축이 여럿이면 0 높이를 같게 (아래 몫 : 위 몫 비를 기하 평균으로 맞추고 모자란 쪽을 늘림) → 0 선 하나 */
+  const ZG = groups.filter(G => G.r.lo < 0 && G.r.hi > 0);
+  if(ZG.length > 1){ const ks = ZG.map(G => -G.r.lo/G.r.hi), k = Math.sqrt(Math.min(...ks)*Math.max(...ks));
+    ZG.forEach(G => { let lo = G.r.lo, hi = G.r.hi; if(-lo/hi < k) lo = -k*hi; else hi = -lo/k; G.r = wbTicksIn(lo, hi, 5); if(!G.r.t.some(t => Math.abs(t) < (hi - lo)*1e-9)) G.r.t.push(0); }); }
+  groups.forEach(G => {
     if(o.zy){ const a = G.r.lo + o.zy.a*(G.r.hi - G.r.lo), b = G.r.lo + o.zy.b*(G.r.hi - G.r.lo); G.r = wbTicksIn(a, b, 5); }
     G.lw = Math.max(...G.r.t.map(t => wbFmt(t, dg(G.r)).length))*6.6; G.aw = Math.round(7 + G.lw + 8 + 13 + 8); });
   const LG = groups.filter((_, i) => i % 2 === 0), RG = groups.filter((_, i) => i % 2 === 1);
@@ -154,6 +159,7 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
     const body = !G.ys.length ? '<tspan style="fill:var(--muted)">-</tspan>' : one ? `<tspan style="fill:${col}">${wbEsc(G.ys[0].n)}</tspan>` : short ? `<tspan style="fill:var(--ink-2)">${wbEsc(short)}</tspan>`
       : G.ys.map((y, i) => `${i ? '<tspan style="fill:var(--muted)"> · </tspan>' : ''}<tspan style="fill:${y.c}">${wbEsc(y.n)}</tspan>`).join('');
     s += `<text x="${tx}" y="${ty}" class="wb-tl" text-anchor="middle" transform="rotate(${left ? -90 : 90} ${tx} ${ty})"><title>${wbEsc(all)}${u}</title>${body}<tspan style="fill:${col}">${u}</tspan></text>`; });
+  { const Z = groups.find(G => G.r.lo < 0 && G.r.hi > 0); if(Z){ const zy = Y(0, Z.r); s += `<line x1="${L}" y1="${zy}" x2="${L+pw}" y2="${zy}" class="wb-zero"/>`; } }   /* y = 0 선 (가속 · 감속 구분) */
   s += `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-frame"/>`;
   ys.forEach(y => { const r = gOf(y).r; s += `<polyline${clip} fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
   if(o.xi != null && isFinite(xd[o.xi]) && xd[o.xi] >= xr.lo && xd[o.xi] <= xr.hi){ const cx = X(xd[o.xi]), right = cx < L + pw*0.72, lab = [];

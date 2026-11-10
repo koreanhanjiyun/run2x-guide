@@ -2415,6 +2415,7 @@ html.wb-lock,html.wb-lock body{overflow:hidden}
 .wb-plotbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px}
 .wb-plot{display:block;width:100%;height:auto;touch-action:none}
 .wb-grid{stroke:#ebe8f1;stroke-width:1}
+.wb-zero{stroke:var(--ink-2);stroke-width:1;stroke-dasharray:4 3;opacity:.55}
 .wb-frame{fill:none;stroke:var(--line-2)}
 .wb-hit{fill:transparent;cursor:crosshair}
 .wb-cur{stroke:#232731;stroke-width:1;stroke-dasharray:4 3}
