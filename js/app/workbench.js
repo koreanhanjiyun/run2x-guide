@@ -263,7 +263,11 @@ function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
-  if(!R) return wbSkel('cards');
+  if(!R){   /* 계산 중: 실제 카드 모양 그대로 (이전 결과 · 없으면 빈 결과로 그린 뒤 숫자 자리만 반짝이는 막대) */
+    let h = ''; const D = WB.Rlast && WB.Rlast.id===WB.id ? WB.Rlast.R : {out:{}};
+    try{ h = T.outHTML ? T.outHTML(D) : wbOutCards(T, D, false); }catch(e){ try{ h = wbOutCards(T, {out:{}}, false); }catch(e2){ h = ''; } }
+    return h ? `<div class="wb-skelmode" aria-busy="true" aria-label="계산 중">${h}</div>` : wbSkel('cards'); }
+  WB.Rlast = {id:WB.id, R};
   if(T.outHTML) return T.outHTML(R);   /* 도구가 결과 칸을 직접 그림 (도구 2P) */
   return wbOutCards(T, R, WB.cmp); }
 /* 결과 카드: 도구가 정한 묶음마다. d.hide = 화면에 안 보임(검증 · 반영용), d.fmt(v, out) = 값 칸 HTML(단위 포함),

@@ -3198,3 +3198,15 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-cmq{fill:rgba(61,90,153,.08);stroke:#3d5a99;stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
 .t2-mdh{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}.t2-mdh .t2-mdhn{margin-left:0}.t2-mdhc{margin-left:auto;font-weight:400;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .t9-crqb{flex-direction:column;align-items:stretch}.t9-crq{border:1px dashed var(--line,#c9ced8);border-radius:6px;padding:6px 8px;min-height:38px;overflow-x:auto;cursor:text}.t9-crq:focus{outline:2px solid #3d5a99;outline-offset:1px}.t9-crq table{font-size:12px}
+/* 냉각 블럭 입력 칸 정렬 (2026-11-10): 이름 · 값 · 단위 세 칸 격자 */
+.t9-csel{align-items:flex-start}.t9-cform{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px 18px;align-items:center;flex:1 1 100%}.t9-cform>b,.t9-cform>.muted,.t9-cform>.t2-use,.t9-cform>.t9-crq,.t9-cform>.dc-seg{grid-column:1/-1}
+.t9-cfi{display:grid;grid-template-columns:1fr 92px 64px;align-items:center;gap:8px}.t9-cfi span{line-height:1.3}.t9-cfi input{width:100%;box-sizing:border-box}.t9-cfi i{white-space:nowrap}
+.t9-rqt td{padding:0}.t9-rqt input{width:64px;border:0;padding:3px 5px;font:inherit;text-align:right;background:transparent}.t9-rqt input.hd{font-weight:600;background:var(--soft,#f3f5f8)}.t9-crqb .t2-use{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* 계산 중 스켈레톤: 실제 카드 그대로, 숫자 · 메모 자리만 반짝이는 막대 (2026-11-10) */
+.wb-skelmode{pointer-events:none}.wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov, td, .t2-dt){color:transparent!important;border-radius:5px;background:linear-gradient(90deg,var(--panel-2) 0%,var(--line) 50%,var(--panel-2) 100%)!important;background-size:200% 100%!important;animation:wbsk 1.2s linear infinite}
+.wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov) *{color:transparent!important;border-color:transparent!important;background:transparent!important}.wb-skelmode svg{opacity:.18}
+/* 모델 칩 높이 = 옆 선택 단추 높이 */
+.t2-hr{align-items:stretch}.t2-hr>.t2-mdl{display:inline-flex;align-items:center}
+/* 차량 거동 자세히 (접힘) */
+.t2-bmore{margin-top:10px}.t2-bmore>summary{cursor:pointer;font-weight:600;font-size:13px;padding:6px 2px;color:var(--ink-2)}

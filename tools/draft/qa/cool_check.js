@@ -1,4 +1,4 @@
-// 냉각 편집기 점검 (시뮬링크식, 2026-11-09): 기본 회로 · 휠 확대 · 휠 버튼 이동 · 블럭 끌기 · 영역 고르기 · Delete · 합쳐진 호스 하나만 고르기 · 토막 옮기기 · 호스 잇기 ·
+// 냉각 편집기 점검 (시뮬링크식, 2026-11-09): 기본 회로 · 휠 확대 · 휠 버튼 이동 · 블럭 끌기 · 영역 고르기 · Delete · 합쳐진 호스 하나만 고르기 · 토막 옮기기 · 호스 잇기 · 손잡이 없이 호스 토막 끌기 · 휠은 누른 뒤에만 확대 ·
 //   호스 유량 (안지름 · 길이) · 공랭 갈라짐 비율 · 지우기 단추 없음 · 도구 2P 쪽 같은 편집기.  node cool_check.js [스크린샷 폴더]
 const H=require('./h.js');
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead'); const W=H.sleep, d=process.argv[2];
@@ -8,8 +8,10 @@ const H=require('./h.js');
   console.log('delete buttons', await p.locator('[data-t9cbx], [data-t9clx]').count(), 'zoom buttons', await p.locator('.t9-cool button:has-text("+"):has-text("확대")').count());
   const svg=await p.$('svg[data-t9csvg="w1"]'); let bb=await svg.boundingBox();
   // 휠 = 확대
-  const v0=(await C0()).view; await p.mouse.move(bb.x+bb.width/2, bb.y+bb.height/2); await p.mouse.wheel(0,-300); await W(300); const v1=(await C0()).view;
-  console.log('wheel zoom', v1.w < v0.w, (v0.w/v1.w).toFixed(2));
+  const v0=(await C0()).view; await p.mouse.move(bb.x+bb.width/2, bb.y+bb.height/2); await p.mouse.wheel(0,-300); await W(300); const va=(await C0()).view;
+  console.log('wheel before click (no zoom)', JSON.stringify(va)===JSON.stringify(v0));
+  await p.mouse.click(bb.x+bb.width-4, bb.y+4); await W(200); await p.mouse.wheel(0,-300); await W(300); const v1=(await C0()).view;
+  console.log('wheel zoom after click', v1.w < v0.w, (v0.w/v1.w).toFixed(2));
   // 휠 버튼 끌기 = 화면 이동
   await p.mouse.move(bb.x+300, bb.y+100); await p.mouse.down({button:'middle'}); await p.mouse.move(bb.x+400, bb.y+140, {steps:5}); await p.mouse.up({button:'middle'}); await W(300); const v2=(await C0()).view;
   console.log('middle pan', v2.x < v1.x && v2.y < v1.y, (v1.x-v2.x).toFixed(1));
@@ -32,14 +34,16 @@ const H=require('./h.js');
   console.log('parallel err', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)), 'lq', await p.evaluate(()=>{ const r=t9CoolCompile().lq.w1; return [...r.m.values()].map(x=>+x.toFixed(3)).join(','); }));
   if(d && await p.$('.t9-cc')) await (await p.$('.t9-cc')).screenshot({path:`${d}/cool_parallel.png`});
   const hits=await p.$$('[data-t9clink^="w1:"].t9-clhit'); const want=await p.evaluate(()=>T9.cool.circuits[0].links.findIndex(l=>l[0]==='k3' && l[1]==='k1'));
-  // 그 호스 경로 위 한 점 (다른 호스와 겹치지 않는 수직 토막 가운데)
+  // 그 호스 경로 위 한 점 (다른 호스와 겹치지 않는 토막 가운데)
   const pt=await p.evaluate(j=>{ const C=T9.cool.circuits[0], by=new Map(C.blocks.map(b=>[b.id,b])), P=t9Route(C,j,by), svg=document.querySelector('svg[data-t9csvg="w1"]'), m=svg.getScreenCTM();
-    let best=null; for(let q=1;q<P.length-2;q++){ const L=Math.hypot(P[q+1][0]-P[q][0],P[q+1][1]-P[q][1]); if(!best||L>best[0]) best=[L,(P[q][0]+P[q+1][0])/2,(P[q][1]+P[q+1][1])/2]; }
+    const oth=C.links.map((l,i)=>i===j?null:t9Route(C,i,by)).filter(Boolean), on=(x,y)=>oth.some(R=>R.some((a,k)=>k<R.length-1 && Math.abs((R[k+1][0]-a[0])*(y-a[1])-(R[k+1][1]-a[1])*(x-a[0]))<1e-6 && x>=Math.min(a[0],R[k+1][0])-1 && x<=Math.max(a[0],R[k+1][0])+1 && y>=Math.min(a[1],R[k+1][1])-1 && y<=Math.max(a[1],R[k+1][1])+1));
+    let best=null; for(let q=1;q<P.length-2;q++){ const L=Math.hypot(P[q+1][0]-P[q][0],P[q+1][1]-P[q][1]), mx=(P[q][0]+P[q+1][0])/2, my=(P[q][1]+P[q+1][1])/2; if(on(mx,my)) continue; if(!best||L>best[0]) best=[L,mx,my]; }
     const s=svg.createSVGPoint(); s.x=best[1]; s.y=best[2]; const r=s.matrixTransform(m); return [r.x,r.y]; }, want);
   await p.mouse.click(pt[0], pt[1]); await W(300); console.log('pick merged hose', JSON.stringify((await C0()).selL), 'want', want, 'hose form', await p.locator('[data-t9chp]').count(), 'flow txt', await p.locator('.t9-csel .t9-cfi b').first().textContent().catch(()=>''));
   // 토막 옮기기
-  const sg=await p.$('[data-t9cseg]'); if(sg){ const sb=await sg.boundingBox(); await p.mouse.move(sb.x+6,sb.y+6); await p.mouse.down(); await p.mouse.move(sb.x+46,sb.y+6,{steps:5}); await p.mouse.up(); await W(300);
-    console.log('seg drag pts', JSON.stringify(await p.evaluate(j=>T9.cool.circuits[0].links[j][3].pts, want))); } else console.log('seg handle none');
+  console.log('seg handles', await p.locator('[data-t9cseg]').count());
+  await p.mouse.move(pt[0], pt[1]); await p.mouse.down(); await p.mouse.move(pt[0]+40, pt[1]+40, {steps:5}); await p.mouse.up(); await W(300);
+  console.log('seg drag pts', JSON.stringify(await p.evaluate(j=>(T9.cool.circuits[0].links[j][3]||{}).pts, want)));
   await p.click(`[data-t9clink="w1:${want}"].t9-clhit`, {force:true}).catch(()=>{}); await W(200);
   await p.evaluate(j=>{ const C=T9.cool.circuits[0]; C.selL=[j]; C.selB=[]; }, want); await p.keyboard.press('Delete'); await W(400);
   console.log('delete one hose', JSON.stringify(await p.evaluate(()=>T9.cool.circuits[0].links.map(l=>l[0]+'>'+l[1]))));
