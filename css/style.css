@@ -2873,12 +2873,12 @@ html.wb-lock #tip{z-index:95}
 .t2-msvg.live{cursor:crosshair;touch-action:none}
 .t2-mc{margin:0;min-width:0}
 .t2-oc .t2-rs{display:flex;flex-direction:column}
-.t2-r{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(78px,auto);align-items:center;gap:10px;height:30px;border-bottom:1px solid #eeecf3;font-size:12.5px}
+.t2-r{display:grid;grid-template-columns:minmax(56px,1fr) minmax(0,auto) minmax(78px,auto);align-items:center;gap:10px;height:30px;border-bottom:1px solid #eeecf3;font-size:12.5px}
 .t2-r:last-child{border-bottom:0}
 .t2-r.x3{height:90px}
 .t2-r .n{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .t2-r .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.t2-r .v b{font-size:13.5px}.t2-r .v i{font-style:normal;color:var(--muted);font-size:11.5px}
-.t2-r .d{text-align:right;color:var(--ink-2);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.t2-r .d{text-align:right;color:var(--ink-2);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .t2-dt{font-weight:600}
 .wb-ir.lock input{background:var(--panel-2);color:var(--muted)}
 .wb-in-n{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0}.wb-in-t{min-width:0}
@@ -3205,9 +3205,44 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-rqt td{padding:0}.t9-rqt input{width:64px;border:0;padding:3px 5px;font:inherit;text-align:right;background:transparent}.t9-rqt input.hd{font-weight:600;background:var(--soft,#f3f5f8)}.t9-crqb .t2-use{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 
 /* 계산 중 스켈레톤: 실제 카드 그대로, 숫자 · 메모 자리만 반짝이는 막대 (2026-11-10) */
-.wb-skelmode{pointer-events:none}.wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov, td, .t2-dt){color:transparent!important;border-radius:5px;background:linear-gradient(90deg,var(--panel-2) 0%,var(--line) 50%,var(--panel-2) 100%)!important;background-size:200% 100%!important;animation:wbsk 1.2s linear infinite}
-.wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov) *{color:transparent!important;border-color:transparent!important;background:transparent!important}.wb-skelmode svg{opacity:.18}
+#wb.wb-skelnow :is(#wbout, #wbmain, #wbsig, #wbmid){pointer-events:none}
+.wb-skelmode{pointer-events:none}:is(.wb-skelmode, #wb.wb-skelnow #wbout) :is(.t2-r .v, .t2-r .d, .wb-ov, td, .t2-dt){color:transparent!important;border-radius:5px;background:linear-gradient(90deg,var(--panel-2) 0%,var(--line) 50%,var(--panel-2) 100%)!important;background-size:200% 100%!important;animation:wbsk 1.2s linear infinite}
+.wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov) *, #wb.wb-skelnow #wbout :is(.t2-r .v, .t2-r .d, .wb-ov) *{color:transparent!important;border-color:transparent!important;background:transparent!important}.wb-skelmode svg, #wb.wb-skelnow :is(#wbout, #wbmain, #wbsig, #wbmid) svg{opacity:.18;transition:opacity .15s}
 /* 모델 칩 높이 = 옆 선택 단추 높이 */
 .t2-hr{align-items:stretch}.t2-hr>.t2-mdl{display:inline-flex;align-items:center}
 /* 차량 거동 자세히 (접힘) */
 .t2-bmore{margin-top:10px}.t2-bmore>summary{cursor:pointer;font-weight:600;font-size:13px;padding:6px 2px;color:var(--ink-2)}
+/* ---------- 예제 · 새 파일 (2026-11-10) ---------- */
+/* 도구 목록 줄: 커서 · 포커스가 오면 [예제 | 새 파일] 두 단추가 줄을 덮음 */
+.tl-tools li.wb-mpick{position:relative;cursor:default}
+.wb-mpick .wb-mp-b{position:absolute;inset:3px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;opacity:0;pointer-events:none;transform:translateY(4px);transition:opacity .18s ease,transform .18s ease;z-index:2}
+.wb-mpick:hover .wb-mp-b,.wb-mpick:focus-within .wb-mp-b{opacity:1;pointer-events:auto;transform:none}
+.wb-mp-b button{display:flex;align-items:center;justify-content:center;gap:10px;border-radius:7px;border:1px solid var(--line-2);background:var(--panel);font:inherit;cursor:pointer;color:var(--ink);transition:background .12s,border-color .12s,transform .12s}
+.wb-mp-b button b{font-size:15px}.wb-mp-b button span{font-size:12px;color:var(--muted)}
+.wb-mp-b .wb-mp-ex{border-color:#e7c873;background:repeating-linear-gradient(135deg,#fff8e6 0 12px,#fff2d2 12px 24px)}.wb-mp-b .wb-mp-ex b{color:#8a6100}
+.wb-mp-b .wb-mp-nf{border-color:var(--accent);background:var(--accent-soft)}.wb-mp-b .wb-mp-nf b{color:var(--accent)}
+.wb-mp-b button:hover,.wb-mp-b button:focus-visible{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.08);outline:none}
+.wb-mp-b .wb-mp-ex:hover,.wb-mp-b .wb-mp-ex:focus-visible{border-color:#b8860b}
+.wb-mp-b .wb-mp-nf:hover,.wb-mp-b .wb-mp-nf:focus-visible{background:#fbdcc8}
+/* 글 안 링크(파트 페이지): 아래로 작은 두 단추 */
+.wb-mpi{position:relative;display:inline-block;outline:none}.wb-mpi .lnk{cursor:default}
+.wb-mpi .wb-mp-b{inset:auto;left:0;top:calc(100% + 2px);width:300px;height:44px}
+/* 작업창 예제 띠 · 카드 표시 · 막힌 단추 */
+.wb-exband{display:flex;align-items:center;gap:10px;margin:0;padding:7px 18px;background:repeating-linear-gradient(135deg,#fff4d6 0 14px,#ffeec2 14px 28px);border-bottom:1px solid #e7c873;color:#6b4e00;font-size:13px}
+.wb-exband b{background:#b8860b;color:#fff;border-radius:5px;padding:2px 8px;font-size:12px;letter-spacing:.04em}
+.wb-exband span{flex:1;opacity:.9}
+#wb.wb-exmode #wbout :is(.wb-oc, .t2-oc){position:relative}
+#wb.wb-exmode #wbout :is(.wb-oc, .t2-oc)::after{content:'예제';position:absolute;top:8px;right:10px;font-size:11px;font-weight:700;color:#b8860b;border:1px solid #e7c873;background:#fff8e6;border-radius:4px;padding:1px 6px;pointer-events:none}
+#wb.wb-exmode :is([data-wbexp],[data-wbimp],[data-wbput],[data-wbfill],[data-wbhp],[data-t2to9="send"],[data-t9x="put"],[data-t6x]){opacity:.42;filter:grayscale(1)}
+/* 새 파일: 빈 필수 칸 빨강 · 채울 칸 목록 */
+.wb-ir.need input,.t9-cfi.need input{border-color:#d33a2c!important;background:#fff4f2!important;box-shadow:0 0 0 1px #d33a2c inset}
+.wb-ir.need .wb-in-t{color:#b3261e}
+[data-t2eg].need,[data-t2tab="edit"].need{position:relative}
+[data-t2eg].need::after,[data-t2tab="edit"].need::after{content:'';position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#d33a2c}
+.wb-need{border:1px solid #f0b8b0;background:#fff7f5;border-radius:10px;padding:14px 16px}
+.wb-need-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}.wb-need-h b{color:#b3261e;font-size:15px}.wb-need-h span{font-size:12.5px}
+.wb-need-l{display:flex;flex-wrap:wrap;gap:6px}
+.wb-need-i{border:1px solid #f0b8b0;background:#fff;border-radius:6px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink)}
+.wb-need-i:hover,.wb-need-i:focus-visible{border-color:#d33a2c;background:#fff0ed;outline:none}.wb-need-i .muted{font-size:11.5px}
+.wb-need-flash{animation:wbneedf 1.2s ease}
+@keyframes wbneedf{0%,60%{box-shadow:0 0 0 4px rgba(211,58,44,.35)}100%{box-shadow:none}}

@@ -12,22 +12,52 @@
    - 저장소가 없으면(로그인 전) 이 브라우저에 저장
    ============================================================ */
 const MASSKEY = 'run2x.mass.v2', DRVKEY = 'run2x.drv.v2', M1COLKEY = 'run2x.m1.hues';
-let MASS = {}, DRVS = {};
-try{ MASS = JSON.parse(localStorage.getItem(MASSKEY) || '{}') || {}; }catch(e){ MASS = {}; }
-try{ DRVS = JSON.parse(localStorage.getItem(DRVKEY) || '{}') || {}; }catch(e){ DRVS = {}; }
+let MASS = {}, DRVS = {}, MASS_T = null, DRVS_T = null;   /* MASS_T · DRVS_T = 팀 저장소에서 받은 값 (새 파일 · 로그인일 때 씀) */
+/* 예제 질량 표 · 드라이버 (튜토리얼용 임의 데이터, 이번 · 지난 시즌) */
+function M1EXSEED(){ const mass={}, o={n:0}, S0=m1Season(), S1=String(+S0 - 1);
+  const HUE={frame:265,sus:190,str:40,brk:5,pt:130,mc:220,bat:25,cool:160,aero:205};
+  const G=(code,name,cat,x,y,z,items)=>{ o.n++; const it=items.map(([nm,m,n,h])=>Object.assign({name:nm,m,n:n==null?1:n}, h?{half:true}:{})), hue=HUE[code];
+    mass['g'+String(o.n).padStart(2,'0')]={s:{[S0]:{name,cat,x,y,z,hue,items:it,ord:o.n},[S1]:{name,cat,x,y,z,hue,items:it.map(i=>({...i,m:+(i.m*1.04).toFixed(2)})),ord:o.n}}}; };
+  G('frame','프레임 · 방화벽','s',910,0,330,[['스페이스 프레임',32],['방화벽 판',0.8,2],['리벳 · 볼트',0.4]]);
+  G('frame','시트 · 헤드레스트','s',760,0,380,[['시트',2.3],['헤드레스트',0.6],['벨트',1.1]]);
+  G('frame','카울 · 언더트레이','s',1410,0,330,[['카울',5.2],['언더트레이',1.4],['패스너',0.02,24]]);
+  [['왼',1],['오른',-1]].forEach(([sd,k])=>{
+    G('sus','앞 업라이트 assy '+sd,'uf',1560,560*k,240,[['너클',1.1],['허브',0.9],['디스크',0.7],['캘리퍼',0.8],['베어링',0.2,2],['휠',3.0],['타이어',4.6],['휠 너트',0.03,4],['위시본',0.7,2,1],['푸시로드',0.2,1,1],['로드엔드',0.05,4,1]]);
+    G('sus','뒤 업라이트 assy '+sd,'ur',0,550*k,240,[['너클',1.2],['허브',1.1],['디스크',0.7],['캘리퍼',0.7],['베어링',0.25,2],['휠',3.0],['타이어',4.6],['휠 너트',0.03,4],['위시본',0.75,2,1],['토 링크',0.15,1,1]]); });
+  G('sus','댐퍼 · 벨크랭크 (앞)','s',1410,0,520,[['댐퍼',0.8,2,1],['벨크랭크',0.4,2],['ARB',0.6,0]]);
+  G('sus','댐퍼 · 벨크랭크 (뒤)','s',110,0,470,[['댐퍼',0.8,2,1],['벨크랭크',0.4,2],['ARB',0.6,1]]);
+  G('str','조향','s',1660,0,210,[['랙 · 피니언',1.3],['타이로드',0.2,2,1],['스티어링 휠',0.9],['칼럼',0.4]]);
+  G('brk','페달 박스 · 유압','s',1990,0,250,[['페달 박스',2.6],['마스터실린더',0.45,2],['리저버',0.1,2]]);
+  G('pt','모터 · 디퍼렌셜','s',60,0,225,[['모터',12.4],['디퍼렌셜',3.9],['체인',0.8],['텐셔너',0.15,2],['드라이브샤프트 (CV축)',1.1,2,1]]);
+  G('mc','인버터','s',360,0,580,[['모터 컨트롤러',6.5],['HV 케이블',0.9]]);
+  G('bat','축전지','s',476,0,210,[['셀 모듈',4.3,6],['컨테이너',6.1],['BMS',0.6],['저전압 배터리',1.2]]);
+  G('cool','냉각 왼','s',860,430,300,[['라디에이터',1.3],['팬',0.6],['호스',0.6]]);
+  G('cool','냉각 오른','s',860,-430,300,[['라디에이터',1.3],['팬',0.6],['펌프',0.8]]);
+  G('aero','앞날개','s',2240,0,170,[['메인 플레인',1.6],['플랩',0.6,2],['엔드플레이트',0.25,2]]);
+  G('aero','뒤날개','s',-60,0,900,[['메인 플레인',1.8],['플랩',0.7,2],['엔드플레이트',0.3,2],['스완넥',0.7]]);
+  const D=(label,height,mass,sex,gear)=>({label,sex:sex||'m',height,mass,gear:gear||{helmet:0,suit:0,belt:0},back:32,hip:{x:970,z:230},pedal:{x:1780,z:250},sw:{x:1185,z:500},seg:{}});
+  return {mass, drv:{d1:{s:{[S0]:D('시험 1',175,68,'m',{helmet:1.4,suit:1.1,belt:0.9}),[S1]:D('시험 1',175,70)}}, d2:{s:{[S0]:D('시험 2',184,80,'m',{helmet:1.5,suit:1.3,belt:0.9})}}, d3:{s:{[S0]:Object.assign(D('시험 3',165,58,'f',{helmet:1.3,suit:1.0,belt:0.9}),{pedal:{x:-160,z:250}})}}}}; }
+/* 모드: 예제 = 이 브라우저의 예제 저장본 (없으면 위 예시), 팀 저장소에 쓰지 않음 · 새 파일 = 팀 저장소(로그인) 또는 이 브라우저 새 파일 저장본, 없으면 빈 표 */
+wbModeReg(m => { const rd = k => { try{ return JSON.parse(localStorage.getItem(wbMK(k)) || 'null'); }catch(e){ return null; } };
+  if(m==='ex'){ const a = rd(MASSKEY), b = rd(DRVKEY); if(a && b){ MASS = a; DRVS = b; } else { const T = M1EXSEED(); MASS = a || T.mass; DRVS = b || T.drv; } }
+  else if(typeof SH!=='undefined' && SH.on){ MASS = MASS_T || {}; DRVS = DRVS_T || {}; }
+  else { MASS = rd(MASSKEY) || {}; DRVS = rd(DRVKEY) || {}; } });
 const M1 = { tourUndo:false, tab:'mass', drv:'d1', dsel:'d1', timer:{}, drag:null, edit:null, pick:null, mv:null };
 try{ const v = localStorage.getItem('run2x.wb.1.drv'); if(['d1','d2','d3'].includes(v)) M1.dsel = v; }catch(e){}
 const M1CAT = [['s','현가상'], ['uf','현가하 앞'], ['ur','현가하 뒤']];
 const M1DRV = {d1:'1st', d2:'2nd', d3:'3rd'};
 const M1HC = {d1:'#6A4294', d2:'#1d5f9a', d3:'#c2410c'};   /* 헬멧 색: 1st 보라 · 2nd 파랑 · 3rd 주황 */
 /* 드라이버 기본값: 예시 차량(그림 윤곽, 휠베이스 1550) 시트 · 페달 · 핸들 자리(뒤 차축 기준 x)에 남성 175 cm · 70 kg, 장비 0 */
-const M1DDEF = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, neck:0, foot:20, helm:M1HD, hip:{x:960, z:230}, pedal:{x:1770, z:250}, sw:{x:1175, z:500}, seg:{}});
+const M1DDEF0 = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, neck:0, foot:20, helm:M1HD, hip:{x:960, z:230}, pedal:{x:1770, z:250}, sw:{x:1175, z:500}, seg:{}});
+/* 새 파일: 드라이버 키 · 몸무게는 빈칸에서 (자세 손잡이 자리만 그림 기준) */
+const M1DDEF = () => wbEx() ? M1DDEF0() : {...M1DDEF0(), height:NaN, mass:NaN};
+const m1Num0 = v => typeof v==='number' && Number.isFinite(v);
 const M1SEG = {head:'머리', neck:'목', trunk:'몸통', uarm:'상완', farm:'하완', hand:'손', thigh:'허벅지', shank:'정강이', foot:'발'};
 const m1HueBg = h => h==null ? '' : `hsl(${h} 62% 93%)`, m1HueLn = h => `hsl(${h} 45% 62%)`;
 
 const m1Season = () => typeof dvSeason==='function' ? dvSeason() : String(new Date().getFullYear());
 /* 고치기: 로그인 전은 자유, 팀에서는 팀원 누구나(지난 시즌은 회장만) */
-const m1CanEdit = () => !SH.on || SH.canAdmin || !pastLock();
+const m1CanEdit = () => wbEx() || !SH.on || SH.canAdmin || !pastLock();   /* 예제는 늘 고칠 수 있음 (이 브라우저에만) */
 const m1Groups = () => Object.entries(MASS).map(([id, d]) => { const v = d && d.s && d.s[m1Season()]; return v ? {id, ...v} : null; })
   .filter(Boolean).sort((a, b) => (a.ord||0) - (b.ord||0));
 const m1N = it => it.n==null || !isFinite(it.n) ? 1 : +it.n;
@@ -40,13 +70,13 @@ const m1NewId = () => 'g' + Date.now().toString(36) + Math.random().toString(36)
 function m1Store(kind, id, val){ const se = m1Season(), STORE = kind==='mass' ? MASS : DRVS, cur = STORE[id] || {s:{}}, s2 = {...(cur.s||{})};
   if(val==null) delete s2[se]; else s2[se] = val; STORE[id] = {s:s2};
   wbRefresh(); m1PartDirty();
-  if(!SH.on){ try{ localStorage.setItem(kind==='mass' ? MASSKEY : DRVKEY, JSON.stringify(STORE)); }catch(e){} return; }
+  if(!SH.on || wbEx()){ try{ localStorage.setItem(wbMK(kind==='mass' ? MASSKEY : DRVKEY), JSON.stringify(STORE)); }catch(e){} return; }   /* 예제는 팀 저장소에 쓰지 않음 */
   clearTimeout(M1.timer[kind + id]);
   M1.timer[kind + id] = setTimeout(() => { SH.db.doc((kind==='mass' ? 'mass/' : 'drivers/') + id).set(STORE[id])
     .catch(e => toast(Backend.denied && Backend.denied(e) ? '이 값을 고칠 권한이 없습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.')); }, 600); }
 { const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
-    db.collection('mass').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); MASS = r; m1Live(); }, () => {});
-    db.collection('drivers').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DRVS = r; m1Live(); }, () => {}); }; }
+    db.collection('mass').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); MASS_T = r; if(!wbEx()){ MASS = r; m1Live(); } }, () => {});
+    db.collection('drivers').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DRVS_T = r; if(!wbEx()){ DRVS = r; m1Live(); } }, () => {}); }; }
 /* 다른 사람이 고친 값이 들어오면: 입력 중인 칸이 없을 때만 다시 그림 */
 function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.activeElement;
   if(!M1.drag && !M1.pick && !M1.mv && !(a && a.closest && a.closest('#wbext') && a.matches('input, select'))) wbPaint(['ext']); wbRefresh(); }
@@ -362,7 +392,7 @@ function m1PartRun(){ const I = m1PartInputs(), key = JSON.stringify(I); if(key=
 function m1PartBody(I, R){ const o = R.out; if(!(o.m > 0)) return '<p class="muted">팀 질량 표가 비어 있습니다. 도구 1에서 어셈블리를 넣으십시오.</p>';
   return `<div class="m1-pf">${m1Figure(I, R)}</div>${wbOutCards(WB_TOOLS['1'], R, false)}`; }
 function m1PartHTML(){ setTimeout(m1PartRun, 0);
-  return `<div class="m1-part"><p class="dp-note">팀 질량 표(어셈블리 ${m1Groups().length}개)와 ${M1DRV[M1.dsel]} 드라이버, 대시보드의 휠베이스 · 트레드로 계산한 결과입니다. 고치기는 <button type="button" class="lnk" data-wb="1">도구 1 질량 · 무게중심 계산기</button>에서 합니다.</p><div id="m1part">${M1P.R ? m1PartBody(m1PartInputs(), M1P.R) : '<p class="muted">계산 중…</p>'}</div></div>`; }
+  return `<div class="m1-part"><p class="dp-note">팀 질량 표(어셈블리 ${m1Groups().length}개)와 ${M1DRV[M1.dsel]} 드라이버, 대시보드의 휠베이스 · 트레드로 계산한 결과입니다. 고치기는 <span class="wb-mpick wb-mpi" tabindex="-1"><span class="lnk">도구 1 질량 · 무게중심 계산기</span>${wbModeBtns('1', '도구 1')}</span>에서 합니다.</p><div id="m1part">${M1P.R ? m1PartBody(m1PartInputs(), M1P.R) : '<p class="muted">계산 중…</p>'}</div></div>`; }
 
 /* ---------- 이 탭 사용법 (사이트 사용법과 같은 방식). 단계: [선택자, 제목, 설명, {click, inner}]
    - 표 탭이 바뀌는 단계는 포인터가 탭을 누르는 모습 → 서서히 바뀜 (click). 끝나면 원래 탭으로
@@ -415,11 +445,22 @@ WB_TOOLS['1'] = {
     {k:'ixx', dk:'ixx', d:1, g:'관성 모멘트'}, {k:'iyy', dk:'iyy', d:1, g:'관성 모멘트'}, {k:'izz', dk:'izz', d:1, g:'관성 모멘트'}
   ],
   extHTML: m1ExtHTML, extraI: m1ExtraI, figure: m1Figure,
+  extGet: () => ({mass:JSON.parse(JSON.stringify(MASS)), drv:JSON.parse(JSON.stringify(DRVS)), season:m1Season()}),   /* .json 내보내기에 질량 표 · 드라이버도 (이번 시즌 칸을 가져옴) */
+  extSet(d){ if(!d || typeof d!=='object') return; const se = d.season || m1Season(); let n = 0;
+    [['mass', d.mass], ['drv', d.drv]].forEach(([kind, S]) => { if(S && typeof S==='object') Object.entries(S).forEach(([id, doc]) => { const v = doc && doc.s && (doc.s[se] || doc.s[m1Season()]); if(v){ m1Store(kind, id, v); n++; } }); });
+    if(n) toast(`질량 표 · 드라이버 ${n}개를 이번 시즌 칸으로 가져왔습니다.`); wbPaint(['ext']); },
+  exReset(){ try{ localStorage.removeItem(wbMK(MASSKEY)); localStorage.removeItem(wbMK(DRVKEY)); }catch(e){} const T = M1EXSEED(); MASS = T.mass; DRVS = T.drv; },
+  /* 새 파일: 질량 표 · 고른 드라이버 키 · 몸무게 */
+  needExt(){ const L = [], d = m1Drv(M1.dsel) || M1DDEF();
+    if(!m1Groups().some(g => m1GSum(g) > 0)) L.push({k:'m1:mass', n:'부품 질량 표 (질량이 있는 어셈블리 1개 이상)', g:'표 입력'});
+    if(!m1Num0(d.height) || !m1Num0(d.mass)) L.push({k:'m1:drv', n:`드라이버 ${M1DRV[M1.dsel]} 키 · 몸무게`, g:'드라이버 모델'});
+    return L; },
+  needGo(k){ if(k==='m1:mass' || k==='m1:drv'){ M1.tab = k==='m1:mass' ? 'mass' : 'drv'; if(k==='m1:drv') M1.drv = M1.dsel; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); return true; } return false; },
   tour: M1TOUR, shape: true,
   onResult(R){ if(M1.tab==='drv'){ if(!M1.edit && !M1.drag){ const f = $('#m1dfig'); if(f) f.innerHTML = m1DrvFig(R); } else { const f = $('#m1dfig'); if(f && M1.drag) f.innerHTML = m1DrvFig(R); }
       const sg = $('#m1segs'); if(sg) sg.innerHTML = m1SegTable(R.drv && R.drv[M1.drv]); const ds = $('#m1dsum'), DD = R.drv && R.drv[M1.drv]; if(ds && DD) ds.textContent = wbFmt(DD.m, 1); const he = $('#m1dhest'); if(he && DD){ he.hidden = !DD.segSet; he.textContent = m1HestTxt(DD); } }
     else if(M1.tab==='mass'){ const a = document.activeElement; if(!M1.pick && !M1.mv && !(a && a.closest && a.closest('#wbext') && a.matches('input, select'))){ const b = $('#m1body'); if(b) b.innerHTML = m1MassHTML(); } } },
-  verifyBase:{items:[], drv:{d1:M1DDEF(), d2:M1DDEF(), d3:M1DDEF()}, dsel:'d1'},
+  verifyBase:{items:[], drv:{d1:M1DDEF0(), d2:M1DDEF0(), d3:M1DDEF0()}, dsel:'d1'},
   code:`// ================================================================
 // 도구 1 질량 · 무게중심 계산기 — 계산 코드
 // ================================================================
@@ -609,18 +650,18 @@ function calc(I) {
 }
 `,
   verify:[
-    {n:'어셈블리 하나', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:400, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:100, fr:25, left:50, h:300, m_s:100}, src:'뒤 차축에서 400 ÷ 1600 = 25 %'},
-    {n:'어셈블리 자체 관성 · 고른 직육면체 1000 × 600 × 300 mm, 100 kg (CG 자리)', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:0, z:300, lx:1000, ly:600, lz:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{ixx:3.75, iyy:9.083333, izz:11.333333}, src:'Ixx = 100 × (0.6² + 0.3²) ÷ 12 = 3.75, Iyy = 100 × (1² + 0.3²) ÷ 12 = 9.0833, Izz = 100 × (1² + 0.6²) ÷ 12 = 11.3333 kg·m² (평행축 몫 0)'},
-    {n:'좌우 대칭 두 어셈블리', I:{L:1600, tf:1200, tr:1200, items:[{m:50, x:800, y:300, z:300, cat:'s'}, {m:50, x:800, y:-300, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:50, fr:50, ixx:9, izz:9, iyy:0}, src:'Ixx = 2 × 50 × 0.3² = 9 kg·m²'},
-    {n:'왼쪽으로 60 mm', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{left:55, cw_fl:27.5, cw_rr:22.5, cross:50}, src:'50 + 60 ÷ 1200 × 100 = 55 %'},
-    {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:1600, y:0, z:230, cat:'uf'}, {m:34, x:0, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},
-    {n:'체절 질량 합 = 몸무게 (남)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_drv:70}, src:'체절 비율 합 = 1 (de Leva 1996)'},
-    {n:'체절 질량 합 = 몸무게 (여)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), sex:'f', height:165, mass:58}}}, expect:{m_drv:58}, src:'비율 합 0.9999 → 1로 맞춤'},
-    {n:'추정 키 = 입력 키 (기본 체절)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), height:182}}}, expect:{h_est:182}, src:'체절 길이가 모두 키 비율이면 같음'},
-    {n:'공차 = 드라이버 빼고', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:70}}}, expect:{m_empty:100, cw0_fl:27.5, cw0_rr:22.5, cross0:50}, src:'드라이버 없이 왼쪽으로 60 mm 경우와 같음'},
-    {n:'걸침: 현가하 카드', I:{L:1600, tf:1200, tr:1200, items:[{m:10, mh:4, x:1600, y:500, z:250, cat:'uf'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m:110, m_s:102, m_us_f:4}, src:'4 ÷ 2 = 2 kg 가 현가상으로 → 현가하 앞 8 kg, 바퀴 하나 4'},
-    {n:'걸침: 현가상 카드 → 가까운 뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:20, mh:4, to:'ur', x:100, y:0, z:250, cat:'s'}, {m:10, x:0, y:500, z:250, cat:'ur'}], drv:{d1:{...M1DDEF(), mass:0}}}, expect:{m_s:18, m_us_r:6}, src:'4 ÷ 2 = 2 kg 가 뒤 현가하로 → (10 + 2) ÷ 2'},
-    {n:'목 각도: 질량 그대로', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, neck:-30}}}, expect:{m_drv:70}, src:'머리 · 목을 기울여도 체절 질량 합 = 몸무게'},
-    {n:'장비 더하기', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF(), mass:70, gear:{helmet:1.5, suit:2, belt:1}}}}, expect:{m_drv:74.5}, src:'70 + 1.5 + 2 + 1'}
+    {n:'어셈블리 하나', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:400, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF0(), mass:0}}}, expect:{m:100, fr:25, left:50, h:300, m_s:100}, src:'뒤 차축에서 400 ÷ 1600 = 25 %'},
+    {n:'어셈블리 자체 관성 · 고른 직육면체 1000 × 600 × 300 mm, 100 kg (CG 자리)', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:0, z:300, lx:1000, ly:600, lz:300, cat:'s'}], drv:{d1:{...M1DDEF0(), mass:0}}}, expect:{ixx:3.75, iyy:9.083333, izz:11.333333}, src:'Ixx = 100 × (0.6² + 0.3²) ÷ 12 = 3.75, Iyy = 100 × (1² + 0.3²) ÷ 12 = 9.0833, Izz = 100 × (1² + 0.6²) ÷ 12 = 11.3333 kg·m² (평행축 몫 0)'},
+    {n:'좌우 대칭 두 어셈블리', I:{L:1600, tf:1200, tr:1200, items:[{m:50, x:800, y:300, z:300, cat:'s'}, {m:50, x:800, y:-300, z:300, cat:'s'}], drv:{d1:{...M1DDEF0(), mass:0}}}, expect:{left:50, fr:50, ixx:9, izz:9, iyy:0}, src:'Ixx = 2 × 50 × 0.3² = 9 kg·m²'},
+    {n:'왼쪽으로 60 mm', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF0(), mass:0}}}, expect:{left:55, cw_fl:27.5, cw_rr:22.5, cross:50}, src:'50 + 60 ÷ 1200 × 100 = 55 %'},
+    {n:'현가하 앞뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:30, x:1600, y:0, z:230, cat:'uf'}, {m:34, x:0, y:0, z:230, cat:'ur'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF0(), mass:0}}}, expect:{m_us_f:15, m_us_r:17, m_s:100, h_s:300}, src:'바퀴 하나 = 축 합 ÷ 2'},
+    {n:'체절 질량 합 = 몸무게 (남)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF0(), mass:70}}}, expect:{m_drv:70}, src:'체절 비율 합 = 1 (de Leva 1996)'},
+    {n:'체절 질량 합 = 몸무게 (여)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF0(), sex:'f', height:165, mass:58}}}, expect:{m_drv:58}, src:'비율 합 0.9999 → 1로 맞춤'},
+    {n:'추정 키 = 입력 키 (기본 체절)', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF0(), height:182}}}, expect:{h_est:182}, src:'체절 길이가 모두 키 비율이면 같음'},
+    {n:'공차 = 드라이버 빼고', I:{L:1600, tf:1200, tr:1200, items:[{m:100, x:800, y:60, z:300, cat:'s'}], drv:{d1:{...M1DDEF0(), mass:70}}}, expect:{m_empty:100, cw0_fl:27.5, cw0_rr:22.5, cross0:50}, src:'드라이버 없이 왼쪽으로 60 mm 경우와 같음'},
+    {n:'걸침: 현가하 카드', I:{L:1600, tf:1200, tr:1200, items:[{m:10, mh:4, x:1600, y:500, z:250, cat:'uf'}, {m:100, x:800, y:0, z:300, cat:'s'}], drv:{d1:{...M1DDEF0(), mass:0}}}, expect:{m:110, m_s:102, m_us_f:4}, src:'4 ÷ 2 = 2 kg 가 현가상으로 → 현가하 앞 8 kg, 바퀴 하나 4'},
+    {n:'걸침: 현가상 카드 → 가까운 뒤', I:{L:1600, tf:1200, tr:1200, items:[{m:20, mh:4, to:'ur', x:100, y:0, z:250, cat:'s'}, {m:10, x:0, y:500, z:250, cat:'ur'}], drv:{d1:{...M1DDEF0(), mass:0}}}, expect:{m_s:18, m_us_r:6}, src:'4 ÷ 2 = 2 kg 가 뒤 현가하로 → (10 + 2) ÷ 2'},
+    {n:'목 각도: 질량 그대로', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF0(), mass:70, neck:-30}}}, expect:{m_drv:70}, src:'머리 · 목을 기울여도 체절 질량 합 = 몸무게'},
+    {n:'장비 더하기', I:{L:1600, tf:1200, tr:1200, items:[], drv:{d1:{...M1DDEF0(), mass:70, gear:{helmet:1.5, suit:2, belt:1}}}}, expect:{m_drv:74.5}, src:'70 + 1.5 + 2 + 1'}
   ]
 };

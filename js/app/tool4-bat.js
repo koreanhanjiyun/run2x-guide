@@ -8,12 +8,12 @@
 const T4PK = 'run2x.t4.presets';
 const T4CELL = ['c_vmax', 'c_vnom', 'c_vmin', 'c_ah', 'c_imax', 'c_ich', 'c_r', 'c_g'];
 const T4 = { presets:[], name:'' };
-try{ const a = JSON.parse(localStorage.getItem(T4PK) || '[]'); if(Array.isArray(a)) T4.presets = a.filter(p => p && typeof p.name==='string' && p.cell); }catch(e){}
-const t4PSave = () => { try{ localStorage.setItem(T4PK, JSON.stringify(T4.presets)); return true; }catch(e){ return false; } };
+wbModeReg(m => { T4.presets = []; T4.name = ''; try{ const a = JSON.parse(localStorage.getItem(wbMK(T4PK)) || '[]'); if(Array.isArray(a)) T4.presets = a.filter(p => p && typeof p.name==='string' && p.cell); }catch(e){} });
+const t4PSave = () => { try{ localStorage.setItem(wbMK(T4PK), JSON.stringify(T4.presets)); return true; }catch(e){ return false; } };
 /* 셀 표 (SOC × 온도): 글 표 3 개 (OCV · 내부저항 · 용량), 이 브라우저에 저장 (run2x.t4.cell). 도구 2P [축전지 › 셀 표]가 [도구 4 에서 가져오기]로 복사 */
 const T4CK = 'run2x.t4.cell', T4C = {o:'', r:'', c:''};
-try{ const s = JSON.parse(localStorage.getItem(T4CK) || '{}'); ['o', 'r', 'c'].forEach(k => { if(typeof s[k]==='string') T4C[k] = s[k]; }); }catch(e){}
-const t4CSave = () => { try{ localStorage.setItem(T4CK, JSON.stringify(T4C)); }catch(e){} };
+wbModeReg(m => { Object.assign(T4C, {o:'', r:'', c:''}); try{ const s = JSON.parse(localStorage.getItem(wbMK(T4CK)) || '{}'); ['o', 'r', 'c'].forEach(k => { if(typeof s[k]==='string') T4C[k] = s[k]; }); }catch(e){} });
+const t4CSave = () => { try{ localStorage.setItem(wbMK(T4CK), JSON.stringify(T4C)); }catch(e){} };
 function t4CellGet(){ return {...T4C}; }
 const t4CellI = () => ({cellO: typeof t2GridParse==='function' ? t2GridParse(T4C.o).map : null, cellR: typeof t2GridParse==='function' ? t2GridParse(T4C.r).map : null, cellC: typeof t2PairParse==='function' ? t2PairParse(T4C.c).map : null});
 /* 결과 아래: 셀 표 편집 · 온도 o_T 에서 SOC 별 출력 */
@@ -144,6 +144,9 @@ WB_TOOLS['4'] = {
   onResult(){ const r = document.getElementById('t4rules'); if(r) r.innerHTML = t4Rules(); const y = document.getElementById('t4why'); if(y) y.textContent = t4Why();
     const m = document.getElementById('wbmid'); if(m) m.innerHTML = t4MidHTML() + t4CellHTML(); },
   extraI: t4CellI,
+  extGet: () => ({cell:{...T4C}, presets:JSON.parse(JSON.stringify(T4.presets))}),   /* .json 내보내기에 셀 표 · 저장한 셀도 */
+  extSet(d){ if(!d || typeof d!=='object') return; if(d.cell) ['o', 'r', 'c'].forEach(k => { if(typeof d.cell[k]==='string') T4C[k] = d.cell[k]; }); if(Array.isArray(d.presets)) T4.presets = d.presets.filter(p => p && typeof p.name==='string' && p.cell); t4CSave(); t4PSave(); wbPaint(['ext']); },
+  exReset(){ try{ localStorage.removeItem(wbMK(T4CK)); localStorage.removeItem(wbMK(T4PK)); }catch(e){} Object.assign(T4C, {o:'', r:'', c:''}); T4.presets = []; },
   tour: M4TOUR,
   verifyBase:{cellO:null, cellR:null, cellC:null, o_T:25, auto:0, o_mode:0, o_i:0, x_mseg:0, x_mpack:0, x_r:0, il_on:0, vi_on:0, c_ah:4.5, c_imax:45, c_r:15, c_g:70, n_seg:6, s_seg:12, n_p:6},   // 검증 손계산은 예전 기본 (P45B 6 × 12S6P) 그대로
   verify: [

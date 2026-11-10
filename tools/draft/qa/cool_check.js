@@ -2,7 +2,7 @@
 //   호스 유량 (안지름 · 길이) · 공랭 갈라짐 비율 · 지우기 단추 없음 · 도구 2P 쪽 같은 편집기.  node cool_check.js [스크린샷 폴더]
 const H=require('./h.js');
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead'); const W=H.sleep, d=process.argv[2];
-  await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>{ localStorage.removeItem('run2x.t9'); T9.cool=T9COOL_DEF(); wbOpen('9'); wbTabSet('edit'); }); await W(1500);
+  await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>{ localStorage.removeItem('run2x.t9@ex'); T9.cool=T9COOL_DEF(); wbOpen('9',null,'ex'); wbTabSet('edit'); }); await W(1500);
   const C0=()=>p.evaluate(()=>{ const C=T9.cool.circuits[0]; return {selB:C.selB, selL:C.selL, n:C.blocks.length, l:C.links.length, view:C.view}; });
   console.log('err', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)), 'cards', await p.locator('.t9-cc').count(), 'blocks', await p.locator('.t9-cb').count(), 'round', await p.locator('.t9-cb.rd').count());
   console.log('delete buttons', await p.locator('[data-t9cbx], [data-t9clx]').count(), 'zoom buttons', await p.locator('.t9-cool button:has-text("+"):has-text("확대")').count());
@@ -63,7 +63,7 @@ const H=require('./h.js');
   // 블럭 넣기: 지금 보는 화면 가운데
   await p.click('[data-t9cadd="w1:pump"]'); await W(300); console.log('add pump', await p.evaluate(()=>{ const C=T9.cool.circuits[0]; return JSON.stringify([C.blocks.length, C.selB]); }));
   // 도구 2P 쪽 같은 편집기
-  await p.evaluate(()=>{ wbOpen('2'); }); await W(7000); await p.click('[data-t2tab="edit"]'); await W(300);
+  await p.evaluate(()=>{ wbOpen('2',null,'ex'); }); await W(7000); await p.click('[data-t2tab="edit"]'); await W(300);
   await p.evaluate(()=>{ WB.I.cw_mode=1; wbSave(); }); await p.click('[data-t2eg="cool"]'); await W(600);
   console.log('2P editor', await p.locator('.t9-cool svg[data-t9csvg]').count(), 'round', await p.locator('.t9-cb.rd').count(), 'mode btn in head', await p.evaluate(()=>{ return null; }));
   await p.click('[data-t2eg="model"]'); await W(400); console.log('2P head cw seg', await p.locator('.t2-mdh [data-t2cwm]').count(), 'card seg', await p.locator('.t2c [data-t2cwm]').count());

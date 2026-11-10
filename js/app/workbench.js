@@ -16,7 +16,28 @@ const WB = { id:null, I:{}, R:null, err:'', ms:0, xi:0, sel:new Set(), act:'', c
 const wbT = () => WB_TOOLS[WB.id];
 const wbEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wbFmt = (x, d) => (typeof x==='number' && isFinite(x)) ? x.toLocaleString('ko-KR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
-const wbStoreKey = id => 'run2x.wb.' + id;
+/* ---------- 예제 · 새 파일 (2026-11-10 관리자 결정) ----------
+   예제 = 튜토리얼용 임의 데이터 (도구 기본값 · 예시 표). 설계에 쓰지 않음 → 내보내기 · 가져오기 · 대시보드(가져오기 · 반영) · 다른 도구로 보내기 막음.
+   새 파일 = 모두 빈칸 (고정 종목 코스 · 모델 선택 · 고정 상수만). 사이트는 차량 데이터를 주지 않음. 빈칸이 있으면 계산하지 않고 필요한 칸을 빨갛게.
+   두 모드는 저장을 따로 (키 끝 @ex · @nf). 도구 목록 줄에 커서를 올리면 [예제 | 새 파일] 로 바뀌어 고른 쪽으로 엶. 도구 안에서 다른 도구로 넘어가면 지금 모드 그대로.
+   검증표는 모드와 상관없이 늘 입력 정의의 기본값(d.v) 위에서 돎. 예전 저장본(모드 없는 키)은 버림. */
+let WBMODE = 'nf', WBMODE_ON = true;   /* 처음 = 새 파일 (도구마다 wbModeReg 로 바로 읽음) */
+const wbEx = () => WBMODE==='ex';
+const wbMK = k => k + (WBMODE==='ex' ? '@ex' : '@nf');
+const WB_MODE_LOAD = [], wbModeReg = f => { WB_MODE_LOAD.push(f); try{ f(WBMODE); }catch(e){ console.error('mode load', e); } };   /* 도구마다 (mode) => 그 모드 저장본을 읽음 (없으면 예제 = 예시값 · 새 파일 = 빈칸) */
+function wbModeSet(m){ m = m==='ex' ? 'ex' : 'nf'; if(WBMODE_ON && m===WBMODE) return; WBMODE = m; WBMODE_ON = true;
+  WB_MODE_LOAD.forEach(f => { try{ f(m); }catch(e){ console.error('mode load', e); } }); }
+/* [예제 | 새 파일] 두 단추 (도구 목록 줄 · 파트 페이지 단추 안). 부모 .wb-mpick 에 커서 · 포커스가 오면 보임 */
+const wbModeBtns = (id, t) => `<span class="wb-mp-b" role="group" aria-label="${wbEsc(String(t).replace(/<[^>]+>/g, ''))} 열기"><button type="button" class="wb-mp-ex" data-wbo="${id}" data-wbm="ex"><b>예제</b><span>튜토리얼 · 임의 데이터</span></button><button type="button" class="wb-mp-nf" data-wbo="${id}" data-wbm="nf"><b>새 파일</b><span>빈칸에서 설계</span></button></span>`;
+const wbModeName = m => (m || WBMODE)==='ex' ? '예제' : '새 파일';
+/* 예제에서 막는 것: 이유를 알림 */
+function wbExBlock(){ if(!wbEx()) return false; toast('예제는 튜토리얼용 임의 데이터라 내보내기 · 가져오기 · 대시보드 연결을 쓰지 않습니다. 도구 목록에서 [새 파일]로 여세요.'); return true; }
+/* 예전 저장본 (모드 나누기 전 키) 버림 — 한 번만 */
+try{ if(!localStorage.getItem('run2x.mode.v1')){ ['1', '2', 'G', '4', '9', 'T', '5', '6', '7', '3', '8'].forEach(id => localStorage.removeItem('run2x.wb.' + id));
+    ['run2x.wb.2.ext.v2', 'run2x.t9', 'run2x.wb.share.hp', 'run2x.t4.presets', 'run2x.t4.cell'].forEach(k => localStorage.removeItem(k));
+    if(!(typeof SH!=='undefined' && SH.on)) ['run2x.mass.v2', 'run2x.drv.v2'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('run2x.mode.v1', '1'); } }catch(e){}
+const wbStoreKey = id => wbMK('run2x.wb.' + id);
 /* [결과 | 편집] 탭 (도구 2P 는 자체 [시뮬레이션 | 편집]). 입력은 모두 편집 탭에 묶음 카드로, 왼쪽 입력 칸은 key:true 인 핵심 입력만 (없으면 안내).
    ext (도구가 그리는 큰 입력 화면: 도구 1 표 · 도구 4 셀 · 도구 9 회로) 는 편집 탭, mid · 그림 · 신호 그래프 · 결과 카드는 결과 탭. 그림을 편집에도 두려면 editFig:true */
 const wbTabs = T => !!T && T.inPanel !== false;
@@ -73,8 +94,8 @@ function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = f
   const t = p.querySelector('span'); if(t) t.textContent = (msg || '계산 중') + (f != null ? ` · ${Math.round(f*100)} %` : ' …'); }
 /* 계산 중: 화면 위에 고정한 진행 막대(스크롤과 상관없이 보임) + 오른쪽 화면 전체를 살짝 회색. 끝나면 바뀐 결과 칸 · 그래프가 한 번 깜빡임 */
 function wbBusy(on){ clearTimeout(WB.busyT); const m = $('#wb'), p = $('#wbprog');
-  if(on){ if(m) m.classList.add('wb-busy'); WB.progD = false; WB.busyT = setTimeout(() => { if(!WB.progD) wbProgShow(null, '계산 중'); }, 150); return; }   // 진행 신호가 이미 왔으면 흐르는 막대로 바꾸지 않음
-  if(m){ m.classList.remove('wb-busy'); m.classList.remove('wb-flash'); void m.offsetWidth; m.classList.add('wb-flash'); clearTimeout(WB.flashT); WB.flashT = setTimeout(() => m.classList.remove('wb-flash'), 800); }
+  if(on){ if(m) m.classList.add('wb-busy'); WB.progD = false; WB.busyT = setTimeout(() => { if(m) m.classList.add('wb-skelnow'); if(!WB.progD) wbProgShow(null, '계산 중'); }, 150); return; }   // 0.15 s 넘는 계산만 자리 표시 (짧은 계산은 깜빡이지 않게)   // 진행 신호가 이미 왔으면 흐르는 막대로 바꾸지 않음
+  if(m){ m.classList.remove('wb-busy', 'wb-skelnow'); m.classList.remove('wb-flash'); void m.offsetWidth; m.classList.add('wb-flash'); clearTimeout(WB.flashT); WB.flashT = setTimeout(() => m.classList.remove('wb-flash'), 800); }
   if(p){ p.hidden = true; const b = p.querySelector('i'); if(b){ b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth; b.style.transition = ''; } } }
 /* 휠 확대는 박스를 눌러 켠 뒤에만 (data-zoombox). 다른 곳을 누르거나 Esc = 끔 → 휠 = 페이지 스크롤 */
 /*   상자는 다시 그려질 수 있어 이름(data-zoombox 값)으로 기억하고, 다시 그린 뒤에도 강조를 다시 붙임 (wbZoomMark) */
@@ -88,7 +109,25 @@ new MutationObserver(() => { if(WBZ.key) wbZoomMark(); }).observe(document.docum
 document.addEventListener('keydown', e => { if(e.key==='Escape' && WBZ.key){ wbZoomSet(null); } });
 function wbKill(){ if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
   Object.keys(WB.wait).forEach(id => { const f = WB.wait[id]; delete WB.wait[id]; f({ok:false, cancelled:true}); }); }
+/* 새 파일: 계산에 필요한데 빈 칸 = 화면에 있고(ui:'none' 아님) 잠기지 않은 칸 + 도구가 알리는 표 (T.needExt → [{n, go}]) */
+function wbNeed(){ const T = wbT(); if(!T) return []; const L = [];
+  T.inputs.forEach(d => { if(d.ui==='none' || (T.inLock && T.inLock(d.k)) || (T.inNeed && T.inNeed(d.k)===false)) return; if(!isFinite(WB.I[d.k])) L.push({k:d.k, n:wbInName(d).replace(/<[^>]+>/g, ''), g:d.g || ''}); });
+  if(T.needExt) (T.needExt() || []).forEach(x => L.push(x)); return L; }
+const wbNeedK = k => (WB.need || []).some(x => x.k===k);
+/* 빈 필수 칸 빨강: 다시 그리지 않고 그 자리에서 (입력 중인 칸의 포커스 유지). 도구 화면의 표 · 블럭은 [data-wbneed="키"] 로 */
+function wbNeedMark(){ document.querySelectorAll('#wb input[data-wbi]').forEach(i => { const l = i.closest('.wb-ir'); if(l) l.classList.toggle('need', !i.disabled && wbNeedK(i.dataset.wbi)); });
+  document.querySelectorAll('#wb [data-wbneed]').forEach(el => el.classList.toggle('need', wbNeedK(el.dataset.wbneed))); const T = wbT(); if(T && T.needMark) T.needMark(WB.need || []); }
+/* 결과 자리: 채울 칸 목록 (누르면 그 칸으로) */
+function wbNeedHTML(){ const L = WB.need || [], T = wbT();
+  return `<div class="wb-need" role="status"><div class="wb-need-h"><b>채울 칸 ${L.length}개</b><span class="muted">새 파일은 빈칸에서 시작합니다. 아래 칸을 채우면 계산합니다 (모델 단계 · 켠 기능에 따라 필요한 칸이 바뀜).</span></div>
+    <div class="wb-need-l">${L.map(x => `<button type="button" class="wb-need-i" data-wbgo="${wbEsc(x.k)}"${x.tab ? ` data-wbgotab="${wbEsc(x.tab)}"` : ''}>${x.g ? `<span class="muted">${wbEsc(x.g)}</span> ` : ''}${wbEsc(x.n)}</button>`).join('')}</div></div>`; }
+/* 목록에서 고른 칸으로: 도구가 T.needGo(k) 로 자기 화면을 엶 (도구 2P 편집 탭 묶음), 아니면 편집 탭 */
+function wbNeedGo(k, tab){ const T = wbT(); if(T.needGo && T.needGo(k, tab)===true){} else if(wbTabs(T) && WB.tab!=='edit') wbTabSet('edit');
+  setTimeout(() => { const el = document.querySelector(`#wb input[data-wbi="${k}"]`) || document.querySelector(`#wb [data-wbneed="${k}"]`); if(el){ el.scrollIntoView({block:'center', behavior:'smooth'}); if(el.focus) el.focus({preventScroll:true}); el.classList.add('wb-need-flash'); setTimeout(() => el.classList.remove('wb-need-flash'), 1200); } }, 80); }
 async function wbCalc(){ const T = wbT(); if(!T) return;
+  WB.need = wbNeed(); if(WB.need.length){ if(WB.busy) wbKill(); WB.cseq = (WB.cseq || 0) + 1; WB.busy = false; wbBusy(false); WB.R = null; WB.err = '';
+    if(T.onResult) T.onResult(null); wbPaint(['out', 'main', 'sig', 'stat']); wbNeedMark(); return; }
+  wbNeedMark();
   if(WB.busy) wbKill();                                   /* 입력이 또 바뀜: 하던 계산은 버리고 새로 */
   const my = WB.cseq = (WB.cseq || 0) + 1; WB.busy = true; wbBusy(true);
   const r = await wbRun(wbInputs(), wbCode());
@@ -161,7 +200,10 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
     s += `<text x="${tx}" y="${ty}" class="wb-tl" text-anchor="middle" transform="rotate(${left ? -90 : 90} ${tx} ${ty})"><title>${wbEsc(all)}${u}</title>${body}<tspan style="fill:${col}">${u}</tspan></text>`; });
   { const Z = groups.find(G => G.r.lo < 0 && G.r.hi > 0); if(Z){ const zy = Y(0, Z.r); s += `<line x1="${L}" y1="${zy}" x2="${L+pw}" y2="${zy}" class="wb-zero"/>`; } }   /* y = 0 선 (가속 · 감속 구분) */
   s += `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-frame"/>`;
-  ys.forEach(y => { const r = gOf(y).r; s += `<polyline${clip} fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
+  /* o.dots: 가로축이 시간 · 거리가 아닌 신호면 선으로 잇지 않고 점 (회전수 – 토크 운전점처럼). 점 수천 개라 원 대신 길이 0 토막 하나의 path (둥근 끝 = 점) */
+  if(o.dots) ys.forEach(y => { const r = gOf(y).r; let p = ''; y.d.forEach((v, i) => { if(isFinite(v) && isFinite(xd[i])) p += `M${X(xd[i]).toFixed(1)} ${Y(v, r).toFixed(1)}h0`; });
+    s += `<path${clip} d="${p}" fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?4:3.2}" stroke-linecap="round" stroke-opacity=".55" vector-effect="non-scaling-stroke"/>`; });
+  else ys.forEach(y => { const r = gOf(y).r; s += `<polyline${clip} fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
   if(o.xi != null && isFinite(xd[o.xi]) && xd[o.xi] >= xr.lo && xd[o.xi] <= xr.hi){ const cx = X(xd[o.xi]), right = cx < L + pw*0.72, lab = [];
     s += `<line x1="${cx}" y1="${T}" x2="${cx}" y2="${T+ph}" class="wb-cur"/>`;
     ys.forEach(y => { const v = y.d[o.xi], r = gOf(y).r; if(!isFinite(v) || v < r.lo || v > r.hi) return; const cy = Y(v, r); s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="${y.c}" stroke="#fff" stroke-width="1"/>`;
@@ -195,6 +237,7 @@ function wbShellHTML(){ const T = wbT();
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
       </span><input type="file" accept=".json,application/json" id="wbfile" hidden><input type="file" accept=".xlsx,.csv,.txt,.json" id="wbhpfile" hidden></div>
+    ${wbEx() ? '<div class="wb-exband" role="note"><b>예제</b><span>튜토리얼용 임의 데이터입니다. 설계에 쓸 수 없고, 내보내기 · 가져오기 · 대시보드 연결이 꺼져 있습니다.</span><button type="button" class="btn small" data-wbexreset title="이 도구의 예제 값을 처음 상태로">예제 처음으로</button></div>' : ''}
     <div class="wb-prog" id="wbprog" hidden role="status" aria-live="polite"><i></i><span></span></div>
     <div class="wb-main">
       <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button></div><div id="wbin"></div></aside>
@@ -263,12 +306,13 @@ function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
     const lk = T.inLock ? T.inLock(d.k) : '';   /* 도구가 맵으로 대신 쓰는 입력: 칸을 막고 까닭을 적음 */
     const ev = lk ? wbEffVal(T, d) : null;      /* 잠긴 칸에 보일 값: 실제로 계산에 쓰는 값 · 안 쓰면 — (저장값은 그대로 → 풀리면 되돌아옴) */
     const opt = T.inOpt ? T.inOpt(d.k) : '';   /* 도구가 이 칸 줄에 넣는 옵션 단추 (이름과 값 사이) */
-    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}"><span class="wb-in-n"><span class="wb-in-t">${dot}${nm}${viz}</span>${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${!lk && wbNeedK(d.k) ? ' need' : ''}"><span class="wb-in-n"><span class="wb-in-t">${dot}${nm}${viz}</span>${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
+  if(!R && WB.need && WB.need.length) return wbNeedHTML();
   if(!R){   /* 계산 중: 실제 카드 모양 그대로 (이전 결과 · 없으면 빈 결과로 그린 뒤 숫자 자리만 반짝이는 막대) */
     let h = ''; const D = WB.Rlast && WB.Rlast.id===WB.id ? WB.Rlast.R : {out:{}};
     try{ h = T.outHTML ? T.outHTML(D) : wbOutCards(T, D, false); }catch(e){ try{ h = wbOutCards(T, {out:{}}, false); }catch(e2){ h = ''; } }
@@ -364,7 +408,7 @@ function wbPanes(P, pi, mk, x, xi, act, label, what){ const zm = WB.zm || 'cur';
   return P.map((S, i) => { const ys = mk(S), h = wbPh(i, P.length), zy = WB.zy && WB.zy[i];
     const tb = `<div class="wb-ptb" role="toolbar" aria-label="${i+1}번 그래프 칸 보기">${WB_ZM.map(([k, t, ti]) => `<button type="button" data-wbzm="${k}" aria-pressed="${zm===k}" title="${ti}">${t}</button>`).join('')}`
       + (P.length > 1 ? `<i></i><button type="button" class="wb-ppx" data-wbpdel="${i}" aria-label="${i+1}번 칸 지우기" title="이 칸 지우기">×</button>` : '') + '</div>';
-    const body = wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`, zx:wbZx(), zy, clip:`p${i}`});
+    const body = wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`, zx:wbZx(), zy, clip:`p${i}`, dots:WB.xa.startsWith('sig:')});
     const hint = ys.length ? '' : `<p class="wb-pempty">왼쪽에서 ${P.length > 1 ? `${i+1}번 칸에 ` : ''}그릴 ${what}를 고르십시오.</p>`;
     return `<div class="wb-pp${P.length > 1 && i===pi ? ' on' : ''}" data-wbpi="${i}" data-zoombox="pane${i}">${tb}${body}${hint}<div class="wb-ph" data-wbph="${i}" title="끌어서 높이 조절" aria-hidden="true"></div></div>`; }).join('')
     + (P.length < 3 ? '<div class="wb-padd"><button type="button" class="btn small" data-wbpadd>+ 그래프 칸</button></div>' : ''); }
@@ -389,7 +433,7 @@ function wbTourTabs(T){ if(!T || !T.tour || T.__tt || !wbTabs(T)) return; T.__tt
 /* ---------- 열기 · 닫기 · 입력 기억 ---------- */
 /* ---------- 도구끼리 같이 쓰는 입력 (share): 같은 브라우저 안에서 한 벌. 고른 도구 어디서 고쳐도 다른 도구가 열 때 그 값을 씀
    hp = 서스 하드포인트 (도구 5 · 6 · 7 · 8, 키 '앞 f / 뒤 r _ 점 _ x · y · z'). 상세 제원이라 팀 저장소에는 두지 않고, 파일(.xlsx · .csv · .json)로 주고받음 */
-const WB_SHARE = {hp:{re:/^[fr]_[a-z]{2}_[xyz]$/, key:'run2x.wb.share.hp', n:'하드포인트'}};
+const WB_SHARE = {hp:{re:/^[fr]_[a-z]{2}_[xyz]$/, key0:'run2x.wb.share.hp', n:'하드포인트', get key(){ return wbMK(this.key0); }}};
 function wbShareGet(sh){ try{ const o = JSON.parse(localStorage.getItem(WB_SHARE[sh].key) || '{}'); return o && typeof o==='object' ? o : {}; }catch(e){ return {}; } }
 function wbShareSet(sh, I){ const S = WB_SHARE[sh]; if(!S) return; const o = wbShareGet(sh); let ch = false;
   Object.keys(I).forEach(k => { if(S.re.test(k) && typeof I[k]==='number' && isFinite(I[k]) && o[k]!==I[k]){ o[k] = I[k]; ch = true; } });
@@ -397,8 +441,8 @@ function wbShareSet(sh, I){ const S = WB_SHARE[sh]; if(!S) return; const o = wbS
 function wbLoad(id){ const T = WB_TOOLS[id], I = {}; let saved = {};
   try{ saved = JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ saved = {}; }
   const sh = T.share && WB_SHARE[T.share] ? wbShareGet(T.share) : null, re = sh ? WB_SHARE[T.share].re : null;
-  T.inputs.forEach(d => { const c = sh && re.test(d.k) ? sh[d.k] : undefined, s = saved[d.k], db = wbDash(d.dk);
-    I[d.k] = typeof c==='number' && isFinite(c) ? c : typeof s==='number' && isFinite(s) ? s : (db ? db.v : d.v); });   /* 같이 쓰는 값 > 이 도구 저장값 > 대시보드 > 기본 */
+  T.inputs.forEach(d => { const c = sh && re.test(d.k) ? sh[d.k] : undefined, s = saved[d.k];
+    I[d.k] = typeof c==='number' && isFinite(c) ? c : typeof s==='number' && isFinite(s) ? s : (wbEx() || d.ui==='none' ? d.v : NaN); });   /* 같이 쓰는 값 > 이 도구 저장값 > (예제 = 기본값 · 새 파일 = 빈칸, 모델 선택 · 고정 상수(ui:'none')는 늘 기본) */
   return I; }
 function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(WB.I)); }catch(e){} const T = WB_TOOLS[WB.id]; if(T && T.share) wbShareSet(T.share, WB.I); }
 /* 하드포인트 파일: 행 = 축 · 점 · 이름 · x · y · z [mm] (차량 좌표: x 앞 · y 바깥 · z 위, 왼쪽 바퀴). 도구 5 · 6 · 7 · 8 의 점을 모두 담음 */
@@ -425,17 +469,23 @@ async function wbHpImport(file){ const ext = (file.name.split('.').pop() || '').
     wbShareSet('hp', got); Object.keys(got).forEach(k => { if(WB.I && k in WB.I) WB.I[k] = got[k]; });
     wbSave(); wbPaint(['in']); wbCalc(); toast(`${file.name}: 하드포인트 값 ${n}개를 넣었습니다 (도구 5 · 6 · 7 · 8 공통).`); }
   catch(err){ toast((err && err.message) || '파일을 읽지 못했습니다.'); } }
-function wbOpen(id, ret){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
-  WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
+function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
+  wbModeSet(mode || (WB.id ? WBMODE : 'nf'));   /* 목록에서 고른 모드 · 도구 안에서 넘어가면 지금 모드 그대로 */
+  WB.id = id; WB.need = []; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
-  m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
+  m.classList.toggle('wb-exmode', wbEx()); m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
   wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); }
+/* 예제 처음으로: 이 도구의 예제 저장본을 지우고 다시 읽음 (도구 바깥 표 · 회로는 도구가 T.exReset 으로) */
+function wbExReset(){ if(!wbEx() || !WB.id) return; const id = WB.id, T = wbT();
+  try{ localStorage.removeItem(wbStoreKey(id)); if(T.share && WB_SHARE[T.share]) localStorage.removeItem(WB_SHARE[T.share].key); }catch(e){}
+  if(T.exReset) T.exReset(); WB.I = wbLoad(id); WB.R = null; wbPaint(); wbCalc(); toast('예제를 처음 상태로 되돌렸습니다.'); }
 function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = ''; m.classList.remove('wb-tabbed', 'wb-edit', 'wb-res');
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
-  if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null; }
+  m.classList.remove('wb-exmode'); if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null;
+  wbModeSet('nf'); }   /* 작업창 밖(파트 페이지 등)은 늘 새 파일(실제 설계) 쪽 상태 */
 
 /* ---------- 작은 창 (검증표 · 코드 보기 · 대시보드에 반영) ---------- */
 function wbModal(html, cls){ let m = $('#wbm'); if(!m){ m = document.createElement('div'); m.id = 'wbm'; m.className = 'dv-modal wb-modal'; document.body.appendChild(m); }
@@ -550,10 +600,11 @@ function wb3dClose(){ const S = WB.t3; if(!S) return; S.ro.disconnect(); if(S.of
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click', e => { const t = e.target; if(!t.closest) return;
-  const row = t.closest('[data-wb]'); if(row){ wbOpen(row.dataset.wb, row); return; }
+  { const mb = t.closest('[data-wbo]'); if(mb){ wbOpen(mb.dataset.wbo, mb.closest('.wb-mpick') || mb, mb.dataset.wbm); return; } }
   if(!WB.id) return;
   if(t.closest('[data-wbmx]') || t.matches('#wbm')){ wbModalClose(); return; }
   if(t.closest('[data-wbx]')){ wbClose(); return; }
+  if(t.closest('[data-wbfill]') && wbExBlock()) return;
   if(t.closest('[data-wbfill]')){ let n = 0, ch = 0, no = 0; wbT().inputs.forEach(d => { const db = wbDash(d.dk); if(db){ if(Math.abs((WB.I[d.k] ?? NaN) - db.v) > 1e-12 || !isFinite(WB.I[d.k])) ch++; WB.I[d.k] = db.v; n++; } else no++; }); wbSave(); wbPaint(['in']); wbCalc(); toast(`대시보드 값 ${n}개로 채웠습니다 (그중 바뀐 값 ${ch}개)${no ? ` · ${no}개는 대시보드에 없어 지금 값 그대로` : ''}. 칸 옆 점 색이 대시보드 상태입니다.`); return; }
   if(t.closest('[data-wbcmp]')){ WB.cmp = !WB.cmp; t.closest('[data-wbcmp]').setAttribute('aria-pressed', String(WB.cmp)); wbPaint(['in','out']); return; }
   if(t.closest('[data-wbver]')){ wbVerify(); return; }
@@ -561,12 +612,14 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbcreset]')){ delete WB.code[WB.id]; $('#wbm textarea').value = wbT().code; $('#wbcmsg').textContent = '원래 코드로 돌렸습니다.'; wbCalc(); return; }
   if(t.closest('[data-wbcrun]')){ const src = $('#wbm textarea').value; WB.code[WB.id] = src === wbT().code ? undefined : src; if(WB.code[WB.id]===undefined) delete WB.code[WB.id];
     wbCalc().then(() => { const mm = $('#wbcmsg'); if(mm) mm.textContent = WB.err ? WB.err : '계산했습니다. 결과는 작업창에 보입니다.'; }); return; }
-  if(t.closest('[data-wbexp]')){ wbExport(); return; }
-  if(t.closest('[data-wbimp]')){ $('#wbfile').click(); return; }
-  { const h = t.closest('[data-wbhp]'); if(h){ if(h.dataset.wbhp==='imp') $('#wbhpfile').click(); else wbHpExport(h.dataset.wbhp); return; } }
+  if(t.closest('[data-wbexp]')){ if(!wbExBlock()) wbExport(); return; }
+  if(t.closest('[data-wbimp]')){ if(!wbExBlock()) $('#wbfile').click(); return; }
+  { const g = t.closest('[data-wbgo]'); if(g){ wbNeedGo(g.dataset.wbgo, g.dataset.wbgotab); return; } }
+  { const h = t.closest('[data-wbhp]'); if(h){ if(wbExBlock()) return; if(h.dataset.wbhp==='imp') $('#wbhpfile').click(); else wbHpExport(h.dataset.wbhp); return; } }
   { const tb = t.closest('[data-wbtab]'); if(tb){ wbTabSet(tb.dataset.wbtab); return; } }
   { const es = t.closest('[data-wbesec]'); if(es){ WB.esec = es.dataset.wbesec; wbPaint(['tabs']); return; } }
-  if(t.closest('[data-wbput]')){ wbPutOpen(); return; }
+  if(t.closest('[data-wbput]')){ if(!wbExBlock()) wbPutOpen(); return; }
+  if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }
   const zmb = t.closest('[data-wbzm]'); if(zmb){ WB.zm = zmb.dataset.wbzm; $('#wbsig').dataset.zm = WB.zm; wbPaint(['sig']); return; }
@@ -578,7 +631,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const vv = t.closest('#wb [data-v3v]'); if(vv && WB.t3){ WB.t3.orb.set(vv.dataset.v3v); wb3dViews(); WB.t3.render(); return; }
 });
 document.addEventListener('keydown', e => {
-  const row = e.target.closest && e.target.closest('[data-wb]'); if(row && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); wbOpen(row.dataset.wb, row); return; }
+
   if(!WB.id) return;
   if(e.key==='Escape'){ e.preventDefault(); if(!wbModalClose()) wbClose(); return; }
   if(e.target.matches && e.target.matches('textarea.wb-ta') && e.key==='Tab'){ e.preventDefault(); const ta = e.target, a = ta.selectionStart; ta.setRangeText('  ', a, ta.selectionEnd, 'end'); return; }

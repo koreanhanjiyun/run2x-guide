@@ -17,7 +17,7 @@ const t6Rows = () => { const R = WB.R; if(!R || !R.x || !R.sig) return []; retur
 function t6MidHTML(){ const n = t6Rows().length, S = typeof T2!=='undefined' && Array.isArray(T2.stab) ? T2.stab.length : 0;
   return `<div class="t9-xbar"><b>도구 2P 와 주고받기</b><button type="button" class="btn small pri" data-t6x${n >= 2 ? '' : ' disabled'}>도구 2P 로 조향각 표 보내기</button>
     <span class="muted">${n >= 2 ? `핸들 각 0 ~ ${wbFmt(WB.R.out.hw_max, 0)}° 의 안쪽 · 바깥 바퀴 각 ${n}점 → 도구 2P 가 링크 기하 그대로 (애커먼 %) 조향각 · 최대 조향각 · 조향비 · 최소 회전 반경을 계산` : '계산이 끝나면 보낼 수 있음'}${S ? ` · 도구 2P 에 지금 ${S}점 표가 있음` : ''}</span></div>`; }
-document.addEventListener('click', e => { if(WB.id!=='6' || !e.target.closest) return; const b = e.target.closest('[data-t6x]'); if(!b || b.disabled) return;
+document.addEventListener('click', e => { if(WB.id!=='6' || !e.target.closest) return; const b = e.target.closest('[data-t6x]'); if(!b || b.disabled) return; if(wbExBlock()) return;
   const rows = t6Rows(); if(rows.length < 2 || typeof T2==='undefined') return; T2.stab = rows.map(r => r.map(x => +x.toFixed(4))); if(typeof t2Save==='function') t2Save();
   toast(`조향각 표 ${rows.length}점을 도구 2P 로 보냈습니다 (도구 2P 의 최대 조향각 · 조향비 칸은 이 표 값으로 잠김).`); wbPaint(['mid']); });
 const t6Pt = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];

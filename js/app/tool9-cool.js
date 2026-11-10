@@ -18,8 +18,10 @@ const T9COOL_DEF = () => ({ circuits:[
     {id:'k5', t:'in', x:40, y:67, p:{A:0.02, kd:0.5, fan:0.03}}, {id:'k6', t:'b', x:360, y:70, p:{}}, {id:'k7', t:'out', x:680, y:67, p:{}}],
    links:[['k5', 'k6'], ['k6', 'k7']]}] });
 const T9 = { cool:T9COOL_DEF() };
-try{ const s = JSON.parse(localStorage.getItem(T9KEY) || 'null'); if(s && s.cool && Array.isArray(s.cool.circuits)) T9.cool = s.cool; else if(typeof T2!=='undefined' && T2.coolOld && Array.isArray(T2.coolOld.circuits)) T9.cool = T2.coolOld; }catch(e){}
-const t9Save = () => { try{ localStorage.setItem(T9KEY, JSON.stringify({cool:T9.cool})); }catch(e){} };
+/* 새 파일 = 회로 틀(수랭 회로 1 · 공랭 덕트 1)만, 블럭 · 호스 · 냉각수 값 없음 */
+const T9COOL_NEW = () => ({ circuits:T9COOL_DEF().circuits.map(c => ({...c, p:{}, sel:'', blocks:[], links:[]})) });
+wbModeReg(m => { T9.cool = m==='ex' ? T9COOL_DEF() : T9COOL_NEW(); try{ const s = JSON.parse(localStorage.getItem(wbMK(T9KEY)) || 'null'); if(s && s.cool && Array.isArray(s.cool.circuits)) T9.cool = s.cool; }catch(e){} });
+const t9Save = () => { try{ localStorage.setItem(wbMK(T9KEY), JSON.stringify({cool:T9.cool})); }catch(e){} };
 // ================================================================ 냉각 회로 공통 (도구 9 · 도구 2P 계산과 냉각 편집기가 같이 씀)
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
 //   호스  : ΔP = f (L ÷ D) ρ u² ÷ 2,  u = Q ÷ (π D² ÷ 4),  Re = ρ u D ÷ μ,  f = max(64 ÷ Re, 0.3164 Re^(−1/4))   (층류 · 매끈한 관 Blasius 난류, Re ≈ 1188 에서 이어짐)
@@ -151,7 +153,15 @@ const T9CP = {   // 블럭 입력 [키, 이름, 단위, 소수, 기본값]
 const t9RadTab = B => B && B.t==='rad' && B.p && B.p.rqUse!=='const' && typeof t2GridParse==='function' && B.p.rq ? t2GridParse(B.p.rq).map : null;
 const t9LX = l => (l[3] && typeof l[3]==='object') ? l[3] : (l[3] = {});   // 호스 값 · 꺾임점
 const t9CParams = (C, B) => B.t==='rad' ? T9CP.rad : B.t==='pump' ? T9CP.pump.filter(([k]) => k!=='pc' && (t9CV(B.p, T9CP.pump).pc===1 ? k!=='flow' : k==='flow')) : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t][1]==='part' ? T9CP.partW : [];
-const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { r[k] = isFinite(+((o || {})[k])) && (o || {})[k] !== '' ? +o[k] : v; }); return r; };
+/* 블럭 값: 넣은 값, 없으면 예제 = 기본값 · 새 파일 = 빈칸 (NaN, 펌프 방식 pc 같은 고르기만 기본) */
+const T9CHOICE = ['pc'];
+const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { const x = (o || {})[k]; r[k] = x !== '' && x != null && isFinite(+x) ? +x : (wbEx() || T9CHOICE.includes(k) ? v : NaN); }); return r; };
+/* 새 파일: 회로에 쓰는 블럭 · 호스 · 냉각수 값 중 빈칸 */
+function t9Blank(C){ const L = [], nm = (b) => T9CB[b.t] ? T9CB[b.t][0] : b.t, miss = (o, def, skip = {}) => def.filter(([k]) => !skip[k] && !isFinite(t9CV(o, def)[k])).map(([, n]) => n);
+  if(C.kind==='water'){ const m = miss(C.p, T9CP.water); if(m.length) L.push(`냉각수: ${m.join(' · ')}`);
+    C.links.forEach(l => { const m2 = miss(t9LX(l), T9CP.hose); if(m2.length) L.push(`호스 ${nm({t:(C.blocks.find(b => b.id===l[0]) || {}).t})} → ${nm({t:(C.blocks.find(b => b.id===l[1]) || {}).t})}: ${m2.join(' · ')}`); }); }
+  C.blocks.forEach(b => { const m = miss(b.p, t9CParams(C, b), b.t==='rad' ? (t9RadTab(b) ? {UA:1} : {itd:1}) : {}); if(m.length) L.push(`${nm(b)}: ${m.join(' · ')}`); });
+  return L.map(s => s + ' 비어 있음'); }
 /* 수랭 회로 → 계산용: 갈라지고 합쳐지는 배관 가능. 라디에이터에서 나가는 흐름 = 1, 합쳐지는 곳은 더함.
    라디로 들어오는 호스를 빼면 순환 없는 흐름이어야 함 → 그 순서(위상 정렬)로 점을 늘어놓음 (라디 = 0 번).
    구조 확인(펌프가 전체 흐름 자리인지)은 똑같이 나눈 몫으로, 실제 갈래 몫은 hyd (호스 · 블럭 압력 강하)로 계산 (coolPrep).
@@ -218,6 +228,7 @@ function t9CoolCompile(S){ S = S || t9S(); const out = {water:[], air:[]}, err =
   (S.cool.circuits || []).forEach(C => { const E = [], by = new Map(C.blocks.map(b => [b.id, b])), nx = new Map(), pv = new Map();
     C.links.forEach(([a, b]) => { if(by.has(a) && by.has(b)){ nx.set(a, b); pv.set(b, a); } });
     C.blocks.forEach(b => { if(T9CB[b.t] && T9CB[b.t][1]==='part'){ if(used[b.t]) E.push(`${T9CB[b.t][0]}이 다른 회로에도 있음`); used[b.t] = true; } });
+    if(!wbEx() && C.blocks.length){ const bl = t9Blank(C); if(bl.length){ E.push(...bl); err[C.id] = E; return; } }
     if(C.kind==='water'){ const r = t9CWater(C, by); E.push(...r.E); if(!r.E.length){ out.water.push(r.net); if(r.mode) mode[C.id] = r.mode; lq[C.id] = {m:r.lq, Vt:r.Vt}; } }
     else { const r = t9CAir(C, by); E.push(...r.E); if(!r.E.length) out.air.push(r.net); }
     if(E.length) err[C.id] = E; });
@@ -297,7 +308,7 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
 function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kind==='water').length, na = CC.filter(c => c.kind==='air').length, comp = t9CoolCompile(), used = new Set(CC.flatMap(c => c.blocks.map(b => b.t)));
   const card = C => { t9Sel(C); const E = comp.err[C.id], pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b'] : ['m', 'i', 'b'], by = new Map(C.blocks.map(b => [b.id, b]));
     const form = (title, def, obj, attr, lock = {}) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
-        return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${lock[k] ? lock[k] : u}</i></label>`; }).join('')}</div>`;
+        return `<label class="t9-cfi${!lock[k] && !isFinite(v) ? ' need' : ''}"><span>${n}</span><input type="number" step="any" value="${isFinite(v) ? v : ''}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${lock[k] ? lock[k] : u}</i></label>`; }).join('')}</div>`;
     const radTab = B => { const M = B.p && B.p.rq && typeof t2GridParse==='function' ? t2GridParse(B.p.rq).map : null, use = B.p && B.p.rqUse==='const' ? 'const' : 'tab', id = `${C.id}:${B.id}`;
       const G = t9RqGrid(B.p && B.p.rq);   // 칸마다 바로 고치는 표 (다른 표와 같음): 첫 행 = 유량, 첫 열 = 풍속
       return `<div class="t9-cform t9-crqb"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW. 칸을 고치거나, 엑셀에서 여러 칸을 복사해 표를 누르고 Ctrl+V (표 전체를 바꿈). 값이 있으면 [UA] 대신 씀 (점마다 ε-NTU 로 UA 를 거꾸로 구해 보간)</span>
@@ -489,9 +500,9 @@ function t9XBar(){ const o = WB.R && WB.R.out, f = (v, d) => isFinite(v) ? wbFmt
       <button type="button" class="btn small" data-t9x="get" title="도구 2P 에 저장된 부품 열용량 · 열저항 · 공랭 hA · 외기 온도를 왼쪽 칸으로">도구 2P 부품 열 값 가져오기</button>
       <button type="button" class="btn small pri" data-t9x="put"${o && (o.n_w > 0 || o.n_a > 0) ? '' : ' disabled title="수랭 회로나 공랭 덕트가 계산에 들어가야 씀"'} title="이 배치를 도구 2P 의 냉각 회로로 복사 (그 뒤로는 도구 2P 에서 따로 고침)">도구 2P 로 회로 보내기</button>
       <span class="muted">${o && (o.n_w > 0 || o.n_a > 0) ? `도구 2P 로 보낼 배치: 수랭 회로 ${o.n_w}개 · 공랭 덕트 ${o.n_a}개 · 모터 ${t9IsWater('m') ? '수랭' : '공랭'} · 인버터 ${t9IsWater('i') ? '수랭' : '공랭'} · 축전지 ${t9IsWater('b') ? '수랭' : '공랭'} (직렬 · 병렬 · 회로 여러 개 그대로)` : '도구 2P [편집 › 냉각]의 [평균 발열 · 차속을 도구 9 로 보내기]로 왼쪽 발열 · 차속을 채울 수 있습니다.'}</span></div>`; }
-document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) return; const b = e.target.closest('[data-t9x]'); if(!b || b.disabled) return;
+document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) return; const b = e.target.closest('[data-t9x]'); if(!b || b.disabled) return; if(b.dataset.t9x==='put' && wbExBlock()) return;
   if(b.dataset.t9x==='get'){ const s = t9Read('2'), D = WB_TOOLS['2'] ? WB_TOOLS['2'].inputs : []; let n = 0;
-    T9PART.forEach(k => { const d = D.find(q => q.k===k), v = typeof s[k]==='number' && isFinite(s[k]) ? s[k] : d ? d.v : NaN; if(Number.isFinite(v)){ WB.I[k] = v; n++; } });
+    T9PART.forEach(k => { const d = D.find(q => q.k===k), v = typeof s[k]==='number' && isFinite(s[k]) ? s[k] : d && wbEx() ? d.v : NaN; if(Number.isFinite(v)){ WB.I[k] = v; n++; } });
     wbSave(); wbPaint(['in']); wbCalcSoon(); toast(`도구 2P 의 부품 열 값 ${n}개를 가져왔습니다.`); return; }
   if(b.dataset.t9x==='put'){ const o = WB.R && WB.R.out; if(!o || !(o.n_w > 0 || o.n_a > 0)) return; const s = t9Read('2');
     Object.assign(s, {cw_mode:1, m_cool:t9IsWater('m'), i_cool:t9IsWater('i'), b_cool:t9IsWater('b'), cw_on:1, t_amb:WB.I.t_amb});   /* 공랭 / 수랭 단추도 맞춰 둠 (부품별 독립으로 돌아갈 때) */
@@ -544,6 +555,9 @@ WB_TOOLS['9'] = {
   xiStart:'end',
   onResult(){ const x = document.querySelector('#wbext .t9-xbar'); if(x) x.outerHTML = t9XBar(); },
   extHTML: t9ExtHTML, extraI: () => ({cool: t9CoolCompile().net}),
+  extGet: () => ({cool:JSON.parse(JSON.stringify(T9.cool))}),   /* .json 내보내기에 회로 배치도 */
+  extSet(d){ if(d && d.cool && Array.isArray(d.cool.circuits)){ T9.cool = d.cool; t9Save(); wbPaint(['ext']); } },
+  exReset(){ try{ localStorage.removeItem(wbMK(T9KEY)); }catch(e){} T9.cool = T9COOL_DEF(); },
   tour: M9TOUR,
   verifyBase:{cool:{water:[], air:[]}, t_run:0, t0:25, t_amb:25},
   verify: [
