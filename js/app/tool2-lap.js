@@ -921,7 +921,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(T2.menu){ T2.menu = ''; t2Repaint(); }
 
   const tb = t.closest('[data-t2tab]'); if(tb){ T2.tab = tb.dataset.t2tab; T2.menu = ''; t2Save(); wbPaint(['ext']);
-    if(T2.tab==='sim'){ t2MapRepaint(); t2PfSoon(); if(WB.dirty){ WB.dirty = false; wbCalc(); } } return; }   // 편집에서 바꾼 것이 있으면 이제 계산
+    if(T2.tab==='sim'){ t2MapRepaint(); t2PfSoon(); if(WB.dirty || (WB.need || []).length){ WB.dirty = false; wbCalc(); } } else wbNeedMark(); return; }   // 편집에서 바꾼 것이 있으면 이제 계산 (빈 필수 칸이 있으면 그때 빨강)   // 편집에서 바꾼 것이 있으면 이제 계산
   const ec = t.closest('[data-t2ecourse]'); if(ec){ T2.ecourse = ec.dataset.t2ecourse; T2.menu = ''; T2.zoomE = {k:1, cx:.5, cy:.5}; t2Save(); wbPaint(['ext']); return; }
   const us = t.closest('[data-t2use]'); if(us){ T2.use[T2.etab] = us.dataset.t2use; t2Save(); wbPaint(['ext']); t2Soon(); return; }
   const el = t.closest('[data-t2el]'); if(el){ WB.I.e_lim = +el.dataset.t2el; if(WB.I.e_lim===2 && !(WB.I.e_target > 0)) WB.I.e_target = Math.round(t2Epack()*100)/100; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
@@ -1273,6 +1273,7 @@ WB_TOOLS['2'] = {
     if(th.w && WB.I.cw_mode===1 && !(C && (C.circuits || []).some(c => (c.blocks || []).length))) L.push({k:'t2:cool', n:'냉각 회로 배치', g:'냉각', tab:'cool'});
     return L; },
   /* 편집 탭 위 단추: 빈 필수 칸이 있는 묶음을 빨강 */
+  onNeedOpen(){ T2.tab = 'edit'; },   /* 새 파일 빈칸이면 편집 탭에서 시작 */
   needMark(L){ const gs = new Set(L.map(x => x.tab ? t2Grp(x.tab) : (d => d && Object.keys(T2EG).find(e => (T2EG[e] || []).includes(d.g)))(WB_TOOLS['2'].inputs.find(o => o.k===x.k))).filter(Boolean));
     document.querySelectorAll('#wb [data-t2eg]').forEach(b => b.classList.toggle('need', gs.has(b.dataset.t2eg))); document.querySelectorAll('#wb [data-t2tab="edit"]').forEach(b => b.classList.toggle('need', gs.size > 0)); },
   /* 목록에서 고른 칸: 편집 탭의 그 묶음 (표는 그 표) */

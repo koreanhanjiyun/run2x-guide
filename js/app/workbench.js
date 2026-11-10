@@ -43,7 +43,7 @@ const wbStoreKey = id => wbMK('run2x.wb.' + id);
 const wbTabs = T => !!T && T.inPanel !== false;
 const WBTAB_KEY = 'run2x.wb.tab';
 function wbTabGet(id){ try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; return m[id]==='edit' ? 'edit' : 'res'; }catch(e){ return 'res'; } }
-function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res';
+function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res'; if(WB.tab==='res' && (WB.need || []).length){ WB.needShow = true; setTimeout(wbNeedMark, 0); }
   try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; m[WB.id] = WB.tab; localStorage.setItem(WBTAB_KEY, JSON.stringify(m)); }catch(e){}
   const w = $('#wb'); if(w){ w.classList.toggle('wb-edit', WB.tab==='edit'); w.classList.toggle('wb-res', WB.tab!=='edit'); }
   wbPaint(['tabs']); if(WB.tab==='res'){ wbPaint(['out', 'main', 'sig', 'mid']); wb3dUpdate && wb3dUpdate(); } }
@@ -115,17 +115,17 @@ function wbNeed(){ const T = wbT(); if(!T) return []; const L = [];
   if(T.needExt) (T.needExt() || []).forEach(x => L.push(x)); return L; }
 const wbNeedK = k => (WB.need || []).some(x => x.k===k);
 /* 빈 필수 칸 빨강: 다시 그리지 않고 그 자리에서 (입력 중인 칸의 포커스 유지). 도구 화면의 표 · 블럭은 [data-wbneed="키"] 로 */
-function wbNeedMark(){ document.querySelectorAll('#wb input[data-wbi]').forEach(i => { const l = i.closest('.wb-ir'); if(l) l.classList.toggle('need', !i.disabled && wbNeedK(i.dataset.wbi)); });
+function wbNeedMark(){ const w = $('#wb'); if(w) w.classList.toggle('wb-needon', !!WB.needShow && !!(WB.need || []).length);
+  document.querySelectorAll('#wb input[data-wbi]').forEach(i => { const l = i.closest('.wb-ir'); if(l) l.classList.toggle('need', !i.disabled && wbNeedK(i.dataset.wbi)); });
   document.querySelectorAll('#wb [data-wbneed]').forEach(el => el.classList.toggle('need', wbNeedK(el.dataset.wbneed))); const T = wbT(); if(T && T.needMark) T.needMark(WB.need || []); }
 /* 결과 자리: 채울 칸 목록 (누르면 그 칸으로) */
-function wbNeedHTML(){ const L = WB.need || [], T = wbT();
-  return `<div class="wb-need" role="status"><div class="wb-need-h"><b>채울 칸 ${L.length}개</b><span class="muted">새 파일은 빈칸에서 시작합니다. 아래 칸을 채우면 계산합니다 (모델 단계 · 켠 기능에 따라 필요한 칸이 바뀜).</span></div>
-    <div class="wb-need-l">${L.map(x => `<button type="button" class="wb-need-i" data-wbgo="${wbEsc(x.k)}"${x.tab ? ` data-wbgotab="${wbEsc(x.tab)}"` : ''}>${x.g ? `<span class="muted">${wbEsc(x.g)}</span> ` : ''}${wbEsc(x.n)}</button>`).join('')}</div></div>`; }
+function wbNeedHTML(){ const n = (WB.need || []).length;
+  return `<p class="wb-needline" role="status"><b>필수 입력 ${n}칸이 비어 있어 계산하지 않았습니다.</b> <span>편집 탭의 빨간 칸을 채워 주십시오 (모델 단계 · 켠 기능에 따라 필요한 칸이 바뀜).</span> <button type="button" class="btn small" data-wbgo="${wbEsc((WB.need[0] || {}).k || '')}"${WB.need[0] && WB.need[0].tab ? ` data-wbgotab="${wbEsc(WB.need[0].tab)}"` : ''}>첫 빈칸으로</button></p>`; }
 /* 목록에서 고른 칸으로: 도구가 T.needGo(k) 로 자기 화면을 엶 (도구 2P 편집 탭 묶음), 아니면 편집 탭 */
 function wbNeedGo(k, tab){ const T = wbT(); if(T.needGo && T.needGo(k, tab)===true){} else if(wbTabs(T) && WB.tab!=='edit') wbTabSet('edit');
   setTimeout(() => { const el = document.querySelector(`#wb input[data-wbi="${k}"]`) || document.querySelector(`#wb [data-wbneed="${k}"]`); if(el){ el.scrollIntoView({block:'center', behavior:'smooth'}); if(el.focus) el.focus({preventScroll:true}); el.classList.add('wb-need-flash'); setTimeout(() => el.classList.remove('wb-need-flash'), 1200); } }, 80); }
 async function wbCalc(){ const T = wbT(); if(!T) return;
-  WB.need = wbNeed(); if(WB.need.length){ if(WB.busy) wbKill(); WB.cseq = (WB.cseq || 0) + 1; WB.busy = false; wbBusy(false); WB.R = null; WB.err = '';
+  WB.need = wbNeed(); if(WB.need.length){ if(WB.busy) wbKill(); if(wbTabs(T) ? WB.tab!=='edit' : !(T.deferCalc && T.deferCalc())) WB.needShow = true;   /* 결과를 보려 할 때 비어 있으면 그때 빨강 (처음부터 빨갛게 하지 않음) */ WB.cseq = (WB.cseq || 0) + 1; WB.busy = false; wbBusy(false); WB.R = null; WB.err = '';
     if(T.onResult) T.onResult(null); wbPaint(['out', 'main', 'sig', 'stat']); wbNeedMark(); return; }
   wbNeedMark();
   if(WB.busy) wbKill();                                   /* 입력이 또 바뀜: 하던 계산은 버리고 새로 */
@@ -424,6 +424,8 @@ function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) re
   if((all || which.includes('sig')) && $('#wbsl')){ wbSlPaint(); $('#wbsig').innerHTML = wbSigHTML(); }
   if(all || which.includes('stat')){ $('#wbstat').textContent = WB.err ? '' : (WB.R ? `계산 ${WB.ms < 1 ? '1 ms 미만' : Math.round(WB.ms) + ' ms'} · Web Worker` : ''); const c = $('#wbcodeon'); if(c) c.hidden = WB.code[WB.id] == null; } }
 
+/* 다시 그린 뒤에도 빈 필수 칸 표시 유지 (도구 화면을 새로 그려도) */
+{ const _wbPaint = wbPaint; wbPaint = function(which){ _wbPaint(which); if((WB.need || []).length) wbNeedMark(); }; }
 /* ---------- 사용법 단계의 탭: 결과 쪽 선택자면 결과, 입력 · 도구 입력 화면이면 편집 ---------- */
 function wbTourTabs(T){ if(!T || !T.tour || T.__tt || !wbTabs(T)) return; T.__tt = true;
   T.tour = T.tour.map(st => { const sel = String(st[0] || ''); if(/wb-bar|wb-tabsec/.test(sel)) return st;
@@ -474,6 +476,7 @@ function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id]
   WB.id = id; WB.need = []; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
+  WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 새 파일 빈칸: 편집 탭에서 시작 */
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
   m.classList.toggle('wb-exmode', wbEx()); m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
@@ -640,7 +643,8 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => { const sw = e.target.closest && e.target.closest('[data-wbsw]'); if(sw && WB.sw){ const x = parseFloat(sw.value); if(isFinite(x)){ WB.sw[sw.dataset.wbsw] = x; clearTimeout(WB.timer); WB.timer = setTimeout(() => wbSweep().then(() => wbPaint(['sig'])), 250); } return; }
   const i = e.target.closest && e.target.closest('[data-wbi]'); if(!i || !WB.id) return;
-  const x = parseFloat(i.value); if(!isFinite(x)) return; WB.I[i.dataset.wbi] = x; wbSave();
+  const x = parseFloat(i.value); if(!isFinite(x)){ if(String(i.value).trim()==='' && !wbEx()){ WB.I[i.dataset.wbi] = NaN; wbSave(); WB.need = wbNeed(); wbNeedMark(); wbCalcSoon(); } return; }
+  WB.I[i.dataset.wbi] = x; wbSave(); if(!wbEx() && (WB.need || []).length){ WB.need = wbNeed(); wbNeedMark(); }   /* 채우면 그 칸 빨강이 바로 사라짐 */
   const r = i.closest('.wb-ir'), d = wbT().inputs.find(o => o.k===i.dataset.wbi), db = wbDash(d.dk); if(r) r.classList.toggle('diff', !!(db && Math.abs(x - db.v) > 1e-9*Math.max(1, Math.abs(db.v))));
   wbCalcSoon(); });
 document.addEventListener('change', e => { const t = e.target; if(!WB.id || !t.matches) return;
