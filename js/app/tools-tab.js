@@ -86,15 +86,20 @@ const dashFmt = (k, v) => { if(DV_RATIO[k]){ const a = Number(v); return `${a.to
 const dashP = () => DASH.C.aero ? DASH.P : {...DASH.P, cla:0, cda:0};
 function dashCalc(){ const C = DASH.C; return DASHCALC(dashP(), {v:C.v, R: C.straight ? Infinity : C.R, ax:C.ax, dir:C.dir}); }
 
+/* 대시보드 예시값 빼기 (2026-11-11): 아무도 안 넣은 값은 — 로. 그림 · 조건 · 파트 그림은 필요한 값이 다 있을 때만 그림 */
+const dashEx = k => DASH.ST[k]==='ex';
+const dashMissing = () => DASH.GROUPS.flatMap(g => g[1].map(r => r[0])).filter(dashEx);
+const dashNoFig = what => `<p class="dp-note dv-nofig">대시보드 설계값 ${dashMissing().length}개가 비어 있어 ${what}을 그리지 않습니다. 위 설계값을 채우면 그립니다 (예시값은 쓰지 않음).</p>`;
 function dashValuesHTML(){ const P = DASH.P;
   const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
-  const calc = (k, v, u, inv) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd>${inv && canEditDv(inv) ? `<button type="button" class="dv-v" data-dk="${k}" data-dinv="${inv}" title="계산값 · 고치면 ${DK[inv].n}이 역으로 바뀜">` : '<span class="dv-v ro">'}<b>${v}</b> <span class="dv-u">${u}</span>${inv && canEditDv(inv) ? '</button>' : '</span>'}<span class="dv-s s-calc" title="계산값"></span></dd></div>`;
-  const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr');
+  const calc = (k, v, u, inv, need) => (need || []).some(dashEx) ? `<div class="dv-r calc ex"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>—</b></span><span class="dv-s s-calc" title="계산값 (넣지 않은 값이 있어 계산 안 함)"></span></dd></div>` : calc0(k, v, u, inv);
+  const calc0 = (k, v, u, inv) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd>${inv && canEditDv(inv) ? `<button type="button" class="dv-v" data-dk="${k}" data-dinv="${inv}" title="계산값 · 고치면 ${DK[inv].n}이 역으로 바뀜">` : '<span class="dv-v ro">'}<b>${v}</b> <span class="dv-u">${u}</span>${inv && canEditDv(inv) ? '</button>' : '</span>'}<span class="dv-s s-calc" title="계산값"></span></dd></div>`;
+  const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr', ['L', 'fr']);
   return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const can = canEditDv(k), st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
-      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd>${can ? `<button type="button" class="dv-v" data-dk="${k}" title="눌러서 고치기">` : `<span class="dv-v ro" title="${DK[k].p} 담당만 고칠 수 있습니다">`}<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}${can ? '</button>' : '</span>'}${can && st!=='ex' ? `<button type="button" class="dv-s s-${st}" data-dst="${k}" title="${DASH.STL[st]} · 눌러서 상태 바꾸기" aria-label="상태 ${DASH.STL[st]}"></button>` : `<span class="dv-s s-${st}" title="${DASH.STL[st]}${e&&e.src?' · '+esc(e.src):''}"></span>`}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
-      ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h') : ''}
+      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd>${can ? `<button type="button" class="dv-v" data-dk="${k}" title="눌러서 고치기">` : `<span class="dv-v ro" title="${DK[k].p} 담당만 고칠 수 있습니다">`}${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}${can ? '</button>' : '</span>'}${can && st!=='ex' ? `<button type="button" class="dv-s s-${st}" data-dst="${k}" title="${DASH.STL[st]} · 눌러서 상태 바꾸기" aria-label="상태 ${DASH.STL[st]}"></button>` : `<span class="dv-s s-${st}" title="${DASH.STL[st]}${e&&e.src?' · '+esc(e.src):''}"></span>`}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
+      ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h', null, ['nmax', 'gr', 'r_eff']) : ''}
       </dl></section>`).join('')}</div>
-    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><i class="dv-s s-asm"></i>가정</span><span><i class="dv-s s-calc"></i>계산값</span><span><i class="dv-s s-ex"></i>예시값</span><span class="dv-legn">${SH.on ? '값을 누르면 고칩니다(담당 파트만). 상태 점을 누르면 확정 · 검토 중 · 가정이 바뀝니다.' : '팀에 로그인하지 않아 이 브라우저에만 저장됩니다.'}</span></p>`;
+    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><i class="dv-s s-asm"></i>가정</span><span><i class="dv-s s-calc"></i>계산값</span><span><i class="dv-s s-ex"></i>비어 있음</span><span class="dv-legn">${SH.on ? '값을 누르면 고칩니다(담당 파트만). 상태 점을 누르면 확정 · 검토 중 · 가정이 바뀝니다.' : '팀에 로그인하지 않아 이 브라우저에만 저장됩니다.'}</span></p>`;
 }
 function dashReadHTML(){ const K = dashCalc(), f = (v,d) => v.toFixed(d);
   const row = (l, v, cls) => `<div class="dr-r"><dt>${l}</dt><dd class="${cls||''}">${v}</dd></div>`;
@@ -121,7 +126,7 @@ function dashBipolar(){ const sl = document.querySelector('#dcond input[data-dc=
 function dashPartHTML(){ const P = DASH.P, C = DASH.C;
   const tabs = [['frame','질량 · 무게중심',''],['aero','에어로',''],['goal','차량 목표',''],['pt','파워트레인',''],['brake','제동','도구 3'],['susp','서스 기하','도구 5'],['steer','조향','도구 6'],['spring','스프링·ARB','도구 7']];
   return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+'을 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
-    <div class="dp-body">${DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : (DASH.part==='goal' || DASH.part==='pt') && typeof t2PartHTML==='function' ? t2PartHTML(DASH.part) : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
+    <div class="dp-body">${DASH.part==='frame' && ['L', 'tf', 'tr', 'r_load'].some(dashEx) ? dashNoFig('질량 분포 그림') : (DASH.part==='goal' || DASH.part==='pt') && dashMissing().length ? dashNoFig('이 파트 그림') : DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : (DASH.part==='goal' || DASH.part==='pt') && typeof t2PartHTML==='function' ? t2PartHTML(DASH.part) : DASH.part==='aero' && dashMissing().length ? dashNoFig('에어로 그림') : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
 }
 function dashFigsHTML(){ const K = dashCalc(), P = DASH.P, C = DASH.C;
   return `<figure class="df-f"><figcaption><b>옆에서</b><span>축하중 · 무게중심 · 압력 중심</span></figcaption>${CARFIG.side(P, C, K)}</figure>
@@ -143,8 +148,9 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
 function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
   dashSync(); dashClamp(); const ss = $('#dvseason'); if(ss) ss.textContent = dvSeason() + ' 시즌';
   if(all || which.includes('vals')) $('#dvals').innerHTML = dashValuesHTML();
-  if(all || which.includes('cond')){ $('#dcond').innerHTML = dashCondHTML(); dashBipolar(); }
-  if(all || which.includes('figs')) $('#dfigs').innerHTML = dashFigsHTML();
+  const nf = dashMissing().length > 0;   /* 비어 있는 값이 있으면 그림 · 조건 대신 안내 */
+  if(all || which.includes('cond')){ $('#dcond').innerHTML = nf ? '<h3 class="dc-h">주행 조건</h3><p class="dp-note dv-nofig">설계값을 다 채우면 차속 · 코너 반경 · 종가속을 골라 그림을 봅니다.</p>' : dashCondHTML(); if(!nf) dashBipolar(); }
+  if(all || which.includes('figs')) $('#dfigs').innerHTML = nf ? dashNoFig('그림') : dashFigsHTML();
   if(all || which.includes('part')) $('#dpart').innerHTML = dashPartHTML(); }
 /* 값 고치기: 누르면 입력칸 → Enter·바깥 누르기로 저장, Esc 취소. 처음 넣는 값은 '검토 중'
    - 배분(앞 : 뒤, 왼 : 오른): 두 칸, 한쪽을 고치면 다른 쪽이 100 − 값으로 따라 바뀜(둘 다 고칠 수 있음). 저장은 앞 · 왼 값
@@ -153,7 +159,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('.dv-v[data-dk]'); if(!b) return;
   const k = b.dataset.dk, inv = b.dataset.dinv, sk = inv || k; if(!canEditDv(sk)) return;
   const P = DASH.P, ex = DASH.ST[sk]==='ex', box = document.createElement('span'); box.className = 'dv-ed';
-  const mk = (v, lab) => { const i = document.createElement('input'); i.type = 'number'; i.step = 'any'; i.className = 'dv-in'; i.value = ex ? '' : v; i.placeholder = String(v); i.setAttribute('aria-label', lab); return i; };
+  const mk = (v, lab) => { const i = document.createElement('input'); i.type = 'number'; i.step = 'any'; i.className = 'dv-in'; i.value = ex ? '' : v; i.placeholder = ex ? '' : String(v); i.setAttribute('aria-label', lab); return i; };
   let ins;
   if(DV_RATIO[k]){ const [l1, l2] = DV_RATIO[k], a = mk(+(+P[k]).toFixed(2), l1), c = mk(+(100 - P[k]).toFixed(2), l2), sep = document.createElement('span'); sep.className = 'dv-sep'; sep.textContent = ':';
     a.addEventListener('input', () => { const x = parseFloat(a.value); c.value = isFinite(x) ? +(100 - x).toFixed(2) : ''; });

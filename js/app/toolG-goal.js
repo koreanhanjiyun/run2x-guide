@@ -23,6 +23,9 @@ WB_TOOLS['G'] = {
   no:'2', stage:'P0', name:'목표 · 요구값 (경량 시뮬)',
   x:{ get n(){ return gTgU()[0]; }, get u(){ return gTgU()[1]; } }, xiStart:'mid',
   extraI: () => ({ base: typeof t2PartInputs === 'function' ? t2PartInputs() : {} }),
+  /* 새 파일: 기본 차 값 (대시보드 설계값 · 도구 2P 새 파일 저장값) 이 비어 있으면 계산 안 함 */
+  needExt(){ if(wbEx() || typeof t2PartInputs!=='function') return []; const B = t2PartInputs(), n = WB_TOOLS['2'].inputs.filter(d => d.ui!=='none' && d.dk && !isFinite(B[d.k])).length;
+    return n ? [{k:'g:base', n:`기본 차 값 ${n}개 (대시보드 설계값 · 도구 2P 새 파일)`, g:'기본 차'}] : []; },
   inLock(k){ if(k==='xcop') return WB.I.cop_m !== 0 ? '무게 배분과 같게' : ''; return ''; },
   inOpt(k){ const seg = (attr, cur, items) => `<span class="t2-inopt"><span class="dc-seg" role="group">${items.map(([v, t]) => `<button type="button" ${attr}="${v}" aria-pressed="${String(cur)===v}">${t}</button>`).join('')}</span></span>`;
     if(k==='tg_v') return seg('data-gtg', Math.round(WB.I.tg || 0), GTGN);
@@ -41,7 +44,7 @@ WB_TOOLS['G'] = {
     {k:'cla', dk:'cla', n:'기본 C<sub>L</sub>·A (훑기 기준점)', v:3.0, d:2, g:GG.aero}, {k:'ld', n:'양항비 L/D (다운포스 ÷ 날개 항력)', u:'', v:2.5, d:2, g:GG.aero},
     {k:'cda0', n:'차체 C<sub>D</sub>·A (날개 없이)', u:'m²', v:0.2, d:2, g:GG.aero},
     {k:'cop_m', n:'압력중심 (1 = 무게 배분과 같게, 0 = 직접)', u:'', v:1, d:0, g:GG.aero, ui:'none'}, {k:'xcop', dk:'xcop', n:'압력중심 위치 (뒤축부터 앞으로)', v:698, d:0, g:GG.aero},
-    {k:'dr_ks', n:'현실 운전자 그립 사용률 k_s', u:'', v:0.9, d:2, g:GG.drv}, {k:'dr_ke', n:'현실 운전자 내구 페이스 k_e', u:'', v:0.7, d:2, g:GG.drv},
+    {k:'dr_ks', n:'현실 운전자 그립 사용률 k_s', u:'', v:0.9, d:2, g:GG.drv, keep:true}, {k:'dr_ke', n:'현실 운전자 내구 페이스 k_e', u:'', v:0.7, d:2, g:GG.drv, keep:true},
   ],
   outputs:[
     {k:'b_acc', n:'가속', u:'s', d:3, g:'기본 차 기록 (이상 운전자)'}, {k:'b_skid', n:'스키드패드 (좌우 합)', u:'s', d:3, g:'기본 차 기록 (이상 운전자)'},

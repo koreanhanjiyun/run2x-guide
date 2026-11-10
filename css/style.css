@@ -3244,3 +3244,5 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wb-needline b{color:#b3261e}.wb-needline span{color:var(--ink-2);flex:1}
 .wb-need-flash{animation:wbneedf 1.2s ease}
 @keyframes wbneedf{0%,60%{box-shadow:0 0 0 4px rgba(211,58,44,.35)}100%{box-shadow:none}}
+/* 대시보드: 비어 있는 값 (예시값 없음) */
+.dv-nofig{padding:16px 0;color:var(--muted)}

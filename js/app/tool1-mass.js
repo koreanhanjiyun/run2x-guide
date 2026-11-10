@@ -384,7 +384,7 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
 /* ---------- 대시보드 '파트별 > 질량 · 무게중심': 팀 질량 표 · 드라이버로 계산한 결과(읽기 전용) ---------- */
 const M1P = { R:null, key:'', busy:false, w:null };
 function m1PartDirty(){ M1P.key = ''; if(typeof DASH!=='undefined' && DASH.part==='frame' && $('#m1part')) m1PartRun(); }
-function m1PartInputs(){ const P = typeof DASH!=='undefined' ? DASH.P : {}; return {L:P.L || 1550, tf:P.tf || 1200, tr:P.tr || 1180, r_load:P.r_load || 220, ...m1ExtraI()}; }
+function m1PartInputs(){ const v = k => { const d = wbDash(k); return d ? d.v : NaN; }; return {L:v('L'), tf:v('tf'), tr:v('tr'), r_load:v('r_load'), ...m1ExtraI()}; }   /* 대시보드에 넣은 값만 (예시값 · 기본값 없음) */
 function m1PartRun(){ const I = m1PartInputs(), key = JSON.stringify(I); if(key===M1P.key || M1P.busy) return; M1P.busy = true;
   try{ if(!M1P.w){ M1P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['1'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); } }catch(e){ M1P.busy = false; return; }
   M1P.w.onmessage = e => { M1P.busy = false; M1P.key = key; if(e.data.ok){ M1P.R = e.data.r; const b = $('#m1part'); if(b) b.innerHTML = m1PartBody(I, M1P.R); } };

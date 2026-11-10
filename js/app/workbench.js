@@ -52,8 +52,7 @@ function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res
 function wbDash(dk){ if(!dk) return null;
   const e = typeof dvEntry==='function' ? dvEntry(dk) : null;
   if(e && typeof e.v==='number' && isFinite(e.v)) return {v:e.v, st:e.st || 'rev', by:e.by || '', at:e.at || '', src:e.src || ''};
-  if(typeof DASH!=='undefined' && typeof DASH.P[dk]==='number') return {v:DASH.P[dk], st:'ex'};   /* 아직 아무도 안 넣은 값 = 예시값 */
-  return null; }
+  return null; }   /* 아직 아무도 안 넣은 값 = 없음 (사이트는 예시값을 주지 않음, 2026-11-11) */
 const wbInName = d => d.n || (d.dk && DK[d.dk] ? DK[d.dk].n : d.k);
 const wbInUnit = d => d.u != null ? d.u : (d.dk && DK[d.dk] ? DK[d.dk].u : '');
 
@@ -444,7 +443,7 @@ function wbLoad(id){ const T = WB_TOOLS[id], I = {}; let saved = {};
   try{ saved = JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ saved = {}; }
   const sh = T.share && WB_SHARE[T.share] ? wbShareGet(T.share) : null, re = sh ? WB_SHARE[T.share].re : null;
   T.inputs.forEach(d => { const c = sh && re.test(d.k) ? sh[d.k] : undefined, s = saved[d.k];
-    I[d.k] = typeof c==='number' && isFinite(c) ? c : typeof s==='number' && isFinite(s) ? s : (wbEx() || d.ui==='none' ? d.v : NaN); });   /* 같이 쓰는 값 > 이 도구 저장값 > (예제 = 기본값 · 새 파일 = 빈칸, 모델 선택 · 고정 상수(ui:'none')는 늘 기본) */
+    I[d.k] = typeof c==='number' && isFinite(c) ? c : typeof s==='number' && isFinite(s) ? s : (wbEx() || d.ui==='none' || d.keep ? d.v : NaN); });   /* 같이 쓰는 값 > 이 도구 저장값 > (예제 = 기본값 · 새 파일 = 빈칸, 모델 선택 · 고정 상수(ui:'none') · 운전자 계수(keep)는 늘 기본) */
   return I; }
 function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(WB.I)); }catch(e){} const T = WB_TOOLS[WB.id]; if(T && T.share) wbShareSet(T.share, WB.I); }
 /* 하드포인트 파일: 행 = 축 · 점 · 이름 · x · y · z [mm] (차량 좌표: x 앞 · y 바깥 · z 위, 왼쪽 바퀴). 도구 5 · 6 · 7 · 8 의 점을 모두 담음 */
