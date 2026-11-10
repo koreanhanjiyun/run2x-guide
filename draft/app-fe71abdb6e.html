@@ -3257,16 +3257,14 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 #wb.wb-exmode #wbout :is(.wb-oc, .t2-oc){position:relative}
 #wb.wb-exmode #wbout :is(.wb-oc, .t2-oc)::after{content:'예제';position:absolute;top:8px;right:10px;font-size:11px;font-weight:700;color:#b8860b;border:1px solid #e7c873;background:#fff8e6;border-radius:4px;padding:1px 6px;pointer-events:none}
 #wb.wb-exmode :is([data-wbexp],[data-wbimp],[data-wbput],[data-wbfill],[data-wbhp],[data-t2to9="send"],[data-t9x="put"],[data-t6x]){opacity:.42;filter:grayscale(1)}
-/* 새 파일: 빈 필수 칸 빨강 · 채울 칸 목록 */
-.wb-ir.need input,.t9-cfi.need input{border-color:#d33a2c!important;background:#fff4f2!important;box-shadow:0 0 0 1px #d33a2c inset}
-.wb-ir.need .wb-in-t{color:#b3261e}
-[data-t2eg].need,[data-t2tab="edit"].need{position:relative}
-[data-t2eg].need::after,[data-t2tab="edit"].need::after{content:'';position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#d33a2c}
-.wb-need{border:1px solid #f0b8b0;background:#fff7f5;border-radius:10px;padding:14px 16px}
-.wb-need-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}.wb-need-h b{color:#b3261e;font-size:15px}.wb-need-h span{font-size:12.5px}
-.wb-need-l{display:flex;flex-wrap:wrap;gap:6px}
-.wb-need-i{border:1px solid #f0b8b0;background:#fff;border-radius:6px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink)}
-.wb-need-i:hover,.wb-need-i:focus-visible{border-color:#d33a2c;background:#fff0ed;outline:none}.wb-need-i .muted{font-size:11.5px}
+/* 새 파일: 빈 필수 칸 빨강 (결과를 보려 할 때부터, #wb.wb-needon) · 칸 아래 경고 */
+#wb.wb-needon :is(.wb-ir.need, .t9-cfi.need) input{border-color:#d33a2c!important;background:#fff4f2!important;box-shadow:0 0 0 1px #d33a2c inset}
+#wb.wb-needon .wb-ir.need .wb-in-t{color:#b3261e}
+#wb.wb-needon :is(.wb-ir.need, .t9-cfi.need)::after{content:'반드시 입력해야 합니다';grid-column:1/-1;justify-self:end;color:#c62828;font-size:11.5px;font-weight:600;line-height:1.2;margin-top:-1px}
+#wb.wb-needon :is([data-t2eg].need, [data-t2tab="edit"].need){position:relative}
+#wb.wb-needon :is([data-t2eg].need, [data-t2tab="edit"].need)::after{content:'';position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#d33a2c}
+.wb-needline{margin:0;padding:12px 14px;border:1px solid #f0b8b0;background:#fff7f5;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wb-needline b{color:#b3261e}.wb-needline span{color:var(--ink-2);flex:1}
 .wb-need-flash{animation:wbneedf 1.2s ease}
 @keyframes wbneedf{0%,60%{box-shadow:0 0 0 4px rgba(211,58,44,.35)}100%{box-shadow:none}}
 </style>
@@ -10210,7 +10208,7 @@ const wbStoreKey = id => wbMK('run2x.wb.' + id);
 const wbTabs = T => !!T && T.inPanel !== false;
 const WBTAB_KEY = 'run2x.wb.tab';
 function wbTabGet(id){ try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; return m[id]==='edit' ? 'edit' : 'res'; }catch(e){ return 'res'; } }
-function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res';
+function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res'; if(WB.tab==='res' && (WB.need || []).length){ WB.needShow = true; setTimeout(wbNeedMark, 0); }
   try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; m[WB.id] = WB.tab; localStorage.setItem(WBTAB_KEY, JSON.stringify(m)); }catch(e){}
   const w = $('#wb'); if(w){ w.classList.toggle('wb-edit', WB.tab==='edit'); w.classList.toggle('wb-res', WB.tab!=='edit'); }
   wbPaint(['tabs']); if(WB.tab==='res'){ wbPaint(['out', 'main', 'sig', 'mid']); wb3dUpdate && wb3dUpdate(); } }
@@ -10282,17 +10280,17 @@ function wbNeed(){ const T = wbT(); if(!T) return []; const L = [];
   if(T.needExt) (T.needExt() || []).forEach(x => L.push(x)); return L; }
 const wbNeedK = k => (WB.need || []).some(x => x.k===k);
 /* 빈 필수 칸 빨강: 다시 그리지 않고 그 자리에서 (입력 중인 칸의 포커스 유지). 도구 화면의 표 · 블럭은 [data-wbneed="키"] 로 */
-function wbNeedMark(){ document.querySelectorAll('#wb input[data-wbi]').forEach(i => { const l = i.closest('.wb-ir'); if(l) l.classList.toggle('need', !i.disabled && wbNeedK(i.dataset.wbi)); });
+function wbNeedMark(){ const w = $('#wb'); if(w) w.classList.toggle('wb-needon', !!WB.needShow && !!(WB.need || []).length);
+  document.querySelectorAll('#wb input[data-wbi]').forEach(i => { const l = i.closest('.wb-ir'); if(l) l.classList.toggle('need', !i.disabled && wbNeedK(i.dataset.wbi)); });
   document.querySelectorAll('#wb [data-wbneed]').forEach(el => el.classList.toggle('need', wbNeedK(el.dataset.wbneed))); const T = wbT(); if(T && T.needMark) T.needMark(WB.need || []); }
 /* 결과 자리: 채울 칸 목록 (누르면 그 칸으로) */
-function wbNeedHTML(){ const L = WB.need || [], T = wbT();
-  return `<div class="wb-need" role="status"><div class="wb-need-h"><b>채울 칸 ${L.length}개</b><span class="muted">새 파일은 빈칸에서 시작합니다. 아래 칸을 채우면 계산합니다 (모델 단계 · 켠 기능에 따라 필요한 칸이 바뀜).</span></div>
-    <div class="wb-need-l">${L.map(x => `<button type="button" class="wb-need-i" data-wbgo="${wbEsc(x.k)}"${x.tab ? ` data-wbgotab="${wbEsc(x.tab)}"` : ''}>${x.g ? `<span class="muted">${wbEsc(x.g)}</span> ` : ''}${wbEsc(x.n)}</button>`).join('')}</div></div>`; }
+function wbNeedHTML(){ const n = (WB.need || []).length;
+  return `<p class="wb-needline" role="status"><b>필수 입력 ${n}칸이 비어 있어 계산하지 않았습니다.</b> <span>편집 탭의 빨간 칸을 채워 주십시오 (모델 단계 · 켠 기능에 따라 필요한 칸이 바뀜).</span> <button type="button" class="btn small" data-wbgo="${wbEsc((WB.need[0] || {}).k || '')}"${WB.need[0] && WB.need[0].tab ? ` data-wbgotab="${wbEsc(WB.need[0].tab)}"` : ''}>첫 빈칸으로</button></p>`; }
 /* 목록에서 고른 칸으로: 도구가 T.needGo(k) 로 자기 화면을 엶 (도구 2P 편집 탭 묶음), 아니면 편집 탭 */
 function wbNeedGo(k, tab){ const T = wbT(); if(T.needGo && T.needGo(k, tab)===true){} else if(wbTabs(T) && WB.tab!=='edit') wbTabSet('edit');
   setTimeout(() => { const el = document.querySelector(`#wb input[data-wbi="${k}"]`) || document.querySelector(`#wb [data-wbneed="${k}"]`); if(el){ el.scrollIntoView({block:'center', behavior:'smooth'}); if(el.focus) el.focus({preventScroll:true}); el.classList.add('wb-need-flash'); setTimeout(() => el.classList.remove('wb-need-flash'), 1200); } }, 80); }
 async function wbCalc(){ const T = wbT(); if(!T) return;
-  WB.need = wbNeed(); if(WB.need.length){ if(WB.busy) wbKill(); WB.cseq = (WB.cseq || 0) + 1; WB.busy = false; wbBusy(false); WB.R = null; WB.err = '';
+  WB.need = wbNeed(); if(WB.need.length){ if(WB.busy) wbKill(); if(wbTabs(T) ? WB.tab!=='edit' : !(T.deferCalc && T.deferCalc())) WB.needShow = true;   /* 결과를 보려 할 때 비어 있으면 그때 빨강 (처음부터 빨갛게 하지 않음) */ WB.cseq = (WB.cseq || 0) + 1; WB.busy = false; wbBusy(false); WB.R = null; WB.err = '';
     if(T.onResult) T.onResult(null); wbPaint(['out', 'main', 'sig', 'stat']); wbNeedMark(); return; }
   wbNeedMark();
   if(WB.busy) wbKill();                                   /* 입력이 또 바뀜: 하던 계산은 버리고 새로 */
@@ -10591,6 +10589,8 @@ function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) re
   if((all || which.includes('sig')) && $('#wbsl')){ wbSlPaint(); $('#wbsig').innerHTML = wbSigHTML(); }
   if(all || which.includes('stat')){ $('#wbstat').textContent = WB.err ? '' : (WB.R ? `계산 ${WB.ms < 1 ? '1 ms 미만' : Math.round(WB.ms) + ' ms'} · Web Worker` : ''); const c = $('#wbcodeon'); if(c) c.hidden = WB.code[WB.id] == null; } }
 
+/* 다시 그린 뒤에도 빈 필수 칸 표시 유지 (도구 화면을 새로 그려도) */
+{ const _wbPaint = wbPaint; wbPaint = function(which){ _wbPaint(which); if((WB.need || []).length) wbNeedMark(); }; }
 /* ---------- 사용법 단계의 탭: 결과 쪽 선택자면 결과, 입력 · 도구 입력 화면이면 편집 ---------- */
 function wbTourTabs(T){ if(!T || !T.tour || T.__tt || !wbTabs(T)) return; T.__tt = true;
   T.tour = T.tour.map(st => { const sel = String(st[0] || ''); if(/wb-bar|wb-tabsec/.test(sel)) return st;
@@ -10641,6 +10641,7 @@ function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id]
   WB.id = id; WB.need = []; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
+  WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 새 파일 빈칸: 편집 탭에서 시작 */
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
   m.classList.toggle('wb-exmode', wbEx()); m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
@@ -10807,7 +10808,8 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => { const sw = e.target.closest && e.target.closest('[data-wbsw]'); if(sw && WB.sw){ const x = parseFloat(sw.value); if(isFinite(x)){ WB.sw[sw.dataset.wbsw] = x; clearTimeout(WB.timer); WB.timer = setTimeout(() => wbSweep().then(() => wbPaint(['sig'])), 250); } return; }
   const i = e.target.closest && e.target.closest('[data-wbi]'); if(!i || !WB.id) return;
-  const x = parseFloat(i.value); if(!isFinite(x)) return; WB.I[i.dataset.wbi] = x; wbSave();
+  const x = parseFloat(i.value); if(!isFinite(x)){ if(String(i.value).trim()==='' && !wbEx()){ WB.I[i.dataset.wbi] = NaN; wbSave(); WB.need = wbNeed(); wbNeedMark(); wbCalcSoon(); } return; }
+  WB.I[i.dataset.wbi] = x; wbSave(); if(!wbEx() && (WB.need || []).length){ WB.need = wbNeed(); wbNeedMark(); }   /* 채우면 그 칸 빨강이 바로 사라짐 */
   const r = i.closest('.wb-ir'), d = wbT().inputs.find(o => o.k===i.dataset.wbi), db = wbDash(d.dk); if(r) r.classList.toggle('diff', !!(db && Math.abs(x - db.v) > 1e-9*Math.max(1, Math.abs(db.v))));
   wbCalcSoon(); });
 document.addEventListener('change', e => { const t = e.target; if(!WB.id || !t.matches) return;
@@ -12504,7 +12506,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(T2.menu){ T2.menu = ''; t2Repaint(); }
 
   const tb = t.closest('[data-t2tab]'); if(tb){ T2.tab = tb.dataset.t2tab; T2.menu = ''; t2Save(); wbPaint(['ext']);
-    if(T2.tab==='sim'){ t2MapRepaint(); t2PfSoon(); if(WB.dirty){ WB.dirty = false; wbCalc(); } } return; }   // 편집에서 바꾼 것이 있으면 이제 계산
+    if(T2.tab==='sim'){ t2MapRepaint(); t2PfSoon(); if(WB.dirty || (WB.need || []).length){ WB.dirty = false; wbCalc(); } } else wbNeedMark(); return; }   // 편집에서 바꾼 것이 있으면 이제 계산 (빈 필수 칸이 있으면 그때 빨강)   // 편집에서 바꾼 것이 있으면 이제 계산
   const ec = t.closest('[data-t2ecourse]'); if(ec){ T2.ecourse = ec.dataset.t2ecourse; T2.menu = ''; T2.zoomE = {k:1, cx:.5, cy:.5}; t2Save(); wbPaint(['ext']); return; }
   const us = t.closest('[data-t2use]'); if(us){ T2.use[T2.etab] = us.dataset.t2use; t2Save(); wbPaint(['ext']); t2Soon(); return; }
   const el = t.closest('[data-t2el]'); if(el){ WB.I.e_lim = +el.dataset.t2el; if(WB.I.e_lim===2 && !(WB.I.e_target > 0)) WB.I.e_target = Math.round(t2Epack()*100)/100; wbSave(); wbPaint(['ext']); wbCalcSoon(); return; }
@@ -12856,6 +12858,7 @@ WB_TOOLS['2'] = {
     if(th.w && WB.I.cw_mode===1 && !(C && (C.circuits || []).some(c => (c.blocks || []).length))) L.push({k:'t2:cool', n:'냉각 회로 배치', g:'냉각', tab:'cool'});
     return L; },
   /* 편집 탭 위 단추: 빈 필수 칸이 있는 묶음을 빨강 */
+  onNeedOpen(){ T2.tab = 'edit'; },   /* 새 파일 빈칸이면 편집 탭에서 시작 */
   needMark(L){ const gs = new Set(L.map(x => x.tab ? t2Grp(x.tab) : (d => d && Object.keys(T2EG).find(e => (T2EG[e] || []).includes(d.g)))(WB_TOOLS['2'].inputs.find(o => o.k===x.k))).filter(Boolean));
     document.querySelectorAll('#wb [data-t2eg]').forEach(b => b.classList.toggle('need', gs.has(b.dataset.t2eg))); document.querySelectorAll('#wb [data-t2tab="edit"]').forEach(b => b.classList.toggle('need', gs.size > 0)); },
   /* 목록에서 고른 칸: 편집 탭의 그 묶음 (표는 그 표) */
