@@ -10675,12 +10675,13 @@ async function wbVerify(){ const T = wbT(), code = wbCode(); wbModal(wbMHead('�
   const rows = []; let pass = 0, n = 0;
   for(const c of (T.verify || [])){ const I = {...T.inputs.reduce((o, d) => (o[d.k] = d.v, o), {}), ...(T.verifyBase || {}), ...c.I}, r = await wbRun(I, code);
     Object.entries(c.expect).forEach(([k, ex]) => { const d = T.outputs.find(o => o.k===k) || {n:k, u:'', d:3}, got = r.ok && r.r.out ? r.r.out[k] : NaN;
-      const tol = c.tol != null ? c.tol : 0.001, ok = isFinite(got) && Math.abs(got - ex) <= tol*Math.max(1, Math.abs(ex)); n++; if(ok) pass++;
+      /* 허용 오차: 상대 0.1 % (값이 1 보다 작으면 절대 0.001). 온도 [°C] 는 절대 ±0.001 °C (°C 는 0 점이 임의라 상대 오차가 뜻이 없음 — 30 °C 의 0.1 % = 0.03 K 지만 300 K 로 보면 0.3 K) */
+      const uu = d.u || (d.dk && DK[d.dk] ? DK[d.dk].u : ''), tC = uu==='°C', tol = c.tol != null ? c.tol : 0.001, ok = isFinite(got) && (tC && c.tol == null ? Math.abs(got - ex) <= 0.001 : Math.abs(got - ex) <= tol*Math.max(1, Math.abs(ex))); n++; if(ok) pass++;
       rows.push(`<tr class="${ok?'ok':'ng'}"><td>${wbEsc(c.n)}</td><td>${d.dk && DK[d.dk] ? DK[d.dk].n : wbEsc(d.n)}</td><td>${wbFmt(ex, (d.d||0)+1)}</td><td>${r.ok ? wbFmt(got, (d.d||0)+1) : '<span class="wb-err">' + wbEsc(r.err) + '</span>'}</td><td>${wbEsc(d.u || (d.dk && DK[d.dk] ? DK[d.dk].u : ''))}</td><td>${ok?'통과':'<b>다름</b>'}</td><td class="muted">${wbEsc(c.src||'')}</td></tr>`); }); }
   const m = $('#wbm'); if(!m || m.hidden) return;
   if(!m.querySelector('[data-wbver][aria-selected="true"]')) return;
   m.querySelector('.dvm-box').innerHTML = wbMHead('코드 · 검증') + wbCTabs('ver') + `<p class="wb-cnote muted">답을 이미 아는 단순한 경우(해석해 · 손계산)에서 지금 코드의 결과가 같은지 봅니다. 코드를 고친 뒤 기존 식이 깨지지 않았는지 확인하는 용도입니다.</p><div class="dvi-body"><table class="dvi-t wb-vt"><thead><tr><th>경우</th><th>항목</th><th>기대값</th><th>계산값</th><th>단위</th><th>판정</th><th>기대값 근거</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
-    <div class="dvi-foot"><span class="muted">${pass} / ${n} 통과 · 허용 오차 상대 0.1 %${WB.code[WB.id]!=null ? ' · 고친 코드로 계산' : ''}</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`; }
+    <div class="dvi-foot"><span class="muted">${pass} / ${n} 통과 · 허용 오차 상대 0.1 % (온도 °C 는 ±0.001 °C)${WB.code[WB.id]!=null ? ' · 고친 코드로 계산' : ''}</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`; }
 /* 코드 보기: 고친 코드는 이 창을 닫아도 작업창이 열려 있는 동안만 쓰이고, 다시 열면 원래 코드 */
 function wbCodeOpen(){ wbModal(wbMHead('코드 · 검증') + wbCTabs('code') + `<p class="wb-cnote muted">입력 <code>I</code>(왼쪽 입력 칸의 키)를 받아 <code>out</code>(결과 숫자) · <code>x</code>(가로축) · <code>sig</code>(신호) · <code>main</code>(결과 그래프에 그릴 신호)를 돌려주는 <code>calc(I)</code> 함수입니다. 고친 코드는 저장되지 않으며, 작업창을 다시 열면 원래 코드로 돌아갑니다. 계산은 페이지와 떨어진 Web Worker에서 돌아갑니다.</p>
     <div class="dvi-body"><textarea class="wb-ta" spellcheck="false" aria-label="계산 코드">${wbEsc(wbCode())}</textarea></div>
@@ -18633,12 +18634,12 @@ function calc(I) {
 const K3D_PN = {lf:'아래 팔 안쪽 앞', lr:'아래 팔 안쪽 뒤', lo:'아래 볼조인트', uf:'위 팔 안쪽 앞', ur:'위 팔 안쪽 뒤', uo:'위 볼조인트', ti:'타이로드 안쪽', to:'타이로드 바깥',
   pa:'푸시로드 팔 쪽', pr:'푸시로드 로커 쪽', rp:'로커 회전 중심', rq:'로커 회전축 위 다른 점', dr:'댐퍼 로커 쪽', db:'댐퍼 차체 쪽'};
 const K3D_PNR = {ti:'토 링크 안쪽', to:'토 링크 바깥'};
-/* 2024 REF4 STEP 왼쪽 바퀴 (STEP 좌표 X 바깥 · Y 위 (지면 −74) · Z 앞 → 차 좌표 x = Z − 바퀴 중심 Z (앞 929.8 · 뒤 −650), y = X, z = Y + 74) */
+/* 2024 REF4 STEP 왼쪽 바퀴 (STEP 좌표 X 바깥 · Y 위 (지면 −74) · Z 앞 → 차 좌표 x = Z − 바퀴 중심 Z (앞 929.8 · 뒤 −650), y = X, z = Y + 74). 댐퍼 차체 쪽 눈 db = 몸통 끝 눈 고리의 원 맞춤 중심 (61차, 2026-11-11; 예전 가정 = 로커 쪽 눈에서 몸통 축 방향 200 mm) */
 const K3D_HP = {
   f:{lf:[170.2, 212.7, 131.3], lr:[-179.8, 212.7, 131.3], lo:[2.0, 561.6, 151.2], uf:[170.2, 246.7, 288.0], ur:[-179.8, 246.7, 288.0], uo:[-11.6, 516.6, 346.0],
-     ti:[12.2, 220.7, 169.5], to:[56.3, 550.1, 199.9], pa:[-4.8, 462.2, 361.4], pr:[-4.8, 314.0, 566.2], rp:[-4.8, 253.0, 551.0], rq:[95.2, 253.0, 551.0], dr:[-4.8, 250.8, 619.9], db:[-4.8, 51.0, 610.5]},
+     ti:[12.2, 220.7, 169.5], to:[56.3, 550.1, 199.9], pa:[-4.8, 462.2, 361.4], pr:[-4.8, 314.0, 566.2], rp:[-4.8, 253.0, 551.0], rq:[95.2, 253.0, 551.0], dr:[-4.8, 250.8, 619.9], db:[-4.8, 48.6, 610.3]},
   r:{lf:[100, 218.1, 154.1], lr:[-25, 218.1, 154.1], lo:[-1, 539.6, 169.2], uf:[100, 251.6, 309.6], ur:[-25, 251.6, 309.6], uo:[-25, 501.5, 365.5],
-     ti:[160, 218.1, 154.1], to:[59, 539.2, 169.1], pa:[5, 488.4, 193.3], pr:[5, 260.4, 401.0], rp:[5, 218.0, 362.0], rq:[105, 218.0, 362.0], dr:[5, 201.6, 439.1], db:[5, 7.4, 391.3]}};
+     ti:[160, 218.1, 154.1], to:[59, 539.2, 169.1], pa:[5, 488.4, 193.3], pr:[5, 260.4, 401.0], rp:[5, 218.0, 362.0], rq:[105, 218.0, 362.0], dr:[5, 201.6, 439.1], db:[5, 21.9, 395.2]}};
 /* 입력 칸: 축 s 의 점 목록 pts → 점마다 x · y · z (묶음 이름 = '앞 · 점 이름') */
 function k3dIn(s, pts){ const ax = s === 'f' ? '앞' : '뒤';
   return pts.flatMap(p => { const nm = (s === 'r' && K3D_PNR[p]) || K3D_PN[p], g = `${ax} · ${nm} (x 앞 · y 바깥 · z 위)`;
@@ -18890,7 +18891,7 @@ WB_TOOLS['6'] = {
   inputs:[
     {k:'L', dk:'L', v:1550, d:0, g:T6G.car}, {k:'tf', dk:'tf', v:1200, d:0, g:T6G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T6G.car},
     {k:'r_load', dk:'r_load', v:236, d:0, g:T6G.car}, {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T6G.car}, {k:'toe_f', dk:'toe_f', v:0, d:2, g:T6G.car},
-    {k:'rack_c', dk:'rack_c', v:90, d:1, g:T6G.rack}, {k:'rack_travel', dk:'rack_travel', v:30, d:1, g:T6G.rack}, {k:'d_ref', n:'애커먼 기준 조향각 (두 바퀴 평균)', u:'°', v:15, d:1, g:T6G.rack},
+    {k:'rack_c', dk:'rack_c', v:90, d:1, g:T6G.rack}, {k:'rack_travel', dk:'rack_travel', v:31.74, d:2, g:T6G.rack}, {k:'d_ref', n:'애커먼 기준 조향각 (두 바퀴 평균)', u:'°', v:15, d:1, g:T6G.rack},
     ...k3dIn('f', t6Pt),
   ],
   outputs:[
