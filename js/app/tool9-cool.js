@@ -76,7 +76,8 @@ function coolGauss(M, N) { const a = M.map(r => r.slice());
 //   공랭: 예전 꼴 (parts = 직렬 순서) 이면 점 꼴로 — 점 = {part, q, ins: [[앞 점, 몫]]} (앞 점 −1 = 입구 외기), 흐름 순서대로
 function coolPrep(NET) {
   if (!NET) return NET;
-  (NET.water || []).forEach(C => { if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+  (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
+    if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -96,6 +97,31 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
     out[k] = Cq > 0 ? Tin + G * (T[p] - Tin) / Cq : Tin; });
   return out;
 }
+// ---------- 라디에이터 (도구 9 · 2P 같이)
+//   공기 = 주행풍 A k_d v + 팬 (팬 켜는 온도 fon 이 있으면: 라디로 들어오는 냉각수가 fon 이상이면 켬, fon − COOL_FH 아래면 끔. 0 = 늘 켬)
+//   UA: 표 (nd.rq = {n: 냉각수 유량 L/min, t: 코어 풍속 m/s, e: 방열량 kW}, nd.itd = 그 표의 입구 온도차 K) 가 있으면
+//     표의 점마다 ε = Q ÷ (C_min × ITD) → 교차류 ε-NTU 를 거꾸로 풀어 UA = NTU × C_min (coolPrep 에서 한 번) → 코어 풍속 · 냉각수 유량으로 이중선형 (범위 밖은 끝값),
+//     없으면 UA = UA₅ (V_f ÷ 5)^0.6 (코어 풍속 5 m/s 기준)
+//   라디 금속 열용량 nd.Cm [kJ/K] 은 그 점 열용량에 더함 (정상 온도는 그대로, 오르내리는 빠르기만)
+const COOL_RA = 1.2, COOL_CA = 1005, COOL_FH = 3;   // 공기 밀도 [kg/m³] · 비열 [J/kg·K] · 팬 끄는 온도 차 [K]
+const coolEps = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));   // 교차류 (양쪽 안 섞임) 근사
+function coolNTU(eps, Cr) { if (!(eps > 0)) return 0; let lo = 0, hi = 1; while (coolEps(hi, Cr) < eps && hi < 1e4) hi *= 2; if (coolEps(hi, Cr) < eps) return Infinity;
+  for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (coolEps(m, Cr) < eps) lo = m; else hi = m; } return (lo + hi) / 2; }
+function coolUAtab(nd, rcp) { const M = nd.rq, itd = nd.itd > 0 ? nd.itd : 60;
+  return M.t.map(vf => M.n.map((fl, j) => { const Ca = COOL_RA * COOL_CA * vf * nd.A, Cc = fl / 60000 * rcp, Cm = Math.min(Ca, Cc), Cx = Math.max(Ca, Cc);
+    const row = M.t.indexOf(vf), Q = M.e[row][j] * 1000; if (!(Cm > 0) || !(Q > 0)) return 0;
+    const NTU = coolNTU(Math.min(Q / (Cm * itd), 0.999 * coolEps(1e3, Cm / Cx)), Cm / Cx); return isFinite(NTU) ? NTU * Cm : 0; })); }
+const coolBil = (ys, xs, Z, y, x) => { const f = (a, v) => { if (v <= a[0]) return [0, 0, 0]; const k = a.length - 1; if (v >= a[k]) return [k, k, 0]; let i = 0; while (a[i + 1] < v) i++; return [i, i + 1, (v - a[i]) / (a[i + 1] - a[i])]; };
+  const [i0, i1, w] = f(ys, y), [j0, j1, u] = f(xs, x); return (Z[i0][j0] * (1 - u) + Z[i0][j1] * u) * (1 - w) + (Z[i1][j0] * (1 - u) + Z[i1][j1] * u) * w; };
+function coolUA(nd, Vf, Lmin) { if (nd.uaT) return Vf > 0 ? coolBil(nd.rq.t, nd.rq.n, nd.uaT, Vf, Lmin) : 0; return Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0; }
+// 라디 점이 섞인 냉각수 열 중 외기로 버리는 몫 a = ε C_min ÷ F  (F = 이 라디 흐름 q C_c), fan = 팬이 도는지
+function coolRadA(C, nd, v, fan) {
+  const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + (fan ? nd.fan : 0)), Ca = COOL_RA * COOL_CA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
+  const UA = coolUA(nd, Vf, F / (C.rcp || 4.18e6) * 60000), Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? coolEps(UA / Cm, Cm / Cx) : 0;
+  return F > 0 ? e * Cm / F : 0; }
+const coolFanOn0 = nd => !(nd.fon > 0);                                                   // 출발: 켜는 온도가 있으면 꺼진 채
+const coolFanNext = (nd, on, Tin) => !(nd.fon > 0) ? true : on ? Tin >= nd.fon - COOL_FH : Tin >= nd.fon;   // 히스테리시스
+const coolC = nd => Math.max(1, (nd.C || 1) + (nd.Cm > 0 ? nd.Cm * 1000 : 0));          // 점 열용량 [J/K] (금속 포함)
 
 /* ---------- 냉각 블럭 배치 (시뮬링크처럼, 2026-11-06 도구 2P 편집 탭에서 옮겨 옴 · 2026-11-09 조작을 시뮬링크식으로)
    수랭 회로 (최대 3개): 라디에이터 · 펌프 · 모터 · 인버터 · 축전지 블럭을 라디에서 나와 라디로 돌아오게 이음 (라디 · 펌프 1개 이상, 처음 라디가 기준, 선 방향 = 냉각수 흐름, 갈라짐 · 합쳐짐 가능)
@@ -106,13 +132,16 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
    호스 = [앞 블럭, 뒤 블럭, 갈래 비율 (공랭), {d 안지름 mm, len 길이 m, pts 꺾임점}] */
 const T9CB = { rad:['라디에이터', 'rad'], pump:['펌프', 'pump'], m:['모터', 'part'], i:['인버터', 'part'], b:['축전지', 'part'], in:['공기 입구', 'io'], out:['공기 출구', 'io'] };
 const T9CP = {   // 블럭 입력 [키, 이름, 단위, 소수, 기본값]
-  rad:[['A', '코어 앞면 면적', 'm²', 3, 0.06], ['kd', '주행풍 중 코어 통과 비율', '', 2, 0.3], ['fan', '팬 유량 (정지 때도)', 'm³/s', 3, 0.08], ['UA', 'UA (코어 풍속 5 m/s)', 'W/K', 0, 250], ['V', '안의 냉각수 양', 'L', 2, 0.6],
+  rad:[['A', '코어 앞면 면적', 'm²', 3, 0.06], ['kd', '주행풍 중 코어 통과 비율', '', 2, 0.3], ['fan', '팬 유량', 'm³/s', 3, 0.08], ['fon', '팬 켜는 냉각수 온도 (0 = 늘 켬, 3 K 아래면 끔)', '°C', 0, 0],
+       ['UA', 'UA (코어 풍속 5 m/s, × (풍속 ÷ 5)^0.6)', 'W/K', 0, 250], ['itd', '방열 표의 입구 온도차', 'K', 0, 60], ['V', '안의 냉각수 양', 'L', 2, 0.6], ['Cm', '금속 열용량 (0 = 넣지 않음)', 'kJ/K', 2, 0],
        ['dp', '압력 강하 (0 = 없음)', 'kPa', 1, 0], ['dq', '압력 강하를 잰 유량', 'L/min', 1, 8]],
   pump:[['flow', '유량', 'L/min', 1, 8]],
   partW:[['V', '안의 냉각수 양 (재킷 · 냉각판)', 'L', 2, 0.3], ['dp', '압력 강하 (0 = 없음)', 'kPa', 1, 0], ['dq', '압력 강하를 잰 유량', 'L/min', 1, 8]],
   hose:[['d', '안지름', 'mm', 1, 10], ['len', '길이', 'm', 2, 0.5]],
   in:[['A', '입구 면적', 'm²', 3, 0.02], ['kd', '주행풍 중 들어오는 비율', '', 2, 0.5], ['fan', '팬 유량 (정지 때도)', 'm³/s', 3, 0.03]],
   water:[['cp', '냉각수 비열', 'J/kg·K', 0, 4180], ['rho', '냉각수 밀도', 'kg/m³', 0, 1000], ['mu', '냉각수 점도', 'mPa·s', 2, 1], ['Vh', '배관 · 탱크 냉각수 양', 'L', 2, 0.5]] };
+/* 라디 방열 표 (스펙 시트): B.p.rq = 글자 (첫 행 냉각수 유량 L/min, 첫 열 코어 풍속 m/s, 칸 kW), B.p.rqUse = 'const' 면 위 UA. 다른 표와 같은 규칙 (값이 있으면 표 · UA 칸 잠김) */
+const t9RadTab = B => B && B.t==='rad' && B.p && B.p.rqUse!=='const' && typeof t2GridParse==='function' && B.p.rq ? t2GridParse(B.p.rq).map : null;
 const t9LX = l => (l[3] && typeof l[3]==='object') ? l[3] : (l[3] = {});   // 호스 값 · 꺾임점
 const t9CParams = (C, B) => B.t==='rad' ? T9CP.rad : B.t==='pump' ? T9CP.pump : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t][1]==='part' ? T9CP.partW : [];
 const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { r[k] = isFinite(+((o || {})[k])) && (o || {})[k] !== '' ? +o[k] : v; }); return r; };
@@ -150,11 +179,11 @@ function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.bloc
   const Vsh = Math.max(0, P.Vh)/order.length, li = l => L.indexOf(l);
   const nodes = order.map(id => { const B = by.get(id), v = t9CV(B.p, t9CParams(C, B));
     return {t:B.t==='rad' ? 'rad' : B.t==='pump' ? 'pump' : 'part', part:T9CB[B.t][1]==='part' ? B.t : undefined, C:Math.max(1, ((B.t==='pump' ? 0 : v.V) + Vsh)/1000*P.rho*P.cp), q:id===R0 ? 1 : q.get(id),
-            ins:ins(id).map(l => [ix.get(l[0]), q.get(l[0])*fr(l), li(l)]), ...(B.t==='rad' ? {UA:v.UA, A:v.A, kd:v.kd, fan:v.fan} : {})}; });   // 라디마다 공기 쪽 값
+            ins:ins(id).map(l => [ix.get(l[0]), q.get(l[0])*fr(l), li(l)]), ...(B.t==='rad' ? {UA:v.UA, A:v.A, kd:v.kd, fan:v.fan, fon:v.fon, Cm:v.Cm, ...(t9RadTab(B) ? {rq:t9RadTab(B), itd:v.itd} : {})} : {})}; });   // 라디마다 공기 쪽 값 · 팬 · 금속 · 방열 표
   const hyd = {Vt, rho:P.rho, mu:P.mu/1000, links:L.map(l => { const h = t9CV(t9LX(l), T9CP.hose); return {a:ix.get(l[0]), b:ix.get(l[1]), d:h.d, len:h.len}; }),
                blk:order.map(id => { const B = by.get(id); if(B.t==='pump') return {}; const v = t9CV(B.p, t9CParams(C, B)); return {dp:v.dp, dq:v.dq}; }),
                src:pumps.map(b => ({k:ix.get(b.id), flow:part.length ? flow(b.id) : Vt}))};
-  const rr = t9CV(rads[0].p, T9CP.rad), net = {nodes, Cc:Vt/60000*P.rho*P.cp, UA:rr.UA, A:rr.A, kd:rr.kd, fan:rr.fan, hyd};
+  const rr = t9CV(rads[0].p, T9CP.rad), net = {nodes, Cc:Vt/60000*P.rho*P.cp, rcp:P.rho*P.cp, UA:rr.UA, A:rr.A, kd:rr.kd, fan:rr.fan, hyd};
   const hf = coolHydSolve(hyd); if(!hf) return {E:['호스 유량을 풀지 못함 (호스 값 확인)']};
   const lq = new Map(L.map((l, k) => [l, hf[k]]));   // 호스 → 유량 몫 (화면 표시용)
   return {E, net, q, fr, mode, lq, Vt}; }
@@ -246,7 +275,7 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
       hdl += `<rect class="t9-cseg ${vert ? 'v' : 'h'}" data-t9cseg="${C.id}:${j}:${q}" x="${(ax + bx)/2 - 6}" y="${(ay + byy)/2 - 6}" width="12" height="12" rx="2"/>`; } });
   s += `<g class="t9-hose ${C.kind}">${layers.o}${layers.i}${layers.f}</g>${dots}${layers.h}${bad}`;   // 테두리를 모두 먼저, 안쪽 색을 그 위에 → 겹친 곳에 경계가 안 보임
   C.blocks.forEach(b => { const [nm, kind] = T9CB[b.t], q = t9CV(b.p, t9CParams(C, b)), sel = sB.has(b.id), w = t9BW(b), h = t9BH(b), rd = t9Rd(b);
-    const sub = b.t==='rad' ? `${q.A} m² · UA ${q.UA}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
+    const sub = b.t==='rad' ? `${q.A} m² · ${t9RadTab(b) ? '방열 표' : `UA ${q.UA}`}${q.fon > 0 ? ` · 팬 ${q.fon} °C` : ''}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
     const shape = rd ? `<circle cx="${w/2}" cy="${h/2}" r="${w/2}"/>` : `<rect width="${w}" height="${h}" rx="7"/>`;
     const txt = rd ? `<text x="${w/2}" y="${sub ? h/2 - 2 : h/2 + 4}" text-anchor="middle" class="t9-cbn sm">${b.t==='in' ? '입구' : b.t==='out' ? '출구' : nm}</text>${sub ? `<text x="${w/2}" y="${h/2 + 13}" text-anchor="middle" class="t9-cbs sm">${b.t==='in' ? `${q.A} m²` : sub}</text>` : ''}`
                    : `<text x="${w/2}" y="24" text-anchor="middle" class="t9-cbn">${nm}</text><text x="${w/2}" y="42" text-anchor="middle" class="t9-cbs">${sub}</text>`;
@@ -257,8 +286,12 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
   return s + `<rect class="t9-cmq" style="display:none"/><g class="t9-hose ${C.kind} drag" style="display:none"><path class="o"/><path class="i"/><path class="f"/></g><circle class="t9-cend ${C.kind}" r="9" style="display:none"/></svg>`; }   // 영역 고르기 · 끄는 중인 호스
 function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kind==='water').length, na = CC.filter(c => c.kind==='air').length, comp = t9CoolCompile(), used = new Set(CC.flatMap(c => c.blocks.map(b => b.t)));
   const card = C => { t9Sel(C); const E = comp.err[C.id], pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b'] : ['m', 'i', 'b'], by = new Map(C.blocks.map(b => [b.id, b]));
-    const form = (title, def, obj, attr) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
-        return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"><i>${u}</i></label>`; }).join('')}</div>`;
+    const form = (title, def, obj, attr, lock = {}) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
+        return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${lock[k] ? lock[k] : u}</i></label>`; }).join('')}</div>`;
+    const radTab = B => { const M = B.p && B.p.rq && typeof t2GridParse==='function' ? t2GridParse(B.p.rq).map : null, use = B.p && B.p.rqUse==='const' ? 'const' : 'tab', id = `${C.id}:${B.id}`;
+      return `<div class="t9-cform t9-crqb"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW. 엑셀에서 표를 복사해 아래 칸을 누르고 Ctrl+V. 값이 있으면 [UA] 대신 씀 (점마다 ε-NTU 로 UA 를 거꾸로 구해 보간)</span>
+        ${M ? `<span class="t2-use"><span class="muted">계산에 쓸 값</span><span class="dc-seg" role="group">${[['tab', '표'], ['const', 'UA']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span> <button type="button" class="btn small" data-t9crqx="${id}">표 지우기</button></span>` : ''}
+        <div class="t9-crq" data-t9crq="${id}" tabindex="0">${M ? `<table class="t2-tt"><tr><th>풍속 \\ 유량</th>${M.n.map(f => `<th>${wbFmt(f, 1)}</th>`).join('')}</tr>${M.t.map((v, i) => `<tr><th>${wbFmt(v, 1)}</th>${M.e[i].map(x => `<td>${wbFmt(x, 2)}</td>`).join('')}</tr>`).join('')}</table>` : '<span class="muted">비어 있음 — 여기를 누르고 Ctrl+V</span>'}</div></div>`; };
     const B = C.selB.length===1 && !C.selL.length ? by.get(C.selB[0]) : null, Lj = C.selL.length===1 && !C.selB.length ? C.selL[0] : -1;
     const hose = () => { const l = C.links[Lj], A = by.get(l[0]), Bt = by.get(l[1]); if(!A || !Bt) return ''; const o = C.links.filter(q => q[0]===l[0]), k = o.indexOf(l) + 1;
       let info = '';
@@ -272,7 +305,7 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
       return `<div class="t9-csel"><div class="t9-cform"><b>덕트 ${T9CB[A.t][0]} → ${T9CB[Bt.t][0]}</b>${o.length > 1 ? o.map((q, m) => { const Bq = by.get(q[1]);
           return `<label class="t9-cfi"><span>${m + 1}번 (→ ${T9CB[Bq.t][0]}) 비율</span><input type="number" step="any" min="1" max="99" value="${(+(q[2] || 1/o.length)*100).toFixed(1)}" data-t9crat="${C.id}:${jj[m]}"><i>%</i></label>`; }).join('') : '<span class="muted">갈라지지 않은 덕트 (공기 100 %)</span>'}</div></div>`; };
     const panel = Lj >= 0 ? hose()
-      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`) : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
+      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? (t9RadTab(B) ? {UA:'표 사용'} : {itd:'표 없음'}) : {}) + (B.t==='rad' ? radTab(B) : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
       : C.selB.length + C.selL.length ? `<p class="muted t9-cmsg">블럭 ${C.selB.length}개 · ${C.kind==='water' ? '호스' : '덕트'} ${C.selL.length}개 고름 · 끌면 같이 옮겨지고 Delete 로 지움</p>`
       : `<p class="muted t9-cmsg">왼쪽 끌기: 블럭 옮기기 · 빈 곳은 영역 고르기 · 오른쪽 점을 끌어 다른 블럭에 놓으면 이어짐 · 휠 = 확대 · 축소 · 휠 버튼 끌기 = 화면 이동 · Shift + 누르기 = 더해 고르기 · Delete = 고른 것 지우기 · 고른 ${C.kind==='water' ? '호스' : '덕트'}의 네모를 끌면 경로를 옮김 · 두 번 누르기: 빈 곳 = 전체 보기, ${C.kind==='water' ? '호스' : '덕트'} = 자동 경로.${C.kind==='water' ? ' 한 블럭에서 호스를 둘 이상 끌어내면 갈라지고, 한 블럭으로 여러 호스가 들어오면 합쳐집니다.' : ' 한 블럭에서 덕트를 둘 이상 끌어내면 갈라지고(비율 입력), 여러 덕트가 한 블럭으로 들어오면 합쳐집니다.'}</p>`;
     return `<div class="t9-cc" data-t9cc="${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b><span class="muted">${C.kind==='water' ? '선 방향 = 냉각수 흐름 · 라디에서 나와 라디로 (갈라짐 · 합쳐짐 가능)' : '선 방향 = 공기 흐름 · 입구 → 출구 (갈라짐 · 합쳐짐 가능)'}</span>
@@ -321,6 +354,16 @@ document.addEventListener('keydown', e => { if(e.key!=='Escape' || !t9On() || (e
 document.addEventListener('keydown', e => { if(!t9On() || (e.target.matches && e.target.matches('input,textarea,select'))) return;
   if(!['Delete', 'Backspace'].includes(e.key)) return; const C = t9S().cool.circuits.find(c => { t9Sel(c); return c.selB.length || c.selL.length; }); if(!C) return;
   e.preventDefault(); t9CDelSel(C); });
+/* 라디 방열 표: 붙여넣기 · 표 / UA 고르기 · 지우기 */
+const t9RadB = id => { const [cid, bid] = id.split(':'); return t9CC(cid).blocks.find(b => b.id===bid); };
+document.addEventListener('paste', e => { if(!t9On() || !e.target.closest) return; const t = e.target.closest('[data-t9crq]'); if(!t) return;
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; e.preventDefault();
+  const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
+  if(typeof t2GridParse!=='function' || !t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s, 칸 = 방열량 kW.'); return; }
+  const B = t9RadB(t.dataset.t9crq); B.p = B.p || {}; B.p.rq = v; B.p.rqUse = 'tab'; t9CoolSet(); toast('방열 표를 넣었습니다 (UA 대신 씀).'); });
+document.addEventListener('click', e => { if(!t9On() || !e.target.closest) return;
+  const u = e.target.closest('[data-t9crqu]'); if(u){ const a = u.dataset.t9crqu.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p.rqUse = a[2]; t9CoolSet(); return; }
+  const x = e.target.closest('[data-t9crqx]'); if(x){ const B = t9RadB(x.dataset.t9crqx); delete B.p.rq; delete B.p.rqUse; t9CoolSet(); } });
 /* 갈라진 덕트 비율 입력 (%): 하나를 바꾸면 나머지를 그 비율대로 줄이거나 늘려 합 100 % */
 document.addEventListener('change', e => { if(!t9On() || !e.target.matches || !e.target.matches('[data-t9crat]')) return; const [cid, j] = e.target.dataset.t9crat.split(':'), C = t9CC(cid), l = C.links[+j];
   const o = C.links.filter(q => q[0]===l[0]), r = Math.max(0.01, Math.min(0.99, (+e.target.value || 0)/100)), rest = o.filter(q => q!==l), rs = rest.reduce((a, q) => a + (+q[2] || 0), 0);
@@ -497,7 +540,15 @@ WB_TOOLS['9'] = {
        hyd:{Vt:8, rho:1000, mu:0.001, links:[{a:0, b:1, d:10, len:0.5}, {a:1, b:2, d:10, len:0.5}, {a:1, b:3, d:10, len:1.5}, {a:2, b:0, d:10, len:0.5}, {a:3, b:0, d:10, len:0.5}], blk:[{}, {}, {}, {}], src:[{k:1, flow:8}]}}], air:[]}}, expect:{s_tm:30.621027, s_ti:31.840390},
      src:'두 갈래 모두 난류 (모터 갈래 Re ≈ 10150, 인버터 ≈ 6830 > 1188) → Blasius ΔP ∝ L Q^1.75, 갈래 압력 강하가 같으므로 Q_m ÷ Q_i = (2.0 ÷ 1.0)^(1/1.75) = 1.4860 → 모터 몫 0.597746, 인버터 0.402254. 라디 출구 25.6671 (직렬과 같음). 모터 점 = 25.6671 + 215.371 ÷ (0.597746 × 557.33) → 모터 = + 215.371 × 0.02 = 30.6210, 인버터 점 = 25.6671 + 113.353 ÷ (0.402254 × 557.33) → 인버터 = + 113.353 × 0.05 = 31.8404'},
     {n:'공랭 덕트 갈라짐 · 합쳐짐 · 입구 → (인버터 40 % · 축전지 60 %) → 모터 → 출구 (입구 0.02 m², 비율 0.5, 팬 0.03 m³/s, 40 km/h)', I:{v:40, L_m:150, L_i:300, L_b:200, i_ha0:5, i_ha60:20, b_ha:15, b_ha60:30, m_ha0:10, m_ha60:40, cool:{water:[], air:[{A:0.02, kd:0.5, fan:0.03, nodes:[{part:'i', q:0.4, ins:[[-1, 0.4]]}, {part:'b', q:0.6, ins:[[-1, 0.6]]}, {part:'m', q:1, ins:[[0, 0.4], [1, 0.6]]}]}]}}, expect:{s_ti:47.284411, s_tb:34.019279, s_tm:33.391717, s_qa:650},
-     src:'C_a = 1.2 × 1005 × 0.1411 = 170.18 W/K. 갈래 공기 C_q = 0.4 C_a · 0.6 C_a, G = C_q (1 − e^(−hA ÷ C_q)): 인버터 = 25 + 300 ÷ G(68.07, 15) = 47.2844, 축전지 = 25 + 200 ÷ G(102.11, 25) = 34.0193. 합친 공기 = 25 + (300 + 200) ÷ 170.18 = 27.9381 → 모터 = 27.9381 + 150 ÷ G(170.18, 30) = 33.3917'}
+     src:'C_a = 1.2 × 1005 × 0.1411 = 170.18 W/K. 갈래 공기 C_q = 0.4 C_a · 0.6 C_a, G = C_q (1 − e^(−hA ÷ C_q)): 인버터 = 25 + 300 ÷ G(68.07, 15) = 47.2844, 축전지 = 25 + 200 ÷ G(102.11, 25) = 34.0193. 합친 공기 = 25 + (300 + 200) ÷ 170.18 = 27.9381 → 모터 = 27.9381 + 150 ÷ G(170.18, 30) = 33.3917'},
+    {n:'라디 방열 표 (스펙 시트) · 운전점이 표의 점 (코어 풍속 5 m/s · 8 L/min · 6.0 kW @ 입구 온도차 60 K)', I:{v:50, L_m:300, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:9999, A:0.06, kd:0, fan:0.3, rq:{n:[4, 8, 12], t:[2, 5, 8], e:[[2.4, 3.0, 3.3], [4.1, 6.0, 6.6], [5.2, 7.0, 7.9]]}, itd:60}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1]]}], Cc:557.3333333333334, rcp:4180000}], air:[]}}, expect:{s_win:28, s_tm:34},
+     src:'표의 점에서 ε C_min = 6000 W ÷ 60 K = 100 W/K (UA 칸 9999 는 안 씀). 정상: 라디가 버리는 열 = ε C_min (T_입구 − T_외기) = 모터 손실 300 W → 라디 입구 = 25 + 300 ÷ 100 = 28 °C, 모터 = 28 + 300 × 0.02 = 34 °C'},
+    {n:'라디 팬 켜는 온도 35 °C · 정상에서 켜짐 (모터 2000 W, 60 km/h, 주행풍 0.3 m³/s + 팬 0.3)', I:{v:60, L_m:2000, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:250, A:0.06, kd:0.3, fan:0.3, fon:35}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1]]}], Cc:557.3333333333334}], air:[]}}, expect:{s_win:33.873141, s_tm:73.873141},
+     src:'팬 끔: 공기 0.3 m³/s (코어 5 m/s, UA 250) → ε C_min = 152.46 W/K → 입구 25 + 2000 ÷ 152.46 = 38.118 ≥ 35 → 켬. 팬 켬: 0.6 m³/s (코어 10 m/s, UA = 250 × 2^0.6 = 378.9) → ε C_min = 225.40 → 입구 25 + 2000 ÷ 225.40 = 33.873 (끄는 온도 32 보다 높아 켠 채), 모터 + 2000 × 0.02'},
+    {n:'라디 팬 켜는 온도 35 °C · 정상에서 꺼짐 (모터 500 W, 위와 같은 라디)', I:{v:60, L_m:500, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:250, A:0.06, kd:0.3, fan:0.3, fon:35}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1]]}], Cc:557.3333333333334}], air:[]}}, expect:{s_win:28.279556, s_tm:38.279556},
+     src:'팬 끔: ε C_min = 152.46 W/K → 입구 25 + 500 ÷ 152.46 = 28.280 < 35 → 끈 채, 모터 + 500 × 0.02'},
+    {n:'라디 금속 열용량 1 kJ/K · 식는 빠르기 (라디 한 점 고리, 60 °C 에서 100 s, 팬 0.3 m³/s)', I:{v:0, L_m:0, L_i:0, L_b:0, t0:60, t_run:100, cool:{water:[{nodes:[{t:'rad', C:2508, Cm:1, q:1, ins:[[0, 1]], UA:250, A:0.06, kd:0, fan:0.3}], Cc:557.3333333333334}], air:[]}}, expect:{e_win:25.482687, q_cw:3508},
+     src:'열용량 C = 2508 + 1 × 1000 = 3508 J/K. 버리는 몫 a = ε C_min ÷ C_c = 0.273552. 0.25 s 칸마다 (적분 방식 그대로) ΔT ← ΔT × (1 − a (1 − e^(−C_c × 0.25 ÷ C))) → 400 칸 뒤 25 + 35 × 0.98173^400 = 25.4827 °C (금속을 빼면 C = 2508 → 25.09 °C)'}
   ],
   code: `// ================================================================ 냉각 회로 공통 (도구 9 · 도구 2P 계산과 냉각 편집기가 같이 씀)
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
@@ -555,7 +606,8 @@ function coolGauss(M, N) { const a = M.map(r => r.slice());
 //   공랭: 예전 꼴 (parts = 직렬 순서) 이면 점 꼴로 — 점 = {part, q, ins: [[앞 점, 몫]]} (앞 점 −1 = 입구 외기), 흐름 순서대로
 function coolPrep(NET) {
   if (!NET) return NET;
-  (NET.water || []).forEach(C => { if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+  (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
+    if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -575,6 +627,31 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
     out[k] = Cq > 0 ? Tin + G * (T[p] - Tin) / Cq : Tin; });
   return out;
 }
+// ---------- 라디에이터 (도구 9 · 2P 같이)
+//   공기 = 주행풍 A k_d v + 팬 (팬 켜는 온도 fon 이 있으면: 라디로 들어오는 냉각수가 fon 이상이면 켬, fon − COOL_FH 아래면 끔. 0 = 늘 켬)
+//   UA: 표 (nd.rq = {n: 냉각수 유량 L/min, t: 코어 풍속 m/s, e: 방열량 kW}, nd.itd = 그 표의 입구 온도차 K) 가 있으면
+//     표의 점마다 ε = Q ÷ (C_min × ITD) → 교차류 ε-NTU 를 거꾸로 풀어 UA = NTU × C_min (coolPrep 에서 한 번) → 코어 풍속 · 냉각수 유량으로 이중선형 (범위 밖은 끝값),
+//     없으면 UA = UA₅ (V_f ÷ 5)^0.6 (코어 풍속 5 m/s 기준)
+//   라디 금속 열용량 nd.Cm [kJ/K] 은 그 점 열용량에 더함 (정상 온도는 그대로, 오르내리는 빠르기만)
+const COOL_RA = 1.2, COOL_CA = 1005, COOL_FH = 3;   // 공기 밀도 [kg/m³] · 비열 [J/kg·K] · 팬 끄는 온도 차 [K]
+const coolEps = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));   // 교차류 (양쪽 안 섞임) 근사
+function coolNTU(eps, Cr) { if (!(eps > 0)) return 0; let lo = 0, hi = 1; while (coolEps(hi, Cr) < eps && hi < 1e4) hi *= 2; if (coolEps(hi, Cr) < eps) return Infinity;
+  for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (coolEps(m, Cr) < eps) lo = m; else hi = m; } return (lo + hi) / 2; }
+function coolUAtab(nd, rcp) { const M = nd.rq, itd = nd.itd > 0 ? nd.itd : 60;
+  return M.t.map(vf => M.n.map((fl, j) => { const Ca = COOL_RA * COOL_CA * vf * nd.A, Cc = fl / 60000 * rcp, Cm = Math.min(Ca, Cc), Cx = Math.max(Ca, Cc);
+    const row = M.t.indexOf(vf), Q = M.e[row][j] * 1000; if (!(Cm > 0) || !(Q > 0)) return 0;
+    const NTU = coolNTU(Math.min(Q / (Cm * itd), 0.999 * coolEps(1e3, Cm / Cx)), Cm / Cx); return isFinite(NTU) ? NTU * Cm : 0; })); }
+const coolBil = (ys, xs, Z, y, x) => { const f = (a, v) => { if (v <= a[0]) return [0, 0, 0]; const k = a.length - 1; if (v >= a[k]) return [k, k, 0]; let i = 0; while (a[i + 1] < v) i++; return [i, i + 1, (v - a[i]) / (a[i + 1] - a[i])]; };
+  const [i0, i1, w] = f(ys, y), [j0, j1, u] = f(xs, x); return (Z[i0][j0] * (1 - u) + Z[i0][j1] * u) * (1 - w) + (Z[i1][j0] * (1 - u) + Z[i1][j1] * u) * w; };
+function coolUA(nd, Vf, Lmin) { if (nd.uaT) return Vf > 0 ? coolBil(nd.rq.t, nd.rq.n, nd.uaT, Vf, Lmin) : 0; return Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0; }
+// 라디 점이 섞인 냉각수 열 중 외기로 버리는 몫 a = ε C_min ÷ F  (F = 이 라디 흐름 q C_c), fan = 팬이 도는지
+function coolRadA(C, nd, v, fan) {
+  const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + (fan ? nd.fan : 0)), Ca = COOL_RA * COOL_CA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
+  const UA = coolUA(nd, Vf, F / (C.rcp || 4.18e6) * 60000), Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? coolEps(UA / Cm, Cm / Cx) : 0;
+  return F > 0 ? e * Cm / F : 0; }
+const coolFanOn0 = nd => !(nd.fon > 0);                                                   // 출발: 켜는 온도가 있으면 꺼진 채
+const coolFanNext = (nd, on, Tin) => !(nd.fon > 0) ? true : on ? Tin >= nd.fon - COOL_FH : Tin >= nd.fon;   // 히스테리시스
+const coolC = nd => Math.max(1, (nd.C || 1) + (nd.Cm > 0 ? nd.Cm * 1000 : 0));          // 점 열용량 [J/K] (금속 포함)
 
 // ================================================================
 // 도구 9 냉각 계통 계산기 — 계산 코드
@@ -613,20 +690,23 @@ function calc(I) {
   const where = {};   // 부품 → {w: 회로 번호, k: 점 번호} · {a: 덕트 번호, j: 덕트 안 순서}
   W.forEach((C, w) => C.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
   A.forEach((D, a) => D.nodes.forEach((n, j) => { if (!where[n.part]) where[n.part] = { a, j }; }));
-  const epsX = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));
-  // 라디 점 k 가 섞인 냉각수 열 중 외기로 버리는 몫 a_k = ε C_min ÷ F  (F = 이 라디 흐름 q_k C_c)
-  function radA(C, nd, v) {
-    const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + nd.fan), Ca = RHOA * CPA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
-    const UA = Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0, Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? epsX(UA / Cm, Cm / Cx) : 0;
-    return F > 0 ? e * Cm / F : 0; }
+  // 라디 점 k 가 섞인 냉각수 열 중 외기로 버리는 몫 a_k = ε C_min ÷ F (coolRadA: 표 UA · 팬 켬 · 끔 포함, cool_net)
+  const radA = (C, nd, v, fan) => coolRadA(C, nd, v, fan);
   const mixOf = (nd, c, k, N) => { const ins = nd.ins || [[(k - 1 + N) % N, 1]]; let fs = 0, ft = 0; ins.forEach(([j, f]) => { fs += f; ft += f * c[j]; }); return fs > 0 ? ft / fs : c[k]; };
 
   // ---------- 정상 상태 (차속 v [m/s])
-  function steady(v) {
+  //   팬 켜는 온도가 있는 라디: 꺼진 채 풀어 라디로 들어오는 냉각수가 켜는 온도 이상이면 켠 채 다시 풂 (켠 정상 상태를 결과로)
+  function steady(v) { let fan = W.map(C => C.nodes.map(coolFanOn0)), r = null;
+    for (let it = 0; it < 4; it++) { r = steady1(v, fan); let ch = false;
+      fan = fan.map((f, w) => f.map((on, k) => { const nd = W[w].nodes[k]; if (on || nd.t !== 'rad' || !r.cs[w]) return on; const Tin = mixOf(nd, r.cs[w], k, nd.ins ? W[w].nodes.length : W[w].nodes.length);
+        if (Tin >= nd.fon) { ch = true; return true; } return false; }));
+      if (!ch) break; }
+    r.fan = fan; return r; }
+  function steady1(v, fan) {
     const T = { m: NaN, i: NaN, b: NaN }, cs = [], rin = [];
     W.forEach((C, w) => { const N = C.nodes.length, M = C.nodes.map(() => new Array(N + 1).fill(0));   // M c = 오른쪽 (마지막 열)
       C.nodes.forEach((nd, k) => { const ins = nd.ins || [[(k - 1 + N) % N, 1]], fs = ins.reduce((a, [, f]) => a + f, 0);
-        const a = nd.t === 'rad' ? radA(C, nd, v) : 0, Fk = (nd.q || 1) * C.Cc;
+        const a = nd.t === 'rad' ? radA(C, nd, v, fan[w][k]) : 0, Fk = (nd.q || 1) * C.Cc;
         // T_k − (1 − a) Σ (f_j ÷ fs) T_j = a T_외기 + (부품 손실 ÷ F)
         M[k][k] += 1; ins.forEach(([j, f]) => { M[k][j] -= (1 - a) * f / fs; });
         M[k][N] = a * Ta + (nd.part && Fk > 0 ? L[nd.part] / Fk : 0); });
@@ -652,15 +732,17 @@ function calc(I) {
   const v0 = Math.max(0, I.v || 0) / 3.6, tEnd = Math.max(0, I.t_run || 0), t0 = isFinite(I.t0) ? I.t0 : Ta;
   const h = 0.25, nStep = Math.min(400000, Math.ceil(tEnd / h)), every = Math.max(1, Math.round(nStep / 600));
   const T = { m: t0, i: t0, b: t0 }, c = W.map(C => C.nodes.map(() => t0));
-  const aK = W.map(C => C.nodes.map(nd => nd.t === 'rad' ? radA(C, nd, v0) : 0));
+  const fanS = W.map(C => C.nodes.map(coolFanOn0)), aOf = (w, k) => radA(W[w], W[w].nodes[k], v0, fanS[w][k]);   // 팬 상태 (켜는 온도 · 히스테리시스)
+  const aK = W.map((C, w) => C.nodes.map((nd, k) => nd.t === 'rad' ? aOf(w, k) : 0));
   const xs = [0], S = { tm: [t0], ti: [t0], tb: [t0], w1: [W[0] ? t0 : NaN], w2: [W[1] ? t0 : NaN], w3: [W[2] ? t0 : NaN] };
   const rinOf = w => W[w] ? mixOf(W[w].nodes[0], c[w], 0, W[w].nodes.length) : NaN;
   for (let s = 1; s <= nStep; s++) { const dt = Math.min(h, tEnd - (s - 1) * h);
     W.forEach((C, w) => { const N = C.nodes.length;
       for (let k = 0; k < N; k++) { const nd = C.nodes[k], mix = mixOf(nd, c[w], k, N), F = (nd.q || 1) * C.Cc;
-        if (nd.t === 'rad') { c[w][k] = toward(c[w][k], mix - aK[w][k] * (mix - Ta), F / nd.C, dt); continue; }
+        if (nd.t === 'rad') { const on = coolFanNext(nd, fanS[w][k], mix); if (on !== fanS[w][k]) { fanS[w][k] = on; aK[w][k] = aOf(w, k); }
+          c[w][k] = toward(c[w][k], mix - aK[w][k] * (mix - Ta), F / coolC(nd), dt); continue; }
         const p = nd.part, G = p ? 1 / PR[p] : 0;
-        c[w][k] = F + G > 0 ? toward(c[w][k], (F * mix + G * (p ? T[p] : 0)) / (F + G), (F + G) / nd.C, dt) : c[w][k]; } });
+        c[w][k] = F + G > 0 ? toward(c[w][k], (F * mix + G * (p ? T[p] : 0)) / (F + G), (F + G) / coolC(nd), dt) : c[w][k]; } });
     for (const p of ['m', 'i', 'b']) { const wh = where[p];
       if (wh && wh.w != null) T[p] = toward(T[p], c[wh.w][wh.k] + L[p] * PR[p], 1 / (PR[p] * PC[p]), dt);
       else if (!wh) { const hh = PH[p](v0); T[p] = hh > 0 ? toward(T[p], Ta + L[p] / hh, hh / PC[p], dt) : T[p] + L[p] * dt / PC[p]; } }
@@ -674,7 +756,7 @@ function calc(I) {
     s_win: W[0] ? fin(ss.rin[0]) : NaN, s_wout: W[0] && r0 ? fin(r0[0]) : NaN,         // 첫 수랭 회로 기준 라디 입구 (섞인 온도) · 출구 [°C]
     s_qw: ss.Qw, s_qa: Lsum - ss.Qw,                                                   // 냉각수로 · 공기로 바로 버리는 열 [W]
     e_tm: T.m, e_ti: T.i, e_tb: T.b, e_win: rinOf(0),                                  // 주행 시간 뒤 [°C]
-    q_cw: W.reduce((s, C) => s + C.nodes.reduce((a, nd) => a + nd.C, 0), 0),           // 도구 2P 냉각수 열용량 [J/K]
+    q_cw: W.reduce((s, C) => s + C.nodes.reduce((a, nd) => a + coolC(nd), 0), 0),     // 냉각수 · 라디 금속 열용량 합 [J/K]
     q_ua0: s0.Qw > 0 ? fin(s0.UA) : NaN, q_ua60: s60.Qw > 0 ? fin(s60.UA) : NaN,       // 도구 2P 라디에이터 UA (정지 · 60 km/h) [W/K]
     n_w: W.length, n_a: A.length,
   };
