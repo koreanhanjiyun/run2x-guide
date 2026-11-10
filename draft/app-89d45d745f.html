@@ -3221,6 +3221,18 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-cmq{fill:rgba(61,90,153,.08);stroke:#3d5a99;stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
 .t2-mdh{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}.t2-mdh .t2-mdhn{margin-left:0}.t2-mdhc{margin-left:auto;font-weight:400;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .t9-crqb{flex-direction:column;align-items:stretch}.t9-crq{border:1px dashed var(--line,#c9ced8);border-radius:6px;padding:6px 8px;min-height:38px;overflow-x:auto;cursor:text}.t9-crq:focus{outline:2px solid #3d5a99;outline-offset:1px}.t9-crq table{font-size:12px}
+/* 냉각 블럭 입력 칸 정렬 (2026-11-10): 이름 · 값 · 단위 세 칸 격자 */
+.t9-csel{align-items:flex-start}.t9-cform{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px 18px;align-items:center;flex:1 1 100%}.t9-cform>b,.t9-cform>.muted,.t9-cform>.t2-use,.t9-cform>.t9-crq,.t9-cform>.dc-seg{grid-column:1/-1}
+.t9-cfi{display:grid;grid-template-columns:1fr 92px 64px;align-items:center;gap:8px}.t9-cfi span{line-height:1.3}.t9-cfi input{width:100%;box-sizing:border-box}.t9-cfi i{white-space:nowrap}
+.t9-rqt td{padding:0}.t9-rqt input{width:64px;border:0;padding:3px 5px;font:inherit;text-align:right;background:transparent}.t9-rqt input.hd{font-weight:600;background:var(--soft,#f3f5f8)}.t9-crqb .t2-use{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* 계산 중 스켈레톤: 실제 카드 그대로, 숫자 · 메모 자리만 반짝이는 막대 (2026-11-10) */
+.wb-skelmode{pointer-events:none}.wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov, td, .t2-dt){color:transparent!important;border-radius:5px;background:linear-gradient(90deg,var(--panel-2) 0%,var(--line) 50%,var(--panel-2) 100%)!important;background-size:200% 100%!important;animation:wbsk 1.2s linear infinite}
+.wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov) *{color:transparent!important;border-color:transparent!important;background:transparent!important}.wb-skelmode svg{opacity:.18}
+/* 모델 칩 높이 = 옆 선택 단추 높이 */
+.t2-hr{align-items:stretch}.t2-hr>.t2-mdl{display:inline-flex;align-items:center}
+/* 차량 거동 자세히 (접힘) */
+.t2-bmore{margin-top:10px}.t2-bmore>summary{cursor:pointer;font-weight:600;font-size:13px;padding:6px 2px;color:var(--ink-2)}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -10381,7 +10393,11 @@ function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
-  if(!R) return wbSkel('cards');
+  if(!R){   /* 계산 중: 실제 카드 모양 그대로 (이전 결과 · 없으면 빈 결과로 그린 뒤 숫자 자리만 반짝이는 막대) */
+    let h = ''; const D = WB.Rlast && WB.Rlast.id===WB.id ? WB.Rlast.R : {out:{}};
+    try{ h = T.outHTML ? T.outHTML(D) : wbOutCards(T, D, false); }catch(e){ try{ h = wbOutCards(T, {out:{}}, false); }catch(e2){ h = ''; } }
+    return h ? `<div class="wb-skelmode" aria-busy="true" aria-label="계산 중">${h}</div>` : wbSkel('cards'); }
+  WB.Rlast = {id:WB.id, R};
   if(T.outHTML) return T.outHTML(R);   /* 도구가 결과 칸을 직접 그림 (도구 2P) */
   return wbOutCards(T, R, WB.cmp); }
 /* 결과 카드: 도구가 정한 묶음마다. d.hide = 화면에 안 보임(검증 · 반영용), d.fmt(v, out) = 값 칸 HTML(단위 포함),
@@ -12274,25 +12290,29 @@ function t2MapRepaint(){ const m = $('#t2map'); if(m) m.innerHTML = t2MapSVG(fal
 function t2EMapRepaint(){ const m = $('#t2emap'); if(m) m.innerHTML = t2MapSVG(true); }
 /* 지도 두 개: 시뮬레이션 (#t2map, T2.zoom) · 편집 코스 (#t2emap, T2.zoomE)
    휠 확대 = 박스를 한 번 눌러 켠 뒤에만 (wbZoomOn, 스크롤하다 박스 위를 지나가도 확대되지 않게)
-   끌기 이동 = 포인터를 박스에 잡아 둠 → 박스 밖으로 나가도 놓을 때까지 지도만 움직임 · 누르기 = 시뮬레이션은 프로브, 편집은 표의 그 구간 */
+   왼쪽 누르기 · 끌기 = 프로브 (시뮬레이션) · 표의 그 구간 (편집), 휠 버튼 끌기 = 이동 (포인터를 박스에 잡아 둠) */
 const t2MapOf = el => { const box = el && el.closest && el.closest('#t2map, #t2emap'); return box ? {box, edit:box.id==='t2emap'} : null; };
 function t2SvgPt(svg, e){ const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
 function t2ZoomAt(f, px, py, edit){ const Z = edit ? T2.zoomE : T2.zoom, k = Math.max(1, Math.min(40, Z.k*f)); if(px != null){ const a = px/T2MW, b = py/T2MH; Z.cx = a - (a - Z.cx)*Z.k/k; Z.cy = b - (b - Z.cy)*Z.k/k; } Z.k = k;
   if(k===1){ Z.cx = .5; Z.cy = .5; } const h = .5/k; Z.cx = Math.max(h, Math.min(1 - h, Z.cx)); Z.cy = Math.max(h, Math.min(1 - h, Z.cy)); edit ? t2EMapRepaint() : t2MapRepaint(); }
 document.addEventListener('wheel', e => { const M = t2MapOf(e.target); if(!M || !wbZoomOn(M.box)) return; const svg = M.box.querySelector('svg'); if(!svg) return;
   e.preventDefault(); const p = t2SvgPt(svg, e); t2ZoomAt(e.deltaY < 0 ? 1.25 : 0.8, p.x, p.y, M.edit); }, {passive:false});
+/* 왼쪽 = 프로브 (누른 채 끌면 계속 따라감, 신호 그래프와 같음) · 휠 버튼 끌기 = 화면 이동 (냉각 편집기와 같음, 2026-11-10) */
 let T2DRAG = null;
-document.addEventListener('pointerdown', e => { const M = t2MapOf(e.target); if(!M || e.button || e.target.closest('button')) return; const svg = M.box.querySelector('svg'); if(!svg) return;
+const t2MapProbe = (box, edit, e) => { const svg = box.querySelector('svg'), M = edit ? T2.mpE : T2.mp; if(!svg || !M) return;
+  const p = t2SvgPt(svg, e); let bi = 0, bd = Infinity; M.pts.forEach(([x, y], i) => { const dd = (x - p.x)**2 + (y - p.y)**2; if(dd < bd){ bd = dd; bi = i; } });
+  if(edit){ const r = t2PtToRow(bi); if(r >= 0) t2Hl($(`#t2tt tbody tr:nth-child(${r + 1})`)); }
+  else { const xi = t2MapToSig(bi); if(xi != null) wbCursor('sig', xi); } };
+document.addEventListener('mousedown', e => { if(e.button===1 && t2MapOf(e.target)) e.preventDefault(); });   // 휠 버튼 자동 스크롤 막기
+document.addEventListener('pointerdown', e => { const M = t2MapOf(e.target); if(!M || (e.button!==0 && e.button!==1) || e.target.closest('button')) return; const svg = M.box.querySelector('svg'); if(!svg) return;
   e.preventDefault();   // 끌기 중 글자 선택 막음
   const Z = M.edit ? T2.zoomE : T2.zoom; try{ M.box.setPointerCapture(e.pointerId); }catch(err){}
-  document.body.classList.add('wb-dragging'); T2DRAG = {box:M.box, edit:M.edit, id:e.pointerId, x:e.clientX, y:e.clientY, cx:Z.cx, cy:Z.cy, w:svg.getBoundingClientRect().width, moved:false}; });
-document.addEventListener('pointermove', e => { const d = T2DRAG; if(!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if(!d.moved && Math.hypot(dx, dy) < 4) return; d.moved = true; e.preventDefault();
-  const Z = d.edit ? T2.zoomE : T2.zoom, f = 1/(d.w*Z.k), h = .5/Z.k; Z.cx = Math.max(h, Math.min(1 - h, d.cx - dx*f)); Z.cy = Math.max(h, Math.min(1 - h, d.cy - dy*f*T2MW/T2MH)); d.edit ? t2EMapRepaint() : t2MapRepaint(); });
-const t2DragEnd = e => { const d = T2DRAG; T2DRAG = null; document.body.classList.remove('wb-dragging'); if(!d) return; try{ d.box.releasePointerCapture(d.id); }catch(err){}
-  if(d.moved || e.type==='pointercancel') return; const svg = d.box.querySelector('svg'), M = d.edit ? T2.mpE : T2.mp; if(!svg || !M) return;
-  const p = t2SvgPt(svg, e); let bi = 0, bd = Infinity; M.pts.forEach(([x, y], i) => { const dd = (x - p.x)**2 + (y - p.y)**2; if(dd < bd){ bd = dd; bi = i; } });
-  if(d.edit){ const r = t2PtToRow(bi); if(r >= 0) t2Hl($(`#t2tt tbody tr:nth-child(${r + 1})`)); }
-  else { const xi = t2MapToSig(bi); if(xi != null) wbCursor('sig', xi); } };
+  document.body.classList.add('wb-dragging'); T2DRAG = {box:M.box, edit:M.edit, id:e.pointerId, pan:e.button===1, x:e.clientX, y:e.clientY, cx:Z.cx, cy:Z.cy, w:svg.getBoundingClientRect().width};
+  if(!T2DRAG.pan) t2MapProbe(M.box, M.edit, e); });
+document.addEventListener('pointermove', e => { const d = T2DRAG; if(!d) return; e.preventDefault();
+  if(!d.pan){ if(!d.raf) d.raf = requestAnimationFrame(() => { d.raf = 0; if(T2DRAG===d) t2MapProbe(d.box, d.edit, d.ev); }); d.ev = e; return; }
+  const dx = e.clientX - d.x, dy = e.clientY - d.y, Z = d.edit ? T2.zoomE : T2.zoom, f = 1/(d.w*Z.k), h = .5/Z.k; Z.cx = Math.max(h, Math.min(1 - h, d.cx - dx*f)); Z.cy = Math.max(h, Math.min(1 - h, d.cy - dy*f*T2MW/T2MH)); d.edit ? t2EMapRepaint() : t2MapRepaint(); });
+const t2DragEnd = e => { const d = T2DRAG; T2DRAG = null; document.body.classList.remove('wb-dragging'); if(!d) return; try{ d.box.releasePointerCapture(d.id); }catch(err){} };
 document.addEventListener('pointerup', t2DragEnd); document.addEventListener('pointercancel', t2DragEnd);
 
 /* ============================================================ 그림 → 표 칸 찾기 (그림에서 튀는 곳을 누르면 표의 그 칸으로) */
@@ -12516,7 +12536,9 @@ function t2DynHTML(R, cn){ const o = R.out, md = WB.I.md || 0; if(md < 2) return
       + t2R('고유진동수 · 감쇠비 (2 자유도)', `<b>${t2F(o.tr_wn, 2)}</b> <i>Hz</i> · <b>${t2F(o.tr_zeta, 3)}</b>`, '')
       + t2R('롤각 (정상 해석해 / 3 s)', `<b>${t2F(o.tr_phis, 3)}</b> <i>/</i> <b>${t2F(o.tr_phi, 3)}</b> <i>°</i>`, `<span class="muted">β ${t2F(o.tr_beta, 2)}°</span>`)
       + `<div class="t2-trp">${wbPlot({id:'t2tr', w:520, h:220, x:{d:T.t, n:'시간', u:'s'}, ys:[{k:'r', d:T.r, c:WB_COL[0], n:'요레이트', u:'°/s', dd:2}, {k:'ay', d:T.ay, c:WB_COL[2], n:'횡가속도', u:'g', dd:3}, {k:'phi', d:T.phi, c:WB_COL[3], n:'롤각', u:'°', dd:3}, {k:'sw', d:T.sw, c:WB_COL[7], n:'핸들 각', u:'°', dd:1}], hit:false, label:'계단 조향 응답'})}</div>`; }
-  return `<div class="t2-orow${r5 ? ' two' : ''}">${t2Box('차량 거동 · 모델 2 (정상 선회)', cn, r4)}${r5 ? t2Box('과도 · 모델 3', '기록 반영 (요 관성 · 타이어 이완) · 계단 조향 ISO 7401 꼴', r5) : ''}</div>`; }
+  // 참고용이라 처음엔 접어 둠 (열면 그 상태를 기억)
+  return `<details class="t2-bmore" data-t2bmore${T2.bmore ? ' open' : ''}><summary>차량 거동 자세히 (모델 2 정상 선회${r5 ? ' · 모델 3 과도' : ''})</summary><div class="t2-orow${r5 ? ' two' : ''}">${t2Box('차량 거동 · 모델 2 (정상 선회)', cn, r4)}${r5 ? t2Box('과도 · 모델 3', '기록 반영 (요 관성 · 타이어 이완) · 계단 조향 ISO 7401 꼴', r5) : ''}</div></details>`; }
+document.addEventListener('toggle', e => { if(e.target.matches && e.target.matches('[data-t2bmore]')) T2.bmore = e.target.open; }, true);
 
 /* 입력 옆 '모양 보기': 하중 감도 → 바퀴 하중에 따른 μ 와 낼 수 있는 횡력 */
 function t2VizMus(I){ const Z = Array.from({length:61}, (_, i) => i*50), mu = Z.map(z => Math.max(0, I.mu - I.mu_s*(z - (I.tire_fz0 > 0 ? I.tire_fz0 : 0))/1000)), Fy = Z.map((z, i) => mu[i]*z);
@@ -12546,7 +12568,7 @@ const M2TOUR = [
   ['#wb .t2-orow', '결과 1행', '감속비(종목마다 가장 빠른 감속비와 그때 기록) · 종목 기록(기준 감속비) · 차량 한계. 같은 종목이 같은 높이라 옆으로 비교합니다. ± = 가장 빠른 기록 대비, 초록은 빠름 · 빨강은 느림.', t2TT('sim', null, 'end')],
   ['#wb .t2-orow + .t2-orow', '결과 2행', '고른 코스 · 볼 랩의 기록, 축전지 · 모터(회전수 · 토크 · 출력 · 전압 · 모터 온도), 에너지(단자 · 소비 · SOC, 내구는 에너지 제한 · CO₂). 내구는 24랩 전체 단자 · 소비 에너지와, 출력 상한 없이 달렸을 때의 에너지(축전지 용량 가늠용)도 보입니다. 최적 모드에서 감속비는 그 코스에서 가장 빠른 값입니다.', t2TT('sim', null, 'end')],
   ['#wb .t2-ftw', '구동력 선도', '코스 프로브 지점의 전압 · 모터 온도 · 횡가속도로 다시 그린 선도입니다(보기만, 눌러도 프로브는 안 움직임). 세로선 = 그 점의 차속. 아래 글이 그 점의 구동력을 무엇이 정했는지(모터 곡선 · 출력 상한 · 뒤축 접지), 제동 한계, 앞축 여유를 알려 줍니다.', t2TT('sim', null, 'end')],
-  ['#wb .t2-mapw', '코스 지도', '한 번 눌러 휠 확대를 켠 뒤(박스 테두리 강조, 박스 밖을 누르거나 Esc = 끔) 휠로 확대, 끌어서 이동(박스 밖으로 나가도 됨), 누르면 그 위치로 프로브가 옮겨 갑니다. 색 = 차속(여러 랩이면 모든 랩 통틀어 같은 범위), 주황 콘 = 슬라럼. 색 선 = 계산한 주행선(기본 레코드 라인: 코스 폭 안에서 가장 덜 휘는 라인을 구한 뒤 랩타임이 줄어드는 쪽으로 조금씩 다듬은 라인. 슬라럼은 첫 콘을 왼쪽으로, 번갈아 비켜 감), 점선 = 코스 중심선. 주행선(레코드 라인 · 최소 곡률 라인 · 중심 라인)과 여유는 편집 탭 [코스], 차 전폭은 [차량 제원]에서 바꿉니다. 다듬기는 입력이 바뀔 때마다 다시 해서 계산이 몇 초 걸립니다.', t2TT('sim', null, 'end')],
+  ['#wb .t2-mapw', '코스 지도', '한 번 눌러 휠 확대를 켠 뒤(박스 테두리 강조, 박스 밖을 누르거나 Esc = 끔) 휠로 확대, 휠 버튼을 누른 채 끌면 이동(박스 밖으로 나가도 됨), 왼쪽 버튼으로 누르거나 누른 채 끌면 프로브가 따라갑니다. 색 = 차속(여러 랩이면 모든 랩 통틀어 같은 범위), 주황 콘 = 슬라럼. 색 선 = 계산한 주행선(기본 레코드 라인: 코스 폭 안에서 가장 덜 휘는 라인을 구한 뒤 랩타임이 줄어드는 쪽으로 조금씩 다듬은 라인. 슬라럼은 첫 콘을 왼쪽으로, 번갈아 비켜 감), 점선 = 코스 중심선. 주행선(레코드 라인 · 최소 곡률 라인 · 중심 라인)과 여유는 편집 탭 [코스], 차 전폭은 [차량 제원]에서 바꿉니다. 다듬기는 입력이 바뀔 때마다 다시 해서 계산이 몇 초 걸립니다.', t2TT('sim', null, 'end')],
   ['#wbsl', '신호 고르기', '그래프를 누르면 그 칸이 강조되고, 여기 체크가 그 칸에 그릴 신호를 고릅니다. 이름을 누르면 그 신호의 눈금이 앞으로. 축 · 눈금 · 제목 · 값 글자는 선 색과 같습니다.', t2TT('sim')],
   ['#wbsig', '그래프 칸', '칸마다 상자 하나. 위 오른쪽 단추줄: [프로브] 누르거나 끌면 프로브(←/→ 한 칸씩) · [이동] 끌어서 보기 범위 옮김 · [영역 확대] 끌어서 사각형 확대 · 더블클릭 = 처음 범위. 가로 범위는 모든 칸이 같이 움직이고 세로는 칸마다. 칸을 한 번 누르면 휠 = 가로 확대, Shift + 휠 = 세로 확대. 상자 아래 [+ 그래프 칸]으로 최대 3칸, × 로 지우고, 칸 아래 경계를 끌어 높이를 바꿉니다.', t2TT('sim')],
   ['#wbsl [data-wbxa]', '입력 훑기', '가로축을 [입력 훑기 → 최종 감속비] 등으로 바꾸면 그 입력을 바꿔 가며 다시 계산한 종목 기록 변화를 봅니다 (나머지 입력은 지금 값).', t2TT('sim')]
@@ -12852,25 +12874,29 @@ WB_TOOLS['2'] = {
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
 //   호스  : ΔP = f (L ÷ D) ρ u² ÷ 2,  u = Q ÷ (π D² ÷ 4),  Re = ρ u D ÷ μ,  f = max(64 ÷ Re, 0.3164 Re^(−1/4))   (층류 · 매끈한 관 Blasius 난류, Re ≈ 1188 에서 이어짐)
 //   블럭  : ΔP = ΔP_기준 (Q ÷ Q_기준)²  (넣었을 때만, 0 = 없음)
-//   펌프  : 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량). 펌프 곡선은 넣지 않음
+//   펌프  : 유량 고정 = 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량),
+//           펌프 곡선 (H.crv) = 올리는 압력 H(Q) = H₀ (1 − (Q ÷ Q_max)²) (H₀ = 막힘 압력, Q_max = 압력 0 일 때 유량) → 회로 압력 강하와 만나는 점에서 유량이 정해짐
 //   블럭마다 들어감 · 나감 두 이음점 (압력 강하가 없는 블럭은 한 점), 이음점마다 들어오는 유량 = 나가는 유량 → 이음점 압력을 뉴턴법으로 풂
 //   hyd = {Vt [L/min], rho [kg/m³], mu [Pa·s], links: [{a, b, d [mm], len [m]}] (점 번호), blk: [{dp [kPa], dq [L/min]}] (점마다), src: [{k, flow [L/min]}] (펌프 점)}
-//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null)
+//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null), .Vt = 실제 회로 유량 [L/min] (라디 0 번에서 나가는 유량 합, 곡선 펌프면 풀어서 정해짐)
 function coolHydSolve(H) {
   const N = H.blk.length, rho = H.rho > 0 ? H.rho : 1000, mu = H.mu > 0 ? H.mu : 1e-3, Vt = H.Vt / 60000;
   if (!(Vt > 0) || !N) return null;
-  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000]));
+  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000])), crv = new Map((H.crv || []).map(s => [s.k, s]));
   // 이음점: 들어감 = 2k, 나감 = 2k + 1, 압력 강하도 펌프도 아닌 블럭은 같은 점
   const par = Array.from({ length: 2 * N }, (_, i) => i), fd = i => par[i] === i ? i : (par[i] = fd(par[i]));
   const hasDP = k => H.blk[k] && H.blk[k].dp > 0 && H.blk[k].dq > 0;
-  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
+  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k) && !crv.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
   const ids = [...new Set(par.map((_, i) => fd(i)))], ix = new Map(ids.map((r, j) => [r, j])), M = ids.length, nd = i => ix.get(fd(i));
   // 저항 요소: [u, v, ΔP(Q) (Q ≥ 0, m³/s → Pa)]
   const E = [];
   H.links.forEach((l, li) => { const D = Math.max(1e-3, (l.d > 0 ? l.d : 10) / 1000), Lh = Math.max(1e-3, l.len > 0 ? l.len : 0.5), A = Math.PI * D * D / 4;
     E.push({ u: nd(2 * l.a + 1), v: nd(2 * l.b), li, dP: Q => { const u = Q / A, Re = rho * u * D / mu; if (Re <= 0) return 0;
       const f = Math.max(64 / Re, 0.3164 * Math.pow(Re, -0.25)); return f * Lh / D * rho * u * u / 2; } }); });
-  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
+  // 곡선 펌프: 들어감 → 나감 요소, 압력 차 d = P_들어감 − P_나감 (= −올린 압력) → Q = Q_max √(1 + d ÷ H₀) (d 가 클수록 많이)
+  const PC = [];
+  crv.forEach((s, k) => { const H0 = Math.max(1, s.h0 * 1000), qm = Math.max(1e-9, s.qmax / 60000); PC.push({ u: nd(2 * k), v: nd(2 * k + 1), Q: d => qm * Math.sqrt(Math.max(0, 1 + d / H0)), G: d => qm / (2 * H0 * Math.sqrt(Math.max(1e-4, 1 + d / H0))) }); });
+  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k) && !crv.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
     E.push({ u: nd(2 * k), v: nd(2 * k + 1), li: -1, dP: Q => P0 * ((Q / Q0) ** 2 + 1e-3 * Q / Q0) }); }   // 아주 작은 1차 항: Q = 0 근처에서도 풀리게
   // ΔP → Q (단조 증가, 이분법)
   const inv = (e, p) => { if (p <= 0) return 0; let hi = Vt; while (e.dP(hi) < p && hi < 1e3) hi *= 2; let lo = 0;
@@ -12879,13 +12905,15 @@ function coolHydSolve(H) {
   const cond = (e, Q) => { const q = Math.max(Math.abs(Q), 1e-6 * Vt), h = q * 1e-4; return 2 * h / Math.max(1e-30, e.dP(q + h) - e.dP(Math.max(0, q - h))); };   // dQ/dΔP
   const P = new Array(M).fill(0), ref = 0;
   const resid = (P, Qs) => { const r = new Array(M).fill(0); E.forEach((e, j) => { r[e.u] -= Qs[j]; r[e.v] += Qs[j]; });
-    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); return r; };
+    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); PC.forEach(p => { const q = p.Q(P[p.u] - P[p.v]); r[p.u] -= q; r[p.v] += q; }); return r; };
   for (let it = 0; it < 200; it++) {
     const Qs = E.map(e => flow(e, P)), r = resid(P, Qs), err = Math.max(...r.map((x, j) => j === ref ? 0 : Math.abs(x)));
-    if (err < 1e-10 * Vt) return H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vt; });
+    if (err < 1e-10 * Vt) { const Va = H.links.reduce((s, l, li) => s + (l.a === 0 ? Qs[E.findIndex(e => e.li === li)] : 0), 0), Vu = PC.length ? Va : Vt;
+      const out = H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vu; }); out.Vt = Vu * 60000; return out; }
     // J ΔP = −r  (J = 이음점 사이 dQ/dΔP 로 만든 라플라스 행렬), 기준점 압력 0
     const n = M - 1, map = j => j < ref ? j : j - 1, J = Array.from({ length: n }, () => new Array(n + 1).fill(0));
-    E.forEach((e, j) => { const g = cond(e, Qs[j]); [[e.u, e.v], [e.v, e.u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; }); });
+    const lap = (u, v, g) => [[u, v], [v, u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; });
+    E.forEach((e, j) => lap(e.u, e.v, cond(e, Qs[j]))); PC.forEach(p => lap(p.u, p.v, p.G(P[p.u] - P[p.v])));
     for (let a = 0; a < M; a++) if (a !== ref) J[map(a)][n] = r[a];   // 들어오는 유량 합 − 나가는 합 → 압력을 올리면 나가는 유량이 늚
     const d = coolGauss(J, n); if (!d) return null;
     let s = 1; const Pn = () => P.map((p, a) => a === ref ? 0 : p + s * d[map(a)]);
@@ -12906,6 +12934,7 @@ function coolPrep(NET) {
   if (!NET) return NET;
   (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
     if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+    if (C.hyd.crv && C.hyd.crv.length && fl.Vt > 0) { C.hyd.Vt = fl.Vt; C.Cc = fl.Vt / 60000 * (C.rcp || 4.18e6); }   // 곡선 펌프: 회로 유량이 풀려서 정해짐
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -15013,25 +15042,29 @@ WB_TOOLS['G'] = {
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
 //   호스  : ΔP = f (L ÷ D) ρ u² ÷ 2,  u = Q ÷ (π D² ÷ 4),  Re = ρ u D ÷ μ,  f = max(64 ÷ Re, 0.3164 Re^(−1/4))   (층류 · 매끈한 관 Blasius 난류, Re ≈ 1188 에서 이어짐)
 //   블럭  : ΔP = ΔP_기준 (Q ÷ Q_기준)²  (넣었을 때만, 0 = 없음)
-//   펌프  : 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량). 펌프 곡선은 넣지 않음
+//   펌프  : 유량 고정 = 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량),
+//           펌프 곡선 (H.crv) = 올리는 압력 H(Q) = H₀ (1 − (Q ÷ Q_max)²) (H₀ = 막힘 압력, Q_max = 압력 0 일 때 유량) → 회로 압력 강하와 만나는 점에서 유량이 정해짐
 //   블럭마다 들어감 · 나감 두 이음점 (압력 강하가 없는 블럭은 한 점), 이음점마다 들어오는 유량 = 나가는 유량 → 이음점 압력을 뉴턴법으로 풂
 //   hyd = {Vt [L/min], rho [kg/m³], mu [Pa·s], links: [{a, b, d [mm], len [m]}] (점 번호), blk: [{dp [kPa], dq [L/min]}] (점마다), src: [{k, flow [L/min]}] (펌프 점)}
-//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null)
+//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null), .Vt = 실제 회로 유량 [L/min] (라디 0 번에서 나가는 유량 합, 곡선 펌프면 풀어서 정해짐)
 function coolHydSolve(H) {
   const N = H.blk.length, rho = H.rho > 0 ? H.rho : 1000, mu = H.mu > 0 ? H.mu : 1e-3, Vt = H.Vt / 60000;
   if (!(Vt > 0) || !N) return null;
-  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000]));
+  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000])), crv = new Map((H.crv || []).map(s => [s.k, s]));
   // 이음점: 들어감 = 2k, 나감 = 2k + 1, 압력 강하도 펌프도 아닌 블럭은 같은 점
   const par = Array.from({ length: 2 * N }, (_, i) => i), fd = i => par[i] === i ? i : (par[i] = fd(par[i]));
   const hasDP = k => H.blk[k] && H.blk[k].dp > 0 && H.blk[k].dq > 0;
-  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
+  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k) && !crv.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
   const ids = [...new Set(par.map((_, i) => fd(i)))], ix = new Map(ids.map((r, j) => [r, j])), M = ids.length, nd = i => ix.get(fd(i));
   // 저항 요소: [u, v, ΔP(Q) (Q ≥ 0, m³/s → Pa)]
   const E = [];
   H.links.forEach((l, li) => { const D = Math.max(1e-3, (l.d > 0 ? l.d : 10) / 1000), Lh = Math.max(1e-3, l.len > 0 ? l.len : 0.5), A = Math.PI * D * D / 4;
     E.push({ u: nd(2 * l.a + 1), v: nd(2 * l.b), li, dP: Q => { const u = Q / A, Re = rho * u * D / mu; if (Re <= 0) return 0;
       const f = Math.max(64 / Re, 0.3164 * Math.pow(Re, -0.25)); return f * Lh / D * rho * u * u / 2; } }); });
-  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
+  // 곡선 펌프: 들어감 → 나감 요소, 압력 차 d = P_들어감 − P_나감 (= −올린 압력) → Q = Q_max √(1 + d ÷ H₀) (d 가 클수록 많이)
+  const PC = [];
+  crv.forEach((s, k) => { const H0 = Math.max(1, s.h0 * 1000), qm = Math.max(1e-9, s.qmax / 60000); PC.push({ u: nd(2 * k), v: nd(2 * k + 1), Q: d => qm * Math.sqrt(Math.max(0, 1 + d / H0)), G: d => qm / (2 * H0 * Math.sqrt(Math.max(1e-4, 1 + d / H0))) }); });
+  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k) && !crv.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
     E.push({ u: nd(2 * k), v: nd(2 * k + 1), li: -1, dP: Q => P0 * ((Q / Q0) ** 2 + 1e-3 * Q / Q0) }); }   // 아주 작은 1차 항: Q = 0 근처에서도 풀리게
   // ΔP → Q (단조 증가, 이분법)
   const inv = (e, p) => { if (p <= 0) return 0; let hi = Vt; while (e.dP(hi) < p && hi < 1e3) hi *= 2; let lo = 0;
@@ -15040,13 +15073,15 @@ function coolHydSolve(H) {
   const cond = (e, Q) => { const q = Math.max(Math.abs(Q), 1e-6 * Vt), h = q * 1e-4; return 2 * h / Math.max(1e-30, e.dP(q + h) - e.dP(Math.max(0, q - h))); };   // dQ/dΔP
   const P = new Array(M).fill(0), ref = 0;
   const resid = (P, Qs) => { const r = new Array(M).fill(0); E.forEach((e, j) => { r[e.u] -= Qs[j]; r[e.v] += Qs[j]; });
-    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); return r; };
+    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); PC.forEach(p => { const q = p.Q(P[p.u] - P[p.v]); r[p.u] -= q; r[p.v] += q; }); return r; };
   for (let it = 0; it < 200; it++) {
     const Qs = E.map(e => flow(e, P)), r = resid(P, Qs), err = Math.max(...r.map((x, j) => j === ref ? 0 : Math.abs(x)));
-    if (err < 1e-10 * Vt) return H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vt; });
+    if (err < 1e-10 * Vt) { const Va = H.links.reduce((s, l, li) => s + (l.a === 0 ? Qs[E.findIndex(e => e.li === li)] : 0), 0), Vu = PC.length ? Va : Vt;
+      const out = H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vu; }); out.Vt = Vu * 60000; return out; }
     // J ΔP = −r  (J = 이음점 사이 dQ/dΔP 로 만든 라플라스 행렬), 기준점 압력 0
     const n = M - 1, map = j => j < ref ? j : j - 1, J = Array.from({ length: n }, () => new Array(n + 1).fill(0));
-    E.forEach((e, j) => { const g = cond(e, Qs[j]); [[e.u, e.v], [e.v, e.u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; }); });
+    const lap = (u, v, g) => [[u, v], [v, u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; });
+    E.forEach((e, j) => lap(e.u, e.v, cond(e, Qs[j]))); PC.forEach(p => lap(p.u, p.v, p.G(P[p.u] - P[p.v])));
     for (let a = 0; a < M; a++) if (a !== ref) J[map(a)][n] = r[a];   // 들어오는 유량 합 − 나가는 합 → 압력을 올리면 나가는 유량이 늚
     const d = coolGauss(J, n); if (!d) return null;
     let s = 1; const Pn = () => P.map((p, a) => a === ref ? 0 : p + s * d[map(a)]);
@@ -15067,6 +15102,7 @@ function coolPrep(NET) {
   if (!NET) return NET;
   (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
     if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+    if (C.hyd.crv && C.hyd.crv.length && fl.Vt > 0) { C.hyd.Vt = fl.Vt; C.Cc = fl.Vt / 60000 * (C.rcp || 4.18e6); }   // 곡선 펌프: 회로 유량이 풀려서 정해짐
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -17467,25 +17503,29 @@ const t9Save = () => { try{ localStorage.setItem(T9KEY, JSON.stringify({cool:T9.
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
 //   호스  : ΔP = f (L ÷ D) ρ u² ÷ 2,  u = Q ÷ (π D² ÷ 4),  Re = ρ u D ÷ μ,  f = max(64 ÷ Re, 0.3164 Re^(−1/4))   (층류 · 매끈한 관 Blasius 난류, Re ≈ 1188 에서 이어짐)
 //   블럭  : ΔP = ΔP_기준 (Q ÷ Q_기준)²  (넣었을 때만, 0 = 없음)
-//   펌프  : 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량). 펌프 곡선은 넣지 않음
+//   펌프  : 유량 고정 = 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량),
+//           펌프 곡선 (H.crv) = 올리는 압력 H(Q) = H₀ (1 − (Q ÷ Q_max)²) (H₀ = 막힘 압력, Q_max = 압력 0 일 때 유량) → 회로 압력 강하와 만나는 점에서 유량이 정해짐
 //   블럭마다 들어감 · 나감 두 이음점 (압력 강하가 없는 블럭은 한 점), 이음점마다 들어오는 유량 = 나가는 유량 → 이음점 압력을 뉴턴법으로 풂
 //   hyd = {Vt [L/min], rho [kg/m³], mu [Pa·s], links: [{a, b, d [mm], len [m]}] (점 번호), blk: [{dp [kPa], dq [L/min]}] (점마다), src: [{k, flow [L/min]}] (펌프 점)}
-//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null)
+//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null), .Vt = 실제 회로 유량 [L/min] (라디 0 번에서 나가는 유량 합, 곡선 펌프면 풀어서 정해짐)
 function coolHydSolve(H) {
   const N = H.blk.length, rho = H.rho > 0 ? H.rho : 1000, mu = H.mu > 0 ? H.mu : 1e-3, Vt = H.Vt / 60000;
   if (!(Vt > 0) || !N) return null;
-  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000]));
+  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000])), crv = new Map((H.crv || []).map(s => [s.k, s]));
   // 이음점: 들어감 = 2k, 나감 = 2k + 1, 압력 강하도 펌프도 아닌 블럭은 같은 점
   const par = Array.from({ length: 2 * N }, (_, i) => i), fd = i => par[i] === i ? i : (par[i] = fd(par[i]));
   const hasDP = k => H.blk[k] && H.blk[k].dp > 0 && H.blk[k].dq > 0;
-  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
+  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k) && !crv.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
   const ids = [...new Set(par.map((_, i) => fd(i)))], ix = new Map(ids.map((r, j) => [r, j])), M = ids.length, nd = i => ix.get(fd(i));
   // 저항 요소: [u, v, ΔP(Q) (Q ≥ 0, m³/s → Pa)]
   const E = [];
   H.links.forEach((l, li) => { const D = Math.max(1e-3, (l.d > 0 ? l.d : 10) / 1000), Lh = Math.max(1e-3, l.len > 0 ? l.len : 0.5), A = Math.PI * D * D / 4;
     E.push({ u: nd(2 * l.a + 1), v: nd(2 * l.b), li, dP: Q => { const u = Q / A, Re = rho * u * D / mu; if (Re <= 0) return 0;
       const f = Math.max(64 / Re, 0.3164 * Math.pow(Re, -0.25)); return f * Lh / D * rho * u * u / 2; } }); });
-  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
+  // 곡선 펌프: 들어감 → 나감 요소, 압력 차 d = P_들어감 − P_나감 (= −올린 압력) → Q = Q_max √(1 + d ÷ H₀) (d 가 클수록 많이)
+  const PC = [];
+  crv.forEach((s, k) => { const H0 = Math.max(1, s.h0 * 1000), qm = Math.max(1e-9, s.qmax / 60000); PC.push({ u: nd(2 * k), v: nd(2 * k + 1), Q: d => qm * Math.sqrt(Math.max(0, 1 + d / H0)), G: d => qm / (2 * H0 * Math.sqrt(Math.max(1e-4, 1 + d / H0))) }); });
+  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k) && !crv.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
     E.push({ u: nd(2 * k), v: nd(2 * k + 1), li: -1, dP: Q => P0 * ((Q / Q0) ** 2 + 1e-3 * Q / Q0) }); }   // 아주 작은 1차 항: Q = 0 근처에서도 풀리게
   // ΔP → Q (단조 증가, 이분법)
   const inv = (e, p) => { if (p <= 0) return 0; let hi = Vt; while (e.dP(hi) < p && hi < 1e3) hi *= 2; let lo = 0;
@@ -17494,13 +17534,15 @@ function coolHydSolve(H) {
   const cond = (e, Q) => { const q = Math.max(Math.abs(Q), 1e-6 * Vt), h = q * 1e-4; return 2 * h / Math.max(1e-30, e.dP(q + h) - e.dP(Math.max(0, q - h))); };   // dQ/dΔP
   const P = new Array(M).fill(0), ref = 0;
   const resid = (P, Qs) => { const r = new Array(M).fill(0); E.forEach((e, j) => { r[e.u] -= Qs[j]; r[e.v] += Qs[j]; });
-    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); return r; };
+    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); PC.forEach(p => { const q = p.Q(P[p.u] - P[p.v]); r[p.u] -= q; r[p.v] += q; }); return r; };
   for (let it = 0; it < 200; it++) {
     const Qs = E.map(e => flow(e, P)), r = resid(P, Qs), err = Math.max(...r.map((x, j) => j === ref ? 0 : Math.abs(x)));
-    if (err < 1e-10 * Vt) return H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vt; });
+    if (err < 1e-10 * Vt) { const Va = H.links.reduce((s, l, li) => s + (l.a === 0 ? Qs[E.findIndex(e => e.li === li)] : 0), 0), Vu = PC.length ? Va : Vt;
+      const out = H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vu; }); out.Vt = Vu * 60000; return out; }
     // J ΔP = −r  (J = 이음점 사이 dQ/dΔP 로 만든 라플라스 행렬), 기준점 압력 0
     const n = M - 1, map = j => j < ref ? j : j - 1, J = Array.from({ length: n }, () => new Array(n + 1).fill(0));
-    E.forEach((e, j) => { const g = cond(e, Qs[j]); [[e.u, e.v], [e.v, e.u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; }); });
+    const lap = (u, v, g) => [[u, v], [v, u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; });
+    E.forEach((e, j) => lap(e.u, e.v, cond(e, Qs[j]))); PC.forEach(p => lap(p.u, p.v, p.G(P[p.u] - P[p.v])));
     for (let a = 0; a < M; a++) if (a !== ref) J[map(a)][n] = r[a];   // 들어오는 유량 합 − 나가는 합 → 압력을 올리면 나가는 유량이 늚
     const d = coolGauss(J, n); if (!d) return null;
     let s = 1; const Pn = () => P.map((p, a) => a === ref ? 0 : p + s * d[map(a)]);
@@ -17521,6 +17563,7 @@ function coolPrep(NET) {
   if (!NET) return NET;
   (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
     if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+    if (C.hyd.crv && C.hyd.crv.length && fl.Vt > 0) { C.hyd.Vt = fl.Vt; C.Cc = fl.Vt / 60000 * (C.rcp || 4.18e6); }   // 곡선 펌프: 회로 유량이 풀려서 정해짐
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -17578,7 +17621,7 @@ const T9CP = {   // 블럭 입력 [키, 이름, 단위, 소수, 기본값]
   rad:[['A', '코어 앞면 면적', 'm²', 3, 0.06], ['kd', '주행풍 중 코어 통과 비율', '', 2, 0.3], ['fan', '팬 유량', 'm³/s', 3, 0.08], ['fon', '팬 켜는 냉각수 온도 (0 = 늘 켬, 3 K 아래면 끔)', '°C', 0, 0],
        ['UA', 'UA (코어 풍속 5 m/s, × (풍속 ÷ 5)^0.6)', 'W/K', 0, 250], ['itd', '방열 표의 입구 온도차', 'K', 0, 60], ['V', '안의 냉각수 양', 'L', 2, 0.6], ['Cm', '금속 열용량 (0 = 넣지 않음)', 'kJ/K', 2, 0],
        ['dp', '압력 강하 (0 = 없음)', 'kPa', 1, 0], ['dq', '압력 강하를 잰 유량', 'L/min', 1, 8]],
-  pump:[['flow', '유량', 'L/min', 1, 8]],
+  pump:[['flow', '유량', 'L/min', 1, 8], ['pc', '유량 정하기 (0 고정 · 1 곡선)', '', 0, 0], ['h0', '막힘 압력 (유량 0)', 'kPa', 1, 50], ['qmax', '최대 유량 (압력 0)', 'L/min', 1, 20]],
   partW:[['V', '안의 냉각수 양 (재킷 · 냉각판)', 'L', 2, 0.3], ['dp', '압력 강하 (0 = 없음)', 'kPa', 1, 0], ['dq', '압력 강하를 잰 유량', 'L/min', 1, 8]],
   hose:[['d', '안지름', 'mm', 1, 10], ['len', '길이', 'm', 2, 0.5]],
   in:[['A', '입구 면적', 'm²', 3, 0.02], ['kd', '주행풍 중 들어오는 비율', '', 2, 0.5], ['fan', '팬 유량 (정지 때도)', 'm³/s', 3, 0.03]],
@@ -17586,7 +17629,7 @@ const T9CP = {   // 블럭 입력 [키, 이름, 단위, 소수, 기본값]
 /* 라디 방열 표 (스펙 시트): B.p.rq = 글자 (첫 행 냉각수 유량 L/min, 첫 열 코어 풍속 m/s, 칸 kW), B.p.rqUse = 'const' 면 위 UA. 다른 표와 같은 규칙 (값이 있으면 표 · UA 칸 잠김) */
 const t9RadTab = B => B && B.t==='rad' && B.p && B.p.rqUse!=='const' && typeof t2GridParse==='function' && B.p.rq ? t2GridParse(B.p.rq).map : null;
 const t9LX = l => (l[3] && typeof l[3]==='object') ? l[3] : (l[3] = {});   // 호스 값 · 꺾임점
-const t9CParams = (C, B) => B.t==='rad' ? T9CP.rad : B.t==='pump' ? T9CP.pump : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t][1]==='part' ? T9CP.partW : [];
+const t9CParams = (C, B) => B.t==='rad' ? T9CP.rad : B.t==='pump' ? T9CP.pump.filter(([k]) => k!=='pc' && (t9CV(B.p, T9CP.pump).pc===1 ? k!=='flow' : k==='flow')) : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t][1]==='part' ? T9CP.partW : [];
 const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { r[k] = isFinite(+((o || {})[k])) && (o || {})[k] !== '' ? +o[k] : v; }); return r; };
 /* 수랭 회로 → 계산용: 갈라지고 합쳐지는 배관 가능. 라디에이터에서 나가는 흐름 = 1, 합쳐지는 곳은 더함.
    라디로 들어오는 호스를 빼면 순환 없는 흐름이어야 함 → 그 순서(위상 정렬)로 점을 늘어놓음 (라디 = 0 번).
@@ -17597,7 +17640,7 @@ function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.bloc
   const R0 = rads[0].id, L = C.links.filter(([a, b]) => by.has(a) && by.has(b)), outs = id => L.filter(l => l[0]===id), ins = id => L.filter(l => l[1]===id);
   C.blocks.forEach(b => { const nm = T9CB[b.t][0]; if(!outs(b.id).length) E.push(`${nm}에서 나가는 호스가 없음`); if(!ins(b.id).length) E.push(`${nm}로 들어오는 호스가 없음`); });
   if(E.length) return {E};
-  const flow = id => t9CV(by.get(id).p, T9CP.pump).flow, isPump = id => by.get(id).t==='pump';
+  const pv = id => t9CV(by.get(id).p, T9CP.pump), isCrv = id => pv(id).pc===1, flow = id => isCrv(id) ? pv(id).qmax : pv(id).flow, isPump = id => by.get(id).t==='pump';   // 곡선 펌프는 구조 확인에 최대 유량을 씀 (실제 유량은 hyd 로 풂)
   const pSplit = t9PumpSplit(C, by);   // 갈래마다 펌프가 붙은 갈라짐 (있으면 그 비율 = 펌프 유량 비)
   const fr = l => { const o = outs(l[0]); if(o.length < 2) return 1;
     if(pSplit && l[0]===pSplit){ const s = o.reduce((a, x) => a + flow(x[1]), 0); return s > 0 ? flow(l[1])/s : 1/o.length; }
@@ -17625,9 +17668,10 @@ function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.bloc
             ins:ins(id).map(l => [ix.get(l[0]), q.get(l[0])*fr(l), li(l)]), ...(B.t==='rad' ? {UA:v.UA, A:v.A, kd:v.kd, fan:v.fan, fon:v.fon, Cm:v.Cm, ...(t9RadTab(B) ? {rq:t9RadTab(B), itd:v.itd} : {})} : {})}; });   // 라디마다 공기 쪽 값 · 팬 · 금속 · 방열 표
   const hyd = {Vt, rho:P.rho, mu:P.mu/1000, links:L.map(l => { const h = t9CV(t9LX(l), T9CP.hose); return {a:ix.get(l[0]), b:ix.get(l[1]), d:h.d, len:h.len}; }),
                blk:order.map(id => { const B = by.get(id); if(B.t==='pump') return {}; const v = t9CV(B.p, t9CParams(C, B)); return {dp:v.dp, dq:v.dq}; }),
-               src:pumps.map(b => ({k:ix.get(b.id), flow:part.length ? flow(b.id) : Vt}))};
+               src:pumps.filter(b => !isCrv(b.id)).map(b => ({k:ix.get(b.id), flow:part.length ? flow(b.id) : Vt})), crv:pumps.filter(b => isCrv(b.id)).map(b => ({k:ix.get(b.id), h0:pv(b.id).h0, qmax:pv(b.id).qmax}))};
   const rr = t9CV(rads[0].p, T9CP.rad), net = {nodes, Cc:Vt/60000*P.rho*P.cp, rcp:P.rho*P.cp, UA:rr.UA, A:rr.A, kd:rr.kd, fan:rr.fan, hyd};
   const hf = coolHydSolve(hyd); if(!hf) return {E:['호스 유량을 풀지 못함 (호스 값 확인)']};
+  if(hyd.crv.length){ Vt = hf.Vt; hyd.Vt = Vt; net.Cc = Vt/60000*P.rho*P.cp; mode = (mode ? mode + ' · ' : '') + `펌프 곡선 → 회로 유량 ${Vt.toFixed(2)} L/min`; }
   const lq = new Map(L.map((l, k) => [l, hf[k]]));   // 호스 → 유량 몫 (화면 표시용)
   return {E, net, q, fr, mode, lq, Vt}; }
 /* 갈래마다 펌프가 바로 붙은 갈라짐 블럭 id (나가는 호스가 둘 이상이고 모두 펌프로 감), 없으면 '' */
@@ -17663,8 +17707,9 @@ function t9CoolWhere(p){ const ok = t9CoolCompile().err; for(const C of t9S().co
 function t9S(){ return typeof WB!=='undefined' && WB.id==='2' && typeof t2Cwc==='function' ? t2Cwc() : T9; }
 function t9On(){ return typeof WB!=='undefined' && (WB.id==='9' || WB.id==='2') && !!document.querySelector('#wb .t9-cool'); }
 /* ---------- 편집기 그림 · 조작 (시뮬링크식)
-   왼쪽 끌기: 블럭 = 옮기기 (고른 블럭이 여럿이면 같이) · 빈 곳 = 영역 고르기 · 오른쪽 점 = 호스 새로 끌어 다른 블럭에 이음 · 고른 호스의 네모 = 경로 토막 옮기기
-   휠 = 확대 · 축소 (커서 자리 기준) · 휠 버튼 끌기 = 화면 이동 · Shift + 누르기 = 더해 고르기 · Delete · Backspace = 고른 것 지우기 · Esc = 고르기 풀기
+   왼쪽 끌기: 블럭 = 옮기기 (고른 블럭이 여럿이면 같이) · 빈 곳 = 영역 고르기 (걸치기만 해도) · 오른쪽 점 = 호스 새로 끌어 다른 블럭에 이음 ·
+     호스 토막 = 수직 토막은 좌우, 수평 토막은 상하로 옮김 (같은 자리에 겹친 토막은 함께 · 다른 호스 토막 6 안쪽이면 붙어 합쳐짐)
+   휠 = 확대 · 축소 (커서 자리 기준, 그림을 한 번 누른 뒤에만 — 스크롤하다 지나가도 확대 안 됨) · 휠 버튼 끌기 = 화면 이동 · Shift + 누르기 = 더해 고르기 · Delete · Backspace = 고른 것 지우기 · Esc = 고르기 풀기
    두 번 누르기: 빈 곳 = 전체 보기, 호스 = 자동 경로로 되돌림 */
 const T9CBW = 150, T9CBH = 58, T9CR = 64, T9VA = 0.36;   // 네모 블럭 · 동그라미 블럭(펌프 · 공기 입구 · 출구) 크기, 그림 세로 ÷ 가로
 const t9Rd = b => b.t==='pump' || b.t==='in' || b.t==='out';
@@ -17685,11 +17730,14 @@ function t9Route(C, j, by){ const l = C.links[j], A = by.get(l[0]), B = by.get(l
   const [x1, y1] = t9Pout(A), [x2, y2] = t9Pin(B), pts = t9LX(l).pts;
   if(Array.isArray(pts) && pts.length >= 2){ const P = pts.map(p => p.slice()); P[0][1] = y1; P[P.length - 1][1] = y2; return [[x1, y1], ...P, [x2, y2]]; }
   const oo = C.links.filter(q => q[0]===l[0]), ii = C.links.filter(q => q[1]===l[1]), ko = oo.indexOf(l), ki = ii.indexOf(l);
-  const xs = x1 + 18 + (oo.length > 1 ? 10*ko : 0), xe = x2 - 18 - (ii.length > 1 ? 10*ki : 0);
+  const xs = x1 + 18, xe = x2 - 18;   // 갈라지는 · 합쳐지는 호스는 같은 수직 토막을 함께 씀 (시뮬링크처럼 겹쳐 보임)
   if(xe >= xs + 4 || (oo.length < 2 && ii.length < 2 && x2 >= x1 + 24)){ const xm = oo.length > 1 ? xs : ii.length > 1 ? xe : (x1 + x2)/2; return [[x1, y1], [xm, y1], [xm, y2], [x2, y2]]; }
-  const back = C.links.filter(q => { const a = by.get(q[0]), b = by.get(q[1]); return a && b && t9Pin(b)[0] < t9Pout(a)[0] + 24; }), kb = back.indexOf(l);
+  const back = C.links.filter(q => { const a = by.get(q[0]), b = by.get(q[1]); return a && b && t9Pin(b)[0] < t9Pout(a)[0] + 24; }), bt = [...new Set(back.map(q => q[1]))], kb = bt.indexOf(l[1]);   // 같은 곳으로 돌아가는 호스는 같은 아래 길
   const lane = Math.max(...C.blocks.map(b => b.y + t9BH(b))) + 24 + 12*Math.max(0, kb);
   return [[x1, y1], [xs, y1], [xs, lane], [xe, lane], [xe, y2], [x2, y2]]; }
+/* 토막 끌기: 링크 j 의 꺾은선에서 점 (px, py) 에 가장 가까운 토막 번호 (양 끝 토막 = 포트에 붙어 못 옮김 → −1) */
+function t9SegAt(P, px, py){ let best = -1, bd = Infinity; for(let q = 0; q < P.length - 1; q++){ const [ax, ay] = P[q], [bx, by] = P[q + 1], dx = bx - ax, dy = by - ay, L2 = dx*dx + dy*dy, t = L2 > 0 ? Math.max(0, Math.min(1, ((px - ax)*dx + (py - ay)*dy)/L2)) : 0, d = Math.hypot(ax + t*dx - px, ay + t*dy - py); if(d < bd){ bd = d; best = q; } }
+  return best >= 1 && best <= P.length - 3 ? best : -1; }
 /* 보는 자리 (그림 좌표 viewBox): 없으면 모든 블럭이 보이게 */
 function t9Fit(C){ const B = C.blocks.length ? C.blocks : [{x:0, y:0, t:'rad'}], x0 = Math.min(...B.map(b => b.x)) - 50, x1 = Math.max(...B.map(b => b.x + t9BW(b))) + 50;
   const y0 = Math.min(...B.map(b => b.y)) - 40, y1 = Math.max(...B.map(b => b.y + t9BH(b))) + 40 + 12*Math.max(1, C.links.length);
@@ -17713,12 +17761,10 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
     if(oo.length > 1){ const k = oo.indexOf(l) + 1; let best = null;   // 갈래 번호: 그 갈래 가장 긴 토막 가운데
       for(let q = 1; q < P.length - 2; q++){ const L2 = Math.hypot(P[q + 1][0] - P[q][0], P[q + 1][1] - P[q][1]); if(!best || L2 > best[0]) best = [L2, (P[q][0] + P[q + 1][0])/2, (P[q][1] + P[q + 1][1])/2]; }
       if(!best || best[0] < 24) best = [0, P[P.length - 1][0] - 30, P[P.length - 1][1]];
-      bad += `<g class="t9-cbadge${sel ? ' sel' : ''}" data-t9clink="${C.id}:${j}" transform="translate(${best[1]},${best[2]})"><circle r="10"/><text y="4" text-anchor="middle">${k}</text></g>`; }
-    if(sel && C.selL.length===1) for(let q = 1; q < P.length - 2; q++){ const [ax, ay] = P[q], [bx, byy] = P[q + 1], vert = Math.abs(ax - bx) < 0.5;   // 가운데 토막마다 옮기기 네모
-      hdl += `<rect class="t9-cseg ${vert ? 'v' : 'h'}" data-t9cseg="${C.id}:${j}:${q}" x="${(ax + bx)/2 - 6}" y="${(ay + byy)/2 - 6}" width="12" height="12" rx="2"/>`; } });
+      bad += `<g class="t9-cbadge${sel ? ' sel' : ''}" data-t9clink="${C.id}:${j}" transform="translate(${best[1]},${best[2]})"><circle r="10"/><text y="4" text-anchor="middle">${k}</text></g>`; } });
   s += `<g class="t9-hose ${C.kind}">${layers.o}${layers.i}${layers.f}</g>${dots}${layers.h}${bad}`;   // 테두리를 모두 먼저, 안쪽 색을 그 위에 → 겹친 곳에 경계가 안 보임
   C.blocks.forEach(b => { const [nm, kind] = T9CB[b.t], q = t9CV(b.p, t9CParams(C, b)), sel = sB.has(b.id), w = t9BW(b), h = t9BH(b), rd = t9Rd(b);
-    const sub = b.t==='rad' ? `${q.A} m² · ${t9RadTab(b) ? '방열 표' : `UA ${q.UA}`}${q.fon > 0 ? ` · 팬 ${q.fon} °C` : ''}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
+    const sub = b.t==='pump' && q.pc===1 ? `곡선 ${q.h0} kPa` : b.t==='rad' ? `${q.A} m² · ${t9RadTab(b) ? '방열 표' : `UA ${q.UA}`}${q.fon > 0 ? ` · 팬 ${q.fon} °C` : ''}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
     const shape = rd ? `<circle cx="${w/2}" cy="${h/2}" r="${w/2}"/>` : `<rect width="${w}" height="${h}" rx="7"/>`;
     const txt = rd ? `<text x="${w/2}" y="${sub ? h/2 - 2 : h/2 + 4}" text-anchor="middle" class="t9-cbn sm">${b.t==='in' ? '입구' : b.t==='out' ? '출구' : nm}</text>${sub ? `<text x="${w/2}" y="${h/2 + 13}" text-anchor="middle" class="t9-cbs sm">${b.t==='in' ? `${q.A} m²` : sub}</text>` : ''}`
                    : `<text x="${w/2}" y="24" text-anchor="middle" class="t9-cbn">${nm}</text><text x="${w/2}" y="42" text-anchor="middle" class="t9-cbs">${sub}</text>`;
@@ -17732,9 +17778,11 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
     const form = (title, def, obj, attr, lock = {}) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
         return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${lock[k] ? lock[k] : u}</i></label>`; }).join('')}</div>`;
     const radTab = B => { const M = B.p && B.p.rq && typeof t2GridParse==='function' ? t2GridParse(B.p.rq).map : null, use = B.p && B.p.rqUse==='const' ? 'const' : 'tab', id = `${C.id}:${B.id}`;
-      return `<div class="t9-cform t9-crqb"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW. 엑셀에서 표를 복사해 아래 칸을 누르고 Ctrl+V. 값이 있으면 [UA] 대신 씀 (점마다 ε-NTU 로 UA 를 거꾸로 구해 보간)</span>
-        ${M ? `<span class="t2-use"><span class="muted">계산에 쓸 값</span><span class="dc-seg" role="group">${[['tab', '표'], ['const', 'UA']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span> <button type="button" class="btn small" data-t9crqx="${id}">표 지우기</button></span>` : ''}
-        <div class="t9-crq" data-t9crq="${id}" tabindex="0">${M ? `<table class="t2-tt"><tr><th>풍속 \\ 유량</th>${M.n.map(f => `<th>${wbFmt(f, 1)}</th>`).join('')}</tr>${M.t.map((v, i) => `<tr><th>${wbFmt(v, 1)}</th>${M.e[i].map(x => `<td>${wbFmt(x, 2)}</td>`).join('')}</tr>`).join('')}</table>` : '<span class="muted">비어 있음 — 여기를 누르고 Ctrl+V</span>'}</div></div>`; };
+      const G = t9RqGrid(B.p && B.p.rq);   // 칸마다 바로 고치는 표 (다른 표와 같음): 첫 행 = 유량, 첫 열 = 풍속
+      return `<div class="t9-cform t9-crqb"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW. 칸을 고치거나, 엑셀에서 여러 칸을 복사해 표를 누르고 Ctrl+V (표 전체를 바꿈). 값이 있으면 [UA] 대신 씀 (점마다 ε-NTU 로 UA 를 거꾸로 구해 보간)</span>
+        <span class="t2-use">${M ? `<span class="muted">계산에 쓸 값</span><span class="dc-seg" role="group">${[['tab', '표'], ['const', 'UA']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span>` : '<span class="muted">비어 있음 → 위 UA 씀</span>'}
+          <button type="button" class="btn small" data-t9crqa="${id}:row">+ 행 (풍속)</button><button type="button" class="btn small" data-t9crqa="${id}:col">+ 열 (유량)</button>${B.p && B.p.rq ? `<button type="button" class="btn small" data-t9crqx="${id}">표 지우기</button>` : ''}</span>
+        <div class="t9-crq" data-t9crq="${id}"><table class="t2-tt t9-rqt">${G.map((r, ri) => `<tr>${r.map((v, ci) => ri===0 && ci===0 ? '<th class="muted">풍속 \\ 유량</th>' : `<td><input type="text" inputmode="decimal" value="${wbEsc(v)}" data-t9rqc="${id}:${ri}:${ci}"${ri===0 || ci===0 ? ' class="hd"' : ''}></td>`).join('')}</tr>`).join('')}</table></div></div>`; };
     const B = C.selB.length===1 && !C.selL.length ? by.get(C.selB[0]) : null, Lj = C.selL.length===1 && !C.selB.length ? C.selL[0] : -1;
     const hose = () => { const l = C.links[Lj], A = by.get(l[0]), Bt = by.get(l[1]); if(!A || !Bt) return ''; const o = C.links.filter(q => q[0]===l[0]), k = o.indexOf(l) + 1;
       let info = '';
@@ -17748,15 +17796,15 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
       return `<div class="t9-csel"><div class="t9-cform"><b>덕트 ${T9CB[A.t][0]} → ${T9CB[Bt.t][0]}</b>${o.length > 1 ? o.map((q, m) => { const Bq = by.get(q[1]);
           return `<label class="t9-cfi"><span>${m + 1}번 (→ ${T9CB[Bq.t][0]}) 비율</span><input type="number" step="any" min="1" max="99" value="${(+(q[2] || 1/o.length)*100).toFixed(1)}" data-t9crat="${C.id}:${jj[m]}"><i>%</i></label>`; }).join('') : '<span class="muted">갈라지지 않은 덕트 (공기 100 %)</span>'}</div></div>`; };
     const panel = Lj >= 0 ? hose()
-      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? (t9RadTab(B) ? {UA:'표 사용'} : {itd:'표 없음'}) : {}) + (B.t==='rad' ? radTab(B) : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
+      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? (t9RadTab(B) ? {UA:'표 사용'} : {itd:'표 없음'}) : {}) + (B.t==='rad' ? radTab(B) : '') + (B.t==='pump' ? `<div class="t9-cform"><b>유량 정하기</b><span class="dc-seg" role="group">${[[0, '유량 고정'], [1, '펌프 곡선']].map(([q, nm]) => `<button type="button" data-t9cpm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.pump).pc===q}">${nm}</button>`).join('')}</span><span class="muted">${t9CV(B.p, T9CP.pump).pc===1 ? '올리는 압력 = 막힘 압력 × (1 − (유량 ÷ 최대 유량)²), 호스 · 블럭 압력 강하와 만나는 점에서 유량이 정해짐 (펌프 스펙 시트의 곡선 양 끝)' : '회로 압력 강하와 상관없이 이 유량'}</span></div>` : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
       : C.selB.length + C.selL.length ? `<p class="muted t9-cmsg">블럭 ${C.selB.length}개 · ${C.kind==='water' ? '호스' : '덕트'} ${C.selL.length}개 고름 · 끌면 같이 옮겨지고 Delete 로 지움</p>`
-      : `<p class="muted t9-cmsg">왼쪽 끌기: 블럭 옮기기 · 빈 곳은 영역 고르기 · 오른쪽 점을 끌어 다른 블럭에 놓으면 이어짐 · 휠 = 확대 · 축소 · 휠 버튼 끌기 = 화면 이동 · Shift + 누르기 = 더해 고르기 · Delete = 고른 것 지우기 · 고른 ${C.kind==='water' ? '호스' : '덕트'}의 네모를 끌면 경로를 옮김 · 두 번 누르기: 빈 곳 = 전체 보기, ${C.kind==='water' ? '호스' : '덕트'} = 자동 경로.${C.kind==='water' ? ' 한 블럭에서 호스를 둘 이상 끌어내면 갈라지고, 한 블럭으로 여러 호스가 들어오면 합쳐집니다.' : ' 한 블럭에서 덕트를 둘 이상 끌어내면 갈라지고(비율 입력), 여러 덕트가 한 블럭으로 들어오면 합쳐집니다.'}</p>`;
+      : `<p class="muted t9-cmsg">왼쪽 끌기: 블럭 옮기기 · 빈 곳은 영역 고르기 · 오른쪽 점을 끌어 다른 블럭에 놓으면 이어짐 · 휠 = 확대 · 축소 · 휠 버튼 끌기 = 화면 이동 · Shift + 누르기 = 더해 고르기 · Delete = 고른 것 지우기 · ${C.kind==='water' ? '호스' : '덕트'} 토막을 끌면 수직은 좌우 · 수평은 상하로 옮김 (다른 토막에 가까이 대면 합쳐짐) · 휠 확대는 그림을 한 번 누른 뒤 · 두 번 누르기: 빈 곳 = 전체 보기, ${C.kind==='water' ? '호스' : '덕트'} = 자동 경로.${C.kind==='water' ? ' 한 블럭에서 호스를 둘 이상 끌어내면 갈라지고, 한 블럭으로 여러 호스가 들어오면 합쳐집니다.' : ' 한 블럭에서 덕트를 둘 이상 끌어내면 갈라지고(비율 입력), 여러 덕트가 한 블럭으로 들어오면 합쳐집니다.'}</p>`;
     return `<div class="t9-cc" data-t9cc="${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b><span class="muted">${C.kind==='water' ? '선 방향 = 냉각수 흐름 · 라디에서 나와 라디로 (갈라짐 · 합쳐짐 가능)' : '선 방향 = 공기 흐름 · 입구 → 출구 (갈라짐 · 합쳐짐 가능)'}</span>
         <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? t9S().cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = T9CB[t][1]==='part' && here;
       return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${T9CB[t][0]}은 이 회로에 이미 있음 (부품은 한 곳에만)"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
         <button type="button" class="btn small t9-cdel" data-t9cdel="${C.id}">회로 지우기</button></div>
       ${C.kind==='water' ? form('냉각수', T9CP.water, C.p, `data-t9cwp="${C.id}"`) : ''}
-      <div class="t9-cbox">${t9CoolSVG(C)}</div>
+      <div class="t9-cbox" data-zoombox="t9c-${C.id}">${t9CoolSVG(C)}</div>
       <p class="t9-cmsg ${E ? 'bad' : 'ok'}">${E ? '계산에서 빠짐: ' + E.join(' · ') : '이어짐 · 계산에 씀' + (comp.mode[C.id] ? ' · ' + comp.mode[C.id] : '')}</p>
       ${panel}</div>`; };
   const free = ['m', 'i', 'b'].filter(p => !used.has(p)).map(p => T9CB[p][0]);
@@ -17797,16 +17845,25 @@ document.addEventListener('keydown', e => { if(e.key!=='Escape' || !t9On() || (e
 document.addEventListener('keydown', e => { if(!t9On() || (e.target.matches && e.target.matches('input,textarea,select'))) return;
   if(!['Delete', 'Backspace'].includes(e.key)) return; const C = t9S().cool.circuits.find(c => { t9Sel(c); return c.selB.length || c.selL.length; }); if(!C) return;
   e.preventDefault(); t9CDelSel(C); });
-/* 라디 방열 표: 붙여넣기 · 표 / UA 고르기 · 지우기 */
+/* 라디 방열 표: 글자 ↔ 칸 (첫 칸은 머리), 빈 표면 2 × 2 빈칸 */
+function t9RqGrid(txt){ const R = String(txt || '').replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split(/[,\t]/).map(c => c.trim()));
+  if(!R.length) return [['', ''], ['', '']]; const w = Math.max(...R.map(r => r.length)); return R.map(r => Array.from({length:w}, (_, k) => r[k] ?? '')); }
+const t9RqText = G => G.map(r => r.join(', ')).join('\n');
+document.addEventListener('change', e => { if(!t9On() || !e.target.matches || !e.target.matches('[data-t9rqc]')) return; const a = e.target.dataset.t9rqc.split(':'), B = t9RadB(a[0] + ':' + a[1]), G = t9RqGrid(B.p && B.p.rq);
+  G[+a[2]][+a[3]] = e.target.value.trim(); B.p = B.p || {}; B.p.rq = t9RqText(G); if(!B.p.rqUse) B.p.rqUse = 'tab'; t9CoolSet(); });
+/* 라디 방열 표: 붙여넣기 · 행 · 열 더하기 · 표 / UA 고르기 · 지우기 */
 const t9RadB = id => { const [cid, bid] = id.split(':'); return t9CC(cid).blocks.find(b => b.id===bid); };
 document.addEventListener('paste', e => { if(!t9On() || !e.target.closest) return; const t = e.target.closest('[data-t9crq]'); if(!t) return;
-  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; e.preventDefault();
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();   // 한 칸이면 그 칸에 그대로
   const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
   if(typeof t2GridParse!=='function' || !t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s, 칸 = 방열량 kW.'); return; }
   const B = t9RadB(t.dataset.t9crq); B.p = B.p || {}; B.p.rq = v; B.p.rqUse = 'tab'; t9CoolSet(); toast('방열 표를 넣었습니다 (UA 대신 씀).'); });
 document.addEventListener('click', e => { if(!t9On() || !e.target.closest) return;
   const u = e.target.closest('[data-t9crqu]'); if(u){ const a = u.dataset.t9crqu.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p.rqUse = a[2]; t9CoolSet(); return; }
-  const x = e.target.closest('[data-t9crqx]'); if(x){ const B = t9RadB(x.dataset.t9crqx); delete B.p.rq; delete B.p.rqUse; t9CoolSet(); } });
+  const x = e.target.closest('[data-t9crqx]'); if(x){ const B = t9RadB(x.dataset.t9crqx); delete B.p.rq; delete B.p.rqUse; t9CoolSet(); return; }
+  const ad = e.target.closest('[data-t9crqa]'); if(ad){ const a = ad.dataset.t9crqa.split(':'), B = t9RadB(a[0] + ':' + a[1]), G = t9RqGrid(B.p && B.p.rq); if(a[2]==='row') G.push(G[0].map(() => '')); else G.forEach(r => r.push(''));
+    B.p = B.p || {}; B.p.rq = t9RqText(G); t9CoolUI(); }
+  const pm = e.target.closest('[data-t9cpm]'); if(pm){ const a = pm.dataset.t9cpm.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p = B.p || {}; B.p.pc = +a[2]; t9CoolSet(); } });
 /* 갈라진 덕트 비율 입력 (%): 하나를 바꾸면 나머지를 그 비율대로 줄이거나 늘려 합 100 % */
 document.addEventListener('change', e => { if(!t9On() || !e.target.matches || !e.target.matches('[data-t9crat]')) return; const [cid, j] = e.target.dataset.t9crat.split(':'), C = t9CC(cid), l = C.links[+j];
   const o = C.links.filter(q => q[0]===l[0]), r = Math.max(0.01, Math.min(0.99, (+e.target.value || 0)/100)), rest = o.filter(q => q!==l), rs = rest.reduce((a, q) => a + (+q[2] || 0), 0);
@@ -17829,10 +17886,6 @@ document.addEventListener('pointerdown', e => { if(!t9On() || !e.target.closest)
   if(e.button!==0) return;
   const po = e.target.closest('[data-t9cpo]');
   if(po){ const bid = po.dataset.t9cpo.split(':')[1]; T9CD = {mode:'link', cid, bid, svg}; t9CDrag(e); e.preventDefault(); return; }
-  const sg = e.target.closest('[data-t9cseg]');
-  if(sg){ const [, j, q] = sg.dataset.t9cseg.split(':').map(Number), by = new Map(C.blocks.map(b => [b.id, b])), P = t9Route(C, j, by), X = t9LX(C.links[j]);
-    X.pts = P.slice(1, -1).map(p => p.slice()); const [px, py] = t9CPt(svg, e);
-    T9CD = {mode:'seg', cid, svg, j, q, vert:Math.abs(P[q][0] - P[q + 1][0]) < 0.5, px, py, p0:X.pts.map(p => p.slice()), raf:0}; e.preventDefault(); return; }
   const g = e.target.closest('[data-t9cb]'), lk = e.target.closest('[data-t9clink]'), [px, py] = t9CPt(svg, e);
   if(g){ const bid = g.dataset.t9cb.split(':')[1], was = C.selB.includes(bid);
     if(e.shiftKey){ C.selB = was ? C.selB.filter(x => x!==bid) : [...C.selB, bid]; }
@@ -17843,7 +17896,13 @@ document.addEventListener('pointerdown', e => { if(!t9On() || !e.target.closest)
     t9CoolRe(cid); T9CD.svg = document.querySelector(`svg[data-t9csvg="${cid}"]`); e.preventDefault(); return; }
   if(lk){ const j = +lk.dataset.t9clink.split(':')[1];
     if(e.shiftKey) C.selL = C.selL.includes(j) ? C.selL.filter(x => x!==j) : [...C.selL, j]; else { C.selL = [j]; C.selB = []; }
-    t9CoolUI(); e.preventDefault(); return; }
+    const by = new Map(C.blocks.map(b => [b.id, b])), P = t9Route(C, j, by), q = P ? t9SegAt(P, px, py) : -1;
+    if(q >= 0 && !e.shiftKey){ const vert = Math.abs(P[q][0] - P[q + 1][0]) < 0.5, fix = vert ? P[q][0] : P[q][1], lo = Math.min(P[q][vert ? 1 : 0], P[q + 1][vert ? 1 : 0]), hi = Math.max(P[q][vert ? 1 : 0], P[q + 1][vert ? 1 : 0]);
+      // 같은 자리에 겹친 다른 호스 토막 (같은 방향 · 같은 좌표 · 겹치는 구간) 도 같이 옮김 → 겹친 줄기는 계속 겹침
+      const grp = C.links.map((l, k) => { const Q = t9Route(C, k, by); if(!Q) return null; for(let s = 1; s <= Q.length - 3; s++){ const v2 = Math.abs(Q[s][0] - Q[s + 1][0]) < 0.5, f2 = v2 ? Q[s][0] : Q[s][1], a2 = Math.min(Q[s][v2 ? 1 : 0], Q[s + 1][v2 ? 1 : 0]), b2 = Math.max(Q[s][v2 ? 1 : 0], Q[s + 1][v2 ? 1 : 0]);
+          if(v2===vert && Math.abs(f2 - fix) < 0.5 && Math.min(hi, b2) - Math.max(lo, a2) > 1) return [k, s, Q.slice(1, -1).map(p => p.slice())]; } return null; }).filter(Boolean);
+      T9CD = {mode:'seg', cid, svg, j, q, vert, fix, grp, px, py, sx:e.clientX, sy:e.clientY, moved:false, raf:0}; }
+    t9CoolRe(cid); if(T9CD) T9CD.svg = document.querySelector(`svg[data-t9csvg="${cid}"]`); else t9CoolUI(); e.preventDefault(); return; }
   const now = Date.now(), L2 = T9DC; T9DC = {t:now, x:e.clientX, y:e.clientY, cid};
   if(L2 && L2.cid===cid && now - L2.t < 400 && Math.hypot(e.clientX - L2.x, e.clientY - L2.y) < 6){ T9DC = null; C.view = t9Fit(C); t9CoolUI(); e.preventDefault(); return; }   // 빈 곳 두 번 = 전체 보기
   T9CD = {mode:'mq', cid, svg, px, py, sx:e.clientX, sy:e.clientY, shift:e.shiftKey, moved:false}; e.preventDefault(); });
@@ -17856,12 +17915,14 @@ function t9CDrag(e){ const D = T9CD, C = t9CC(D.cid), B = C.blocks.find(b => b.i
 document.addEventListener('pointermove', e => { if(!T9CD) return; const D = T9CD, C = t9CC(D.cid); if(!C) return;
   if(D.mode==='link'){ t9CDrag(e); return; }
   if(D.mode==='pan'){ const r = D.svg.getBoundingClientRect(), k = D.v0.w/Math.max(1, r.width); C.view = {x:D.v0.x - (e.clientX - D.sx)*k, y:D.v0.y - (e.clientY - D.sy)*k, w:D.v0.w}; D.svg.setAttribute('viewBox', t9VB(C.view)); return; }
-  if(!D.moved && Math.hypot(e.clientX - D.sx, e.clientY - D.sy) < 5 && D.mode!=='seg') return;   // 5 px 안쪽은 누르기
+  if(!D.moved && Math.hypot(e.clientX - D.sx, e.clientY - D.sy) < 5) return;   // 5 px 안쪽은 누르기
   D.moved = true; const [px, py] = t9CPt(D.svg, e);
   if(D.mode==='mq'){ const m = D.svg.querySelector('.t9-cmq'), x = Math.min(px, D.px), y = Math.min(py, D.py); m.style.display = ''; m.setAttribute('x', x); m.setAttribute('y', y); m.setAttribute('width', Math.abs(px - D.px)); m.setAttribute('height', Math.abs(py - D.py)); D.r = [x, y, x + Math.abs(px - D.px), y + Math.abs(py - D.py)]; return; }
-  if(D.mode==='seg'){ const X = t9LX(C.links[D.j]), a = D.q - 1, b = D.q;   // 토막 = 꺾임점 a · b (P 번호 q · q + 1)
-    X.pts = D.p0.map(p => p.slice()); const dv = D.vert ? Math.round((px - D.px)/5)*5 : Math.round((py - D.py)/5)*5;
-    [a, b].forEach(k => { if(X.pts[k]) X.pts[k][D.vert ? 0 : 1] += dv; });
+  if(D.mode==='seg'){ let to = D.fix + (D.vert ? px - D.px : py - D.py), snap = null;   // 끄는 토막의 새 좌표
+    const by = new Map(C.blocks.map(b => [b.id, b])), mine = new Set(D.grp.map(g => g[0]));
+    C.links.forEach((l, k) => { if(mine.has(k)) return; const Q = t9Route(C, k, by); if(!Q) return; for(let s = 0; s < Q.length - 1; s++){ const v2 = Math.abs(Q[s][0] - Q[s + 1][0]) < 0.5; if(v2!==D.vert) continue; const f2 = v2 ? Q[s][0] : Q[s][1]; if(Math.abs(f2 - to) < 6 && (snap==null || Math.abs(f2 - to) < Math.abs(snap - to))) snap = f2; } });   // 다른 호스 토막 6 안쪽 → 붙음 (합쳐짐)
+    to = snap != null ? snap : Math.round(to/5)*5;
+    D.grp.forEach(([k, s, p0]) => { const X = t9LX(C.links[k]); X.pts = p0.map(p => p.slice()); [s - 1, s].forEach(m => { if(X.pts[m]) X.pts[m][D.vert ? 0 : 1] = to; }); });
     if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const n = t9CoolRe(D.cid); if(n) D.svg = n; }); return; }
   // 블럭 옮기기: 끄는 블럭 기준으로 다른 블럭과 가운데가 8 안쪽이면 붙이고 안내선, 아니면 10 칸 격자 → 고른 블럭 모두 같은 만큼
   const B = C.blocks.find(b => b.id===D.bid); let x = D.bx0 + (px - D.px), y = D.by0 + (py - D.py), gx = null, gy = null;
@@ -17875,18 +17936,20 @@ document.addEventListener('pointermove', e => { if(!T9CD) return; const D = T9CD
   if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const n = t9CoolRe(D.cid); if(n) D.svg = n; }); });
 document.addEventListener('pointerup', e => { if(!T9CD) return; const D = T9CD, C = t9CC(D.cid); T9CD = null; T9CG = null; if(!C) return; if(D.raf) cancelAnimationFrame(D.raf);
   if(D.mode==='pan'){ t9CoolSave(); return; }
-  if(D.mode==='seg'){ t9CoolSet(); return; }
+  if(D.mode==='seg'){ if(!D.moved){ t9CoolUI(); return; } t9CoolSet(); return; }
   if(D.mode==='mq'){ if(!D.moved || !D.r){ if(!D.shift && (C.selB.length || C.selL.length)){ C.selB = []; C.selL = []; t9CoolUI(); } return; }
     const [x0, y0, x1, y1] = D.r, inR = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1, by = new Map(C.blocks.map(b => [b.id, b]));
-    const bs = C.blocks.filter(b => inR(b.x, b.y) && inR(b.x + t9BW(b), b.y + t9BH(b))).map(b => b.id);
-    const ls = C.links.map((l, j) => j).filter(j => { const P = t9Route(C, j, by); return P && P.slice(1, -1).every(([x, y]) => inR(x, y)); });
+    // 걸치기만 해도 고름 (시뮬링크): 블럭 사각형이 영역과 겹치거나, 호스 토막 하나라도 영역을 지나면
+    const bs = C.blocks.filter(b => b.x <= x1 && b.x + t9BW(b) >= x0 && b.y <= y1 && b.y + t9BH(b) >= y0).map(b => b.id);
+    const segHit = (a, b) => { if(inR(...a) || inR(...b)) return true; const vert = Math.abs(a[0] - b[0]) < 0.5; return vert ? a[0] >= x0 && a[0] <= x1 && Math.min(a[1], b[1]) <= y1 && Math.max(a[1], b[1]) >= y0 : a[1] >= y0 && a[1] <= y1 && Math.min(a[0], b[0]) <= x1 && Math.max(a[0], b[0]) >= x0; };
+    const ls = C.links.map((l, j) => j).filter(j => { const P = t9Route(C, j, by); if(!P) return false; for(let q = 0; q < P.length - 1; q++) if(segHit(P[q], P[q + 1])) return true; return false; });
     C.selB = D.shift ? [...new Set([...C.selB, ...bs])] : bs; C.selL = D.shift ? [...new Set([...C.selL, ...ls])] : ls; t9CoolUI(); return; }
   if(D.mode==='move'){ if(!D.moved){ if(!D.shift && D.was){ C.selB = [D.bid]; C.selL = []; } t9CoolUI(); return; } t9CoolSet(); return; }
   const T = t9CTarget(e, D.cid, D.bid);   // 새 호스
   if(T && !C.links.some(([a, b]) => a===D.bid && b===T.id)){ C.links.push([D.bid, T.id]); const o = C.links.filter(l => l[0]===D.bid); if(C.kind==='air' && o.length > 1) o.forEach(l => { l[2] = 1/o.length; }); C.selB = []; C.selL = []; }
   t9CoolSet(); });
 /* 휠 = 확대 · 축소 (커서 자리를 그대로 둠) */
-document.addEventListener('wheel', e => { if(!t9On() || !e.target.closest) return; const svg = e.target.closest('svg[data-t9csvg]'); if(!svg) return; e.preventDefault();
+document.addEventListener('wheel', e => { if(!t9On() || !e.target.closest) return; const svg = e.target.closest('svg[data-t9csvg]'); if(!svg || !wbZoomOn(svg.closest('[data-zoombox]'))) return; e.preventDefault();
   const C = t9CC(svg.dataset.t9csvg); if(!C) return; const v = t9View(C), [px, py] = t9CPt(svg, e), k = Math.exp(Math.max(-0.5, Math.min(0.5, e.deltaY*0.0015))), w = Math.max(150, Math.min(8000, v.w*k)), f = w/v.w;
   C.view = {x:px - (px - v.x)*f, y:py - (py - v.y)*f, w}; svg.setAttribute('viewBox', t9VB(C.view)); clearTimeout(T9VT); T9VT = setTimeout(t9CoolSave, 400); }, {passive:false});
 let T9VT = 0;
@@ -17948,7 +18011,7 @@ WB_TOOLS['9'] = {
     {k:'s_qw', n:'냉각수로 버리는 열', u:'W', d:0, g:'정상 온도 (평균 차속, 발열 일정)'}, {k:'s_qa', n:'공기로 바로 버리는 열', u:'W', d:0, g:'정상 온도 (평균 차속, 발열 일정)'},
     {k:'e_tm', n:'모터', u:'°C', d:1, g:'주행 시간 뒤 (출발 온도에서)'}, {k:'e_ti', n:'인버터', u:'°C', d:1, g:'주행 시간 뒤 (출발 온도에서)'}, {k:'e_tb', n:'축전지', u:'°C', d:1, g:'주행 시간 뒤 (출발 온도에서)'},
     {k:'e_win', n:'라디 입구 (수랭 회로 1)', u:'°C', d:2, g:'주행 시간 뒤 (출발 온도에서)'},
-    {k:'q_cw', dk:'cool_c', n:'냉각수 열용량 (모든 수랭 회로)', u:'J/K', d:0, g:'한 덩어리로 줄인 등가값 (대시보드 · 참고)'}, {k:'q_ua0', dk:'cool_ua0', n:'라디에이터 UA 등가 (정지)', u:'W/K', d:1, g:'한 덩어리로 줄인 등가값 (대시보드 · 참고)'},
+    {k:'w_q', n:'수랭 회로 1 유량', u:'L/min', d:2, g:'한 덩어리로 줄인 등가값 (대시보드 · 참고)'}, {k:'q_cw', dk:'cool_c', n:'냉각수 열용량 (모든 수랭 회로)', u:'J/K', d:0, g:'한 덩어리로 줄인 등가값 (대시보드 · 참고)'}, {k:'q_ua0', dk:'cool_ua0', n:'라디에이터 UA 등가 (정지)', u:'W/K', d:1, g:'한 덩어리로 줄인 등가값 (대시보드 · 참고)'},
     {k:'q_ua60', dk:'cool_ua60', n:'라디에이터 UA 등가 (60 km/h)', u:'W/K', d:1, g:'한 덩어리로 줄인 등가값 (대시보드 · 참고)'},
     {k:'n_w', n:'수랭 회로 수', u:'', d:0, g:'정상 온도 (평균 차속, 발열 일정)', hide:true}, {k:'n_a', n:'공랭 덕트 수', u:'', d:0, g:'정상 온도 (평균 차속, 발열 일정)', hide:true},
   ],
@@ -17991,31 +18054,38 @@ WB_TOOLS['9'] = {
     {n:'라디 팬 켜는 온도 35 °C · 정상에서 꺼짐 (모터 500 W, 위와 같은 라디)', I:{v:60, L_m:500, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:250, A:0.06, kd:0.3, fan:0.3, fon:35}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1]]}], Cc:557.3333333333334}], air:[]}}, expect:{s_win:28.279556, s_tm:38.279556},
      src:'팬 끔: ε C_min = 152.46 W/K → 입구 25 + 500 ÷ 152.46 = 28.280 < 35 → 끈 채, 모터 + 500 × 0.02'},
     {n:'라디 금속 열용량 1 kJ/K · 식는 빠르기 (라디 한 점 고리, 60 °C 에서 100 s, 팬 0.3 m³/s)', I:{v:0, L_m:0, L_i:0, L_b:0, t0:60, t_run:100, cool:{water:[{nodes:[{t:'rad', C:2508, Cm:1, q:1, ins:[[0, 1]], UA:250, A:0.06, kd:0, fan:0.3}], Cc:557.3333333333334}], air:[]}}, expect:{e_win:25.482687, q_cw:3508},
-     src:'열용량 C = 2508 + 1 × 1000 = 3508 J/K. 버리는 몫 a = ε C_min ÷ C_c = 0.273552. 0.25 s 칸마다 (적분 방식 그대로) ΔT ← ΔT × (1 − a (1 − e^(−C_c × 0.25 ÷ C))) → 400 칸 뒤 25 + 35 × 0.98173^400 = 25.4827 °C (금속을 빼면 C = 2508 → 25.09 °C)'}
+     src:'열용량 C = 2508 + 1 × 1000 = 3508 J/K. 버리는 몫 a = ε C_min ÷ C_c = 0.273552. 0.25 s 칸마다 (적분 방식 그대로) ΔT ← ΔT × (1 − a (1 − e^(−C_c × 0.25 ÷ C))) → 400 칸 뒤 25 + 35 × 0.98173^400 = 25.4827 °C (금속을 빼면 C = 2508 → 25.09 °C)'},
+    {n:'펌프 곡선 (막힘 30 kPa · 최대 20 L/min) × 호스 3개 (안지름 8 mm · 1 m) → 만나는 점의 유량', I:{v:0, L_m:300, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1, 2]], UA:250, A:0.06, kd:0, fan:0.3}, {t:'pump', C:418, q:1, ins:[[0, 1, 0]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1, 1]]}], Cc:1393.3333333333333, rcp:4180000,
+       hyd:{Vt:20, rho:1000, mu:0.001, links:[{a:0, b:1, d:8, len:1}, {a:1, b:2, d:8, len:1}, {a:2, b:0, d:8, len:1}], blk:[{}, {}, {}], src:[], crv:[{k:1, h0:30, qmax:20}]}}], air:[]}}, expect:{w_q:6.865619, s_win:27.023019, s_tm:33.023019},
+     src:'호스 3 m 압력 강하 = 3 × f (L ÷ D) ρ u² ÷ 2 (Blasius, Re ≈ 18200) = 펌프 30 kPa × (1 − (Q ÷ 20)²) 를 Q 로 풂 → Q = 6.8656 L/min (압력 26.46 kPa). C_c = 478.3 W/K, 라디 (코어 5 m/s, UA 250, C_a 361.8) ε C_min = 148.29 W/K → 라디 입구 25 + 300 ÷ 148.29 = 27.0230, 모터 + 300 × 0.02'}
   ],
   code: `// ================================================================ 냉각 회로 공통 (도구 9 · 도구 2P 계산과 냉각 편집기가 같이 씀)
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
 //   호스  : ΔP = f (L ÷ D) ρ u² ÷ 2,  u = Q ÷ (π D² ÷ 4),  Re = ρ u D ÷ μ,  f = max(64 ÷ Re, 0.3164 Re^(−1/4))   (층류 · 매끈한 관 Blasius 난류, Re ≈ 1188 에서 이어짐)
 //   블럭  : ΔP = ΔP_기준 (Q ÷ Q_기준)²  (넣었을 때만, 0 = 없음)
-//   펌프  : 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량). 펌프 곡선은 넣지 않음
+//   펌프  : 유량 고정 = 유량을 정하는 원천 (직렬 = 회로 유량, 갈래마다 하나씩 = 자기 유량),
+//           펌프 곡선 (H.crv) = 올리는 압력 H(Q) = H₀ (1 − (Q ÷ Q_max)²) (H₀ = 막힘 압력, Q_max = 압력 0 일 때 유량) → 회로 압력 강하와 만나는 점에서 유량이 정해짐
 //   블럭마다 들어감 · 나감 두 이음점 (압력 강하가 없는 블럭은 한 점), 이음점마다 들어오는 유량 = 나가는 유량 → 이음점 압력을 뉴턴법으로 풂
 //   hyd = {Vt [L/min], rho [kg/m³], mu [Pa·s], links: [{a, b, d [mm], len [m]}] (점 번호), blk: [{dp [kPa], dq [L/min]}] (점마다), src: [{k, flow [L/min]}] (펌프 점)}
-//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null)
+//   돌려줌: 호스마다 유량 ÷ 회로 유량 (풀지 못하면 null), .Vt = 실제 회로 유량 [L/min] (라디 0 번에서 나가는 유량 합, 곡선 펌프면 풀어서 정해짐)
 function coolHydSolve(H) {
   const N = H.blk.length, rho = H.rho > 0 ? H.rho : 1000, mu = H.mu > 0 ? H.mu : 1e-3, Vt = H.Vt / 60000;
   if (!(Vt > 0) || !N) return null;
-  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000]));
+  const pump = new Map((H.src || []).map(s => [s.k, s.flow / 60000])), crv = new Map((H.crv || []).map(s => [s.k, s]));
   // 이음점: 들어감 = 2k, 나감 = 2k + 1, 압력 강하도 펌프도 아닌 블럭은 같은 점
   const par = Array.from({ length: 2 * N }, (_, i) => i), fd = i => par[i] === i ? i : (par[i] = fd(par[i]));
   const hasDP = k => H.blk[k] && H.blk[k].dp > 0 && H.blk[k].dq > 0;
-  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
+  for (let k = 0; k < N; k++) if (!hasDP(k) && !pump.has(k) && !crv.has(k)) par[fd(2 * k + 1)] = fd(2 * k);
   const ids = [...new Set(par.map((_, i) => fd(i)))], ix = new Map(ids.map((r, j) => [r, j])), M = ids.length, nd = i => ix.get(fd(i));
   // 저항 요소: [u, v, ΔP(Q) (Q ≥ 0, m³/s → Pa)]
   const E = [];
   H.links.forEach((l, li) => { const D = Math.max(1e-3, (l.d > 0 ? l.d : 10) / 1000), Lh = Math.max(1e-3, l.len > 0 ? l.len : 0.5), A = Math.PI * D * D / 4;
     E.push({ u: nd(2 * l.a + 1), v: nd(2 * l.b), li, dP: Q => { const u = Q / A, Re = rho * u * D / mu; if (Re <= 0) return 0;
       const f = Math.max(64 / Re, 0.3164 * Math.pow(Re, -0.25)); return f * Lh / D * rho * u * u / 2; } }); });
-  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
+  // 곡선 펌프: 들어감 → 나감 요소, 압력 차 d = P_들어감 − P_나감 (= −올린 압력) → Q = Q_max √(1 + d ÷ H₀) (d 가 클수록 많이)
+  const PC = [];
+  crv.forEach((s, k) => { const H0 = Math.max(1, s.h0 * 1000), qm = Math.max(1e-9, s.qmax / 60000); PC.push({ u: nd(2 * k), v: nd(2 * k + 1), Q: d => qm * Math.sqrt(Math.max(0, 1 + d / H0)), G: d => qm / (2 * H0 * Math.sqrt(Math.max(1e-4, 1 + d / H0))) }); });
+  for (let k = 0; k < N; k++) if (hasDP(k) && !pump.has(k) && !crv.has(k)) { const P0 = H.blk[k].dp * 1000, Q0 = H.blk[k].dq / 60000;
     E.push({ u: nd(2 * k), v: nd(2 * k + 1), li: -1, dP: Q => P0 * ((Q / Q0) ** 2 + 1e-3 * Q / Q0) }); }   // 아주 작은 1차 항: Q = 0 근처에서도 풀리게
   // ΔP → Q (단조 증가, 이분법)
   const inv = (e, p) => { if (p <= 0) return 0; let hi = Vt; while (e.dP(hi) < p && hi < 1e3) hi *= 2; let lo = 0;
@@ -18024,13 +18094,15 @@ function coolHydSolve(H) {
   const cond = (e, Q) => { const q = Math.max(Math.abs(Q), 1e-6 * Vt), h = q * 1e-4; return 2 * h / Math.max(1e-30, e.dP(q + h) - e.dP(Math.max(0, q - h))); };   // dQ/dΔP
   const P = new Array(M).fill(0), ref = 0;
   const resid = (P, Qs) => { const r = new Array(M).fill(0); E.forEach((e, j) => { r[e.u] -= Qs[j]; r[e.v] += Qs[j]; });
-    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); return r; };
+    pump.forEach((q, k) => { r[nd(2 * k)] -= q; r[nd(2 * k + 1)] += q; }); PC.forEach(p => { const q = p.Q(P[p.u] - P[p.v]); r[p.u] -= q; r[p.v] += q; }); return r; };
   for (let it = 0; it < 200; it++) {
     const Qs = E.map(e => flow(e, P)), r = resid(P, Qs), err = Math.max(...r.map((x, j) => j === ref ? 0 : Math.abs(x)));
-    if (err < 1e-10 * Vt) return H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vt; });
+    if (err < 1e-10 * Vt) { const Va = H.links.reduce((s, l, li) => s + (l.a === 0 ? Qs[E.findIndex(e => e.li === li)] : 0), 0), Vu = PC.length ? Va : Vt;
+      const out = H.links.map((_, li) => { const j = E.findIndex(e => e.li === li); return Qs[j] / Vu; }); out.Vt = Vu * 60000; return out; }
     // J ΔP = −r  (J = 이음점 사이 dQ/dΔP 로 만든 라플라스 행렬), 기준점 압력 0
     const n = M - 1, map = j => j < ref ? j : j - 1, J = Array.from({ length: n }, () => new Array(n + 1).fill(0));
-    E.forEach((e, j) => { const g = cond(e, Qs[j]); [[e.u, e.v], [e.v, e.u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; }); });
+    const lap = (u, v, g) => [[u, v], [v, u]].forEach(([a, b]) => { if (a === ref) return; J[map(a)][map(a)] += g; if (b !== ref) J[map(a)][map(b)] -= g; });
+    E.forEach((e, j) => lap(e.u, e.v, cond(e, Qs[j]))); PC.forEach(p => lap(p.u, p.v, p.G(P[p.u] - P[p.v])));
     for (let a = 0; a < M; a++) if (a !== ref) J[map(a)][n] = r[a];   // 들어오는 유량 합 − 나가는 합 → 압력을 올리면 나가는 유량이 늚
     const d = coolGauss(J, n); if (!d) return null;
     let s = 1; const Pn = () => P.map((p, a) => a === ref ? 0 : p + s * d[map(a)]);
@@ -18051,6 +18123,7 @@ function coolPrep(NET) {
   if (!NET) return NET;
   (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
     if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+    if (C.hyd.crv && C.hyd.crv.length && fl.Vt > 0) { C.hyd.Vt = fl.Vt; C.Cc = fl.Vt / 60000 * (C.rcp || 4.18e6); }   // 곡선 펌프: 회로 유량이 풀려서 정해짐
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -18199,6 +18272,7 @@ function calc(I) {
     s_win: W[0] ? fin(ss.rin[0]) : NaN, s_wout: W[0] && r0 ? fin(r0[0]) : NaN,         // 첫 수랭 회로 기준 라디 입구 (섞인 온도) · 출구 [°C]
     s_qw: ss.Qw, s_qa: Lsum - ss.Qw,                                                   // 냉각수로 · 공기로 바로 버리는 열 [W]
     e_tm: T.m, e_ti: T.i, e_tb: T.b, e_win: rinOf(0),                                  // 주행 시간 뒤 [°C]
+    w_q: W.length ? W[0].Cc / (W[0].rcp || 4.18e6) * 60000 : NaN,   // 수랭 회로 1 유량 [L/min] (곡선 펌프면 풀린 값)
     q_cw: W.reduce((s, C) => s + C.nodes.reduce((a, nd) => a + coolC(nd), 0), 0),     // 냉각수 · 라디 금속 열용량 합 [J/K]
     q_ua0: s0.Qw > 0 ? fin(s0.UA) : NaN, q_ua60: s60.Qw > 0 ? fin(s60.UA) : NaN,       // 도구 2P 라디에이터 UA (정지 · 60 km/h) [W/K]
     n_w: W.length, n_a: A.length,
