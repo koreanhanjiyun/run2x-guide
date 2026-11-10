@@ -3220,6 +3220,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-cseg{fill:#fff;stroke:#e0559b;stroke-width:2}.t9-cseg.v{cursor:ew-resize}.t9-cseg.h{cursor:ns-resize}
 .t9-cmq{fill:rgba(61,90,153,.08);stroke:#3d5a99;stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
 .t2-mdh{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}.t2-mdh .t2-mdhn{margin-left:0}.t2-mdhc{margin-left:auto;font-weight:400;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.t9-crqb{flex-direction:column;align-items:stretch}.t9-crq{border:1px dashed var(--line,#c9ced8);border-radius:6px;padding:6px 8px;min-height:38px;overflow-x:auto;cursor:text}.t9-crq:focus{outline:2px solid #3d5a99;outline-offset:1px}.t9-crq table{font-size:12px}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -11448,18 +11449,18 @@ const T2EFF_PH = '비우면 위 상수 칸의 효율을 씁니다.\n숫자 하�
 /* 화면 상태 (이 브라우저에 저장). free.text = 내 코스 표를 글로 (한 행에 한 구간) */
 const T2 = { tab:'sim', etab:'course', course:'end', lap:{end:'1', free:'1'}, free:{text:'', laps:1, s0:0, end:0}, mtext:'', eM:'', eI:'', tire:'', bO:'', bR:'', bC:'', grMode:'my',
              menu:'', paste:'', zoom:{k:1, cx:.5, cy:.5}, zoomE:{k:1, cx:.5, cy:.5}, timer:0,
-             ecourse:'end', use:{mt:'tab', eM:'tab', eI:'tab', tire:'tab', bO:'tab', bR:'tab', bC:'tab'} };   // ecourse = 편집 탭에서 보는 코스 (시뮬레이션 코스와 따로), use = 맵마다 [아래 표 · 위 상수]
-const T2ET = {course:'코스', mt:'모터 토크 곡선', eM:'모터 효율 맵', eI:'인버터 효율 맵', tire:'타이어 하중 감도', bO:'셀 OCV 표', bR:'셀 내부저항 표', bC:'셀 용량 표'};   // 표 이름 (붙여넣기 창 · 메뉴)
+             ecourse:'end', use:{mt:'tab', eM:'tab', eI:'tab', tire:'tab', bO:'tab', bR:'tab', bC:'tab', rqM:'tab', rqI:'tab', rqB:'tab'}, rqM:'', rqI:'', rqB:'' };   // ecourse = 편집 탭에서 보는 코스 (시뮬레이션 코스와 따로), use = 맵마다 [아래 표 · 위 상수]
+const T2ET = {course:'코스', mt:'모터 토크 곡선', eM:'모터 효율 맵', eI:'인버터 효율 맵', tire:'타이어 하중 감도', bO:'셀 OCV 표', bR:'셀 내부저항 표', bC:'셀 용량 표', rqM:'모터 회로 라디 표', rqI:'인버터 회로 라디 표', rqB:'축전지 회로 라디 표'};   // 표 이름 (붙여넣기 창 · 메뉴)
 /* 편집 탭 항목 (위 단추). 모터 · 인버터는 안에서 표 고름 (etab = mt · eM · eI) */
 const T2EI = [['model', '모델 단계'], ['course', '코스'], ['car', '차량 제원'], ['sus', '서스 · 조향'], ['tire', '타이어'], ['aero', '에어로'], ['mot', '모터 · 인버터'], ['cool', '냉각'], ['dt', '구동계'], ['bat', '축전지']];
-const T2MOT = ['mt', 'eM', 'eI'], T2BAT = ['bO', 'bR', 'bC'];   // 축전지 표: 셀 OCV (SOC × 온도) · 내부저항 (SOC × 온도) · 용량 (온도)
-const t2Grp = et => T2MOT.includes(et) ? 'mot' : T2BAT.includes(et) ? 'bat' : et;   // etab → 위 단추
+const T2MOT = ['mt', 'eM', 'eI'], T2BAT = ['bO', 'bR', 'bC'], T2RAD = ['rqM', 'rqI', 'rqB'];   // 라디 표 (부품별 독립 회로: 코어 풍속 × 냉각수 유량 → 방열량)   // 축전지 표: 셀 OCV (SOC × 온도) · 내부저항 (SOC × 온도) · 용량 (온도)
+const t2Grp = et => T2MOT.includes(et) ? 'mot' : T2BAT.includes(et) ? 'bat' : T2RAD.includes(et) ? 'cool' : et;   // etab → 위 단추
 T2.free.text = T2TRACK_EX.split('\n').map(l => l).join('\n');
 T2.mtext = (typeof EMRAX228!=='undefined' ? EMRAX228.torque : ''); T2.eM = (typeof EMRAX228!=='undefined' ? EMRAX228.eff : '');
 const T2COURSES = ['free', 'ax', 'end', 'acc', 'skid'];
 function t2Load(s){ if(!s || typeof s!=='object') return;
   if(T2COURSES.includes(s.course)) T2.course = s.course; T2.ecourse = T2COURSES.includes(s.ecourse) ? s.ecourse : T2.course;
-  if(s.use && typeof s.use==='object') ['mt', 'eM', 'eI', 'tire', 'bO', 'bR', 'bC'].forEach(k => { if(s.use[k]==='tab' || s.use[k]==='const') T2.use[k] = s.use[k]; }); if(s.lap && typeof s.lap==='object') Object.assign(T2.lap, s.lap);
+  if(s.use && typeof s.use==='object') ['mt', 'eM', 'eI', 'tire', 'bO', 'bR', 'bC', 'rqM', 'rqI', 'rqB'].forEach(k => { if(s.use[k]==='tab' || s.use[k]==='const') T2.use[k] = s.use[k]; }); ['rqM', 'rqI', 'rqB'].forEach(k => { if(typeof s[k]==='string') T2[k] = s[k]; }); if(s.lap && typeof s.lap==='object') Object.assign(T2.lap, s.lap);
   if(s.free && typeof s.free.text==='string') Object.assign(T2.free, {text:s.free.text, laps:Math.max(1, Math.round(+s.free.laps || 1)), s0:Math.max(0, +s.free.s0 || 0), end:s.free.end === 1 ? 1 : 0});
   if(s.cwc && s.cwc.cool && Array.isArray(s.cwc.cool.circuits)) T2.cwc = {cool:s.cwc.cool};   // 도구 2P 자체 냉각 회로 (도구 9 와 따로)
   if(s.cool && Array.isArray(s.cool.circuits)) T2.coolOld = s.cool;   // 예전 저장본의 냉각 배치 → 도구 9 가 처음 열 때 가져감
@@ -11473,7 +11474,7 @@ function t2EffFix(txt){ try{ if(typeof EMRAX228==='undefined' || txt===EMRAX228.
 try{ t2Load(JSON.parse(localStorage.getItem(T2KEY) || '{}')); }catch(e){}
 /* 도구 2P 자체 냉각 회로 (편집 탭 [냉각], 도구 9 와 같은 편집기 · 같은 형식). 처음엔 도구 9 의 기본 배치, [도구 9 에서 가져오기]는 복사 */
 function t2Cwc(){ if(!T2.cwc) T2.cwc = {cool: typeof T9COOL_DEF==='function' ? T9COOL_DEF() : {circuits:[]}}; return T2.cwc; }
-const t2Save = () => { try{ localStorage.setItem(T2KEY, JSON.stringify({...(T2.coolOld ? {cool:T2.coolOld} : {}), ...(T2.cwc ? {cwc:{cool:T2.cwc.cool}} : {}), course:T2.course, lap:T2.lap, free:T2.free, mtext:T2.mtext, eM:T2.eM, eI:T2.eI, tire:T2.tire, bO:T2.bO, bR:T2.bR, bC:T2.bC, stab:T2.stab || null, grMode:T2.grMode, ecourse:T2.ecourse, use:T2.use, tab:T2.tab, etab:T2.etab})); }catch(e){} };
+const t2Save = () => { try{ localStorage.setItem(T2KEY, JSON.stringify({...(T2.coolOld ? {cool:T2.coolOld} : {}), ...(T2.cwc ? {cwc:{cool:T2.cwc.cool}} : {}), course:T2.course, lap:T2.lap, free:T2.free, mtext:T2.mtext, eM:T2.eM, eI:T2.eI, tire:T2.tire, bO:T2.bO, bR:T2.bR, bC:T2.bC, rqM:T2.rqM, rqI:T2.rqI, rqB:T2.rqB, stab:T2.stab || null, grMode:T2.grMode, ecourse:T2.ecourse, use:T2.use, tab:T2.tab, etab:T2.etab})); }catch(e){} };
 
 /* ---------- 글 · 파일 → 표 ---------- */
 /* ---------- 파일 가져오기: .csv · .txt · .xlsx ---------- */
@@ -11600,7 +11601,8 @@ const t2ExtraI = () => ({ wc_on: 1,   /* 차 크기는 2P 에서 항상 고려 (
   free:(() => { const P = t2Track(T2.free.text); return {seg:P.segs, wl:P.rows.map(r => isFinite(r.wl) ? r.wl : null), wr:P.rows.map(r => isFinite(r.wr) ? r.wr : null),
                                                        sl:P.rows.map(r => isFinite(r.sl) ? r.sl : null), laps:T2.free.laps, s0:T2.free.s0, end:T2.free.end === 1 ? 1 : 0}; })(), motor:t2MotorParse(T2.mtext).pts, motorC:t2MotorParse(T2.mtext).ptsC, motorReq:1,   /* 모터 곡선은 늘 표 */
   effM:T2.use.eM==='const' ? null : t2EffParse(T2.eM).map, effI:T2.use.eI==='const' ? null : t2EffParse(T2.eI).map, tireMap:T2.use.tire==='const' ? null : t2TireParse(T2.tire).map,
-  bOcv:T2.use.bO==='const' ? null : t2GridParse(T2.bO).map, bRes:T2.use.bR==='const' ? null : t2GridParse(T2.bR).map, bCap:T2.use.bC==='const' ? null : t2PairParse(T2.bC).map,   /* 셀 표 (비우면 직선 · 상수) */ course:T2.course, lap:T2.lap[T2.course] || '1', grMode:T2.grMode,
+  bOcv:T2.use.bO==='const' ? null : t2GridParse(T2.bO).map, bRes:T2.use.bR==='const' ? null : t2GridParse(T2.bR).map, bCap:T2.use.bC==='const' ? null : t2PairParse(T2.bC).map,
+  ...Object.fromEntries(['rqM', 'rqI', 'rqB'].map(k => [k, T2.use[k]==='const' ? null : t2GridParse(T2[k]).map])),   /* 라디 표 (부품별 독립): {n 유량, t 풍속, e kW} */   /* 셀 표 (비우면 직선 · 상수) */ course:T2.course, lap:T2.lap[T2.course] || '1', grMode:T2.grMode,
   cw9: WB.I && WB.I.cw_mode === 1 && typeof t2Net9==='function' ? (t2Net9() || {net:null}).net : null });   /* 냉각 회로 (수랭 방식 1): 도구 2P 자체 배치 */
 
 /* ---------- 파일 가져오기 · 양식 받기 ---------- */
@@ -11660,6 +11662,7 @@ T2TPL.bocv = {name:'셀OCV_양식', rows:[['# 셀 개방 전압(OCV) 양식 — 
   ['SOC % \\ 셀 온도 °C', 0, 25, 45], [0, 3.0, 3.05, 3.07], [20, 3.5, 3.55, 3.56], [50, 3.66, 3.7, 3.71], [80, 3.92, 3.95, 3.96], [100, 4.15, 4.2, 4.2]]};
 T2TPL.bres = {name:'셀내부저항_양식', rows:[['# 셀 내부저항 양식 — 첫 행 = 셀 온도 °C · 첫 열 = SOC % · 칸 = 셀 내부저항 mΩ'], ['# 도구 2P 는 표의 모양만 씀 (팩 내부저항 = 팩 내부저항 칸 × R(SOC, 온도) ÷ R(50 %, 25 °C)) · 도구 4 는 값 그대로'],
   ['SOC % \\ 셀 온도 °C', 0, 25, 45], [0, 60, 30, 24], [50, 45, 22, 18], [100, 50, 24, 20]]};
+T2TPL.rad = {name:'라디방열표_양식', rows:[['# 라디에이터 방열량 양식 — 첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW (스펙 시트, 표를 잰 입구 온도차는 [표의 입구 온도차] 칸에)'], ['코어 풍속 m/s \\ 유량 L/min', 4, 8, 12], [2, 2.4, 3.0, 3.3], [5, 4.1, 5.4, 6.0], [8, 5.2, 7.0, 7.9]]};
 T2TPL.bcap = {name:'셀용량_양식', rows:[['# 셀 용량 양식 — 한 행에 셀 온도 °C · 용량 Ah (사이는 직선, 범위 밖은 끝값) · 숫자 하나면 온도와 상관없는 용량'], ['셀 온도 °C', '용량 Ah'], [0, 3.6], [25, 4.0], [45, 4.05]]};
 function t2Template(kind, fmt){ const T = T2TPL[kind]; let blob;
   if(fmt==='xlsx') blob = t2XlsxBlob(T.rows); else blob = new Blob(['﻿' + T.rows.map(r => r.join(',')).join('\r\n')], {type:'text/csv'});
@@ -11854,6 +11857,7 @@ function t2CoolLite(){ const o = WB.id==='2' && WB.R && WB.R.out, ok = o && isFi
       <div class="t2-cqb"><button type="button" class="btn small" data-t2cw9="get">도구 9 에서 가져오기 (복사)</button><button type="button" class="btn small" data-t2cw9="def">기본 배치로</button></div>
       ${typeof t9CoolPage==='function' ? t9CoolPage() : ''}</div>` : ''}
     ${t2Consts('cool')}
+    ${n9 ? '' : (rt => `<div class="t2-sub"><span class="muted">라디 표</span>${t2Seg('data-t2et', rt, T2RAD.map(k => [k, T2ET[k]]))}</div>${t2MapEdit(rt)}`)(T2RAD.includes(T2.etab) ? T2.etab : 'rqM')}
     <div class="t2-cq"><b>냉각 회로 설계 → 도구 9 냉각 계통 계산기</b>
       <p class="muted">도구 9 는 같은 배치로 라디에이터 · 펌프 선정과 부품 정상 온도를 계산합니다. 도구 9 의 [도구 2P 로 회로 보내기] 또는 위 [도구 9 에서 가져오기] 로 배치를 복사할 수 있습니다.</p>
       <div class="t2-cqb"><button type="button" class="btn small" data-t2to9="send"${ok ? '' : ' disabled title="시뮬레이션 탭에서 계산한 뒤 보낼 수 있음"'}>평균 발열 · 차속을 도구 9 로 보내기</button><button type="button" class="btn small" data-t2to9="open">도구 9 열기</button></div>
@@ -11894,7 +11898,7 @@ function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
   return t2Consts(grp); }
 
 /* ---------- [입력하기 ▾] 메뉴: 표 k = track · mt · eM · eI · tire.  on = false 면 회색으로 막음 */
-function t2MenuHTML(k, label, on){ const tpl = k==='track' ? 'track' : k==='mt' ? 'motor' : k==='tire' ? 'tire' : k==='bO' ? 'bocv' : k==='bR' ? 'bres' : k==='bC' ? 'bcap' : 'eff';
+function t2MenuHTML(k, label, on){ const tpl = k==='track' ? 'track' : k==='mt' ? 'motor' : k==='tire' ? 'tire' : k==='bO' ? 'bocv' : k==='bR' ? 'bres' : k==='bC' ? 'bcap' : T2RAD.includes(k) ? 'rad' : 'eff';
   const items = [`<label class="t2-mi">파일 가져오기 (.xlsx · .csv)<input type="file" accept=".xlsx,.csv,.txt,.tsv" data-t2file="${k}" hidden></label>`,
     `<button type="button" data-t2act="tpl" data-t2tpl="${tpl}.xlsx">양식 받기 (.xlsx)</button>`, `<button type="button" data-t2act="tpl" data-t2tpl="${tpl}.csv">양식 받기 (.csv)</button>`,
     k==='track' ? `<button type="button" data-t2act="ex" data-t2k="track">예시 코스로</button>` : '',
@@ -11988,15 +11992,17 @@ const T2ERULE = {
   bO:   '첫 행 = 셀 온도 °C, 첫 열 = SOC %, 칸 = 셀 개방 전압 V. 팩 개방 전압 = 직렬 수 × OCV(SOC, 축전지 온도). 비우면 위 셀 최대 · 최소 전압 사이 직선.',
   bR:   '첫 행 = 셀 온도 °C, 첫 열 = SOC %, 칸 = 셀 내부저항 mΩ. 팩 내부저항 = [팩 내부저항] × R(SOC, 온도) ÷ R(50 %, 25 °C) (표의 모양만 씀, 도구 4 추가 저항까지 같은 배율). 쓰면 축전지 열 모델의 [저항 온도 계수]는 안 씀. 비우면 위 팩 내부저항 (+ 온도 계수).',
   bC:   '한 행에 셀 온도 °C · 용량 Ah. SOC 가 줄어드는 양 = 소비 ÷ (직렬 × 병렬 × 용량(랩 시작 축전지 온도) × 공칭 전압). 에너지 상한 [제원 용량]은 위 셀 용량 그대로. 비우면 위 셀 용량.',
+  ...Object.fromEntries(['rqM', 'rqI', 'rqB'].map(k => [k, '첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s (주행풍 + 팬 ÷ 코어 앞면 면적), 칸 = 방열량 kW (스펙 시트 값), 위 [표의 입구 온도차] = 그 표를 잰 냉각수 입구 − 공기 입구 온도. 점마다 ε = Q ÷ (C_min × 입구 온도차) → 교차류 ε-NTU 로 UA 를 거꾸로 구해 풍속 · 유량 사이를 이중선형 (범위 밖은 끝값). 비우면 위 [UA] × (풍속 ÷ 5)^0.6.'])),
   tire: '한 행에 바퀴 하나 수직 하중 N · 그때 μ (사이는 직선 보간, 범위 밖은 끝값). 숫자 하나면 하중과 상관없는 μ. 비우면 위 [타이어 마찰계수] · [μ 하중 감도].' };
 /* 맵에 읽을 값이 있는지 (머리 행만 남은 표도 '비어 있음') · 계산에 표를 쓰는지 */
-const t2HasMap = k => { const t = t2MtText(k); return k==='mt' ? (P => P.pts.length + P.ptsC.length > 0)(t2MotorParse(t)) : k==='tire' ? !!t2TireParse(t).map : k==='bO' || k==='bR' ? !!t2GridParse(t).map : k==='bC' ? !!t2PairParse(t).map : !!t2EffParse(t).map; };
+const t2HasMap = k => { const t = t2MtText(k); return k==='mt' ? (P => P.pts.length + P.ptsC.length > 0)(t2MotorParse(t)) : k==='tire' ? !!t2TireParse(t).map : k==='bO' || k==='bR' || T2RAD.includes(k) ? !!t2GridParse(t).map : k==='bC' ? !!t2PairParse(t).map : !!t2EffParse(t).map; };
 const t2UseMap = k => t2HasMap(k) && (k==='mt' || T2.use[k]!=='const');   // 모터 토크는 늘 표
 const T2MTITLE = {mt:'모터 토크 곡선 표 — 회전수별 피크 · 연속 토크 (모터 토크는 늘 이 표로 계산)', eM:'모터 효율 맵 — 채우고 [아래 표]를 고르면 위 [모터 효율 (상수)] 대신 씀',
                   eI:'인버터 효율 맵 — 채우고 [아래 표]를 고르면 위 [인버터 효율 (상수)] 대신 씀', tire:'타이어 하중 감도 표 — 채우고 [아래 표]를 고르면 위 [타이어 μ] · [μ 하중 감도] 대신 씀', bO:'셀 OCV 표 — SOC × 셀 온도, 채우고 [아래 표]를 고르면 셀 전압 직선 대신 씀',
-                  bR:'셀 내부저항 표 — SOC × 셀 온도, 채우고 [아래 표]를 고르면 팩 내부저항에 이 모양을 곱함', bC:'셀 용량 표 — 셀 온도별 용량, 채우고 [아래 표]를 고르면 SOC 계산에 씀'};
+                  bR:'셀 내부저항 표 — SOC × 셀 온도, 채우고 [아래 표]를 고르면 팩 내부저항에 이 모양을 곱함', bC:'셀 용량 표 — 셀 온도별 용량, 채우고 [아래 표]를 고르면 SOC 계산에 씀',
+                  ...Object.fromEntries([['rqM', '모터'], ['rqI', '인버터'], ['rqB', '축전지']].map(([k, nm]) => [k, `${nm} 회로 라디 표 — 코어 풍속 × 냉각수 유량별 방열량 (스펙 시트), 채우고 [아래 표]를 고르면 위 [UA] 대신 씀`]))};
 function t2MapEdit(k){ const txt = t2MtText(k), has = t2HasMap(k), empty = !t2UseMap(k);
-  const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : k==='bO' ? (t2GridParse(txt, 'V').msg || '비어 있음') : k==='bR' ? (t2GridParse(txt, 'mΩ').msg || '비어 있음') : k==='bC' ? (t2PairParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
+  const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : T2RAD.includes(k) ? (t2GridParse(txt, 'kW').msg || '비어 있음').replace('셀 온도', '냉각수 유량').replace('SOC', '코어 풍속') : k==='bO' ? (t2GridParse(txt, 'V').msg || '비어 있음') : k==='bR' ? (t2GridParse(txt, 'mΩ').msg || '비어 있음') : k==='bC' ? (t2PairParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
   const useSeg = k==='mt' ? '' : `<span class="t2-use"><span class="muted">계산에 쓸 값</span>${t2Seg('data-t2use', has && T2.use[k]!=='const' ? 'tab' : 'const', [['tab', '아래 표'], ['const', '위 상수']])}</span>`;
   return `<div class="t2-mth"><b>${T2MTITLE[k].split(' — ')[0]}</b><span class="muted"> — ${T2MTITLE[k].split(' — ')[1]}</span>${useSeg}</div>
     <div class="t2-set"><span class="t2-sum" id="t2msum">${msg}</span></div><p class="t2-rule muted">${T2ERULE[k]}</p>
@@ -12005,27 +12011,28 @@ function t2MapEdit(k){ const txt = t2MtText(k), has = t2HasMap(k), empty = !t2Us
       `<div class="t2-fbox" id="t2mc">${t2EditPlot(k)}</div>`, t2EditCap(k))}`; }
 /* 표가 비었을 때 쓰는 상수 */
 function t2ConstNote(k){ const I = WB.I;
+  if(T2RAD.includes(k)){ const P = {rqM:'cw_', rqI:'i_w', rqB:'b_w'}[k]; return `UA ${wbFmt(I[P + 'ua'], 0)} W/K (코어 풍속 5 m/s) × (풍속 ÷ 5)^0.6`; }
   if(k==='bO') return `셀 ${wbFmt(I.c_vmin, 2)} ~ ${wbFmt(I.c_vmax, 2)} V 직선 (SOC 0 ~ 100 %)`; if(k==='bR') return `팩 내부저항 ${wbFmt(I.r_pack, 0)} mΩ${WB.I.bt_on === 1 ? ` × 온도 계수 ${wbFmt(I.b_alpha, 3)} /°C` : ''}`; if(k==='bC') return `셀 용량 ${wbFmt(I.c_ah, 2)} Ah 일정`;
   return k==='mt' ? `모터 최대 토크 ${wbFmt(I.tmax, 0)} N·m 일정` : k==='eM' ? `모터 효율 ${wbFmt(I.eta_mot, 1)} %` : k==='eI' ? `인버터 효율 ${wbFmt(I.eta_inv, 1)} %` : `μ ${wbFmt(I.mu, 2)} · 하중 감도 ${wbFmt(I.mu_s, 3)} 1/kN`; }
 function t2MotorMsg(M){ const P = M.pts.length ? M.pts : M.ptsC, c = Math.max(1, Math.min(100, WB.I.c_pct || 100)), mx = a => Math.max(...a.map(p => p[1]));
   if(!P.length) return '비어 있음 → 계산할 수 없음 (피크 또는 연속 토크를 넣으세요)';
   return `${P.length}점 · ${wbFmt(P[0][0], 0)} ~ ${wbFmt(P[P.length-1][0], 0)} rpm · ${M.pts.length ? `피크 ${wbFmt(mx(M.pts), 1)} N·m` : `피크 = 연속 ÷ ${wbFmt(c, 0)} %`} · ${M.ptsC.length ? `연속 ${wbFmt(mx(M.ptsC), 1)} N·m` : `연속 = 피크 × ${wbFmt(c, 0)} %`}`; }
 /* 칸 표: 행 지우기 ×(행 끝) · [+ 행](표 아래 한 행) · 맵은 열 지우기 ×(맨 아래 행) · [+ 열](표 오른쪽 한 열) */
-function t2GridTable(k, txt){ const g = t2Grid(txt), map = k==='eM' || k==='eI' || k==='bO' || k==='bR', bm = k==='bO' || k==='bR';
-  const addRow = n => `<tr class="t2-addr"><td colspan="${n}"><button type="button" data-t2gadd="row">+ 행${bm ? ' (SOC)' : map ? ' (토크)' : ''}</button></td></tr>`;
+function t2GridTable(k, txt){ const g = t2Grid(txt), rd = T2RAD.includes(k), map = k==='eM' || k==='eI' || k==='bO' || k==='bR' || rd, bm = k==='bO' || k==='bR';
+  const addRow = n => `<tr class="t2-addr"><td colspan="${n}"><button type="button" data-t2gadd="row">+ 행${rd ? ' (코어 풍속)' : bm ? ' (SOC)' : map ? ' (토크)' : ''}</button></td></tr>`;
   if(!g.length) return `<table class="t2-tt t2-gtab" data-t2gk="${k}"><tbody><tr><td class="t2-empty muted">비어 있습니다. 엑셀 표를 복사해 이 표를 누르고 Ctrl+V, 또는 아래 [+ 행] · [입력하기]의 파일 가져오기.</td></tr>${addRow(1)}</tbody></table>`;
   const head = !isFinite(parseFloat(g[0][0])) || (map && g.length > 1), rows = head ? g.slice(1) : g, off = head ? 1 : 0, nc = g.reduce((a, r) => Math.max(a, r.length), 0);
   const cell = (r, c, v, th) => `<${th ? 'th' : 'td'} class="t2-e${c===0 && map && !th ? ' t2-rh' : ''}" data-t2e="${r},${c}" data-t2g="1" tabindex="0">${wbEsc(v ?? '')}</${th ? 'th' : 'td'}>`;
   const nr = (head ? 1 : 0) + rows.length + (map ? 1 : 0);
-  const addCol = map ? `<th class="t2-addc" rowspan="${nr}"><button type="button" data-t2gadd="col">+ 열<br><span>(${bm ? '온도' : '회전수'})</span></button></th>` : '';
+  const addCol = map ? `<th class="t2-addc" rowspan="${nr}"><button type="button" data-t2gadd="col">+ 열<br><span>(${rd ? '유량' : bm ? '온도' : '회전수'})</span></button></th>` : '';
   const x = (i, lab) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdel="${i}" aria-label="${lab} 지우기" title="${lab} 지우기">×</button></td>`;
   // 머리 행도 tbody 안에 둠: [+ 열] 칸의 rowspan 이 행 묶음(thead · tbody)을 넘지 못하므로
   return `<table class="t2-tt t2-gtab${map ? ' map' : ''}" data-t2gk="${k}"><tbody>${head ? `<tr class="t2-hrow">${Array.from({length:nc}, (_, c) => cell(0, c, g[0][c], true)).join('')}<th class="t2-xc"></th>${addCol}</tr>` : ''}
     ${rows.map((r, i) => `<tr data-t2row="${i + off}">${Array.from({length:nc}, (_, c) => cell(i + off, c, r[c])).join('')}${x(i + off, `${i + 1}번 행`)}${!head && i===0 ? addCol : ''}</tr>`).join('')}
-    ${map ? `<tr class="t2-delc"><td class="t2-xc"></td>${Array.from({length:nc - 1}, (_, c) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdelc="${c + 1}" aria-label="${c + 1}번 열 지우기" title="${c + 1}번 열 (${wbEsc(g[0][c + 1] ?? '')} ${bm ? '°C' : 'rpm'}) 지우기">×</button></td>`).join('')}<td class="t2-xc"></td></tr>` : ''}
+    ${map ? `<tr class="t2-delc"><td class="t2-xc"></td>${Array.from({length:nc - 1}, (_, c) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdelc="${c + 1}" aria-label="${c + 1}번 열 지우기" title="${c + 1}번 열 (${wbEsc(g[0][c + 1] ?? '')} ${rd ? 'L/min' : bm ? '°C' : 'rpm'}) 지우기">×</button></td>`).join('')}<td class="t2-xc"></td></tr>` : ''}
     ${addRow(nc + 1 + (map ? 1 : 0))}</tbody></table>`; }
 /* 빈 표에 [+ 행 · 열]: 머리 행부터 만듦 */
-const T2HEAD = {mt:['회전수 rpm', '피크 토크 N·m', '연속 토크 N·m'], tire:['하중 N', 'μ'], bO:['SOC % \\ 셀 온도 °C', '25'], bR:['SOC % \\ 셀 온도 °C', '25'], bC:['셀 온도 °C', '용량 Ah'], eM:['토크 N·m \\ 회전수 rpm', '0'], eI:['토크 N·m \\ 회전수 rpm', '0']};
+const T2HEAD = {mt:['회전수 rpm', '피크 토크 N·m', '연속 토크 N·m'], tire:['하중 N', 'μ'], bO:['SOC % \\ 셀 온도 °C', '25'], bR:['SOC % \\ 셀 온도 °C', '25'], bC:['셀 온도 °C', '용량 Ah'], eM:['토크 N·m \\ 회전수 rpm', '0'], rqM:['코어 풍속 m/s \\ 유량 L/min', '8'], rqI:['코어 풍속 m/s \\ 유량 L/min', '8'], rqB:['코어 풍속 m/s \\ 유량 L/min', '8'], eI:['토크 N·m \\ 회전수 rpm', '0']};
 function t2GridAdd(k, what){ const g = t2Grid(t2MtText(k)); if(!g.length) g.push(T2HEAD[k].slice());
   const nc = g.reduce((a, r) => Math.max(a, r.length), 0);
   if(what==='col'){ g.forEach(r => { while(r.length < nc) r.push(''); r.push(''); }); }
@@ -12039,6 +12046,9 @@ function t2EditPlot(k){ const R = WB.id==='2' ? WB.R : null, I = WB.I;
     const bl = (Tc, s) => { const f = (a, x) => { if(x <= a[0]) return [0, 0, 0]; const q = a.length - 1; if(x >= a[q]) return [q, q, 0]; let i = 0; while(a[i + 1] < x) i++; return [i, i + 1, (x - a[i])/(a[i + 1] - a[i])]; };
       const [j0, j1, u2] = f(M.n, Tc), [i0, i1, w] = f(M.t, s), e = M.e; return (e[i0][j0]*(1 - u2) + e[i0][j1]*u2)*(1 - w) + (e[i1][j0]*(1 - u2) + e[i1][j1]*u2)*w; };
     return wbPlot({id:'t2bat', w:560, h:330, hit:false, x:{d:soc, n:'SOC', u:'%'}, ys:M.n.slice(0, 6).map((Tc, j) => ({k:'t' + j, d:soc.map(s => bl(Tc, s)), c:WB_COL[j % WB_COL.length], n:`${wbFmt(Tc, 0)} °C`, u:k==='bO' ? 'V' : 'mΩ', dd:k==='bO' ? 3 : 1})), label:T2ET[k]}); }
+  if(T2RAD.includes(k)){ const M = t2GridParse(t2MtText(k)).map; if(!M) return `<div class="t2-fconst">${t2ConstNote(k)}</div>`;
+    const vs = M.t.length > 1 ? Array.from({length:21}, (_, i) => M.t[0] + (M.t[M.t.length - 1] - M.t[0])*i/20) : M.t, bl = (f, v) => coolBil(M.t, M.n, M.e, v, f);
+    return wbPlot({id:'t2rad', w:560, h:330, hit:false, x:{d:vs, n:'코어 풍속', u:'m/s'}, ys:M.n.slice(0, 6).map((f, j) => ({k:'q' + j, d:vs.map(v => bl(f, v)), c:WB_COL[j % WB_COL.length], n:`${wbFmt(f, 1)} L/min`, u:'kW', dd:2})), label:T2ET[k]}); }
   if(k==='bC'){ const M = t2PairParse(t2MtText(k)).map; if(!M) return `<div class="t2-fconst">${t2ConstNote(k)}</div>`;
     const T = Array.from({length:31}, (_, i) => -10 + i*2); return wbPlot({id:'t2bcap', w:560, h:330, hit:false, x:{d:T, n:'셀 온도', u:'°C'}, ys:[{k:'c', d:T.map(x => tab1j(M, x)), c:WB_COL[0], n:'셀 용량', u:'Ah', dd:2}], label:'셀 용량'}); }
   if(k==='tire'){ const M = t2TireParse(T2.tire).map, Z = t2TireZ(M), mu = Z.map(z => M ? tab1j(M, z) : Math.max(0, I.mu - I.mu_s*z/1000));
@@ -12056,7 +12066,7 @@ function t2TireZ(M){ const R = WB.id==='2' ? WB.R : null, S = R && R.sig; let zm
 /* 그림 아래 글 */
 function t2EditCap(k){ const R = WB.id==='2' ? WB.R : null, I = WB.I;
   if(k==='mt') return R && R.out ? `<span><i style="background:#9aa0ab"></i>표 그대로 (팀 모터로 ${wbFmt(I.v_ref*(I.ke_ratio || 1), 0)} V 상당)</span> <span><i style="background:${WB_COL[0]}"></i>축전지 공칭 ${wbFmt(I.n_s*I.c_vnom, 0)} V</span> <span><i style="background:${WB_COL[3]}"></i>최대 전류(${wbFmt(I.i_bms_max, 0)} A) 때 단자 전압 ${wbFmt(R.out.v_load, 0)} V</span> <span>실선 토크 · 분홍 · 갈색 출력</span>` : '';
-  if(T2BAT.includes(k)) return '';
+  if(T2BAT.includes(k) || T2RAD.includes(k)) return '';
   if(k==='tire') return `정지 때 바퀴 하나 평균 하중 약 ${wbFmt(I.m*9.81/4, 0)} N. μ·Fz 가 꺾여 내려가면 하중을 더 실어도 그 바퀴 힘이 늘지 않습니다.`;
   const E = t2EffParse(t2MtText(k)); return E.map && t2Grid(t2MtText(k)).length >= 2 ? t2HeatCap(E.map) : ''; }
 const tab1j = (t, x) => { if(x <= t[0][0]) return t[0][1]; for(let i = 1; i < t.length; i++) if(x <= t[i][0]){ const a = t[i-1], b = t[i]; return a[1] + (b[1] - a[1])*(x - a[0])/((b[0] - a[0]) || 1); } return t[t.length-1][1]; };
@@ -12165,6 +12175,7 @@ function t2ApplyText(k, v){
   if(k==='mt'){ if(!t2MotorParse(v).pts.length){ toast('회전수 · 토크 행을 읽지 못했습니다.'); return false; } T2.mtext = v; }
   else if(k==='tire'){ if(!t2TireParse(v).map){ toast('하중 · μ 행을 읽지 못했습니다.'); return false; } T2.tire = v; }
   else if(k==='bO' || k==='bR'){ if(!t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 셀 온도 °C, 첫 열 = SOC %.'); return false; } T2[k] = v; }
+  else if(T2RAD.includes(k)){ if(!t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s, 칸 = 방열량 kW.'); return false; } T2[k] = v; }
   else if(k==='bC'){ if(!t2PairParse(v).map){ toast('온도 · 용량 행을 읽지 못했습니다.'); return false; } T2.bC = v; }
   else if(k==='eM' || k==='eI'){ if(!t2EffParse(v).map){ toast('효율을 읽지 못했습니다. 숫자 하나 또는 맵(첫 행 회전수, 첫 열 토크)이어야 합니다.'); return false; } T2[k] = v; }
   else return false;
@@ -12381,8 +12392,9 @@ function t2InLock(k){ const L = '아래 표 사용';
     if(['b_c', 'b_t0', 'b_alpha'].includes(k)) return th.b ? '' : '축전지 온도 끔';
     if(k==='b_ha' || k==='b_ha60') return !th.b ? '축전지 온도 끔' : th.bW ? '축전지 수랭' : '';
     if(k==='b_r') return !th.b ? '축전지 온도 끔' : th.bW ? '' : '축전지 공랭';
-    { const cwK = {cw_c:'m', ua0:'m', ua60:'m', i_wc:'i', i_ua0:'i', i_ua60:'i', b_wc:'b', b_ua0:'b', b_ua60:'b'}[k];
+    { const cwK = /^cw_(v|q|ra|kd|fan|fon|ua|itd|cm)$/.test(k) ? 'm' : /^i_w(v|q|ra|kd|fan|fon|ua|itd|cm)$/.test(k) ? 'i' : /^b_w(v|q|ra|kd|fan|fon|ua|itd|cm)$/.test(k) ? 'b' : '';
       if(cwK){ if(!th.w) return WB.I.cw_on === 1 ? '수랭 부품 없음' : '냉각수 온도 끔'; if(th.n9) return '냉각 회로';
+        const rk = {m:'rqM', i:'rqI', b:'rqB'}[cwK]; if(/ua$/.test(k) && t2UseMap(rk)) return '아래 표 사용'; if(/itd$/.test(k) && !t2UseMap(rk)) return '라디 표 없음';
         const wat = cwK==='m' ? th.m && th.mW : cwK==='i' ? th.iW : th.b && th.bW; if(!wat) return cwK==='m' ? '모터 수랭 아님' : cwK==='i' ? '인버터 수랭 아님' : '축전지 수랭 아님'; } }
     if(k==='th_cool') return (th.m && th.mW) || (th.i && th.iW) || (th.b && th.bW) || th.w ? '' : '수랭 부품 없음';
     if(k==='t_amb') return th.w || (th.m && !th.mW) || (th.i && !th.iW) || (th.b && !th.bW) ? '' : '외기로 식는 것 없음';
@@ -12601,12 +12613,21 @@ WB_TOOLS['2'] = {
     {k:'t_amb', n:'외기 온도', u:'°C', v:25, d:0, g:T2G.thm},
     // 냉각수 등가 기본값 = 도구 9 기본 배치(라디 0.06 m² · UA 250 · 팬 0.08, 펌프 8 L/min, 인버터 → 모터)를 줄인 값
     {k:'cw_mode', n:'수랭 방식 (0 = 부품별 독립 회로, 1 = 냉각 회로)', u:'', v:1, d:0, g:T2G.cool, ui:'none'},
-    {k:'cw_c', dk:'cool_c', n:'모터 수랭 회로 · 냉각수 열용량', u:'J/K', v:5016, d:0, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'},
-    {k:'ua0', dk:'cool_ua0', n:'모터 수랭 회로 · 라디 방열 UA (정지)', u:'W/K', v:65, d:0, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'}, {k:'ua60', dk:'cool_ua60', n:'모터 수랭 회로 · 라디 방열 UA (60 km/h)', u:'W/K', v:188, d:0, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'},
-    {k:'i_wc', n:'인버터 수랭 회로 · 냉각수 열용량', u:'J/K', v:5016, d:0, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'},
-    {k:'i_ua0', n:'인버터 수랭 회로 · 라디 방열 UA (정지)', u:'W/K', v:65, d:0, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'}, {k:'i_ua60', n:'인버터 수랭 회로 · 라디 방열 UA (60 km/h)', u:'W/K', v:188, d:0, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'},
-    {k:'b_wc', n:'축전지 수랭 회로 · 냉각수 열용량', u:'J/K', v:5016, d:0, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'},
-    {k:'b_ua0', n:'축전지 수랭 회로 · 라디 방열 UA (정지)', u:'W/K', v:65, d:0, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'}, {k:'b_ua60', n:'축전지 수랭 회로 · 라디 방열 UA (60 km/h)', u:'W/K', v:188, d:0, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'},
+    {k:'cw_v', n:'모터 회로 · 냉각수 양 (라디 · 배관 · 재킷 합)', u:'L', v:1.2, d:2, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'}, {k:'cw_q', n:'모터 회로 · 펌프 유량', u:'L/min', v:8, d:1, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'},
+    {k:'cw_ra', n:'모터 회로 라디 · 코어 앞면 면적', u:'m²', v:0.06, d:3, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'}, {k:'cw_kd', n:'모터 회로 라디 · 주행풍 중 코어 통과 비율', u:'', v:0.3, d:2, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'},
+    {k:'cw_fan', n:'모터 회로 라디 · 팬 유량', u:'m³/s', v:0.08, d:3, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'}, {k:'cw_fon', n:'모터 회로 라디 · 팬 켜는 냉각수 온도 (0 = 늘 켬, 3 K 아래로 내려가면 끔)', u:'°C', v:0, d:0, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'},
+    {k:'cw_ua', n:'모터 회로 라디 · UA (코어 풍속 5 m/s, 다른 풍속은 × (풍속 ÷ 5)^0.6)', u:'W/K', v:250, d:0, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'}, {k:'cw_itd', n:'모터 회로 라디 · 표의 입구 온도차 (냉각수 입구 − 공기 입구)', u:'K', v:60, d:0, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'},
+    {k:'cw_cm', n:'모터 회로 라디 · 금속 열용량 (0 = 넣지 않음, 알루미늄 kg × 0.9)', u:'kJ/K', v:0, d:2, g:T2G.cool, sb:'모터 수랭 회로 (부품별 독립)'},
+    {k:'i_wv', n:'인버터 회로 · 냉각수 양 (라디 · 배관 · 재킷 합)', u:'L', v:1.2, d:2, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'}, {k:'i_wq', n:'인버터 회로 · 펌프 유량', u:'L/min', v:8, d:1, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'},
+    {k:'i_wra', n:'인버터 회로 라디 · 코어 앞면 면적', u:'m²', v:0.06, d:3, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'}, {k:'i_wkd', n:'인버터 회로 라디 · 주행풍 중 코어 통과 비율', u:'', v:0.3, d:2, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'},
+    {k:'i_wfan', n:'인버터 회로 라디 · 팬 유량', u:'m³/s', v:0.08, d:3, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'}, {k:'i_wfon', n:'인버터 회로 라디 · 팬 켜는 냉각수 온도 (0 = 늘 켬, 3 K 아래로 내려가면 끔)', u:'°C', v:0, d:0, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'},
+    {k:'i_wua', n:'인버터 회로 라디 · UA (코어 풍속 5 m/s, 다른 풍속은 × (풍속 ÷ 5)^0.6)', u:'W/K', v:250, d:0, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'}, {k:'i_witd', n:'인버터 회로 라디 · 표의 입구 온도차 (냉각수 입구 − 공기 입구)', u:'K', v:60, d:0, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'},
+    {k:'i_wcm', n:'인버터 회로 라디 · 금속 열용량 (0 = 넣지 않음, 알루미늄 kg × 0.9)', u:'kJ/K', v:0, d:2, g:T2G.cool, sb:'인버터 수랭 회로 (부품별 독립)'},
+    {k:'b_wv', n:'축전지 회로 · 냉각수 양 (라디 · 배관 · 재킷 합)', u:'L', v:1.2, d:2, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'}, {k:'b_wq', n:'축전지 회로 · 펌프 유량', u:'L/min', v:8, d:1, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'},
+    {k:'b_wra', n:'축전지 회로 라디 · 코어 앞면 면적', u:'m²', v:0.06, d:3, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'}, {k:'b_wkd', n:'축전지 회로 라디 · 주행풍 중 코어 통과 비율', u:'', v:0.3, d:2, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'},
+    {k:'b_wfan', n:'축전지 회로 라디 · 팬 유량', u:'m³/s', v:0.08, d:3, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'}, {k:'b_wfon', n:'축전지 회로 라디 · 팬 켜는 냉각수 온도 (0 = 늘 켬, 3 K 아래로 내려가면 끔)', u:'°C', v:0, d:0, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'},
+    {k:'b_wua', n:'축전지 회로 라디 · UA (코어 풍속 5 m/s, 다른 풍속은 × (풍속 ÷ 5)^0.6)', u:'W/K', v:250, d:0, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'}, {k:'b_witd', n:'축전지 회로 라디 · 표의 입구 온도차 (냉각수 입구 − 공기 입구)', u:'K', v:60, d:0, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'},
+    {k:'b_wcm', n:'축전지 회로 라디 · 금속 열용량 (0 = 넣지 않음, 알루미늄 kg × 0.9)', u:'kJ/K', v:0, d:2, g:T2G.cool, sb:'축전지 수랭 회로 (부품별 독립)'},
     {k:'b_c', n:'축전지 열용량', u:'J/K', v:30000, d:0, g:T2G.bth, sb:'축전지 열'}, {k:'b_ha', n:'축전지 공랭 hA (정지)', u:'W/K', v:15, d:1, g:T2G.bth, sb:'축전지 공랭'}, {k:'b_ha60', n:'축전지 공랭 hA (60 km/h)', u:'W/K', v:15, d:1, g:T2G.bth, sb:'축전지 공랭'},
     {k:'b_r', n:'축전지 → 냉각수 열저항 (수랭)', u:'K/W', v:0.05, d:4, g:T2G.bth, sb:'축전지 열'},
     {k:'b_t0', n:'축전지 출발 온도', u:'°C', v:25, d:0, g:T2G.bth, sb:'축전지 열'}, {k:'b_alpha', n:'내부저항 온도 계수 (25 °C 기준)', u:'1/°C', v:0.01, d:3, g:T2G.bat, sb:'내부저항 (온도)'},
@@ -12728,11 +12749,13 @@ WB_TOOLS['2'] = {
      src:'접지 한계만이면 종가속도 = μg 일정 → 최대 1 g, 일정 반경 선회 ay = μg → 1 g'},
     {n:'내구 · 에너지 상한 제한 안 함 → 출력 상한 100 %', I:{end:{seg:[[400, 0], [31.4159, 10], [400, 0], [31.4159, 10]], laps:26, stint:13}, e_target:3, e_lim:0, pmax:80}, expect:{p_lim:100},
      src:'상한을 끄면 소비와 상관없이 출력 배율 1 (위 경우와 같은 코스 · 한도에서 제한만 끔)'},
-    {n:'열 모델 모터 · 냉각수 · 축전지 · 정상 온도 (직선 20 km, 최고속 일정, 효율 90 · 95 %)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, cw_mode:0, i_cool:0}, expect:{c_tm:30.384286, c_tw:26.076857, c_tb:25.407582},
-     src:'F = 0.015·300·9.81 = 44.15 N, v = 43.909 m/s → 축 1938.4 W, 모터 손실 215.371 W (인버터는 공랭 · 온도 끔 → 냉각수에 안 넣음). 모터 수랭 회로 냉각수 = 25 + 215.371 ÷ 200 = 26.0769, 모터 = 냉각수 + 215.371 × 0.02 = 30.3843, 축전지: 단자 2267.1 W, 개방 70 × 3.6 = 252 V, R 0.1 Ω → I = 9.0286 A, 발열 I² R = 8.1516 W → 25 + 8.1516 ÷ 20 = 25.4076 °C'},
-    {n:'열 모델 축전지 · 내부저항 온도 의존 (α = 0.02 /°C)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0.02}, expect:{c_tb:25.404263},
+    {n:'열 모델 모터 · 냉각수 · 축전지 · 정상 온도 (직선 20 km, 최고속 일정, 효율 90 · 95 %)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, cw_mode:0, i_cool:0}, expect:{c_tm:30.939432, c_tw:26.632012, c_tb:25.407582},
+     src:'F = 0.015·300·9.81 = 44.15 N, v = 43.909 m/s → 축 1938.4 W, 모터 손실 215.371 W (인버터는 공랭 · 온도 끔 → 냉각수에 안 넣음). 모터 회로 [라디 → 펌프 → 모터]: 팬 0.3 m³/s ÷ 0.06 m² = 코어 5 m/s → UA 200, C_a 361.8 · C_c 557.33 W/K → ε C_min = 131.97 W/K, 라디 입구 (가장 뜨거움) = 25 + 215.371 ÷ 131.97 = 26.6320, 모터 = + 215.371 × 0.02 = 30.9394, 축전지: 단자 2267.1 W, 개방 70 × 3.6 = 252 V, R 0.1 Ω → I = 9.0286 A, 발열 I² R = 8.1516 W → 25 + 8.1516 ÷ 20 = 25.4076 °C'},
+    {n:'부품별 독립 · 라디 방열 표 (코어 5 m/s · 8 L/min 에서 6.0 kW @ 입구 온도차 60 K)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:9999, cw_itd:60, rqM:{n:[4, 8, 12], t:[2, 5, 8], e:[[2.4, 3.0, 3.3], [4.1, 6.0, 6.6], [5.2, 7.0, 7.9]]}, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, cw_mode:0, i_cool:0}, expect:{c_tw:27.15371, c_tm:31.46113},
+     src:'표의 점이므로 ε C_min = 6000 ÷ 60 = 100 W/K (UA 9999 는 안 씀) → 라디 입구 = 25 + 215.371 ÷ 100 = 27.1537, 모터 = + 215.371 × 0.02 = 31.4611'},
+    {n:'열 모델 축전지 · 내부저항 온도 의존 (α = 0.02 /°C)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0.02}, expect:{c_tb:25.404263},
      src:'T = 25 + I(T)²·R(T) ÷ 20, R(T) = 0.1 (1 + 0.02 (25 − T)) 를 고정점 반복으로 풂 (셀 70 직렬 · 252 V) → 25.4043 °C'},
-    {n:'팩 값 직접 입력 (직렬 수 0, 팩 252 V · 28 Ah) = 위와 같은 팩 (셀 3.6 V × 70 직렬)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:0, c_vmax:3.6, p_vmax:252, p_vnom:252, p_vmin:252, p_ah:28, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0.02}, expect:{c_tb:25.404263},
+    {n:'팩 값 직접 입력 (직렬 수 0, 팩 252 V · 28 Ah) = 위와 같은 팩 (셀 3.6 V × 70 직렬)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:1, bt_on:1, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:0, c_vmax:3.6, p_vmax:252, p_vnom:252, p_vmin:252, p_ah:28, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0.02}, expect:{c_tb:25.404263},
      src:'직렬 수 = 252 ÷ 3.6 = 70, 셀 공칭 · 최소 = 252 ÷ 70 = 3.6 V, 병렬 1 × 28 Ah = 7 × 4 Ah → 위 경우와 같은 팩이므로 같은 25.4043 °C'},
     {n:'최소 회전 반경 · 레코드 라인이 안쪽으로 가다 멈춤 (반경 20 m, 폭 6 m, 최대 조향각 4.8188° → R 19 m)', I:{course:'free', lap:'2', rl_on:2, rl_b:1, dl_on:1, delta_max:4.818897983525083, mu:1, mu_s:0, crr:0, cla:0, cda:0, tmax:1e5, free:{seg:[[125.663706, 20]], wl:[3], wr:[3], closed:true, laps:2, s0:0}}, expect:{c_t:8.744242, c_len:119.380521, c_rbad:0},
      src:'제약이 없으면 안쪽 경계 18 m. 반경 19 m 아래로는 못 가므로 r = 19: 2π·19 ÷ √(9.81·19) = 8.7442 s, 길이 2π·19'},
@@ -12752,7 +12775,7 @@ WB_TOOLS['2'] = {
      src:'R_뒤축 = 1.55 ÷ tan 34° + 0.6 = 2.297970 + 0.6 = 2.897970 m, l_r = 1.55 × 0.475 = 0.73625 m → R = √(2.897970² + 0.73625²) = 2.990032 m. 가운데 선 2.5 m < R → 한 바퀴 전부 급함 15.7080 m'},
     {n:'열 모델 모터 열 끔 → 디레이팅 없음', I:{m:300, fr:50, h:0, mu:10, crr:0, cla:0, cda:0, j_eq:0, r_eff:250, gr:4, eta_dt:100, tmax:1e5, motor:[[0, 200], [10000, 200]], motorC:[[0, 100], [10000, 100]], v_ref:300, ke_ratio:1, dr_t0:40, dr_t1:60, th_init:45, th_c:1e9, th_r:1e9, th_cool:45, th_on:0}, expect:{t_acc_s:3.75},
      src:'모터 열을 끄면 온도로 토크를 깎지 않음: 200 N·m → F = 3200 N, a = 10.667 → t = √(2 × 75 ÷ 10.667) = 3.75 s (켜면 4.3301 s)'},
-    {n:'열 모델 모터 · 축전지 (냉각수 계통 끔 → 냉각수 온도 고정)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:0, bt_on:1, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0}, expect:{c_tm:29.307429, c_tb:25.407582},
+    {n:'열 모델 모터 · 축전지 (냉각수 계통 끔 → 냉각수 온도 고정)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, th_on:1, cw_on:0, bt_on:1, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0}, expect:{c_tm:29.307429, c_tb:25.407582},
      src:'모터 = 고정 냉각수 25 + 손실 215.37 W × 0.02 = 29.3074 °C, 축전지는 냉각수와 이어져 있지 않아 세 계통 모두 켤 때와 같은 25.4076 °C'},
     {n:'주행선 · 슬라럼 콘이 가운데 선에서 벗어남 (곧은 80 m 닫힌 코스, 콘 옆 거리 +0.5 · −0.5 m, 폭 6 m)', I:{course:'end', rl_on:1, rl_b:1, end:{seg:[[20, 0], [20, 0], [20, 0], [20, 0]], laps:1, stint:1, WL:[3, 3, 3, 3], WR:[3, 3, 3, 3], slalom:[1, 3], slat:[0.5, -0.5], sds:[0, 0]}}, expect:{c_len:80.269101, c_ctight:0},
      src:"콘 자리 제약이 e ≥ 0.5 + 1 · e ≤ −0.5 − 1 → 가운데 콘 경우의 해 × 1.5: e(u) = 1.5 (a·u + c·u³) → 길이 = Σ√(1 + Δe²) = 80.2691 m (가운데 콘이면 80.1198 m)"},
@@ -12760,13 +12783,13 @@ WB_TOOLS['2'] = {
      src:'첫 콘은 왼쪽으로 지나가야 하는데 콘 ↔ 왼쪽 경계 1.5 m < 2b = 2 m → 1개. 두 번째 콘(오른쪽, 3 m)은 지킴'},
     {n:'차 여유 · 전장과 저속 차체 각도 (반경 10 m 원, 전폭 1.4 m, 휠베이스 1.6 m, 앞 50 %, 앞 · 뒤 오버행 0.5 · 0.3 m, 여유 0.2 m)', I:{wc_on:1, course:'free', lap:'1', rl_on:0, w_car:1.4, rl_m:0.2, oh_f:0.5, oh_r:0.3, L:1600, fr:50, free:{seg:[[62.831853, 10]], wl:[3], wr:[3], closed:true, laps:1, s0:0}}, expect:{c_rmn:10, c_bo:1.072678, c_bi:0.932051},
      src:'l_r = 0.8 m, 뒤축 반경 R_r = √(10² − 0.8²) = 9.9679. 바깥 = √(2.1² + (R_r + 0.7)²) − 10 + 0.2 = 1.0727 m (앞 끝 = 뒤축에서 1.6 + 0.5), 안쪽 = 10 − (R_r − 0.7) + 0.2 = 0.9321 m (곧은 길이면 둘 다 0.9 m)'},
-    {n:'열 모델 · 모두 수랭, 부품별 독립 회로 (모터 UA 200 · 인버터 100 · 축전지 100 W/K, 정상 온도)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, cw_mode:0, i_wc:2000, i_ua0:100, i_ua60:100, b_wc:500, b_ua0:100, b_ua60:100}, expect:{c_tw:26.133534, c_tm:30.384286, c_ti:31.801204, c_tb:25.489099},
-     src:'회로마다 냉각수 = 25 + 손실 ÷ UA: 모터 25 + 215.371 ÷ 200 = 26.0769 → 모터 = + 215.371 × 0.02 = 30.3843, 인버터 25 + 113.353 ÷ 100 = 26.1335 → + 113.353 × 0.05 = 31.8012, 축전지 25 + 8.1516 ÷ 100 = 25.0815 → + 8.1516 × 0.05 = 25.4891 (축전지 회로 열용량 500 J/K: 출발 가속의 큰 발열이 20 km 안에 빠지게). 냉각수 결과 = 가장 뜨거운 회로 (인버터 26.1335)'},
-    {n:'열 모델 · 모두 공랭 (냉각수 계통에 넣는 부품 없음)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:0, i_cool:0, b_cool:0, m_ha0:20, m_ha60:20, i_c:500, i_ha0:10, i_ha60:10, b_ha:20, b_ha60:20}, expect:{c_tm:35.768572, c_ti:36.335339, c_tb:25.407582},
+    {n:'열 모델 · 모두 수랭, 부품별 독립 회로 (회로마다 라디 → 펌프 → 부품, UA 모터 200 · 인버터 100 · 축전지 100 W/K, 정상 온도)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, cw_mode:0, i_wv:0.4785, i_wq:8, i_wra:0.06, i_wkd:0, i_wfan:0.3, i_wua:100, b_wv:0.1196, b_wq:8, b_wra:0.06, b_wkd:0, b_wfan:0.3, b_wua:100}, expect:{c_tw:26.632012, c_tm:30.939432, c_ti:32.10454, c_tb:25.510912},
+     src:'회로마다 [라디 → 펌프 → 부품], 팬 0.3 m³/s ÷ 0.06 m² = 코어 5 m/s (UA = 입력값), C_a 361.8 · C_c 557.33 W/K → ε C_min 모터 (UA 200) 131.97 · 인버터 · 축전지 (UA 100) 78.888 W/K. 라디 입구 = 25 + 손실 ÷ ε C_min: 모터 26.6320 → + 215.371 × 0.02 = 30.9394, 인버터 25 + 113.353 ÷ 78.888 = 26.4369 → + 113.353 × 0.05 = 32.1045, 축전지 25 + 8.1516 ÷ 78.888 = 25.1033 → + 8.1516 × 0.05 = 25.5109. 냉각수 결과 = 가장 뜨거운 곳 (모터 회로 26.6320)'},
+    {n:'열 모델 · 모두 공랭 (냉각수 계통에 넣는 부품 없음)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:0, i_cool:0, b_cool:0, m_ha0:20, m_ha60:20, i_c:500, i_ha0:10, i_ha60:10, b_ha:20, b_ha60:20}, expect:{c_tm:35.768572, c_ti:36.335339, c_tb:25.407582},
      src:'모터 = 25 + 215.371 ÷ 20 = 35.7686, 인버터 = 25 + 113.353 ÷ 10 = 36.3353, 축전지 = 25 + 8.1516 ÷ 20 = 25.4076 (냉각수는 켜도 넣는 열이 없어 고정)'},
-    {n:'효율 · 모터 맵에 인버터를 합침 (합친 효율 85.5 %, 인버터 몫 30 %)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:0, m_cool:1, i_cool:1, i_c:500, i_r:0.05, eta_mot:85.5, eta_inv:50, eff_mg:1, inv_r:30, cw_mode:0, i_wc:2000, i_ua0:200, i_ua60:200}, expect:{c_tw:26.150538, c_tm:30.752688, c_ti:30.423963},
-     src:'합친 손실 = 1938.343 × (1 ÷ 0.855 − 1) = 328.725 W (따로 넣을 때 모터 + 인버터와 같음, 인버터 효율 칸 50 % 는 안 씀). 부품별 독립 회로 (모터 · 인버터 UA 200): 모터 냉각수 = 25 + 0.7 × 328.725 ÷ 200 = 26.1505, 모터 = + 0.7 × 328.725 × 0.02 = 30.7527, 인버터 냉각수 = 25 + 0.3 × 328.725 ÷ 200 = 25.4931, 인버터 = + 0.3 × 328.725 × 0.05 = 30.4240'},
-    {n:'열 모델 · 공랭 방열 능력이 차속에 따라 (축전지 정지 10 · 60 km/h 30 W/K)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:0, bt_on:1, b_cool:0, b_ha:10, b_ha60:30}, expect:{c_tb:25.130031},
+    {n:'효율 · 모터 맵에 인버터를 합침 (합친 효율 85.5 %, 인버터 몫 30 %)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:0, m_cool:1, i_cool:1, i_c:500, i_r:0.05, eta_mot:85.5, eta_inv:50, eff_mg:1, inv_r:30, cw_mode:0, i_wv:0.4785, i_wq:8, i_wra:0.06, i_wkd:0, i_wfan:0.3, i_wua:200}, expect:{c_tw:26.743681, c_tm:31.345831, c_ti:30.678167},
+     src:'합친 손실 = 1938.343 × (1 ÷ 0.855 − 1) = 328.725 W (따로 넣을 때 모터 + 인버터와 같음, 인버터 효율 칸 50 % 는 안 씀). 부품별 독립 회로 (모터 · 인버터 UA 200, 코어 5 m/s → ε C_min 131.97 W/K): 모터 라디 입구 = 25 + 0.7 × 328.725 ÷ 131.97 = 26.7437, 모터 = + 0.7 × 328.725 × 0.02 = 31.3458, 인버터 라디 입구 = 25 + 0.3 × 328.725 ÷ 131.97 = 25.7473, 인버터 = + 0.3 × 328.725 × 0.05 = 30.6782'},
+    {n:'열 모델 · 공랭 방열 능력이 차속에 따라 (축전지 정지 10 · 60 km/h 30 W/K)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:0, bt_on:1, b_cool:0, b_ha:10, b_ha60:30}, expect:{c_tb:25.130031},
      src:'v = 43.909 m/s → hA = 10 + (30 − 10) × 43.909 ÷ 16.667 = 62.690 W/K → 축전지 = 25 + 8.1516 ÷ 62.690 = 25.1300 °C'},
     {n:'μ 기준 하중 · μ(F_z) = μ − 감도 (F_z − F_z0): 기준 735.75 N 에서 μ 1.426425 = 위 하중 감도 경우와 같은 직선', I:{fz0_m:1, m:300, fr:50, h:300, tf:1200, tr:1200, lltd:50, mu:1.426425, mu_s:0.1, tire_fz0:735.75, crr:0, cla:0, cda:0}, expect:{t_skid_s:10.276676, ay_skid:1.390843},
      src:'1.426425 − 0.1 × (F_z − 0.73575 kN) = 1.5 − 0.1 × F_z → 하중 감도 · 스키드패드 경우와 같은 μ(F_z)'},
@@ -12803,13 +12826,13 @@ WB_TOOLS['2'] = {
      src:'접지 한계 a = μg 그대로 (배율 없음), 페달 신호 0 → 100 % 0.2 s 만 → 아래 경우와 같은 4.0099 s'},
     {n:'현실 운전자 · 원 코스 (반경 10 m) 최고 차속: 오토크로스 √(k_s μ g R), 내구 √(k_s k_e μ g R)', I:{m:300, fr:50, h:0, mu:1.5, crr:0, cla:0, cda:0, rl_on:0, md:0, dr_real:1, dr_ks:0.81, dr_ke:0.5, end:{seg:[[62.831853, 10]], laps:4, stint:2}}, expect:{v_top:39.302969, v_endtop:27.791381},
      src:'오토크로스 √(0.81 × 1.5 × 9.81 × 10) = 10.9175 m/s = 39.30 km/h, 내구 √(0.405 × 1.5 × 9.81 × 10) = 7.7198 m/s = 27.79 km/h'},
-    {n:'열 모델 · 냉각 회로, 직렬 라디 → 펌프 → 인버터 → 모터 (흐름 8 L/min, 팬 0.3 m³/s, 정상 온도)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[{Cc:557.333333, nodes:[{t:'rad', C:500, q:1, UA:250, A:0.06, kd:0, fan:0.3}, {t:'pump', C:500, q:1}, {t:'inv', part:'i', C:500, q:1}, {t:'mot', part:'m', C:500, q:1}]}], air:[]}}, expect:{c_ti:32.437381, c_tm:31.463572, c_tw:27.156143, c_tb:25.407582},
+    {n:'열 모델 · 냉각 회로, 직렬 라디 → 펌프 → 인버터 → 모터 (흐름 8 L/min, 팬 0.3 m³/s, 정상 온도)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[{Cc:557.333333, nodes:[{t:'rad', C:500, q:1, UA:250, A:0.06, kd:0, fan:0.3}, {t:'pump', C:500, q:1}, {t:'inv', part:'i', C:500, q:1}, {t:'mot', part:'m', C:500, q:1}]}], air:[]}}, expect:{c_ti:32.437381, c_tm:31.463572, c_tw:27.156143, c_tb:25.407582},
      src:'도구 9 정상 식: 라디 a = ε C_min ÷ C_c = 0.421392 × 361.8 ÷ 557.33 = 0.273552 (팬만 · 코어 풍속 5 m/s → UA 250). 점 온도 1차 연립: 라디 26.5663, 펌프 26.5663, 인버터 점 = + 113.353 ÷ 557.33 = 26.7697 → 인버터 = + 113.353 × 0.05 = 32.4374, 모터 점 = + 215.371 ÷ 557.33 = 27.1561 (가장 뜨거움) → 모터 = + 215.371 × 0.02 = 31.4636. 축전지는 회로에 없음 → 외기 hA 20: 25 + 8.1516 ÷ 20 = 25.4076'},
-    {n:'열 모델 · 냉각 회로, 병렬 (펌프 뒤 인버터 · 모터로 반씩 갈라져 라디 앞에서 합쳐짐)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[{Cc:557.333333, nodes:[{t:'rad', C:500, q:1, UA:250, A:0.06, kd:0, fan:0.3, ins:[[2, 0.5], [3, 0.5]]}, {t:'pump', C:500, q:1, ins:[[0, 1]]}, {t:'inv', part:'i', C:500, q:0.5, ins:[[1, 1]]}, {t:'mot', part:'m', C:500, q:0.5, ins:[[1, 1]]}]}], air:[]}}, expect:{c_ti:32.640766, c_tm:31.646619, c_tw:27.33919, c_tb:25.407582},
+    {n:'열 모델 · 냉각 회로, 병렬 (펌프 뒤 인버터 · 모터로 반씩 갈라져 라디 앞에서 합쳐짐)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[{Cc:557.333333, nodes:[{t:'rad', C:500, q:1, UA:250, A:0.06, kd:0, fan:0.3, ins:[[2, 0.5], [3, 0.5]]}, {t:'pump', C:500, q:1, ins:[[0, 1]]}, {t:'inv', part:'i', C:500, q:0.5, ins:[[1, 1]]}, {t:'mot', part:'m', C:500, q:0.5, ins:[[1, 1]]}]}], air:[]}}, expect:{c_ti:32.640766, c_tm:31.646619, c_tw:27.33919, c_tb:25.407582},
      src:'갈래마다 흐름 0.5 C_c = 278.67 W/K: 인버터 점 = 26.5663 + 113.353 ÷ 278.67 = 26.9731 → 32.6408, 모터 점 = 26.5663 + 215.371 ÷ 278.67 = 27.3392 → 31.6466, 라디 입구 = 두 갈래 평균, 라디 = 입구 − a (입구 − 25) = 26.5663'},
-    {n:'열 모델 · 냉각 회로, 병렬 (갈래 유량 = 호스: 인버터 갈래 2.0 m · 모터 갈래 1.0 m, 안지름 10 mm)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[{Cc:557.333333, nodes:[{t:'rad', C:500, q:1, UA:250, A:0.06, kd:0, fan:0.3, ins:[[2, 0.5, 3], [3, 0.5, 4]]}, {t:'pump', C:500, q:1, ins:[[0, 1, 0]]}, {t:'inv', part:'i', C:500, q:0.5, ins:[[1, 0.5, 1]]}, {t:'mot', part:'m', C:500, q:0.5, ins:[[1, 0.5, 2]]}], hyd:{Vt:8, rho:1000, mu:0.001, links:[{a:0, b:1, d:10, len:0.5}, {a:1, b:2, d:10, len:1.5}, {a:1, b:3, d:10, len:0.5}, {a:2, b:0, d:10, len:0.5}, {a:3, b:0, d:10, len:0.5}], blk:[{}, {}, {}, {}], src:[{k:1, flow:8}]}}], air:[]}}, expect:{c_ti:32.739585, c_tm:31.520222, c_tw:27.212802, c_tb:25.407582},
+    {n:'열 모델 · 냉각 회로, 병렬 (갈래 유량 = 호스: 인버터 갈래 2.0 m · 모터 갈래 1.0 m, 안지름 10 mm)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[{Cc:557.333333, nodes:[{t:'rad', C:500, q:1, UA:250, A:0.06, kd:0, fan:0.3, ins:[[2, 0.5, 3], [3, 0.5, 4]]}, {t:'pump', C:500, q:1, ins:[[0, 1, 0]]}, {t:'inv', part:'i', C:500, q:0.5, ins:[[1, 0.5, 1]]}, {t:'mot', part:'m', C:500, q:0.5, ins:[[1, 0.5, 2]]}], hyd:{Vt:8, rho:1000, mu:0.001, links:[{a:0, b:1, d:10, len:0.5}, {a:1, b:2, d:10, len:1.5}, {a:1, b:3, d:10, len:0.5}, {a:2, b:0, d:10, len:0.5}, {a:3, b:0, d:10, len:0.5}], blk:[{}, {}, {}, {}], src:[{k:1, flow:8}]}}], air:[]}}, expect:{c_ti:32.739585, c_tm:31.520222, c_tw:27.212802, c_tb:25.407582},
      src:'Blasius 난류 → 모터 몫 = 2^(1/1.75) ÷ (1 + 2^(1/1.75)) = 0.597746, 인버터 0.402254. 라디 출구 26.5663 (반씩과 같음): 인버터 점 = + 113.353 ÷ (0.402254 × 557.33) = 27.0720 → 32.7396, 모터 점 = + 215.371 ÷ (0.597746 × 557.33) = 27.2128 (가장 뜨거움) → 31.5202'},
-    {n:'열 모델 · 냉각 회로, 공랭 덕트 갈라짐 (팬 0.1 m³/s → 인버터 40 % · 모터 60 %, 수랭 없음)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_c:2000, ua0:200, ua60:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[], air:[{A:0, kd:0, fan:0.1, nodes:[{part:'i', q:0.4, ins:[[-1, 0.4]]}, {part:'m', q:0.6, ins:[[-1, 0.6]]}]}]}, cw_on:0, m_ha0:30, m_ha60:30, i_ha0:15, i_ha60:15}, expect:{c_ti:33.792542, c_tm:33.769763, c_tb:25.407582},
+    {n:'열 모델 · 냉각 회로, 공랭 덕트 갈라짐 (팬 0.1 m³/s → 인버터 40 % · 모터 60 %, 수랭 없음)', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:1, cw_on:1, in_on:1, bt_on:1, m_cool:1, i_cool:1, b_cool:1, i_c:500, i_r:0.05, b_r:0.05, b_ha60:20, cw_mode:1, cw9:{water:[], air:[{A:0, kd:0, fan:0.1, nodes:[{part:'i', q:0.4, ins:[[-1, 0.4]]}, {part:'m', q:0.6, ins:[[-1, 0.6]]}]}]}, cw_on:0, m_ha0:30, m_ha60:30, i_ha0:15, i_ha60:15}, expect:{c_ti:33.792542, c_tm:33.769763, c_tb:25.407582},
      src:'C_a = 1.2 × 1005 × 0.1 = 120.6 W/K, 갈래 C_q = 48.24 · 72.36 W/K, G = C_q (1 − e^(−hA ÷ C_q)): 인버터 = 25 + 113.353 ÷ G(48.24, 15) = 33.7925, 모터 = 25 + 215.371 ÷ G(72.36, 30) = 33.7698. 축전지는 외기 hA 20 → 25.4076'},
     {n:'셀 표 · OCV 가 온도에 따라 (SOC 와 상관없이 3.5 + 0.004 T V) → 축전지 정상 온도 고정점', I:{i_init:25, m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, t_amb:25, b_c:500, b_ha:20, b_ha60:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0, th_on:0, cw_on:0, in_on:0, bt_on:1, b_cool:0, bOcv:{n:[0, 50], t:[0, 100], e:[[3.5, 3.7], [3.5, 3.7]]}}, expect:{c_tb:25.407211},
      src:'단자 2267.1 W, 팩 OCV = 70 × (3.5 + 0.004 T_b), R 0.1 Ω → I = (V − √(V² − 4 R P)) ÷ 2R, T_b = 25 + I² R ÷ 20 고정점 → 25.40721 °C (V = 252.114 V)'},
@@ -12877,7 +12900,8 @@ function coolGauss(M, N) { const a = M.map(r => r.slice());
 //   공랭: 예전 꼴 (parts = 직렬 순서) 이면 점 꼴로 — 점 = {part, q, ins: [[앞 점, 몫]]} (앞 점 −1 = 입구 외기), 흐름 순서대로
 function coolPrep(NET) {
   if (!NET) return NET;
-  (NET.water || []).forEach(C => { if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+  (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
+    if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -12897,6 +12921,31 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
     out[k] = Cq > 0 ? Tin + G * (T[p] - Tin) / Cq : Tin; });
   return out;
 }
+// ---------- 라디에이터 (도구 9 · 2P 같이)
+//   공기 = 주행풍 A k_d v + 팬 (팬 켜는 온도 fon 이 있으면: 라디로 들어오는 냉각수가 fon 이상이면 켬, fon − COOL_FH 아래면 끔. 0 = 늘 켬)
+//   UA: 표 (nd.rq = {n: 냉각수 유량 L/min, t: 코어 풍속 m/s, e: 방열량 kW}, nd.itd = 그 표의 입구 온도차 K) 가 있으면
+//     표의 점마다 ε = Q ÷ (C_min × ITD) → 교차류 ε-NTU 를 거꾸로 풀어 UA = NTU × C_min (coolPrep 에서 한 번) → 코어 풍속 · 냉각수 유량으로 이중선형 (범위 밖은 끝값),
+//     없으면 UA = UA₅ (V_f ÷ 5)^0.6 (코어 풍속 5 m/s 기준)
+//   라디 금속 열용량 nd.Cm [kJ/K] 은 그 점 열용량에 더함 (정상 온도는 그대로, 오르내리는 빠르기만)
+const COOL_RA = 1.2, COOL_CA = 1005, COOL_FH = 3;   // 공기 밀도 [kg/m³] · 비열 [J/kg·K] · 팬 끄는 온도 차 [K]
+const coolEps = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));   // 교차류 (양쪽 안 섞임) 근사
+function coolNTU(eps, Cr) { if (!(eps > 0)) return 0; let lo = 0, hi = 1; while (coolEps(hi, Cr) < eps && hi < 1e4) hi *= 2; if (coolEps(hi, Cr) < eps) return Infinity;
+  for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (coolEps(m, Cr) < eps) lo = m; else hi = m; } return (lo + hi) / 2; }
+function coolUAtab(nd, rcp) { const M = nd.rq, itd = nd.itd > 0 ? nd.itd : 60;
+  return M.t.map(vf => M.n.map((fl, j) => { const Ca = COOL_RA * COOL_CA * vf * nd.A, Cc = fl / 60000 * rcp, Cm = Math.min(Ca, Cc), Cx = Math.max(Ca, Cc);
+    const row = M.t.indexOf(vf), Q = M.e[row][j] * 1000; if (!(Cm > 0) || !(Q > 0)) return 0;
+    const NTU = coolNTU(Math.min(Q / (Cm * itd), 0.999 * coolEps(1e3, Cm / Cx)), Cm / Cx); return isFinite(NTU) ? NTU * Cm : 0; })); }
+const coolBil = (ys, xs, Z, y, x) => { const f = (a, v) => { if (v <= a[0]) return [0, 0, 0]; const k = a.length - 1; if (v >= a[k]) return [k, k, 0]; let i = 0; while (a[i + 1] < v) i++; return [i, i + 1, (v - a[i]) / (a[i + 1] - a[i])]; };
+  const [i0, i1, w] = f(ys, y), [j0, j1, u] = f(xs, x); return (Z[i0][j0] * (1 - u) + Z[i0][j1] * u) * (1 - w) + (Z[i1][j0] * (1 - u) + Z[i1][j1] * u) * w; };
+function coolUA(nd, Vf, Lmin) { if (nd.uaT) return Vf > 0 ? coolBil(nd.rq.t, nd.rq.n, nd.uaT, Vf, Lmin) : 0; return Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0; }
+// 라디 점이 섞인 냉각수 열 중 외기로 버리는 몫 a = ε C_min ÷ F  (F = 이 라디 흐름 q C_c), fan = 팬이 도는지
+function coolRadA(C, nd, v, fan) {
+  const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + (fan ? nd.fan : 0)), Ca = COOL_RA * COOL_CA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
+  const UA = coolUA(nd, Vf, F / (C.rcp || 4.18e6) * 60000), Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? coolEps(UA / Cm, Cm / Cx) : 0;
+  return F > 0 ? e * Cm / F : 0; }
+const coolFanOn0 = nd => !(nd.fon > 0);                                                   // 출발: 켜는 온도가 있으면 꺼진 채
+const coolFanNext = (nd, on, Tin) => !(nd.fon > 0) ? true : on ? Tin >= nd.fon - COOL_FH : Tin >= nd.fon;   // 히스테리시스
+const coolC = nd => Math.max(1, (nd.C || 1) + (nd.Cm > 0 ? nd.Cm * 1000 : 0));          // 점 열용량 [J/K] (금속 포함)
 
 // ================================================================
 // 도구 2P 랩타임 시뮬레이터 — 계산 코드
@@ -12956,6 +13005,21 @@ function bil(M, n, T) {
   return (e[i0][j0] * (1 - u) + e[i0][j1] * u) * (1 - w) + (e[i1][j0] * (1 - u) + e[i1][j1] * u) * w;
 }
 
+
+// ================================================================ 부품별 독립 냉각 (cw_mode 0): 수랭 부품마다 [라디 → 펌프 → 부품] 회로 (냉각 회로와 같은 꼴, 2026-11-10 통일)
+//   부품 p (모터 cw_ · 인버터 i_w · 축전지 b_w): 냉각수 양 v [L] (회로 전체, 세 점에 똑같이), 펌프 유량 q [L/min], 라디 코어 앞면 면적 ra [m²] · 주행풍 통과 비율 kd ·
+//   팬 유량 fan [m³/s] · 팬 켜는 온도 fon [°C, 0 = 늘 켬] · UA (코어 풍속 5 m/s) ua [W/K] 또는 라디 표 (I.rq{M,I,B} = {n 유량, t 풍속, e kW}, 입구 온도차 itd [K]) · 라디 금속 열용량 cm [kJ/K]
+//   수랭 여부: 모터 m_cool (기본 수랭) · 인버터 i_cool (기본 수랭) · 축전지 b_cool (기본 공랭). 냉각수 밀도 1000 kg/m³ · 비열 4180 J/kg·K
+const T2CWP = { m: ['cw_', 'rqM'], i: ['i_w', 'rqI'], b: ['b_w', 'rqB'] };
+function coolIndep(I) { const rcp = 1000 * 4180, water = [];
+  const on = { m: I.m_cool !== 0, i: I.i_cool !== 0, b: I.b_cool === 1 };
+  ['m', 'i', 'b'].forEach(p => { if (!on[p]) return; const [k, tk] = T2CWP[p], g = s => I[k + s];
+    const V = Math.max(1e-3, g('v') > 0 ? g('v') : 1.2), q = Math.max(1e-3, g('q') > 0 ? g('q') : 8), C = V / 1000 * rcp / 3, rq = I[tk] && Array.isArray(I[tk].t) ? I[tk] : null;
+    water.push({ Cc: q / 60000 * rcp, rcp, nodes: [
+      { t: 'rad', C, q: 1, ins: [[2, 1]], UA: Math.max(0, g('ua') || 0), A: Math.max(1e-6, g('ra') || 0.06), kd: Math.max(0, g('kd') || 0), fan: Math.max(0, g('fan') || 0), fon: g('fon') || 0, Cm: Math.max(0, g('cm') || 0), ...(rq ? { rq, itd: g('itd') } : {}) },
+      { t: 'pump', C, q: 1, ins: [[0, 1]] },
+      { t: 'part', part: p, C, q: 1, ins: [[1, 1]] }] }); });
+  return { water, air: [] }; }
 
 // ================================================================ 차량 (감속비 gr, 출력 상한 배율 kP)
 function car(I, gr, kP, lam) {
@@ -13031,12 +13095,13 @@ function car(I, gr, kP, lam) {
   // 열 모델 켜기: 모터 열 · 인버터 온도 · 축전지 온도 · 냉각수 온도.
   // 수랭 방식 cw_mode: 0 = 부품별 독립 회로 (수랭 부품마다 자기 냉각수 · 라디, 냉각 방식은 m_cool · i_cool · b_cool),
   //                    1 = 냉각 회로 (I.cw9 = 도구 2P 자체 배치, 도구 9 와 같은 형식: 수랭 회로 여러 개 · 직렬 · 병렬 갈라짐 · 합침 · 라디 여러 개 · 공랭 덕트. 부품 위치도 도구 9 가 정함)
-  const NET = I.cw_mode === 1 && I.cw9 && Array.isArray(I.cw9.water) ? coolPrep(I.cw9) : null;   // 갈래 몫 (호스 압력 강하) · 공랭 덕트 점 꼴로
-  const where = {};   // 냉각 회로: 부품 → {w 회로, k 점} · {a 덕트, j 순서}, 없으면 외기
-  if (NET) { NET.water.forEach((Cc, w) => Cc.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
-             (NET.air || []).forEach((D, a) => D.nodes.forEach((n, j) => { if (!where[n.part]) where[n.part] = { a, j }; })); }
+  //   부품별 독립 (cw_mode 0) 도 같은 점 모델: 수랭 부품마다 [라디 → 펌프 → 부품] 회로를 만듦 (coolIndep, 2026-11-10 통일)
+  const NET = coolPrep(I.cw_mode === 1 && I.cw9 && Array.isArray(I.cw9.water) ? I.cw9 : coolIndep(I));   // 갈래 몫 (호스 압력 강하) · 라디 표 → UA · 공랭 덕트 점 꼴로
+  const where = {};   // 부품 → {w 회로, k 점} · {a 덕트, j 순서}, 없으면 외기
+  NET.water.forEach((Cc, w) => Cc.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
+  (NET.air || []).forEach((D, a) => D.nodes.forEach((n, j) => { if (!where[n.part]) where[n.part] = { a, j }; }));
   const inW = p => !!(where[p] && where[p].w != null);
-  const mW = NET ? inW('m') : I.m_cool !== 0, iW = NET ? inW('i') : I.i_cool !== 0, bW = NET ? inW('b') : I.b_cool === 1;
+  const mW = inW('m'), iW = inW('i'), bW = inW('b');
   const thOn = I.th_on !== 0, inOn = I.in_on === 1, btOn = I.bt_on === 1;
   const cwOn = I.cw_on === 1 && ((thOn && mW) || iW || (btOn && bW));   // 냉각수 온도: 켰고 수랭으로 열을 넣는 부품이 있을 때만 (아니면 고정값)
   // ---------- 디레이팅 (회전수마다 피크 ~ 연속 사이를 같은 비율 r 로)
@@ -13060,7 +13125,7 @@ function car(I, gr, kP, lam) {
   //   모터    : C_m dT_m/dt = 모터 손실 − 냉각.  수랭 (T_m − T_w) ÷ R_m,  공랭 hA_m(v) (T_m − T_외기).  끄면 출발 온도 그대로 · 디레이팅 없음
   //   인버터  : C_i dT_i/dt = 인버터 손실 − 냉각.  수랭 (T_i − T_w) ÷ R_i,  공랭 hA_i(v) (T_i − T_외기).  끄면 온도는 안 셈 (수랭이면 손실을 냉각수에 바로)
   //   축전지  : C_b dT_b/dt = I² R(T_b) − 냉각.  공랭 hA_b(v) (T_b − T_외기),  수랭 (T_b − T_w) ÷ R_b.  R(T) = R_25 (1 + α (25 − T)) (0.3 R_25 아래로는 안 감)
-  //   냉각수 · 부품별 독립 (cw_mode 0): 수랭 부품 p 마다 C_wp dT_wp/dt = 부품에서 들어오는 열 − UA_p(v) (T_wp − T_외기)  (모터 cw_c · ua0 · ua60, 인버터 i_wc · i_ua0 · i_ua60, 축전지 b_wc · b_ua0 · b_ua60)
+  //   냉각수 · 부품별 독립 (cw_mode 0): 수랭 부품마다 자기 [라디 → 펌프 → 부품] 회로 (coolIndep) 를 아래 냉각 회로와 같은 식으로
   //   냉각수 · 냉각 회로 (cw_mode 1): 도구 9 와 같은 점 모델 — 점 k (잘 섞인 덩어리, 열용량 C_k): C_k dT_k/dt = q_k C_c (T_섞임 − T_k) + (T_부품 − T_k) ÷ R,
   //     라디 점: C_k dT_k/dt = q_k C_c (T_섞임 − T_k) − ε C_min (T_섞임 − T_외기) (교차류 ε-NTU, 공기 = 주행풍 A k_d v + 팬), 공랭 덕트는 흐름 순서대로 공기가 데워짐 (갈래 · 합침, coolAir).
 //     갈래 유량 몫은 호스 안지름 · 길이와 블럭 압력 강하로 (coolHydSolve).
@@ -13075,39 +13140,20 @@ function car(I, gr, kP, lam) {
   const rS   = (Tb, soc) => bR ? Math.max(0.05, bil(bR, Tok(Tb), cl01(soc == null ? 1 : soc) * 100) / Rref) : btOn ? Math.max(0.3, 1 + alp * (25 - Tb)) : 1;  // 내부저항 배율 (셀 표가 있으면 표, 없으면 온도 계수)
   const toward = (T, Teq, k, dt) => Teq + (T - Teq) * Math.exp(-k * dt);   // dT/dt = k (Teq − T) 의 해
   const air = (T, Q, h, C, dt) => h > 0 ? toward(T, Tamb + Q / h, h / C, dt) : T + Q * dt / C;          // 외기로 식는 노드
-  // 부품별 독립 회로: [열용량, UA 정지, UA 60 km/h] (모터 · 인버터 · 축전지)
-  const CWI = { m: [Math.max(1, I.cw_c || 1), Math.max(0, I.ua0 || 0), Math.max(0, I.ua60 || 0)],
-                i: [Math.max(1, I.i_wc || 1), Math.max(0, I.i_ua0 || 0), Math.max(0, I.i_ua60 || 0)],
-                b: [Math.max(1, I.b_wc || 1), Math.max(0, I.b_ua0 || 0), Math.max(0, I.b_ua60 || 0)] };
   const PJ = ['m', 'i', 'b'], PR = { m: thR, i: Ri, b: Rbt }, PC = { m: thC, i: Ci, b: Cb }, PON = { m: thOn, i: inOn, b: btOn };
   const PH = { m: v => hV(I.m_ha0, I.m_ha60, v), i: v => hV(I.i_ha0, I.i_ha60, v), b: v => hV(I.b_ha, I.b_ha60, v) };
-  const RHOA = 1.2, CPA = 1005;
-  const epsX = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));
-  const radA = (Cc, nd, v) => { const F = (nd.q || 1) * Cc.Cc, qa = Math.max(0, nd.A * nd.kd * v + nd.fan), Ca = RHOA * CPA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
-    const UA = Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0, Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? epsX(UA / Cm, Cm / Cx) : 0;
-    return F > 0 ? e * Cm / F : 0; };
+  const RHOA = COOL_RA, CPA = COOL_CA;
   const mixOf = (nd, c, k, N) => { const ins = nd.ins || [[(k - 1 + N) % N, 1]]; let fs = 0, ft = 0; ins.forEach(([j, f]) => { fs += f; ft += f * c[j]; }); return fs > 0 ? ft / fs : c[k]; };
-  const X0 = NET ? NET.water.map(Cc => Cc.nodes.map(() => I.th_cool)) : [I.th_cool, I.th_cool, I.th_cool];
+  const X0 = NET.water.map(Cc => Cc.nodes.map(() => I.th_cool)); X0.fan = NET.water.map(Cc => Cc.nodes.map(coolFanOn0));   // 냉각수 점 온도 · 라디 팬 상태
   function thStep(st, Lm, Li, Ib, v, dt, soc) {
     const Qb = Ib * Ib * Rb * rS(st.b, soc), L = { m: Lm, i: Li, b: Qb }, x = st.x || X0;
-    if (!NET) {   // 부품별 독립 회로
-      const Tw = p => cwOn ? x[PJ.indexOf(p)] : thCo, nx = x.slice();
-      const m = !thOn ? st.m : mW ? toward(st.m, Tw('m') + Lm * thR, 1 / (thR * thC), dt) : air(st.m, Lm, PH.m(v), thC, dt);
-      const i = !inOn ? st.i : iW ? toward(st.i, Tw('i') + Li * Ri, 1 / (Ri * Ci), dt) : air(st.i, Li, PH.i(v), Ci, dt);
-      const b = !btOn ? st.b : bW ? toward(st.b, Tw('b') + Qb * Rbt, 1 / (Rbt * Cb), dt) : air(st.b, Qb, PH.b(v), Cb, dt);
-      let w = cwOn ? -Infinity : thCo;
-      if (cwOn) PJ.forEach((p, j) => { const wat = p === 'm' ? thOn && mW : p === 'i' ? iW : btOn && bW; if (!wat) return;
-        const [Cw, u0, u60] = CWI[p], UA = Math.max(1e-6, hV(u0, u60, v)), Q = p === 'i' && !inOn ? Li : (st[p] - x[j]) / PR[p];
-        nx[j] = toward(x[j], Tamb + Q / UA, UA / Cw, dt); w = Math.max(w, nx[j]); });
-      return { m, i, w, b, x: nx };
-    }
     // 냉각 회로
     const T = { m: st.m, i: st.i, b: st.b }, c = x.map(a => a.slice()), n = Math.max(1, Math.ceil(dt / 0.25)), h = dt / n;
-    const aK = NET.water.map(Cc => Cc.nodes.map(nd => nd.t === 'rad' ? radA(Cc, nd, v) : 0));
+    const fan = (x.fan || X0.fan).map(a => a.slice()), aC = {}, aK = (w, k) => { const on = fan[w][k], key = w + ':' + k + ':' + on; return key in aC ? aC[key] : (aC[key] = coolRadA(NET.water[w], NET.water[w].nodes[k], v, on)); };
     for (let s = 0; s < n; s++) {
       if (cwOn) NET.water.forEach((Cc, w) => { const N = Cc.nodes.length;
-        for (let k = 0; k < N; k++) { const nd = Cc.nodes[k], mix = mixOf(nd, c[w], k, N), F = (nd.q || 1) * Cc.Cc, Cn = Math.max(1, nd.C || 1);
-          if (nd.t === 'rad') { c[w][k] = toward(c[w][k], mix - aK[w][k] * (mix - Tamb), F / Cn, h); continue; }
+        for (let k = 0; k < N; k++) { const nd = Cc.nodes[k], mix = mixOf(nd, c[w], k, N), F = (nd.q || 1) * Cc.Cc, Cn = coolC(nd);
+          if (nd.t === 'rad') { fan[w][k] = coolFanNext(nd, fan[w][k], mix); c[w][k] = toward(c[w][k], mix - aK(w, k) * (mix - Tamb), F / Cn, h); continue; }
           const p = nd.part;
           if (p && PON[p]) { const G = 1 / PR[p]; c[w][k] = toward(c[w][k], (F * mix + G * T[p]) / (F + G), (F + G) / Cn, h); }
           else if (p === 'i' && F > 0) c[w][k] = toward(c[w][k], mix + Li / F, F / Cn, h);   // 인버터 온도 끔: 손실을 냉각수에 바로
@@ -13116,7 +13162,7 @@ function car(I, gr, kP, lam) {
         if (wh && wh.w != null) T[p] = toward(T[p], (cwOn ? c[wh.w][wh.k] : thCo) + L[p] * PR[p], 1 / (PR[p] * PC[p]), h);
         else if (!wh) T[p] = air(T[p], L[p], PH[p](v), PC[p], h); }
       (NET.air || []).forEach(D => coolAir(D, RHOA * CPA * Math.max(0, D.A * D.kd * v + D.fan), Tamb, T, L, p => PH[p](v), false, h, PC, PON, toward)); }   // 공랭 덕트 (갈래 · 합침, 앞 부품이 데운 공기)
-    const w = cwOn && c.length ? Math.max(...c.map(a => Math.max(...a))) : thCo;
+    const w = cwOn && c.length ? Math.max(...c.map(a => Math.max(...a))) : thCo; c.fan = fan;
     return { m: T.m, i: T.i, w, b: T.b, x: c };
   }
   const tmNext = (Tm, Ploss, dt) => thStep({ m: Tm, i: Tm, w: thCo, b: 25, x: X0 }, Ploss, 0, 0, 0, dt).m;   // 예전 이름 (모터만)
@@ -14849,7 +14895,7 @@ function calc(I) {
 /* ============================================================ 대시보드 '파트별 > 차량 목표 · 파워트레인'
    대시보드 값으로 도구 2P를 돌린 결과 (읽기 전용, 내 감속비 = 대시보드 감속비) */
 const T2P = { R:null, key:'', busy:false, w:null };
-const T2ONLY = ['p_vmax', 'p_vnom', 'p_vmin', 'p_ah', 'v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'c_pct', 'kt', 'i_pk', 'i_ct', 'i_cpct', 'i_init', 'tr_ks', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'oh_f', 'oh_r', 'rl_m', 'rl_b', 'e_lim', 'md', 'th_on', 'cw_on', 'in_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'inv_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_ha60', 'b_r', 'bt_on', 't_amb', 'cw_c', 'ua0', 'ua60', 'i_wc', 'i_ua0', 'i_ua60', 'b_wc', 'b_ua0', 'b_ua60', 'cw_mode', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
+const T2ONLY = ['p_vmax', 'p_vnom', 'p_vmin', 'p_ah', 'v_ref', 'ke_ratio', 'eta_mot', 'eta_inv', 'c_vmax', 'c_vmin', 'c_vnom', 'c_ah', 'c_pct', 'kt', 'i_pk', 'i_ct', 'i_cpct', 'i_init', 'tr_ks', 'th_c', 'th_r', 'th_cool', 'th_init', 'rl_on', 'w_car', 'oh_f', 'oh_r', 'rl_m', 'rl_b', 'e_lim', 'md', 'th_on', 'cw_on', 'in_on', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'inv_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_ha60', 'b_r', 'bt_on', 't_amb', 'cw_v', 'cw_q', 'cw_ra', 'cw_kd', 'cw_fan', 'cw_fon', 'cw_ua', 'cw_itd', 'cw_cm', 'i_wv', 'i_wq', 'i_wra', 'i_wkd', 'i_wfan', 'i_wfon', 'i_wua', 'i_witd', 'i_wcm', 'b_wv', 'b_wq', 'b_wra', 'b_wkd', 'b_wfan', 'b_wfon', 'b_wua', 'b_witd', 'b_wcm', 'cw_mode', 'b_c', 'b_ha', 'b_t0', 'b_alpha', 'h_rcf', 'h_rcr', 'k_roll'];   // 대시보드에 없는 입력: 도구에 저장된 값을 씀
 const T2SET = ['md', 'th_on', 'in_on', 'bt_on', 'cw_on', 'cw_mode', 'm_cool', 'i_cool', 'b_cool', 'eff_mg', 'rl_on', 'e_lim', 'drv', 'dr_real', 'rg_on', 'dl_on', 'fz0_m', 'ict_m'];   // 이 도구에서 고른 계산 설정 (대시보드 파트 결과도 같은 설정으로)
 const T2GOAL = ['t_acc', 't_skid', 't_ax', 't_end'];                                                    // 목표 기록 (대시보드 '차량 목표')
 function t2PartInputs(){ const I = {}; WB_TOOLS['2'].inputs.forEach(d => { const db = wbDash(d.dk); I[d.k] = db ? db.v : d.v; });
@@ -15015,7 +15061,8 @@ function coolGauss(M, N) { const a = M.map(r => r.slice());
 //   공랭: 예전 꼴 (parts = 직렬 순서) 이면 점 꼴로 — 점 = {part, q, ins: [[앞 점, 몫]]} (앞 점 −1 = 입구 외기), 흐름 순서대로
 function coolPrep(NET) {
   if (!NET) return NET;
-  (NET.water || []).forEach(C => { if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+  (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
+    if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -15035,6 +15082,31 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
     out[k] = Cq > 0 ? Tin + G * (T[p] - Tin) / Cq : Tin; });
   return out;
 }
+// ---------- 라디에이터 (도구 9 · 2P 같이)
+//   공기 = 주행풍 A k_d v + 팬 (팬 켜는 온도 fon 이 있으면: 라디로 들어오는 냉각수가 fon 이상이면 켬, fon − COOL_FH 아래면 끔. 0 = 늘 켬)
+//   UA: 표 (nd.rq = {n: 냉각수 유량 L/min, t: 코어 풍속 m/s, e: 방열량 kW}, nd.itd = 그 표의 입구 온도차 K) 가 있으면
+//     표의 점마다 ε = Q ÷ (C_min × ITD) → 교차류 ε-NTU 를 거꾸로 풀어 UA = NTU × C_min (coolPrep 에서 한 번) → 코어 풍속 · 냉각수 유량으로 이중선형 (범위 밖은 끝값),
+//     없으면 UA = UA₅ (V_f ÷ 5)^0.6 (코어 풍속 5 m/s 기준)
+//   라디 금속 열용량 nd.Cm [kJ/K] 은 그 점 열용량에 더함 (정상 온도는 그대로, 오르내리는 빠르기만)
+const COOL_RA = 1.2, COOL_CA = 1005, COOL_FH = 3;   // 공기 밀도 [kg/m³] · 비열 [J/kg·K] · 팬 끄는 온도 차 [K]
+const coolEps = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));   // 교차류 (양쪽 안 섞임) 근사
+function coolNTU(eps, Cr) { if (!(eps > 0)) return 0; let lo = 0, hi = 1; while (coolEps(hi, Cr) < eps && hi < 1e4) hi *= 2; if (coolEps(hi, Cr) < eps) return Infinity;
+  for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (coolEps(m, Cr) < eps) lo = m; else hi = m; } return (lo + hi) / 2; }
+function coolUAtab(nd, rcp) { const M = nd.rq, itd = nd.itd > 0 ? nd.itd : 60;
+  return M.t.map(vf => M.n.map((fl, j) => { const Ca = COOL_RA * COOL_CA * vf * nd.A, Cc = fl / 60000 * rcp, Cm = Math.min(Ca, Cc), Cx = Math.max(Ca, Cc);
+    const row = M.t.indexOf(vf), Q = M.e[row][j] * 1000; if (!(Cm > 0) || !(Q > 0)) return 0;
+    const NTU = coolNTU(Math.min(Q / (Cm * itd), 0.999 * coolEps(1e3, Cm / Cx)), Cm / Cx); return isFinite(NTU) ? NTU * Cm : 0; })); }
+const coolBil = (ys, xs, Z, y, x) => { const f = (a, v) => { if (v <= a[0]) return [0, 0, 0]; const k = a.length - 1; if (v >= a[k]) return [k, k, 0]; let i = 0; while (a[i + 1] < v) i++; return [i, i + 1, (v - a[i]) / (a[i + 1] - a[i])]; };
+  const [i0, i1, w] = f(ys, y), [j0, j1, u] = f(xs, x); return (Z[i0][j0] * (1 - u) + Z[i0][j1] * u) * (1 - w) + (Z[i1][j0] * (1 - u) + Z[i1][j1] * u) * w; };
+function coolUA(nd, Vf, Lmin) { if (nd.uaT) return Vf > 0 ? coolBil(nd.rq.t, nd.rq.n, nd.uaT, Vf, Lmin) : 0; return Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0; }
+// 라디 점이 섞인 냉각수 열 중 외기로 버리는 몫 a = ε C_min ÷ F  (F = 이 라디 흐름 q C_c), fan = 팬이 도는지
+function coolRadA(C, nd, v, fan) {
+  const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + (fan ? nd.fan : 0)), Ca = COOL_RA * COOL_CA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
+  const UA = coolUA(nd, Vf, F / (C.rcp || 4.18e6) * 60000), Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? coolEps(UA / Cm, Cm / Cx) : 0;
+  return F > 0 ? e * Cm / F : 0; }
+const coolFanOn0 = nd => !(nd.fon > 0);                                                   // 출발: 켜는 온도가 있으면 꺼진 채
+const coolFanNext = (nd, on, Tin) => !(nd.fon > 0) ? true : on ? Tin >= nd.fon - COOL_FH : Tin >= nd.fon;   // 히스테리시스
+const coolC = nd => Math.max(1, (nd.C || 1) + (nd.Cm > 0 ? nd.Cm * 1000 : 0));          // 점 열용량 [J/K] (금속 포함)
 
 // ================================================================
 // 도구 2P 랩타임 시뮬레이터 — 계산 코드
@@ -15094,6 +15166,21 @@ function bil(M, n, T) {
   return (e[i0][j0] * (1 - u) + e[i0][j1] * u) * (1 - w) + (e[i1][j0] * (1 - u) + e[i1][j1] * u) * w;
 }
 
+
+// ================================================================ 부품별 독립 냉각 (cw_mode 0): 수랭 부품마다 [라디 → 펌프 → 부품] 회로 (냉각 회로와 같은 꼴, 2026-11-10 통일)
+//   부품 p (모터 cw_ · 인버터 i_w · 축전지 b_w): 냉각수 양 v [L] (회로 전체, 세 점에 똑같이), 펌프 유량 q [L/min], 라디 코어 앞면 면적 ra [m²] · 주행풍 통과 비율 kd ·
+//   팬 유량 fan [m³/s] · 팬 켜는 온도 fon [°C, 0 = 늘 켬] · UA (코어 풍속 5 m/s) ua [W/K] 또는 라디 표 (I.rq{M,I,B} = {n 유량, t 풍속, e kW}, 입구 온도차 itd [K]) · 라디 금속 열용량 cm [kJ/K]
+//   수랭 여부: 모터 m_cool (기본 수랭) · 인버터 i_cool (기본 수랭) · 축전지 b_cool (기본 공랭). 냉각수 밀도 1000 kg/m³ · 비열 4180 J/kg·K
+const T2CWP = { m: ['cw_', 'rqM'], i: ['i_w', 'rqI'], b: ['b_w', 'rqB'] };
+function coolIndep(I) { const rcp = 1000 * 4180, water = [];
+  const on = { m: I.m_cool !== 0, i: I.i_cool !== 0, b: I.b_cool === 1 };
+  ['m', 'i', 'b'].forEach(p => { if (!on[p]) return; const [k, tk] = T2CWP[p], g = s => I[k + s];
+    const V = Math.max(1e-3, g('v') > 0 ? g('v') : 1.2), q = Math.max(1e-3, g('q') > 0 ? g('q') : 8), C = V / 1000 * rcp / 3, rq = I[tk] && Array.isArray(I[tk].t) ? I[tk] : null;
+    water.push({ Cc: q / 60000 * rcp, rcp, nodes: [
+      { t: 'rad', C, q: 1, ins: [[2, 1]], UA: Math.max(0, g('ua') || 0), A: Math.max(1e-6, g('ra') || 0.06), kd: Math.max(0, g('kd') || 0), fan: Math.max(0, g('fan') || 0), fon: g('fon') || 0, Cm: Math.max(0, g('cm') || 0), ...(rq ? { rq, itd: g('itd') } : {}) },
+      { t: 'pump', C, q: 1, ins: [[0, 1]] },
+      { t: 'part', part: p, C, q: 1, ins: [[1, 1]] }] }); });
+  return { water, air: [] }; }
 
 // ================================================================ 차량 (감속비 gr, 출력 상한 배율 kP)
 function car(I, gr, kP, lam) {
@@ -15169,12 +15256,13 @@ function car(I, gr, kP, lam) {
   // 열 모델 켜기: 모터 열 · 인버터 온도 · 축전지 온도 · 냉각수 온도.
   // 수랭 방식 cw_mode: 0 = 부품별 독립 회로 (수랭 부품마다 자기 냉각수 · 라디, 냉각 방식은 m_cool · i_cool · b_cool),
   //                    1 = 냉각 회로 (I.cw9 = 도구 2P 자체 배치, 도구 9 와 같은 형식: 수랭 회로 여러 개 · 직렬 · 병렬 갈라짐 · 합침 · 라디 여러 개 · 공랭 덕트. 부품 위치도 도구 9 가 정함)
-  const NET = I.cw_mode === 1 && I.cw9 && Array.isArray(I.cw9.water) ? coolPrep(I.cw9) : null;   // 갈래 몫 (호스 압력 강하) · 공랭 덕트 점 꼴로
-  const where = {};   // 냉각 회로: 부품 → {w 회로, k 점} · {a 덕트, j 순서}, 없으면 외기
-  if (NET) { NET.water.forEach((Cc, w) => Cc.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
-             (NET.air || []).forEach((D, a) => D.nodes.forEach((n, j) => { if (!where[n.part]) where[n.part] = { a, j }; })); }
+  //   부품별 독립 (cw_mode 0) 도 같은 점 모델: 수랭 부품마다 [라디 → 펌프 → 부품] 회로를 만듦 (coolIndep, 2026-11-10 통일)
+  const NET = coolPrep(I.cw_mode === 1 && I.cw9 && Array.isArray(I.cw9.water) ? I.cw9 : coolIndep(I));   // 갈래 몫 (호스 압력 강하) · 라디 표 → UA · 공랭 덕트 점 꼴로
+  const where = {};   // 부품 → {w 회로, k 점} · {a 덕트, j 순서}, 없으면 외기
+  NET.water.forEach((Cc, w) => Cc.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
+  (NET.air || []).forEach((D, a) => D.nodes.forEach((n, j) => { if (!where[n.part]) where[n.part] = { a, j }; }));
   const inW = p => !!(where[p] && where[p].w != null);
-  const mW = NET ? inW('m') : I.m_cool !== 0, iW = NET ? inW('i') : I.i_cool !== 0, bW = NET ? inW('b') : I.b_cool === 1;
+  const mW = inW('m'), iW = inW('i'), bW = inW('b');
   const thOn = I.th_on !== 0, inOn = I.in_on === 1, btOn = I.bt_on === 1;
   const cwOn = I.cw_on === 1 && ((thOn && mW) || iW || (btOn && bW));   // 냉각수 온도: 켰고 수랭으로 열을 넣는 부품이 있을 때만 (아니면 고정값)
   // ---------- 디레이팅 (회전수마다 피크 ~ 연속 사이를 같은 비율 r 로)
@@ -15198,7 +15286,7 @@ function car(I, gr, kP, lam) {
   //   모터    : C_m dT_m/dt = 모터 손실 − 냉각.  수랭 (T_m − T_w) ÷ R_m,  공랭 hA_m(v) (T_m − T_외기).  끄면 출발 온도 그대로 · 디레이팅 없음
   //   인버터  : C_i dT_i/dt = 인버터 손실 − 냉각.  수랭 (T_i − T_w) ÷ R_i,  공랭 hA_i(v) (T_i − T_외기).  끄면 온도는 안 셈 (수랭이면 손실을 냉각수에 바로)
   //   축전지  : C_b dT_b/dt = I² R(T_b) − 냉각.  공랭 hA_b(v) (T_b − T_외기),  수랭 (T_b − T_w) ÷ R_b.  R(T) = R_25 (1 + α (25 − T)) (0.3 R_25 아래로는 안 감)
-  //   냉각수 · 부품별 독립 (cw_mode 0): 수랭 부품 p 마다 C_wp dT_wp/dt = 부품에서 들어오는 열 − UA_p(v) (T_wp − T_외기)  (모터 cw_c · ua0 · ua60, 인버터 i_wc · i_ua0 · i_ua60, 축전지 b_wc · b_ua0 · b_ua60)
+  //   냉각수 · 부품별 독립 (cw_mode 0): 수랭 부품마다 자기 [라디 → 펌프 → 부품] 회로 (coolIndep) 를 아래 냉각 회로와 같은 식으로
   //   냉각수 · 냉각 회로 (cw_mode 1): 도구 9 와 같은 점 모델 — 점 k (잘 섞인 덩어리, 열용량 C_k): C_k dT_k/dt = q_k C_c (T_섞임 − T_k) + (T_부품 − T_k) ÷ R,
   //     라디 점: C_k dT_k/dt = q_k C_c (T_섞임 − T_k) − ε C_min (T_섞임 − T_외기) (교차류 ε-NTU, 공기 = 주행풍 A k_d v + 팬), 공랭 덕트는 흐름 순서대로 공기가 데워짐 (갈래 · 합침, coolAir).
 //     갈래 유량 몫은 호스 안지름 · 길이와 블럭 압력 강하로 (coolHydSolve).
@@ -15213,39 +15301,20 @@ function car(I, gr, kP, lam) {
   const rS   = (Tb, soc) => bR ? Math.max(0.05, bil(bR, Tok(Tb), cl01(soc == null ? 1 : soc) * 100) / Rref) : btOn ? Math.max(0.3, 1 + alp * (25 - Tb)) : 1;  // 내부저항 배율 (셀 표가 있으면 표, 없으면 온도 계수)
   const toward = (T, Teq, k, dt) => Teq + (T - Teq) * Math.exp(-k * dt);   // dT/dt = k (Teq − T) 의 해
   const air = (T, Q, h, C, dt) => h > 0 ? toward(T, Tamb + Q / h, h / C, dt) : T + Q * dt / C;          // 외기로 식는 노드
-  // 부품별 독립 회로: [열용량, UA 정지, UA 60 km/h] (모터 · 인버터 · 축전지)
-  const CWI = { m: [Math.max(1, I.cw_c || 1), Math.max(0, I.ua0 || 0), Math.max(0, I.ua60 || 0)],
-                i: [Math.max(1, I.i_wc || 1), Math.max(0, I.i_ua0 || 0), Math.max(0, I.i_ua60 || 0)],
-                b: [Math.max(1, I.b_wc || 1), Math.max(0, I.b_ua0 || 0), Math.max(0, I.b_ua60 || 0)] };
   const PJ = ['m', 'i', 'b'], PR = { m: thR, i: Ri, b: Rbt }, PC = { m: thC, i: Ci, b: Cb }, PON = { m: thOn, i: inOn, b: btOn };
   const PH = { m: v => hV(I.m_ha0, I.m_ha60, v), i: v => hV(I.i_ha0, I.i_ha60, v), b: v => hV(I.b_ha, I.b_ha60, v) };
-  const RHOA = 1.2, CPA = 1005;
-  const epsX = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));
-  const radA = (Cc, nd, v) => { const F = (nd.q || 1) * Cc.Cc, qa = Math.max(0, nd.A * nd.kd * v + nd.fan), Ca = RHOA * CPA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
-    const UA = Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0, Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? epsX(UA / Cm, Cm / Cx) : 0;
-    return F > 0 ? e * Cm / F : 0; };
+  const RHOA = COOL_RA, CPA = COOL_CA;
   const mixOf = (nd, c, k, N) => { const ins = nd.ins || [[(k - 1 + N) % N, 1]]; let fs = 0, ft = 0; ins.forEach(([j, f]) => { fs += f; ft += f * c[j]; }); return fs > 0 ? ft / fs : c[k]; };
-  const X0 = NET ? NET.water.map(Cc => Cc.nodes.map(() => I.th_cool)) : [I.th_cool, I.th_cool, I.th_cool];
+  const X0 = NET.water.map(Cc => Cc.nodes.map(() => I.th_cool)); X0.fan = NET.water.map(Cc => Cc.nodes.map(coolFanOn0));   // 냉각수 점 온도 · 라디 팬 상태
   function thStep(st, Lm, Li, Ib, v, dt, soc) {
     const Qb = Ib * Ib * Rb * rS(st.b, soc), L = { m: Lm, i: Li, b: Qb }, x = st.x || X0;
-    if (!NET) {   // 부품별 독립 회로
-      const Tw = p => cwOn ? x[PJ.indexOf(p)] : thCo, nx = x.slice();
-      const m = !thOn ? st.m : mW ? toward(st.m, Tw('m') + Lm * thR, 1 / (thR * thC), dt) : air(st.m, Lm, PH.m(v), thC, dt);
-      const i = !inOn ? st.i : iW ? toward(st.i, Tw('i') + Li * Ri, 1 / (Ri * Ci), dt) : air(st.i, Li, PH.i(v), Ci, dt);
-      const b = !btOn ? st.b : bW ? toward(st.b, Tw('b') + Qb * Rbt, 1 / (Rbt * Cb), dt) : air(st.b, Qb, PH.b(v), Cb, dt);
-      let w = cwOn ? -Infinity : thCo;
-      if (cwOn) PJ.forEach((p, j) => { const wat = p === 'm' ? thOn && mW : p === 'i' ? iW : btOn && bW; if (!wat) return;
-        const [Cw, u0, u60] = CWI[p], UA = Math.max(1e-6, hV(u0, u60, v)), Q = p === 'i' && !inOn ? Li : (st[p] - x[j]) / PR[p];
-        nx[j] = toward(x[j], Tamb + Q / UA, UA / Cw, dt); w = Math.max(w, nx[j]); });
-      return { m, i, w, b, x: nx };
-    }
     // 냉각 회로
     const T = { m: st.m, i: st.i, b: st.b }, c = x.map(a => a.slice()), n = Math.max(1, Math.ceil(dt / 0.25)), h = dt / n;
-    const aK = NET.water.map(Cc => Cc.nodes.map(nd => nd.t === 'rad' ? radA(Cc, nd, v) : 0));
+    const fan = (x.fan || X0.fan).map(a => a.slice()), aC = {}, aK = (w, k) => { const on = fan[w][k], key = w + ':' + k + ':' + on; return key in aC ? aC[key] : (aC[key] = coolRadA(NET.water[w], NET.water[w].nodes[k], v, on)); };
     for (let s = 0; s < n; s++) {
       if (cwOn) NET.water.forEach((Cc, w) => { const N = Cc.nodes.length;
-        for (let k = 0; k < N; k++) { const nd = Cc.nodes[k], mix = mixOf(nd, c[w], k, N), F = (nd.q || 1) * Cc.Cc, Cn = Math.max(1, nd.C || 1);
-          if (nd.t === 'rad') { c[w][k] = toward(c[w][k], mix - aK[w][k] * (mix - Tamb), F / Cn, h); continue; }
+        for (let k = 0; k < N; k++) { const nd = Cc.nodes[k], mix = mixOf(nd, c[w], k, N), F = (nd.q || 1) * Cc.Cc, Cn = coolC(nd);
+          if (nd.t === 'rad') { fan[w][k] = coolFanNext(nd, fan[w][k], mix); c[w][k] = toward(c[w][k], mix - aK(w, k) * (mix - Tamb), F / Cn, h); continue; }
           const p = nd.part;
           if (p && PON[p]) { const G = 1 / PR[p]; c[w][k] = toward(c[w][k], (F * mix + G * T[p]) / (F + G), (F + G) / Cn, h); }
           else if (p === 'i' && F > 0) c[w][k] = toward(c[w][k], mix + Li / F, F / Cn, h);   // 인버터 온도 끔: 손실을 냉각수에 바로
@@ -15254,7 +15323,7 @@ function car(I, gr, kP, lam) {
         if (wh && wh.w != null) T[p] = toward(T[p], (cwOn ? c[wh.w][wh.k] : thCo) + L[p] * PR[p], 1 / (PR[p] * PC[p]), h);
         else if (!wh) T[p] = air(T[p], L[p], PH[p](v), PC[p], h); }
       (NET.air || []).forEach(D => coolAir(D, RHOA * CPA * Math.max(0, D.A * D.kd * v + D.fan), Tamb, T, L, p => PH[p](v), false, h, PC, PON, toward)); }   // 공랭 덕트 (갈래 · 합침, 앞 부품이 데운 공기)
-    const w = cwOn && c.length ? Math.max(...c.map(a => Math.max(...a))) : thCo;
+    const w = cwOn && c.length ? Math.max(...c.map(a => Math.max(...a))) : thCo; c.fan = fan;
     return { m: T.m, i: T.i, w, b: T.b, x: c };
   }
   const tmNext = (Tm, Ploss, dt) => thStep({ m: Tm, i: Tm, w: thCo, b: 25, x: X0 }, Ploss, 0, 0, 0, dt).m;   // 예전 이름 (모터만)
@@ -17446,7 +17515,8 @@ function coolGauss(M, N) { const a = M.map(r => r.slice());
 //   공랭: 예전 꼴 (parts = 직렬 순서) 이면 점 꼴로 — 점 = {part, q, ins: [[앞 점, 몫]]} (앞 점 −1 = 입구 외기), 흐름 순서대로
 function coolPrep(NET) {
   if (!NET) return NET;
-  (NET.water || []).forEach(C => { if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+  (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
+    if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -17466,6 +17536,31 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
     out[k] = Cq > 0 ? Tin + G * (T[p] - Tin) / Cq : Tin; });
   return out;
 }
+// ---------- 라디에이터 (도구 9 · 2P 같이)
+//   공기 = 주행풍 A k_d v + 팬 (팬 켜는 온도 fon 이 있으면: 라디로 들어오는 냉각수가 fon 이상이면 켬, fon − COOL_FH 아래면 끔. 0 = 늘 켬)
+//   UA: 표 (nd.rq = {n: 냉각수 유량 L/min, t: 코어 풍속 m/s, e: 방열량 kW}, nd.itd = 그 표의 입구 온도차 K) 가 있으면
+//     표의 점마다 ε = Q ÷ (C_min × ITD) → 교차류 ε-NTU 를 거꾸로 풀어 UA = NTU × C_min (coolPrep 에서 한 번) → 코어 풍속 · 냉각수 유량으로 이중선형 (범위 밖은 끝값),
+//     없으면 UA = UA₅ (V_f ÷ 5)^0.6 (코어 풍속 5 m/s 기준)
+//   라디 금속 열용량 nd.Cm [kJ/K] 은 그 점 열용량에 더함 (정상 온도는 그대로, 오르내리는 빠르기만)
+const COOL_RA = 1.2, COOL_CA = 1005, COOL_FH = 3;   // 공기 밀도 [kg/m³] · 비열 [J/kg·K] · 팬 끄는 온도 차 [K]
+const coolEps = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));   // 교차류 (양쪽 안 섞임) 근사
+function coolNTU(eps, Cr) { if (!(eps > 0)) return 0; let lo = 0, hi = 1; while (coolEps(hi, Cr) < eps && hi < 1e4) hi *= 2; if (coolEps(hi, Cr) < eps) return Infinity;
+  for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (coolEps(m, Cr) < eps) lo = m; else hi = m; } return (lo + hi) / 2; }
+function coolUAtab(nd, rcp) { const M = nd.rq, itd = nd.itd > 0 ? nd.itd : 60;
+  return M.t.map(vf => M.n.map((fl, j) => { const Ca = COOL_RA * COOL_CA * vf * nd.A, Cc = fl / 60000 * rcp, Cm = Math.min(Ca, Cc), Cx = Math.max(Ca, Cc);
+    const row = M.t.indexOf(vf), Q = M.e[row][j] * 1000; if (!(Cm > 0) || !(Q > 0)) return 0;
+    const NTU = coolNTU(Math.min(Q / (Cm * itd), 0.999 * coolEps(1e3, Cm / Cx)), Cm / Cx); return isFinite(NTU) ? NTU * Cm : 0; })); }
+const coolBil = (ys, xs, Z, y, x) => { const f = (a, v) => { if (v <= a[0]) return [0, 0, 0]; const k = a.length - 1; if (v >= a[k]) return [k, k, 0]; let i = 0; while (a[i + 1] < v) i++; return [i, i + 1, (v - a[i]) / (a[i + 1] - a[i])]; };
+  const [i0, i1, w] = f(ys, y), [j0, j1, u] = f(xs, x); return (Z[i0][j0] * (1 - u) + Z[i0][j1] * u) * (1 - w) + (Z[i1][j0] * (1 - u) + Z[i1][j1] * u) * w; };
+function coolUA(nd, Vf, Lmin) { if (nd.uaT) return Vf > 0 ? coolBil(nd.rq.t, nd.rq.n, nd.uaT, Vf, Lmin) : 0; return Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0; }
+// 라디 점이 섞인 냉각수 열 중 외기로 버리는 몫 a = ε C_min ÷ F  (F = 이 라디 흐름 q C_c), fan = 팬이 도는지
+function coolRadA(C, nd, v, fan) {
+  const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + (fan ? nd.fan : 0)), Ca = COOL_RA * COOL_CA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
+  const UA = coolUA(nd, Vf, F / (C.rcp || 4.18e6) * 60000), Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? coolEps(UA / Cm, Cm / Cx) : 0;
+  return F > 0 ? e * Cm / F : 0; }
+const coolFanOn0 = nd => !(nd.fon > 0);                                                   // 출발: 켜는 온도가 있으면 꺼진 채
+const coolFanNext = (nd, on, Tin) => !(nd.fon > 0) ? true : on ? Tin >= nd.fon - COOL_FH : Tin >= nd.fon;   // 히스테리시스
+const coolC = nd => Math.max(1, (nd.C || 1) + (nd.Cm > 0 ? nd.Cm * 1000 : 0));          // 점 열용량 [J/K] (금속 포함)
 
 /* ---------- 냉각 블럭 배치 (시뮬링크처럼, 2026-11-06 도구 2P 편집 탭에서 옮겨 옴 · 2026-11-09 조작을 시뮬링크식으로)
    수랭 회로 (최대 3개): 라디에이터 · 펌프 · 모터 · 인버터 · 축전지 블럭을 라디에서 나와 라디로 돌아오게 이음 (라디 · 펌프 1개 이상, 처음 라디가 기준, 선 방향 = 냉각수 흐름, 갈라짐 · 합쳐짐 가능)
@@ -17476,13 +17571,16 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
    호스 = [앞 블럭, 뒤 블럭, 갈래 비율 (공랭), {d 안지름 mm, len 길이 m, pts 꺾임점}] */
 const T9CB = { rad:['라디에이터', 'rad'], pump:['펌프', 'pump'], m:['모터', 'part'], i:['인버터', 'part'], b:['축전지', 'part'], in:['공기 입구', 'io'], out:['공기 출구', 'io'] };
 const T9CP = {   // 블럭 입력 [키, 이름, 단위, 소수, 기본값]
-  rad:[['A', '코어 앞면 면적', 'm²', 3, 0.06], ['kd', '주행풍 중 코어 통과 비율', '', 2, 0.3], ['fan', '팬 유량 (정지 때도)', 'm³/s', 3, 0.08], ['UA', 'UA (코어 풍속 5 m/s)', 'W/K', 0, 250], ['V', '안의 냉각수 양', 'L', 2, 0.6],
+  rad:[['A', '코어 앞면 면적', 'm²', 3, 0.06], ['kd', '주행풍 중 코어 통과 비율', '', 2, 0.3], ['fan', '팬 유량', 'm³/s', 3, 0.08], ['fon', '팬 켜는 냉각수 온도 (0 = 늘 켬, 3 K 아래면 끔)', '°C', 0, 0],
+       ['UA', 'UA (코어 풍속 5 m/s, × (풍속 ÷ 5)^0.6)', 'W/K', 0, 250], ['itd', '방열 표의 입구 온도차', 'K', 0, 60], ['V', '안의 냉각수 양', 'L', 2, 0.6], ['Cm', '금속 열용량 (0 = 넣지 않음)', 'kJ/K', 2, 0],
        ['dp', '압력 강하 (0 = 없음)', 'kPa', 1, 0], ['dq', '압력 강하를 잰 유량', 'L/min', 1, 8]],
   pump:[['flow', '유량', 'L/min', 1, 8]],
   partW:[['V', '안의 냉각수 양 (재킷 · 냉각판)', 'L', 2, 0.3], ['dp', '압력 강하 (0 = 없음)', 'kPa', 1, 0], ['dq', '압력 강하를 잰 유량', 'L/min', 1, 8]],
   hose:[['d', '안지름', 'mm', 1, 10], ['len', '길이', 'm', 2, 0.5]],
   in:[['A', '입구 면적', 'm²', 3, 0.02], ['kd', '주행풍 중 들어오는 비율', '', 2, 0.5], ['fan', '팬 유량 (정지 때도)', 'm³/s', 3, 0.03]],
   water:[['cp', '냉각수 비열', 'J/kg·K', 0, 4180], ['rho', '냉각수 밀도', 'kg/m³', 0, 1000], ['mu', '냉각수 점도', 'mPa·s', 2, 1], ['Vh', '배관 · 탱크 냉각수 양', 'L', 2, 0.5]] };
+/* 라디 방열 표 (스펙 시트): B.p.rq = 글자 (첫 행 냉각수 유량 L/min, 첫 열 코어 풍속 m/s, 칸 kW), B.p.rqUse = 'const' 면 위 UA. 다른 표와 같은 규칙 (값이 있으면 표 · UA 칸 잠김) */
+const t9RadTab = B => B && B.t==='rad' && B.p && B.p.rqUse!=='const' && typeof t2GridParse==='function' && B.p.rq ? t2GridParse(B.p.rq).map : null;
 const t9LX = l => (l[3] && typeof l[3]==='object') ? l[3] : (l[3] = {});   // 호스 값 · 꺾임점
 const t9CParams = (C, B) => B.t==='rad' ? T9CP.rad : B.t==='pump' ? T9CP.pump : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t][1]==='part' ? T9CP.partW : [];
 const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { r[k] = isFinite(+((o || {})[k])) && (o || {})[k] !== '' ? +o[k] : v; }); return r; };
@@ -17520,11 +17618,11 @@ function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.bloc
   const Vsh = Math.max(0, P.Vh)/order.length, li = l => L.indexOf(l);
   const nodes = order.map(id => { const B = by.get(id), v = t9CV(B.p, t9CParams(C, B));
     return {t:B.t==='rad' ? 'rad' : B.t==='pump' ? 'pump' : 'part', part:T9CB[B.t][1]==='part' ? B.t : undefined, C:Math.max(1, ((B.t==='pump' ? 0 : v.V) + Vsh)/1000*P.rho*P.cp), q:id===R0 ? 1 : q.get(id),
-            ins:ins(id).map(l => [ix.get(l[0]), q.get(l[0])*fr(l), li(l)]), ...(B.t==='rad' ? {UA:v.UA, A:v.A, kd:v.kd, fan:v.fan} : {})}; });   // 라디마다 공기 쪽 값
+            ins:ins(id).map(l => [ix.get(l[0]), q.get(l[0])*fr(l), li(l)]), ...(B.t==='rad' ? {UA:v.UA, A:v.A, kd:v.kd, fan:v.fan, fon:v.fon, Cm:v.Cm, ...(t9RadTab(B) ? {rq:t9RadTab(B), itd:v.itd} : {})} : {})}; });   // 라디마다 공기 쪽 값 · 팬 · 금속 · 방열 표
   const hyd = {Vt, rho:P.rho, mu:P.mu/1000, links:L.map(l => { const h = t9CV(t9LX(l), T9CP.hose); return {a:ix.get(l[0]), b:ix.get(l[1]), d:h.d, len:h.len}; }),
                blk:order.map(id => { const B = by.get(id); if(B.t==='pump') return {}; const v = t9CV(B.p, t9CParams(C, B)); return {dp:v.dp, dq:v.dq}; }),
                src:pumps.map(b => ({k:ix.get(b.id), flow:part.length ? flow(b.id) : Vt}))};
-  const rr = t9CV(rads[0].p, T9CP.rad), net = {nodes, Cc:Vt/60000*P.rho*P.cp, UA:rr.UA, A:rr.A, kd:rr.kd, fan:rr.fan, hyd};
+  const rr = t9CV(rads[0].p, T9CP.rad), net = {nodes, Cc:Vt/60000*P.rho*P.cp, rcp:P.rho*P.cp, UA:rr.UA, A:rr.A, kd:rr.kd, fan:rr.fan, hyd};
   const hf = coolHydSolve(hyd); if(!hf) return {E:['호스 유량을 풀지 못함 (호스 값 확인)']};
   const lq = new Map(L.map((l, k) => [l, hf[k]]));   // 호스 → 유량 몫 (화면 표시용)
   return {E, net, q, fr, mode, lq, Vt}; }
@@ -17616,7 +17714,7 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
       hdl += `<rect class="t9-cseg ${vert ? 'v' : 'h'}" data-t9cseg="${C.id}:${j}:${q}" x="${(ax + bx)/2 - 6}" y="${(ay + byy)/2 - 6}" width="12" height="12" rx="2"/>`; } });
   s += `<g class="t9-hose ${C.kind}">${layers.o}${layers.i}${layers.f}</g>${dots}${layers.h}${bad}`;   // 테두리를 모두 먼저, 안쪽 색을 그 위에 → 겹친 곳에 경계가 안 보임
   C.blocks.forEach(b => { const [nm, kind] = T9CB[b.t], q = t9CV(b.p, t9CParams(C, b)), sel = sB.has(b.id), w = t9BW(b), h = t9BH(b), rd = t9Rd(b);
-    const sub = b.t==='rad' ? `${q.A} m² · UA ${q.UA}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
+    const sub = b.t==='rad' ? `${q.A} m² · ${t9RadTab(b) ? '방열 표' : `UA ${q.UA}`}${q.fon > 0 ? ` · 팬 ${q.fon} °C` : ''}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
     const shape = rd ? `<circle cx="${w/2}" cy="${h/2}" r="${w/2}"/>` : `<rect width="${w}" height="${h}" rx="7"/>`;
     const txt = rd ? `<text x="${w/2}" y="${sub ? h/2 - 2 : h/2 + 4}" text-anchor="middle" class="t9-cbn sm">${b.t==='in' ? '입구' : b.t==='out' ? '출구' : nm}</text>${sub ? `<text x="${w/2}" y="${h/2 + 13}" text-anchor="middle" class="t9-cbs sm">${b.t==='in' ? `${q.A} m²` : sub}</text>` : ''}`
                    : `<text x="${w/2}" y="24" text-anchor="middle" class="t9-cbn">${nm}</text><text x="${w/2}" y="42" text-anchor="middle" class="t9-cbs">${sub}</text>`;
@@ -17627,8 +17725,12 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
   return s + `<rect class="t9-cmq" style="display:none"/><g class="t9-hose ${C.kind} drag" style="display:none"><path class="o"/><path class="i"/><path class="f"/></g><circle class="t9-cend ${C.kind}" r="9" style="display:none"/></svg>`; }   // 영역 고르기 · 끄는 중인 호스
 function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kind==='water').length, na = CC.filter(c => c.kind==='air').length, comp = t9CoolCompile(), used = new Set(CC.flatMap(c => c.blocks.map(b => b.t)));
   const card = C => { t9Sel(C); const E = comp.err[C.id], pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b'] : ['m', 'i', 'b'], by = new Map(C.blocks.map(b => [b.id, b]));
-    const form = (title, def, obj, attr) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
-        return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"><i>${u}</i></label>`; }).join('')}</div>`;
+    const form = (title, def, obj, attr, lock = {}) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
+        return `<label class="t9-cfi"><span>${n}</span><input type="number" step="any" value="${v}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${lock[k] ? lock[k] : u}</i></label>`; }).join('')}</div>`;
+    const radTab = B => { const M = B.p && B.p.rq && typeof t2GridParse==='function' ? t2GridParse(B.p.rq).map : null, use = B.p && B.p.rqUse==='const' ? 'const' : 'tab', id = `${C.id}:${B.id}`;
+      return `<div class="t9-cform t9-crqb"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW. 엑셀에서 표를 복사해 아래 칸을 누르고 Ctrl+V. 값이 있으면 [UA] 대신 씀 (점마다 ε-NTU 로 UA 를 거꾸로 구해 보간)</span>
+        ${M ? `<span class="t2-use"><span class="muted">계산에 쓸 값</span><span class="dc-seg" role="group">${[['tab', '표'], ['const', 'UA']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span> <button type="button" class="btn small" data-t9crqx="${id}">표 지우기</button></span>` : ''}
+        <div class="t9-crq" data-t9crq="${id}" tabindex="0">${M ? `<table class="t2-tt"><tr><th>풍속 \\ 유량</th>${M.n.map(f => `<th>${wbFmt(f, 1)}</th>`).join('')}</tr>${M.t.map((v, i) => `<tr><th>${wbFmt(v, 1)}</th>${M.e[i].map(x => `<td>${wbFmt(x, 2)}</td>`).join('')}</tr>`).join('')}</table>` : '<span class="muted">비어 있음 — 여기를 누르고 Ctrl+V</span>'}</div></div>`; };
     const B = C.selB.length===1 && !C.selL.length ? by.get(C.selB[0]) : null, Lj = C.selL.length===1 && !C.selB.length ? C.selL[0] : -1;
     const hose = () => { const l = C.links[Lj], A = by.get(l[0]), Bt = by.get(l[1]); if(!A || !Bt) return ''; const o = C.links.filter(q => q[0]===l[0]), k = o.indexOf(l) + 1;
       let info = '';
@@ -17642,7 +17744,7 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
       return `<div class="t9-csel"><div class="t9-cform"><b>덕트 ${T9CB[A.t][0]} → ${T9CB[Bt.t][0]}</b>${o.length > 1 ? o.map((q, m) => { const Bq = by.get(q[1]);
           return `<label class="t9-cfi"><span>${m + 1}번 (→ ${T9CB[Bq.t][0]}) 비율</span><input type="number" step="any" min="1" max="99" value="${(+(q[2] || 1/o.length)*100).toFixed(1)}" data-t9crat="${C.id}:${jj[m]}"><i>%</i></label>`; }).join('') : '<span class="muted">갈라지지 않은 덕트 (공기 100 %)</span>'}</div></div>`; };
     const panel = Lj >= 0 ? hose()
-      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`) : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
+      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? (t9RadTab(B) ? {UA:'표 사용'} : {itd:'표 없음'}) : {}) + (B.t==='rad' ? radTab(B) : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
       : C.selB.length + C.selL.length ? `<p class="muted t9-cmsg">블럭 ${C.selB.length}개 · ${C.kind==='water' ? '호스' : '덕트'} ${C.selL.length}개 고름 · 끌면 같이 옮겨지고 Delete 로 지움</p>`
       : `<p class="muted t9-cmsg">왼쪽 끌기: 블럭 옮기기 · 빈 곳은 영역 고르기 · 오른쪽 점을 끌어 다른 블럭에 놓으면 이어짐 · 휠 = 확대 · 축소 · 휠 버튼 끌기 = 화면 이동 · Shift + 누르기 = 더해 고르기 · Delete = 고른 것 지우기 · 고른 ${C.kind==='water' ? '호스' : '덕트'}의 네모를 끌면 경로를 옮김 · 두 번 누르기: 빈 곳 = 전체 보기, ${C.kind==='water' ? '호스' : '덕트'} = 자동 경로.${C.kind==='water' ? ' 한 블럭에서 호스를 둘 이상 끌어내면 갈라지고, 한 블럭으로 여러 호스가 들어오면 합쳐집니다.' : ' 한 블럭에서 덕트를 둘 이상 끌어내면 갈라지고(비율 입력), 여러 덕트가 한 블럭으로 들어오면 합쳐집니다.'}</p>`;
     return `<div class="t9-cc" data-t9cc="${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b><span class="muted">${C.kind==='water' ? '선 방향 = 냉각수 흐름 · 라디에서 나와 라디로 (갈라짐 · 합쳐짐 가능)' : '선 방향 = 공기 흐름 · 입구 → 출구 (갈라짐 · 합쳐짐 가능)'}</span>
@@ -17691,6 +17793,16 @@ document.addEventListener('keydown', e => { if(e.key!=='Escape' || !t9On() || (e
 document.addEventListener('keydown', e => { if(!t9On() || (e.target.matches && e.target.matches('input,textarea,select'))) return;
   if(!['Delete', 'Backspace'].includes(e.key)) return; const C = t9S().cool.circuits.find(c => { t9Sel(c); return c.selB.length || c.selL.length; }); if(!C) return;
   e.preventDefault(); t9CDelSel(C); });
+/* 라디 방열 표: 붙여넣기 · 표 / UA 고르기 · 지우기 */
+const t9RadB = id => { const [cid, bid] = id.split(':'); return t9CC(cid).blocks.find(b => b.id===bid); };
+document.addEventListener('paste', e => { if(!t9On() || !e.target.closest) return; const t = e.target.closest('[data-t9crq]'); if(!t) return;
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; e.preventDefault();
+  const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
+  if(typeof t2GridParse!=='function' || !t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s, 칸 = 방열량 kW.'); return; }
+  const B = t9RadB(t.dataset.t9crq); B.p = B.p || {}; B.p.rq = v; B.p.rqUse = 'tab'; t9CoolSet(); toast('방열 표를 넣었습니다 (UA 대신 씀).'); });
+document.addEventListener('click', e => { if(!t9On() || !e.target.closest) return;
+  const u = e.target.closest('[data-t9crqu]'); if(u){ const a = u.dataset.t9crqu.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p.rqUse = a[2]; t9CoolSet(); return; }
+  const x = e.target.closest('[data-t9crqx]'); if(x){ const B = t9RadB(x.dataset.t9crqx); delete B.p.rq; delete B.p.rqUse; t9CoolSet(); } });
 /* 갈라진 덕트 비율 입력 (%): 하나를 바꾸면 나머지를 그 비율대로 줄이거나 늘려 합 100 % */
 document.addEventListener('change', e => { if(!t9On() || !e.target.matches || !e.target.matches('[data-t9crat]')) return; const [cid, j] = e.target.dataset.t9crat.split(':'), C = t9CC(cid), l = C.links[+j];
   const o = C.links.filter(q => q[0]===l[0]), r = Math.max(0.01, Math.min(0.99, (+e.target.value || 0)/100)), rest = o.filter(q => q!==l), rs = rest.reduce((a, q) => a + (+q[2] || 0), 0);
@@ -17867,7 +17979,15 @@ WB_TOOLS['9'] = {
        hyd:{Vt:8, rho:1000, mu:0.001, links:[{a:0, b:1, d:10, len:0.5}, {a:1, b:2, d:10, len:0.5}, {a:1, b:3, d:10, len:1.5}, {a:2, b:0, d:10, len:0.5}, {a:3, b:0, d:10, len:0.5}], blk:[{}, {}, {}, {}], src:[{k:1, flow:8}]}}], air:[]}}, expect:{s_tm:30.621027, s_ti:31.840390},
      src:'두 갈래 모두 난류 (모터 갈래 Re ≈ 10150, 인버터 ≈ 6830 > 1188) → Blasius ΔP ∝ L Q^1.75, 갈래 압력 강하가 같으므로 Q_m ÷ Q_i = (2.0 ÷ 1.0)^(1/1.75) = 1.4860 → 모터 몫 0.597746, 인버터 0.402254. 라디 출구 25.6671 (직렬과 같음). 모터 점 = 25.6671 + 215.371 ÷ (0.597746 × 557.33) → 모터 = + 215.371 × 0.02 = 30.6210, 인버터 점 = 25.6671 + 113.353 ÷ (0.402254 × 557.33) → 인버터 = + 113.353 × 0.05 = 31.8404'},
     {n:'공랭 덕트 갈라짐 · 합쳐짐 · 입구 → (인버터 40 % · 축전지 60 %) → 모터 → 출구 (입구 0.02 m², 비율 0.5, 팬 0.03 m³/s, 40 km/h)', I:{v:40, L_m:150, L_i:300, L_b:200, i_ha0:5, i_ha60:20, b_ha:15, b_ha60:30, m_ha0:10, m_ha60:40, cool:{water:[], air:[{A:0.02, kd:0.5, fan:0.03, nodes:[{part:'i', q:0.4, ins:[[-1, 0.4]]}, {part:'b', q:0.6, ins:[[-1, 0.6]]}, {part:'m', q:1, ins:[[0, 0.4], [1, 0.6]]}]}]}}, expect:{s_ti:47.284411, s_tb:34.019279, s_tm:33.391717, s_qa:650},
-     src:'C_a = 1.2 × 1005 × 0.1411 = 170.18 W/K. 갈래 공기 C_q = 0.4 C_a · 0.6 C_a, G = C_q (1 − e^(−hA ÷ C_q)): 인버터 = 25 + 300 ÷ G(68.07, 15) = 47.2844, 축전지 = 25 + 200 ÷ G(102.11, 25) = 34.0193. 합친 공기 = 25 + (300 + 200) ÷ 170.18 = 27.9381 → 모터 = 27.9381 + 150 ÷ G(170.18, 30) = 33.3917'}
+     src:'C_a = 1.2 × 1005 × 0.1411 = 170.18 W/K. 갈래 공기 C_q = 0.4 C_a · 0.6 C_a, G = C_q (1 − e^(−hA ÷ C_q)): 인버터 = 25 + 300 ÷ G(68.07, 15) = 47.2844, 축전지 = 25 + 200 ÷ G(102.11, 25) = 34.0193. 합친 공기 = 25 + (300 + 200) ÷ 170.18 = 27.9381 → 모터 = 27.9381 + 150 ÷ G(170.18, 30) = 33.3917'},
+    {n:'라디 방열 표 (스펙 시트) · 운전점이 표의 점 (코어 풍속 5 m/s · 8 L/min · 6.0 kW @ 입구 온도차 60 K)', I:{v:50, L_m:300, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:9999, A:0.06, kd:0, fan:0.3, rq:{n:[4, 8, 12], t:[2, 5, 8], e:[[2.4, 3.0, 3.3], [4.1, 6.0, 6.6], [5.2, 7.0, 7.9]]}, itd:60}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1]]}], Cc:557.3333333333334, rcp:4180000}], air:[]}}, expect:{s_win:28, s_tm:34},
+     src:'표의 점에서 ε C_min = 6000 W ÷ 60 K = 100 W/K (UA 칸 9999 는 안 씀). 정상: 라디가 버리는 열 = ε C_min (T_입구 − T_외기) = 모터 손실 300 W → 라디 입구 = 25 + 300 ÷ 100 = 28 °C, 모터 = 28 + 300 × 0.02 = 34 °C'},
+    {n:'라디 팬 켜는 온도 35 °C · 정상에서 켜짐 (모터 2000 W, 60 km/h, 주행풍 0.3 m³/s + 팬 0.3)', I:{v:60, L_m:2000, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:250, A:0.06, kd:0.3, fan:0.3, fon:35}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1]]}], Cc:557.3333333333334}], air:[]}}, expect:{s_win:33.873141, s_tm:73.873141},
+     src:'팬 끔: 공기 0.3 m³/s (코어 5 m/s, UA 250) → ε C_min = 152.46 W/K → 입구 25 + 2000 ÷ 152.46 = 38.118 ≥ 35 → 켬. 팬 켬: 0.6 m³/s (코어 10 m/s, UA = 250 × 2^0.6 = 378.9) → ε C_min = 225.40 → 입구 25 + 2000 ÷ 225.40 = 33.873 (끄는 온도 32 보다 높아 켠 채), 모터 + 2000 × 0.02'},
+    {n:'라디 팬 켜는 온도 35 °C · 정상에서 꺼짐 (모터 500 W, 위와 같은 라디)', I:{v:60, L_m:500, L_i:0, L_b:0, th_r:0.02, cool:{water:[{nodes:[{t:'rad', C:2508, q:1, ins:[[2, 1]], UA:250, A:0.06, kd:0.3, fan:0.3, fon:35}, {t:'pump', C:418, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:1254, q:1, ins:[[1, 1]]}], Cc:557.3333333333334}], air:[]}}, expect:{s_win:28.279556, s_tm:38.279556},
+     src:'팬 끔: ε C_min = 152.46 W/K → 입구 25 + 500 ÷ 152.46 = 28.280 < 35 → 끈 채, 모터 + 500 × 0.02'},
+    {n:'라디 금속 열용량 1 kJ/K · 식는 빠르기 (라디 한 점 고리, 60 °C 에서 100 s, 팬 0.3 m³/s)', I:{v:0, L_m:0, L_i:0, L_b:0, t0:60, t_run:100, cool:{water:[{nodes:[{t:'rad', C:2508, Cm:1, q:1, ins:[[0, 1]], UA:250, A:0.06, kd:0, fan:0.3}], Cc:557.3333333333334}], air:[]}}, expect:{e_win:25.482687, q_cw:3508},
+     src:'열용량 C = 2508 + 1 × 1000 = 3508 J/K. 버리는 몫 a = ε C_min ÷ C_c = 0.273552. 0.25 s 칸마다 (적분 방식 그대로) ΔT ← ΔT × (1 − a (1 − e^(−C_c × 0.25 ÷ C))) → 400 칸 뒤 25 + 35 × 0.98173^400 = 25.4827 °C (금속을 빼면 C = 2508 → 25.09 °C)'}
   ],
   code: `// ================================================================ 냉각 회로 공통 (도구 9 · 도구 2P 계산과 냉각 편집기가 같이 씀)
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)
@@ -17925,7 +18045,8 @@ function coolGauss(M, N) { const a = M.map(r => r.slice());
 //   공랭: 예전 꼴 (parts = 직렬 순서) 이면 점 꼴로 — 점 = {part, q, ins: [[앞 점, 몫]]} (앞 점 −1 = 입구 외기), 흐름 순서대로
 function coolPrep(NET) {
   if (!NET) return NET;
-  (NET.water || []).forEach(C => { if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
+  (NET.water || []).forEach(C => { C.nodes.forEach(nd => { if (nd.t === 'rad' && nd.rq && Array.isArray(nd.rq.t) && nd.rq.t.length && Array.isArray(nd.rq.n) && nd.rq.n.length) nd.uaT = coolUAtab(nd, C.rcp || 4.18e6); });   // 라디 표 → UA 표
+    if (!C.hyd) return; const fl = coolHydSolve(C.hyd); C.hydOk = !!fl; if (!fl) return;
     C.nodes.forEach((nd, k) => { if (!nd.ins) return; nd.ins = nd.ins.map(x => x.length > 2 && x[2] >= 0 ? [x[0], fl[x[2]], x[2]] : x);
       if (k > 0) nd.q = nd.ins.reduce((s, x) => s + x[1], 0); }); });
   (NET.air || []).forEach(D => { if (!D.nodes) D.nodes = (D.parts || []).map((p, j) => ({ part: p, q: 1, ins: [[j - 1, 1]] })); D.parts = D.nodes.map(n => n.part); });
@@ -17945,6 +18066,31 @@ function coolAir(D, Ca, Ta, T, L, hA, ss, h, PC, on, toward) {
     out[k] = Cq > 0 ? Tin + G * (T[p] - Tin) / Cq : Tin; });
   return out;
 }
+// ---------- 라디에이터 (도구 9 · 2P 같이)
+//   공기 = 주행풍 A k_d v + 팬 (팬 켜는 온도 fon 이 있으면: 라디로 들어오는 냉각수가 fon 이상이면 켬, fon − COOL_FH 아래면 끔. 0 = 늘 켬)
+//   UA: 표 (nd.rq = {n: 냉각수 유량 L/min, t: 코어 풍속 m/s, e: 방열량 kW}, nd.itd = 그 표의 입구 온도차 K) 가 있으면
+//     표의 점마다 ε = Q ÷ (C_min × ITD) → 교차류 ε-NTU 를 거꾸로 풀어 UA = NTU × C_min (coolPrep 에서 한 번) → 코어 풍속 · 냉각수 유량으로 이중선형 (범위 밖은 끝값),
+//     없으면 UA = UA₅ (V_f ÷ 5)^0.6 (코어 풍속 5 m/s 기준)
+//   라디 금속 열용량 nd.Cm [kJ/K] 은 그 점 열용량에 더함 (정상 온도는 그대로, 오르내리는 빠르기만)
+const COOL_RA = 1.2, COOL_CA = 1005, COOL_FH = 3;   // 공기 밀도 [kg/m³] · 비열 [J/kg·K] · 팬 끄는 온도 차 [K]
+const coolEps = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));   // 교차류 (양쪽 안 섞임) 근사
+function coolNTU(eps, Cr) { if (!(eps > 0)) return 0; let lo = 0, hi = 1; while (coolEps(hi, Cr) < eps && hi < 1e4) hi *= 2; if (coolEps(hi, Cr) < eps) return Infinity;
+  for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; if (coolEps(m, Cr) < eps) lo = m; else hi = m; } return (lo + hi) / 2; }
+function coolUAtab(nd, rcp) { const M = nd.rq, itd = nd.itd > 0 ? nd.itd : 60;
+  return M.t.map(vf => M.n.map((fl, j) => { const Ca = COOL_RA * COOL_CA * vf * nd.A, Cc = fl / 60000 * rcp, Cm = Math.min(Ca, Cc), Cx = Math.max(Ca, Cc);
+    const row = M.t.indexOf(vf), Q = M.e[row][j] * 1000; if (!(Cm > 0) || !(Q > 0)) return 0;
+    const NTU = coolNTU(Math.min(Q / (Cm * itd), 0.999 * coolEps(1e3, Cm / Cx)), Cm / Cx); return isFinite(NTU) ? NTU * Cm : 0; })); }
+const coolBil = (ys, xs, Z, y, x) => { const f = (a, v) => { if (v <= a[0]) return [0, 0, 0]; const k = a.length - 1; if (v >= a[k]) return [k, k, 0]; let i = 0; while (a[i + 1] < v) i++; return [i, i + 1, (v - a[i]) / (a[i + 1] - a[i])]; };
+  const [i0, i1, w] = f(ys, y), [j0, j1, u] = f(xs, x); return (Z[i0][j0] * (1 - u) + Z[i0][j1] * u) * (1 - w) + (Z[i1][j0] * (1 - u) + Z[i1][j1] * u) * w; };
+function coolUA(nd, Vf, Lmin) { if (nd.uaT) return Vf > 0 ? coolBil(nd.rq.t, nd.rq.n, nd.uaT, Vf, Lmin) : 0; return Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0; }
+// 라디 점이 섞인 냉각수 열 중 외기로 버리는 몫 a = ε C_min ÷ F  (F = 이 라디 흐름 q C_c), fan = 팬이 도는지
+function coolRadA(C, nd, v, fan) {
+  const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + (fan ? nd.fan : 0)), Ca = COOL_RA * COOL_CA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
+  const UA = coolUA(nd, Vf, F / (C.rcp || 4.18e6) * 60000), Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? coolEps(UA / Cm, Cm / Cx) : 0;
+  return F > 0 ? e * Cm / F : 0; }
+const coolFanOn0 = nd => !(nd.fon > 0);                                                   // 출발: 켜는 온도가 있으면 꺼진 채
+const coolFanNext = (nd, on, Tin) => !(nd.fon > 0) ? true : on ? Tin >= nd.fon - COOL_FH : Tin >= nd.fon;   // 히스테리시스
+const coolC = nd => Math.max(1, (nd.C || 1) + (nd.Cm > 0 ? nd.Cm * 1000 : 0));          // 점 열용량 [J/K] (금속 포함)
 
 // ================================================================
 // 도구 9 냉각 계통 계산기 — 계산 코드
@@ -17983,20 +18129,23 @@ function calc(I) {
   const where = {};   // 부품 → {w: 회로 번호, k: 점 번호} · {a: 덕트 번호, j: 덕트 안 순서}
   W.forEach((C, w) => C.nodes.forEach((nd, k) => { if (nd.part) where[nd.part] = { w, k }; }));
   A.forEach((D, a) => D.nodes.forEach((n, j) => { if (!where[n.part]) where[n.part] = { a, j }; }));
-  const epsX = (NTU, Cr) => NTU <= 0 ? 0 : Cr < 1e-9 ? 1 - Math.exp(-NTU) : 1 - Math.exp(Math.pow(NTU, 0.22) / Cr * (Math.exp(-Cr * Math.pow(NTU, 0.78)) - 1));
-  // 라디 점 k 가 섞인 냉각수 열 중 외기로 버리는 몫 a_k = ε C_min ÷ F  (F = 이 라디 흐름 q_k C_c)
-  function radA(C, nd, v) {
-    const F = (nd.q || 1) * C.Cc, qa = Math.max(0, nd.A * nd.kd * v + nd.fan), Ca = RHOA * CPA * qa, Vf = nd.A > 0 ? qa / nd.A : 0;
-    const UA = Vf > 0 ? nd.UA * Math.pow(Vf / 5, 0.6) : 0, Cm = Math.min(Ca, F), Cx = Math.max(Ca, F), e = Cm > 0 && F > 0 ? epsX(UA / Cm, Cm / Cx) : 0;
-    return F > 0 ? e * Cm / F : 0; }
+  // 라디 점 k 가 섞인 냉각수 열 중 외기로 버리는 몫 a_k = ε C_min ÷ F (coolRadA: 표 UA · 팬 켬 · 끔 포함, cool_net)
+  const radA = (C, nd, v, fan) => coolRadA(C, nd, v, fan);
   const mixOf = (nd, c, k, N) => { const ins = nd.ins || [[(k - 1 + N) % N, 1]]; let fs = 0, ft = 0; ins.forEach(([j, f]) => { fs += f; ft += f * c[j]; }); return fs > 0 ? ft / fs : c[k]; };
 
   // ---------- 정상 상태 (차속 v [m/s])
-  function steady(v) {
+  //   팬 켜는 온도가 있는 라디: 꺼진 채 풀어 라디로 들어오는 냉각수가 켜는 온도 이상이면 켠 채 다시 풂 (켠 정상 상태를 결과로)
+  function steady(v) { let fan = W.map(C => C.nodes.map(coolFanOn0)), r = null;
+    for (let it = 0; it < 4; it++) { r = steady1(v, fan); let ch = false;
+      fan = fan.map((f, w) => f.map((on, k) => { const nd = W[w].nodes[k]; if (on || nd.t !== 'rad' || !r.cs[w]) return on; const Tin = mixOf(nd, r.cs[w], k, nd.ins ? W[w].nodes.length : W[w].nodes.length);
+        if (Tin >= nd.fon) { ch = true; return true; } return false; }));
+      if (!ch) break; }
+    r.fan = fan; return r; }
+  function steady1(v, fan) {
     const T = { m: NaN, i: NaN, b: NaN }, cs = [], rin = [];
     W.forEach((C, w) => { const N = C.nodes.length, M = C.nodes.map(() => new Array(N + 1).fill(0));   // M c = 오른쪽 (마지막 열)
       C.nodes.forEach((nd, k) => { const ins = nd.ins || [[(k - 1 + N) % N, 1]], fs = ins.reduce((a, [, f]) => a + f, 0);
-        const a = nd.t === 'rad' ? radA(C, nd, v) : 0, Fk = (nd.q || 1) * C.Cc;
+        const a = nd.t === 'rad' ? radA(C, nd, v, fan[w][k]) : 0, Fk = (nd.q || 1) * C.Cc;
         // T_k − (1 − a) Σ (f_j ÷ fs) T_j = a T_외기 + (부품 손실 ÷ F)
         M[k][k] += 1; ins.forEach(([j, f]) => { M[k][j] -= (1 - a) * f / fs; });
         M[k][N] = a * Ta + (nd.part && Fk > 0 ? L[nd.part] / Fk : 0); });
@@ -18022,15 +18171,17 @@ function calc(I) {
   const v0 = Math.max(0, I.v || 0) / 3.6, tEnd = Math.max(0, I.t_run || 0), t0 = isFinite(I.t0) ? I.t0 : Ta;
   const h = 0.25, nStep = Math.min(400000, Math.ceil(tEnd / h)), every = Math.max(1, Math.round(nStep / 600));
   const T = { m: t0, i: t0, b: t0 }, c = W.map(C => C.nodes.map(() => t0));
-  const aK = W.map(C => C.nodes.map(nd => nd.t === 'rad' ? radA(C, nd, v0) : 0));
+  const fanS = W.map(C => C.nodes.map(coolFanOn0)), aOf = (w, k) => radA(W[w], W[w].nodes[k], v0, fanS[w][k]);   // 팬 상태 (켜는 온도 · 히스테리시스)
+  const aK = W.map((C, w) => C.nodes.map((nd, k) => nd.t === 'rad' ? aOf(w, k) : 0));
   const xs = [0], S = { tm: [t0], ti: [t0], tb: [t0], w1: [W[0] ? t0 : NaN], w2: [W[1] ? t0 : NaN], w3: [W[2] ? t0 : NaN] };
   const rinOf = w => W[w] ? mixOf(W[w].nodes[0], c[w], 0, W[w].nodes.length) : NaN;
   for (let s = 1; s <= nStep; s++) { const dt = Math.min(h, tEnd - (s - 1) * h);
     W.forEach((C, w) => { const N = C.nodes.length;
       for (let k = 0; k < N; k++) { const nd = C.nodes[k], mix = mixOf(nd, c[w], k, N), F = (nd.q || 1) * C.Cc;
-        if (nd.t === 'rad') { c[w][k] = toward(c[w][k], mix - aK[w][k] * (mix - Ta), F / nd.C, dt); continue; }
+        if (nd.t === 'rad') { const on = coolFanNext(nd, fanS[w][k], mix); if (on !== fanS[w][k]) { fanS[w][k] = on; aK[w][k] = aOf(w, k); }
+          c[w][k] = toward(c[w][k], mix - aK[w][k] * (mix - Ta), F / coolC(nd), dt); continue; }
         const p = nd.part, G = p ? 1 / PR[p] : 0;
-        c[w][k] = F + G > 0 ? toward(c[w][k], (F * mix + G * (p ? T[p] : 0)) / (F + G), (F + G) / nd.C, dt) : c[w][k]; } });
+        c[w][k] = F + G > 0 ? toward(c[w][k], (F * mix + G * (p ? T[p] : 0)) / (F + G), (F + G) / coolC(nd), dt) : c[w][k]; } });
     for (const p of ['m', 'i', 'b']) { const wh = where[p];
       if (wh && wh.w != null) T[p] = toward(T[p], c[wh.w][wh.k] + L[p] * PR[p], 1 / (PR[p] * PC[p]), dt);
       else if (!wh) { const hh = PH[p](v0); T[p] = hh > 0 ? toward(T[p], Ta + L[p] / hh, hh / PC[p], dt) : T[p] + L[p] * dt / PC[p]; } }
@@ -18044,7 +18195,7 @@ function calc(I) {
     s_win: W[0] ? fin(ss.rin[0]) : NaN, s_wout: W[0] && r0 ? fin(r0[0]) : NaN,         // 첫 수랭 회로 기준 라디 입구 (섞인 온도) · 출구 [°C]
     s_qw: ss.Qw, s_qa: Lsum - ss.Qw,                                                   // 냉각수로 · 공기로 바로 버리는 열 [W]
     e_tm: T.m, e_ti: T.i, e_tb: T.b, e_win: rinOf(0),                                  // 주행 시간 뒤 [°C]
-    q_cw: W.reduce((s, C) => s + C.nodes.reduce((a, nd) => a + nd.C, 0), 0),           // 도구 2P 냉각수 열용량 [J/K]
+    q_cw: W.reduce((s, C) => s + C.nodes.reduce((a, nd) => a + coolC(nd), 0), 0),     // 냉각수 · 라디 금속 열용량 합 [J/K]
     q_ua0: s0.Qw > 0 ? fin(s0.UA) : NaN, q_ua60: s60.Qw > 0 ? fin(s60.UA) : NaN,       // 도구 2P 라디에이터 UA (정지 · 60 km/h) [W/K]
     n_w: W.length, n_a: A.length,
   };
