@@ -18,11 +18,11 @@ function showTab(t, keep){
 const navState = () => ({tab:TAB, sys:(typeof START!=='undefined'?START.sys:''), y:window.scrollY, sel:(typeof SEL!=='undefined'?SEL:null), v:(typeof view!=='undefined'?{...view}:null)});
 function pushHist(){ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
 function goBack(){ try{ history.back(); }catch(e){} }
-window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true);
+window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true); try{ history.replaceState(h, '', location.hash); }catch(_){}   /* showTab 이 지운 이 칸의 상태를 되살림 (앞으로가기에 필요) */
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
   requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
 /* 스크롤이 멈추면 지금 위치를 현재 기록에 덮어써 둠 (앞으로 가기에도 위치 유지) */
-{ let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
+{ let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(window.DEBUG || (typeof WB!=='undefined' && WB.id)) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
 let SCR=null;
 function smoothScrollTo(getY, done){
   if(SCR) cancelAnimationFrame(SCR);

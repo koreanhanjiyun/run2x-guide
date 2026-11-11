@@ -3138,6 +3138,11 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 @media (max-width:700px){.t2s-top{columns:1}}
 .t2s-base{font-size:13.5px;margin:0}
 .wb-hpbar{display:inline-flex;align-items:center;gap:6px}
+.wb-hpdd{position:relative}.wb-hpdd>summary{list-style:none;cursor:pointer;display:inline-flex}.wb-hpdd>summary::before,.wb-hpdd>summary::after{display:none!important;content:none!important}
+.wb-bar>.btn,.wb-bar>.wb-no,.wb-bar>.wb-stage{flex:none;white-space:nowrap}.wb-bar>b{min-width:0;overflow:hidden;text-overflow:ellipsis}.wb-hpdd>summary::-webkit-details-marker{display:none}
+.wb-hpmenu{position:absolute;right:0;top:calc(100% + 4px);z-index:30;display:flex;flex-direction:column;gap:4px;padding:6px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);min-width:200px}
+.wb-hpmenu .btn{justify-content:flex-start;text-align:left}
+.wb-acts .btn,.wb-acts .wb-help,.wb-hpbar>span,.wb-bar>b{white-space:nowrap}.wb-acts{gap:6px}
 /* 도구 2P 켬 · 끔 카드: 카드 아무 곳이나 눌러 바꿈 */
 .t2-mdop.t2-card{cursor:pointer}
 .t2-mdop.t2-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -3246,7 +3251,20 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 #wb.wb-needon :is([data-t2eg].need, [data-t2tab="edit"].need)::after{content:'';position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#d33a2c}
 .wb-needline{margin:0;padding:12px 14px;border:1px solid #f0b8b0;background:#fff7f5;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .wb-needline b{color:#b3261e}.wb-needline span{color:var(--ink-2);flex:1}
+#wb.wb-needon .t2-tw.need{border-color:#d33a2c;box-shadow:0 0 0 1px #d33a2c inset;background:#fff8f7}
+#wb.wb-needon .t2-tw.need .t2-empty::before{content:'반드시 입력해야 합니다 · ';color:#c62828;font-weight:600}
+#wb.wb-needon [data-t2et].need{position:relative}#wb.wb-needon [data-t2et].need:not([aria-pressed="true"]){color:#b3261e}
+#wb.wb-needon [data-t2et].need::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#d33a2c}
 .wb-need-flash{animation:wbneedf 1.2s ease}
+/* 도구 연결 (2026-11-11) */
+.wb-src{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;background:var(--in-soft);color:var(--in);font-size:11px;font-weight:600;line-height:17px;white-space:nowrap;vertical-align:middle}
+.wbl-box{width:min(1080px,94vw)}
+.wbl-sec+.wbl-sec{margin-top:18px}.wbl-sec h4{margin:0 0 6px;font-size:14px}
+.wbl-t td{vertical-align:top;font-size:12.5px}.wbl-t td:nth-child(1){width:24px}.wbl-t td:nth-child(2){width:24%}.wbl-t td:nth-child(3){width:26%}
+.wbl-t tr.off td{color:var(--muted)}
+.wbl-tool{display:inline-block;padding:0 6px;border-radius:5px;background:var(--panel-2);border:1px solid var(--line);font-size:11.5px;font-weight:600;margin-right:4px}
+.wbl-act{display:flex;justify-content:flex-end;margin-top:6px}
+.wbl-info{margin:16px 0 0;padding-left:18px;font-size:12.5px}
 @keyframes wbneedf{0%,60%{box-shadow:0 0 0 4px rgba(211,58,44,.35)}100%{box-shadow:none}}
 /* 대시보드: 비어 있는 값 (예시값 없음) */
 .dv-nofig{padding:16px 0;color:var(--muted)}

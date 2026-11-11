@@ -3,7 +3,7 @@
 //   node tool2_check.js [스크린샷 폴더] [xlsx] [csv]
 const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead');
-  const R=()=>p.evaluate(()=>WB.R&&WB.R.out); const f=(v,d=2)=>typeof v==='number'?v.toFixed(d):v; const W=ms=>H.sleep(ms); const et=async k=>{ if(k==='tire'){ await p.click('[data-t2eg="tire"]'); } else { await p.click('[data-t2eg="mot"]'); await W(300); await p.click(`[data-t2et="${k}"]`); } }; const idle=async()=>{ await W(800); for(let i=0;i<150 && await p.evaluate(()=>WB.busy);i++) await W(200); };
+  const R=()=>p.evaluate(()=>WB.R&&WB.R.out); const f=(v,d=2)=>typeof v==='number'?v.toFixed(d):v; const W=ms=>H.sleep(ms); const et=async k=>{ if(k==='tire'){ await p.click('[data-t2eg="tire"]'); } else { await p.click('[data-t2eg="mot"]'); await W(300); await p.click(`[data-t2et="${k}"]`); } await W(200); await p.evaluate(()=>document.querySelectorAll('details.t2-mfold').forEach(d=>{ d.open=true; })); };   /* [위 상수]면 표가 접혀 있음 (69차) */ const idle=async()=>{ await W(800); for(let i=0;i<150 && await p.evaluate(()=>WB.busy);i++) await W(200); };
   const rows=()=>p.evaluate(()=>t2Track(T2.free.text).rows.map(r=>[+r.l.toFixed(2),+r.R.toFixed(2)]).join(' | '));
   const cell=async(i,k,v)=>{ await p.click(`#t2tt [data-t2e="${i},${k}"]`); await W(150); const e=await p.$(`#t2tt [data-t2e="${i},${k}"] .t2-ci`); if(e.tagName && false); if(await e.evaluate(x=>x.tagName)==='SELECT') await e.selectOption(v); else { await e.fill(String(v)); await e.press('Enter'); } await W(400); };
   await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>wbOpen('2',null,'ex')); await W(3000); for(let i=0;i<40 && !(await p.evaluate(()=>!!(WB.R&&WB.R.out))); i++) await W(500);   // 처음 계산 기다림 (기기 · 설정에 따라 다름)
@@ -76,7 +76,8 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   console.log('tire', (await p.textContent('#t2msum')).trim(), 'lock mu', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled), 'lock eta_mot', await p.evaluate(()=>!!t2InLock('eta_mot')));
   const toSim=async()=>{ await p.click('[data-t2tab="sim"]'); await idle(); }, toEdit=async g=>{ await p.click('[data-t2tab="edit"]'); await W(300); await et(g); await W(300); };
   await toSim(); console.log('tire acc', f((await R()).t_skid_s,3)); await toEdit('tire');
-  await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(500); console.log('tire cleared lock', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled));
+  await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(500); console.log('tire cleared lock', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled), 'need tire', await p.evaluate(()=>wbNeed().some(x=>x.k==='t2:tire')));
+  await p.click('[data-t2uk="tire"] [data-t2use="const"]'); await W(400);   /* 빈 표 + [아래 표] = 필수 (69차) → [위 상수]로 */
   await et('mt'); await W(300); await p.click('#t2tt [data-t2e="1,1"]'); await W(150); await p.fill('#t2tt .t2-ci','100'); await p.press('#t2tt .t2-ci','Enter'); await toSim(); console.log('torque edit acc', f((await R()).t_acc_s,3)); await toEdit('mt');
   await p.click('[data-t2menu="mt"]'); await W(200); await p.click('[data-t2act="ex"][data-t2k="mt"]'); await toSim(); console.log('torque reset acc', f((await R()).t_acc_s,3)); await toEdit('mt');
   // 디레이팅 켜기

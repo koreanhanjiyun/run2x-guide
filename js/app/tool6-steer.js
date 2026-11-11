@@ -6,7 +6,7 @@
    - 대시보드로 steer_ratio · ackermann · delta_max · rmin · knuckle_l 을 보냄. [도구 2P 로 조향각 표 보내기] = 핸들 각 → 안 · 바깥 바퀴 각 곡선을 도구 2P 로 복사 (도구 2P 가 링크 기하로 계산)
    ============================================================ */
 const M6TOUR = [
-  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
+  ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, [도구 연결 ▾](도구 2P 로 조향각 표 보내기), [하드포인트 ▾](5 · 6 · 7 · 8 공통 하드포인트 파일), 대시보드에 반영이 있습니다.'],
   ['#wb .wb-in', '입력', '앞 왼쪽 바퀴의 하드포인트 8 점(도구 5 와 같은 좌표: x 앞 +, y 바깥 +, z 지면 위 +)과 랙 이송비 · 최대 이송입니다. 타이로드 안쪽 점이 랙 끝(볼)입니다. 오른쪽 바퀴는 거울로 셈합니다.'],
   ['#wb #wbout', '결과', '링크 길이 · 조향비, 기준 조향각(두 바퀴 평균)에서 안 · 바깥 각과 애커먼 %, 최대 이송에서 최대 조향각 · 최소 회전 반경입니다. 최소 회전 반경은 아주 느릴 때(슬립 없음) 자전거 등가 각으로 셈합니다. 캠버 · 잭킹은 바퀴 중심 높이를 고정하고 본 값입니다.'],
   ['#wb .wb-sig', '조향각 곡선', '가로축 = 핸들 각. 안쪽 · 바깥 바퀴 각과 완전 애커먼일 때 안쪽 각, 애커먼 %, 조향에 따른 캠버 · 잭킹입니다. 작은 각에서는 애커먼 % 가 크게 흔들립니다.'],
@@ -14,9 +14,12 @@ const M6TOUR = [
 const T6G = {car:'차 · 바퀴', rack:'랙 · 기준'};
 /* 도구 2P 로 조향각 표 보내기: 결과 곡선 (핸들 각 0 ~ 최대, 41 점) 의 [핸들 각, 안쪽 바퀴, 바깥 바퀴] → 도구 2P 가 기하 조향각 · 최대 조향각 · 조향비 · 최소 회전 반경 · 핸들 속도에 씀 */
 const t6Rows = () => { const R = WB.R; if(!R || !R.x || !R.sig) return []; return R.x.d.map((h, j) => [h, R.sig.di[j], R.sig.dout[j]]).filter(r => r.every(Number.isFinite) && r[0] > 0 && r[1] > 0 && r[2] > 0); };
-function t6MidHTML(){ const n = t6Rows().length, S = typeof T2!=='undefined' && Array.isArray(T2.stab) ? T2.stab.length : 0;
-  return `<div class="t9-xbar"><b>도구 2P 와 주고받기</b><button type="button" class="btn small pri" data-t6x${n >= 2 ? '' : ' disabled'}>도구 2P 로 조향각 표 보내기</button>
-    <span class="muted">${n >= 2 ? `핸들 각 0 ~ ${wbFmt(WB.R.out.hw_max, 0)}° 의 안쪽 · 바깥 바퀴 각 ${n}점 → 도구 2P 가 링크 기하 그대로 (애커먼 %) 조향각 · 최대 조향각 · 조향비 · 최소 회전 반경을 계산` : '계산이 끝나면 보낼 수 있음'}${S ? ` · 도구 2P 에 지금 ${S}점 표가 있음` : ''}</span></div>`; }
+function t6MidHTML(){ return ''; }   /* 도구 2P 로 보내기는 윗줄 [도구 연결 ▾] 로 옮김 (2026-11-11) */
+function t6Links(){ const rows = t6Rows(), n = rows.length, S = typeof T2!=='undefined' && Array.isArray(T2.stab) ? T2.stab : [];
+  const now = !S.length ? '없음 (100 % 애커먼 · 일정 조향비)' : typeof T2STAB_DEF!=='undefined' && JSON.stringify(S)===JSON.stringify(T2STAB_DEF) ? `기본 표 ${S.length}점` : `조향각 표 ${S.length}점`;
+  return {send:[{tool:'도구 2P', n:'조향각 표 (핸들 각 → 안쪽 · 바깥 바퀴 각)', to:'도구 2P › 서스 · 조향 › 조향 기하 (최대 조향각 · 조향비 칸은 이 표 값으로 잠김)', now,
+    val:n >= 2 ? `핸들 각 0 ~ ${wbFmt(WB.R.out.hw_max, 0)}° · ${n}점 (링크 기하 그대로)` : '', ok:n >= 2 && typeof T2!=='undefined', why:'계산이 끝나면 보낼 수 있음',
+    run(){ T2.stab = rows.map(r => r.map(x => +x.toFixed(4))); if(typeof t2Save==='function') t2Save(); wbSrcSet('2', ['t2:stab'], '도구 6'); return `조향각 표 ${n}점`; }}]}; }
 document.addEventListener('click', e => { if(WB.id!=='6' || !e.target.closest) return; const b = e.target.closest('[data-t6x]'); if(!b || b.disabled) return; if(wbExBlock()) return;
   const rows = t6Rows(); if(rows.length < 2 || typeof T2==='undefined') return; T2.stab = rows.map(r => r.map(x => +x.toFixed(4))); if(typeof t2Save==='function') t2Save();
   toast(`조향각 표 ${rows.length}점을 도구 2P 로 보냈습니다 (도구 2P 의 최대 조향각 · 조향비 칸은 이 표 값으로 잠김).`); wbPaint(['mid']); });
@@ -46,7 +49,7 @@ WB_TOOLS['6'] = {
   ],
   sigs:[{k:'di', n:'안쪽 바퀴 조향각', u:'°', d:2}, {k:'dout', n:'바깥 바퀴 조향각', u:'°', d:2}, {k:'dideal', n:'완전 애커먼 안쪽 각', u:'°', d:2}, {k:'ack', n:'애커먼', u:'%', d:1},
         {k:'ci', n:'캠버 · 안쪽 바퀴', u:'°', d:2}, {k:'co', n:'캠버 · 바깥 바퀴', u:'°', d:2}, {k:'ji', n:'잭킹 · 안쪽 바퀴', u:'mm', d:2}, {k:'jo', n:'잭킹 · 바깥 바퀴', u:'mm', d:2}],
-  sigOn:['di', 'dout', 'dideal'], xiStart:'end', midHTML: t6MidHTML, onResult: () => { const m = document.getElementById('wbmid'); if(m) m.innerHTML = t6MidHTML(); },
+  sigOn:['di', 'dout', 'dideal'], xiStart:'end', links: () => t6Links(),
   tour: M6TOUR,
   verifyBase:{camber_f:0, toe_f:0, tf:1200, r_load:236, L:1550, fr:47.5, rack_c:90, rack_travel:30, d_ref:15,
     f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:200, f_uf_z:300, f_ur_x:-175, f_ur_y:200, f_ur_z:300, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:200, f_to_x:-70, f_to_y:545, f_to_z:200},   // 검증 기본 = 킹핀 수직 · 링크 한 평면 (예전 윗면 2D 와 같은 꼴)

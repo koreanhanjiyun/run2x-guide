@@ -1,7 +1,7 @@
 // 시안 빌드에서 도구 1 확인: 카드 끼워 넣기(줄마다 왼쪽 정렬), 드라이버 선택, 검증표, 도움말 12단계. 그림은 dist/draft/ 에 저장
 const {start,sleep,chromium,PORT,end,S}=require('./h'); const {fpage}=require('./h2'); const ev=(p,f,a)=>p.evaluate(f,a);
 (async()=>{ await start(); const b=await chromium.launch(); const p=await fpage(b,`http://127.0.0.1:${PORT}/_t.html`,'admin',{W:1920,H:1080});
- await ev(p,()=>showTab('tools')); await sleep(600); await p.click('[data-wb="1"]'); await sleep(2500); await ev(p,()=>wbTabSet('edit')); await sleep(500);
+ await ev(p,()=>showTab('tools')); await sleep(600); await ev(p,()=>wbOpen('1',null,'ex')); await sleep(2500); await ev(p,()=>wbTabSet('edit')); await sleep(500);
  const rows=async()=>(await ev(p,()=>m1Layout(m1Groups()).rows)).map(r=>r.map(x=>x.slice(-2)).join(' ')).join(' | ');
  const L=await ev(p,()=>m1Layout(m1Groups()).rows); console.log('rows    ', await rows());
  await ev(p,()=>document.querySelector('.wb-right').scrollTo(0,0)); await sleep(300);

@@ -494,11 +494,23 @@ function t9ExtHTML(){ const w = $('#wb'); if(w) w.classList.remove('t2-edit');  
   return `<div class="t9-x">${t9XBar()}
     ${t9CoolPage()}</div>`; }
 /* 주고받기 줄 (계산 결과가 바뀌면 이것만 다시 그림: onResult) */
-function t9XBar(){ const o = WB.R && WB.R.out, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—', nW = T9.cool.circuits.filter(c => c.kind==='water').length;
-  return `<div class="t9-xbar"><b>도구 2P 와 주고받기</b>
-      <button type="button" class="btn small" data-t9x="get" title="도구 2P 에 저장된 부품 열용량 · 열저항 · 공랭 hA · 외기 온도를 왼쪽 칸으로">도구 2P 부품 열 값 가져오기</button>
-      <button type="button" class="btn small pri" data-t9x="put"${o && (o.n_w > 0 || o.n_a > 0) ? '' : ' disabled title="수랭 회로나 공랭 덕트가 계산에 들어가야 씀"'} title="이 배치를 도구 2P 의 냉각 회로로 복사 (그 뒤로는 도구 2P 에서 따로 고침)">도구 2P 로 회로 보내기</button>
-      <span class="muted">${o && (o.n_w > 0 || o.n_a > 0) ? `도구 2P 로 보낼 배치: 수랭 회로 ${o.n_w}개 · 공랭 덕트 ${o.n_a}개 · 모터 ${t9IsWater('m') ? '수랭' : '공랭'} · 인버터 ${t9IsWater('i') ? '수랭' : '공랭'} · 축전지 ${t9IsWater('b') ? '수랭' : '공랭'} (직렬 · 병렬 · 회로 여러 개 그대로)` : '도구 2P [편집 › 냉각]의 [평균 발열 · 차속을 도구 9 로 보내기]로 왼쪽 발열 · 차속을 채울 수 있습니다.'}</span></div>`; }
+function t9XBar(){ return ''; }   /* 도구 2P 와 주고받기는 윗줄 [도구 연결 ▾] 로 옮김 (2026-11-11) */
+/* [도구 연결 ▾]: 도구 2P 에서 부품 열 값 가져오기, 도구 2P 로 회로 보내기 */
+function t9Links(){ const s2 = t9Read('2'), o = WB.R && WB.R.out, D = WB_TOOLS['9'].inputs, u = k => (D.find(d => d.k===k) || {}).u || '', fv = (v, k) => isFinite(v) ? `${+(+v).toPrecision(4)} ${u(k)}`.trim() : '—';
+  const grp = (nm, keys) => { const has = keys.filter(k => typeof s2[k]==='number' && isFinite(s2[k]));
+    return {tool:'도구 2P', n:nm, to:`입력 › ${nm} (${keys.length}칸)`, now:keys.map(k => fv(WB.I[k], k)).join(' · '), val:keys.map(k => fv(s2[k], k)).join(' · '), ok:has.length > 0, why:'도구 2P 에 저장된 값이 없음',
+      run(){ has.forEach(k => { WB.I[k] = s2[k]; }); wbSrcSet('9', has, '도구 2P'); return nm; }}; };
+  const okC = !!(o && (o.n_w > 0 || o.n_a > 0)), C2 = typeof t2Cwc==='function' ? ((t2Cwc().cool || {}).circuits || []) : [];
+  const parts = ['m', 'i', 'b'].map((p, j) => `${['모터', '인버터', '축전지'][j]} ${t9IsWater(p) ? '수랭' : '공랭'}`).join(' · ');
+  return {
+    get:[grp('모터 열 값 (열용량 · 냉각수까지 열저항 · 공랭 hA 정지 · 60 km/h)', ['th_c', 'th_r', 'm_ha0', 'm_ha60']), grp('인버터 열 값', ['i_c', 'i_r', 'i_ha0', 'i_ha60']), grp('축전지 열 값', ['b_c', 'b_r', 'b_ha', 'b_ha60']), grp('외기 온도', ['t_amb'])],
+    send:[{tool:'도구 2P', n:'냉각 회로 배치 + 부품 수랭 / 공랭', to:'도구 2P › 편집 › 냉각 › 냉각 회로, 수랭 방식 = [냉각 회로], 냉각수 온도 계산 켬', now:C2.some(c => (c.blocks || []).length) ? `수랭 회로 ${C2.filter(c => c.kind==='water').length}개 · 공랭 덕트 ${C2.filter(c => c.kind!=='water').length}개 · 수랭 방식 ${s2.cw_mode===1 ? '냉각 회로' : '부품별 독립'}` : '비어 있음',
+        val:okC ? `수랭 회로 ${o.n_w}개 · 공랭 덕트 ${o.n_a}개 · ${parts} (직렬 · 병렬 · 회로 여러 개 그대로)` : '', ok:okC, why:'계산에 수랭 회로나 공랭 덕트가 들어가야 보낼 수 있음',
+        run(){ const s = t9Read('2'); Object.assign(s, {cw_mode:1, m_cool:t9IsWater('m'), i_cool:t9IsWater('i'), b_cool:t9IsWater('b'), cw_on:1}); localStorage.setItem(wbStoreKey('2'), JSON.stringify(s));
+          if(typeof t2Cwc==='function'){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); t2Save(); } wbSrcSet('2', ['t2:cool'], '도구 9'); return '냉각 회로 배치'; }},
+      {tool:'도구 2P', n:'외기 온도', to:'도구 2P › 외기 온도', now:fv(s2.t_amb, 't_amb'), val:fv(WB.I.t_amb, 't_amb'), ok:isFinite(WB.I.t_amb), why:'이 도구의 외기 온도가 비어 있음',
+        run(){ const s = t9Read('2'); s.t_amb = WB.I.t_amb; localStorage.setItem(wbStoreKey('2'), JSON.stringify(s)); wbSrcSet('2', ['t_amb'], '도구 9'); return '외기 온도'; }}],
+    info:['주행 평균 발열 · 평균 차속 · 주행 시간은 도구 2P 의 [도구 연결]에서 보냅니다 (도구 2P 랩 시뮬 결과라서).'] }; }
 document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) return; const b = e.target.closest('[data-t9x]'); if(!b || b.disabled) return; if(b.dataset.t9x==='put' && wbExBlock()) return;
   if(b.dataset.t9x==='get'){ const s = t9Read('2'), D = WB_TOOLS['2'] ? WB_TOOLS['2'].inputs : []; let n = 0;
     T9PART.forEach(k => { const d = D.find(q => q.k===k), v = typeof s[k]==='number' && isFinite(s[k]) ? s[k] : d && wbEx() ? d.v : NaN; if(Number.isFinite(v)){ WB.I[k] = v; n++; } });
@@ -512,7 +524,7 @@ document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) r
 const M9TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 코드 · 검증(계산 코드와 손계산 비교표), 입력 내보내기 · 가져오기입니다. 냉각 배치는 이 브라우저에 기억됩니다.'],
   ['#wb .wb-in', '입력', '주행 조건(외기 · 평균 차속 · 주행 시간 · 출발 온도), 주행 평균 발열(모터 · 인버터 손실, 축전지 발열), 부품 열 값(열용량 · 냉각수까지 열저항 · 공랭 hA)입니다. 발열은 일정하다고 봅니다. 도구 2P 에서 보내거나 [도구 2P 부품 열 값 가져오기]로 채웁니다.'],
-  ['#wb .t9-xbar', '도구 2P 와 주고받기', '[도구 2P 로 회로 보내기]를 누르면 이 배치(수랭 회로 · 라디 · 펌프 · 공랭 덕트)가 도구 2P 의 냉각 회로로 복사됩니다 (도구 2P 에서도 같은 편집기로 따로 고칠 수 있음). [도구 2P 에서 가져오기]는 도구 2P 의 부품 열 값을 이 도구로 가져옵니다. 결과의 등가값은 회로를 냉각수 하나로 줄인 참고값 (대시보드 냉각 값)입니다.'],
+  ['#wb [data-wblink]', '도구 연결', '[도구 연결 ▾]에서 도구 2P 와 주고받습니다. 가져오기 = 도구 2P 의 모터 · 인버터 · 축전지 열 값 · 외기 온도를 이 도구 입력 칸으로, 보내기 = 이 배치(수랭 회로 · 라디 · 펌프 · 공랭 덕트)와 부품 수랭 / 공랭을 도구 2P 의 냉각 회로로. 무엇이 어디를 덮어쓰는지 표로 보고 체크한 것만 옮깁니다 (복사, 그 뒤로는 따로). 가져온 칸에는 "도구 2P에서" 표시가 붙습니다. 결과의 등가값은 회로를 냉각수 하나로 줄인 참고값 (대시보드 냉각 값)입니다.'],
   ['#wb .t9-cool', '냉각 배치', '수랭 회로 · 공랭 덕트를 블럭으로 놓고 오른쪽 점을 끌어 다음 블럭에 이어 줍니다(선 방향 = 냉각수 · 공기 흐름). 블럭은 끌어서 옮기고(다른 블럭과 줄이 맞으면 붙음), 누르면 입력(라디 면적 · UA · 팬, 펌프 유량, 냉각수 양)이 나옵니다. 한 블럭에서 호스를 둘 이상 끌어내면 갈라지고(번호 · 비율 %), 여러 호스가 한 블럭으로 들어오면 합쳐집니다. 호스 · 블럭을 누르고 Delete 키로 지웁니다. 수랭은 라디에이터 1개 이상(처음 넣은 라디가 기준) · 펌프 1개, 공랭은 입구 → 부품 → 출구. 회로에 없는 부품은 외기로 바로 식습니다.'],
   ['#wb #wbout', '결과', '정상 온도(평균 차속에서 발열이 계속될 때), 주행 시간 뒤 온도(출발 온도에서), 도구 2P 등가값입니다. 수랭 회로 1 의 라디 입구는 들어오는 냉각수가 섞인 온도, 출구는 기준 라디에서 나가는 온도입니다.'],
   ['#wb .wb-sig', '온도 그래프', '출발 온도에서 주행 시간 동안 부품 · 냉각수(회로마다 라디 입구) 온도입니다. 가로축을 입력 훑기로 바꾸면 평균 차속 · 발열 등을 바꿔 가며 정상 온도를 볼 수 있습니다.'],
@@ -552,7 +564,7 @@ WB_TOOLS['9'] = {
   ],
   sigOn:['tm', 'ti', 'tb', 'w1'],
   xiStart:'end',
-  onResult(){ const x = document.querySelector('#wbext .t9-xbar'); if(x) x.outerHTML = t9XBar(); },
+  links: () => t9Links(),
   extHTML: t9ExtHTML, extraI: () => ({cool: t9CoolCompile().net}),
   extGet: () => ({cool:JSON.parse(JSON.stringify(T9.cool))}),   /* .json 내보내기에 회로 배치도 */
   extSet(d){ if(d && d.cool && Array.isArray(d.cool.circuits)){ T9.cool = d.cool; t9Save(); wbPaint(['ext']); } },

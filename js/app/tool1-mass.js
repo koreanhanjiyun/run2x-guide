@@ -455,6 +455,7 @@ WB_TOOLS['1'] = {
     if(!m1Groups().some(g => m1GSum(g) > 0)) L.push({k:'m1:mass', n:'부품 질량 표 (질량이 있는 어셈블리 1개 이상)', g:'표 입력'});
     if(!m1Num0(d.height) || !m1Num0(d.mass)) L.push({k:'m1:drv', n:`드라이버 ${M1DRV[M1.dsel]} 키 · 몸무게`, g:'드라이버 모델'});
     return L; },
+  navGet: () => ({t:M1.tab}), navSet(s){ if(s.t && M1.tab!==s.t){ M1.tab = s.t; wbPaint(['ext']); } },   /* 뒤로가기 · 앞으로가기: 부품 질량 표 / 드라이버 모델 */
   needGo(k){ if(k==='m1:mass' || k==='m1:drv'){ M1.tab = k==='m1:mass' ? 'mass' : 'drv'; if(k==='m1:drv') M1.drv = M1.dsel; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); return true; } return false; },
   tour: M1TOUR, shape: true,
   onResult(R){ if(M1.tab==='drv'){ if(!M1.edit && !M1.drag){ const f = $('#m1dfig'); if(f) f.innerHTML = m1DrvFig(R); } else { const f = $('#m1dfig'); if(f && M1.drag) f.innerHTML = m1DrvFig(R); }
