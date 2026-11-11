@@ -3278,13 +3278,13 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 /* 새 파일: 빈 필수 칸 빨강 (결과를 보려 할 때부터, #wb.wb-needon) · 칸 아래 경고 */
 #wb.wb-needon :is(.wb-ir.need, .t9-cfi.need) input{border-color:#d33a2c!important;background:#fff4f2!important;box-shadow:0 0 0 1px #d33a2c inset}
 #wb.wb-needon .wb-ir.need .wb-in-t{color:#b3261e}
-#wb.wb-needon :is(.wb-ir.need, .t9-cfi.need)::after{content:'반드시 입력해야 합니다';grid-column:1/-1;justify-self:end;color:#c62828;font-size:11.5px;font-weight:600;line-height:1.2;margin-top:-1px}
+#wb.wb-needon :is(.wb-ir.need, .t9-cfi.need)::after{content:none;grid-column:1/-1;justify-self:end;color:#c62828;font-size:11.5px;font-weight:600;line-height:1.2;margin-top:-1px}
 #wb.wb-needon :is([data-t2eg].need, [data-t2tab="edit"].need, [data-wbtab="edit"].need){position:relative}
 #wb.wb-needon :is([data-t2eg].need, [data-t2tab="edit"].need, [data-wbtab="edit"].need)::after{content:'';position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#d33a2c}
 .wb-needline{margin:0;padding:12px 14px;border:1px solid #f0b8b0;background:#fff7f5;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .wb-needline b{color:#b3261e}.wb-needline span{color:var(--ink-2);flex:1}
 #wb.wb-needon .t2-tw.need{border-color:#d33a2c;box-shadow:0 0 0 1px #d33a2c inset;background:#fff8f7}
-#wb.wb-needon .t2-tw.need .t2-empty::before{content:'반드시 입력해야 합니다 · ';color:#c62828;font-weight:600}
+#wb.wb-needon .t2-tw.need .t2-empty::before{content:none;color:#c62828;font-weight:600}
 #wb.wb-needon [data-t2et].need{position:relative}#wb.wb-needon [data-t2et].need:not([aria-pressed="true"]){color:#b3261e}
 #wb.wb-needon [data-t2et].need::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#d33a2c}
 .wb-need-flash{animation:wbneedf 1.2s ease}
@@ -3347,6 +3347,11 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 /* [도구 연결]로 받을 수 있는 칸: 파란 테두리 (빈 필수면 안쪽만 빨강, 테두리는 파랑) */
 .wb-ir.wb-lnk input:not(:disabled),.t2-tw.wb-lnk{border-color:#2f6fd0!important}
 #wb.wb-needon .wb-ir.need.wb-lnk input{border-color:#2f6fd0!important;box-shadow:0 0 0 1px #2f6fd0 inset!important;background:#fff4f2!important}
+
+/* 계산하지 않을 때(빈 필수 칸 등) 자리 표시는 멈춘 빈 상자, 계산 중일 때만 움직임 (2026-11-11) */
+#wb:not(.wb-busy) :is(.wb-skel, .wb-skelmode),#wb:not(.wb-busy) :is(.wb-skel, .wb-skelmode) *{animation:none!important}
+/* 도구 1: 차 형상이 없을 때 그림 자리 [차 형상 넣기] */
+.m1-dwrap,#wbmain{position:relative}.m1-shpcta{position:absolute;right:12px;top:12px;z-index:3;background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -10483,7 +10488,7 @@ function wbShellHTML(){ const T = wbT();
         <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
         <button type="button" class="btn small" data-wbimp>가져오기 .json</button><i class="wb-sep" aria-hidden="true"></i>
-        ${T.links ? `<button type="button" class="btn small" data-wblink title="다른 도구에서 값 · 표를 가져오거나 보냄 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
+        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구에서 값 · 표를 가져오거나 보냄 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
         ${T.share==='hp' ? `<details class="wb-hpdd"><summary class="btn small" title="도구 5 · 6 · 7 · 8 이 같은 하드포인트 한 벌을 씁니다 (이 브라우저 안). 어느 도구에서 고쳐도 다른 도구가 열 때 그 값을 씁니다.">하드포인트 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbhp="xlsx">내보내기 .xlsx</button><button type="button" class="btn small" data-wbhp="json">내보내기 .json</button><button type="button" class="btn small" data-wbhp="imp">가져오기 (.xlsx · .csv · .json)</button></span></details><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
@@ -10491,7 +10496,7 @@ function wbShellHTML(){ const T = wbT();
     ${wbEx() ? '<div class="wb-exband" role="note"><b>예제</b><span>튜토리얼용 임의 데이터입니다. 설계에 쓸 수 없고, 내보내기 · 가져오기 · 대시보드 연결이 꺼져 있습니다.</span><button type="button" class="btn small" data-wbexreset title="이 도구의 예제 값을 처음 상태로">예제 처음으로</button></div>' : ''}
     <div class="wb-prog" id="wbprog" hidden role="status" aria-live="polite"><i></i><span></span></div>
     <div class="wb-main">
-      <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button></div><div id="wbin"></div></aside>
+      <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3></div><div id="wbin"></div></aside>
       <div class="wb-right">
         ${wbTabs(T) ? `<section class="wb-sec wb-tabsec" aria-label="결과 · 편집"><div class="wb-h"><div class="m1-tabs" role="tablist" id="wbtabs"></div><span class="wb-meta" id="wbtabm"></span></div></section>` : ''}
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
@@ -10510,13 +10515,13 @@ function wbShellHTML(){ const T = wbT();
    대시보드에 없는 값(도구 기본값 · 도구 전용)은 회색 네모. 마우스를 올리면 담당 파트 · 대시보드 값 · 상태 · 고친 사람 */
 const WB_STL = {ok:'확정', rev:'검토 중', asm:'가정', calc:'계산값', ex:'예시값'};
 function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2;
-  if(!K) return `<i class="wb-st sq" title="이 도구에서만 쓰는 값 (대시보드에 없음) · 도구 기본값 ${wbFmt(d.v, dd)}"></i>`;
+  if(!K) return `<i class="wb-st sq" title="본 설계 전용값 (이 도구에서만 씀 · 대시보드와 공유 안 함)"></i>`;
   const part = K.p + (K.p2 ? ' · ' + K.p2 : '');
-  if(!db) return `<i class="wb-st sq" title="${wbEsc(K.n)} · 담당 ${wbEsc(part)} · 대시보드 값 없음 → 도구 기본값 ${wbFmt(d.v, dd)}"></i>`;
+  if(!db) return `<i class="wb-st sq" title="${wbEsc(K.n)} · 담당 ${wbEsc(part)} · 대시보드 값 없음 → 본 설계 전용값"></i>`;
   const who = db.by ? ` · ${db.by}${db.at ? ' ' + String(db.at).slice(0, 10) : ''}` : '';
   const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''} (${WB_STL[db.st] || db.st})${who}${own ? ` → 지금 ${wbFmt(v, dd)} (직접 고침, 대시보드는 그대로)` : ''}`;
   return `<i class="wb-st dv-s s-${db.st}${own ? ' own' : ''}" title="${wbEsc(tip)}"></i>`; }
-const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
+const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>본 설계 전용값</span></p>`;
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
    도구가 입력을 자기 화면(도구 2P 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
 function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2P) · 탭 도구 = 핵심 입력(key:true)만 */
@@ -10532,7 +10537,7 @@ function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') 
   const groups = []; show.forEach(d => { let G = groups.find(x => x.g===(d.g || '')); if(!G){ G = {g:d.g || '', ds:[]}; groups.push(G); } G.ds.push(d); });
   const nav = sides ? `<div class="wb-esec"><span class="muted">보기</span><span class="dc-seg" role="group">${[['c', '차 · 공통'], ['f', '앞'], ['r', '뒤']].map(([k, t]) => `<button type="button" data-wbesec="${k}" aria-pressed="${WB.esec===k}">${t}</button>`).join('')}</span></div>` : '';
   const cut = g => sides ? g.replace(/^(앞|뒤) · /, '') : g;
-  return `<div class="wb-ebar"><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button>${nav}</div>
+  return `<div class="wb-ebar">${nav}</div>
     ${!sides && T.edLay ? wbEditLay(T.edLay(), groups) : groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
     ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }
 /* 편집 배치 (도구가 T.edLay 를 줄 때, 2026-11-11): 구역 [{h 머리, n 열 수, cards:[{g 묶음, span 칸, k 카드 안 열 수}]}]. 항목이 적으면 한 행 여러 카드,
@@ -10810,18 +10815,21 @@ async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
 /* ---------- 도구 연결 (2026-11-11): 다른 도구와 주고받는 것을 한 창에 (체크해서 가져오기 · 보내기)
    도구가 T.links() → {get:[행], send:[행], info:[글]}, 행 = {tool 상대 도구, n 무엇, to 덮어쓸 곳, now 지금, val 가져올 · 보낼 값, ok, why 못 하는 까닭, run()}.
    run() 은 그 행을 실제로 복사하고 짧은 글을 돌려줌. 가져온 칸 · 표에는 출처 표시 (wbSrcSet), 사용자가 그 칸을 고치면 지움 */
-function wbLinkOpen(){ const T = wbT(); if(!T || !T.links) return; const L = T.links() || {}; WB.lk = L;
+/* 대시보드에서 가져오기 (예전 [대시보드 값으로 채우기], 2026-11-11): 대시보드 키가 있는 입력마다 한 줄 */
+function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
+  return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; return ''; }}; }); }
+function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.links() : null) || {}; L.dash = wbDashRows(); WB.lk = L;
   const sec = (dir, title, btn) => { const G = L[dir] || []; if(!G.length) return '';
-    return `<section class="wbl-sec"><h4>${title}</h4><table class="dvi-t wbl-t"><thead><tr><th></th><th>무엇을</th><th>${dir==='get' ? '이 도구의 어디에 (덮어씀)' : '받는 도구의 어디에 (덮어씀)'}</th><th>지금 그 자리</th><th>${dir==='get' ? '가져올 것' : '보낼 것'}</th></tr></thead>
+    return `<section class="wbl-sec"><h4>${title}</h4><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th><th>무엇을</th><th>${dir==='send' ? '받는 도구의 어디에 (덮어씀)' : '이 도구의 어디에 (덮어씀)'}</th><th>지금 그 자리</th><th>${dir==='send' ? '보낼 것' : '가져올 것'}</th></tr></thead>
       <tbody>${G.map((r, i) => `<tr${r.ok ? '' : ' class="off"'}><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td><span class="wbl-tool">${wbEsc(r.tool)}</span> ${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`).join('')}</tbody></table>
       <div class="wbl-act"><button type="button" class="btn small pri" data-wblgo="${dir}"${G.some(r => r.ok) ? '' : ' disabled'}>${btn}</button></div></section>`; };
-  wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('send', '다른 도구로 보내기', '체크한 것 보내기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
+  wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('dash', '대시보드에서 가져오기', '체크한 것 가져오기')}${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('send', '다른 도구로 보내기', '체크한 것 보내기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
     <div class="dvi-foot"><span class="muted">복사입니다. 가져오거나 보낸 뒤 한쪽을 고쳐도 다른 쪽은 그대로입니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbl-box'); }
 function wbLinkGo(dir){ const m = $('#wbm'), G = (WB.lk || {})[dir] || []; if(!m) return;
   const sel = [...m.querySelectorAll(`[data-wblk^="${dir}:"]:checked`)].map(c => G[+c.dataset.wblk.split(':')[1]]).filter(r => r && r.ok);
   if(!sel.length){ toast('체크한 항목이 없습니다.'); return; }
   const msg = sel.map(r => { try{ return r.run(); }catch(e){ return `${r.n}: 실패`; } }).filter(Boolean);
-  wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast((dir==='get' ? '가져왔습니다 — ' : '보냈습니다 — ') + msg.join(' · ')); }
+  wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast(dir==='dash' ? `대시보드 값 ${sel.length}개를 가져왔습니다.` : (dir==='get' ? '가져왔습니다 — ' : '보냈습니다 — ') + msg.join(' · ')); }
 /* 출처 표시: 모드별 {도구: {키: '도구 X'}} */
 const WBSRC_KEY = 'run2x.wb.src';
 const wbSrcAll = () => { try{ return JSON.parse(localStorage.getItem(wbMK(WBSRC_KEY)) || '{}') || {}; }catch(e){ return {}; } };
@@ -10914,8 +10922,6 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(!WB.id) return;
   if(t.closest('[data-wbmx]') || t.matches('#wbm')){ wbModalClose(); return; }
   if(t.closest('[data-wbx]')){ wbClose(); return; }
-  if(t.closest('[data-wbfill]') && wbExBlock()) return;
-  if(t.closest('[data-wbfill]')){ let n = 0, ch = 0, no = 0; wbT().inputs.forEach(d => { const db = wbDash(d.dk); if(db){ if(Math.abs((WB.I[d.k] ?? NaN) - db.v) > 1e-12 || !isFinite(WB.I[d.k])) ch++; WB.I[d.k] = db.v; n++; } else no++; }); wbSave(); wbPaint(['in']); wbCalc(); toast(`대시보드 값 ${n}개로 채웠습니다 (그중 바뀐 값 ${ch}개)${no ? ` · ${no}개는 대시보드에 없어 지금 값 그대로` : ''}. 칸 옆 점 색이 대시보드 상태입니다.`); return; }
   if(t.closest('[data-wbcmp]')){ WB.cmp = !WB.cmp; t.closest('[data-wbcmp]').setAttribute('aria-pressed', String(WB.cmp)); wbPaint(['in','out']); return; }
   if(t.closest('[data-wbver]')){ wbVerify(); return; }
   if(t.closest('[data-wbcode]')){ wbCodeOpen(); return; }
@@ -10931,6 +10937,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbput]')){ if(!wbExBlock()) wbPutOpen(); return; }
   if(t.closest('[data-wblink]')){ if(!wbExBlock()) wbLinkOpen(); return; }
   { const lg = t.closest('[data-wblgo]'); if(lg){ wbLinkGo(lg.dataset.wblgo); return; } }
+  { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { c.checked = la.checked; }); } }
   if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }
@@ -11255,7 +11262,7 @@ function m1SetHue(id, h){ const card = document.querySelector(`[data-m1g="${id}"
 
 /* ---------- 드라이버 모델: 그림(왼쪽, 숫자 누르면 고침) + 오른쪽 칸(성별 · 장비 · 다른 드라이버와 같게 · 체절 질량) ---------- */
 function m1DrvHTML(){ const ed = m1CanEdit(), d = m1Drv(M1.drv) || M1DDEF(), others = Object.keys(M1DRV).filter(k => k!==M1.drv);
-  const D = WB.R && WB.R.drv && WB.R.drv[M1.drv];
+  const D = m1DOf(WB.R, M1.drv);
   const gin = (p, lab) => `<label class="m1-gi"><span>${lab}</span>${ed ? m1Num(m1Get(d, p) || null, `data-m1d="${p}" min="0" placeholder="0" aria-label="${lab.replace(/<[^>]+>/g, '')} [kg]"`) : `<b>${wbFmt(m1Get(d, p) || 0, 1)}</b>`}<i>kg</i></label>`;
   return `<div class="m1-top"><div class="m1-ptabs">${Object.entries(M1DRV).map(([k, t]) => { const dd = m1Drv(k); return `<button type="button" data-m1drv="${k}" aria-pressed="${M1.drv===k}"><i class="m1-hdot" style="background:${M1HC[k]}"></i>${t}${dd && dd.label ? ' · ' + wbEsc(dd.label) : ''}${dd ? '' : '<span>기본값</span>'}</button>`; }).join('')}</div>
       <span class="m1-hint">${ed ? '그림 위 숫자를 누르면 고칩니다 · 흰 점(엉덩이점 · 발목 · 핸들)은 끌어서 옮깁니다' : '지난 시즌 기록은 회장만 고칠 수 있습니다'}</span>
@@ -11295,7 +11302,14 @@ function m1Pill(P, a, b, ra, rb, cls, halo){ const dx = b[0] - a[0], dy = b[1] -
   const pt = (c, r, e) => `${(c[0] + r*e[0]).toFixed(1)},${(c[1] + r*e[1]).toFixed(1)}`;
   const shape = (h, c) => `<path d="M${pt(a, ra + h, e1)} L${pt(b, rb + h, e1)} L${pt(b, rb + h, e2)} L${pt(a, ra + h, e2)} Z" class="${c}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(ra + h).toFixed(1)}" class="${c}"/><circle cx="${b[0].toFixed(1)}" cy="${b[1].toFixed(1)}" r="${(rb + h).toFixed(1)}" class="${c}"/>`;
   return (halo ? shape(halo, 'm1-halo') : '') + shape(0, cls); }
-function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p class="wb-empty">계산 중…</p>';
+/* 드라이버 모델은 다른 필수 칸이 비어 계산을 안 해도 키 · 몸무게만 있으면 이 자리에서 계산해 그림 (계산 코드의 driver 를 그대로, 2026-11-11) */
+let M1DRVF = null;
+function m1DrvLocal(k){ const d = m1Drv(k) || M1DDEF(); if(!(+d.height > 0 && +d.mass >= 0 && isFinite(+d.mass))) return null;
+  try{ if(!M1DRVF) M1DRVF = new Function(WB_TOOLS['1'].code + '\nreturn driver;')(); return M1DRVF(JSON.parse(JSON.stringify(d)), WB.I.L > 0 ? WB.I.L : 1550); }catch(e){ return null; } }
+const m1DOf = (R, k) => (R && R.drv && R.drv[k]) || m1DrvLocal(k);
+/* 차 형상이 없으면 그림 자리에 [차 형상 넣기] */
+const m1ShpCta = view => typeof shGet==='function' && !shGet(view) && !wbEx() ? `<button type="button" class="btn small m1-shpcta" data-shpopen>차 형상 넣기</button>` : '';
+function m1DrvFig(R){ const D = m1DOf(R, M1.drv); if(!D) return '<p class="wb-empty">키 · 몸무게를 넣으면 그려집니다</p>';
   const d = m1Drv(M1.drv) || M1DDEF(), ed = m1CanEdit(), L = (WB.I.L > 0 ? WB.I.L : 1550), r = (WB.I.r_load > 0 ? WB.I.r_load : (typeof DASH!=='undefined' && DASH.P.r_load) || 220);
   const {x0, x1, z0, z1, W} = M1F, s = W/(x1 - x0), H = Math.round((z1 - z0)*s), T = (x, z) => [(x - x0)*s, H - (z - z0)*s], X = x => T(x, 0)[0], Z = z => T(0, z)[1];
   const J = D.j, S2 = p => T(p[0], p[1]), mm = v => v*s, f0 = v => Math.round(v), hal = 2.2;
@@ -11310,7 +11324,7 @@ function m1DrvFig(R){ const D = R && R.drv && R.drv[M1.drv]; if(!D) return '<p c
   /* 바이저는 목 각도와 상관없이 항상 수평 (시선은 정면) */
   const visor = `<g><clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/></g>`;
   const foot = `<path d="M${J.F.map(p => S2(p).map(v => v.toFixed(1)).join(',')).join(' L')} Z" class="m1-foot"/>`;
-  return `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
+  return m1ShpCta('side') + `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
     ${CARFIG.carSide(T, L, r, s)}
     <line x1="0" y1="${Z(0)}" x2="${W}" y2="${Z(0)}" class="cf-gnd"/>
     <line x1="${X(L)}" y1="${Z(0) + 4}" x2="${X(L)}" y2="${Z(0) + 16}" stroke="#232731"/><text x="${X(L)}" y="${Z(0) + 28}" class="m1-tl" text-anchor="middle">뒤 차축 x = 0</text>
@@ -11336,7 +11350,7 @@ const M1EF = {back:[['back','°']], neck:[['neck','°']], foot:[['foot','°']], 
 const m1Get = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
 function m1EditOpen(t){ const key = t.dataset.m1e, d = m1Drv(M1.drv) || M1DDEF(), box = t.closest('.m1-dwrap'), rb = box.getBoundingClientRect(), rt = t.getBoundingClientRect();
   const fs = key.startsWith('seg.') ? [[key, 'mm']] : M1EF[key]; if(!fs) return;
-  const D = WB.R && WB.R.drv && WB.R.drv[M1.drv], ph = p => p.startsWith('seg.') && D ? Math.round(D.lenDef[p.slice(4)]) : '';
+  const D = m1DOf(WB.R, M1.drv), ph = p => p.startsWith('seg.') && D ? Math.round(D.lenDef[p.slice(4)]) : '';
   const pop = document.createElement('div'); pop.className = 'm1-pop'; pop.style.left = Math.max(0, rt.left - rb.left - 8) + 'px'; pop.style.top = (rt.bottom - rb.top + 4) + 'px';
   pop.innerHTML = fs.map(([p, u]) => { const v = m1Get(d, p);
     return `<label>${key==='label' ? `<input type="text" data-m1p="${p}" maxlength="20" value="${wbEsc(v||'')}" placeholder="${M1DRV[M1.drv]}">` : `<span>${u==='x'||u==='z' ? u : ''}</span><input type="number" step="any" data-m1p="${p}" value="${v==null || !isFinite(v) || (p.startsWith('seg.') && !(v > 0)) ? '' : v}" placeholder="${ph(p)}">${u==='x'||u==='z' ? '<i>mm</i>' : `<i>${u}</i>`}`}</label>`; }).join('')
@@ -11440,7 +11454,7 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
     sv += `<circle cx="${p1[0].toFixed(1)}" cy="${p1[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle><circle cx="${p2[0].toFixed(1)}" cy="${p2[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle>`; });
   if(o.m > 0){ sv += sym(ts(L - o.x_cg, o.h), '#d92d20', 9) + sym(tt(L - o.x_cg, -o.y_cg), '#d92d20', 9); if(o.m_s > 0) sv += sym(ts(L - o.x_s, o.h_s), '#6A4294', 7); }
   sv += `</svg><div class="wb-leg"><span><i style="background:#d92d20"></i>차 전체 CG</span><span><i style="background:#6A4294"></i>현가상 CG</span><span class="muted">원 색 = 카드 색 (드라이버 = 헬멧 색) · 원 넓이 ∝ 질량 · 원에 마우스를 올리면 어셈블리 이름</span></div>`;
-  return sv; }
+  return (WB.id==='1' && !wbEx() ? m1ShpCta('side') : '') + sv; }
 
 /* ---------- 대시보드 '파트별 > 질량 · 무게중심': 팀 질량 표 · 드라이버로 계산한 결과(읽기 전용) ---------- */
 const M1P = { R:null, key:'', busy:false, w:null };
@@ -11466,7 +11480,7 @@ const M1TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 차 형상, 코드 · 검증(계산 코드와 손계산 비교표), 입력 내보내기 · 가져오기, 대시보드에 반영입니다.', m1TT('mass')],
   ['#wb .wb-bar [data-coordopen]', '좌표계', '모든 좌표는 사이트 차량 좌표계입니다. 원점은 뒤 차축 중심 · 차량 중심면 · 지면, x는 앞으로 +, y는 왼쪽 +, z는 위로 + [mm]입니다. 누르면 설계 탭과 같은 좌표계 그림이 열립니다. 차 안 부품은 대부분 x가 + 라서 숫자만 넣으면 됩니다.', m1TT('mass')],
   ['#wb .wb-bar [data-shpopen]', '차 형상', '우리 차 측면도 · 윗면도를 이미지(.png .jpg .webp)나 CAD 도면(.dxf)으로 올리면, 질량 분포와 드라이버 모델 그림의 차 대신 씁니다. 올린 뒤 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심(윗면은 차축 가운데) 두 점만 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 계산에는 쓰지 않고, 올리지 않거나 되돌리면 기본 차 그림입니다.', m1TT('mass')],
-  ['#wb .wb-in', '입력', '휠베이스와 트레드입니다. [대시보드 값으로 채우기]를 누르면 대시보드 설계값이 들어옵니다.', m1TT('mass')],
+  ['#wb .wb-in', '입력', '휠베이스와 트레드입니다. 대시보드 설계값은 윗줄 [도구 연결 ▾]에서 가져옵니다.', m1TT('mass')],
   ['#wb .m1-tabs', '표 입력', '[부품 질량 표]는 어셈블리별 질량과 위치, [드라이버 모델]은 드라이버 자세와 체절 질량입니다. 팀원 누구나 이번 시즌 값을 고칩니다.', m1TT('mass')],
   ['#m1list [data-m1g]', '어셈블리 카드', '카드 하나가 어셈블리 하나입니다. 좌표는 그 어셈블리의 무게중심이고, 질량은 항목의 질량 × 개수 합입니다. 개수를 0으로 하면 그 항목은 빠집니다. 왼쪽 위 동그라미로 카드 색을, 오른쪽 위 단추로 좌우 바꿔 복사 · 지우기를 합니다.', m1TT('mass')],
   ['#m1list [data-m1g] .m1-grip', '카드 옮기기', '점 손잡이를 끌어 옮깁니다. 카드는 줄마다 왼쪽부터 채워집니다. 다른 카드 위에 놓으면 그 앞에 끼워 넣고(줄이 넘치면 마지막 카드가 바로 아래 새 줄로), 줄 끝 빈칸에 놓으면 그 줄 끝에 붙고, 줄 사이에 놓으면 새 줄이 생깁니다. 끄는 동안 파란 선으로 들어갈 자리를 보여 줍니다.', m1TT('mass')],
@@ -11523,7 +11537,7 @@ WB_TOOLS['1'] = {
   if(k==='m1:mass' || k==='m1:drv'){ M1.tab = k==='m1:mass' ? 'mass' : 'drv'; if(k==='m1:drv') M1.drv = M1.dsel; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); return true; } return false; },
   tour: M1TOUR, shape: true,
   onResult(R){ if(M1.tab==='drv'){ if(!M1.edit && !M1.drag){ const f = $('#m1dfig'); if(f) f.innerHTML = m1DrvFig(R); } else { const f = $('#m1dfig'); if(f && M1.drag) f.innerHTML = m1DrvFig(R); }
-      const sg = $('#m1segs'); if(sg) sg.innerHTML = m1SegTable(R.drv && R.drv[M1.drv]); const ds = $('#m1dsum'), DD = R.drv && R.drv[M1.drv]; if(ds && DD) ds.textContent = wbFmt(DD.m, 1); const he = $('#m1dhest'); if(he && DD){ he.hidden = !DD.segSet; he.textContent = m1HestTxt(DD); } }
+      const sg = $('#m1segs'); if(sg) sg.innerHTML = m1SegTable(m1DOf(R, M1.drv)); const ds = $('#m1dsum'), DD = m1DOf(R, M1.drv); if(ds && DD) ds.textContent = wbFmt(DD.m, 1); const he = $('#m1dhest'); if(he && DD){ he.hidden = !DD.segSet; he.textContent = m1HestTxt(DD); } }
     else if(M1.tab==='mass'){ const a = document.activeElement; if(!M1.pick && !M1.mv && !(a && a.closest && a.closest('#wbext') && a.matches('input, select'))){ const b = $('#m1body'); if(b) b.innerHTML = m1MassHTML(); } } },
   verifyBase:{items:[], drv:{d1:M1DDEF0(), d2:M1DDEF0(), d3:M1DDEF0()}, dsel:'d1'},
   code:`// ================================================================
@@ -12059,7 +12073,7 @@ document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) r
 document.addEventListener('change', e => { if(WB.id==='2' && e.target.matches && e.target.matches('[data-t2srel]')){ const v = +e.target.value; if(v > 0) T2S.rel = Math.min(50, v); } });
 /* 편집 탭 본문: 항목의 상수 칸 (왼쪽 입력과 같은 칸, 비슷한 값끼리 작은 상자 = sb) + 표 · 그림 */
 /* 탭 아래 짧은 안내 (글머리표, 2026-11-11 줄임) */
-const T2CNOTE = {bat:['셀 · 팩 값은 도구 4 에서 정해 왼쪽 [대시보드 값으로 채우기]로 받음 <button type="button" class="lnk" data-t2to4>도구 4 열기</button>', '규정(세그먼트 120 V · 6 MJ · 12 kg) · 질량은 도구 4 에서 확인'],
+const T2CNOTE = {bat:['셀 · 팩 값은 도구 4 에서 정해 [도구 연결 ▾] › 대시보드에서 받음 <button type="button" class="lnk" data-t2to4>도구 4 열기</button>', '규정(세그먼트 120 V · 6 MJ · 12 kg) · 질량은 도구 4 에서 확인'],
   mot:['모터 토크는 아래 토크 표로만 셈']};
 function t2Consts(grp){ const gs = T2EG[grp] || [], list = WB_TOOLS['2'].inputs.filter(d => gs.includes(d.g) && d.ui!=='none'); if(!list.length) return '';
   const groups = []; list.forEach(d => { let G = groups.find(x => x.g===d.g); if(!G){ G = {g:d.g, sb:[]}; groups.push(G); } let B = G.sb.find(x => x.n===d.sb); if(!B){ B = {n:d.sb, ds:[]}; G.sb.push(B); } B.ds.push(d); });
@@ -12963,7 +12977,7 @@ function t2TourTab(tab, et, course){ if(!T2.tourUndo && typeof tgUndo==='functio
 const t2TT = (tab, et, course) => ({click:{sel:`#wb [data-t2tab="${tab}"]`, need:() => T2.tab!==tab || (et && T2.etab!==et) || (course && T2.course!==course), run:() => t2TourTab(tab, et, course)}, inner:'#wb .wb-right'});
 const M2TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 코드 · 검증(계산 코드와 해석해 비교표), 입력 내보내기 · 가져오기(맵 편집 표 포함), [도구 연결 ▾](도구 9 · 4 에서 냉각 회로 · 셀 표 가져오기, 도구 9 로 평균 발열 · 차속 보내기 — 덮어쓸 곳을 표로 보고 체크), 대시보드에 반영(제안 감속비 · 최고 차속 · 횡가속도 · 랩 에너지)입니다.', t2TT('sim')],
-  ['#wb .wb-in', '입력', '입력 칸은 위 [편집] 탭에 항목별로 있습니다(자주 바꿔 보는 값만 나중에 이곳으로 꺼낼 예정). 여기에는 [대시보드 값으로 채우기]와 칸 앞 점의 뜻이 있습니다: 색 점 = 대시보드 값(확정 · 검토 중 · 가정 · 계산값 · 예시값), 고리 = 직접 고친 값, 회색 네모 = 도구 기본값.', t2TT('sim')],
+  ['#wb .wb-in', '입력', '입력 칸은 위 [편집] 탭에 항목별로 있습니다(자주 바꿔 보는 값만 나중에 이곳으로 꺼낼 예정). 여기에는 칸 앞 점의 뜻이 있습니다: 색 점 = 대시보드 값(확정 · 검토 중 · 가정 · 계산값), 고리 = 직접 고친 값, 회색 네모 = 본 설계 전용값. 대시보드 값은 윗줄 [도구 연결 ▾]에서 가져옵니다.', t2TT('sim')],
   ['#wb [data-t2tab="edit"]', '편집 탭', '모든 입력을 항목별로 넣는 탭입니다: 모델 단계 · 코스 · 차량 제원 · 서스 · 조향 · 타이어 · 에어로 · 모터 · 인버터 · 구동계 · 축전지. 항목마다 위에 상수 칸(비슷한 값끼리 상자), 아래에 표 · 그림이 있습니다. 여기서 고치는 동안은 계산하지 않고, [시뮬레이션] 탭으로 가면 한 번 계산합니다. 코스 단추는 시뮬레이션 코스와 따로입니다.', t2TT('edit', 'course')],
   ['#wb .t2-coolq', '냉각', '수랭 방식을 고릅니다. [부품별 독립 회로] = 수랭 부품마다 자기 냉각수 · 라디 (부품별 회로 값 칸). [냉각 회로] = 이 탭의 편집기로 그린 배치(직렬 · 병렬 · 라디 여러 개 · 공랭 덕트)로 앞 부품이 데운 냉각수를 뒤 부품이 받습니다. 배치는 이 도구에만 저장됩니다. 도구 9 에서 배치를 가져오거나, 시뮬레이션 탭에서 계산한 뒤 평균 손실 · 차속을 도구 9 로 보내는 것은 윗줄 [도구 연결 ▾]에서 합니다.', t2TT('edit', 'cool')],
   ['#wb .t2-model', '모델 단계', '차량 모델(0 기본 · 1 롤센터 · 롤)과 열 모델(모터 열 · 인버터 온도 · 축전지 온도 · 냉각수 온도를 각각 켜고 끔, 부품마다 공랭 · 수랭, 냉각수 온도는 수랭 부품이 있어야 계산)을 눌러 조합합니다. 단추마다 계산하는 것과 쓰는 입력(어느 항목에 있는지)이 적혀 있고, 그 단계에서 안 쓰는 입력 칸은 막힙니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 보입니다. 대시보드 반영은 늘 차량 0 · 열 모터 열만.', t2TT('edit', 'model')],
@@ -13150,7 +13164,7 @@ WB_TOOLS['2'] = {
         {tool:'도구 9', n:'외기 온도', to:'도구 9 › 외기 온도', now:`${f(s9.t_amb, 0)} °C`, val:`${f(WB.I.t_amb, 0)} °C`, ok:isFinite(WB.I.t_amb), why:'이 도구의 외기 온도가 비어 있음', run:put9(['t_amb'], () => [WB.I.t_amb], '외기 온도')}],
       info:['평균 발열 · 차속은 지금 랩 시뮬 결과 (고른 코스 · 랩) 의 평균입니다.',
         '조향각 표는 도구 6 의 [도구 연결]에서 보냅니다 (이 도구에서 가져오려면 도구 6 계산 결과가 필요해서).',
-        '도구 1 · 4 · T 등의 설계값은 대시보드를 거쳐 왼쪽 [대시보드 값으로 채우기]로 받습니다.'] }; },
+        '도구 1 · 4 · T 등의 설계값은 이 창 맨 위 [대시보드에서 가져오기]로 받습니다.'] }; },
   /* 뒤로가기 · 앞으로가기: 랩 시뮬 / 편집 탭 · 편집 묶음 · 코스 편집 쪽 */
   navGet: () => ({t:T2.tab, e:T2.etab, c:T2.ecourse}),
   navSet(s){ const tc = T2.tab!==s.t; T2.etab = s.e || T2.etab; T2.ecourse = s.c || T2.ecourse; T2.tab = s.t || T2.tab; T2.menu = ''; t2Save(); wbPaint(['ext']);
@@ -17817,7 +17831,7 @@ document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches) 
 /* ============================================================ 이 탭 사용법 */
 const M4TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 코드 · 검증(계산 코드와 손계산 비교표), 입력 내보내기 · 가져오기, 대시보드에 반영(직렬 · 병렬 수, 팩 전압 · 에너지 · 저항 · 무게, 적용 전류, 셀 값)입니다.'],
-  ['#wb .wb-in', '입력', '셀 사양(데이터시트), 팩 구성(세그먼트 수 · 세그먼트 직렬 수 · 병렬 수), 추가 무게 · 저항, 팩 사용 전류 제한([제한 적용 · 셀 사양 최대])입니다. [대시보드 값으로 채우기]로 팀 셀 값을 불러옵니다.'],
+  ['#wb .wb-in', '입력', '셀 사양(데이터시트), 팩 구성(세그먼트 수 · 세그먼트 직렬 수 · 병렬 수), 추가 무게 · 저항, 팩 사용 전류 제한([제한 적용 · 셀 사양 최대])입니다. [도구 연결 ▾]에서 대시보드의 팀 셀 값을 가져옵니다.'],
   ['#wb .t4-x', '셀 프리셋 · 구성 방식 · 규정', '셀 값을 이름 붙여 저장해 두고 골라 쓸 수 있습니다. 구성 방식을 자동으로 두면 한쪽(세그먼트 직렬 또는 병렬)을 넣었을 때 규정(120 V · 6 MJ · 12 kg) 안에서 다른 쪽 최대를 찾습니다. 아래 막대는 세그먼트 규정 사용률입니다.'],
   ['#wb #wbout', '결과', '팩 · 세그먼트 · 전기 결과입니다. 팩 저항 = (전체 직렬 ÷ 병렬) × 셀 저항 + 추가 저항, 적용 전류 = min(셀 최대 × 병렬, 제한).'],
   ['#wb .t4-pw', '전압 단계별 출력', '셀 무부하 전압이 최대 · 공칭 · 전압 범위 90 ~ 10 % 일 때 표 전류로 부하 전압 · 단자 출력 · 손실 · 최소 셀 전압 판정을 봅니다. 표 전류는 [제한 적용 · 셀 사양 최대 · 직접]에서 고릅니다.'],
