@@ -83,10 +83,11 @@ function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.act
 
 /* ---------- 표 입력 ---------- */
 const m1Num = (v, attrs) => `<input type="number" step="any" ${attrs} value="${v==null || !isFinite(v) ? '' : v}">`;
-function m1ExtHTML(){ return `<section class="wb-sec m1" aria-label="표 입력"><div class="wb-h"><h3>표 입력</h3>
-      <div class="m1-tabs" role="tablist">${[['mass','부품 질량 표'], ['drv','드라이버 모델']].map(([k, t]) => `<button type="button" role="tab" data-m1tab="${k}" aria-selected="${M1.tab===k}">${t}</button>`).join('')}</div>
+function m1ExtHTML(){ const w = $('#wb'); if(w){ w.classList.add('m1-on'); w.classList.toggle('m1-tabdim', M1.tab==='dim'); }   /* [차 치수] 탭 = 아래 공통 입력 카드 (2026-11-11) */
+  return `<section class="wb-sec m1" aria-label="표 입력"><div class="wb-h"><h3>표 입력</h3>
+      <div class="m1-tabs" role="tablist">${[['mass','부품 질량 표'], ['drv','드라이버 모델'], ['dim','차 치수']].map(([k, t]) => `<button type="button" role="tab" data-m1tab="${k}" aria-selected="${M1.tab===k}">${t}</button>`).join('')}</div>
       <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 뒤 차축에서 앞으로 · y = 중심선에서 왼쪽 · z = 지면에서 위</span></div>
-    <div id="m1body">${M1.tab==='mass' ? m1MassHTML() : m1DrvHTML()}</div></section>`; }
+    <div id="m1body"${M1.tab==='mass' ? ' data-wbneed="m1:mass"' : ''}>${M1.tab==='mass' ? m1MassHTML() : M1.tab==='drv' ? m1DrvHTML() : ''}</div></section>`; }
 /* 카드 배치: 4열, 줄마다 왼쪽부터 빈칸 없이 채움. 드라이버 카드는 첫 줄 첫 칸 고정(첫 줄은 3장까지).
    저장값 pos {c, r}: 줄 r 과 줄 안 순서 c. 자리가 없는 카드는 마지막 줄 뒤에 이어 붙임 */
 const M1NC = 4, m1Cap = i => i===0 ? M1NC - 1 : M1NC;
@@ -195,14 +196,14 @@ function m1SetHue(id, h){ const card = document.querySelector(`[data-m1g="${id}"
 /* ---------- 드라이버 모델: 그림(왼쪽, 숫자 누르면 고침) + 오른쪽 칸(성별 · 장비 · 다른 드라이버와 같게 · 체절 질량) ---------- */
 function m1DrvHTML(){ const ed = m1CanEdit(), d = m1Drv(M1.drv) || M1DDEF(), others = Object.keys(M1DRV).filter(k => k!==M1.drv);
   const D = WB.R && WB.R.drv && WB.R.drv[M1.drv];
-  const gin = (p, lab) => `<label class="m1-gi"><span>${lab}</span>${ed ? m1Num(m1Get(d, p) || null, `data-m1d="${p}" min="0" placeholder="0" aria-label="${lab} [kg]"`) : `<b>${wbFmt(m1Get(d, p) || 0, 1)}</b>`}<i>kg</i></label>`;
+  const gin = (p, lab) => `<label class="m1-gi"><span>${lab}</span>${ed ? m1Num(m1Get(d, p) || null, `data-m1d="${p}" min="0" placeholder="0" aria-label="${lab.replace(/<[^>]+>/g, '')} [kg]"`) : `<b>${wbFmt(m1Get(d, p) || 0, 1)}</b>`}<i>kg</i></label>`;
   return `<div class="m1-top"><div class="m1-ptabs">${Object.entries(M1DRV).map(([k, t]) => { const dd = m1Drv(k); return `<button type="button" data-m1drv="${k}" aria-pressed="${M1.drv===k}"><i class="m1-hdot" style="background:${M1HC[k]}"></i>${t}${dd && dd.label ? ' · ' + wbEsc(dd.label) : ''}${dd ? '' : '<span>기본값</span>'}</button>`; }).join('')}</div>
       <span class="m1-hint">${ed ? '그림 위 숫자를 누르면 고칩니다 · 흰 점(엉덩이점 · 발목 · 핸들)은 끌어서 옮깁니다' : '지난 시즌 기록은 회장만 고칠 수 있습니다'}</span>
       ${ed && m1Drv(M1.drv) ? `<button type="button" class="lnk m1-reset" data-m1dreset title="엉덩이점 · 등받이 · 목 각도 · 발목 · 발 각도 · 핸들 · 직접 고친 체절 길이를 처음으로 (이름 · 키 · 몸무게 · 성별 · 장비는 그대로)">자세 초기화</button>` : ''}</div>
     <div class="m1-dgrid"><div class="m1-dfw">${m1InfoHTML(d, D, ed)}<div class="m1-dwrap" id="m1dfig">${m1DrvFig(WB.R)}</div></div>
       <aside class="m1-dside" aria-label="드라이버 설정">
         <div class="m1-sg"><b>체절 비율</b><div class="m1-seg2">${[['m','남성'],['f','여성']].map(([k, t]) => `<button type="button" data-m1sex="${k}" aria-pressed="${(d.sex||'m')===k}"${ed ? '' : ' disabled'}>${t}</button>`).join('')}</div></div>
-        <div class="m1-sg"><b>장비</b>${gin('gear.helmet', '헬멧 → 머리')}${gin('gear.suit', '드라이버 복 → 체절 비율로')}${gin('gear.belt', '안전벨트 → 몸통')}</div>
+        <div class="m1-sg"><b>장비</b>${gin('gear.helmet', '헬멧 <span class="m1-to">(→ 머리)</span>')}${gin('gear.suit', '드라이버 복 <span class="m1-to">(→ 체절 비율로)</span>')}${gin('gear.belt', '안전벨트 <span class="m1-to">(→ 몸통)</span>')}</div>
         ${ed ? `<div class="m1-sg"><b>자세 복사</b><span class="m1-fh">엉덩이점 · 등받이 · 목 각도 · 발목 · 발 각도 · 핸들 · 체절 길이만</span><div class="m1-same">${others.map(k => `<button type="button" class="btn small" data-m1same="${k}">${M1DRV[k]}와 같게</button>`).join('')}</div></div>` : ''}
         <div class="m1-sg" id="m1segs">${m1SegTable(D)}</div>
       </aside></div>`; }
@@ -212,9 +213,9 @@ function m1InfoHTML(d, D, ed){
   const num = (p, v, u, w) => ed ? `<input type="number" step="any" data-m1o="${p}" value="${v==null || !isFinite(v) ? '' : v}"${w ? ` placeholder="${w}"` : ''} aria-label="${p}">${u ? `<i>${u}</i>` : ''}` : `<b>${v==null || !isFinite(v) ? '-' : v}</b>${u ? `<i>${u}</i>` : ''}`;
   return `<div class="m1-dinfo${ed ? ' ed' : ''}" aria-label="드라이버 정보">
     <label class="m1-dn">${ed ? `<input type="text" data-m1o="label" maxlength="20" value="${wbEsc(d.label||'')}" placeholder="표시 이름 (${M1DRV[M1.drv]})" aria-label="표시 이름">` : `<b>${wbEsc(d.label || M1DRV[M1.drv])}</b>`}</label>
-    <label><span>키</span>${num('height', +d.height, 'cm')}</label>
+    <label data-wbneed="m1:drv"><span>키</span>${num('height', +d.height, 'cm')}</label>
     <p class="m1-fh m1-hest" id="m1dhest"${D && D.segSet ? '' : ' hidden'}>${D ? m1HestTxt(D) : ''}</p>
-    <label><span>몸무게</span>${num('mass', +d.mass, 'kg')}</label>
+    <label data-wbneed="m1:drv"><span>몸무게</span>${num('mass', +d.mass, 'kg')}</label>
     <p class="m1-dsum">드라이버 합 <b id="m1dsum">${D ? wbFmt(D.m, 1) : '-'}</b> kg (장비 포함)</p></div>`; }
 function m1SegTable(D){ if(!D) return '';
   return `<b>체절 질량 · 무게중심</b><table class="m1-st"><thead><tr><th>체절</th><th>kg</th><th>x</th><th>z</th></tr></thead><tbody>${D.segs.map(sg => `<tr><td>${sg.n}</td><td>${wbFmt(sg.m, 2)}</td><td>${Math.round(sg.x)}</td><td>${Math.round(sg.z)}</td></tr>`).join('')}
@@ -456,7 +457,10 @@ WB_TOOLS['1'] = {
     if(!m1Num0(d.height) || !m1Num0(d.mass)) L.push({k:'m1:drv', n:`드라이버 ${M1DRV[M1.dsel]} 키 · 몸무게`, g:'드라이버 모델'});
     return L; },
   navGet: () => ({t:M1.tab}), navSet(s){ if(s.t && M1.tab!==s.t){ M1.tab = s.t; wbPaint(['ext']); } },   /* 뒤로가기 · 앞으로가기: 부품 질량 표 / 드라이버 모델 */
-  needGo(k){ if(k==='m1:mass' || k==='m1:drv'){ M1.tab = k==='m1:mass' ? 'mass' : 'drv'; if(k==='m1:drv') M1.drv = M1.dsel; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); return true; } return false; },
+  needMark(L){ const ks = new Set(L.map(x => x.k)), dim = L.some(x => !String(x.k).startsWith('m1:'));
+    document.querySelectorAll('#wb [data-m1tab]').forEach(b => b.classList.toggle('need', b.dataset.m1tab==='mass' ? ks.has('m1:mass') : b.dataset.m1tab==='drv' ? ks.has('m1:drv') : dim)); },
+  needGo(k){ if(!String(k).startsWith('m1:')){ if(M1.tab!=='dim'){ M1.tab = 'dim'; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); } return false; }   /* 치수 빈칸 → [차 치수] 탭을 열고 칸 찾기는 작업창이 */
+  if(k==='m1:mass' || k==='m1:drv'){ M1.tab = k==='m1:mass' ? 'mass' : 'drv'; if(k==='m1:drv') M1.drv = M1.dsel; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); return true; } return false; },
   tour: M1TOUR, shape: true,
   onResult(R){ if(M1.tab==='drv'){ if(!M1.edit && !M1.drag){ const f = $('#m1dfig'); if(f) f.innerHTML = m1DrvFig(R); } else { const f = $('#m1dfig'); if(f && M1.drag) f.innerHTML = m1DrvFig(R); }
       const sg = $('#m1segs'); if(sg) sg.innerHTML = m1SegTable(R.drv && R.drv[M1.drv]); const ds = $('#m1dsum'), DD = R.drv && R.drv[M1.drv]; if(ds && DD) ds.textContent = wbFmt(DD.m, 1); const he = $('#m1dhest'); if(he && DD){ he.hidden = !DD.segSet; he.textContent = m1HestTxt(DD); } }

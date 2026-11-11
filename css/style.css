@@ -3308,3 +3308,14 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-cright .t9-cfi.need input{border-color:#d33a2c;background:#fff4f2}
 .t9-cb.need>rect,.t9-cb.need>circle:first-child{stroke:#d33a2c!important;stroke-width:2px;stroke-dasharray:5 3}
 .dc-seg button:disabled{opacity:.45;cursor:not-allowed;background:repeating-linear-gradient(135deg,#eceef2 0 4px,#f6f7f9 4px 8px);color:#7a808c}
+/* 편집 배치 (T.edLay) */
+.wb-elh{margin:14px 0 6px}.wb-elh:first-of-type{margin-top:4px}
+.wb-elay{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px 14px;align-items:start}
+.wb-ebin{display:grid;grid-template-columns:repeat(var(--k),minmax(0,1fr));grid-auto-flow:column;grid-template-rows:repeat(var(--r),auto);column-gap:24px}
+/* 도구 1 (2026-11-11): [차 치수] 탭에서만 공통 입력 카드, 장비 행선지 (→ …) 는 작게, 빈 필수 표시 */
+#wb.m1-on:not(.m1-tabdim) #wbedit{display:none}
+.m1-to{color:var(--muted);font-size:11.5px;font-weight:400}
+#wb.wb-needon .m1-dinfo label.need input{border-color:#d33a2c!important;background:#fff4f2!important}
+#wb.wb-needon #m1body.need .m1-board,#wb.wb-needon #m1body.need{outline:2px solid #d33a2c;outline-offset:4px;border-radius:8px}
+#wb.wb-needon [data-m1tab].need{position:relative}
+#wb.wb-needon [data-m1tab].need::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#d33a2c}

@@ -28,24 +28,27 @@ const M3TOUR = [
   ['#wb .wb-sig', '답력–감속도', '가로축 = 답력. 감속도 · 앞뒤 제동력 · 라인 압력입니다. 한 축이 잠기면 그 축 제동력은 μ F_z 에 묶이고 기울기가 꺾입니다.'],
   ['#wb #wbout', '결과', '이상 · 실제 배분, 설계 답력의 라인 압력 · 제동력 · 감속도, 먼저 잠기는 축 · 그 감속도 · 답력, 네 바퀴 잠김 답력(규정 제동 시험) · 최소 페달비입니다.'],
 ];
-const T3G = {car:'차 (1번 · 2P번 도구)', ped:'페달', hyd:'유압 · 마찰', th:'디스크 온도'};
+const T3G = {car:'차 (도구 1 · 2P 값)', ped:'페달', hyd:'마스터실린더 · 캘리퍼 · 패드', disc:'디스크', cprobe:'답력 곡선', cdn:'다운포스', th:'디스크 온도'};
+/* 편집 배치 (2026-11-11): 다른 도구 값 / 부품 / 계산 조건 (보고자 하는 계산 대상별) */
+const T3LAY = () => [{h:'다른 도구에서 오는 차 값', n:1, cards:[{g:T3G.car, k:3}]}, {h:'브레이크 부품', n:4, cards:[{g:T3G.ped}, {g:T3G.hyd, span:2, k:2}, {g:T3G.disc}]}, {h:'계산 조건', n:3, cards:[{g:T3G.cprobe}, {g:T3G.cdn}, {g:T3G.th}]}];
 WB_TOOLS['3'] = {
   no:'3', stage:'P1 · P3-8', name:'제동 시스템 사이징 ',
   x:{n:'답력', u:'N'}, mainTitle:'제동 배분 선도', mainMeta:'이상 곡선 · 실제 직선',
+  edLay: T3LAY,
   inputs:[
     {k:'m', dk:'m', v:300, d:0, g:T3G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T3G.car}, {k:'h', dk:'h', v:290, d:0, g:T3G.car}, {k:'L', dk:'L', v:1550, d:0, g:T3G.car},
     {k:'mu', dk:'mu', v:1.5, d:2, g:T3G.car}, {k:'r_load', dk:'r_load', v:236, d:0, g:T3G.car},
-    {k:'cla', dk:'cla', v:3, d:2, g:T3G.car}, {k:'xcop', dk:'xcop', v:775, d:0, g:T3G.car}, {k:'v_b', n:'시험 차속 (다운포스만)', u:'km/h', v:0, d:0, g:T3G.car},
+    {k:'cla', dk:'cla', v:3, d:2, g:T3G.car}, {k:'xcop', dk:'xcop', v:775, d:0, g:T3G.car}, {k:'v_b', n:'시험 차속 (다운포스만)', u:'km/h', v:0, d:0, g:T3G.cdn},
     {k:'f_ped', n:'설계 답력 (드라이버가 낼 수 있는 힘)', u:'N', v:981, d:0, g:T3G.ped}, {k:'pedal_ratio', dk:'pedal_ratio', v:2.73, d:2, g:T3G.ped}, {k:'brake_bias', dk:'brake_bias', n:'밸런스 바 앞 몫', v:73.6, d:1, g:T3G.ped},
     {k:'eta_b', n:'페달 · 유압 기계 효율', u:'%', v:100, d:0, g:T3G.ped},
     {k:'mc_f', dk:'mc_f', v:15.875, d:3, g:T3G.hyd}, {k:'mc_r', dk:'mc_r', v:15.875, d:3, g:T3G.hyd},
     {k:'cal_area_f', dk:'cal_area_f', n:'캘리퍼 피스톤 면적 (앞, 한쪽 합)', v:766.6, d:1, g:T3G.hyd}, {k:'cal_area_r', dk:'cal_area_r', n:'캘리퍼 피스톤 면적 (뒤, 한쪽 합)', v:766.6, d:1, g:T3G.hyd},
-    {k:'pad_mu', dk:'pad_mu', v:0.32, d:2, g:T3G.hyd}, {k:'disc_d_f', dk:'disc_d_f', v:187, d:0, g:T3G.hyd}, {k:'disc_d_r', dk:'disc_d_r', v:187, d:0, g:T3G.hyd},
+    {k:'pad_mu', dk:'pad_mu', v:0.32, d:2, g:T3G.hyd}, {k:'disc_d_f', dk:'disc_d_f', v:187, d:0, g:T3G.disc}, {k:'disc_d_r', dk:'disc_d_r', v:187, d:0, g:T3G.disc},
     {k:'pad_h', n:'패드 높이 (유효 반지름 = 바깥 반지름 − 패드 높이 ÷ 2)', u:'mm', v:0, d:1, g:T3G.hyd},
     {k:'v_stop', n:'정지 시작 차속 (디스크 온도)', u:'km/h', v:100, d:0, g:T3G.th}, {k:'n_stop', n:'연속 정지 횟수 (사이 냉각 없음)', u:'회', v:5, d:0, g:T3G.th},
-    {k:'m_disc_f', n:'디스크 하나 질량 (앞)', u:'kg', v:0.45, d:3, g:T3G.th}, {k:'m_disc_r', n:'디스크 하나 질량 (뒤)', u:'kg', v:0.45, d:3, g:T3G.th},
-    {k:'c_disc', n:'디스크 비열 (강 460)', u:'J/(kg·K)', v:460, d:0, g:T3G.th},
-    {k:'f_probe', n:'탐침 답력 (곡선 위 한 점)', u:'N', v:1200, d:0, g:T3G.ped},
+    {k:'m_disc_f', n:'디스크 하나 질량 (앞)', u:'kg', v:0.45, d:3, g:T3G.disc}, {k:'m_disc_r', n:'디스크 하나 질량 (뒤)', u:'kg', v:0.45, d:3, g:T3G.disc},
+    {k:'c_disc', n:'디스크 비열 (강 460)', u:'J/(kg·K)', v:460, d:0, g:T3G.disc},
+    {k:'f_probe', n:'탐침 답력 (곡선 위 한 점)', u:'N', v:1200, d:0, g:T3G.cprobe},
   ],
   outputs:[
     {k:'ideal_f', n:'이상 배분 (앞, 네 바퀴 동시 잠김)', u:'%', d:1, g:'배분'}, {k:'act_f', n:'실제 배분 (앞, 유압)', u:'%', d:1, g:'배분'}, {k:'a_max', n:'최대 감속도 (이상 배분)', u:'g', d:2, g:'배분'},

@@ -282,8 +282,16 @@ function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') 
   const nav = sides ? `<div class="wb-esec"><span class="muted">보기</span><span class="dc-seg" role="group">${[['c', '차 · 공통'], ['f', '앞'], ['r', '뒤']].map(([k, t]) => `<button type="button" data-wbesec="${k}" aria-pressed="${WB.esec===k}">${t}</button>`).join('')}</span></div>` : '';
   const cut = g => sides ? g.replace(/^(앞|뒤) · /, '') : g;
   return `<div class="wb-ebar"><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button>${nav}</div>
-    ${groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
+    ${!sides && T.edLay ? wbEditLay(T.edLay(), groups) : groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
     ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }
+/* 편집 배치 (도구가 T.edLay 를 줄 때, 2026-11-11): 구역 [{h 머리, n 열 수, cards:[{g 묶음, span 칸, k 카드 안 열 수}]}]. 항목이 적으면 한 행 여러 카드,
+   많으면 카드를 넓혀 안에서 열을 나눔 (세로 순서대로 채움). 배치에 없는 묶음은 맨 아래 카드로 */
+function wbEditLay(L, groups){ const used = new Set();
+  const card = c => { const G = groups.find(x => x.g===c.g); if(!G) return ''; used.add(G); const k = c.k || 1;
+    return `<div class="wb-ecard" style="grid-column:span ${c.span || 1}">${G.g ? `<div class="wb-ech">${wbEsc(G.g)}</div>` : ''}${k > 1 ? `<div class="wb-ebin" style="--k:${k};--r:${Math.ceil(G.ds.length / k)}">${wbInRows(G.ds, false)}</div>` : wbInRows(G.ds, false)}</div>`; };
+  const secs = L.map(S => { const cs = S.cards.map(card).join(''); return cs ? `<div class="wb-ig wb-elh">${wbEsc(S.h)}</div><div class="wb-elay" style="--n:${S.n}">${cs}</div>` : ''; }).join('');
+  const rest = groups.filter(G => !used.has(G));
+  return secs + (rest.length ? `<div class="wb-ecards">${rest.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(G.g)}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''); }
 function wbTabsHTML(){ const T = wbT(); if(!wbTabs(T)) return '';
   return [['res', '결과'], ['edit', '편집']].map(([k, t]) => `<button type="button" role="tab" data-wbtab="${k}" aria-selected="${(WB.tab || 'res')===k}">${t}</button>`).join(''); }
 /* 잠긴 칸 값: 도구의 inEff(k) 가 undefined = 저장값 그대로, null = 계산에 안 씀 (—), 숫자 = 실제로 쓰는 값, '…' = 결과가 나오면 정해짐 */
@@ -483,7 +491,7 @@ function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id]
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
   WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 새 파일 빈칸: 편집 탭에서 시작 */
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
-  m.classList.remove('t2-edit');   /* 도구 2P 편집 탭 표시가 다른 도구로 남아 결과를 가리던 것 (2026-11-11). 2P 는 그릴 때 다시 붙임 */
+  m.classList.remove('t2-edit', 'm1-on', 'm1-tabdim');   /* 도구 2P 편집 탭 표시가 다른 도구로 남아 결과를 가리던 것 (2026-11-11). 2P 는 그릴 때 다시 붙임 */
   m.classList.toggle('wb-exmode', wbEx()); m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
   wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); wbNavPush(!was); }
@@ -493,7 +501,7 @@ function wbExReset(){ if(!wbEx() || !WB.id) return; const id = WB.id, T = wbT();
   if(T.exReset) T.exReset(); WB.I = wbLoad(id); WB.R = null; wbPaint(); wbCalc(); toast('예제를 처음 상태로 되돌렸습니다.'); }
 function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = ''; m.classList.remove('wb-tabbed', 'wb-edit', 'wb-res');
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
-  m.classList.remove('wb-exmode', 't2-edit'); if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null;
+  m.classList.remove('wb-exmode', 't2-edit', 'm1-on', 'm1-tabdim'); if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null;
   wbModeSet('nf'); WBNAV.last = '';
   if(!WBNAV.pop && !window.DEBUG && typeof navState==='function'){ try{ history.pushState(navState(), '', location.hash); }catch(e){} } }   /* 단추로 닫으면 사이트 기록을 한 칸 (뒤로가기 = 닫기 전 도구 화면) */
 
