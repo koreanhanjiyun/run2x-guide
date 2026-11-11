@@ -29,11 +29,11 @@ const H=require('./h.js');
   await p.mouse.move(bb.x+3, bb.y+3); await p.mouse.down(); await p.mouse.move(bb.x+bb.width-3, bb.y+bb.height-3, {steps:8}); await p.mouse.up(); await W(300);
   console.log('marquee', JSON.stringify(await C0()));
   await p.keyboard.press('Escape'); await W(200); console.log('esc', JSON.stringify((await C0()).selB));
-  // 병렬: 펌프 뒤 인버터 · 모터 갈라져 라디로 합쳐짐 → 인버터 → 라디 호스 하나만 골라 지우기
-  await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.blocks.find(b=>b.id==='k4').x=440; C.blocks.find(b=>b.id==='k4').y=200; C.links=[['k1','k2'],['k2','k3'],['k2','k4'],['k3','k1'],['k4','k1']]; C.links.forEach(l=>{}); C.selB=[]; C.selL=[]; C.view=null; t9Save(); wbPaint(['ext']); }); await W(500);
+  // 병렬: 펌프 뒤 분기점 j1 에서 인버터 · 모터로 갈라져 합류점 j2 에서 합쳐져 라디로 (80차: 가르기 · 합치기는 분기점으로만)
+  await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.blocks.find(b=>b.id==='k4').x=440; C.blocks.find(b=>b.id==='k4').y=200; C.blocks.push({id:'j1',t:'j',x:360,y:110,p:{}},{id:'j2',t:'j',x:640,y:110,p:{}}); C.blocks.find(b=>b.id==='k3').x=440; C.blocks.find(b=>b.id==='k3').y=40; C.links=[['k1','k2'],['k2','j1'],['j1','k3'],['j1','k4'],['k3','j2'],['k4','j2'],['j2','k1']]; C.links.forEach(l=>{}); C.selB=[]; C.selL=[]; C.view=null; t9Save(); wbPaint(['ext']); }); await W(500);
   console.log('parallel err', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)), 'lq', await p.evaluate(()=>{ const r=t9CoolCompile().lq.w1; return [...r.m.values()].map(x=>+x.toFixed(3)).join(','); }));
   if(d && await p.$('.t9-cc')) await (await p.$('.t9-cc')).screenshot({path:`${d}/cool_parallel.png`});
-  const hits=await p.$$('[data-t9clink^="w1:"].t9-clhit'); const want=await p.evaluate(()=>T9.cool.circuits[0].links.findIndex(l=>l[0]==='k3' && l[1]==='k1'));
+  const hits=await p.$$('[data-t9clink^="w1:"].t9-clhit'); const want=await p.evaluate(()=>T9.cool.circuits[0].links.findIndex(l=>l[0]==='j2' && l[1]==='k1'));
   // 그 호스 경로 위 한 점 (다른 호스와 겹치지 않는 토막 가운데)
   const pt=await p.evaluate(j=>{ const C=T9.cool.circuits[0], by=new Map(C.blocks.map(b=>[b.id,b])), P=t9Route(C,j,by), svg=document.querySelector('svg[data-t9csvg="w1"]'), m=svg.getScreenCTM();
     const oth=C.links.map((l,i)=>i===j?null:t9Route(C,i,by)).filter(Boolean), on=(x,y)=>oth.some(R=>R.some((a,k)=>k<R.length-1 && Math.abs((R[k+1][0]-a[0])*(y-a[1])-(R[k+1][1]-a[1])*(x-a[0]))<1e-6 && x>=Math.min(a[0],R[k+1][0])-1 && x<=Math.max(a[0],R[k+1][0])+1 && y>=Math.min(a[1],R[k+1][1])-1 && y<=Math.max(a[1],R[k+1][1])+1));
@@ -45,22 +45,26 @@ const H=require('./h.js');
   await p.mouse.move(pt[0], pt[1]); await p.mouse.down(); await p.mouse.move(pt[0]+40, pt[1]+40, {steps:5}); await p.mouse.up(); await W(300);
   console.log('seg drag pts', JSON.stringify(await p.evaluate(j=>(T9.cool.circuits[0].links[j][3]||{}).pts, want)));
   await p.click(`[data-t9clink="w1:${want}"].t9-clhit`, {force:true}).catch(()=>{}); await W(200);
-  await p.evaluate(j=>{ const C=T9.cool.circuits[0]; C.selL=[j]; C.selB=[]; }, want); await p.keyboard.press('Delete'); await W(400);
+  await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.selL=[C.links.findIndex(l=>l[0]==='k3' && l[1]==='j2')]; C.selB=[]; }); await p.keyboard.press('Delete'); await W(400);
   console.log('delete one hose', JSON.stringify(await p.evaluate(()=>T9.cool.circuits[0].links.map(l=>l[0]+'>'+l[1]))));
-  // 호스 잇기 (인버터 오른쪽 점 → 라디)
-  const o=await (await p.$('[data-t9cpo="w1:k3"]')).boundingBox(), t=await pos('k1');
-  await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+40,t.y+20,{steps:8}); await p.mouse.up(); await W(400);
+  // 입구가 찬 라디로는 안 이어짐 · 출구가 찬 블럭 점은 끌기 안 됨
+  { const o=await (await p.$('[data-t9cpo="w1:k3"]')).boundingBox(), t=await pos('k1'); await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+40,t.y+20,{steps:8}); await p.mouse.up(); await W(400);
+    console.log('to full input (no new hose)', await p.evaluate(()=>T9.cool.circuits[0].links.length), 'full out port handle', await p.locator('[data-t9cpo="w1:k2"]').count()); }
+  // 호스 잇기 (인버터 오른쪽 점 → 합류점)
+  const o=await (await p.$('[data-t9cpo="w1:k3"]')).boundingBox(), t=await pos('j2');
+  await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+t.width/2,t.y+t.height/2,{steps:8}); await p.mouse.up(); await W(400);
   console.log('connect', JSON.stringify(await p.evaluate(()=>T9.cool.circuits[0].links.map(l=>l[0]+'>'+l[1]))), 'err', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)));
   // 호스 안지름 바꾸면 갈래 몫이 바뀜
-  await p.evaluate(()=>{ const C=T9.cool.circuits[0], j=C.links.findIndex(l=>l[0]==='k2' && l[1]==='k3'); (C.links[j][3]=C.links[j][3]||{}).d=6; t9Save(); }); const lq=await p.evaluate(()=>{ const C=T9.cool.circuits[0], r=t9CoolCompile().lq.w1; return C.links.map(l=>l[0]+'>'+l[1]+'='+(r.m.get(l)||0).toFixed(3)).join(' '); });
+  await p.evaluate(()=>{ const C=T9.cool.circuits[0], j=C.links.findIndex(l=>l[0]==='j1' && l[1]==='k3'); (C.links[j][3]=C.links[j][3]||{}).d=6; t9Save(); }); const lq=await p.evaluate(()=>{ const C=T9.cool.circuits[0], r=t9CoolCompile().lq.w1; return C.links.map(l=>l[0]+'>'+l[1]+'='+(r.m.get(l)||0).toFixed(3)).join(' '); });
   console.log('hose d 6 mm', lq);
   // 공랭: 입구 → 축전지 · 모터 갈라짐 → 출구, 비율
   await p.evaluate(()=>{ const A=T9.cool.circuits[1]; T9.cool.circuits[0].blocks=T9.cool.circuits[0].blocks.filter(b=>b.t!=='m'); T9.cool.circuits[0].links=T9.cool.circuits[0].links.filter(l=>l[0]!=='k4'&&l[1]!=='k4');
-    A.blocks.push({id:'k9', t:'m', x:360, y:200, p:{}}); A.links=[['k5','k6',0.3],['k5','k9',0.7],['k6','k7'],['k9','k7']]; A.selL=[]; A.selB=[]; A.view=null; t9Save(); wbPaint(['ext']); }); await W(500);
+    A.blocks.push({id:'k9', t:'m', x:360, y:200, p:{}},{id:'j5',t:'j',x:200,y:90,p:{}},{id:'j6',t:'j',x:560,y:90,p:{}}); A.links=[['k5','j5'],['j5','k6',0.3],['j5','k9',0.7],['k6','j6'],['k9','j6'],['j6','k7']]; A.selL=[]; A.selB=[]; A.view=null; t9Save(); wbPaint(['ext']); }); await W(500);
   console.log('air err', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)), 'air net', JSON.stringify(await p.evaluate(()=>t9CoolCompile().net.air[0].nodes)));
   await p.waitForTimeout(1500); console.log('t9 out', await p.evaluate(()=>WB.err || JSON.stringify({tm:WB.R.out.s_tm, tb:WB.R.out.s_tb, ti:WB.R.out.s_ti})));
   if(d) await (await p.$$('.t9-cc'))[1].screenshot({path:`${d}/cool_air.png`});
   // 블럭 넣기: 지금 보는 화면 가운데
+  console.log('palette j', await p.locator('[data-t9cadd="w1:j"]').count(), await p.locator('[data-t9cadd="a1:j"]').count());
   await p.click('[data-t9cadd="w1:pump"]'); await W(300); console.log('add pump', await p.evaluate(()=>{ const C=T9.cool.circuits[0]; return JSON.stringify([C.blocks.length, C.selB]); }));
   // 도구 2P 쪽 같은 편집기
   await p.evaluate(()=>{ wbOpen('2',null,'ex'); }); await W(7000); await p.click('[data-t2tab="edit"]'); await W(300);
