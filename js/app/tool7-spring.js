@@ -37,7 +37,7 @@ WB_TOOLS['7'] = {
     /* 댐퍼 규격 (예제 = Fox DHX 2023 신품 (관리자) → 2022+ DHX 눈-눈 규격에서 CAD 정지 길이 202.4 · 185.0 mm 바로 위: 앞 210 · 뒤 190, 스트로크는 확인 못 함 → 가정 앞 55 · 뒤 45) */
     {k:'sh_l_f', n:'댐퍼 규격 길이 (앞, 다 늘어난 눈 사이)', u:'mm', v:210, d:1, g:T7G.dmp}, {k:'sh_s_f', n:'댐퍼 스트로크 (앞)', u:'mm', v:55, d:1, g:T7G.dmp},
     {k:'sh_l_r', n:'댐퍼 규격 길이 (뒤, 다 늘어난 눈 사이)', u:'mm', v:190, d:1, g:T7G.dmp}, {k:'sh_s_r', n:'댐퍼 스트로크 (뒤)', u:'mm', v:45, d:1, g:T7G.dmp},
-    {k:'mr_m', n:'모션비 (1 = 기하, 0 = 상수)', u:'', v:1, d:0, g:T7G.spr, ui:'none'},
+    {k:'mr_m', n:'모션비 (1 = 기하, 0 = 상수)', u:'', v:0, d:0, g:T7G.spr, ui:'none'},
     {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T7G.geo}, {k:'camber_r', dk:'camber_r', v:-2, d:2, g:T7G.geo}, {k:'s_max', n:'그래프 트래블 범위 (±)', u:'mm', v:30, d:0, g:T7G.geo},
     {k:'pa_arm_f', n:'앞 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:1, d:0, g:T7G.geo, ui:'none'}, {k:'pa_arm_r', n:'뒤 푸시로드가 붙은 팔 (1 = 위, 0 = 아래)', u:'', v:0, d:0, g:T7G.geo, ui:'none'},
     ...k3dIn('f', t7Pt), ...k3dIn('r', t7Pt),

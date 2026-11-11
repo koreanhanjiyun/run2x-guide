@@ -121,5 +121,5 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   console.log('tour', seen.join(','));
   await p.evaluate(()=>{ try{ tourStop(); }catch(e){} }); await W(4000); console.log('after tour', await p.evaluate(()=>T2.course+' '+T2.tab));
   await p.evaluate(()=>wbClose()); await W(300);
-  for(const k of ['goal','pt']){ await p.evaluate(k=>{ DASH.part=k; dashPaint(['part']); }, k); await W(9000); console.log('part', k, (await p.textContent('#t2part')).replace(/\s+/g,' ').slice(0,120)); }
+  for(const k of ['goal','pt']){ await p.evaluate(k=>{ DASH.part=k; dashPaint(['part']); }, k); await W(9000); const nf=await p.$('.dp-body .dv-nofig'); console.log('part', k, nf ? 'no fig (대시보드 빈 값): '+(await nf.textContent()).slice(0,40) : (await p.textContent('#t2part')).replace(/\s+/g,' ').slice(0,120)); }
   console.log('errs', JSON.stringify(p.errs), JSON.stringify(p.cons)); await b.close(); await H.end(); })();

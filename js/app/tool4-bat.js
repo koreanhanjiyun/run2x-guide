@@ -108,7 +108,7 @@ WB_TOOLS['4'] = {
     {k:'c_ah', dk:'c_ah', v:4.0, d:2, g:T4G.cell}, {k:'c_imax', dk:'c_imax', v:35, d:1, g:T4G.cell}, {k:'c_ich', dk:'c_ich', v:6, d:1, g:T4G.cell}, {k:'c_r', dk:'c_r', v:12, d:2, g:T4G.cell}, {k:'c_g', dk:'c_g', v:70, d:1, g:T4G.cell},
     {k:'n_seg', dk:'n_seg', v:5, d:0, g:T4G.cfg}, {k:'s_seg', n:'세그먼트 직렬 수 (S)', u:'개', v:14, d:0, g:T4G.cfg}, {k:'n_p', dk:'n_p', n:'병렬 수 (P)', v:7, d:0, g:T4G.cfg},
     {k:'x_mseg', n:'세그먼트당 추가 무게 (버스바 · 케이스 등)', u:'kg', v:0, d:2, g:T4G.add}, {k:'x_mpack', n:'팩 전체 추가 무게 (박스 · 배선 등)', u:'kg', v:0, d:2, g:T4G.add},
-    {k:'v_inv', n:'인버터 최대 직류 전압 (구동계 부품 정격은 축전지 최대 전압 이상)', u:'V', v:420, d:0, g:T4G.add}, {k:'vi_on', n:'인버터 최대 전압 확인 (1 = 확인, 0 = 확인 안 함)', u:'', v:1, d:0, g:T4G.add, ui:'none'},
+    {k:'v_inv', n:'인버터 최대 직류 전압 (구동계 부품 정격은 축전지 최대 전압 이상)', u:'V', v:420, d:0, g:T4G.add}, {k:'vi_on', n:'인버터 최대 전압 확인 (1 = 확인, 0 = 확인 안 함)', u:'', v:0, d:0, g:T4G.add, ui:'none'},
     {k:'x_r', n:'팩 전체 추가 저항 (버스바 · 퓨즈 · 커넥터)', u:'mΩ', v:0, d:2, g:T4G.add}, {k:'i_lim', n:'팩 사용 전류 제한', u:'A', v:245, d:0, g:T4G.add}, {k:'il_on', n:'팩 사용 전류 (1 = 제한 적용, 0 = 셀 사양 최대)', u:'', v:0, d:0, g:T4G.add, ui:'none'},
     {k:'auto', n:'구성 방식 (0 수동 · 1 병렬 자동 · 2 직렬 자동)', u:'', v:0, d:0, g:T4G.cfg, ui:'none'},
     {k:'o_mode', n:'출력 표 전류 (0 제한 적용 · 1 셀 최대 · 2 직접)', u:'', v:0, d:0, g:T4G.add, ui:'none'}, {k:'o_T', n:'셀 표 온도', u:'°C', v:25, d:1, g:T4G.add, ui:'none'}, {k:'o_i', n:'출력 표 전류 (직접)', u:'A', v:0, d:0, g:T4G.add, ui:'none'},

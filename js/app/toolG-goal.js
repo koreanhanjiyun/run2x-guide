@@ -261,9 +261,9 @@ function bil(M, n, T) {
 //   팬 유량 fan [m³/s] · 팬 켜는 온도 fon [°C, 0 = 늘 켬] · UA (코어 풍속 5 m/s) ua [W/K] 또는 라디 표 (I.rq{M,I,B} = {n 유량, t 풍속, e kW}, 입구 온도차 itd [K]) · 라디 금속 열용량 cm [kJ/K]
 //   수랭 여부: 모터 m_cool (기본 수랭) · 인버터 i_cool (기본 수랭) · 축전지 b_cool (기본 공랭). 냉각수 밀도 1000 kg/m³ · 비열 4180 J/kg·K
 const T2CWP = { m: ['cw_', 'rqM'], i: ['i_w', 'rqI'], b: ['b_w', 'rqB'] };
-function coolIndep(I) { const rcp = 1000 * 4180, water = [];
+function coolIndep(I) { const water = [];   // 냉각수 ρ c_p 는 회로마다 (밀도 kg/m³ × 비열 kJ/(kg·K) × 1000, 2026-11-11 · 예전 물 고정 1000 × 4180)
   const on = { m: I.m_cool !== 0, i: I.i_cool !== 0, b: I.b_cool === 1 };
-  ['m', 'i', 'b'].forEach(p => { if (!on[p]) return; const [k, tk] = T2CWP[p], g = s => I[k + s];
+  ['m', 'i', 'b'].forEach(p => { if (!on[p]) return; const [k, tk] = T2CWP[p], g = s => I[k + s], rcp = (g('rho') > 0 ? g('rho') : 1000) * (g('cp') > 0 ? g('cp') : 4.18) * 1000;
     const V = Math.max(1e-3, g('v') > 0 ? g('v') : 1.2), q = Math.max(1e-3, g('q') > 0 ? g('q') : 8), C = V / 1000 * rcp / 3, rq = I[tk] && Array.isArray(I[tk].t) ? I[tk] : null;
     water.push({ Cc: q / 60000 * rcp, rcp, nodes: [
       { t: 'rad', C, q: 1, ins: [[2, 1]], UA: Math.max(0, g('ua') || 0), A: Math.max(1e-6, g('ra') || 0.06), kd: Math.max(0, g('kd') || 0), fan: Math.max(0, g('fan') || 0), fon: g('fon') || 0, Cm: Math.max(0, g('cm') || 0), ...(rq ? { rq, itd: g('itd') } : {}) },
@@ -291,7 +291,8 @@ function car(I, gr, kP, lam) {
   const crr = I.crr;                        // 구름 저항 계수 [-]
   const cl  = 0.5 * RHO * I.cla;            // 다운포스 = cl × v² [N]
   const cd  = 0.5 * RHO * I.cda;            // 항력     = cd × v² [N]
-  const eta = I.eta_dt / 100;               // 구동계 효율 [-]
+  const eta = I.eta_dt / 100;               // 구동계 효율 [-] (상수)
+  const etaD = (n, T) => I.effD ? bil(I.effD, n, Math.abs(T)) / 100 : eta;   // 구동계 효율 맵 (모터 회전수 × 모터 토크, 2026-11-11) 또는 상수
   const meff = m + I.j_eq / (r * r);        // 회전부 포함 등가 질량 [kg]  (J ÷ r²)
 
   // ---------- 축전지
@@ -365,9 +366,11 @@ function car(I, gr, kP, lam) {
   const ict = I.ict_m !== 0 ? Math.max(0, Math.min(I.i_ct, ipk)) : ipk * Math.max(0, Math.min(1, (Number.isFinite(I.i_cpct) ? I.i_cpct : 100) / 100));   // 인버터 연속 상전류 [A]
   const di0 = I.di_t0, di1 = I.di_t1;
   const r01 = x => Math.max(0, Math.min(1, x));
-  const rM = Tm => drM && Number.isFinite(Tm) ? r01((Tm - dr0) / (dr1 - dr0)) : 0;
-  const rI = Ti => inOn && di1 > di0 && ict < ipk && Number.isFinite(Ti) ? r01((Ti - di0) / (di1 - di0)) : 0;   // 인버터 온도 Ti [°C] (인버터 온도 끔 = 디레이팅 없음)
-  const drOn = drM || (inOn && di1 > di0 && ict < ipk);                                              // 온도에 따라 토크 한계가 바뀜 → 온도를 반영해 한 번 더 셈
+  /* 디레이팅 표 (2026-11-11): I.derM · I.derI = {t:[°C], r:[%]} (0 % = 피크 그대로 · 100 % = 연속까지), 표 사이 직선, 끝 밖은 끝 값. 없으면 시작 · 끝 온도 사이 직선 */
+  const dTab = (D, x) => { const t = D.t, rr = D.r; if (x <= t[0]) return rr[0] / 100; if (x >= t[t.length - 1]) return rr[rr.length - 1] / 100; let i = 1; while (t[i] < x) i++; return (rr[i - 1] + (rr[i] - rr[i - 1]) * (x - t[i - 1]) / (t[i] - t[i - 1])) / 100; };
+  const rM = Tm => !(thOn && Number.isFinite(Tm)) ? 0 : I.derM ? r01(dTab(I.derM, Tm)) : drM ? r01((Tm - dr0) / (dr1 - dr0)) : 0;
+  const rI = Ti => !(inOn && ict < ipk && Number.isFinite(Ti)) ? 0 : I.derI ? r01(dTab(I.derI, Ti)) : di1 > di0 ? r01((Ti - di0) / (di1 - di0)) : 0;   // 인버터 온도 Ti [°C] (인버터 온도 끔 = 디레이팅 없음)   // 인버터 온도 Ti [°C] (인버터 온도 끔 = 디레이팅 없음)
+  const drOn = (thOn && (drM || !!I.derM)) || (inOn && ict < ipk && (di1 > di0 || !!I.derI));                                              // 온도에 따라 토크 한계가 바뀜 → 온도를 반영해 한 번 더 셈
   const thC  = Math.max(1, I.th_c);                   // 열용량 [J/K]
   const thR  = Math.max(1e-9, I.th_r);                // 냉각까지 열저항 [K/W]
   const thCo = I.th_cool;                             // 냉각수 온도 [°C]
@@ -455,7 +458,7 @@ function car(I, gr, kP, lam) {
       const tr_ = term(T * w / e, V0);
       V = tr_ ? tr_.V : V0 / 2;
     }
-    return { T, F: T * gr * eta / r, V };
+    return { T, F: T * gr * etaD(n, T) / r, V };
   }
 
   // ---------- 저항 · 하중 [N]
@@ -587,19 +590,19 @@ function car(I, gr, kP, lam) {
   function regen(F, v, V0, rs, ax, Tm, Ti) {
     const n = rpm(v), w = n * 2 * Math.PI / 60; if (!(w > 0) || n > nmax) return null;
     const zf = Fzf(v, ax), zr = Fzr(v, ax), sr = zf + zr > 0 ? Math.max(0, zr) / (zf + zr) : 0;   // 뒤축 제동 몫
-    const Tneed = -F * sr * r / gr * eta;                                                           // 바퀴 → 모터 축 (구동계 효율만큼 덜 옴)
+    const T0r = -F * sr * r / gr, Tneed = T0r * etaD(n, T0r);                                      // 바퀴 → 모터 축 (구동계 효율만큼 덜 옴, 맵이면 그 점 효율)
     let T = Math.min(Tneed, rgT, TcR(n, V0, rM(Tm), rI(Ti)));
     const e = (I.effM ? bil(I.effM, n, T) : I.eta_mot) / 100 * (effMg ? 1 : (I.effI ? bil(I.effI, n, T) : I.eta_inv) / 100), Rx = Rb * rs;
     const Pch = (V0 + Ich * Rx) * Ich; if (T * w * e > Pch) T = Pch / (w * e);                    // 충전 전류 한계
     if (!(T > 0)) return null;
     const P = -T * w * e, i = Rx > 0 ? (V0 - Math.sqrt(V0 * V0 - 4 * Rx * P)) / (2 * Rx) : P / V0;   // P = (V0 − iR) i, i < 0
     const em = I.effM ? bil(I.effM, n, T) / 100 : I.eta_mot / 100;
-    return { T: -T, e, P, I: i, V: V0 - i * Rx, L: effMg ? (1 - rInv) * T * w * (1 - e) : T * w * (1 - em), Li: effMg ? rInv * T * w * (1 - e) : T * w * em - (-P), Fw: T * gr / (r * eta) };
+    return { T: -T, e, P, I: i, V: V0 - i * Rx, L: effMg ? (1 - rInv) * T * w * (1 - e) : T * w * (1 - em), Li: effMg ? rInv * T * w * (1 - e) : T * w * em - (-P), Fw: T * gr / (r * etaD(n, T)) };
   }
   // ---------- 한 칸의 전기: 바퀴 힘 F [N] → 모터 토크 [N·m] · 효율 · 단자 출력 [W] · 전류 [A] · 단자 전압 [V] · 모터 손실 [W]  (ax · Tm · Ti 는 회생 몫 계산에만)
   function elec(F, v, V0, rs = 1, ax = 0, Tm, Ti) {
     if (F <= 0) { const G = rgOn && F < 0 ? regen(F, v, V0, rs, ax, Tm, Ti) : null; return G || { T: 0, e: 1, P: 0, I: 0, V: V0, L: 0, Li: 0 }; }
-    const n = rpm(v), w = n * 2 * Math.PI / 60, T = F * r / (gr * eta), em = eM(n, T), e = effMg ? em : em * eI(n, T), P = T * w / e;
+    const n = rpm(v), w = n * 2 * Math.PI / 60, T0 = F * r / gr, T = T0 / etaD(n, T0 / etaD(n, T0)), em = eM(n, T), e = effMg ? em : em * eI(n, T), P = T * w / e;
     const tr_ = term(P, V0, rs) || { I: Math.min(Imax, V0 / (2 * Math.max(Rb * rs, 1e-9))), V: V0 / 2 };
     if (effMg) { const tot = P - T * w; return { T, e, P, I: tr_.I, V: tr_.V, L: (1 - rInv) * tot, Li: rInv * tot }; }   // 합친 맵: 합친 손실을 비율로 나눔
     return { T, e, P, I: tr_.I, V: tr_.V, L: T * w * (1 / em - 1),       // 모터 손실 = 축 출력 × (1 ÷ 모터 효율 − 1)
@@ -656,7 +659,7 @@ function car(I, gr, kP, lam) {
   const dReq = (v, k) => { const ay = v * v * Math.abs(k), [fo, fi] = wheels(Fzf(v, 0), dF(ay, true)), [ro, ri] = wheels(Fzr(v, 0), dF(ay, false));
     return dIn0(k) + slipA(fo, fi, m * ay * fs).a - slipA(ro, ri, m * ay * (1 - fs)).a; };
 
-  return { m, meff, r, gr, eta, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR, capFy, capRy, axPk, vFlag, vCorner3, md3, ksT, dIn0, dReq, dmx, rollAng, md2, slipA, Ca, kUs, L, hra, tf, tr, muZ, FyT, sr: SG.rc, SG, drv: I.dr_real === 1,
+  return { m, meff, r, gr, eta, etaD, fs, h, nmax, vtop, rpm, Fres, Fzr, Fzf, dF, wheels, capF, capR, capFy, capRy, axPk, vFlag, vCorner3, md3, ksT, dIn0, dReq, dmx, rollAng, md2, slipA, Ca, kUs, L, hra, tf, tr, muZ, FyT, sr: SG.rc, SG, drv: I.dr_real === 1,
            vCorner, aDrive, aBrake, drive, elec, Tcurve, Voc, Epack, EpackAt, Ecap, ptMax, Rb, Imax, tmNext, thStep, rS, thOn, cwOn, btOn, inOn, drOn, Tpk, Tct, Tinit: I.th_init, rgOn, lam: lam > 0 ? lam : 0,
            TH0: { m: I.th_init, i: Number.isFinite(I.i_init) ? I.i_init : I.th_init, w: I.th_cool, b: isFinite(I.b_t0) ? I.b_t0 : 25, x: X0 } };   // 출발 온도 (모터 · 인버터 · 냉각수 · 축전지)
 }
@@ -1983,10 +1986,10 @@ function tractive(I, gr, V, Tm, ay, ax) {
   const C  = car(I, gr, 1);
   const VV = Array.from({ length: 121 }, (_, i) => C.vtop * i / 120);
   const Fyr = C.m * ay * (1 - C.fs), Fy = C.m * ay;
-  const toF = T => T * gr * C.eta / C.r;
-  const f_mt = VV.map(x => toF(C.Tcurve(C.rpm(x), V, Tm)));
-  const f_mp = VV.map(x => { const n = C.rpm(x), w = n * 2 * Math.PI / 60, T = C.Tcurve(n, V, Tm), e = C.elec(toF(T), x, V).e;
-                             return w > 0 ? toF(C.ptMax(V) * e / w) : NaN; });
+  const toF = (T, n) => T * gr * C.etaD(n, T) / C.r;
+  const f_mt = VV.map(x => toF(C.Tcurve(C.rpm(x), V, Tm), C.rpm(x)));
+  const f_mp = VV.map(x => { const n = C.rpm(x), w = n * 2 * Math.PI / 60, T = C.Tcurve(n, V, Tm), e = C.elec(toF(T, n), x, V).e;
+                             return w > 0 ? toF(C.ptMax(V) * e / w, n) : NaN; });
   const f_b = VV.map(x => { let d = 0;
     for (let it = 0; it < 3; it++) { const N = C.capF(x, -d, ay) + C.capR(x, -d, ay); d = Math.sqrt(Math.max(0, N * N - Fy * Fy)) / C.meff; }
     return -d * C.meff; });

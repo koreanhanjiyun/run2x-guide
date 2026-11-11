@@ -3246,3 +3246,10 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 @keyframes wbneedf{0%,60%{box-shadow:0 0 0 4px rgba(211,58,44,.35)}100%{box-shadow:none}}
 /* 대시보드: 비어 있는 값 (예시값 없음) */
 .dv-nofig{padding:16px 0;color:var(--muted)}
+/* 2P 편집 배치 (2026-11-11): 같은 꼴 상자 = 같은 너비 한 행, 같은 꼴 묶음 = 묶음마다 한 열 (열 사이 더 넓게) */
+.t2-cg .t2-brow{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px 14px;align-items:start;margin-top:10px}
+.t2-cg .t2-brow:first-child{margin-top:0}
+.t2-cg .t2-bgrp{column-gap:28px}
+.t2-cg .t2-bcol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.t2-cg .t2-bcol>.wb-ig{margin:0}
+.t2-cg .t2-bset{margin-top:10px}

@@ -264,7 +264,7 @@ function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[
   const who = db.by ? ` · ${db.by}${db.at ? ' ' + String(db.at).slice(0, 10) : ''}` : '';
   const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''} (${WB_STL[db.st] || db.st})${who}${own ? ` → 지금 ${wbFmt(v, dd)} (직접 고침, 대시보드는 그대로)` : ''}`;
   return `<i class="wb-st dv-s s-${db.st}${own ? ' own' : ''}" title="${wbEsc(tip)}"></i>`; }
-const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ex"></i>예시값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
+const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
    도구가 입력을 자기 화면(도구 2P 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
 function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2P) · 탭 도구 = 핵심 입력(key:true)만 */
@@ -305,7 +305,7 @@ function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
     const lk = T.inLock ? T.inLock(d.k) : '';   /* 도구가 맵으로 대신 쓰는 입력: 칸을 막고 까닭을 적음 */
     const ev = lk ? wbEffVal(T, d) : null;      /* 잠긴 칸에 보일 값: 실제로 계산에 쓰는 값 · 안 쓰면 — (저장값은 그대로 → 풀리면 되돌아옴) */
     const opt = T.inOpt ? T.inOpt(d.k) : '';   /* 도구가 이 칸 줄에 넣는 옵션 단추 (이름과 값 사이) */
-    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${!lk && wbNeedK(d.k) ? ' need' : ''}"><span class="wb-in-n"><span class="wb-in-t">${dot}${nm}${viz}</span>${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${!lk && wbNeedK(d.k) ? ' need' : ''}"><span class="wb-in-n"><span class="wb-in-t"${d.nFull ? ` title="${wbEsc(String(d.nFull).replace(/<[^>]+>/g, ''))}"` : ''}>${dot}${nm}${viz}</span>${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
