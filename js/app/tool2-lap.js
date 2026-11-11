@@ -350,7 +350,7 @@ const T2LAY = grp => ({
   dt:[{n:1, heads:[[T2G.dt, 1]], cells:[{sb:'구동계', k:3}]}],
   cool:[{n:3, heads:[[T2G.thm, 1]], cells:[{g:T2G.thm}]},
         /* 부품별 독립 = 회로마다 냉각수 (온도 · 비열 · 밀도) + 회로 값, 냉각 회로 = 공통 냉각수 온도 한 칸만 (회로 값은 위 편집기) (2026-11-11) */
-        ...(WB.I.cw_mode===1 ? [{n:3, wide:1, heads:[['수랭 회로', 3]], cells:[{sb:'냉각수 온도'}, {sb:'모터 냉각수', skip:1}, {sb:'인버터 냉각수', skip:1}, {sb:'축전지 냉각수', skip:1},
+        ...(WB.I.cw_mode===1 ? [{n:3, wide:1, cells:[{sb:'냉각수 온도', skip:1}, {sb:'모터 냉각수', skip:1}, {sb:'인버터 냉각수', skip:1}, {sb:'축전지 냉각수', skip:1},
               {sb:'모터 수랭 회로 (부품별 독립)', skip:1}, {sb:'인버터 수랭 회로 (부품별 독립)', skip:1}, {sb:'축전지 수랭 회로 (부품별 독립)', skip:1}]}]
           : [{n:3, wide:1, heads:[['수랭 회로', 3]], cells:[{sb:'냉각수 온도', skip:1}, {sb:'모터 냉각수'}, {sb:'인버터 냉각수'}, {sb:'축전지 냉각수'}]},
              {n:3, wide:1, cells:[{sb:'모터 수랭 회로 (부품별 독립)'}, {sb:'인버터 수랭 회로 (부품별 독립)'}, {sb:'축전지 수랭 회로 (부품별 독립)'}]}]),
@@ -359,6 +359,7 @@ const T2LAY = grp => ({
 function t2Lay(grp, groups){ const all = []; groups.forEach(G => G.sb.forEach(B => all.push({...B, g:G.g}))); const used = new Set();
   const find = c => all.find(B => !used.has(B) && (c.g ? B.g===c.g && !B.n : B.n===c.sb));
   const rows = T2LAY(grp).map(R => { const cells = R.cells.map(c => { const B = find(c); if(!B) return ''; used.add(B); if(c.skip) return ''; return `<div style="grid-column:span ${c.span || 1}">${t2BoxHTML(B, c.k, c.col)}</div>`; }).join('');
+    if(!cells) return '';   // 모두 숨긴 행
     return (R.heads ? `<div class="t2-lay t2-layh${R.wide ? ' wide' : ''}" style="--n:${R.n}">${R.heads.map(([t, s]) => `<div class="wb-ig" style="grid-column:span ${s}">${wbEsc(t)}</div>`).join('')}</div>` : '') + `<div class="t2-lay${R.wide ? ' wide' : ''}" style="--n:${R.n}">${cells}</div>`; }).join('');
   const rest = groups.map(G => ({...G, sb:G.sb.filter(B => !all.some(A => used.has(A) && A.n===B.n && A.g===G.g))})).filter(G => G.sb.length);
   return rows + (rest.length ? t2Board(rest) : ''); }
@@ -1093,7 +1094,7 @@ function t2InLock(k){ const L = '아래 표 사용';
       if(cwK){ if(!th.w) return WB.I.cw_on === 1 ? '수랭 부품 없음' : '냉각수 온도 끔'; if(th.n9) return '냉각 회로';
         const rk = {m:'rqM', i:'rqI', b:'rqB'}[cwK]; if(/ua$/.test(k) && t2UseMap(rk)) return '아래 표 사용'; if(/itd$/.test(k) && !t2UseMap(rk)) return '라디 표 없음';
         const wat = cwK==='m' ? th.m && th.mW : cwK==='i' ? th.iW : th.b && th.bW; if(!wat) return cwK==='m' ? '모터 수랭 아님' : cwK==='i' ? '인버터 수랭 아님' : '축전지 수랭 아님'; } }
-    if(k==='th_cool' && !th.n9) return '회로마다 냉각수';
+    if(k==='th_cool') return '회로마다 냉각수';   // 부품별 독립 = 회로 카드, 냉각 회로 = 편집기 [냉각수] 칸 (2026-11-11)
     if(k==='th_cool') return (th.m && th.mW) || (th.i && th.iW) || (th.b && th.bW) || th.w ? '' : '수랭 부품 없음';   // 냉각 회로 방식에서만 보임
     if(k==='t_amb') return th.w || (th.m && !th.mW) || (th.i && !th.iW) || (th.b && !th.bW) ? '' : '외기로 식는 것 없음';
     if(k==='inv_r') return WB.I.eff_mg === 1 ? '' : '효율 따로';
@@ -1530,6 +1531,8 @@ WB_TOOLS['2'] = {
      src:'모터 = 고정 냉각수 25 + 손실 215.37 W × 0.02 = 29.3074 °C, 축전지는 냉각수와 이어져 있지 않아 세 계통 모두 켤 때와 같은 25.4076 °C'},
     {n:'부품별 독립 · 회로마다 냉각수 온도 (모터 회로 35 °C, 공통 칸 25 °C 는 안 씀, 냉각수 계통 끔 → 고정)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, cw_tw:35, th_on:1, cw_on:0, bt_on:1, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0}, expect:{c_tm:39.307429, c_tb:25.407582},
      src:'모터 = 모터 회로 냉각수 35 + 손실 215.37 W × 0.02 = 39.3074 °C (위 경우와 손실 같음, 냉각수 온도만 +10 K), 축전지는 냉각수와 이어져 있지 않아 25.4076 °C 그대로'},
+    {n:'냉각 회로 · 회로마다 냉각수 온도 (수랭 회로 35 °C, 공통 칸 25 °C 는 안 씀, 냉각수 계통 끔 → 고정)', I:{m:300, crr:0.015, cla:0, cda:0, j_eq:0, eta_dt:100, eta_mot:90, eta_inv:95, nmax:6500, gr:3.55, r_eff:229, th_c:500, th_r:0.02, th_init:25, th_cool:25, cw_mode:1, cw9:{water:[{Cc:557.33, rcp:4180000, tw0:35, nodes:[{t:'rad', C:500, q:1, ins:[[2, 1]], UA:200, A:0.06, kd:0, fan:0.3, fon:0, Cm:0}, {t:'pump', C:500, q:1, ins:[[0, 1]]}, {t:'part', part:'m', C:500, q:1, ins:[[1, 1]]}]}], air:[]}, th_on:1, cw_on:0, bt_on:1, t_amb:25, cw_v:0.4785, cw_q:8, cw_ra:0.06, cw_kd:0, cw_fan:0.3, cw_ua:200, b_c:500, b_ha:20, b_t0:25, r_pack:100, n_s:70, c_vmax:3.6, c_vmin:3.6, c_vnom:3.6, course:'free', lap:'1', free:{seg:[[20000, 0]], closed:false, laps:1, s0:0}, b_alpha:0}, expect:{c_tm:39.307429, c_tb:25.407582},
+     src:'모터 = 냉각 회로 [라디 → 펌프 → 모터] 의 냉각수 35 + 손실 215.37 W × 0.02 = 39.3074 °C (위 경우와 손실 같음, 냉각수 온도만 +10 K), 축전지는 냉각수와 이어져 있지 않아 25.4076 °C 그대로'},
     {n:'주행선 · 슬라럼 콘이 가운데 선에서 벗어남 (곧은 80 m 닫힌 코스, 콘 옆 거리 +0.5 · −0.5 m, 폭 6 m)', I:{course:'end', rl_on:1, rl_b:1, end:{seg:[[20, 0], [20, 0], [20, 0], [20, 0]], laps:1, stint:1, WL:[3, 3, 3, 3], WR:[3, 3, 3, 3], slalom:[1, 3], slat:[0.5, -0.5], sds:[0, 0]}}, expect:{c_len:80.269101, c_ctight:0},
      src:"콘 자리 제약이 e ≥ 0.5 + 1 · e ≤ −0.5 − 1 → 가운데 콘 경우의 해 × 1.5: e(u) = 1.5 (a·u + c·u³) → 길이 = Σ√(1 + Δe²) = 80.2691 m (가운데 콘이면 80.1198 m)"},
     {n:'주행선 · 콘과 경계 사이가 좁으면 알림 (왼쪽 폭 1.5 m, b = 1 m)', I:{course:'end', rl_on:1, rl_b:1, end:{seg:[[20, 0], [20, 0], [20, 0], [20, 0]], laps:1, stint:1, WL:[1.5, 1.5, 1.5, 1.5], WR:[3, 3, 3, 3], slalom:[1, 3]}}, expect:{c_ctight:1},
