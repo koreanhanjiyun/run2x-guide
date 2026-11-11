@@ -325,7 +325,7 @@ const T2CNOTE = {bat:'셀 값 · 직렬 · 병렬 수 · 팩 내부저항 · 방
 function t2Consts(grp){ const gs = T2EG[grp] || [], list = WB_TOOLS['2'].inputs.filter(d => gs.includes(d.g) && d.ui!=='none'); if(!list.length) return '';
   const groups = []; list.forEach(d => { let G = groups.find(x => x.g===d.g); if(!G){ G = {g:d.g, sb:[]}; groups.push(G); } let B = G.sb.find(x => x.n===d.sb); if(!B){ B = {n:d.sb, ds:[]}; G.sb.push(B); } B.ds.push(d); });
   groups.sort((a, b) => gs.indexOf(a.g) - gs.indexOf(b.g));   // 묶음 순서 = T2EG 순서 (냉각: 외기 → 냉각수 → 모터 · 인버터 · 축전지)
-  return `<div class="t2-cg">${t2Board(groups)}
+  return `<div class="t2-cg">${T2LAY(grp) ? t2Lay(grp, groups) : t2Board(groups)}
     ${T2CNOTE[grp] ? `<p class="t2-cnote muted">${T2CNOTE[grp]}</p>` : ''}</div>`; }
 /* 편집 배치 (2026-11-11): 같은 꼴 상자는 같은 크기로 한 행에.
    ① 한 묶음 안에서 부품 이름만 다른 상자 (모터 · 인버터 · 축전지 수랭 회로) = 같은 칸 너비로 한 행
@@ -335,20 +335,40 @@ function t2Consts(grp){ const gs = T2EG[grp] || [], list = WB_TOOLS['2'].inputs.
 const T2PART = /^(모터|인버터|축전지)\s*/;
 const t2BoxSig = B => String(B.n || '').replace(T2PART, '');
 const t2PartOf = B => (String(B.n || '').match(T2PART) || [])[1] || '';
-function t2BoxHTML(B){ const P = t2PartOf(B), ds = P ? B.ds.map(d => { const n = wbInName(d), s = n.replace(new RegExp('^' + P + ' (회로 )?(· )?'), '').replace(/^라디 · /, '라디 · '); return s!==n && !/^[→·]/.test(s) ? {...d, n:s.charAt(0).toUpperCase() + s.slice(1), nFull:n} : d; }) : B.ds;
-  return `<div class="t2-sb">${B.n ? `<div class="t2-sbh">${wbEsc(B.n)}</div>` : ''}${t2SbTop(B.n)}${wbInRows(ds, false)}</div>`; }
+/* 편집 탭 배치 (관리자 지정, 2026-11-11): 행마다 n 열 격자, heads = [제목, 칸 수], cells = 상자 (g · sb 로 찾음, span 칸, k = 상자 안 열 수, col = 세로로 먼저 채움), wide = 다른 부품끼리 열 사이를 더 띄움.
+   지정에 없는 상자는 끝에 예전 배치로 (빠지는 칸이 없게). 모터 · 인버터 · 축전지 탭은 나중에 다시 정함 (t2Board) */
+const T2LAY = grp => ({
+  car:[{n:3, heads:[[T2G.car, 3]], cells:[{sb:'질량 · 무게중심'}, {sb:'치수', span:2, k:2, col:1}]}],
+  sus:[{n:3, heads:[[T2G.steer, 1], [T2G.rc, 2]], cells:[{sb:'최대 조향각'}, {sb:'롤센터 · 롤'}, {sb:'과도 (모델 3)'}]}],
+  tire:[{n:2, heads:[[T2G.tire, 2]], cells:[{sb:'마찰 · 하중 이동'}, {sb:'바퀴'}]}, {n:1, cells:[{sb:'타이어 곡선 (모델 2 · 3)', k:2, col:1}]}],
+  aero:[{n:2, heads:[[T2G.aero, 2]], cells:[{sb:'공력 계수'}, {sb:'압력중심'}]}],
+  dt:[{n:1, heads:[[T2G.dt, 1]], cells:[{sb:'구동계', k:3}]}],
+  cool:[{n:3, heads:[[T2G.thm, 1]], cells:[{g:T2G.thm}]},
+        {n:3, wide:1, heads:[['수랭 회로', 3]], cells:[{sb:'냉각수 온도'}]},
+        {n:3, wide:1, cells:[{sb:'모터 수랭 회로 (부품별 독립)'}, {sb:'인버터 수랭 회로 (부품별 독립)'}, {sb:'축전지 수랭 회로 (부품별 독립)'}]},
+        {n:3, wide:1, heads:[['공랭 회로', 3]], cells:[{sb:'모터 공랭'}, {sb:'인버터 공랭'}, {sb:'축전지 공랭'}]},
+        {n:3, wide:1, heads:[['열 모델', 3]], cells:[{sb:'모터 열'}, {sb:'인버터 열'}, {sb:'축전지 열'}]}] })[grp];   /* 함수: T2G 가 뒤 파일에서 정의됨 */
+function t2Lay(grp, groups){ const all = []; groups.forEach(G => G.sb.forEach(B => all.push({...B, g:G.g}))); const used = new Set();
+  const find = c => all.find(B => !used.has(B) && (c.g ? B.g===c.g && !B.n : B.n===c.sb));
+  const rows = T2LAY(grp).map(R => { const cells = R.cells.map(c => { const B = find(c); if(!B) return ''; used.add(B); return `<div style="grid-column:span ${c.span || 1}">${t2BoxHTML(B, c.k, c.col)}</div>`; }).join('');
+    return (R.heads ? `<div class="t2-lay t2-layh${R.wide ? ' wide' : ''}" style="--n:${R.n}">${R.heads.map(([t, s]) => `<div class="wb-ig" style="grid-column:span ${s}">${wbEsc(t)}</div>`).join('')}</div>` : '') + `<div class="t2-lay${R.wide ? ' wide' : ''}" style="--n:${R.n}">${cells}</div>`; }).join('');
+  const rest = groups.map(G => ({...G, sb:G.sb.filter(B => !all.some(A => used.has(A) && A.n===B.n && A.g===G.g))})).filter(G => G.sb.length);
+  return rows + (rest.length ? t2Board(rest) : ''); }
+function t2BoxHTML(B, k, col){ const P = t2PartOf(B), ds = P ? B.ds.map(d => { const n = wbInName(d), s = n.replace(new RegExp('^' + P + ' (회로 )?(· )?'), '').replace(/^라디 · /, '라디 · '); return s!==n && !/^[→·]/.test(s) ? {...d, n:s.charAt(0).toUpperCase() + s.slice(1), nFull:n} : d; }) : B.ds;
+  const body = k > 1 ? `<div class="t2-bin${col ? ' col' : ''}" style="--k:${k};--r:${Math.ceil(ds.length / k)}">${wbInRows(ds, false)}</div>` : wbInRows(ds, false);
+  return `<div class="t2-sb">${B.n ? `<div class="t2-sbh">${wbEsc(B.n)}</div>` : ''}${t2SbTop(B.n)}${body}</div>`; }
 function t2Board(groups){ const rows = []; let pend = [];
-  const flush = () => { if(pend.length===1){ const c = pend[0]; rows.push(`<div class="wb-ig">${wbEsc(c.t)}</div><div class="t2-sbs">${c.bs.map(t2BoxHTML).join('')}</div>`); pend = []; } if(pend.length){ rows.push(`<div class="t2-brow t2-bcols" style="--n:${pend.length}">${pend.map(c => `<div class="t2-bcol">${c.t ? `<div class="wb-ig">${wbEsc(c.t)}</div>` : ''}${c.bs.map(t2BoxHTML).join('')}</div>`).join('')}</div>`); pend = []; } };
+  const flush = () => { if(pend.length===1){ const c = pend[0]; rows.push(`<div class="wb-ig">${wbEsc(c.t)}</div><div class="t2-sbs">${c.bs.map(B => t2BoxHTML(B)).join('')}</div>`); pend = []; } if(pend.length){ rows.push(`<div class="t2-brow t2-bcols" style="--n:${pend.length}">${pend.map(c => `<div class="t2-bcol">${c.t ? `<div class="wb-ig">${wbEsc(c.t)}</div>` : ''}${c.bs.map(B => t2BoxHTML(B)).join('')}</div>`).join('')}</div>`); pend = []; } };
   const skel = G => G.sb.map(t2BoxSig).join('|');
   for(let i = 0; i < groups.length; i++){ const G = groups[i];
     let j = i; while(j + 1 < groups.length && G.sb.length >= 2 && skel(groups[j + 1])===skel(G) && G.sb.every(B => t2PartOf(B))) j++;
-    if(j > i){ flush(); rows.push(`<div class="t2-brow t2-bgrp" style="--n:${j - i + 1}">${groups.slice(i, j + 1).map(H => `<div class="t2-bcol"><div class="wb-ig">${wbEsc(H.g)}</div>${H.sb.map(t2BoxHTML).join('')}</div>`).join('')}</div>`); i = j; continue; }
+    if(j > i){ flush(); rows.push(`<div class="t2-brow t2-bgrp" style="--n:${j - i + 1}">${groups.slice(i, j + 1).map(H => `<div class="t2-bcol"><div class="wb-ig">${wbEsc(H.g)}</div>${H.sb.map(B => t2BoxHTML(B)).join('')}</div>`).join('')}</div>`); i = j; continue; }
     const sig = {}; G.sb.forEach(B => { if(t2PartOf(B)) (sig[t2BoxSig(B)] = sig[t2BoxSig(B)] || []).push(B); });
     const set = Object.values(sig).find(a => a.length >= 2) || [], singles = G.sb.filter(B => !set.includes(B));
     /* ③ 상자 하나뿐인 묶음끼리만 한 행으로 (외기 + 냉각수 온도), 그 밖은 묶음 제목 + 상자 3칸 격자 (예전과 같음) */
     if(singles.length===1 && pend.every(c => c.bs.length===1)) pend.push({t:G.g, bs:singles});
-    else { flush(); rows.push(`<div class="wb-ig">${wbEsc(G.g)}</div>` + (singles.length ? `<div class="t2-sbs">${singles.map(t2BoxHTML).join('')}</div>` : '')); }
-    if(set.length){ flush(); rows.push(`<div class="t2-brow t2-bset" style="--n:${set.length}">${set.map(t2BoxHTML).join('')}</div>`); }
+    else { flush(); rows.push(`<div class="wb-ig">${wbEsc(G.g)}</div>` + (singles.length ? `<div class="t2-sbs">${singles.map(B => t2BoxHTML(B)).join('')}</div>` : '')); }
+    if(set.length){ flush(); rows.push(`<div class="t2-brow t2-bset" style="--n:${set.length}">${set.map(B => t2BoxHTML(B)).join('')}</div>`); }
     if(pend.length >= 3) flush(); }
   flush(); return rows.join(''); }
 const T2RL = {2:['레코드 라인', '최소 곡률 라인에서 출발해 우리 차 랩타임이 줄도록 조금씩 다듬은 라인 (차량 입력이 바뀌면 다시 다듬음)'],
@@ -624,11 +644,15 @@ const T2MTITLE = {eD:'구동계 효율 맵 — 모터 회전수 × 모터 토크
 function t2MapEdit(k){ const txt = t2MtText(k), has = t2HasMap(k), empty = !t2UseMap(k);
   const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : T2RAD.includes(k) ? (t2GridParse(txt, 'kW').msg || '비어 있음').replace('셀 온도', '냉각수 유량').replace('SOC', '코어 풍속') : k==='bO' ? (t2GridParse(txt, 'V').msg || '비어 있음') : k==='bR' ? (t2GridParse(txt, 'mΩ').msg || '비어 있음') : k==='bC' ? (t2PairParse(txt).msg || '비어 있음') : k==='dM' || k==='dI' ? (t2DerParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
   const useSeg = k==='mt' ? '' : `<span class="t2-use"><span class="muted">계산에 쓸 값</span>${t2Seg('data-t2use', has && T2.use[k]!=='const' ? 'tab' : 'const', [['tab', '아래 표'], ['const', '위 상수']])}</span>`;
+  /* 표가 비어 있으면 (위 상수를 씀) 아래 표 · 그림은 접어 둠 (2026-11-11). 모터 토크는 늘 표라 접지 않음 */
+  const fold = k!=='mt' && !has, op = fold && (T2.mopen || {})[k];
   return `<div class="t2-mth"><b>${T2MTITLE[k].split(' — ')[0]}</b><span class="muted"> — ${T2MTITLE[k].split(' — ')[1]}</span>${useSeg}</div>
+    ${fold ? `<details class="t2-mfold" data-t2mf="${k}"${op ? ' open' : ''}><summary>표 열기 <span class="muted">— 비어 있어 위 상수를 씁니다 (${t2ConstNote(k)})</span></summary>` : ''}
     <div class="t2-set"><span class="t2-sum" id="t2msum">${msg}</span></div><p class="t2-rule muted">${T2ERULE[k]}</p>
     ${t2Pair(t2MenuHTML(k, '입력하기', true), `<div class="t2-tw" id="t2tt">${t2GridTable(k, txt)}</div>`,
       empty ? `<span class="t2-const">${k==='mt' ? '표가 비어 있어 계산할 수 없습니다 · 피크 또는 연속 토크 열을 채우세요' : `${has ? '[위 상수]를 골라' : '표가 비어 있어'} 위 상수 칸을 씁니다 · ${t2ConstNote(k)}`}</span>` : '<span class="muted">그림을 누르면 표에서 그 칸으로 갑니다</span>',
-      `<div class="t2-fbox" id="t2mc">${t2EditPlot(k)}</div>`, t2EditCap(k))}`; }
+      `<div class="t2-fbox" id="t2mc">${t2EditPlot(k)}</div>`, t2EditCap(k))}${fold ? '</details>' : ''}`; }
+document.addEventListener('toggle', e => { const d = e.target; if(!d || !d.matches || !d.matches('details[data-t2mf]')) return; (T2.mopen = T2.mopen || {})[d.dataset.t2mf] = d.open; }, true);
 /* 표가 비었을 때 쓰는 상수 */
 function t2ConstNote(k){ const I = WB.I;
   if(T2RAD.includes(k)){ const P = {rqM:'cw_', rqI:'i_w', rqB:'b_w'}[k]; return `UA ${wbFmt(I[P + 'ua'], 0)} W/K (코어 풍속 5 m/s) × (풍속 ÷ 5)^0.6`; }

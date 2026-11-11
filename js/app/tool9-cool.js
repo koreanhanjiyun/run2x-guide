@@ -19,7 +19,7 @@ const T9COOL_DEF = () => ({ circuits:[
    links:[['k5', 'k6'], ['k6', 'k7']]}] });
 const T9 = { cool:T9COOL_DEF() };
 /* 새 파일 = 회로 틀(수랭 회로 1 · 공랭 덕트 1)만, 블럭 · 호스 · 냉각수 값 없음 */
-const T9COOL_NEW = () => ({ circuits:T9COOL_DEF().circuits.map(c => ({...c, p:{}, sel:'', blocks:[], links:[]})) });
+const T9COOL_NEW = () => ({ circuits:T9COOL_DEF().circuits.map(c => ({...c, p:{}, sel:'', blocks:c.kind==='air' ? c.blocks.filter(b => b.t==='in' || b.t==='out').map(b => ({...b, p:{}})) : [], links:[]})) });   /* 공랭 덕트는 입구 · 출구 블럭은 늘 있음 (값은 빈칸) */
 wbModeReg(m => { T9.cool = m==='ex' ? T9COOL_DEF() : T9COOL_NEW(); try{ const s = JSON.parse(localStorage.getItem(wbMK(T9KEY)) || 'null'); if(s && s.cool && Array.isArray(s.cool.circuits)) T9.cool = s.cool; }catch(e){} });
 const t9Save = () => { try{ localStorage.setItem(wbMK(T9KEY), JSON.stringify({cool:T9.cool})); }catch(e){} };
 // ================================================================ 냉각 회로 공통 (도구 9 · 도구 2P 계산과 냉각 편집기가 같이 씀)
@@ -295,7 +295,7 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
       if(!best || best[0] < 24) best = [0, P[P.length - 1][0] - 30, P[P.length - 1][1]];
       bad += `<g class="t9-cbadge${sel ? ' sel' : ''}" data-t9clink="${C.id}:${j}" transform="translate(${best[1]},${best[2]})"><circle r="10"/><text y="4" text-anchor="middle">${k}</text></g>`; } });
   s += `<g class="t9-hose ${C.kind}">${layers.o}${layers.i}${layers.f}</g>${dots}${layers.h}${bad}`;   // 테두리를 모두 먼저, 안쪽 색을 그 위에 → 겹친 곳에 경계가 안 보임
-  C.blocks.forEach(b => { const [nm, kind] = T9CB[b.t], q = t9CV(b.p, t9CParams(C, b)), sel = sB.has(b.id), w = t9BW(b), h = t9BH(b), rd = t9Rd(b);
+  C.blocks.forEach(b => { const [nm, kind] = T9CB[b.t], q = Object.fromEntries(Object.entries(t9CV(b.p, t9CParams(C, b))).map(([k, v]) => [k, typeof v==='number' && !isFinite(v) ? '—' : v])), sel = sB.has(b.id), w = t9BW(b), h = t9BH(b), rd = t9Rd(b);
     const sub = b.t==='pump' && q.pc===1 ? `곡선 ${q.h0} kPa` : b.t==='rad' ? `${q.A} m² · ${t9RadTab(b) ? '방열 표' : `UA ${q.UA}`}${q.fon > 0 ? ` · 팬 ${q.fon} °C` : ''}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
     const shape = rd ? `<circle cx="${w/2}" cy="${h/2}" r="${w/2}"/>` : `<rect width="${w}" height="${h}" rx="7"/>`;
     const txt = rd ? `<text x="${w/2}" y="${sub ? h/2 - 2 : h/2 + 4}" text-anchor="middle" class="t9-cbn sm">${b.t==='in' ? '입구' : b.t==='out' ? '출구' : nm}</text>${sub ? `<text x="${w/2}" y="${h/2 + 13}" text-anchor="middle" class="t9-cbs sm">${b.t==='in' ? `${q.A} m²` : sub}</text>` : ''}`
@@ -335,10 +335,9 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
         <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? t9S().cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = T9CB[t][1]==='part' && here;
       return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${T9CB[t][0]}은 이 회로에 이미 있음 (부품은 한 곳에만)"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
         <button type="button" class="btn small t9-cdel" data-t9cdel="${C.id}">회로 지우기</button></div>
-      ${C.kind==='water' ? form('냉각수', T9CP.water, C.p, `data-t9cwp="${C.id}"`) : ''}
-      <div class="t9-cbox" data-zoombox="t9c-${C.id}">${t9CoolSVG(C)}</div>
-      <p class="t9-cmsg ${E ? 'bad' : 'ok'}">${E ? '계산에서 빠짐: ' + E.join(' · ') : '이어짐 · 계산에 씀' + (comp.mode[C.id] ? ' · ' + comp.mode[C.id] : '')}</p>
-      ${panel}</div>`; };
+      <div class="t9-cmain"><div class="t9-cleft"><div class="t9-cbox" data-zoombox="t9c-${C.id}">${t9CoolSVG(C)}</div>
+        <p class="t9-cmsg ${E ? 'bad' : 'ok'}">${E ? '계산에서 빠짐: ' + E.join(' · ') : '이어짐 · 계산에 씀' + (comp.mode[C.id] ? ' · ' + comp.mode[C.id] : '')}</p></div>
+      <div class="t9-cright">${C.kind==='water' ? form('냉각수', T9CP.water, C.p, `data-t9cwp="${C.id}"`) : ''}${panel}</div></div></div>`; };   /* 편집기 왼쪽 · 입력 칸 오른쪽 (2026-11-11) */
   const free = ['m', 'i', 'b'].filter(p => !used.has(p)).map(p => T9CB[p][0]);
   return `<div class="t9-cool"><div class="t9-cbar"><button type="button" class="btn small" data-t9cnew="water"${nw >= 3 ? ' disabled' : ''}>+ 수랭 회로</button><button type="button" class="btn small" data-t9cnew="air"${na >= 3 ? ' disabled' : ''}>+ 공랭 덕트</button>
       <span class="muted">수랭 · 공랭 각각 최대 3개. ${free.length ? `회로에 없는 부품(${free.join(' · ')})은 외기로 바로 식습니다 (부품 hA).` : ''} 라디에이터 · 펌프는 여러 개 넣을 수 있습니다. 처음 넣은 라디에이터가 회로의 기준(출발점)이고, 펌프가 모두 직렬이면 큰 유량, 한 곳에서 갈라진 갈래마다 하나씩이면 유량 합입니다. 수랭 갈래 유량은 호스 안지름 · 길이와 블럭 압력 강하로 계산합니다.</span></div>

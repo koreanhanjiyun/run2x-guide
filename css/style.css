@@ -3256,3 +3256,19 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2-cg .t2-bcol{display:flex;flex-direction:column;gap:10px;min-width:0}
 .t2-cg .t2-bcol>.wb-ig{margin:0}
 .t2-cg .t2-bset{margin-top:10px}
+/* 2P 편집 배치 지정 (T2LAY, 2026-11-11) */
+.t2-cg .t2-lay{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px 14px;align-items:start;margin-top:10px}
+.t2-cg .t2-lay.wide{column-gap:28px}
+.t2-cg .t2-lay:first-child{margin-top:0}
+.t2-cg .t2-layh{margin-top:14px;align-items:end}.t2-cg .t2-layh:first-child{margin-top:0}.t2-cg .t2-layh .wb-ig{margin:0}
+.t2-cg .t2-layh + .t2-lay{margin-top:6px}
+.t2-bin{display:grid;grid-template-columns:repeat(var(--k),minmax(0,1fr));column-gap:24px}
+.t2-bin.col{grid-auto-flow:column;grid-template-rows:repeat(var(--r),auto)}
+/* 비어 있는 표 접기 */
+.t2-mfold{margin:6px 0 4px}.t2-mfold>summary{cursor:pointer;font-size:13px;padding:6px 0;color:var(--ink)}.t2-mfold>summary .muted{font-size:12px}
+/* 냉각 편집기: 왼쪽 그림 · 오른쪽 입력 */
+.t9-cmain{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:14px;align-items:start}
+.t9-cleft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.t9-cright{display:flex;flex-direction:column;gap:10px;min-width:0}
+.t9-cright .t9-cform{grid-template-columns:minmax(0,1fr)!important}
+.t9-cright .t9-csel{flex-direction:column;align-items:stretch}
