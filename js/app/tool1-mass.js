@@ -36,7 +36,7 @@ function M1EXSEED(){ const mass={}, o={n:0}, S0=m1Season(), S1=String(+S0 - 1);
   G('aero','앞날개','s',2240,0,170,[['메인 플레인',1.6],['플랩',0.6,2],['엔드플레이트',0.25,2]]);
   G('aero','뒤날개','s',-60,0,900,[['메인 플레인',1.8],['플랩',0.7,2],['엔드플레이트',0.3,2],['스완넥',0.7]]);
   const D=(label,height,mass,sex,gear)=>({label,sex:sex||'m',height,mass,gear:gear||{helmet:0,suit:0,belt:0},back:32,hip:{x:970,z:230},pedal:{x:1780,z:250},sw:{x:1185,z:500},seg:{}});
-  return {mass, drv:{d1:{s:{[S0]:D('시험 1',175,68,'m',{helmet:1.4,suit:1.1,belt:0.9}),[S1]:D('시험 1',175,70)}}, d2:{s:{[S0]:D('시험 2',184,80,'m',{helmet:1.5,suit:1.3,belt:0.9})}}, d3:{s:{[S0]:Object.assign(D('시험 3',165,58,'f',{helmet:1.3,suit:1.0,belt:0.9}),{pedal:{x:-160,z:250}})}}}}; }
+  return {mass, drv:{d1:{s:{[S0]:D('시험 1',175,68,'m',{helmet:1.4,suit:1.1,belt:0.9}),[S1]:D('시험 1',175,70)}}, d2:{s:{[S0]:D('시험 2',184,80,'m',{helmet:1.5,suit:1.3,belt:0.9})}}, d3:{s:{[S0]:Object.assign(D('시험 3',165,58,'f',{helmet:1.3,suit:1.0,belt:0.9}),{pedal:{x:1620,z:250}})}}}}; }
 /* 모드: 예제 = 이 브라우저의 예제 저장본 (없으면 위 예시), 팀 저장소에 쓰지 않음 · 새 파일 = 팀 저장소(로그인) 또는 이 브라우저 새 파일 저장본, 없으면 빈 표 */
 wbModeReg(m => { const rd = k => { try{ return JSON.parse(localStorage.getItem(wbMK(k)) || 'null'); }catch(e){ return null; } };
   if(m==='ex'){ const a = rd(MASSKEY), b = rd(DRVKEY); if(a && b){ MASS = a; DRVS = b; } else { const T = M1EXSEED(); MASS = a || T.mass; DRVS = b || T.drv; } }
@@ -46,7 +46,7 @@ const M1 = { tourUndo:false, tab:'mass', drv:'d1', dsel:'d1', timer:{}, drag:nul
 try{ const v = localStorage.getItem('run2x.wb.1.drv'); if(['d1','d2','d3'].includes(v)) M1.dsel = v; }catch(e){}
 const M1CAT = [['s','현가상'], ['uf','현가하 앞'], ['ur','현가하 뒤']];
 const M1DRV = {d1:'1st', d2:'2nd', d3:'3rd'};
-const M1HC = {d1:'#6A4294', d2:'#1d5f9a', d3:'#c2410c'};   /* 헬멧 색: 1st 보라 · 2nd 파랑 · 3rd 주황 */
+const M1HC = {d1:'#c2410c', d2:'#257a47', d3:'#1d5f9a'};   /* 헬멧 색: 1st 주황 · 2nd 초록 · 3rd 파랑 (2026-11-12) */
 /* 드라이버 기본값: 예시 차량(그림 윤곽, 휠베이스 1550) 시트 · 페달 · 핸들 자리(뒤 차축 기준 x)에 남성 175 cm · 70 kg, 장비 0 */
 const M1DDEF0 = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, neck:0, foot:20, helm:M1HD, hip:{x:960, z:230}, pedal:{x:1770, z:250}, sw:{x:1175, z:500}, seg:{}});
 /* 새 파일: 드라이버 키 · 몸무게는 빈칸에서 (자세 손잡이 자리만 그림 기준) */
@@ -213,9 +213,9 @@ function m1InfoHTML(d, D, ed){
   const num = (p, v, u, w) => ed ? `<input type="number" step="any" data-m1o="${p}" value="${v==null || !isFinite(v) ? '' : v}"${w ? ` placeholder="${w}"` : ''} aria-label="${p}">${u ? `<i>${u}</i>` : ''}` : `<b>${v==null || !isFinite(v) ? '-' : v}</b>${u ? `<i>${u}</i>` : ''}`;
   return `<div class="m1-dinfo${ed ? ' ed' : ''}" aria-label="드라이버 정보">
     <label class="m1-dn">${ed ? `<input type="text" data-m1o="label" maxlength="20" value="${wbEsc(d.label||'')}" placeholder="표시 이름 (${M1DRV[M1.drv]})" aria-label="표시 이름">` : `<b>${wbEsc(d.label || M1DRV[M1.drv])}</b>`}</label>
-    <label data-wbneed="m1:drv"><span>키</span>${num('height', +d.height, 'cm')}</label>
+    <label${M1.drv===M1.dsel ? ' data-wbneed="m1:drv"' : ''}><span>키</span>${num('height', +d.height, 'cm')}</label>
     <p class="m1-fh m1-hest" id="m1dhest"${D && D.segSet ? '' : ' hidden'}>${D ? m1HestTxt(D) : ''}</p>
-    <label data-wbneed="m1:drv"><span>몸무게</span>${num('mass', +d.mass, 'kg')}</label>
+    <label${M1.drv===M1.dsel ? ' data-wbneed="m1:drv"' : ''}><span>몸무게</span>${num('mass', +d.mass, 'kg')}</label>
     <p class="m1-dsum">드라이버 합 <b id="m1dsum">${D ? wbFmt(D.m, 1) : '-'}</b> kg (장비 포함)</p></div>`; }
 function m1SegTable(D){ if(!D) return '';
   return `<b>체절 질량 · 무게중심</b><table class="m1-st"><thead><tr><th>체절</th><th>kg</th><th>x</th><th>z</th></tr></thead><tbody>${D.segs.map(sg => `<tr><td>${sg.n}</td><td>${wbFmt(sg.m, 2)}</td><td>${Math.round(sg.x)}</td><td>${Math.round(sg.z)}</td></tr>`).join('')}
@@ -241,7 +241,15 @@ function m1DrvLocal(k){ const d = m1Drv(k) || M1DDEF(); if(!(+d.height > 0 && +d
   try{ if(!M1DRVF) M1DRVF = new Function(WB_TOOLS['1'].code + '\nreturn driver;')(); return M1DRVF(JSON.parse(JSON.stringify(d)), WB.I.L > 0 ? WB.I.L : 1550); }catch(e){ return null; } }
 const m1DOf = (R, k) => (R && R.drv && R.drv[k]) || m1DrvLocal(k);
 /* 차 형상이 없으면 그림 자리에 [차 형상 넣기] */
-const m1ShpCta = view => typeof shGet==='function' && !shGet(view) && !wbEx() ? `<button type="button" class="btn small m1-shpcta" data-shpopen>차 형상 넣기</button>` : '';
+const m1NoShp = view => typeof shGet==='function' && !shGet(view) && !wbEx();
+const m1ShpCta = view => { if(!m1NoShp(view)) return ''; setTimeout(m1CtaPlace, 30); return `<button type="button" class="btn small m1-shpcta" data-shpopen>차 형상 넣기</button>`; };
+/* 차 형상이 없을 때: 예시 차 바깥 윤곽(겹친 부품을 메워 한 덩어리의 테두리)을 연보라 선으로, 그 위 오른쪽 끝에 [차 형상 넣기]를 붙임 (2026-11-11) */
+const M1ENVF = `<defs><filter id="m1envf" x="-10%" y="-20%" width="120%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="40" result="d"/><feMorphology in="d" operator="erode" radius="40" result="c"/><feMorphology in="c" operator="dilate" radius="2.5" result="o"/><feComposite in="o" in2="c" operator="out" result="r"/><feFlood flood-color="#b39ddb"/><feComposite in2="r" operator="in"/></filter></defs>`;
+const m1Env = g => `<g class="m1-env" filter="url(#m1envf)">${g}</g>`;
+function m1CtaPlace(){ document.querySelectorAll('#wb .m1-shpcta').forEach(b => { const box = b.parentElement, env = box && box.querySelector('.m1-env'); if(!env) return;
+  const r = env.getBoundingClientRect(), c = box.getBoundingClientRect(); if(!r.width) return;
+  b.style.left = `${Math.max(0, r.right - c.left - b.offsetWidth + 6)}px`; b.style.top = `${Math.max(0, r.top - c.top - b.offsetHeight/2)}px`; b.style.right = 'auto'; }); }
+window.addEventListener('resize', () => { if(WB.id==='1') m1CtaPlace(); });
 function m1DrvFig(R){ const D = m1DOf(R, M1.drv); if(!D) return '<p class="wb-empty">키 · 몸무게를 넣으면 그려집니다</p>';
   const d = m1Drv(M1.drv) || M1DDEF(), ed = m1CanEdit(), L = (WB.I.L > 0 ? WB.I.L : 1550), r = (WB.I.r_load > 0 ? WB.I.r_load : (typeof DASH!=='undefined' && DASH.P.r_load) || 220);
   const {x0, x1, z0, z1, W} = M1F, s = W/(x1 - x0), H = Math.round((z1 - z0)*s), T = (x, z) => [(x - x0)*s, H - (z - z0)*s], X = x => T(x, 0)[0], Z = z => T(0, z)[1];
@@ -258,7 +266,7 @@ function m1DrvFig(R){ const D = m1DOf(R, M1.drv); if(!D) return '<p class="wb-em
   const visor = `<g><clipPath id="${vid}"><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="${(hr - 1).toFixed(1)}"/></clipPath><rect x="${(hx - hr).toFixed(1)}" y="${(hy - hr*0.42).toFixed(1)}" width="${(hr*0.95).toFixed(1)}" height="${(hr*0.42).toFixed(1)}" rx="${(hr*0.12).toFixed(1)}" clip-path="url(#${vid})" class="m1-visor"/></g>`;
   const foot = `<path d="M${J.F.map(p => S2(p).map(v => v.toFixed(1)).join(',')).join(' L')} Z" class="m1-foot"/>`;
   return m1ShpCta('side') + `<svg viewBox="0 0 ${W} ${H}" class="m1-svg cf-svg" id="m1svg" data-s="${s}" data-x0="${x0}" data-z0="${z0}" data-h="${H}" role="img" aria-label="드라이버 자세 측면도 (차 윤곽 위)">
-    ${CARFIG.carSide(T, L, r, s)}
+    ${m1NoShp('side') ? M1ENVF + m1Env(CARFIG.carSide(T, L, r, s)) : ''}${CARFIG.carSide(T, L, r, s)}
     <line x1="0" y1="${Z(0)}" x2="${W}" y2="${Z(0)}" class="cf-gnd"/>
     <line x1="${X(L)}" y1="${Z(0) + 4}" x2="${X(L)}" y2="${Z(0) + 16}" stroke="#232731"/><text x="${X(L)}" y="${Z(0) + 28}" class="m1-tl" text-anchor="middle">뒤 차축 x = 0</text>
     <text x="12" y="${Z(0) + 28}" class="m1-tl">좌표 [mm]: x = 뒤 차축 중심에서 앞으로 + · z = 지면에서 위로 +</text>
@@ -382,7 +390,7 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
   let sv = `<svg class="m1-fig cf-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="질량 분포: 옆에서 · 위에서">
     <text x="${c1 + 4}" y="18" class="m1-tl b">옆에서</text><text x="${c2 + 4}" y="18" class="m1-tl b">위에서</text>
     <line x1="${c1 + colw + gap/2}" y1="30" x2="${c1 + colw + gap/2}" y2="${H - 20}" stroke="var(--line)"/>
-    ${CARFIG.carSide(ts, L, r, s)}<line x1="${c1}" y1="280" x2="${c1 + colw}" y2="280" class="cf-gnd"/>${CARFIG.carTop(tt, L, r, s, I.tf, I.tr)}`;
+    ${WB.id==='1' && m1NoShp('side') ? M1ENVF + m1Env(CARFIG.carSide(ts, L, r, s)) : ''}${CARFIG.carSide(ts, L, r, s)}<line x1="${c1}" y1="280" x2="${c1 + colw}" y2="280" class="cf-gnd"/>${CARFIG.carTop(tt, L, r, s, I.tf, I.tr)}`;
   items.slice().sort((a, b) => b.m - a.m).forEach(it => { const c = colOf(it), R_ = rr(it.m), p1 = ts(L - it.x, it.z), p2 = tt(L - it.x, -it.y), tl = `<title>${wbEsc(it.name || '')} ${wbFmt(it.m, 1)} kg</title>`;
     sv += `<circle cx="${p1[0].toFixed(1)}" cy="${p1[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle><circle cx="${p2[0].toFixed(1)}" cy="${p2[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle>`; });
   if(o.m > 0){ sv += sym(ts(L - o.x_cg, o.h), '#d92d20', 9) + sym(tt(L - o.x_cg, -o.y_cg), '#d92d20', 9); if(o.m_s > 0) sv += sym(ts(L - o.x_s, o.h_s), '#6A4294', 7); }

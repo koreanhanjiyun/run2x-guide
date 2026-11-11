@@ -3329,3 +3329,6 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 #wb:not(.wb-busy) :is(.wb-skel, .wb-skelmode),#wb:not(.wb-busy) :is(.wb-skel, .wb-skelmode) *{animation:none!important}
 /* 도구 1: 차 형상이 없을 때 그림 자리 [차 형상 넣기] */
 .m1-dwrap,#wbmain{position:relative}.m1-shpcta{position:absolute;right:12px;top:12px;z-index:3;background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.m1-env{opacity:1}.m1-env *{fill:#000!important;stroke:#000!important}
+.t9-cj>circle:first-child{fill:#fff;stroke:#3a3f4a;stroke-width:2}.t9-cj.sel>circle:first-child{stroke:var(--accent);stroke-width:3}
+.m1-env .cf-faint,.m1-env g{opacity:1!important}
