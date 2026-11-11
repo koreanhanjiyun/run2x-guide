@@ -48,12 +48,21 @@ const H=require('./h.js');
   await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.selL=[C.links.findIndex(l=>l[0]==='k3' && l[1]==='j2')]; C.selB=[]; }); await p.keyboard.press('Delete'); await W(400);
   console.log('delete one hose', JSON.stringify(await p.evaluate(()=>T9.cool.circuits[0].links.map(l=>l[0]+'>'+l[1]))));
   // 입구가 찬 라디로는 안 이어짐 · 출구가 찬 블럭 점은 끌기 안 됨
-  { const o=await (await p.$('[data-t9cpo="w1:k3"]')).boundingBox(), t=await pos('k1'); await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+40,t.y+20,{steps:8}); await p.mouse.up(); await W(400);
-    console.log('to full input (no new hose)', await p.evaluate(()=>T9.cool.circuits[0].links.length), 'full out port handle', await p.locator('[data-t9cpo="w1:k2"]').count()); }
+  { const o=await (await p.$('[data-t9cpt="w1:k3:o"]')).boundingBox(), t=await pos('k1'); await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+40,t.y+20,{steps:8}); await p.mouse.up(); await W(400);
+    console.log('to full input (no new hose)', await p.evaluate(()=>T9.cool.circuits[0].links.length)); }
   // 호스 잇기 (인버터 오른쪽 점 → 합류점)
-  const o=await (await p.$('[data-t9cpo="w1:k3"]')).boundingBox(), t=await pos('j2');
+  const o=await (await p.$('[data-t9cpt="w1:k3:o"]')).boundingBox(), t=await pos('j2');
   await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(t.x+t.width/2,t.y+t.height/2,{steps:8}); await p.mouse.up(); await W(400);
   console.log('connect', JSON.stringify(await p.evaluate(()=>T9.cool.circuits[0].links.map(l=>l[0]+'>'+l[1]))), 'err', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err)));
+  // 81차: 끝 옮기기 · 흰 점에서 끌기
+  const lks=()=>p.evaluate(()=>T9.cool.circuits[0].links.map(l=>l[0]+'>'+l[1]).join(' '));
+  const dragTo=async(sel,tgt)=>{ const o=await (await p.$(sel)).boundingBox(); await p.mouse.move(o.x+o.width/2,o.y+o.height/2); await p.mouse.down(); await p.mouse.move(tgt[0],tgt[1],{steps:8}); await p.mouse.up(); await W(400); };
+  { const before=await lks(); const bb2=await (await p.$(`svg[data-t9csvg="w1"]`)).boundingBox(); await dragTo('[data-t9cpt="w1:k3:o"]',[bb2.x+8,bb2.y+8]); console.log('grab end, drop empty -> same', (await lks())===before); }
+  { const t=await pos('j1'); await dragTo('[data-t9cpt="w1:k4:o"]',[t.x+t.width/2,t.y+t.height/2]); console.log('move k4 out end to j1', await lks()); }
+  { const L=await p.evaluate(()=>{ const C=T9.cool.circuits[0], by=new Map(C.blocks.map(b=>[b.id,b])), j=C.links.findIndex(l=>l[0]==='j1'&&l[1]==='j2'), P=t9Route(C,j,by), svg=document.querySelector('svg[data-t9csvg="w1"]'), m=svg.getScreenCTM(), s=svg.createSVGPoint(); const dx=P[1][0]-P[0][0], dy=P[1][1]-P[0][1], n=Math.hypot(dx,dy)||1; s.x=P[0][0]+dx/n*15; s.y=P[0][1]+dy/n*15; const r=s.matrixTransform(m); return [r.x,r.y]; });
+    const t=await pos('k4'); await p.mouse.move(L[0],L[1]); await p.mouse.down(); await p.mouse.move(t.x+t.width/2,t.y+t.height/2,{steps:8}); await p.mouse.up(); await W(400); console.log('grab end at j1, back to k4', await lks()); }
+  await p.evaluate(()=>{ const C=T9.cool.circuits[0]; C.selL=[C.links.findIndex(l=>l[0]==='k1'&&l[1]==='k2')]; C.selB=[]; }); await p.keyboard.press('Delete'); await W(400);
+  { const t=await pos('k1'); await dragTo('[data-t9cpt="w1:k2:i"]',[t.x+t.width/2,t.y+t.height/2]); console.log('white(pump in) -> rad', await lks(), 'err', JSON.stringify(await p.evaluate(()=>t9CoolCompile().err.w1||[]))); }
   // 호스 안지름 바꾸면 갈래 몫이 바뀜
   await p.evaluate(()=>{ const C=T9.cool.circuits[0], j=C.links.findIndex(l=>l[0]==='j1' && l[1]==='k3'); (C.links[j][3]=C.links[j][3]||{}).d=6; t9Save(); }); const lq=await p.evaluate(()=>{ const C=T9.cool.circuits[0], r=t9CoolCompile().lq.w1; return C.links.map(l=>l[0]+'>'+l[1]+'='+(r.m.get(l)||0).toFixed(3)).join(' '); });
   console.log('hose d 6 mm', lq);
