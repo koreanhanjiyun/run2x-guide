@@ -18257,8 +18257,7 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
     layers.o += `<path d="${d}" class="o${sel ? ' sel' : ''}"/>`; layers.i += `<path d="${d}" class="i"${ic}/>`; layers.f += `<path d="${d}" class="f"/>`;
     layers.h += `<path d="${d}" class="t9-clhit" data-t9clink="${C.id}:${j}"/>`;
     const oo = C.links.filter(q => q[0]===l[0]), ii = C.links.filter(q => q[1]===l[1]);
-    if(oo.length > 1) dots += `<circle cx="${P[0][0] + 18}" cy="${P[0][1]}" r="4.5" class="t9-tee ${C.kind}"/>`;
-    if(ii.length > 1) dots += `<circle cx="${P[P.length - 1][0] - 18}" cy="${P[P.length - 1][1]}" r="4.5" class="t9-tee ${C.kind}"/>`;
+    /* 갈라짐 · 합쳐짐 점은 그리지 않음 (관리자 지시 2026-11-11: 호스가 만나는 모양으로 충분) */
     if(oo.length > 1){ const k = oo.indexOf(l) + 1; let best = null;   // 갈래 번호: 그 갈래 가장 긴 토막 가운데
       for(let q = 1; q < P.length - 2; q++){ const L2 = Math.hypot(P[q + 1][0] - P[q][0], P[q + 1][1] - P[q][1]); if(!best || L2 > best[0]) best = [L2, (P[q][0] + P[q + 1][0])/2, (P[q][1] + P[q + 1][1])/2]; }
       if(!best || best[0] < 24) best = [0, P[P.length - 1][0] - 30, P[P.length - 1][1]];
