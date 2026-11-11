@@ -3333,3 +3333,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-cj>circle:first-child{fill:#fff;stroke:#3a3f4a;stroke-width:2}.t9-cj.sel>circle:first-child{stroke:var(--accent);stroke-width:3}
 .m1-env .cf-faint,.m1-env g{opacity:1!important}
 .t9-cpi{cursor:crosshair;transition:r .12s}.t9-cpi:hover{r:9}
+/* 82차: 도구 4 셀 표 · 도구 9 방열 표 [표 | 상수] 고름, [표]인데 비면 빨강 */
+.t4-cbox.off .t4-cbh,.t9-crqb.off{opacity:1}
+#wb.wb-needon .t4-cbox.need textarea{border-color:#d33a2c;box-shadow:0 0 0 1px #d33a2c inset;background:#fff8f7}
+#wb .t9-crqb.need .t9-crq{border-radius:6px;box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7}

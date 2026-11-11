@@ -162,8 +162,11 @@ const T9CP = {   // 블럭 입력 [키, 이름, 단위, 소수, 기본값]
   hose:[['d', '안지름', 'mm', 1, 10], ['len', '길이', 'm', 2, 0.5]],
   in:[['A', '입구 면적', 'm²', 3, 0.02], ['kd', '주행풍 중 들어오는 비율', '', 2, 0.5], ['fan', '팬 유량 (정지 때도)', 'm³/s', 3, 0.03]],
   water:[['cp', '냉각수 비열', 'J/kg·K', 0, 4180], ['rho', '냉각수 밀도', 'kg/m³', 0, 1000], ['mu', '냉각수 점도', 'mPa·s', 2, 1], ['Vh', '배관 · 탱크 냉각수 양', 'L', 2, 0.5]] };
-/* 라디 방열 표 (스펙 시트): B.p.rq = 글자 (첫 행 냉각수 유량 L/min, 첫 열 코어 풍속 m/s, 칸 kW), B.p.rqUse = 'const' 면 위 UA. 다른 표와 같은 규칙 (값이 있으면 표 · UA 칸 잠김) */
-const t9RadTab = B => B && B.t==='rad' && B.p && B.p.rqUse!=='const' && typeof t2GridParse==='function' && B.p.rq ? t2GridParse(B.p.rq).map : null;
+/* 라디 방열 표 (스펙 시트): B.p.rq = 글자 (첫 행 냉각수 유량 L/min, 첫 열 코어 풍속 m/s, 칸 kW), B.p.rqUse = 'tab' | 'const' (UA). 계산은 점마다 ε-NTU 로 UA 를 거꾸로 구해 보간 */
+/* [표 | UA] 고름 (2026-11-12): 고른 적 없으면 표가 차 있을 때 표. [표]인데 비어 있으면 빈칸 (필수) */
+const t9RqUse = B => B && B.p && (B.p.rqUse==='tab' || B.p.rqUse==='const') ? B.p.rqUse : B && B.p && String(B.p.rq || '').trim() ? 'tab' : 'const';
+const t9RadTab = B => B && B.t==='rad' && t9RqUse(B)==='tab' && typeof t2GridParse==='function' && B.p.rq ? t2GridParse(B.p.rq).map : null;
+const t9RqMiss = B => B && B.t==='rad' && t9RqUse(B)==='tab' && !t9RadTab(B);
 const t9LX = l => (l[3] && typeof l[3]==='object') ? l[3] : (l[3] = {});   // 호스 값 · 꺾임점
 const t9CParams = (C, B) => B.t==='rad' ? T9CP.rad.filter(([k]) => k!=='fm') : B.t==='pump' ? T9CP.pump.filter(([k]) => k!=='pc' && (t9CV(B.p, T9CP.pump).pc===1 ? k!=='flow' : k==='flow')) : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t][1]==='part' ? T9CP.partW : [];
 /* 블럭 값: 넣은 값, 없으면 예제 = 기본값 · 새 파일 = 빈칸 (NaN, 펌프 방식 pc 같은 고르기만 기본) */
@@ -175,18 +178,19 @@ const T9CHOICE = ['pc', 'fm'];   /* 고르는 값 (숫자 칸 아님) */
 const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { const x = (o || {})[k]; r[k] = x !== '' && x != null && isFinite(+x) ? +x : (wbEx() || T9CHOICE.includes(k) ? v : NaN); }); return r; };
 /* 새 파일: 회로에 쓰는 블럭 · 호스 · 냉각수 값 중 빈칸 */
 /* 블럭에 빈 값이 있나 (그림에서 빨간 테두리) */
-const t9BMiss = (C, b) => !wbEx() && t9CParams(C, b).some(([k]) => !(b.t==='rad' && (t9RadTab(b) ? k==='UA' : k==='itd')) && !(b.t==='rad' && k==='fon' && t9CV(b.p, T9CP.rad).fm!==1) && !isFinite(t9CV(b.p, t9CParams(C, b))[k]));
+const t9BMiss = (C, b) => !wbEx() && (t9RqMiss(b) || t9CParams(C, b).some(([k]) => !(b.t==='rad' && (t9RqUse(b)==='tab' ? k==='UA' : k==='itd')) && !(b.t==='rad' && k==='fon' && t9CV(b.p, T9CP.rad).fm!==1) && !isFinite(t9CV(b.p, t9CParams(C, b))[k])));
 function t9Blank(C){ const L = [], nm = (b) => T9CB[b.t] ? T9CB[b.t][0] : b.t, miss = (o, def, skip = {}) => def.filter(([k]) => !skip[k] && !isFinite(t9CV(o, def)[k])).map(([, n]) => n);
   if(C.kind==='water'){ const m = miss(C.p, T9CPW()); if(m.length) L.push(`냉각수: ${m.join(' · ')}`);
     C.links.forEach(l => { const m2 = miss(t9LX(l), T9CP.hose); if(m2.length) L.push(`호스 ${nm({t:(C.blocks.find(b => b.id===l[0]) || {}).t})} → ${nm({t:(C.blocks.find(b => b.id===l[1]) || {}).t})}: ${m2.join(' · ')}`); }); }
-  C.blocks.forEach(b => { const m = miss(b.p, t9CParams(C, b), b.t==='rad' ? {...(t9RadTab(b) ? {UA:1} : {itd:1}), ...(t9CV(b.p, T9CP.rad).fm===1 ? {} : {fon:1})} : {}); if(m.length) L.push(`${nm(b)}: ${m.join(' · ')}`); });
+  C.blocks.forEach(b => { const m = miss(b.p, t9CParams(C, b), b.t==='rad' ? {...(t9RqUse(b)==='tab' ? {UA:1} : {itd:1}), ...(t9CV(b.p, T9CP.rad).fm===1 ? {} : {fon:1})} : {}); if(t9RqMiss(b)) m.push('방열 표'); if(m.length) L.push(`${nm(b)}: ${m.join(' · ')}`); });
   return L.map(s => s + ' 비어 있음'); }
 /* 수랭 회로 → 계산용: 갈라지고 합쳐지는 배관 가능. 라디에이터에서 나가는 흐름 = 1, 합쳐지는 곳은 더함.
    라디로 들어오는 호스를 빼면 순환 없는 흐름이어야 함 → 그 순서(위상 정렬)로 점을 늘어놓음 (라디 = 0 번).
    구조 확인(펌프가 전체 흐름 자리인지)은 똑같이 나눈 몫으로, 실제 갈래 몫은 hyd (호스 · 블럭 압력 강하)로 계산 (coolPrep).
    배관 · 탱크 냉각수 양은 점마다 똑같이 나눠 더함 */
 /* '로 / 으로': 받침 있고 ㄹ 받침이 아니면 '으로' */
-const t9Ro = s => { const c = s.charCodeAt(s.length - 1) - 0xAC00, k = c >= 0 && c < 11172 ? c % 28 : 0; return s + (k && k!==8 ? '으로' : '로'); };
+const t9Bat = s => { const c = String(s).charCodeAt(String(s).length - 1) - 0xAC00; return c >= 0 && c < 11172 ? c % 28 : 0; };   // 끝 글자 받침 번호 (0 = 없음, 8 = ㄹ)
+const t9Ro = s => s + (t9Bat(s) && t9Bat(s)!==8 ? '으로' : '로'), t9Jo = (s, a, b) => s + (t9Bat(s) ? a : b);   // t9Jo(s, '이', '가') · (s, '은', '는')
 function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.blocks.filter(b => b.t==='rad'), pumps = C.blocks.filter(b => b.t==='pump');
   if(!rads.length) E.push('라디에이터가 1개 이상 있어야 함'); if(!pumps.length) E.push('펌프가 1개 이상 있어야 함'); if(E.length) return {E};   // 라디가 여럿이면 처음 놓은 라디가 회로의 시작점
   const R0 = rads[0].id, L = C.links.filter(([a, b]) => by.has(a) && by.has(b)), outs = id => L.filter(l => l[0]===id), ins = id => L.filter(l => l[1]===id);
@@ -248,8 +252,8 @@ function t9CAir(C, by){ const E = [], ins = C.blocks.filter(b => b.t==='in'), ou
 function t9CoolCompile(S){ S = S || t9S(); const out = {water:[], air:[]}, err = {}, used = {}, mode = {}, lq = {};
   (S.cool.circuits || []).forEach(C => { const E = [], by = new Map(C.blocks.map(b => [b.id, b])), nx = new Map(), pv = new Map();
     C.links.forEach(([a, b]) => { if(by.has(a) && by.has(b)){ nx.set(a, b); pv.set(b, a); } });
-    C.blocks.forEach(b => { if(T9CB[b.t] && T9CB[b.t][1]==='part'){ if(used[b.t]) E.push(`${T9CB[b.t][0]}이 다른 회로에도 있음`); used[b.t] = true; } });
-    if(!wbEx() && C.blocks.length){ const bl = t9Blank(C); if(bl.length){ E.push(`빈칸 있음 (빨간 테두리 블럭 · ${C.kind==='water' ? '호스 · 냉각수' : '덕트'}를 눌러 채우기)`); err[C.id] = E; return; } }
+    C.blocks.forEach(b => { if(T9CB[b.t] && T9CB[b.t][1]==='part'){ if(used[b.t]) E.push(`${t9Jo(T9CB[b.t][0], '이', '가')} 다른 회로에도 있음`); used[b.t] = true; } });
+    if(!wbEx() && C.blocks.length){ const bl = t9Blank(C); if(bl.length){ E.push('빈칸 있음'); err[C.id] = E; return; } }
     if(C.kind==='water'){ const r = t9CWater(C, by); E.push(...r.E); if(!r.E.length){ out.water.push(r.net); if(r.mode) mode[C.id] = r.mode; lq[C.id] = {m:r.lq, Vt:r.Vt}; } }
     else { const r = t9CAir(C, by); E.push(...r.E); if(!r.E.length) out.air.push(r.net); }
     if(E.length) err[C.id] = E; });
@@ -335,10 +339,12 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
   const card = C => { t9Sel(C); const E = comp.err[C.id], pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b', 'j'] : ['m', 'i', 'b', 'j'], by = new Map(C.blocks.map(b => [b.id, b]));
     const form = (title, def, obj, attr, lock = {}) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
         return `<label class="t9-cfi${!lock[k] && !isFinite(v) ? ' need' : ''}"><span>${n}</span><input type="number" step="any" value="${isFinite(v) ? v : ''}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${u}</i>${lock[k] ? `<em class="t9-clk">${lock[k]}</em>` : ''}</label>`; }).join('')}</div>`;
-    const radTab = B => { const M = B.p && B.p.rq && typeof t2GridParse==='function' ? t2GridParse(B.p.rq).map : null, use = B.p && B.p.rqUse==='const' ? 'const' : 'tab', id = `${C.id}:${B.id}`;
+    const radTab = B => { const use = t9RqUse(B), id = `${C.id}:${B.id}`;
       const G = t9RqGrid(B.p && B.p.rq);   // 칸마다 바로 고치는 표 (다른 표와 같음): 첫 행 = 유량, 첫 열 = 풍속
-      return `<div class="t9-cform t9-crqb"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW. 칸을 고치거나, 엑셀에서 여러 칸을 복사해 표를 누르고 Ctrl+V (표 전체를 바꿈). 값이 있으면 [UA] 대신 씀 (점마다 ε-NTU 로 UA 를 거꾸로 구해 보간)</span>
-        <span class="t2-use">${M ? `<span class="muted">계산에 쓸 값</span><span class="dc-seg" role="group">${[['tab', '표'], ['const', 'UA']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span>` : '<span class="muted">비어 있음 → 위 UA 씀</span>'}
+      const seg = `<span class="dc-seg" role="group">${[['tab', '표'], ['const', 'UA']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span>`;
+      if(use==='const') return `<div class="t9-cform t9-crqb off"><b>방열 표 (스펙 시트)</b><span class="t2-use">${seg}</span></div>`;   /* [UA]면 표는 안 그림 */
+      return `<div class="t9-cform t9-crqb${t9RqMiss(B) && !wbEx() ? ' need' : ''}"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW · 엑셀에서 복사해 표를 누르고 Ctrl+V</span>
+        <span class="t2-use">${seg}
           <button type="button" class="btn small" data-t9crqa="${id}:row">+ 행 (풍속)</button><button type="button" class="btn small" data-t9crqa="${id}:col">+ 열 (유량)</button>${B.p && B.p.rq ? `<button type="button" class="btn small" data-t9crqx="${id}">표 지우기</button>` : ''}</span>
         <div class="t9-crq" data-t9crq="${id}"><table class="t2-tt t9-rqt">${G.map((r, ri) => `<tr>${r.map((v, ci) => ri===0 && ci===0 ? '<th class="muted">풍속 \\ 유량</th>' : `<td><input type="text" inputmode="decimal" value="${wbEsc(v)}" data-t9rqc="${id}:${ri}:${ci}"${ri===0 || ci===0 ? ' class="hd"' : ''}></td>`).join('')}</tr>`).join('')}</table></div></div>`; };
     const B = C.selB.length===1 && !C.selL.length ? by.get(C.selB[0]) : null, Lj = C.selL.length===1 && !C.selB.length ? C.selL[0] : -1;
@@ -354,12 +360,12 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
       return `<div class="t9-csel"><div class="t9-cform"><b>덕트 ${T9CB[A.t][0]} → ${T9CB[Bt.t][0]}</b>${o.length > 1 ? o.map((q, m) => { const Bq = by.get(q[1]);
           return `<label class="t9-cfi"><span>${m + 1}번 (→ ${T9CB[Bq.t][0]}) 비율</span><input type="number" step="any" min="1" max="99" value="${(+(q[2] || 1/o.length)*100).toFixed(1)}" data-t9crat="${C.id}:${jj[m]}"><i>%</i></label>`; }).join('') : '<span class="muted">갈라지지 않은 덕트 (공기 100 %)</span>'}</div></div>`; };
     const panel = Lj >= 0 ? hose()
-      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? {...(t9RadTab(B) ? {UA:'표 사용'} : {itd:'표 없음'}), ...(t9CV(B.p, T9CP.rad).fm===1 ? {} : {fon:'팬 늘 켬'})} : {}) + (B.t==='rad' ? `<div class="t9-cform"><b>팬 켜기</b><span class="dc-seg" role="group">${[[0, '늘 켬'], [1, '냉각수 온도로']].map(([q, nm]) => `<button type="button" data-t9cfm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.rad).fm===q}">${nm}</button>`).join('')}</span></div>` + radTab(B) : '') + (B.t==='pump' ? `<div class="t9-cform"><b>유량 정하기</b><span class="dc-seg" role="group">${[[0, '유량 고정'], [1, '펌프 곡선']].map(([q, nm]) => `<button type="button" data-t9cpm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.pump).pc===q}">${nm}</button>`).join('')}</span><span class="muted">${t9CV(B.p, T9CP.pump).pc===1 ? '올리는 압력 = 막힘 압력 × (1 − (유량 ÷ 최대 유량)²), 호스 · 블럭 압력 강하와 만나는 점에서 유량이 정해짐 (펌프 스펙 시트의 곡선 양 끝)' : '회로 압력 강하와 상관없이 이 유량'}</span></div>` : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
+      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? {...(t9RqUse(B)==='tab' ? {UA:'표 사용'} : {itd:'UA 사용'}), ...(t9CV(B.p, T9CP.rad).fm===1 ? {} : {fon:'팬 늘 켬'})} : {}) + (B.t==='rad' ? `<div class="t9-cform"><b>팬 켜기</b><span class="dc-seg" role="group">${[[0, '늘 켬'], [1, '냉각수 온도로']].map(([q, nm]) => `<button type="button" data-t9cfm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.rad).fm===q}">${nm}</button>`).join('')}</span></div>` + radTab(B) : '') + (B.t==='pump' ? `<div class="t9-cform"><b>유량 정하기</b><span class="dc-seg" role="group">${[[0, '유량 고정'], [1, '펌프 곡선']].map(([q, nm]) => `<button type="button" data-t9cpm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.pump).pc===q}">${nm}</button>`).join('')}</span><span class="muted">${t9CV(B.p, T9CP.pump).pc===1 ? '올리는 압력 = 막힘 압력 × (1 − (유량 ÷ 최대 유량)²), 호스 · 블럭 압력 강하와 만나는 점에서 유량이 정해짐 (펌프 스펙 시트의 곡선 양 끝)' : '회로 압력 강하와 상관없이 이 유량'}</span></div>` : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
       : C.selB.length + C.selL.length ? `<p class="muted t9-cmsg">블럭 ${C.selB.length}개 · ${C.kind==='water' ? '호스' : '덕트'} ${C.selL.length}개 고름 · 끌면 같이 옮겨지고 Delete 로 지움</p>`
       : (h => `<ul class="muted t9-cmsg t9-chelp"><li><b>끌기</b> 블럭 옮기기 · 빈 곳 = 영역 고르기 (Shift = 더해 고르기)</li><li><b>잇기</b> 파란 점 ↔ 흰 점 끌어 놓기 · 호스 끝을 끌면 옮김</li><li><b>가르기 · 합치기</b> 합류 · 분기점 (${C.kind==='water' ? '호스' : '덕트'} 위에 놓아도 생김)${C.kind==='water' ? '' : ' · 갈래 비율 입력'}</li><li><b>${h} 토막</b> 끌어서 옮김 · 두 번 누르면 자동 경로</li><li><b>보기</b> 휠 = 확대 · 축소 (그림을 한 번 누른 뒤) · 휠 버튼 끌기 = 이동 · 빈 곳 두 번 = 전체</li><li><b>지우기</b> Delete</li></ul>`)(C.kind==='water' ? '호스' : '덕트');
-    return `<div class="t9-cc" data-t9cc="${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b>
+    return `<div class="t9-cc" data-t9cc="${C.id}" data-wbneed="t9:${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b>
         <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? t9S().cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = T9CB[t][1]==='part' && here;
-      return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${T9CB[t][0]}은 이 회로에 이미 있음 (부품은 한 곳에만)"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
+      return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${t9Jo(T9CB[t][0], '은', '는')} 이 회로에 이미 있음 (부품은 한 곳에만)"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
         <button type="button" class="btn small t9-cdel" data-t9cdel="${C.id}">회로 지우기</button></div>
       <div class="t9-cmain"><div class="t9-cleft"><div class="t9-cbox" data-zoombox="t9c-${C.id}">${t9CoolSVG(C)}</div>
         <p class="t9-cmsg ${E ? 'bad' : 'ok'}">${E ? '계산에서 빠짐 · ' + E.join(' · ') : '이어짐 · 계산에 씀' + (comp.mode[C.id] ? ' · ' + comp.mode[C.id] : '')}</p></div>
@@ -414,10 +420,10 @@ document.addEventListener('paste', e => { if(!t9On() || !e.target.closest) retur
   const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();   // 한 칸이면 그 칸에 그대로
   const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
   if(typeof t2GridParse!=='function' || !t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s, 칸 = 방열량 kW.'); return; }
-  const B = t9RadB(t.dataset.t9crq); B.p = B.p || {}; B.p.rq = v; B.p.rqUse = 'tab'; t9CoolSet(); toast('방열 표를 넣었습니다 (UA 대신 씀).'); });
+  const B = t9RadB(t.dataset.t9crq); B.p = B.p || {}; B.p.rq = v; B.p.rqUse = 'tab'; t9CoolSet(); toast('방열 표를 넣었습니다.'); });
 document.addEventListener('click', e => { if(!t9On() || !e.target.closest) return;
   const u = e.target.closest('[data-t9crqu]'); if(u){ const a = u.dataset.t9crqu.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p.rqUse = a[2]; t9CoolSet(); return; }
-  const x = e.target.closest('[data-t9crqx]'); if(x){ const B = t9RadB(x.dataset.t9crqx); delete B.p.rq; delete B.p.rqUse; t9CoolSet(); return; }
+  const x = e.target.closest('[data-t9crqx]'); if(x){ const B = t9RadB(x.dataset.t9crqx); delete B.p.rq; B.p.rqUse = 'tab'; t9CoolSet(); return; }
   const ad = e.target.closest('[data-t9crqa]'); if(ad){ const a = ad.dataset.t9crqa.split(':'), B = t9RadB(a[0] + ':' + a[1]), G = t9RqGrid(B.p && B.p.rq); if(a[2]==='row') G.push(G[0].map(() => '')); else G.forEach(r => r.push(''));
     B.p = B.p || {}; B.p.rq = t9RqText(G); t9CoolUI(); }
   const fmb = e.target.closest('[data-t9cfm]'); if(fmb){ const a = fmb.dataset.t9cfm.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p = B.p || {}; B.p.fm = +a[2]; t9CoolSet(); return; }
@@ -611,6 +617,8 @@ WB_TOOLS['9'] = {
   sigOn:['tm', 'ti', 'tb', 'w1'],
   xiStart:'end',
   links: () => t9Links(),
+  /* 회로의 빈칸 (빨간 점선 블럭 · 호스 · 냉각수) → 필수 목록 · 편집 탭 빨간 점 (2026-11-12) */
+  needExt(){ if(wbEx()) return []; return ((T9.cool || {}).circuits || []).filter(C => C.blocks.length && t9Blank(C).length).map(C => ({k:'t9:' + C.id, n:`${C.name} 빈칸`, g:'냉각 회로'})); },
   lnkKeys:['th_c', 'th_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_c', 'b_r', 'b_ha', 'b_ha60', 't_amb', 'L_m', 'L_i', 'L_b', 'v', 't_run'],
   extHTML: t9ExtHTML, extraI: () => ({cool: t9CoolCompile().net}),
   extGet: () => ({cool:JSON.parse(JSON.stringify(T9.cool))}),   /* .json 내보내기에 회로 배치도 */

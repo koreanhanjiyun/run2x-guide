@@ -312,14 +312,14 @@ function wbInSplit(nm){ if(/<[^>]+>/.test(nm)) return null; const i = nm.indexOf
 function wbInRows(list, head = true){ const T = wbT(); let g0 = ''; const uw = Math.max(18, ...list.map(d => wbUW(wbInUnit(d) || ''))) + 4;
   return list.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
     const grp = head && d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
-    const sp = d.dk ? null : wbInSplit(String(wbInName(d))), tip = sp ? sp[1] : '';
-    const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : sp ? `<span class="wb-inmore">${sp[0]}</span>` : wbInName(d);
+    const sp = wbInSplit(String(wbInName(d))), tip = sp ? sp[1] : '';   /* 긴 괄호 설명 → 툴팁 (대시보드 연결 칸도, 2026-11-12) */
+    const nm = d.dk ? `<span class="term${sp ? ' wb-inmore' : ''}" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${sp ? sp[0] : wbInName(d)}</span>` : sp ? `<span class="wb-inmore">${sp[0]}</span>` : wbInName(d);
     const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
     const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own);
     const lk = T.inLock ? T.inLock(d.k) : '';   /* 도구가 맵으로 대신 쓰는 입력: 칸을 막고 까닭을 적음 */
     const ev = lk ? wbEffVal(T, d) : null;      /* 잠긴 칸에 보일 값: 실제로 계산에 쓰는 값 · 안 쓰면 — (저장값은 그대로 → 풀리면 되돌아옴) */
     const opt = T.inOpt ? T.inOpt(d.k) : '';   /* 도구가 이 칸 줄에 넣는 옵션 단추 (이름과 값 사이) */
-    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${(T.lnkKeys || []).includes(d.k) ? ' wb-lnk' : ''}${!lk && wbNeedK(d.k) ? ' need' : ''}" style="--uw:${uw}px"><span class="wb-in-n"><span class="wb-in-t"${d.nFull || tip ? ` title="${wbEsc(String(d.nFull || wbInName(d)).replace(/<[^>]+>/g, ''))}"` : ''}>${dot}${nm}${viz}</span>${wbSrcTag(WB.id, d.k)}${opt}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>${lk ? `<span class="wb-lk">${lk}</span>` : ''}
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${d.dk || (T.lnkKeys || []).includes(d.k) ? ' wb-lnk' : ''}${!lk && wbNeedK(d.k) ? ' need' : ''}" style="--uw:${uw}px"><span class="wb-in-n"><span class="wb-in-t"${d.nFull || tip ? ` title="${wbEsc(String(d.nFull || wbInName(d)).replace(/<[^>]+>/g, ''))}"` : ''}>${dot}${nm}${viz}</span>${wbSrcTag(WB.id, d.k)}${opt}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>${lk ? `<span class="wb-lk">${lk}</span>` : ''}
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */

@@ -11,19 +11,23 @@ const T4 = { presets:[], name:'' };
 wbModeReg(m => { T4.presets = []; T4.name = ''; try{ const a = JSON.parse(localStorage.getItem(wbMK(T4PK)) || '[]'); if(Array.isArray(a)) T4.presets = a.filter(p => p && typeof p.name==='string' && p.cell); }catch(e){} });
 const t4PSave = () => { try{ localStorage.setItem(wbMK(T4PK), JSON.stringify(T4.presets)); return true; }catch(e){ return false; } };
 /* 셀 표 (SOC × 온도): 글 표 3 개 (OCV · 내부저항 · 용량), 이 브라우저에 저장 (run2x.t4.cell). 도구 2P [축전지 › 셀 표]가 [도구 4 에서 가져오기]로 복사 */
-const T4CK = 'run2x.t4.cell', T4C = {o:'', r:'', c:''};
-wbModeReg(m => { Object.assign(T4C, {o:'', r:'', c:''}); try{ const s = JSON.parse(localStorage.getItem(wbMK(T4CK)) || '{}'); ['o', 'r', 'c'].forEach(k => { if(typeof s[k]==='string') T4C[k] = s[k]; }); }catch(e){} });
+const T4CK = 'run2x.t4.cell', T4C = {o:'', r:'', c:'', u:{}};
+/* 표마다 [표 | 셀 값 칸] 고름 (2P 의 [아래 표 | 위 상수] 와 같은 방식, 2026-11-12). 고른 적 없으면 표가 차 있을 때 표 */
+const t4Use = k => T4C.u && (T4C.u[k]==='tab' || T4C.u[k]==='const') ? T4C.u[k] : String(T4C[k] || '').trim() ? 'tab' : 'const';
+wbModeReg(m => { Object.assign(T4C, {o:'', r:'', c:'', u:{}}); try{ const s = JSON.parse(localStorage.getItem(wbMK(T4CK)) || '{}'); ['o', 'r', 'c'].forEach(k => { if(typeof s[k]==='string') T4C[k] = s[k]; }); if(s.u && typeof s.u==='object') T4C.u = {...s.u}; }catch(e){} });
 const t4CSave = () => { try{ localStorage.setItem(wbMK(T4CK), JSON.stringify(T4C)); }catch(e){} };
-function t4CellGet(){ return {...T4C}; }
-const t4CellI = () => ({cellO: typeof t2GridParse==='function' ? t2GridParse(T4C.o).map : null, cellR: typeof t2GridParse==='function' ? t2GridParse(T4C.r).map : null, cellC: typeof t2PairParse==='function' ? t2PairParse(T4C.c).map : null});
+function t4CellGet(){ const o = {}; ['o', 'r', 'c'].forEach(k => { o[k] = t4Use(k)==='tab' ? T4C[k] : ''; }); return o; }   /* [셀 값 칸]을 고른 표는 빈 표로 넘김 */
+const t4PM = (k, txt) => typeof t2GridParse!=='function' ? null : k==='c' ? t2PairParse(txt).map : t2GridParse(txt).map;
+const t4CellI = () => ({cellO: t4Use('o')==='tab' ? t4PM('o', T4C.o) : null, cellR: t4Use('r')==='tab' ? t4PM('r', T4C.r) : null, cellC: t4Use('c')==='tab' ? t4PM('c', T4C.c) : null});
 /* 결과 아래: 셀 표 편집 · 온도 o_T 에서 SOC 별 출력 */
 function t4CellHTML(){ const R = WB.R, o = R && R.out, f = t4F, T = R && R.soc, P = (k, txt, u) => k==='c' ? t2PairParse(txt) : t2GridParse(txt, u);
-  const box = (k, nm, u, tpl, ph) => { const p = P(k, T4C[k], u);
-    return `<div class="t4-cbox"><div class="t4-cbh"><b>${nm}</b><span class="muted">${p.map ? p.msg : T4C[k].trim() ? p.msg || '읽지 못함' : '비어 있음 → 셀 값 칸'}</span>
+  const box = (k, nm, u, tpl, ph) => { const p = P(k, T4C[k], u), use = t4Use(k), seg = t4Seg('data-t4cu', use, [['tab', '표'], ['const', '셀 값 칸']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t4cuk="${k}"`);
+    if(use==='const') return `<div class="t4-cbox off"><div class="t4-cbh"><b>${nm}</b>${seg}</div></div>`;   /* [셀 값 칸]이면 표는 안 그림 */
+    return `<div class="t4-cbox" data-wbneed="t4:${k}"><div class="t4-cbh"><b>${nm}</b>${seg}${T4C[k].trim() ? `<span class="muted">${p.map ? p.msg : p.msg || '읽지 못함'}</span>` : ''}
       <button type="button" class="btn small" data-t4ctpl="${tpl}">양식 .xlsx</button><label class="btn small">파일 가져오기<input type="file" accept=".xlsx,.csv,.txt" data-t4cfile="${k}" hidden></label></div>
       <textarea data-t4ct="${k}" rows="6" spellcheck="false" placeholder="${wbEsc(ph)}">${wbEsc(T4C[k])}</textarea></div>`; };
   const row = (nm, fn) => `<tr><td>${nm}</td>${T.map(t => `<td>${fn(t)}</td>`).join('')}</tr>`;
-  return `<section class="wb-sec t4-cell" aria-label="셀 표"><div class="wb-h"><h3>셀 표 (SOC × 온도)</h3><span class="wb-meta">넣으면 아래 SOC 별 출력에 씀 · 도구 2P [축전지 › 셀 표]가 복사해 감 · 비우면 셀 값 칸 (전압은 SOC 에 직선)</span></div>
+  return `<section class="wb-sec t4-cell" aria-label="셀 표"><div class="wb-h"><h3>셀 표 (SOC × 온도)</h3><span class="wb-meta">도구 2P [축전지 › 셀 표]가 복사해 감 · 셀 값 칸이면 전압은 SOC 에 직선</span></div>
     <div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv', 'SOC % \\ 셀 온도 °C, 0, 25, 45\n0, 3.0, 3.05, 3.07\n50, 3.66, 3.7, 3.71\n100, 4.15, 4.2, 4.2')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres', 'SOC % \\ 셀 온도 °C, 0, 25, 45\n0, 60, 30, 24\n50, 45, 22, 18\n100, 50, 24, 20')}${box('c', '셀 용량 (Ah)', '', 'bcap', '셀 온도 °C, 용량 Ah\n0, 3.6\n25, 4.0\n45, 4.05')}</div>
     <div class="t4-bar"><b>셀 온도</b><label class="t4-oi"><input type="number" step="any" value="${Number.isFinite(WB.I.o_T) ? WB.I.o_T : 25}" data-t4ot aria-label="셀 온도"> °C</label>
       ${o ? `<span class="muted">이 온도 셀 용량 ${f(o.cap_T, 2)} Ah · 팩 에너지 ${f(o.e_T, 3)} kWh (OCV 평균 ${f(o.ocv_mean, 3)} V) · 표 전류 ${f(o.o_i, 1)} A</span>` : ''}</div>
@@ -37,6 +41,8 @@ document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches) 
   if(t.matches('[data-t4cfile]')){ const f = t.files && t.files[0], k = t.dataset.t4cfile; t.value = ''; if(!f || typeof t2ReadCells!=='function') return;
     t2ReadCells(f).then(cells => { const txt = cells.map(r => r.map(c => String(c ?? '').trim()).join(', ').replace(/(, )+$/, '')).filter(l => l.replace(/[, ]/g, '') && !l.startsWith('#')).join('\n');
       const p = k==='c' ? t2PairParse(txt) : t2GridParse(txt); if(!p.map){ toast('표를 읽지 못했습니다.'); return; } T4C[k] = txt; t4CSave(); wbPaint(['ext']); wbCalcSoon(); toast(`${f.name}: ${String(p.msg).replace(/<[^>]+>/g, '')}`); }).catch(err => toast(String(err.message || err))); } });
+document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return; const s = e.target.closest('[data-t4cu]'); if(!s || s.disabled) return;
+  const k = s.closest('[data-t4cuk]').dataset.t4cuk; T4C.u = {...(T4C.u || {}), [k]:s.dataset.t4cu}; t4CSave(); wbPaint(['ext']); wbCalcSoon(); });
 document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return; const b = e.target.closest('[data-t4ctpl]'); if(b && typeof t2Template==='function') t2Template(b.dataset.t4ctpl, 'xlsx'); });
 const t4F = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
 const t4Seg = (attr, cur, items) => `<span class="dc-seg" role="group">${items.map(([k, t]) => `<button type="button" ${attr}="${k}" aria-pressed="${cur===k}">${t}</button>`).join('')}</span>`;
@@ -144,9 +150,12 @@ WB_TOOLS['4'] = {
   onResult(){ const r = document.getElementById('t4rules'); if(r) r.innerHTML = t4Rules(); const y = document.getElementById('t4why'); if(y) y.textContent = t4Why();
     const m = document.getElementById('wbmid'); if(m) m.innerHTML = t4MidHTML() + t4CellHTML(); },
   extraI: t4CellI,
-  extGet: () => ({cell:{...T4C}, presets:JSON.parse(JSON.stringify(T4.presets))}),   /* .json 내보내기에 셀 표 · 저장한 셀도 */
-  extSet(d){ if(!d || typeof d!=='object') return; if(d.cell) ['o', 'r', 'c'].forEach(k => { if(typeof d.cell[k]==='string') T4C[k] = d.cell[k]; }); if(Array.isArray(d.presets)) T4.presets = d.presets.filter(p => p && typeof p.name==='string' && p.cell); t4CSave(); t4PSave(); wbPaint(['ext']); },
-  exReset(){ try{ localStorage.removeItem(wbMK(T4CK)); localStorage.removeItem(wbMK(T4PK)); }catch(e){} Object.assign(T4C, {o:'', r:'', c:''}); T4.presets = []; },
+  /* [표]를 골랐는데 빈 표 → 필수 (2026-11-12) */
+  needExt(){ if(wbEx()) return []; return [['o', '셀 OCV 표'], ['r', '셀 내부저항 표'], ['c', '셀 용량 표']].filter(([k]) => t4Use(k)==='tab' && !String(T4C[k] || '').trim()).map(([k, n]) => ({k:'t4:' + k, n, g:'셀 표'})); },
+  needGo(k){ if(!String(k).startsWith('t4:')) return false; if(WB.tab!=='res') wbTabSet('res'); return true; },   /* 셀 표는 결과 탭 아래에 있음 */
+  extGet: () => ({cell:{...T4C, u:{...(T4C.u || {})}}, presets:JSON.parse(JSON.stringify(T4.presets))}),   /* .json 내보내기에 셀 표 · 저장한 셀도 */
+  extSet(d){ if(!d || typeof d!=='object') return; if(d.cell){ ['o', 'r', 'c'].forEach(k => { if(typeof d.cell[k]==='string') T4C[k] = d.cell[k]; }); T4C.u = d.cell.u && typeof d.cell.u==='object' ? {...d.cell.u} : {}; } if(Array.isArray(d.presets)) T4.presets = d.presets.filter(p => p && typeof p.name==='string' && p.cell); t4CSave(); t4PSave(); wbPaint(['ext']); },
+  exReset(){ try{ localStorage.removeItem(wbMK(T4CK)); localStorage.removeItem(wbMK(T4PK)); }catch(e){} Object.assign(T4C, {o:'', r:'', c:'', u:{}}); T4.presets = []; },
   tour: M4TOUR,
   verifyBase:{cellO:null, cellR:null, cellC:null, o_T:25, auto:0, o_mode:0, o_i:0, x_mseg:0, x_mpack:0, x_r:0, il_on:0, vi_on:0, c_ah:4.5, c_imax:45, c_r:15, c_g:70, n_seg:6, s_seg:12, n_p:6},   // 검증 손계산은 예전 기본 (P45B 6 × 12S6P) 그대로
   verify: [
