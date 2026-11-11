@@ -3331,6 +3331,17 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t9-cright .t9-cfi.need input{border-color:#d33a2c;background:#fff4f2}
 .t9-cb.need>rect,.t9-cb.need>circle:first-child{stroke:#d33a2c!important;stroke-width:2px;stroke-dasharray:5 3}
 .dc-seg button:disabled{opacity:.45;cursor:not-allowed;background:repeating-linear-gradient(135deg,#eceef2 0 4px,#f6f7f9 4px 8px);color:#7a808c}
+/* 편집 배치 (T.edLay) */
+.wb-elh{margin:14px 0 6px}.wb-elh:first-of-type{margin-top:4px}
+.wb-elay{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px 14px;align-items:start}
+.wb-ebin{display:grid;grid-template-columns:repeat(var(--k),minmax(0,1fr));grid-auto-flow:column;grid-template-rows:repeat(var(--r),auto);column-gap:24px}
+/* 도구 1 (2026-11-11): [차 치수] 탭에서만 공통 입력 카드, 장비 행선지 (→ …) 는 작게, 빈 필수 표시 */
+#wb.m1-on:not(.m1-tabdim) #wbedit{display:none}
+.m1-to{color:var(--muted);font-size:11.5px;font-weight:400}
+#wb.wb-needon .m1-dinfo label.need input{border-color:#d33a2c!important;background:#fff4f2!important}
+#wb.wb-needon #m1body.need .m1-board,#wb.wb-needon #m1body.need{outline:2px solid #d33a2c;outline-offset:4px;border-radius:8px}
+#wb.wb-needon [data-m1tab].need{position:relative}
+#wb.wb-needon [data-m1tab].need::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#d33a2c}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -10517,8 +10528,16 @@ function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') 
   const nav = sides ? `<div class="wb-esec"><span class="muted">보기</span><span class="dc-seg" role="group">${[['c', '차 · 공통'], ['f', '앞'], ['r', '뒤']].map(([k, t]) => `<button type="button" data-wbesec="${k}" aria-pressed="${WB.esec===k}">${t}</button>`).join('')}</span></div>` : '';
   const cut = g => sides ? g.replace(/^(앞|뒤) · /, '') : g;
   return `<div class="wb-ebar"><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button>${nav}</div>
-    ${groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
+    ${!sides && T.edLay ? wbEditLay(T.edLay(), groups) : groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
     ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }
+/* 편집 배치 (도구가 T.edLay 를 줄 때, 2026-11-11): 구역 [{h 머리, n 열 수, cards:[{g 묶음, span 칸, k 카드 안 열 수}]}]. 항목이 적으면 한 행 여러 카드,
+   많으면 카드를 넓혀 안에서 열을 나눔 (세로 순서대로 채움). 배치에 없는 묶음은 맨 아래 카드로 */
+function wbEditLay(L, groups){ const used = new Set();
+  const card = c => { const G = groups.find(x => x.g===c.g); if(!G) return ''; used.add(G); const k = c.k || 1;
+    return `<div class="wb-ecard" style="grid-column:span ${c.span || 1}">${G.g ? `<div class="wb-ech">${wbEsc(G.g)}</div>` : ''}${k > 1 ? `<div class="wb-ebin" style="--k:${k};--r:${Math.ceil(G.ds.length / k)}">${wbInRows(G.ds, false)}</div>` : wbInRows(G.ds, false)}</div>`; };
+  const secs = L.map(S => { const cs = S.cards.map(card).join(''); return cs ? `<div class="wb-ig wb-elh">${wbEsc(S.h)}</div><div class="wb-elay" style="--n:${S.n}">${cs}</div>` : ''; }).join('');
+  const rest = groups.filter(G => !used.has(G));
+  return secs + (rest.length ? `<div class="wb-ecards">${rest.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(G.g)}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''); }
 function wbTabsHTML(){ const T = wbT(); if(!wbTabs(T)) return '';
   return [['res', '결과'], ['edit', '편집']].map(([k, t]) => `<button type="button" role="tab" data-wbtab="${k}" aria-selected="${(WB.tab || 'res')===k}">${t}</button>`).join(''); }
 /* 잠긴 칸 값: 도구의 inEff(k) 가 undefined = 저장값 그대로, null = 계산에 안 씀 (—), 숫자 = 실제로 쓰는 값, '…' = 결과가 나오면 정해짐 */
@@ -10718,7 +10737,7 @@ function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id]
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
   WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 새 파일 빈칸: 편집 탭에서 시작 */
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
-  m.classList.remove('t2-edit');   /* 도구 2P 편집 탭 표시가 다른 도구로 남아 결과를 가리던 것 (2026-11-11). 2P 는 그릴 때 다시 붙임 */
+  m.classList.remove('t2-edit', 'm1-on', 'm1-tabdim');   /* 도구 2P 편집 탭 표시가 다른 도구로 남아 결과를 가리던 것 (2026-11-11). 2P 는 그릴 때 다시 붙임 */
   m.classList.toggle('wb-exmode', wbEx()); m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
   wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); wbNavPush(!was); }
@@ -10728,7 +10747,7 @@ function wbExReset(){ if(!wbEx() || !WB.id) return; const id = WB.id, T = wbT();
   if(T.exReset) T.exReset(); WB.I = wbLoad(id); WB.R = null; wbPaint(); wbCalc(); toast('예제를 처음 상태로 되돌렸습니다.'); }
 function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = ''; m.classList.remove('wb-tabbed', 'wb-edit', 'wb-res');
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
-  m.classList.remove('wb-exmode', 't2-edit'); if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null;
+  m.classList.remove('wb-exmode', 't2-edit', 'm1-on', 'm1-tabdim'); if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null;
   wbModeSet('nf'); WBNAV.last = '';
   if(!WBNAV.pop && !window.DEBUG && typeof navState==='function'){ try{ history.pushState(navState(), '', location.hash); }catch(e){} } }   /* 단추로 닫으면 사이트 기록을 한 칸 (뒤로가기 = 닫기 전 도구 화면) */
 
@@ -11119,10 +11138,11 @@ function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.act
 
 /* ---------- 표 입력 ---------- */
 const m1Num = (v, attrs) => `<input type="number" step="any" ${attrs} value="${v==null || !isFinite(v) ? '' : v}">`;
-function m1ExtHTML(){ return `<section class="wb-sec m1" aria-label="표 입력"><div class="wb-h"><h3>표 입력</h3>
-      <div class="m1-tabs" role="tablist">${[['mass','부품 질량 표'], ['drv','드라이버 모델']].map(([k, t]) => `<button type="button" role="tab" data-m1tab="${k}" aria-selected="${M1.tab===k}">${t}</button>`).join('')}</div>
+function m1ExtHTML(){ const w = $('#wb'); if(w){ w.classList.add('m1-on'); w.classList.toggle('m1-tabdim', M1.tab==='dim'); }   /* [차 치수] 탭 = 아래 공통 입력 카드 (2026-11-11) */
+  return `<section class="wb-sec m1" aria-label="표 입력"><div class="wb-h"><h3>표 입력</h3>
+      <div class="m1-tabs" role="tablist">${[['mass','부품 질량 표'], ['drv','드라이버 모델'], ['dim','차 치수']].map(([k, t]) => `<button type="button" role="tab" data-m1tab="${k}" aria-selected="${M1.tab===k}">${t}</button>`).join('')}</div>
       <span class="wb-meta">${m1Season()} 시즌 · 좌표 [mm] x = 뒤 차축에서 앞으로 · y = 중심선에서 왼쪽 · z = 지면에서 위</span></div>
-    <div id="m1body">${M1.tab==='mass' ? m1MassHTML() : m1DrvHTML()}</div></section>`; }
+    <div id="m1body"${M1.tab==='mass' ? ' data-wbneed="m1:mass"' : ''}>${M1.tab==='mass' ? m1MassHTML() : M1.tab==='drv' ? m1DrvHTML() : ''}</div></section>`; }
 /* 카드 배치: 4열, 줄마다 왼쪽부터 빈칸 없이 채움. 드라이버 카드는 첫 줄 첫 칸 고정(첫 줄은 3장까지).
    저장값 pos {c, r}: 줄 r 과 줄 안 순서 c. 자리가 없는 카드는 마지막 줄 뒤에 이어 붙임 */
 const M1NC = 4, m1Cap = i => i===0 ? M1NC - 1 : M1NC;
@@ -11231,14 +11251,14 @@ function m1SetHue(id, h){ const card = document.querySelector(`[data-m1g="${id}"
 /* ---------- 드라이버 모델: 그림(왼쪽, 숫자 누르면 고침) + 오른쪽 칸(성별 · 장비 · 다른 드라이버와 같게 · 체절 질량) ---------- */
 function m1DrvHTML(){ const ed = m1CanEdit(), d = m1Drv(M1.drv) || M1DDEF(), others = Object.keys(M1DRV).filter(k => k!==M1.drv);
   const D = WB.R && WB.R.drv && WB.R.drv[M1.drv];
-  const gin = (p, lab) => `<label class="m1-gi"><span>${lab}</span>${ed ? m1Num(m1Get(d, p) || null, `data-m1d="${p}" min="0" placeholder="0" aria-label="${lab} [kg]"`) : `<b>${wbFmt(m1Get(d, p) || 0, 1)}</b>`}<i>kg</i></label>`;
+  const gin = (p, lab) => `<label class="m1-gi"><span>${lab}</span>${ed ? m1Num(m1Get(d, p) || null, `data-m1d="${p}" min="0" placeholder="0" aria-label="${lab.replace(/<[^>]+>/g, '')} [kg]"`) : `<b>${wbFmt(m1Get(d, p) || 0, 1)}</b>`}<i>kg</i></label>`;
   return `<div class="m1-top"><div class="m1-ptabs">${Object.entries(M1DRV).map(([k, t]) => { const dd = m1Drv(k); return `<button type="button" data-m1drv="${k}" aria-pressed="${M1.drv===k}"><i class="m1-hdot" style="background:${M1HC[k]}"></i>${t}${dd && dd.label ? ' · ' + wbEsc(dd.label) : ''}${dd ? '' : '<span>기본값</span>'}</button>`; }).join('')}</div>
       <span class="m1-hint">${ed ? '그림 위 숫자를 누르면 고칩니다 · 흰 점(엉덩이점 · 발목 · 핸들)은 끌어서 옮깁니다' : '지난 시즌 기록은 회장만 고칠 수 있습니다'}</span>
       ${ed && m1Drv(M1.drv) ? `<button type="button" class="lnk m1-reset" data-m1dreset title="엉덩이점 · 등받이 · 목 각도 · 발목 · 발 각도 · 핸들 · 직접 고친 체절 길이를 처음으로 (이름 · 키 · 몸무게 · 성별 · 장비는 그대로)">자세 초기화</button>` : ''}</div>
     <div class="m1-dgrid"><div class="m1-dfw">${m1InfoHTML(d, D, ed)}<div class="m1-dwrap" id="m1dfig">${m1DrvFig(WB.R)}</div></div>
       <aside class="m1-dside" aria-label="드라이버 설정">
         <div class="m1-sg"><b>체절 비율</b><div class="m1-seg2">${[['m','남성'],['f','여성']].map(([k, t]) => `<button type="button" data-m1sex="${k}" aria-pressed="${(d.sex||'m')===k}"${ed ? '' : ' disabled'}>${t}</button>`).join('')}</div></div>
-        <div class="m1-sg"><b>장비</b>${gin('gear.helmet', '헬멧 → 머리')}${gin('gear.suit', '드라이버 복 → 체절 비율로')}${gin('gear.belt', '안전벨트 → 몸통')}</div>
+        <div class="m1-sg"><b>장비</b>${gin('gear.helmet', '헬멧 <span class="m1-to">(→ 머리)</span>')}${gin('gear.suit', '드라이버 복 <span class="m1-to">(→ 체절 비율로)</span>')}${gin('gear.belt', '안전벨트 <span class="m1-to">(→ 몸통)</span>')}</div>
         ${ed ? `<div class="m1-sg"><b>자세 복사</b><span class="m1-fh">엉덩이점 · 등받이 · 목 각도 · 발목 · 발 각도 · 핸들 · 체절 길이만</span><div class="m1-same">${others.map(k => `<button type="button" class="btn small" data-m1same="${k}">${M1DRV[k]}와 같게</button>`).join('')}</div></div>` : ''}
         <div class="m1-sg" id="m1segs">${m1SegTable(D)}</div>
       </aside></div>`; }
@@ -11248,9 +11268,9 @@ function m1InfoHTML(d, D, ed){
   const num = (p, v, u, w) => ed ? `<input type="number" step="any" data-m1o="${p}" value="${v==null || !isFinite(v) ? '' : v}"${w ? ` placeholder="${w}"` : ''} aria-label="${p}">${u ? `<i>${u}</i>` : ''}` : `<b>${v==null || !isFinite(v) ? '-' : v}</b>${u ? `<i>${u}</i>` : ''}`;
   return `<div class="m1-dinfo${ed ? ' ed' : ''}" aria-label="드라이버 정보">
     <label class="m1-dn">${ed ? `<input type="text" data-m1o="label" maxlength="20" value="${wbEsc(d.label||'')}" placeholder="표시 이름 (${M1DRV[M1.drv]})" aria-label="표시 이름">` : `<b>${wbEsc(d.label || M1DRV[M1.drv])}</b>`}</label>
-    <label><span>키</span>${num('height', +d.height, 'cm')}</label>
+    <label data-wbneed="m1:drv"><span>키</span>${num('height', +d.height, 'cm')}</label>
     <p class="m1-fh m1-hest" id="m1dhest"${D && D.segSet ? '' : ' hidden'}>${D ? m1HestTxt(D) : ''}</p>
-    <label><span>몸무게</span>${num('mass', +d.mass, 'kg')}</label>
+    <label data-wbneed="m1:drv"><span>몸무게</span>${num('mass', +d.mass, 'kg')}</label>
     <p class="m1-dsum">드라이버 합 <b id="m1dsum">${D ? wbFmt(D.m, 1) : '-'}</b> kg (장비 포함)</p></div>`; }
 function m1SegTable(D){ if(!D) return '';
   return `<b>체절 질량 · 무게중심</b><table class="m1-st"><thead><tr><th>체절</th><th>kg</th><th>x</th><th>z</th></tr></thead><tbody>${D.segs.map(sg => `<tr><td>${sg.n}</td><td>${wbFmt(sg.m, 2)}</td><td>${Math.round(sg.x)}</td><td>${Math.round(sg.z)}</td></tr>`).join('')}
@@ -11492,7 +11512,10 @@ WB_TOOLS['1'] = {
     if(!m1Num0(d.height) || !m1Num0(d.mass)) L.push({k:'m1:drv', n:`드라이버 ${M1DRV[M1.dsel]} 키 · 몸무게`, g:'드라이버 모델'});
     return L; },
   navGet: () => ({t:M1.tab}), navSet(s){ if(s.t && M1.tab!==s.t){ M1.tab = s.t; wbPaint(['ext']); } },   /* 뒤로가기 · 앞으로가기: 부품 질량 표 / 드라이버 모델 */
-  needGo(k){ if(k==='m1:mass' || k==='m1:drv'){ M1.tab = k==='m1:mass' ? 'mass' : 'drv'; if(k==='m1:drv') M1.drv = M1.dsel; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); return true; } return false; },
+  needMark(L){ const ks = new Set(L.map(x => x.k)), dim = L.some(x => !String(x.k).startsWith('m1:'));
+    document.querySelectorAll('#wb [data-m1tab]').forEach(b => b.classList.toggle('need', b.dataset.m1tab==='mass' ? ks.has('m1:mass') : b.dataset.m1tab==='drv' ? ks.has('m1:drv') : dim)); },
+  needGo(k){ if(!String(k).startsWith('m1:')){ if(M1.tab!=='dim'){ M1.tab = 'dim'; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); } return false; }   /* 치수 빈칸 → [차 치수] 탭을 열고 칸 찾기는 작업창이 */
+  if(k==='m1:mass' || k==='m1:drv'){ M1.tab = k==='m1:mass' ? 'mass' : 'drv'; if(k==='m1:drv') M1.drv = M1.dsel; if(wbTabs(wbT()) && WB.tab!=='edit') wbTabSet('edit'); wbPaint(['ext']); return true; } return false; },
   tour: M1TOUR, shape: true,
   onResult(R){ if(M1.tab==='drv'){ if(!M1.edit && !M1.drag){ const f = $('#m1dfig'); if(f) f.innerHTML = m1DrvFig(R); } else { const f = $('#m1dfig'); if(f && M1.drag) f.innerHTML = m1DrvFig(R); }
       const sg = $('#m1segs'); if(sg) sg.innerHTML = m1SegTable(R.drv && R.drv[M1.drv]); const ds = $('#m1dsum'), DD = R.drv && R.drv[M1.drv]; if(ds && DD) ds.textContent = wbFmt(DD.m, 1); const he = $('#m1dhest'); if(he && DD){ he.hidden = !DD.segSet; he.textContent = m1HestTxt(DD); } }
@@ -19724,24 +19747,27 @@ const M3TOUR = [
   ['#wb .wb-sig', '답력–감속도', '가로축 = 답력. 감속도 · 앞뒤 제동력 · 라인 압력입니다. 한 축이 잠기면 그 축 제동력은 μ F_z 에 묶이고 기울기가 꺾입니다.'],
   ['#wb #wbout', '결과', '이상 · 실제 배분, 설계 답력의 라인 압력 · 제동력 · 감속도, 먼저 잠기는 축 · 그 감속도 · 답력, 네 바퀴 잠김 답력(규정 제동 시험) · 최소 페달비입니다.'],
 ];
-const T3G = {car:'차 (1번 · 2P번 도구)', ped:'페달', hyd:'유압 · 마찰', th:'디스크 온도'};
+const T3G = {car:'차 (도구 1 · 2P 값)', ped:'페달', hyd:'마스터실린더 · 캘리퍼 · 패드', disc:'디스크', cprobe:'답력 곡선', cdn:'다운포스', th:'디스크 온도'};
+/* 편집 배치 (2026-11-11): 다른 도구 값 / 부품 / 계산 조건 (보고자 하는 계산 대상별) */
+const T3LAY = () => [{h:'다른 도구에서 오는 차 값', n:1, cards:[{g:T3G.car, k:3}]}, {h:'브레이크 부품', n:4, cards:[{g:T3G.ped}, {g:T3G.hyd, span:2, k:2}, {g:T3G.disc}]}, {h:'계산 조건', n:3, cards:[{g:T3G.cprobe}, {g:T3G.cdn}, {g:T3G.th}]}];
 WB_TOOLS['3'] = {
   no:'3', stage:'P1 · P3-8', name:'제동 시스템 사이징 ',
   x:{n:'답력', u:'N'}, mainTitle:'제동 배분 선도', mainMeta:'이상 곡선 · 실제 직선',
+  edLay: T3LAY,
   inputs:[
     {k:'m', dk:'m', v:300, d:0, g:T3G.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:T3G.car}, {k:'h', dk:'h', v:290, d:0, g:T3G.car}, {k:'L', dk:'L', v:1550, d:0, g:T3G.car},
     {k:'mu', dk:'mu', v:1.5, d:2, g:T3G.car}, {k:'r_load', dk:'r_load', v:236, d:0, g:T3G.car},
-    {k:'cla', dk:'cla', v:3, d:2, g:T3G.car}, {k:'xcop', dk:'xcop', v:775, d:0, g:T3G.car}, {k:'v_b', n:'시험 차속 (다운포스만)', u:'km/h', v:0, d:0, g:T3G.car},
+    {k:'cla', dk:'cla', v:3, d:2, g:T3G.car}, {k:'xcop', dk:'xcop', v:775, d:0, g:T3G.car}, {k:'v_b', n:'시험 차속 (다운포스만)', u:'km/h', v:0, d:0, g:T3G.cdn},
     {k:'f_ped', n:'설계 답력 (드라이버가 낼 수 있는 힘)', u:'N', v:981, d:0, g:T3G.ped}, {k:'pedal_ratio', dk:'pedal_ratio', v:2.73, d:2, g:T3G.ped}, {k:'brake_bias', dk:'brake_bias', n:'밸런스 바 앞 몫', v:73.6, d:1, g:T3G.ped},
     {k:'eta_b', n:'페달 · 유압 기계 효율', u:'%', v:100, d:0, g:T3G.ped},
     {k:'mc_f', dk:'mc_f', v:15.875, d:3, g:T3G.hyd}, {k:'mc_r', dk:'mc_r', v:15.875, d:3, g:T3G.hyd},
     {k:'cal_area_f', dk:'cal_area_f', n:'캘리퍼 피스톤 면적 (앞, 한쪽 합)', v:766.6, d:1, g:T3G.hyd}, {k:'cal_area_r', dk:'cal_area_r', n:'캘리퍼 피스톤 면적 (뒤, 한쪽 합)', v:766.6, d:1, g:T3G.hyd},
-    {k:'pad_mu', dk:'pad_mu', v:0.32, d:2, g:T3G.hyd}, {k:'disc_d_f', dk:'disc_d_f', v:187, d:0, g:T3G.hyd}, {k:'disc_d_r', dk:'disc_d_r', v:187, d:0, g:T3G.hyd},
+    {k:'pad_mu', dk:'pad_mu', v:0.32, d:2, g:T3G.hyd}, {k:'disc_d_f', dk:'disc_d_f', v:187, d:0, g:T3G.disc}, {k:'disc_d_r', dk:'disc_d_r', v:187, d:0, g:T3G.disc},
     {k:'pad_h', n:'패드 높이 (유효 반지름 = 바깥 반지름 − 패드 높이 ÷ 2)', u:'mm', v:0, d:1, g:T3G.hyd},
     {k:'v_stop', n:'정지 시작 차속 (디스크 온도)', u:'km/h', v:100, d:0, g:T3G.th}, {k:'n_stop', n:'연속 정지 횟수 (사이 냉각 없음)', u:'회', v:5, d:0, g:T3G.th},
-    {k:'m_disc_f', n:'디스크 하나 질량 (앞)', u:'kg', v:0.45, d:3, g:T3G.th}, {k:'m_disc_r', n:'디스크 하나 질량 (뒤)', u:'kg', v:0.45, d:3, g:T3G.th},
-    {k:'c_disc', n:'디스크 비열 (강 460)', u:'J/(kg·K)', v:460, d:0, g:T3G.th},
-    {k:'f_probe', n:'탐침 답력 (곡선 위 한 점)', u:'N', v:1200, d:0, g:T3G.ped},
+    {k:'m_disc_f', n:'디스크 하나 질량 (앞)', u:'kg', v:0.45, d:3, g:T3G.disc}, {k:'m_disc_r', n:'디스크 하나 질량 (뒤)', u:'kg', v:0.45, d:3, g:T3G.disc},
+    {k:'c_disc', n:'디스크 비열 (강 460)', u:'J/(kg·K)', v:460, d:0, g:T3G.disc},
+    {k:'f_probe', n:'탐침 답력 (곡선 위 한 점)', u:'N', v:1200, d:0, g:T3G.cprobe},
   ],
   outputs:[
     {k:'ideal_f', n:'이상 배분 (앞, 네 바퀴 동시 잠김)', u:'%', d:1, g:'배분'}, {k:'act_f', n:'실제 배분 (앞, 유압)', u:'%', d:1, g:'배분'}, {k:'a_max', n:'최대 감속도 (이상 배분)', u:'g', d:2, g:'배분'},
