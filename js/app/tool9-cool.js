@@ -20,7 +20,17 @@ const T9COOL_DEF = () => ({ circuits:[
 const T9 = { cool:T9COOL_DEF() };
 /* 새 파일 = 회로 틀(수랭 회로 1 · 공랭 덕트 1)만, 블럭 · 호스 · 냉각수 값 없음 */
 const T9COOL_NEW = () => ({ circuits:T9COOL_DEF().circuits.map(c => ({...c, p:{}, sel:'', blocks:c.kind==='air' ? c.blocks.filter(b => b.t==='in' || b.t==='out').map(b => ({...b, p:{}})) : [], links:[]})) });   /* 공랭 덕트는 입구 · 출구 블럭은 늘 있음 (값은 빈칸) */
-wbModeReg(m => { T9.cool = m==='ex' ? T9COOL_DEF() : T9COOL_NEW(); try{ const s = JSON.parse(localStorage.getItem(wbMK(T9KEY)) || 'null'); if(s && s.cool && Array.isArray(s.cool.circuits)) T9.cool = s.cool; }catch(e){} });
+/* 저장본 정리 (2026-11-11): 공랭 덕트에는 입구 · 출구가 늘 1개씩 (빼지도 더하지도 못함). 새 파일(nf)에 남은 예전 기본 블럭
+   (기본 배치 id k1 ~ k4 · k6, 값 없음) 은 지움 → 새 파일 회로에 부품이 미리 들어가 있지 않게 */
+function t9CoolNorm(cool, nf){ if(!cool || !Array.isArray(cool.circuits)) return cool; const DEFB = Object.fromEntries(T9COOL_DEF().circuits.flatMap(c => c.blocks).filter(b => b.t!=='in' && b.t!=='out').map(b => [b.id, b]));   // 기본 배치 블럭 (id · 종류 · 자리 모두 같아야 예전 기본으로 봄)
+  cool.circuits.forEach(c => { if(!Array.isArray(c.blocks)) c.blocks = []; if(!Array.isArray(c.links)) c.links = [];
+    if(nf){ const dead = new Set(c.blocks.filter(b => { const d = DEFB[b.id]; return d && d.t===b.t && d.x===b.x && d.y===b.y && !Object.keys(b.p || {}).length; }).map(b => b.id)); if(dead.size){ c.blocks = c.blocks.filter(b => !dead.has(b.id)); c.links = c.links.filter(([a, b]) => !dead.has(a) && !dead.has(b)); } }
+    if(c.kind!=='air') return; const uid = s => { let id = c.id + s, n = 0; while(c.blocks.some(b => b.id===id)) id = c.id + s + (++n); return id; };
+    if(!c.blocks.some(b => b.t==='in')) c.blocks.unshift({id:uid('i'), t:'in', x:40, y:67, p:{}});
+    if(!c.blocks.some(b => b.t==='out')) c.blocks.push({id:uid('o'), t:'out', x:680, y:67, p:{}});
+    if(c.blocks.length===2 && !c.links.length) c.links.push([c.blocks.find(b => b.t==='in').id, c.blocks.find(b => b.t==='out').id]); });
+  return cool; }
+wbModeReg(m => { T9.cool = m==='ex' ? T9COOL_DEF() : T9COOL_NEW(); try{ const s = JSON.parse(localStorage.getItem(wbMK(T9KEY)) || 'null'); if(s && s.cool && Array.isArray(s.cool.circuits)) T9.cool = t9CoolNorm(s.cool, m!=='ex'); }catch(e){} });
 const t9Save = () => { try{ localStorage.setItem(wbMK(T9KEY), JSON.stringify({cool:T9.cool})); }catch(e){} };
 // ================================================================ 냉각 회로 공통 (도구 9 · 도구 2P 계산과 냉각 편집기가 같이 씀)
 // 수랭 회로 갈래 유량 (회로에 hyd 가 있으면): 호스 · 블럭 압력 강하가 같아지게 유량이 나뉨 (밸브가 없으면 비율을 직접 정할 수 없으므로)

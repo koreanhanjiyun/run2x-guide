@@ -2806,7 +2806,7 @@ html.wb-lock #tip{z-index:95}
 .wb-inleg{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 6px;font-size:11.5px;color:var(--muted)}.wb-inleg span{display:inline-flex;align-items:center}
 /* 도구 2: 코스 고르기 · 공식 코스 지도 · 랩별 기록 · 모터 탭 */
 .t2-sk{fill:none;stroke:#9aa0ab;stroke-width:1;stroke-dasharray:3 3}
-.t2-cone{stroke:none}.t2-cone.R{fill:#2563eb}.t2-cone.L{fill:#e0a800}.t2-cone.C{fill:#ea580c;stroke:#fff;stroke-width:.6px;vector-effect:non-scaling-stroke}
+.t2-cone{stroke:none}.t2-cone.R{fill:#2563eb}.t2-cone.L{fill:#e0a800}.t2-cone.O{fill:#f59e0b;stroke:#b45309;stroke-width:.6px;vector-effect:non-scaling-stroke}.t2-cone.C{fill:#ea580c;stroke:#fff;stroke-width:.6px;vector-effect:non-scaling-stroke}
 .t2-sl{stroke:#16a34a;stroke-width:3.5;stroke-linecap:round}.t2-fin{stroke:#dc2626;stroke-width:3.5;stroke-linecap:round}
 .t2-arr{fill:#232731;stroke:#fff;stroke-width:1}
 .t2-cur{fill:#fff;stroke:#232731;stroke-width:2}
@@ -2818,7 +2818,7 @@ html.wb-lock #tip{z-index:95}
 .t2-set label{display:inline-flex;align-items:center;gap:6px}
 .t2-set input[type=number]{width:72px;font:inherit;padding:2px 6px;border:1px solid var(--line-2);border-radius:5px;text-align:right;background:var(--panel);color:var(--ink)}
 .t2-set select{font:inherit;font-size:12.5px;padding:2px 4px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);color:var(--ink)}
-.t2-set input:disabled,.t2-set select:disabled{opacity:.5;background:var(--panel-2)}
+.t2-set input:disabled,.t2-set select:disabled,#wb input:disabled:not([type=checkbox]):not([type=radio]),#wb select:disabled{background:repeating-linear-gradient(135deg,#e9ebef 0 4px,#f5f6f8 4px 8px);color:#7a808c;border-style:dashed;border-color:#b9bfca;cursor:not-allowed}
 .t2-sum{color:var(--ink-2)}
 .t2-rule{font-size:12px;margin:0 0 8px;line-height:1.55}
 .t2-menu{position:relative;align-self:flex-start}
@@ -2880,7 +2880,8 @@ html.wb-lock #tip{z-index:95}
 .t2-r .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.t2-r .v b{font-size:13.5px}.t2-r .v i{font-style:normal;color:var(--muted);font-size:11.5px}
 .t2-r .d{text-align:right;color:var(--ink-2);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .t2-dt{font-weight:600}
-.wb-ir.lock input{background:var(--panel-2);color:var(--muted)}
+/* 잠긴 칸: 빗금 + 점선 테두리 + 흐린 이름 → 빈칸(흰 바탕)과 바로 구분 (2026-11-11) */
+.wb-ir.lock input{background:repeating-linear-gradient(135deg,#e9ebef 0 4px,#f5f6f8 4px 8px);color:#7a808c;border-style:dashed;border-color:#b9bfca;cursor:not-allowed}.wb-ir.lock .wb-in-t{color:#8a909c}
 .wb-in-n{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0}.wb-in-t{min-width:0}
 .wb-ir .wb-lk{margin-left:auto;font-size:11.5px;color:var(--accent);white-space:nowrap}
 .t2-oc h4 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3284,6 +3285,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t2-bin{display:grid;grid-template-columns:repeat(var(--k),minmax(0,1fr));column-gap:24px}
 .t2-bin.col{grid-auto-flow:column;grid-template-rows:repeat(var(--r),auto)}
 /* 비어 있는 표 접기 */
+.t2-mfold.off{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:6px 0 4px;border:1px dashed var(--line-2);border-radius:6px;background:repeating-linear-gradient(135deg,#f1f2f5 0 6px,#f8f9fb 6px 12px);color:var(--muted);font-size:12.5px}.t2-mfold.off b{color:#6b7280;font-size:12.5px}
 .t2-mfold{margin:6px 0 4px}.t2-mfold>summary{cursor:pointer;font-size:13px;padding:6px 0;color:var(--ink)}.t2-mfold>summary .muted{font-size:12px}
 /* 냉각 편집기: 왼쪽 그림 · 오른쪽 입력 */
 .t9-cmain{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:14px;align-items:start}

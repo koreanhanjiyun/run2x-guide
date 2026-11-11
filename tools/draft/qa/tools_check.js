@@ -6,7 +6,7 @@ const H=require('./h.js');
   for(const id of ids){ await p.evaluate(i=>{ wbModeSet('ex'); localStorage.removeItem(wbStoreKey(i)); wbOpen(i,null,'ex'); }, id); await W(1500);
     const st=await p.evaluate(()=>({err:WB.err, n:WB.R ? Object.keys(WB.R.out).length : 0, cards:document.querySelectorAll('#wbout .wb-oc, #wbout section, #wbout > div > div').length}));
     if(d) await p.screenshot({path:`${d}/tool_${id}.png`});
-    await p.click('[data-wbcode]'); await W(300); await p.click('[data-wbver]'); await W(2500);
+    await p.click('[data-wbcode]'); await W(300); await p.click('[data-wbver]'); await W(id==='2'||id==='G' ? 90000 : 2500);
     const v=await p.evaluate(()=>{ const m=document.querySelector('#wbm'); return m.querySelectorAll('tr.ok').length+' ok / '+m.querySelectorAll('tr.ng').length+' ng'; });
     await p.evaluate(()=>wbModalClose());
     console.log('tool', id, JSON.stringify(st), 'verify', v); }
