@@ -3355,6 +3355,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .m1-env{opacity:1}.m1-env *{fill:#000!important;stroke:#000!important}
 .t9-cj>circle:first-child{fill:#fff;stroke:#3a3f4a;stroke-width:2}.t9-cj.sel>circle:first-child{stroke:var(--accent);stroke-width:3}
 .m1-env .cf-faint,.m1-env g{opacity:1!important}
+.t9-cpo.full{fill:#fff;stroke:#8a8f99;stroke-width:1.4;cursor:inherit}.t9-cpo.full:hover{r:7}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -18213,10 +18214,12 @@ function t9Blank(C){ const L = [], nm = (b) => T9CB[b.t] ? T9CB[b.t][0] : b.t, m
    라디로 들어오는 호스를 빼면 순환 없는 흐름이어야 함 → 그 순서(위상 정렬)로 점을 늘어놓음 (라디 = 0 번).
    구조 확인(펌프가 전체 흐름 자리인지)은 똑같이 나눈 몫으로, 실제 갈래 몫은 hyd (호스 · 블럭 압력 강하)로 계산 (coolPrep).
    배관 · 탱크 냉각수 양은 점마다 똑같이 나눠 더함 */
+/* '로 / 으로': 받침 있고 ㄹ 받침이 아니면 '으로' */
+const t9Ro = s => { const c = s.charCodeAt(s.length - 1) - 0xAC00, k = c >= 0 && c < 11172 ? c % 28 : 0; return s + (k && k!==8 ? '으로' : '로'); };
 function t9CWater(C, by){ const E = [], P = t9CV(C.p, T9CP.water), rads = C.blocks.filter(b => b.t==='rad'), pumps = C.blocks.filter(b => b.t==='pump');
   if(!rads.length) E.push('라디에이터가 1개 이상 있어야 함'); if(!pumps.length) E.push('펌프가 1개 이상 있어야 함'); if(E.length) return {E};   // 라디가 여럿이면 처음 놓은 라디가 회로의 시작점
   const R0 = rads[0].id, L = C.links.filter(([a, b]) => by.has(a) && by.has(b)), outs = id => L.filter(l => l[0]===id), ins = id => L.filter(l => l[1]===id);
-  C.blocks.forEach(b => { const nm = T9CB[b.t][0]; if(!outs(b.id).length) E.push(`${nm}에서 나가는 호스가 없음`); if(!ins(b.id).length) E.push(`${nm}로 들어오는 호스가 없음`); });
+  C.blocks.forEach(b => { const nm = T9CB[b.t][0]; if(!outs(b.id).length) E.push(`${nm}에서 나가는 호스가 없음`); if(!ins(b.id).length) E.push(`${t9Ro(nm)} 들어오는 호스가 없음`); });
   if(E.length) return {E};
   const pv = id => t9CV(by.get(id).p, T9CP.pump), isCrv = id => pv(id).pc===1, flow = id => isCrv(id) ? pv(id).qmax : pv(id).flow, isPump = id => by.get(id).t==='pump';   // 곡선 펌프는 구조 확인에 최대 유량을 씀 (실제 유량은 hyd 로 풂)
   const pSplit = t9PumpSplit(C, by);   // 갈래마다 펌프가 붙은 갈라짐 (있으면 그 비율 = 펌프 유량 비)
@@ -18259,7 +18262,7 @@ function t9PumpSplit(C, by){ const L = C.links.filter(([a, b]) => by.has(a) && b
 function t9CAir(C, by){ const E = [], ins = C.blocks.filter(b => b.t==='in'), outs = C.blocks.filter(b => b.t==='out');
   if(ins.length!==1 || outs.length!==1) return {E:['입구 · 출구는 1개씩']};
   const I0 = ins[0].id, O0 = outs[0].id, L = C.links.filter(([a, b]) => by.has(a) && by.has(b)), lo = id => L.filter(l => l[0]===id), li = id => L.filter(l => l[1]===id);
-  C.blocks.forEach(b => { const nm = T9CB[b.t][0]; if(b.t!=='out' && !lo(b.id).length) E.push(`${nm}에서 나가는 덕트가 없음`); if(b.t!=='in' && !li(b.id).length) E.push(`${nm}로 들어오는 덕트가 없음`); });
+  C.blocks.forEach(b => { const nm = T9CB[b.t][0]; if(b.t!=='out' && !lo(b.id).length) E.push(`${nm}에서 나가는 덕트가 없음`); if(b.t!=='in' && !li(b.id).length) E.push(`${t9Ro(nm)} 들어오는 덕트가 없음`); });
   if(E.length) return {E};
   const fr = l => { const o = lo(l[0]); if(o.length < 2) return 1; const w = o.map(x => isFinite(+x[2]) && +x[2] > 0 ? +x[2] : 1/o.length), s = w.reduce((a, b) => a + b, 0); return w[o.indexOf(l)]/s; };
   const deg = new Map(C.blocks.map(b => [b.id, li(b.id).length])), order = [], Q = [I0];
@@ -18287,13 +18290,15 @@ function t9S(){ return typeof WB!=='undefined' && WB.id==='2' && typeof t2Cwc===
 function t9On(){ return typeof WB!=='undefined' && (WB.id==='9' || WB.id==='2') && !!document.querySelector('#wb .t9-cool'); }
 /* ---------- 편집기 그림 · 조작 (시뮬링크식)
    왼쪽 끌기: 블럭 = 옮기기 (고른 블럭이 여럿이면 같이) · 빈 곳 = 영역 고르기 (걸치기만 해도) · 오른쪽 점 = 호스 새로 끌어 다른 블럭에 이음 ·
-     호스 토막 = 수직 토막은 좌우, 수평 토막은 상하로 옮김 (같은 자리에 겹친 토막은 함께 · 다른 호스 토막 6 안쪽이면 붙어 합쳐짐)
+     호스 토막 = 수직 토막은 좌우, 수평 토막은 상하로 옮김.
+   블럭 출구 · 입구에는 호스 하나만. 가르기 · 합치기는 합류 · 분기점 블럭으로만 (호스 위에 새 호스를 놓아도 그 자리에 생김) (2026-11-12)
    휠 = 확대 · 축소 (커서 자리 기준, 그림을 한 번 누른 뒤에만 — 스크롤하다 지나가도 확대 안 됨) · 휠 버튼 끌기 = 화면 이동 · Shift + 누르기 = 더해 고르기 · Delete · Backspace = 고른 것 지우기 · Esc = 고르기 풀기
    두 번 누르기: 빈 곳 = 전체 보기, 호스 = 자동 경로로 되돌림 */
 const T9CBW = 150, T9CBH = 58, T9CR = 64, T9VA = 0.36;   // 네모 블럭 · 동그라미 블럭(펌프 · 공기 입구 · 출구) 크기, 그림 세로 ÷ 가로
 const t9Rd = b => b.t==='pump' || b.t==='in' || b.t==='out';
 const t9BW = b => b.t==='j' ? 22 : t9Rd(b) ? T9CR : T9CBW, t9BH = b => b.t==='j' ? 22 : t9Rd(b) ? T9CR : T9CBH;
-const t9Pin = b => [b.x, b.y + t9BH(b)/2], t9Pout = b => [b.x + t9BW(b), b.y + t9BH(b)/2];
+const t9Pin = b => b.t==='j' ? [b.x + 11, b.y + 11] : [b.x, b.y + t9BH(b)/2], t9Pout = b => b.t==='j' ? [b.x + 11, b.y + 11] : [b.x + t9BW(b), b.y + t9BH(b)/2];   // 합류 · 분기점은 가운데로 드나듦
+const t9OutFull = (C, b) => b.t!=='j' && C.links.some(l => l[0]===b.id), t9InFull = (C, b) => b.t!=='j' && C.links.some(l => l[1]===b.id);
 /* 고른 것: C.selB (블럭 id 들) · C.selL (호스 번호들). 예전 저장본 (sel 글자 · selL 숫자) 은 여기서 바꿈 */
 function t9Sel(C){ if(!Array.isArray(C.selB)){ C.selB = typeof C.sel==='string' && C.sel ? [C.sel] : []; } if(!Array.isArray(C.selL)) C.selL = typeof C.selL==='number' && C.selL >= 0 ? [C.selL] : [];
   delete C.sel; C.selB = C.selB.filter(id => C.blocks.some(b => b.id===id)); C.selL = C.selL.filter(j => j < C.links.length); return C; }
@@ -18308,12 +18313,13 @@ function t9Ortho(P, r){ let d = `M${P[0][0]},${P[0][1]}`;
 function t9Route(C, j, by){ const l = C.links[j], A = by.get(l[0]), B = by.get(l[1]); if(!A || !B) return null;
   const [x1, y1] = t9Pout(A), [x2, y2] = t9Pin(B), pts = t9LX(l).pts;
   if(Array.isArray(pts) && pts.length >= 2){ const P = pts.map(p => p.slice()); P[0][1] = y1; P[P.length - 1][1] = y2; return [[x1, y1], ...P, [x2, y2]]; }
-  const oo = C.links.filter(q => q[0]===l[0]), ii = C.links.filter(q => q[1]===l[1]), ko = oo.indexOf(l), ki = ii.indexOf(l);
-  const xs = x1 + 18, xe = x2 - 18;   // 갈라지는 · 합쳐지는 호스는 같은 수직 토막을 함께 씀 (시뮬링크처럼 겹쳐 보임)
-  if(xe >= xs + 4 || (oo.length < 2 && ii.length < 2 && x2 >= x1 + 24)){ const xm = oo.length > 1 ? xs : ii.length > 1 ? xe : (x1 + x2)/2; return [[x1, y1], [xm, y1], [xm, y2], [x2, y2]]; }
+  const xs = x1 + 18, xe = x2 - 18, ja = A.t==='j', jb = B.t==='j';
+  if(x2 >= x1 + 24 || (ja && x2 >= x1 + 8)){   // 앞으로: 분기점에서 나가면 먼저 위아래로, 분기점으로 들어가면 마지막에 위아래로 (갈래가 점에서 바로 갈라져 보임)
+    if(ja && !jb) return [[x1, y1], [x1, y2], [x2, y2]]; if(jb && !ja) return [[x1, y1], [x2, y1], [x2, y2]];
+    const xm = (x1 + x2)/2; return [[x1, y1], [xm, y1], [xm, y2], [x2, y2]]; }
   const back = C.links.filter(q => { const a = by.get(q[0]), b = by.get(q[1]); return a && b && t9Pin(b)[0] < t9Pout(a)[0] + 24; }), bt = [...new Set(back.map(q => q[1]))], kb = bt.indexOf(l[1]);   // 같은 곳으로 돌아가는 호스는 같은 아래 길
   const lane = Math.max(...C.blocks.map(b => b.y + t9BH(b))) + 24 + 12*Math.max(0, kb);
-  return [[x1, y1], [xs, y1], [xs, lane], [xe, lane], [xe, y2], [x2, y2]]; }
+  const xa = ja ? x1 : xs, xb = jb ? x2 : xe; return [[x1, y1], [xa, y1], [xa, lane], [xb, lane], [xb, y2], [x2, y2]]; }
 /* 토막 끌기: 링크 j 의 꺾은선에서 점 (px, py) 에 가장 가까운 토막 번호 (양 끝 토막 = 포트에 붙어 못 옮김 → −1) */
 function t9SegAt(P, px, py){ let best = -1, bd = Infinity; for(let q = 0; q < P.length - 1; q++){ const [ax, ay] = P[q], [bx, by] = P[q + 1], dx = bx - ax, dy = by - ay, L2 = dx*dx + dy*dy, t = L2 > 0 ? Math.max(0, Math.min(1, ((px - ax)*dx + (py - ay)*dy)/L2)) : 0, d = Math.hypot(ax + t*dx - px, ay + t*dy - py); if(d < bd){ bd = d; best = q; } }
   return best >= 1 && best <= P.length - 3 ? best : -1; }
@@ -18342,19 +18348,19 @@ function t9CoolSVG(C){ t9Sel(C); const by = new Map(C.blocks.map(b => [b.id, b])
       bad += `<g class="t9-cbadge${sel ? ' sel' : ''}" data-t9clink="${C.id}:${j}" transform="translate(${best[1]},${best[2]})"><circle r="10"/><text y="4" text-anchor="middle">${k}</text></g>`; } });
   s += `<g class="t9-hose ${C.kind}">${layers.o}${layers.i}${layers.f}</g>${dots}${layers.h}${bad}`;   // 테두리를 모두 먼저, 안쪽 색을 그 위에 → 겹친 곳에 경계가 안 보임
   C.blocks.forEach(b => { if(b.t==='j'){ const sel = sB.has(b.id);   /* 합류 · 분기점: 작은 점 (드나드는 점은 양옆) */
-      s += `<g class="t9-cb t9-cj ${C.kind}${sel ? ' sel' : ''}" data-t9cb="${C.id}:${b.id}" transform="translate(${b.x},${b.y})"><circle cx="11" cy="11" r="8"/><circle cx="0" cy="11" r="3.5" class="t9-cpi"/><circle cx="22" cy="11" r="4.5" class="t9-cpo" data-t9cpo="${C.id}:${b.id}"><title>끌어서 다음 블럭에 이음</title></circle></g>`; return; }
+      s += `<g class="t9-cb t9-cj ${C.kind}${sel ? ' sel' : ''}" data-t9cb="${C.id}:${b.id}" transform="translate(${b.x},${b.y})"><circle cx="11" cy="11" r="8"/><circle cx="22" cy="11" r="4.5" class="t9-cpo" data-t9cpo="${C.id}:${b.id}"><title>끌어서 다음 블럭에 이음</title></circle></g>`; return; }
     const [nm, kind] = T9CB[b.t], q = Object.fromEntries(Object.entries(t9CV(b.p, t9CAll(C, b))).map(([k, v]) => [k, typeof v==='number' && !isFinite(v) ? '—' : v])), sel = sB.has(b.id), w = t9BW(b), h = t9BH(b), rd = t9Rd(b);
     const sub = b.t==='pump' && q.pc===1 ? `곡선 ${q.h0} kPa` : b.t==='rad' ? `${q.A} m² · ${t9RadTab(b) ? '방열 표' : `UA ${q.UA}`}${q.fm===1 && q.fon > 0 ? ` · 팬 ${q.fon} °C` : ''}` : b.t==='pump' ? `${q.flow} L/min` : b.t==='in' ? `${q.A} m² · 팬 ${q.fan}` : kind==='part' ? (C.kind==='water' ? `냉각수 ${q.V} L` : '부품 hA') : '';
     const shape = rd ? `<circle cx="${w/2}" cy="${h/2}" r="${w/2}"/>` : `<rect width="${w}" height="${h}" rx="7"/>`;
     const txt = rd ? `<text x="${w/2}" y="${sub ? h/2 - 2 : h/2 + 4}" text-anchor="middle" class="t9-cbn sm">${b.t==='in' ? '입구' : b.t==='out' ? '출구' : nm}</text>${sub ? `<text x="${w/2}" y="${h/2 + 13}" text-anchor="middle" class="t9-cbs sm">${b.t==='in' ? `${q.A} m²` : sub}</text>` : ''}`
                    : `<text x="${w/2}" y="24" text-anchor="middle" class="t9-cbn">${nm}</text><text x="${w/2}" y="42" text-anchor="middle" class="t9-cbs">${sub}</text>`;
     s += `<g class="t9-cb ${kind}${rd ? ' rd' : ''}${sel ? ' sel' : ''}${t9BMiss(C, b) ? ' need' : ''}" data-t9cb="${C.id}:${b.id}" transform="translate(${b.x},${b.y})">${shape}${txt}
-      ${b.t!=='in' ? `<circle cx="0" cy="${h/2}" r="6" class="t9-cpi"/>` : ''}${b.t!=='out' ? `<circle cx="${w}" cy="${h/2}" r="7" class="t9-cpo" data-t9cpo="${C.id}:${b.id}"><title>끌어서 다음 블럭에 이음</title></circle>` : ''}</g>`; });
+      ${b.t!=='in' ? `<circle cx="0" cy="${h/2}" r="6" class="t9-cpi"/>` : ''}${b.t!=='out' ? (t9OutFull(C, b) ? `<circle cx="${w}" cy="${h/2}" r="7" class="t9-cpo full"/>` : `<circle cx="${w}" cy="${h/2}" r="7" class="t9-cpo" data-t9cpo="${C.id}:${b.id}"><title>끌어서 다음 블럭에 이음</title></circle>`) : ''}</g>`; });
   s += hdl;
   if(T9CG && T9CG.cid===C.id){ if(T9CG.gx!=null) s += `<line x1="${T9CG.gx}" x2="${T9CG.gx}" y1="${v.y - 2000}" y2="${v.y + 4000}" class="t9-cguide"/>`; if(T9CG.gy!=null) s += `<line y1="${T9CG.gy}" y2="${T9CG.gy}" x1="${v.x - 4000}" x2="${v.x + 8000}" class="t9-cguide"/>`; }   // 정렬 안내선
   return s + `<rect class="t9-cmq" style="display:none"/><g class="t9-hose ${C.kind} drag" style="display:none"><path class="o"/><path class="i"/><path class="f"/></g><circle class="t9-cend ${C.kind}" r="9" style="display:none"/></svg>`; }   // 영역 고르기 · 끄는 중인 호스
 function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kind==='water').length, na = CC.filter(c => c.kind==='air').length, comp = t9CoolCompile(), used = new Set(CC.flatMap(c => c.blocks.map(b => b.t)));
-  const card = C => { t9Sel(C); const E = comp.err[C.id], pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b'] : ['m', 'i', 'b'], by = new Map(C.blocks.map(b => [b.id, b]));
+  const card = C => { t9Sel(C); const E = comp.err[C.id], pal = C.kind==='water' ? ['rad', 'pump', 'm', 'i', 'b', 'j'] : ['m', 'i', 'b', 'j'], by = new Map(C.blocks.map(b => [b.id, b]));
     const form = (title, def, obj, attr, lock = {}) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
         return `<label class="t9-cfi${!lock[k] && !isFinite(v) ? ' need' : ''}"><span>${n}</span><input type="number" step="any" value="${isFinite(v) ? v : ''}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${u}</i>${lock[k] ? `<em class="t9-clk">${lock[k]}</em>` : ''}</label>`; }).join('')}</div>`;
     const radTab = B => { const M = B.p && B.p.rq && typeof t2GridParse==='function' ? t2GridParse(B.p.rq).map : null, use = B.p && B.p.rqUse==='const' ? 'const' : 'tab', id = `${C.id}:${B.id}`;
@@ -18378,7 +18384,7 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
     const panel = Lj >= 0 ? hose()
       : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? {...(t9RadTab(B) ? {UA:'표 사용'} : {itd:'표 없음'}), ...(t9CV(B.p, T9CP.rad).fm===1 ? {} : {fon:'팬 늘 켬'})} : {}) + (B.t==='rad' ? `<div class="t9-cform"><b>팬 켜기</b><span class="dc-seg" role="group">${[[0, '늘 켬'], [1, '냉각수 온도로']].map(([q, nm]) => `<button type="button" data-t9cfm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.rad).fm===q}">${nm}</button>`).join('')}</span></div>` + radTab(B) : '') + (B.t==='pump' ? `<div class="t9-cform"><b>유량 정하기</b><span class="dc-seg" role="group">${[[0, '유량 고정'], [1, '펌프 곡선']].map(([q, nm]) => `<button type="button" data-t9cpm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.pump).pc===q}">${nm}</button>`).join('')}</span><span class="muted">${t9CV(B.p, T9CP.pump).pc===1 ? '올리는 압력 = 막힘 압력 × (1 − (유량 ÷ 최대 유량)²), 호스 · 블럭 압력 강하와 만나는 점에서 유량이 정해짐 (펌프 스펙 시트의 곡선 양 끝)' : '회로 압력 강하와 상관없이 이 유량'}</span></div>` : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
       : C.selB.length + C.selL.length ? `<p class="muted t9-cmsg">블럭 ${C.selB.length}개 · ${C.kind==='water' ? '호스' : '덕트'} ${C.selL.length}개 고름 · 끌면 같이 옮겨지고 Delete 로 지움</p>`
-      : (h => `<ul class="muted t9-cmsg t9-chelp"><li><b>끌기</b> 블럭 옮기기 · 빈 곳 = 영역 고르기 (Shift = 더해 고르기)</li><li><b>잇기</b> 블럭 오른쪽 점을 끌어 다른 블럭에 놓기 · 둘 이상 끌어내면 갈라짐${C.kind==='water' ? '' : ' (비율 입력)'}, 여럿이 들어오면 합쳐짐</li><li><b>${h} 토막</b> 끌어서 옮김 · 두 번 누르면 자동 경로</li><li><b>보기</b> 휠 = 확대 · 축소 (그림을 한 번 누른 뒤) · 휠 버튼 끌기 = 이동 · 빈 곳 두 번 = 전체</li><li><b>지우기</b> Delete</li></ul>`)(C.kind==='water' ? '호스' : '덕트');
+      : (h => `<ul class="muted t9-cmsg t9-chelp"><li><b>끌기</b> 블럭 옮기기 · 빈 곳 = 영역 고르기 (Shift = 더해 고르기)</li><li><b>잇기</b> 블럭 오른쪽 점을 끌어 다른 블럭에 놓기</li><li><b>가르기 · 합치기</b> 합류 · 분기점 (${C.kind==='water' ? '호스' : '덕트'} 위에 놓아도 생김)${C.kind==='water' ? '' : ' · 갈래 비율 입력'}</li><li><b>${h} 토막</b> 끌어서 옮김 · 두 번 누르면 자동 경로</li><li><b>보기</b> 휠 = 확대 · 축소 (그림을 한 번 누른 뒤) · 휠 버튼 끌기 = 이동 · 빈 곳 두 번 = 전체</li><li><b>지우기</b> Delete</li></ul>`)(C.kind==='water' ? '호스' : '덕트');
     return `<div class="t9-cc" data-t9cc="${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b>
         <span class="t9-cpal"><span class="muted">블럭 넣기</span>${pal.map(t => { const here = C.blocks.some(b => b.t===t), other = T9CB[t][1]==='part' && !here && used.has(t) ? t9S().cool.circuits.find(c => c!==C && c.blocks.some(b => b.t===t)) : null, one = T9CB[t][1]==='part' && here;
       return `<button type="button" class="btn small" data-t9cadd="${C.id}:${t}"${one ? ` disabled title="${T9CB[t][0]}은 이 회로에 이미 있음 (부품은 한 곳에만)"` : other ? ` title="${wbEsc(other.name)}에서 이 회로로 옮김"` : ''}>+ ${T9CB[t][0]}${other ? ' (옮김)' : ''}</button>`; }).join('')}</span>
@@ -18460,7 +18466,7 @@ function t9CoolRe(cid){ const old = document.querySelector(`svg[data-t9csvg="${c
 const t9CTarget = (e, cid, from) => { const el = document.elementFromPoint(e.clientX, e.clientY), g = el && el.closest && el.closest('[data-t9cb]'), to = g && g.dataset.t9cb.split(':');
   if(!g){ const lk = el && el.closest && el.closest('[data-t9clink]'), a = lk && lk.dataset.t9clink.split(':');   /* 호스 · 덕트 위에 놓으면 그 줄이 들어가는 블럭 입력으로 합쳐짐 (시뮬링크처럼, 2026-11-11) */
     if(a && a[0]===cid){ const L = t9CC(cid).links[+a[1]], dest = L && L[1], B = dest && t9CC(cid).blocks.find(b => b.id===dest); if(B && dest!==from && L[0]!==from && B.t!=='in') return {g:lk, id:dest, via:+a[1]}; } return null; }
-  if(!to || to[0]!==cid || to[1]===from) return null; const B = t9CC(cid).blocks.find(b => b.id===to[1]); return B && B.t!=='in' ? {g, id:to[1]} : null; };
+  if(!to || to[0]!==cid || to[1]===from) return null; const C = t9CC(cid), B = C.blocks.find(b => b.id===to[1]); return B && B.t!=='in' && !t9InFull(C, B) ? {g, id:to[1]} : null; };
 document.addEventListener('mousedown', e => { if(e.button===1 && t9On() && e.target.closest && e.target.closest('svg[data-t9csvg]')) e.preventDefault(); });   // 휠 버튼 자동 스크롤 막기
 document.addEventListener('pointerdown', e => { if(!t9On() || !e.target.closest) return; const svg = e.target.closest('svg[data-t9csvg]'); if(!svg) return;
   const cid = svg.dataset.t9csvg, C = t9Sel(t9CC(cid)); if(!C) return;
@@ -18480,9 +18486,7 @@ document.addEventListener('pointerdown', e => { if(!t9On() || !e.target.closest)
     if(e.shiftKey) C.selL = C.selL.includes(j) ? C.selL.filter(x => x!==j) : [...C.selL, j]; else { C.selL = [j]; C.selB = []; }
     const by = new Map(C.blocks.map(b => [b.id, b])), P = t9Route(C, j, by), q = P ? t9SegAt(P, px, py) : -1;
     if(q >= 0 && !e.shiftKey){ const vert = Math.abs(P[q][0] - P[q + 1][0]) < 0.5, fix = vert ? P[q][0] : P[q][1], lo = Math.min(P[q][vert ? 1 : 0], P[q + 1][vert ? 1 : 0]), hi = Math.max(P[q][vert ? 1 : 0], P[q + 1][vert ? 1 : 0]);
-      // 같은 자리에 겹친 다른 호스 토막 (같은 방향 · 같은 좌표 · 겹치는 구간) 도 같이 옮김 → 겹친 줄기는 계속 겹침
-      const grp = C.links.map((l, k) => { const Q = t9Route(C, k, by); if(!Q) return null; for(let s = 1; s <= Q.length - 3; s++){ const v2 = Math.abs(Q[s][0] - Q[s + 1][0]) < 0.5, f2 = v2 ? Q[s][0] : Q[s][1], a2 = Math.min(Q[s][v2 ? 1 : 0], Q[s + 1][v2 ? 1 : 0]), b2 = Math.max(Q[s][v2 ? 1 : 0], Q[s + 1][v2 ? 1 : 0]);
-          if(v2===vert && Math.abs(f2 - fix) < 0.5 && Math.min(hi, b2) - Math.max(lo, a2) > 1) return [k, s, Q.slice(1, -1).map(p => p.slice())]; } return null; }).filter(Boolean);
+      const grp = [[j, q, P.slice(1, -1).map(p => p.slice())]];
       T9CD = {mode:'seg', cid, svg, j, q, vert, fix, grp, px, py, sx:e.clientX, sy:e.clientY, moved:false, raf:0}; }
     t9CoolRe(cid); if(T9CD) T9CD.svg = document.querySelector(`svg[data-t9csvg="${cid}"]`); else t9CoolUI(); e.preventDefault(); return; }
   const now = Date.now(), L2 = T9DC; T9DC = {t:now, x:e.clientX, y:e.clientY, cid};
@@ -18500,10 +18504,7 @@ document.addEventListener('pointermove', e => { if(!T9CD) return; const D = T9CD
   if(!D.moved && Math.hypot(e.clientX - D.sx, e.clientY - D.sy) < 5) return;   // 5 px 안쪽은 누르기
   D.moved = true; const [px, py] = t9CPt(D.svg, e);
   if(D.mode==='mq'){ const m = D.svg.querySelector('.t9-cmq'), x = Math.min(px, D.px), y = Math.min(py, D.py); m.style.display = ''; m.setAttribute('x', x); m.setAttribute('y', y); m.setAttribute('width', Math.abs(px - D.px)); m.setAttribute('height', Math.abs(py - D.py)); D.r = [x, y, x + Math.abs(px - D.px), y + Math.abs(py - D.py)]; return; }
-  if(D.mode==='seg'){ let to = D.fix + (D.vert ? px - D.px : py - D.py), snap = null;   // 끄는 토막의 새 좌표
-    const by = new Map(C.blocks.map(b => [b.id, b])), mine = new Set(D.grp.map(g => g[0]));
-    C.links.forEach((l, k) => { if(mine.has(k)) return; const Q = t9Route(C, k, by); if(!Q) return; for(let s = 0; s < Q.length - 1; s++){ const v2 = Math.abs(Q[s][0] - Q[s + 1][0]) < 0.5; if(v2!==D.vert) continue; const f2 = v2 ? Q[s][0] : Q[s][1]; if(Math.abs(f2 - to) < 6 && (snap==null || Math.abs(f2 - to) < Math.abs(snap - to))) snap = f2; } });   // 다른 호스 토막 6 안쪽 → 붙음 (합쳐짐)
-    to = snap != null ? snap : Math.round(to/5)*5;
+  if(D.mode==='seg'){ const to = Math.round((D.fix + (D.vert ? px - D.px : py - D.py))/5)*5;   // 끄는 토막의 새 좌표 (5 칸 격자)
     D.grp.forEach(([k, s, p0]) => { const X = t9LX(C.links[k]); X.pts = p0.map(p => p.slice()); [s - 1, s].forEach(m => { if(X.pts[m]) X.pts[m][D.vert ? 0 : 1] = to; }); });
     if(!D.raf) D.raf = requestAnimationFrame(() => { D.raf = 0; const n = t9CoolRe(D.cid); if(n) D.svg = n; }); return; }
   // 블럭 옮기기: 끄는 블럭 기준으로 다른 블럭과 가운데가 8 안쪽이면 붙이고 안내선, 아니면 10 칸 격자 → 고른 블럭 모두 같은 만큼
