@@ -325,7 +325,7 @@ document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) r
 document.addEventListener('change', e => { if(WB.id==='2' && e.target.matches && e.target.matches('[data-t2srel]')){ const v = +e.target.value; if(v > 0) T2S.rel = Math.min(50, v); } });
 /* 편집 탭 본문: 항목의 상수 칸 (왼쪽 입력과 같은 칸, 비슷한 값끼리 작은 상자 = sb) + 표 · 그림 */
 /* 탭 아래 짧은 안내 (글머리표, 2026-11-11 줄임) */
-const T2CNOTE = {bat:['셀 · 팩 값은 도구 4 에서 정해 왼쪽 [대시보드 값으로 채우기]로 받음 <button type="button" class="lnk" data-t2to4>도구 4 열기</button>', '규정(세그먼트 120 V · 6 MJ · 12 kg) · 질량은 도구 4 에서 확인'],
+const T2CNOTE = {bat:['셀 · 팩 값은 도구 4 에서 정해 [도구 연결 ▾] › 대시보드에서 받음 <button type="button" class="lnk" data-t2to4>도구 4 열기</button>', '규정(세그먼트 120 V · 6 MJ · 12 kg) · 질량은 도구 4 에서 확인'],
   mot:['모터 토크는 아래 토크 표로만 셈']};
 function t2Consts(grp){ const gs = T2EG[grp] || [], list = WB_TOOLS['2'].inputs.filter(d => gs.includes(d.g) && d.ui!=='none'); if(!list.length) return '';
   const groups = []; list.forEach(d => { let G = groups.find(x => x.g===d.g); if(!G){ G = {g:d.g, sb:[]}; groups.push(G); } let B = G.sb.find(x => x.n===d.sb); if(!B){ B = {n:d.sb, ds:[]}; G.sb.push(B); } B.ds.push(d); });
@@ -1229,7 +1229,7 @@ function t2TourTab(tab, et, course){ if(!T2.tourUndo && typeof tgUndo==='functio
 const t2TT = (tab, et, course) => ({click:{sel:`#wb [data-t2tab="${tab}"]`, need:() => T2.tab!==tab || (et && T2.etab!==et) || (course && T2.course!==course), run:() => t2TourTab(tab, et, course)}, inner:'#wb .wb-right'});
 const M2TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 오른쪽은 이 사용법, 좌표계, 코드 · 검증(계산 코드와 해석해 비교표), 입력 내보내기 · 가져오기(맵 편집 표 포함), [도구 연결 ▾](도구 9 · 4 에서 냉각 회로 · 셀 표 가져오기, 도구 9 로 평균 발열 · 차속 보내기 — 덮어쓸 곳을 표로 보고 체크), 대시보드에 반영(제안 감속비 · 최고 차속 · 횡가속도 · 랩 에너지)입니다.', t2TT('sim')],
-  ['#wb .wb-in', '입력', '입력 칸은 위 [편집] 탭에 항목별로 있습니다(자주 바꿔 보는 값만 나중에 이곳으로 꺼낼 예정). 여기에는 [대시보드 값으로 채우기]와 칸 앞 점의 뜻이 있습니다: 색 점 = 대시보드 값(확정 · 검토 중 · 가정 · 계산값 · 예시값), 고리 = 직접 고친 값, 회색 네모 = 도구 기본값.', t2TT('sim')],
+  ['#wb .wb-in', '입력', '입력 칸은 위 [편집] 탭에 항목별로 있습니다(자주 바꿔 보는 값만 나중에 이곳으로 꺼낼 예정). 여기에는 칸 앞 점의 뜻이 있습니다: 색 점 = 대시보드 값(확정 · 검토 중 · 가정 · 계산값), 고리 = 직접 고친 값, 회색 네모 = 본 설계 전용값. 대시보드 값은 윗줄 [도구 연결 ▾]에서 가져옵니다.', t2TT('sim')],
   ['#wb [data-t2tab="edit"]', '편집 탭', '모든 입력을 항목별로 넣는 탭입니다: 모델 단계 · 코스 · 차량 제원 · 서스 · 조향 · 타이어 · 에어로 · 모터 · 인버터 · 구동계 · 축전지. 항목마다 위에 상수 칸(비슷한 값끼리 상자), 아래에 표 · 그림이 있습니다. 여기서 고치는 동안은 계산하지 않고, [시뮬레이션] 탭으로 가면 한 번 계산합니다. 코스 단추는 시뮬레이션 코스와 따로입니다.', t2TT('edit', 'course')],
   ['#wb .t2-coolq', '냉각', '수랭 방식을 고릅니다. [부품별 독립 회로] = 수랭 부품마다 자기 냉각수 · 라디 (부품별 회로 값 칸). [냉각 회로] = 이 탭의 편집기로 그린 배치(직렬 · 병렬 · 라디 여러 개 · 공랭 덕트)로 앞 부품이 데운 냉각수를 뒤 부품이 받습니다. 배치는 이 도구에만 저장됩니다. 도구 9 에서 배치를 가져오거나, 시뮬레이션 탭에서 계산한 뒤 평균 손실 · 차속을 도구 9 로 보내는 것은 윗줄 [도구 연결 ▾]에서 합니다.', t2TT('edit', 'cool')],
   ['#wb .t2-model', '모델 단계', '차량 모델(0 기본 · 1 롤센터 · 롤)과 열 모델(모터 열 · 인버터 온도 · 축전지 온도 · 냉각수 온도를 각각 켜고 끔, 부품마다 공랭 · 수랭, 냉각수 온도는 수랭 부품이 있어야 계산)을 눌러 조합합니다. 단추마다 계산하는 것과 쓰는 입력(어느 항목에 있는지)이 적혀 있고, 그 단계에서 안 쓰는 입력 칸은 막힙니다. 계산에 쓴 조합은 시뮬레이션 탭 위에 보입니다. 대시보드 반영은 늘 차량 0 · 열 모터 열만.', t2TT('edit', 'model')],
@@ -1416,7 +1416,7 @@ WB_TOOLS['2'] = {
         {tool:'도구 9', n:'외기 온도', to:'도구 9 › 외기 온도', now:`${f(s9.t_amb, 0)} °C`, val:`${f(WB.I.t_amb, 0)} °C`, ok:isFinite(WB.I.t_amb), why:'이 도구의 외기 온도가 비어 있음', run:put9(['t_amb'], () => [WB.I.t_amb], '외기 온도')}],
       info:['평균 발열 · 차속은 지금 랩 시뮬 결과 (고른 코스 · 랩) 의 평균입니다.',
         '조향각 표는 도구 6 의 [도구 연결]에서 보냅니다 (이 도구에서 가져오려면 도구 6 계산 결과가 필요해서).',
-        '도구 1 · 4 · T 등의 설계값은 대시보드를 거쳐 왼쪽 [대시보드 값으로 채우기]로 받습니다.'] }; },
+        '도구 1 · 4 · T 등의 설계값은 이 창 맨 위 [대시보드에서 가져오기]로 받습니다.'] }; },
   /* 뒤로가기 · 앞으로가기: 랩 시뮬 / 편집 탭 · 편집 묶음 · 코스 편집 쪽 */
   navGet: () => ({t:T2.tab, e:T2.etab, c:T2.ecourse}),
   navSet(s){ const tc = T2.tab!==s.t; T2.etab = s.e || T2.etab; T2.ecourse = s.c || T2.ecourse; T2.tab = s.t || T2.tab; T2.menu = ''; t2Save(); wbPaint(['ext']);
