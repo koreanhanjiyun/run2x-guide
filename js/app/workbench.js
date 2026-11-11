@@ -115,11 +115,12 @@ function wbNeed(){ const T = wbT(); if(!T) return []; const L = [];
 const wbNeedK = k => (WB.need || []).some(x => x.k===k);
 /* 빈 필수 칸 빨강: 다시 그리지 않고 그 자리에서 (입력 중인 칸의 포커스 유지). 도구 화면의 표 · 블럭은 [data-wbneed="키"] 로 */
 function wbNeedMark(){ const w = $('#wb'); if(w) w.classList.toggle('wb-needon', !!WB.needShow && !!(WB.need || []).length);
+  document.querySelectorAll('#wb [data-wbtab="edit"]').forEach(b => b.classList.toggle('need', !!(WB.need || []).length));   /* [편집] 탭 단추에도 빨간 점 (2026-11-11) */
   document.querySelectorAll('#wb input[data-wbi]').forEach(i => { const l = i.closest('.wb-ir'); if(l) l.classList.toggle('need', !i.disabled && wbNeedK(i.dataset.wbi)); });
   document.querySelectorAll('#wb [data-wbneed]').forEach(el => el.classList.toggle('need', wbNeedK(el.dataset.wbneed))); const T = wbT(); if(T && T.needMark) T.needMark(WB.need || []); }
 /* 결과 자리: 채울 칸 목록 (누르면 그 칸으로) */
 function wbNeedHTML(){ const n = (WB.need || []).length;
-  return `<p class="wb-needline" role="status"><b>필수 입력 ${n}칸이 비어 있어 계산하지 않았습니다.</b> <span>편집 탭의 빨간 칸을 채워 주십시오 (모델 단계 · 켠 기능에 따라 필요한 칸이 바뀜).</span> <button type="button" class="btn small" data-wbgo="${wbEsc((WB.need[0] || {}).k || '')}"${WB.need[0] && WB.need[0].tab ? ` data-wbgotab="${wbEsc(WB.need[0].tab)}"` : ''}>첫 빈칸으로</button></p>`; }
+  return `<p class="wb-needline" role="status"><b>필수 입력 ${n}칸이 비어 있어 계산하지 않았습니다.</b> <span>[편집] 탭의 빨간 칸을 채우면 계산합니다.</span> <button type="button" class="btn small" data-wbgo="${wbEsc((WB.need[0] || {}).k || '')}"${WB.need[0] && WB.need[0].tab ? ` data-wbgotab="${wbEsc(WB.need[0].tab)}"` : ''}>첫 빈칸으로</button></p>`; }
 /* 목록에서 고른 칸으로: 도구가 T.needGo(k) 로 자기 화면을 엶 (도구 2P 편집 탭 묶음), 아니면 편집 탭 */
 function wbNeedGo(k, tab){ const T = wbT(); if(T.needGo && T.needGo(k, tab)===true){} else if(wbTabs(T) && WB.tab!=='edit') wbTabSet('edit');
   setTimeout(() => { const el = document.querySelector(`#wb input[data-wbi="${k}"]`) || document.querySelector(`#wb [data-wbneed="${k}"]`); if(el){ el.scrollIntoView({block:'center', behavior:'smooth'}); if(el.focus) el.focus({preventScroll:true}); el.classList.add('wb-need-flash'); setTimeout(() => el.classList.remove('wb-need-flash'), 1200); } }, 80); }
@@ -296,16 +297,21 @@ function wbEffVal(T, d){ const e = T.inEff ? T.inEff(d.k) : undefined, v = WB.I[
 function wbEffRefresh(){ const T = wbT(); if(!T || !T.inLock) return;
   document.querySelectorAll('#wb input[data-wbi]:disabled').forEach(i => { const d = T.inputs.find(q => q.k===i.dataset.wbi); if(!d) return; const ev = wbEffVal(T, d);
     i.value = ev.v; i.placeholder = ev.ph; i.className = ev.cls; i.title = ev.t; }); }
-function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
+/* 입력 줄 모양 (2026-11-11): [이름 | 칸 | 단위] 한 줄, 잠김 사유는 칸 아래. 단위 열 폭 = 이 목록에서 가장 긴 단위 (오른쪽 빈 여백 줄임).
+   이름 뒤 긴 괄호 설명(12자 넘음)은 이름에 마우스를 올리면 보임 (점선 밑줄) */
+let WBUW = null; const wbUW = s => { try{ if(!WBUW){ WBUW = document.createElement('canvas').getContext('2d'); WBUW.font = `12px ${getComputedStyle(document.body).fontFamily}`; } return Math.ceil(WBUW.measureText(s).width); }catch(e){ return s.length*7; } };
+function wbInSplit(nm){ if(/<[^>]+>/.test(nm)) return null; const i = nm.indexOf(' ('); if(i < 1 || !nm.endsWith(')')) return null; const tail = nm.slice(i + 2, -1); return tail.length > 12 ? [nm.slice(0, i), tail] : null; }
+function wbInRows(list, head = true){ const T = wbT(); let g0 = ''; const uw = Math.max(18, ...list.map(d => wbUW(wbInUnit(d) || ''))) + 4;
   return list.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
     const grp = head && d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
-    const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : wbInName(d);
+    const sp = d.dk ? null : wbInSplit(String(wbInName(d))), tip = sp ? sp[1] : '';
+    const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : sp ? `<span class="wb-inmore">${sp[0]}</span>` : wbInName(d);
     const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
     const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own);
     const lk = T.inLock ? T.inLock(d.k) : '';   /* 도구가 맵으로 대신 쓰는 입력: 칸을 막고 까닭을 적음 */
     const ev = lk ? wbEffVal(T, d) : null;      /* 잠긴 칸에 보일 값: 실제로 계산에 쓰는 값 · 안 쓰면 — (저장값은 그대로 → 풀리면 되돌아옴) */
     const opt = T.inOpt ? T.inOpt(d.k) : '';   /* 도구가 이 칸 줄에 넣는 옵션 단추 (이름과 값 사이) */
-    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${!lk && wbNeedK(d.k) ? ' need' : ''}"><span class="wb-in-n"><span class="wb-in-t"${d.nFull ? ` title="${wbEsc(String(d.nFull).replace(/<[^>]+>/g, ''))}"` : ''}>${dot}${nm}${viz}</span>${wbSrcTag(WB.id, d.k)}${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${!lk && wbNeedK(d.k) ? ' need' : ''}" style="--uw:${uw}px"><span class="wb-in-n"><span class="wb-in-t"${d.nFull || tip ? ` title="${wbEsc(String(d.nFull || wbInName(d)).replace(/<[^>]+>/g, ''))}"` : ''}>${dot}${nm}${viz}</span>${wbSrcTag(WB.id, d.k)}${opt}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>${lk ? `<span class="wb-lk">${lk}</span>` : ''}
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */

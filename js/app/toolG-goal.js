@@ -11,7 +11,8 @@ const GTGU = [['목표 기록 · 가속', 's', 3], ['목표 기록 · 스키드�
               ['목표 출발 종가속도', 'g', 3], ['목표 스키드패드 횡가속도', 'g', 3], ['목표 내구 에너지', 'kWh', 2]];
 const gTgU = () => GTGU[Math.max(0, Math.min(GTGU.length - 1, Math.round((typeof WB!=='undefined' && WB.I && WB.I.tg) || 0)))];
 document.addEventListener('click', e => { if(WB.id!=='G' || !e.target.closest) return;
-  const a = e.target.closest('[data-gtg]'); if(a){ WB.I.tg = +a.dataset.gtg; WB.I.tg_v = 0; wbSave(); wbPaint(['in']); wbCalcSoon(); return; }
+  const gm = e.target.closest('[data-gtgm]'); if(gm){ WB.I.tgv_m = +gm.dataset.gtgm; wbSave(); wbPaint(['in']); wbCalcSoon(); return; }
+  const a = e.target.closest('[data-gtg]'); if(a){ WB.I.tg = +a.dataset.gtg; WB.I.tgv_m = 0; wbSave(); wbPaint(['in']); wbCalcSoon(); return; }
   const c = e.target.closest('[data-gcop]'); if(c){ WB.I.cop_m = +c.dataset.gcop; wbSave(); wbPaint(['in']); wbCalcSoon(); } });
 const MGTOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기가 있습니다.'],
@@ -26,14 +27,15 @@ WB_TOOLS['G'] = {
   /* 새 파일: 기본 차 값 (대시보드 설계값 · 도구 2P 새 파일 저장값) 이 비어 있으면 계산 안 함 */
   needExt(){ if(wbEx() || typeof t2PartInputs!=='function') return []; const B = t2PartInputs(), n = WB_TOOLS['2'].inputs.filter(d => d.ui!=='none' && d.dk && !isFinite(B[d.k])).length;
     return n ? [{k:'g:base', n:`기본 차 값 ${n}개 (대시보드 설계값 · 도구 2P 새 파일)`, g:'기본 차'}] : []; },
-  inLock(k){ if(k==='xcop') return WB.I.cop_m !== 0 ? '무게 배분과 같게' : ''; return ''; },
+  inEff(k){ if(k==='tg_v'){ const o = WB.R && WB.R.out; return o && isFinite(o.tg_v_o) ? o.tg_v_o : null; } return null; },
+  inLock(k){ if(k==='tg_v' && WB.I.tgv_m !== 1) return '기본 차 값'; if(k==='xcop') return WB.I.cop_m !== 0 ? '무게 배분과 같게' : ''; return ''; },
   inOpt(k){ const seg = (attr, cur, items) => `<span class="t2-inopt"><span class="dc-seg" role="group">${items.map(([v, t]) => `<button type="button" ${attr}="${v}" aria-pressed="${String(cur)===v}">${t}</button>`).join('')}</span></span>`;
-    if(k==='tg_v') return seg('data-gtg', Math.round(WB.I.tg || 0), GTGN);
+    if(k==='tg_v') return seg('data-gtg', Math.round(WB.I.tg || 0), GTGN) + seg('data-gtgm', WB.I.tgv_m===1 ? 1 : 0, [['0', '기본 차 값'], ['1', '직접 입력']]);   /* 목표값: 숫자 0 을 '기본 차 값' 스위치로 쓰지 않음 (2026-11-11) */
     if(k==='xcop') return seg('data-gcop', WB.I.cop_m !== 0 ? 1 : 0, [['1', '무게 배분'], ['0', '직접']]);
     return ''; },
   inputs:[
     {k:'tg', n:'가로축 목표 (0 가속 · 1 스키드패드 · 2 오토크로스 · 3 내구 · 4 출발 종가속도 · 5 횡가속도 · 6 내구 에너지)', u:'', v:1, d:0, g:GG.tg, ui:'none'},
-    {k:'tg_v', n:'목표값 (0 = 기본 차 값)', get u(){ return gTgU()[1]; }, v:0, d:3, g:GG.tg},
+    {k:'tgv_m', n:'목표값 정하기 (0 = 기본 차 값, 1 = 직접)', u:'', v:0, d:0, g:GG.tg, ui:'none'}, {k:'tg_v', n:'목표값', get u(){ return gTgU()[1]; }, v:0, d:3, g:GG.tg},
     {k:'m', dk:'m', v:300, d:0, g:GG.car}, {k:'fr', dk:'fr', n:'앞 하중 비율', v:47.5, d:1, g:GG.car}, {k:'h', dk:'h', v:290, d:0, g:GG.car},
     {k:'L', dk:'L', v:1550, d:0, g:GG.car}, {k:'tf', dk:'tf', v:1200, d:0, g:GG.car}, {k:'tr', dk:'tr', v:1180, d:0, g:GG.car},
     {k:'r_eff', dk:'r_eff', n:'바퀴 유효 반경 (타이어 외경에서)', v:229, d:0, g:GG.tire}, {k:'mu', dk:'mu', n:'타이어 μ (문헌 · 예전 차)', v:1.5, d:2, g:GG.tire},
@@ -73,7 +75,7 @@ WB_TOOLS['G'] = {
   ],
   sigOn:['q_cla', 'q_m', 'q_tq'],
   tour: MGTOUR,
-  verifyBase:{tg:1, tg_v:0, mu_s:0, crr:0, cop_m:1, cda0:0, ld:1e9,
+  verifyBase:{tg:1, tg_v:0, tgv_m:NaN, mu_s:0, crr:0, cop_m:1, cda0:0, ld:1e9,
     base: Object.assign(Object.fromEntries(WB_TOOLS['2'].inputs.map(d => [d.k, d.v])), WB_TOOLS['2'].verifyBase)},   // 검증: 도구 2P 기본값 · 검증 기본 (코스 없음)
   verify: [
     {n:'기본 차 · 스키드패드 (에어로 없음, μ 1.5)', I:{cla:0, mu:1.5}, expect:{b_skid:9.895692, b_ay:1.5},
@@ -266,7 +268,7 @@ function coolIndep(I) { const water = [];   // 냉각수 ρ c_p 는 회로마다
   ['m', 'i', 'b'].forEach(p => { if (!on[p]) return; const [k, tk] = T2CWP[p], g = s => I[k + s], rcp = (g('rho') > 0 ? g('rho') : 1000) * (g('cp') > 0 ? g('cp') : 4.18) * 1000;
     const V = Math.max(1e-3, g('v') > 0 ? g('v') : 1.2), q = Math.max(1e-3, g('q') > 0 ? g('q') : 8), C = V / 1000 * rcp / 3, rq = I[tk] && Array.isArray(I[tk].t) ? I[tk] : null;
     water.push({ Cc: q / 60000 * rcp, rcp, tw0: Number.isFinite(g('tw')) ? g('tw') : I.th_cool, nodes: [   // tw0 = 이 회로 냉각수 온도 (고정 · 출발 값, 2026-11-11)
-      { t: 'rad', C, q: 1, ins: [[2, 1]], UA: Math.max(0, g('ua') || 0), A: Math.max(1e-6, g('ra') || 0.06), kd: Math.max(0, g('kd') || 0), fan: Math.max(0, g('fan') || 0), fon: g('fon') || 0, Cm: Math.max(0, g('cm') || 0), ...(rq ? { rq, itd: g('itd') } : {}) },
+      { t: 'rad', C, q: 1, ins: [[2, 1]], UA: Math.max(0, g('ua') || 0), A: Math.max(1e-6, g('ra') || 0.06), kd: Math.max(0, g('kd') || 0), fan: Math.max(0, g('fan') || 0), fon: (Number.isFinite(g('fm')) ? g('fm') === 1 : g('fon') > 0) ? (g('fon') || 0) : 0, /* 팬 켜기 = 고르는 값 fm (없으면 예전 식) */ Cm: Math.max(0, g('cm') || 0), ...(rq ? { rq, itd: g('itd') } : {}) },
       { t: 'pump', C, q: 1, ins: [[0, 1]] },
       { t: 'part', part: p, C, q: 1, ins: [[1, 1]] }] }); });
   return { water, air: [] }; }
@@ -2059,7 +2061,7 @@ function stepSteer(I, C) {
 // 입력 확인: 값은 실제 크기만 뜻함 (0 · 음수 = 계산 불가). 기능을 끄는 것은 각 단추
 function checkIn(I) {
   const bad = (c, msg) => { if (c) throw new Error(msg); };
-  bad(!(I.n_s > 0) || !(I.n_p > 0) || !(I.c_ah > 0) || !(I.c_vnom > 0), '축전지: 직렬 수 · 병렬 수 · 셀 용량 · 셀 공칭 전압이 0 보다 크거나, 직렬 수 0 이면 팩 최대 전압 · 팩 용량이 0 보다 커야 합니다 (축전지).');
+  bad(!(I.n_s > 0) || !(I.n_p > 0) || !(I.c_ah > 0) || !(I.c_vnom > 0), '축전지: 직렬 수 · 병렬 수 · 셀 용량 · 셀 공칭 전압이 0 보다 크거나, [팩 값 직접]이면 팩 최대 전압 · 팩 용량이 0 보다 커야 합니다 (축전지).');
   bad(!(I.i_pk > 0), '인버터 피크 상전류는 0 보다 커야 합니다 (모터 · 인버터 › 인버터 전류 한계).');
   bad(!(I.kt > 0), '모터 토크 상수 K_t 는 0 보다 커야 합니다 (모터 · 인버터 › 모터 한계).');
   bad(I.ict_m !== 0 && !(I.i_ct >= 0), '인버터 연속 상전류를 넣으세요.');
@@ -2072,7 +2074,8 @@ function checkIn(I) {
 
 // 팩 값 직접 입력 (직렬 수 0): 팩 최대 · 공칭 · 최소 전압 [V] · 팩 용량 [Ah] → 같은 셀 값으로 바꿔 아래 계산을 그대로 씀
 //   직렬 수 = 팩 최대 ÷ 셀 최대 (정수가 아니어도 됨, 셀 표 OCV 의 크기 기준), 셀 공칭 · 최소 = 팩 값 ÷ 직렬 수, 병렬 1 · 셀 용량 = 팩 용량
-function packCell(I) { if (I.n_s > 0 || !(I.p_vmax > 0)) return I;
+function packCell(I) { const dir = I.pk_dir === 1 || (I.pk_dir !== 0 && !(I.n_s > 0));   // 팩 값 직접 = 고르는 값 pk_dir (없으면 예전 저장본: 직렬 수 0)
+  if (!dir || !(I.p_vmax > 0)) return I;
   const cv = I.c_vmax > 0 ? I.c_vmax : 4.2, Ns = I.p_vmax / cv;
   return Object.assign(I, { n_s: Ns, n_p: 1, c_vmax: cv, c_vnom: (I.p_vnom > 0 ? I.p_vnom : I.p_vmax) / Ns, c_vmin: (I.p_vmin > 0 ? I.p_vmin : I.p_vmax) / Ns, c_ah: I.p_ah }); }
 function calcT2(I) {
@@ -2263,7 +2266,7 @@ function calc(I) {
   sig.e_tq = side('tq', r => r.e_end); sig.tw_tq = side('tq', r => r.tw); sig.p_tq = side('tq', r => r.p_avg);
   sig.e_m = side('m', r => r.e_end); sig.ay_cla = side('cla', r => r.ay);
   // 목표 탐침 (입력한 목표값에서 각 손잡이 요구값)
-  const pv = I.tg_v > 0 ? I.tg_v : y0, out = {};
+  const pv = (Number.isFinite(I.tgv_m) ? I.tgv_m === 1 : I.tg_v > 0) ? I.tg_v : y0, out = {};   // 목표값 = 고르는 값 tgv_m (없으면 예전: 0 보다 크면 그 값)
   for (const [k] of GLV) { const s = SW[k]; out['p_' + k] = gInv(s.xs, s.rows.map(r => r[tg]), pv, bx(k)); }
   out.p_df = isFinite(out.p_cla) ? 0.5 * RHO_G * out.p_cla * (100 / 3.6) ** 2 : NaN;
   out.p_cda = isFinite(out.p_cla) ? X0.__cda0 + out.p_cla / X0.__ld : NaN;
