@@ -3220,6 +3220,9 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .tl-tools li.wb-mpick{position:relative;cursor:default}
 .wb-mpick .wb-mp-b{position:absolute;inset:3px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;opacity:0;pointer-events:none;transform:translateY(4px);transition:opacity .18s ease,transform .18s ease;z-index:2}
 .wb-mpick:hover .wb-mp-b,.wb-mpick:focus-within .wb-mp-b{opacity:1;pointer-events:auto;transform:none}
+.tl-tools li.wb-mpick .wb-mp-b{left:402px;right:10px}
+.tl-tools li.wb-mpick .tt-io,.tl-tools li.wb-mpick .tt-st{transition:opacity .15s}
+.tl-tools li.wb-mpick:hover .tt-io,.tl-tools li.wb-mpick:hover .tt-st,.tl-tools li.wb-mpick:focus-within .tt-io,.tl-tools li.wb-mpick:focus-within .tt-st{opacity:0}
 .wb-mp-b button{display:flex;align-items:center;justify-content:center;gap:10px;border-radius:7px;border:1px solid var(--line-2);background:var(--panel);font:inherit;cursor:pointer;color:var(--ink);transition:background .12s,border-color .12s,transform .12s}
 .wb-mp-b button b{font-size:15px}.wb-mp-b button span{font-size:12px;color:var(--muted)}
 .wb-mp-b button:hover,.wb-mp-b button:focus-visible{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.08);outline:none}
