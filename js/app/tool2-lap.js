@@ -348,7 +348,7 @@ const T2LAY = grp => ({
   tire:[{n:2, heads:[[T2G.tire, 2]], cells:[{sb:'마찰 · 하중 이동'}, {sb:'바퀴'}]}, {n:1, cells:[{sb:'타이어 곡선 (모델 2 · 3)', k:2, col:1}]}],
   aero:[{n:2, heads:[[T2G.aero, 2]], cells:[{sb:'공력 계수'}, {sb:'압력중심'}]}],
   dt:[{n:1, heads:[[T2G.dt, 1]], cells:[{sb:'구동계', k:3}]}],
-  cool:[{n:3, heads:[[T2G.thm, 1]], cells:[{g:T2G.thm}]},
+  cool:[{n:3, wide:1, heads:[[T2G.thm, 1]], cells:[{g:T2G.thm}]},
         /* 부품별 독립 = 회로마다 냉각수 (온도 · 비열 · 밀도) + 회로 값, 냉각 회로 = 공통 냉각수 온도 한 칸만 (회로 값은 위 편집기) (2026-11-11) */
         ...(WB.I.cw_mode===1 ? [{n:3, wide:1, cells:[{sb:'냉각수 온도', skip:1}, {sb:'모터 냉각수', skip:1}, {sb:'인버터 냉각수', skip:1}, {sb:'축전지 냉각수', skip:1},
               {sb:'모터 수랭 회로 (부품별 독립)', skip:1}, {sb:'인버터 수랭 회로 (부품별 독립)', skip:1}, {sb:'축전지 수랭 회로 (부품별 독립)', skip:1}]}]
@@ -386,7 +386,7 @@ const T2RL = {2:['레코드 라인', '최소 곡률 라인에서 출발해 우�
 const t2RlOf = () => WB.I.rl_on >= 2 ? 2 : WB.I.rl_on >= 1 ? 1 : 0;
 /* 상자 맨 위에 넣는 옵션 행 (상자 이름으로 고름) */
 function t2SbTop(n){ if(n==='최대 조향각'){ const S = t2Stab();
-    return `<div class="t2-optrow"><span class="t2-optn">조향 기하</span>${S ? `<span>${JSON.stringify(T2.stab)===JSON.stringify(T2STAB_DEF) ? '기본 표 (2024 REF4 STEP 링크 기하, 도구 6 3D)' : '도구 6 조향각 표'}${wbSrcTag('2', 't2:stab')} ${S.n}행 · 핸들 최대 ${wbFmt(S.hw, 0)}° → 안쪽 ${wbFmt(S.di, 1)}° · 바깥 ${wbFmt(S.dout, 1)}° · 가운데 조향비 ${wbFmt(S.rc, 2)} · 최소 회전 반경 ${wbFmt(S.R, 2)} m</span> <button type="button" class="btn small" data-t2stabx>표 지우기</button>` : '<span class="muted">100 % 애커먼 · 일정 조향비 (도구 6 [도구 연결 ▾]에서 조향각 표를 보내면 링크 기하를 씀)</span>' + (wbEx() ? ' <button type="button" class="btn small" data-t2stabd>기본 표로 (STEP)</button>' : '')}</div>`; }
+    return `<div class="t2-optrow"><span class="t2-optn">조향 기하</span>${S ? `<span>${JSON.stringify(T2.stab)===JSON.stringify(T2STAB_DEF) ? '기본 표 (2024 REF4 STEP 링크 기하, 도구 6 3D)' : '도구 6 조향각 표'}${wbSrcTag('2', 't2:stab')} ${S.n}행 · 핸들 최대 ${wbFmt(S.hw, 0)}° → 안쪽 ${wbFmt(S.di, 1)}° · 바깥 ${wbFmt(S.dout, 1)}° · 가운데 조향비 ${wbFmt(S.rc, 2)} · 최소 회전 반경 ${wbFmt(S.R, 2)} m</span> <button type="button" class="btn small" data-t2stabx>표 지우기</button>` : '<span class="muted">100 % 애커먼 · 일정 조향비</span>' + (wbEx() ? ' <button type="button" class="btn small" data-t2stabd>기본 표로 (STEP)</button>' : '')}</div>`; }
   if(n!=='여유') return ''; const r = t2RlOf();
   return `<div class="t2-optrow"><span class="t2-optn">주행선</span>${t2Seg('data-t2rl', String(r), [2, 1, 0].map(k => [String(k), T2RL[k][0]]))}
     <p class="muted t2-optd">${T2RL[r][1]} · 슬라럼은 첫 콘을 왼쪽으로 지나감</p></div>`; }
@@ -673,7 +673,7 @@ function t2MapEdit(k){ const txt = t2MtText(k), has = t2HasMap(k), empty = !t2Us
   return `<div class="t2-mth"><b>${T2MTITLE[k].split(' — ')[0]}</b>${wbSrcTag('2', 't2:' + k)}<span class="muted"> — ${T2MTITLE[k].split(' — ')[1]}</span>${useSeg}</div>
     ${fold ? `<div class="t2-mfold off" data-t2mf="${k}"><b>표 꺼짐</b><span>[위 상수] 사용 중 · ${t2ConstNote(k)}${has ? ' · 표 값은 남아 있음 ([아래 표]를 누르면 다시 씀)' : ' · 표를 쓰려면 [아래 표]'}</span></div>` : `
     <div class="t2-set"><span class="t2-sum" id="t2msum">${msg}</span></div><p class="t2-rule muted">${T2ERULE[k]}</p>
-    ${t2Pair(t2MenuHTML(k, '입력하기', true), `<div class="t2-tw" id="t2tt" data-wbneed="t2:${k}">${t2GridTable(k, txt)}</div>`,
+    ${t2Pair(t2MenuHTML(k, '입력하기', true), `<div class="t2-tw${T2BAT.includes(k) ? ' wb-lnk' : ''}" id="t2tt" data-wbneed="t2:${k}">${t2GridTable(k, txt)}</div>`,
       empty ? `<span class="t2-const">${k==='mt' ? '표가 비어 있어 계산할 수 없습니다 · 피크 또는 연속 토크 열을 채우세요' : (t2UseSel(k)==='tab' ? '[아래 표]를 골랐는데 표가 비어 있습니다 · 표를 채우거나 [위 상수]를 고르세요' : `[위 상수]를 골라 위 상수 칸을 씁니다 · ${t2ConstNote(k)}`)}</span>` : '<span class="muted">그림을 누르면 표에서 그 칸으로 갑니다</span>',
       `<div class="t2-fbox" id="t2mc">${t2EditPlot(k)}</div>`, t2EditCap(k))}`}`; }   /* [위 상수]면 표 · 그림은 아예 안 그림 (열 수도 없음, 2026-11-11) */
 document.addEventListener('toggle', e => { const d = e.target; if(!d || !d.matches || !d.matches('details[data-t2mf]')) return; (T2.mopen = T2.mopen || {})[d.dataset.t2mf] = d.open; }, true);
@@ -1070,14 +1070,14 @@ function t2InLock(k){ const L = '아래 표 사용';
   if(k==='rg_tmax' || k==='i_chg') return WB.I.rg_on === 1 ? '' : '회생 제동 고려 안 함';
   if(k==='dr_ks' || k==='dr_ke') return WB.I.dr_real === 1 ? '' : '이상 운전자';
   if(k==='delta_max') return t2Stab() ? '도구 6 표 사용' : WB.I.dl_on !== 0 ? '' : '조향 한계 고려 안 함';
-  if(k==='steer_ratio') return t2Stab() ? '도구 6 표 사용' : WB.I.md >= 2 || WB.I.dr_real === 1 ? '' : '현실 운전자 · 차량 모델 2 에서 씀';
+  if(k==='steer_ratio') return t2Stab() ? '도구 6 표 사용' : WB.I.md >= 2 || WB.I.dr_real === 1 ? '' : '현실 운전자 · 차량 모델 2 에서 쓰임';
   if(k==='mu' || k==='mu_s') return t2UseMap('tire') ? L : '';
   if(k==='e_target') return t2ElOf()===2 ? '' : t2ElOf()===1 ? '제원 용량 사용' : '제한 없음';
   if(k==='rl_b') return '차 전폭으로 계산';
   if(T2PK[k]) return !t2PkDir() ? '셀 값으로 계산' : ''; if(['n_s', 'n_p', 'c_ah', 'c_vnom', 'c_vmin'].includes(k)) return !t2PkDir() ? '' : '팩 값 직접';
-  if(['h_rcf', 'h_rcr', 'k_roll', 'rsd'].includes(k)) return WB.I.md >= 1 ? '' : '차량 모델 1 에서 씀';
-  if(['tire_ca0', 'tire_cn', 'tire_c', 'tire_e'].includes(k)) return WB.I.md >= 2 ? '' : '차량 모델 2 에서 씀';
-  if(['tire_relax', 'izz', 'ixx', 'm_us_f', 'm_us_r', 'c_roll', 'v_test', 'ay_test', 'tr_ks'].includes(k)) return WB.I.md >= 3 ? '' : '차량 모델 3 에서 씀';
+  if(['h_rcf', 'h_rcr', 'k_roll', 'rsd'].includes(k)) return WB.I.md >= 1 ? '' : '차량 모델 1 에서 쓰임';
+  if(['tire_ca0', 'tire_cn', 'tire_c', 'tire_e'].includes(k)) return WB.I.md >= 2 ? '' : '차량 모델 2 에서 쓰임';
+  if(['tire_relax', 'izz', 'ixx', 'm_us_f', 'm_us_r', 'c_roll', 'v_test', 'ay_test', 'tr_ks'].includes(k)) return WB.I.md >= 3 ? '' : '차량 모델 3 에서 쓰임';
   { const th = t2Th();
     if(['dr_t0', 'dr_t1', 'th_c', 'th_init'].includes(k)) return th.m ? '' : '모터 열 끔';
     if(k==='di_t0' || k==='di_t1' || k==='i_init') return th.i ? '' : '인버터 온도 끔';
@@ -1396,6 +1396,7 @@ WB_TOOLS['2'] = {
     return L; },
   /* 편집 탭 위 단추: 빈 필수 칸이 있는 묶음을 빨강 */
   onNeedOpen(){ T2.tab = 'edit'; },
+  lnkKeys:['t_amb', 'delta_max', 'steer_ratio'],   /* [도구 연결]로 다른 도구에서 받을 수 있는 칸 (파란 테두리) */
   /* [도구 연결 ▾]: 도구 9 · 4 에서 가져오기, 도구 9 로 보내기 (2026-11-11) */
   links(){ const o = WB.R && WB.R.out, rd = id => { try{ return JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ return {}; } }, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
     const cs = cool => { const C = (cool && cool.circuits) || []; return C.some(c => (c.blocks || []).length) ? `수랭 회로 ${C.filter(c => c.kind==='water').length}개 · 공랭 덕트 ${C.filter(c => c.kind!=='water').length}개` : ''; };

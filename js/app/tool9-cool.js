@@ -584,6 +584,7 @@ WB_TOOLS['9'] = {
   sigOn:['tm', 'ti', 'tb', 'w1'],
   xiStart:'end',
   links: () => t9Links(),
+  lnkKeys:['th_c', 'th_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_c', 'b_r', 'b_ha', 'b_ha60', 't_amb', 'L_m', 'L_i', 'L_b', 'v', 't_run'],
   extHTML: t9ExtHTML, extraI: () => ({cool: t9CoolCompile().net}),
   extGet: () => ({cool:JSON.parse(JSON.stringify(T9.cool))}),   /* .json 내보내기에 회로 배치도 */
   extSet(d){ if(d && d.cool && Array.isArray(d.cool.circuits)){ T9.cool = d.cool; t9Save(); wbPaint(['ext']); } },
