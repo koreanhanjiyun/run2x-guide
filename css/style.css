@@ -3222,11 +3222,9 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wb-mpick:hover .wb-mp-b,.wb-mpick:focus-within .wb-mp-b{opacity:1;pointer-events:auto;transform:none}
 .wb-mp-b button{display:flex;align-items:center;justify-content:center;gap:10px;border-radius:7px;border:1px solid var(--line-2);background:var(--panel);font:inherit;cursor:pointer;color:var(--ink);transition:background .12s,border-color .12s,transform .12s}
 .wb-mp-b button b{font-size:15px}.wb-mp-b button span{font-size:12px;color:var(--muted)}
-.wb-mp-b .wb-mp-ex{border-color:#e7c873;background:repeating-linear-gradient(135deg,#fff8e6 0 12px,#fff2d2 12px 24px)}.wb-mp-b .wb-mp-ex b{color:#8a6100}
-.wb-mp-b .wb-mp-nf{border-color:var(--accent);background:var(--accent-soft)}.wb-mp-b .wb-mp-nf b{color:var(--accent)}
 .wb-mp-b button:hover,.wb-mp-b button:focus-visible{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.08);outline:none}
-.wb-mp-b .wb-mp-ex:hover,.wb-mp-b .wb-mp-ex:focus-visible{border-color:#b8860b}
-.wb-mp-b .wb-mp-nf:hover,.wb-mp-b .wb-mp-nf:focus-visible{background:#fbdcc8}
+.wb-mp-b .wb-mp-ex:hover,.wb-mp-b .wb-mp-ex:focus-visible{border-color:#b8860b;background:repeating-linear-gradient(135deg,#fff8e6 0 12px,#fff2d2 12px 24px)}.wb-mp-b .wb-mp-ex:hover b,.wb-mp-b .wb-mp-ex:focus-visible b{color:#8a6100}
+.wb-mp-b .wb-mp-nf:hover,.wb-mp-b .wb-mp-nf:focus-visible{border-color:var(--accent);background:var(--accent-soft)}.wb-mp-b .wb-mp-nf:hover b,.wb-mp-b .wb-mp-nf:focus-visible b{color:var(--accent)}
 /* 글 안 링크(파트 페이지): 아래로 작은 두 단추 */
 .wb-mpi{position:relative;display:inline-block;outline:none}.wb-mpi .lnk{cursor:default}
 .wb-mpi .wb-mp-b{inset:auto;left:0;top:calc(100% + 2px);width:300px;height:44px}
