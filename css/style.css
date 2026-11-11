@@ -3209,7 +3209,10 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wb-skelmode{pointer-events:none}:is(.wb-skelmode, #wb.wb-skelnow #wbout) :is(.t2-r .v, .t2-r .d, .wb-ov, td, .t2-dt){color:transparent!important;border-radius:5px;background:linear-gradient(90deg,var(--panel-2) 0%,var(--line) 50%,var(--panel-2) 100%)!important;background-size:200% 100%!important;animation:wbsk 1.2s linear infinite}
 .wb-skelmode :is(.t2-r .v, .t2-r .d, .wb-ov) *, #wb.wb-skelnow #wbout :is(.t2-r .v, .t2-r .d, .wb-ov) *{color:transparent!important;border-color:transparent!important;background:transparent!important}.wb-skelmode svg, #wb.wb-skelnow :is(#wbout, #wbmain, #wbsig, #wbmid) svg{opacity:.18;transition:opacity .15s}
 /* 모델 칩 높이 = 옆 선택 단추 높이 */
-.t2-hr{align-items:stretch}.t2-hr>.t2-mdl{display:inline-flex;align-items:center}
+.t2-hr{align-items:center}.t2-hr>*{display:flex;align-items:center;gap:8px;margin:0}   /* 위 막대: 모든 조작 높이 같게 · 세로 가운데 (2026-11-11) */
+.t2-hr .t2-mdl{display:inline-flex;align-items:center;height:34px;box-sizing:border-box;padding-block:0}
+.t2-hr .dc-seg{height:34px;box-sizing:border-box;align-items:stretch}.t2-hr .dc-seg>button{display:inline-flex;align-items:center}
+.t2-hr select{height:34px;box-sizing:border-box}
 /* 차량 거동 자세히 (접힘) */
 .t2-bmore{margin-top:10px}.t2-bmore>summary{cursor:pointer;font-weight:600;font-size:13px;padding:6px 2px;color:var(--ink-2)}
 /* ---------- 예제 · 새 파일 (2026-11-10) ---------- */

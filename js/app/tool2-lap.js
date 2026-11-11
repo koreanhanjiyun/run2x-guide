@@ -525,7 +525,7 @@ const T2INFO = {
   ax:   () => '공식 내구 코스를 거꾸로 한 바퀴, 정지 출발.',
   end:  () => `FSK 2026 공식 코스 × ${FSK26.laps}랩 = ${wbFmt(FSK26.len*FSK26.laps/1000, 2)} km. 드라이버당 ${FSK26.stint}랩, 각 드라이버 정지 출발(1 · ${FSK26.stint + 1}번째 랩), 교체 시간 제외. 랩마다 SOC가 줄고 모터 온도가 오릅니다.`,
   acc:  () => '직선 75 m, 정지 출발.',
-  skid: () => '8자 코스 (두 원 중심 거리 18.25 m, 안쪽 지름 15.25 m, 차로 폭 3 m), 주행 반경 9.125 m. 기록 = 오른쪽 한 바퀴 + 왼쪽 한 바퀴 (일정 반경이라 정상 선회 속도로 계산).' };
+  skid: () => `8자 코스 (두 원 중심 거리 18.25 m, 안쪽 지름 15.25 m · 바깥 21.25 m, 주행로 폭 3 m, 콘 안쪽 16 · 바깥 13개, FSAE D.10.1). 주행 반경 ${wbFmt(t2SkR(), 2)} m = 주행선에 따라 (중심 9.125 m · 최소 곡률 = 바깥 끝 · 레코드 = 한 바퀴가 가장 빠른 반경, 차 폭 · 여유 안에서). 기록 = 오른쪽 한 바퀴 + 왼쪽 한 바퀴 (일정 반경이라 정상 선회 속도로 계산).` };
 /* 코스 → 표 행 {l 길이 m, R 반경 m (왼쪽 +), note} */
 function t2CourseRows(c){
   if(c==='free') return t2Track(T2.free.text).rows;
@@ -533,8 +533,10 @@ function t2CourseRows(c){
   if(c==='end') return FSK26.seg.map(([l, R], i) => ({l, R, wl:W(B.WL, i), wr:W(B.WR, i), cone:sl.has(i), note:''}));
   if(c==='ax')  return FSK26.seg.map((_, k) => { const i = N - 1 - k, [l, R] = FSK26.seg[i]; return {l, R:-R, wl:W(B.WR, i), wr:W(B.WL, i), cone:sl.has((i + 1) % N), note:''}; });
   if(c==='acc') return [{l:75, R:0, note:'가속 구간'}];
-  const C2 = 2*Math.PI*9.125;
-  return [{l:15, R:0, note:'진입'}, {l:C2, R:-9.125, note:'오른쪽 1바퀴'}, {l:C2, R:-9.125, note:'오른쪽 2바퀴 (기록)'}, {l:C2, R:9.125, note:'왼쪽 1바퀴'}, {l:C2, R:9.125, note:'왼쪽 2바퀴 (기록)'}, {l:15, R:0, note:'탈출'}]; }
+  const SR = t2SkR(), C2 = 2*Math.PI*SR;
+  return [{l:15, R:0, note:'진입'}, {l:C2, R:-SR, note:'오른쪽 1바퀴'}, {l:C2, R:-SR, note:'오른쪽 2바퀴 (기록)'}, {l:C2, R:SR, note:'왼쪽 1바퀴'}, {l:C2, R:SR, note:'왼쪽 2바퀴 (기록)'}, {l:15, R:0, note:'탈출'}]; }
+/* 스키드패드 주행 반경: 계산 결과 (주행선 · 차 크기) 가 있으면 그 값, 없으면 가운데 9.125 m */
+const t2SkR = () => { const o = WB.id==='2' && WB.R && WB.R.out; return o && isFinite(o.sk_r) ? o.sk_r : 9.125; };
 const t2LapsOf = c => c==='free' ? T2.free.laps : c==='end' ? FSK26.laps : 1;
 function t2LapSel(){ const c = T2.course, n = t2LapsOf(c), cur = n > 1 ? (T2.lap[c] || '1') : '1';
   const o = n > 1 ? [['all', '전체'], ...Array.from({length:n}, (_, i) => [String(i + 1), `${i + 1}번째 랩${c==='end' && (i===0 || i===FSK26.stint) ? ' (정지 출발)' : ''}`])] : [['1', '1번째 랩']];
@@ -758,7 +760,12 @@ function t2Geo(c){ let G, close = false, rev = false, extra = [];
   if(c==='ax' || c==='end'){ G = {X:[...FSK26.X, FSK26.X[0]], Y:[...FSK26.Y, FSK26.Y[0]]}; close = true; rev = c==='ax'; }
   else if(c==='free'){ G = t2FreeXY(); close = t2Closed(); }
   else if(c==='acc') G = t2Pts([[75, 0]], 0.5, 0, 0, 0);
-  else { const SR = 9.125, C2 = 2*Math.PI*SR; G = t2Pts([[15, 0], [C2, -SR], [C2, -SR], [C2, SR], [C2, SR], [15, 0]], 0.5, 0, -15, Math.PI/2); [[SR, 0], [-SR, 0]].forEach(([cx, cy]) => [7.625, 10.625].forEach(rr => extra.push([cx, cy, rr]))); }
+  else { const SR = t2SkR(), C2 = 2*Math.PI*SR; G = t2Pts([[15, 0], [C2, -SR], [C2, -SR], [C2, SR], [C2, SR], [15, 0]], 0.5, 0, -15, Math.PI/2);
+    /* 두 원 중심은 늘 ±9.125 (규정 배치), 주행 원만 반경 SR. 경계 원 7.625 · 10.625 + 규정 콘 (안쪽 원 안 16개 · 바깥 원 밖 13개, FSAE D.10.1) */
+    [[9.125, 0], [-9.125, 0]].forEach(([cx, cy]) => { [7.625, 10.625].forEach(rr => extra.push([cx, cy, rr])); [[7.625 - 0.15, 16], [10.625 + 0.15, 13]].forEach(([rr, n]) => { for(let i = 0; i < n; i++){ const a = 2*Math.PI*i/n; extra.push([cx + rr*Math.cos(a), cy + rr*Math.sin(a), 0.15]); } }); });
+    /* 주행 원 반경이 가운데 (9.125) 와 다르면 두 원을 규정 중심 (±9.125) 으로 옮겨 그림 (진입 · 탈출 직선은 그대로, 이음매는 근사) */
+    const dd = 9.125 - SR; if(Math.abs(dd) > 1e-6){ const n0 = Math.ceil(15/0.5 - 1e-9), n = Math.max(1, Math.ceil(C2/0.5 - 1e-9));
+      G.X = G.X.map((x, i) => i > n0 && i <= n0 + 2*n ? x + dd : i > n0 + 2*n && i <= n0 + 4*n ? x - dd : x); } }
   return G && {...G, close, rev, extra}; }
 const T2MW = 440, T2MH = 330;
 /* 내 코스 콘 (지도용): 경계 콘 3 m 간격 (왼쪽 노랑 L · 오른쪽 파랑 R), 슬라럼 콘 (가운데 주황 C). 출발 위치와 상관없이 같은 자리 (코스 원점에서 그림) */
@@ -1277,7 +1284,7 @@ WB_TOOLS['2'] = {
   /* 결과 칸은 outHTML 이 그림. outputs = 대시보드 반영 · 입력 훑기 · 검증표 이름 */
   outHTML: t2OutHTML,
   outputs:[
-    {k:'t_acc_s', n:'가속 기록', u:'s', d:3}, {k:'t_skid_s', n:'스키드패드 기록 (좌우 합)', u:'s', d:3}, {k:'t_ax_s', n:'오토크로스 기록', u:'s', d:2}, {k:'t_end_s', n:'내구 총 시간', u:'s', d:1},
+    {k:'t_acc_s', n:'가속 기록', u:'s', d:3}, {k:'t_skid_s', n:'스키드패드 기록 (좌우 합)', u:'s', d:3}, {k:'sk_r', n:'스키드패드 주행 반경 (주행선 · 차 크기로)', u:'m', d:3}, {k:'t_ax_s', n:'오토크로스 기록', u:'s', d:2}, {k:'t_end_s', n:'내구 총 시간', u:'s', d:1},
     {k:'e_use', n:'내구 소비 에너지', u:'kWh', d:2}, {k:'e_reg', n:'내구 회생 회수 에너지', u:'kWh', d:3}, {k:'c_lam', n:'타력 (에너지 상한) 에너지 시간 값 λ', u:'s/kWh', d:1, hide:true}, {k:'e_nl_c', n:'내구 소비 에너지 (출력 상한 없이)', u:'kWh', d:2}, {k:'p_lim', n:'내구 출력 상한 비율', u:'%', d:1},
     {k:'vmax', dk:'vmax', d:1}, {k:'ay_skid', dk:'ay_max_sim', d:2},
     {k:'gr_opt', dk:'gr', n:'제안 감속비 (배점 가중)', d:2, hide:true}, {k:'e_lap', dk:'e_lap', d:3, hide:true},
@@ -1340,6 +1347,8 @@ WB_TOOLS['2'] = {
     {n:'가속 · 구름 저항 무게 항', I:{m:300, fr:50, h:0, mu:10, crr:0.02, cla:0, cda:0, j_eq:1.25, r_eff:250, tmax:100, gr:4, eta_dt:100}, expect:{t_acc_s:5.580840}, src:'a = (1600 − 0.02 × 300 × 9.81) ÷ 320 = 4.8161'},
     {n:'회전수 한계 최고속', I:{nmax:6500, gr:3.55, r_eff:229}, expect:{vmax:158.0708}, src:'6500 ÷ 3.55 × 2π ÷ 60 × 0.229 × 3.6'},
     {n:'스키드패드 · 에어로 없음', I:{mu:1.5, crr:0, cla:0, cda:0}, expect:{t_skid_s:9.895692, ay_skid:1.5}, src:'v = √(μgR), R = 9.125 → 오른쪽 · 왼쪽 한 바퀴씩 합 = 2 × 2πR ÷ v'},
+    {n:'스키드패드 · 레코드 라인 = 주행로 안쪽 끝 (에어로 없음이면 한 바퀴 시간 ∝ √R → 가장 작은 R, 차 폭 1.4 · 여유 0.1 m)', I:{mu:1.5, crr:0, cla:0, cda:0, rl_on:2, wc_on:1, w_car:1.4, rl_m:0.1}, expect:{sk_r:8.425, t_skid_s:9.508559}, src:'R = 7.625 + 0.1 + 0.7 = 8.425 m (FSAE D.10.1 안쪽 지름 15.25 m) → 2 × 2πR ÷ √(μgR)'},
+    {n:'스키드패드 · 최소 곡률 라인 = 주행로 바깥 끝 (차 크기 고려 안 함, 경계에서 차 중심 0.5 m)', I:{mu:1.5, crr:0, cla:0, cda:0, rl_on:1, wc_on:0, rl_b:0.5}, expect:{sk_r:10.125, t_skid_s:10.423828}, src:'R = 10.625 − 0.5 = 10.125 m (바깥 지름 21.25 m) → 2 × 2πR ÷ √(μgR)'},
     {n:'스키드패드 · 다운포스 (앞뒤 몫 = 무게 배분)', I:{m:300, fr:50, L:1550, xcop:775, mu:1.5, crr:0, cla:3, cda:0}, expect:{t_skid_s:9.471806}, src:'mv²/R = μ(mg + ½ρC_LA v²) → v² = μmg ÷ (m/R − μ½ρC_LA), 좌우 한 바퀴씩 합'},
     {n:'스키드패드 목표 기록 → 필요 C_L·A', I:{m:300, fr:50, L:1550, xcop:775, mu:1.5, crr:0, cla:0, cda:0, t_skid:9.471806}, expect:{cla_req:3}, src:'위 경우를 거꾸로: 9.4718 s 에 필요한 C_L·A = 3'},
     {n:'스키드패드 목표가 느리면 필요 C_L·A 는 − (줄여도 됨)', I:{m:300, fr:50, L:1550, xcop:775, mu:1.5, crr:0, cla:0, cda:0, t_skid:10.302152}, expect:{cla_req:-3}, src:'C_L·A = −3 (양력)이면 v² = μmg·½ ÷ (m/R·½ − μ·½ρ(−3)·½) → 좌우 합 10.3022 s'},
@@ -2988,7 +2997,7 @@ function steerCheck(I) {
   const C = car(I, I.gr, 1), E = I.end || {}, list = [];
   if ((E.seg || []).length) list.push(['내구', drivenSegs(I, 'end', E.seg, true).segs], ['오토크로스', drivenSegs(I, 'ax', reverse(E.seg), true).segs]);
   { const F = freeSegs(I); if (F) list.push(['내 코스', F.segs]); }
-  list.push(['스키드패드', SKID]);
+  list.push(['스키드패드', skidSegs(skR(I, C))]);
   for (const [name, segs] of list) { let s0 = 0;
     for (const [l, R] of segs) { if (R && C.dIn0(1 / R) > C.dmx + 1e-6)
       throw new Error(\`\${name} \${wbN(s0)} m 지점 (반경 \${Math.abs(R).toFixed(2)} m): 아주 느리게 돌아도 안쪽 바퀴를 \${C.dIn0(1 / R).toFixed(1)}° 꺾어야 해서 최대 조향각 \${C.dmx}° 로는 돌 수 없습니다. 조향 (최대 조향각 · 휠베이스)을 다시 설계하십시오\${I.rm_on === 0 ? ' (또는 최소 회전 반경 제약을 켜서 주행선을 그 반경 안으로)' : \` (주행선은 최소 회전 반경 \${I.rmin} m 까지 휨 — 이 반경이 최대 조향각과 맞는지도 확인)\`}.\`);
@@ -2999,10 +3008,25 @@ const wbN = x => Math.round(x).toLocaleString('en-US');
 
 // ================================================================ 종목
 const ACC_L = 75;               // 가속 구간 [m]
-const SK_R  = 9.125;            // 스키드패드 주행 반경 [m] = 안쪽 원 7.625 + 차로 폭 절반 1.5
+const SK_R  = 9.125;            // 스키드패드 주행로 가운데 반경 [m] = 안쪽 원 7.625 + 주행로 폭 절반 1.5 (FSAE D.10.1: 안쪽 지름 15.25 · 바깥 21.25 · 폭 3.0 m)
+const SK_RI = 7.625, SK_RO = 10.625;   // 안쪽 원 · 바깥 원 반경 [m]
 const SK_IN = 15;               // 스키드패드 진입 · 탈출 직선 [m] (근사)
 const SK_C  = 2 * Math.PI * SK_R;
-const SKID  = [[SK_IN, 0], [SK_C, -SK_R], [SK_C, -SK_R], [SK_C, SK_R], [SK_C, SK_R], [SK_IN, 0]];   // 오른쪽 2바퀴 → 왼쪽 2바퀴
+const skidSegs = R => { const c = 2 * Math.PI * R; return [[SK_IN, 0], [c, -R], [c, -R], [c, R], [c, R], [SK_IN, 0]]; };   // 오른쪽 2바퀴 → 왼쪽 2바퀴
+const SKID  = skidSegs(SK_R);
+/* 스키드패드 주행 반경 (2026-11-11, 다른 코스와 같은 주행선 규칙): 중심 라인 = 9.125, 최소 곡률 = 바깥 끝, 레코드 = 주행로 안에서 한 바퀴 시간 2πR ÷ v(R) 가 가장 짧은 반경.
+   주행로 안: 안쪽 R − 차 폭/2 ≥ 7.625 + 여유, 바깥 차 모서리 √((R + 폭/2)² + x²) ≤ 10.625 − 여유 (x = CG 에서 차 앞 · 뒤 끝 중 먼 쪽, 차 크기 고려일 때). 차 크기 고려 안 함 = 차 중심이 경계에서 rl_b */
+function skR(I, C) { const rl = I.rl_on >= 2 ? 2 : I.rl_on >= 1 ? 1 : 0; if (rl === 0 || I.sk_mid === 1) return SK_R;   // sk_mid = 도구 G (스키드패드는 늘 가운데 9.125 m)
+  let rin, rout;
+  if (wcOn(I)) { const w = I.w_car / 2, mg = Math.max(0, I.rl_m || 0), L = I.L / 1000, lr = L * I.fr / 100, x = Math.max(L - lr + Math.max(0, I.oh_f || 0), lr + Math.max(0, I.oh_r || 0));
+    rin = SK_RI + mg + w; const o = SK_RO - mg; rout = o > x ? Math.sqrt(o * o - x * x) - w : -Infinity; }
+  else { const b = Math.max(0, I.rl_b || 0); rin = SK_RI + b; rout = SK_RO - b; }
+  if (!(rout >= rin)) throw new Error(\`스키드패드 주행로 (폭 3 m) 에 차가 들어가지 않습니다 (안쪽 \${rin.toFixed(2)} m > 바깥 \${rout.toFixed(2)} m). 차 폭 · 길이 · 여유를 확인하세요.\`);
+  if (rl === 1) return rout;
+  const t = R => R / skidV(C, R, C.Voc(1));   // 한 바퀴 시간 ÷ 2π
+  let a = rin, b = rout; const gr = (Math.sqrt(5) - 1) / 2; let x1 = b - gr * (b - a), x2 = a + gr * (b - a), f1 = t(x1), f2 = t(x2);
+  for (let i = 0; i < 40 && b - a > 1e-6; i++) { if (f1 <= f2) { b = x2; x2 = x1; f2 = f1; x1 = b - gr * (b - a); f1 = t(x1); } else { a = x1; x1 = x2; f1 = f2; x2 = a + gr * (b - a); f2 = t(x2); } }
+  const rm = (a + b) / 2, ends = [[rin, t(rin)], [rout, t(rout)], [rm, t(rm)]].sort((p, q) => p[1] - q[1]); return ends[0][0]; }
 const W_PT  = { acc: 100, ax: 200, end: 350 };   // 감속비 제안에 쓰는 배점 (스키드패드는 감속비와 거의 상관없어 뺌)
 
 // 가속: 75 m 정지 출발, SOC 100 %  → 시간 [s]
@@ -3163,7 +3187,7 @@ function lapStat(t, stand) {
 }
 
 // 스키드패드 횡가속도 [g]: 기록 바퀴 (오른쪽 · 왼쪽 일정 반경 한 바퀴씩) 의 시간 평균 — 진입 · 탈출은 넣지 않음
-const skidAy = E => (E.vR * E.vR * E.tR + E.vL * E.vL * E.tL) / (E.tR + E.tL) / SK_R / g;
+const skidAy = E => (E.vR * E.vR * E.tR + E.vL * E.vL * E.tL) / (E.tR + E.tL) / (E.skR || SK_R) / g;
 // 가속: 최대 종가속도 [g] (칸마다 (v₂² − v₁²) ÷ 2Δs)
 const accMax = A => { let a = 0; for (let i = 0; i + 1 < A.v.length; i++) a = Math.max(a, (A.v[i + 1] ** 2 - A.v[i] ** 2) / (2 * (A.G.s[i + 1] - A.G.s[i]))); return a / g; };
 
@@ -3171,10 +3195,10 @@ const accMax = A => { let a = 0; for (let i = 0; i + 1 < A.v.length; i++) a = Ma
 //   스키드패드 기록 = 오른쪽 한 바퀴 + 왼쪽 한 바퀴 [s]
 function events(I, gr, fast) {
   const ds = fast ? 3 : 1, C = car(I, gr, 1);
-  const vR = skidV(C, -SK_R, C.Voc(1)), vL = skidV(C, SK_R, C.Voc(1));
+  const skr = skR(I, C), skc = 2 * Math.PI * skr, vR = skidV(C, -skr, C.Voc(1)), vL = skidV(C, skr, C.Voc(1));
   const X = runAx(I, C, ds), EN = runEnd(I, gr, !fast);
   const A = runAcc(I.dr_real === 1 ? car(accI(I), gr, 1) : C);
-  return { C, acc: A.t[0], A, skid: SK_C / vR + SK_C / vL, tR: SK_C / vR, tL: SK_C / vL, vs: Math.min(vR, vL), vR, vL,
+  return { C, acc: A.t[0], A, skid: skc / vR + skc / vL, tR: skc / vR, tL: skc / vL, vs: Math.min(vR, vL), vR, vL, skR: skr,
            ax: X ? X.t[0] : NaN, X, EN, end: EN ? EN.T : NaN };
 }
 
@@ -3220,7 +3244,7 @@ function bestGrFree(I) {
 function claNeed(I, gr) {
   if (!(I.t_skid > 0)) return NaN;
   const keep = VC;
-  const tAt = c => { VC = new Map(); VCF = new Map(); const C = car({ ...I, cla: c }, gr, 1), V = C.Voc(1); return SK_C / skidV(C, -SK_R, V) + SK_C / skidV(C, SK_R, V); };
+  const tAt = c => { VC = new Map(); VCF = new Map(); const C = car({ ...I, cla: c }, gr, 1), V = C.Voc(1), R = skR(I, C), L = 2 * Math.PI * R; return L / skidV(C, -R, V) + L / skidV(C, R, V); };
   let r, lo = -15, hi = 15;
   if (tAt(hi) > I.t_skid || tAt(lo) < I.t_skid) r = NaN;
   else {
@@ -3244,7 +3268,7 @@ function nBase(I, C) {
 function runCourse(I, c, gr) {
   const C = car(I, gr, 1);
   if (c === 'acc')  { const CA = car(accI(I), gr, 1); return { L: runAcc(CA), C: CA, stand: [0] }; }
-  if (c === 'skid') return { L: laps(C, SKID, 1, 0.5, 1, C.Voc(1)), C, stand: [0], skid: true };
+  if (c === 'skid') return { L: laps(C, skidSegs(skR(I, C)), 1, 0.5, 1, C.Voc(1)), C, stand: [0], skid: true };
   if (c === 'ax')   { const X = runAx(I, C, 1); return X && { L: X, C, stand: [0], rev: true }; }
   if (c === 'free') { const F = runFree(I, C, 0.5, false); return F && { L: F, C, stand: [0] }; }
   const EN = runEnd(I, gr, true);
@@ -3260,6 +3284,7 @@ function modeRun(I, G2, G3, fast) {
   const out = {
     // 종목 기록
     gr_use: G2,
+    sk_r: E.skR,   // 스키드패드 주행 반경 [m]
     t_acc_s: E.acc, t_skid_s: E.skid, t_skid_r: E.tR, t_skid_l: E.tL, t_ax_s: E.ax, t_end_s: E.end,
     t_end1: end ? end.first : NaN, t_endavg: end ? end.avg : NaN, n_lap: EN ? EN.n : NaN, n_st1: EN ? EN.n1 : NaN,
     d_acc: E.acc - fast.acc, d_ax: E.ax - fast.ax, d_end: E.end - fast.end,
@@ -3335,7 +3360,7 @@ function modeRun(I, G2, G3, fast) {
     c_gr: G3, c_n: lt.length, c_lap: jj + 1, c_len: RL ? RL.len : NaN, c_ltot: RL ? RL.len * lt.length : NaN, c_rl: RL && RL.eN ? (RL.gain != null ? 2 : 1) : 0, c_rlg: RL && RL.gain != null ? RL.gain : NaN, c_rlb: rlB(I),   // 한 랩 · 총 거리 [m]
     c_rkin: rKin(I) || NaN,   // 최대 조향각에서 정한 최소 회전 반경 [m]
     c_vstr: K.C && K.C.drv && G && G.k ? (x => isFinite(x) ? x * 3.6 : NaN)(Math.min(...steerCap(K.C, G))) : NaN,   // 현실 운전자: 핸들 속도 상한이 가장 낮은 곳 [km/h]
-    ...(() => { const rmE = rKin(I), T = RL ? rTight(RL.segs, rmE) : c === 'skid' ? rTight([[1, 9.125]], rmE) : { r: Infinity, bad: 0 };
+    ...(() => { const rmE = rKin(I), T = RL ? rTight(RL.segs, rmE) : c === 'skid' ? rTight([[1, skR(I, K.C)]], rmE) : { r: Infinity, bad: 0 };
                 const bk = bodyBk(I), bb = bk && isFinite(T.r) ? bk(1 / T.r) : [NaN, NaN];
                 return { c_rmn: isFinite(T.r) ? T.r : NaN, c_rbad: T.bad, c_ctight: RL && RL.ctight ? RL.ctight : 0,
                          c_bo: Math.max(bb[0], bb[1]), c_bi: Math.min(bb[0], bb[1]) }; })(),   // 가장 급한 곳에서 차 바깥 · 안쪽 여유 [m] (전폭이 있을 때)   // c_ctight = 여유를 못 지킨 콘 수                       // 달리는 선 가장 작은 반경 · 최소 회전 반경보다 급한 길이 [m]
