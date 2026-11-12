@@ -3,7 +3,7 @@
    - 파일: 이미지(.png .jpg .jpeg .webp) 또는 CAD 도면(.dxf, 측면도 · 윗면도 한 장)
    - 맞춤: 그림 위에서 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심 (윗면은 앞 차축 가운데 → 뒤 차축 가운데) 두 점만 찍음
      → 두 점 거리 = 휠베이스로 크기, 두 점을 잇는 선이 수평이 되게 회전, 앞이 오른쪽이면 좌우 뒤집기. 지면 = 바퀴 중심에서 하중 반경 r_load 아래
-   - 저장: teams/<팀>/shape/<side|top> = {s:{시즌:{kind:'img'|'dxf', ...}}} (팀원 누구나 이번 시즌, 로그인 전은 이 브라우저)
+   - 저장: 이 브라우저 run2x.shape.v1 = {side|top:{s:{시즌:{kind:'img'|'dxf', ...}}}} (2026-11-12 부터 팀 저장소 안 씀)
      img: data(줄인 이미지 data: 주소), w, h, p1, p2 (그림 픽셀, 아래로 +)
      dxf: d(선 그림 경로, 도면 단위 · y 를 뒤집어 아래로 +), p1, p2
    - 계산에는 쓰지 않음. 질량 계산기(질량 분포 옆 · 위) · 드라이버 모델 그림의 바탕만 바뀜. 대시보드 '그림으로 보기'는 기본 차 그림 그대로
@@ -13,16 +13,13 @@ let SHAPES = {};
 try{ SHAPES = JSON.parse(localStorage.getItem(SHAPEKEY) || '{}') || {}; }catch(e){ SHAPES = {}; }
 const shSeason = () => typeof dvSeason==='function' ? dvSeason() : String(new Date().getFullYear());
 const shGet = view => { const d = SHAPES[view], v = d && d.s && d.s[shSeason()]; return v && v.p1 && v.p2 ? v : null; };
-const shCanEdit = () => !SH.on || SH.canAdmin || !pastLock();
-{ const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
-    db.collection('shape').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); SHAPES = r; shRepaint(); }, () => {}); }; }
+const shCanEdit = () => true;   /* 내 브라우저 값이라 누구나 */
 /* 바탕이 바뀌면 그림만 다시 그림 */
 function shRepaint(){ try{ if(typeof dashPaint==='function' && $('#dfigs')) dashPaint(['figs', 'part']); }catch(e){}
   try{ if(typeof WB!=='undefined' && WB.id==='1'){ wbPaint(['main']); const f = $('#m1dfig'); if(f && !M1.drag && !M1.edit) f.innerHTML = m1DrvFig(WB.R); } }catch(e){} }
 function shStore(view, val){ const se = shSeason(), cur = SHAPES[view] || {s:{}}, s2 = {...(cur.s || {})};
   if(val==null) delete s2[se]; else s2[se] = val; SHAPES[view] = {s:s2}; shRepaint();
-  if(!SH.on){ try{ localStorage.setItem(SHAPEKEY, JSON.stringify(SHAPES)); }catch(e){ toast('이 브라우저에 저장하지 못했습니다 (저장 공간 부족).'); } return; }
-  SH.db.doc('shape/' + view).set(SHAPES[view]).catch(e => toast(Backend.denied && Backend.denied(e) ? '이 그림을 고칠 권한이 없습니다.' : '저장하지 못했습니다. 그림이 너무 크면 더 작게 올려 주십시오.')); }
+  try{ localStorage.setItem(SHAPEKEY, JSON.stringify(SHAPES)); }catch(e){ toast('이 브라우저에 저장하지 못했습니다 (저장 공간 부족).'); } }   /* 다른 도구처럼 이 브라우저에만 (2026-11-12) */
 
 /* 원본 점(u, v: 아래로 +) → 화면: p1 → A(앞), p2 → B(뒤).
    옆면은 앞이 원본에서 오른쪽이면 좌우 뒤집음(반대쪽에서 본 그림). 윗면은 뒤집지 않고 돌리기만 함(뒤집으면 왼쪽 · 오른쪽이 바뀜) */

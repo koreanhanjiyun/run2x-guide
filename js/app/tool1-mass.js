@@ -12,7 +12,7 @@
    - 저장소가 없으면(로그인 전) 이 브라우저에 저장
    ============================================================ */
 const MASSKEY = 'run2x.mass.v2', DRVKEY = 'run2x.drv.v2', M1COLKEY = 'run2x.m1.hues';
-let MASS = {}, DRVS = {}, MASS_T = null, DRVS_T = null;   /* MASS_T · DRVS_T = 팀 저장소에서 받은 값 (내 파일 · 로그인일 때 씀) */
+let MASS = {}, DRVS = {};   /* 이 브라우저 저장 (모드별) */
 /* 예제 질량 표 · 드라이버 (튜토리얼용 임의 데이터, 이번 · 지난 시즌) */
 function M1EXSEED(){ const mass={}, o={n:0}, S0=m1Season(), S1=String(+S0 - 1);
   const HUE={frame:265,sus:190,str:40,brk:5,pt:130,mc:220,bat:25,cool:160,aero:205};
@@ -37,10 +37,9 @@ function M1EXSEED(){ const mass={}, o={n:0}, S0=m1Season(), S1=String(+S0 - 1);
   G('aero','뒤날개','s',-60,0,900,[['메인 플레인',1.8],['플랩',0.7,2],['엔드플레이트',0.3,2],['스완넥',0.7]]);
   const D=(label,height,mass,sex,gear)=>({label,sex:sex||'m',height,mass,gear:gear||{helmet:0,suit:0,belt:0},back:32,hip:{x:970,z:230},pedal:{x:1780,z:250},sw:{x:1185,z:500},seg:{}});
   return {mass, drv:{d1:{s:{[S0]:D('시험 1',175,68,'m',{helmet:1.4,suit:1.1,belt:0.9}),[S1]:D('시험 1',175,70)}}, d2:{s:{[S0]:D('시험 2',184,80,'m',{helmet:1.5,suit:1.3,belt:0.9})}}, d3:{s:{[S0]:Object.assign(D('시험 3',165,58,'f',{helmet:1.3,suit:1.0,belt:0.9}),{pedal:{x:1620,z:250}})}}}}; }
-/* 모드: 예제 = 이 브라우저의 예제 저장본 (없으면 위 예시), 팀 저장소에 쓰지 않음 · 내 파일 = 팀 저장소(로그인) 또는 이 브라우저 내 파일 저장본, 없으면 빈 표 */
+/* 모드: 예제 = 이 브라우저의 예제 저장본 (없으면 위 예시) · 내 파일 = 이 브라우저 내 파일 저장본, 없으면 빈 표 */
 wbModeReg(m => { const rd = k => { try{ return JSON.parse(localStorage.getItem(wbMK(k)) || 'null'); }catch(e){ return null; } };
   if(m==='ex'){ const a = rd(MASSKEY), b = rd(DRVKEY); if(a && b){ MASS = a; DRVS = b; } else { const T = M1EXSEED(); MASS = a || T.mass; DRVS = b || T.drv; } }
-  else if(typeof SH!=='undefined' && SH.on){ MASS = MASS_T || {}; DRVS = DRVS_T || {}; }
   else { MASS = rd(MASSKEY) || {}; DRVS = rd(DRVKEY) || {}; } });
 const M1 = { tourUndo:false, tab:'mass', drv:'d1', dsel:'d1', timer:{}, drag:null, edit:null, pick:null, mv:null };
 try{ const v = localStorage.getItem('run2x.wb.1.drv'); if(['d1','d2','d3'].includes(v)) M1.dsel = v; }catch(e){}
@@ -57,7 +56,7 @@ const m1HueBg = h => h==null ? '' : `hsl(${h} 62% 93%)`, m1HueLn = h => `hsl(${h
 
 const m1Season = () => typeof dvSeason==='function' ? dvSeason() : String(new Date().getFullYear());
 /* 고치기: 로그인 전은 자유, 팀에서는 팀원 누구나(지난 시즌은 회장만) */
-const m1CanEdit = () => wbEx() || !SH.on || SH.canAdmin || !pastLock();   /* 예제는 늘 고칠 수 있음 (이 브라우저에만) */
+const m1CanEdit = () => true;   /* 내 브라우저 값이라 늘 고칠 수 있음 (2026-11-12) */
 const m1Groups = () => Object.entries(MASS).map(([id, d]) => { const v = d && d.s && d.s[m1Season()]; return v ? {id, ...v} : null; })
   .filter(Boolean).sort((a, b) => (a.ord||0) - (b.ord||0));
 const m1N = it => it.n==null || !isFinite(it.n) ? 1 : +it.n;
@@ -70,13 +69,8 @@ const m1NewId = () => 'g' + Date.now().toString(36) + Math.random().toString(36)
 function m1Store(kind, id, val){ const se = m1Season(), STORE = kind==='mass' ? MASS : DRVS, cur = STORE[id] || {s:{}}, s2 = {...(cur.s||{})};
   if(val==null) delete s2[se]; else s2[se] = val; STORE[id] = {s:s2};
   wbRefresh(); m1PartDirty();
-  if(!SH.on || wbEx()){ try{ localStorage.setItem(wbMK(kind==='mass' ? MASSKEY : DRVKEY), JSON.stringify(STORE)); }catch(e){} return; }   /* 예제는 팀 저장소에 쓰지 않음 */
-  clearTimeout(M1.timer[kind + id]);
-  M1.timer[kind + id] = setTimeout(() => { SH.db.doc((kind==='mass' ? 'mass/' : 'drivers/') + id).set(STORE[id])
-    .catch(e => toast(Backend.denied && Backend.denied(e) ? '이 값을 고칠 권한이 없습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.')); }, 600); }
-{ const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
-    db.collection('mass').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); MASS_T = r; if(!wbEx()){ MASS = r; m1Live(); } }, () => {});
-    db.collection('drivers').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DRVS_T = r; if(!wbEx()){ DRVS = r; m1Live(); } }, () => {}); }; }
+  try{ localStorage.setItem(wbMK(kind==='mass' ? MASSKEY : DRVKEY), JSON.stringify(STORE)); }catch(e){} }
+/* 질량 표 · 드라이버는 다른 도구처럼 이 브라우저에만 저장 (2026-11-12 관리자 결정). 예전 팀 저장소(mass · drivers)는 읽지도 쓰지도 않음 (데이터는 그대로 남음) */
 /* 다른 사람이 고친 값이 들어오면: 입력 중인 칸이 없을 때만 다시 그림 */
 function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.activeElement;
   if(!M1.drag && !M1.pick && !M1.mv && !(a && a.closest && a.closest('#wbext') && a.matches('input, select'))) wbPaint(['ext']); wbRefresh(); }
@@ -422,7 +416,7 @@ const M1TOUR = [
   ['#wb .wb-bar [data-coordopen]', '좌표계', '모든 좌표는 사이트 차량 좌표계입니다. 원점은 뒤 차축 중심 · 차량 중심면 · 지면, x는 앞으로 +, y는 왼쪽 +, z는 위로 + [mm]입니다. 누르면 설계 탭과 같은 좌표계 그림이 열립니다. 차 안 부품은 대부분 x가 + 라서 숫자만 넣으면 됩니다.', m1TT('mass')],
   ['#wb .wb-bar [data-shpopen]', '차 형상', '우리 차 측면도 · 윗면도를 이미지(.png .jpg .webp)나 CAD 도면(.dxf)으로 올리면, 질량 분포와 드라이버 모델 그림의 차 대신 씁니다. 올린 뒤 ① 앞 바퀴 중심 → ② 뒤 바퀴 중심(윗면은 차축 가운데) 두 점만 찍으면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 계산에는 쓰지 않고, 올리지 않거나 되돌리면 기본 차 그림입니다.', m1TT('mass')],
   ['#wb .wb-in', '입력', '휠베이스와 트레드입니다. 대시보드 설계값은 윗줄 [도구 연결 ▾]에서 가져옵니다.', m1TT('mass')],
-  ['#wb .m1-tabs', '표 입력', '[부품 질량 표]는 어셈블리별 질량과 위치, [드라이버 모델]은 드라이버 자세와 체절 질량입니다. 팀원 누구나 이번 시즌 값을 고칩니다.', m1TT('mass')],
+  ['#wb .m1-tabs', '표 입력', '[부품 질량 표]는 어셈블리별 질량과 위치, [드라이버 모델]은 드라이버 자세와 체절 질량입니다.', m1TT('mass')],
   ['#m1list [data-m1g]', '어셈블리 카드', '카드 하나가 어셈블리 하나입니다. 좌표는 그 어셈블리의 무게중심이고, 질량은 항목의 질량 × 개수 합입니다. 개수를 0으로 하면 그 항목은 빠집니다. 왼쪽 위 동그라미로 카드 색을, 오른쪽 위 단추로 좌우 바꿔 복사 · 지우기를 합니다.', m1TT('mass')],
   ['#m1list [data-m1g] .m1-grip', '카드 옮기기', '점 손잡이를 끌어 옮깁니다. 카드는 줄마다 왼쪽부터 채워집니다. 다른 카드 위에 놓으면 그 앞에 끼워 넣고(줄이 넘치면 마지막 카드가 바로 아래 새 줄로), 줄 끝 빈칸에 놓으면 그 줄 끝에 붙고, 줄 사이에 놓으면 새 줄이 생깁니다. 끄는 동안 파란 선으로 들어갈 자리를 보여 줍니다.', m1TT('mass')],
   ['#m1list [data-m1g] .m1-half', '걸침 ½ 체크', '드라이브샤프트(CV축) · 위시본 · 푸시로드 · 타이로드 · 스프링 · 댐퍼처럼 한쪽은 차체, 한쪽은 업라이트에 붙는 부품은 ½을 체크합니다. 체크한 항목은 질량 절반을 반대쪽으로 셉니다. 현가하 카드면 절반은 현가상으로, 현가상 카드(예: 구동계의 CV축)면 가장 가까운 현가하 카드 쪽(앞 · 뒤)으로 갑니다. 총질량 · 무게중심 · 코너웨이트는 그대로이고 현가상 · 현가하질량만 바뀝니다. 체크 칸에 마우스를 올리면 절반이 갈 곳이 나옵니다.', m1TT('mass')],
