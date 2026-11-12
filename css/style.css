@@ -3358,3 +3358,5 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wbl-fb:hover{color:var(--ink)}.wbl-fb.on{background:#2f6fd0;border-color:#2f6fd0;color:#fff}
 .wbl-fm{position:absolute;top:100%;left:0;z-index:30;min-width:180px;max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:2px;padding:6px 8px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.16);font-weight:400;font-size:12.5px;white-space:nowrap}
 .wbl-fm label{display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer}.wbl-fm label.all{border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:2px}
+.wbl-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}.wbl-ve{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer}
+.wbl-h{align-items:center}.wbl-h h4{margin-bottom:6px}.wbl-h .wbl-ve{margin-bottom:6px}

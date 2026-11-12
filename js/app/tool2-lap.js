@@ -325,8 +325,7 @@ document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) r
 document.addEventListener('change', e => { if(WB.id==='2' && e.target.matches && e.target.matches('[data-t2srel]')){ const v = +e.target.value; if(v > 0) T2S.rel = Math.min(50, v); } });
 /* 편집 탭 본문: 항목의 상수 칸 (왼쪽 입력과 같은 칸, 비슷한 값끼리 작은 상자 = sb) + 표 · 그림 */
 /* 탭 아래 짧은 안내 (글머리표, 2026-11-11 줄임) */
-const T2CNOTE = {bat:['셀 · 팩 값은 도구 4 에서 정해 [도구 연결 ▾] › 대시보드에서 받음 <button type="button" class="lnk" data-t2to4>도구 4 열기</button>', '규정(세그먼트 120 V · 6 MJ · 12 kg) · 질량은 도구 4 에서 확인'],
-  mot:['모터 토크는 아래 토크 표로만 셈']};
+const T2CNOTE = {mot:['모터 토크는 아래 토크 표로만 셈']};
 function t2Consts(grp){ const gs = T2EG[grp] || [], list = WB_TOOLS['2'].inputs.filter(d => gs.includes(d.g) && d.ui!=='none'); if(!list.length) return '';
   const groups = []; list.forEach(d => { let G = groups.find(x => x.g===d.g); if(!G){ G = {g:d.g, sb:[]}; groups.push(G); } let B = G.sb.find(x => x.n===d.sb); if(!B){ B = {n:d.sb, ds:[]}; G.sb.push(B); } B.ds.push(d); });
   groups.sort((a, b) => gs.indexOf(a.g) - gs.indexOf(b.g));   // 묶음 순서 = T2EG 순서 (냉각: 외기 → 냉각수 → 모터 · 인버터 · 축전지)
@@ -502,11 +501,7 @@ function t2CoolLite(){ const o = WB.id==='2' && WB.R && WB.R.out, ok = o && isFi
       ${typeof t9CoolPage==='function' ? t9CoolPage() : ''}</div>` : ''}
     ${t2Consts('cool')}
     ${n9 ? '' : (rt => `<div class="t2-sub"><span class="muted">라디 표</span>${t2Seg('data-t2et', rt, T2RAD.map(k => [k, T2ET[k]]))}</div>${t2MapEdit(rt)}`)(T2RAD.includes(T2.etab) ? T2.etab : 'rqM')}
-    <div class="t2-cq"><b>냉각 회로 설계 → 도구 9 냉각 계통 계산기</b>
-      <p class="muted">같은 배치로 라디 · 펌프 선정 · 부품 정상 온도 계산. 주고받기는 윗줄 [도구 연결 ▾].</p>
-      <div class="t2-cqb"><button type="button" class="btn small" data-t2to9="open">도구 9 열기</button></div>
-      ${ok ? `<p class="muted">보낼 값 (${T2CN[T2.course] || ''}${lp==='all' ? ' · 전체 랩' : ` · ${lp}번째 랩`} 평균): 모터 손실 ${f(o.c_qm, 0)} W · 인버터 손실 ${f(o.c_qi, 0)} W · 축전지 발열 ${f(o.c_qb, 0)} W · 차속 ${f(o.c_vavg, 1)} km/h · 주행 시간 ${f(o.c_trun, 0)} s</p>` : ''}</div></div>`; }
-document.addEventListener('click', e => { if(WB.id==='2' && e.target.closest && e.target.closest('[data-t2to4]') && WB_TOOLS['4']) wbOpen('4'); });
+    </div>`; }
 document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2cwm]'); if(!b) return;
   e.stopPropagation(); WB.I.cw_mode = +b.dataset.t2cwm; wbSave(); wbPaint(['ext', 'in']); wbCalcSoon(); }, true);
 /* 카드 (role=radio · switch): Enter · Space 로도 고름 · 켬 · 끔 */
@@ -527,7 +522,6 @@ document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest ||
 /* 내 코스 주행 성격: 기록 주행 (k_e = 1) / 내구 주행 (현실 운전자면 k_e 적용) */
 document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2fend]'); if(!b) return;
   T2.free.end = +b.dataset.t2fend === 1 ? 1 : 0; t2Save(); wbPaint(['ext']); wbCalcSoon(); });
-document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2to9]'); if(!b || b.disabled) return; if(WB_TOOLS['9']) wbOpen('9'); });
 function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
   if(grp==='model') return t2ModelPage();
   if(grp==='cool') return t2CoolLite();

@@ -564,7 +564,7 @@ async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
 function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
   return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; return ''; }}; }); }
 /* [도구 연결]: 가져오기만 (다른 도구로 보내기는 없음 — 한 도구가 다른 도구 값을 멋대로 바꾸는 일, 2026-11-12).
-   거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에 · 지금 그 자리 (값 있음 / 비어 있음) · 가져올 것 (값 있음 / 없음). 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
+   거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에. 그리고 [가져올 값 없는 줄 빼기] 하나. 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
    대시보드는 묶음끼리 모으고 묶음마다 줄 띄움 */
 const wbLinkCat = r => r.cat || String(r.to || '').replace(/<[^>]+>/g, '').replace(/^(입력|편집) › /, '').split(' › ')[0].replace(/ \(.*$/, '');
 const wbLinkEmpty = v => { const t = String(v == null ? '' : v).replace(/<[^>]+>/g, '').trim(); return !t || t==='—' || t==='비어 있음' || /^—( ·|$)/.test(t) && !/[0-9]/.test(t); };
@@ -576,15 +576,16 @@ function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.li
     const ord = G.map((r, i) => i).sort((x, y) => dir==='dash' ? first[wbLinkCat(G[x])] - first[wbLinkCat(G[y])] || x - y : x - y);   /* 대시보드는 묶음끼리 모음 */
     const rows = ord.map(i => { const r = G[i], c = wbLinkCat(r), gap = dir==='dash' && c!==last ? `<tr class="wbl-grp"><td colspan="5">${wbEsc(c)}</td></tr>` : ''; last = c;
       return gap + `<tr${r.ok ? '' : ' class="off"'} data-wblr data-wblt="${wbEsc(r.tool)}" data-wblc="${wbEsc(c)}" data-wblne="${wbLinkEmpty(r.now) ? '비어 있음' : '값 있음'}" data-wblve="${r.val ? '값 있음' : '없음'}"><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td>${dir==='get' ? `<span class="wbl-tool">${wbEsc(r.tool)}</span> ` : ''}${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`; }).join('');
-    return `<section class="wbl-sec" data-wbls="${dir}"><h4>${title}</h4><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th>
-      <th>${dir==='get' ? fb(dir, 'tool', '무엇을') : '무엇을'}</th><th>${fb(dir, 'cat', '이 도구의 어디에 (덮어씀)')}</th><th>${fb(dir, 'ne', '지금 그 자리')}</th><th>${fb(dir, 've', '가져올 것')}</th></tr></thead>
+    return `<section class="wbl-sec" data-wbls="${dir}"><div class="wbl-h"><h4>${title}</h4><label class="wbl-ve"><input type="checkbox" data-wblvx> 가져올 값 없는 줄 빼기</label></div><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th>
+      <th>${dir==='get' ? fb(dir, 'tool', '무엇을') : '무엇을'}</th><th>${fb(dir, 'cat', '이 도구의 어디에 (덮어씀)')}</th><th>이 도구의 지금 값</th><th>가져올 값</th></tr></thead>
       <tbody>${rows}</tbody></table>
       <div class="wbl-act"><button type="button" class="btn small pri" data-wblgo="${dir}"${G.some(r => r.ok) ? '' : ' disabled'}>${btn}</button></div></section>`; };
   wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('dash', '대시보드에서 가져오기', '체크한 것 가져오기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
     <div class="dvi-foot"><span class="muted">복사입니다. 가져온 뒤 한쪽을 고쳐도 다른 쪽은 그대로입니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbl-box'); }
 /* 거르기 적용: WB.lkf[dir][열] = 뺀 값들. 묶음 머리 줄도 그 묶음 줄이 다 숨으면 숨김 */
 function wbLinkFilt(sec){ const F = (WB.lkf || {})[sec.dataset.wbls] || {};
-  sec.querySelectorAll('tr[data-wblr]').forEach(tr => { tr.hidden = Object.entries(F).some(([c, X]) => X.size && X.has(tr.dataset[WBLCOL[c]])); });
+  const vx = !!(sec.querySelector('[data-wblvx]') || {}).checked;
+  sec.querySelectorAll('tr[data-wblr]').forEach(tr => { tr.hidden = (vx && tr.dataset.wblve==='없음') || Object.entries(F).some(([c, X]) => X.size && X.has(tr.dataset[WBLCOL[c]])); });
   sec.querySelectorAll('tr.wbl-grp').forEach(g => { let n = g.nextElementSibling, any = false; while(n && !n.classList.contains('wbl-grp')){ if(!n.hidden) any = true; n = n.nextElementSibling; } g.hidden = !any; });
   sec.querySelectorAll('[data-wblfb]').forEach(b => { const c = b.dataset.wblfb.split(':')[1]; b.classList.toggle('on', !!(F[c] && F[c].size)); }); }
 /* 열 머리 ▾ 누르면 값 목록 (체크 = 보임). (모두) 로 한 번에 */
@@ -594,6 +595,7 @@ function wbLinkMenu(btn){ const old = document.querySelector('.wbl-fm'); const s
   const m = document.createElement('div'); m.className = 'wbl-fm'; m.dataset.for = btn.dataset.wblfb;
   m.innerHTML = `<label class="all"><input type="checkbox" data-wblfa${X.size ? '' : ' checked'}> (모두)</label>${vals.map(v => `<label><input type="checkbox" data-wblfv="${wbEsc(v)}"${X.has(v) ? '' : ' checked'}> ${wbEsc(v)}</label>`).join('')}`;
   btn.closest('th').appendChild(m); }
+document.addEventListener('change', e => { if(e.target.matches && e.target.matches('[data-wblvx]')) wbLinkFilt(e.target.closest('.wbl-sec')); });
 document.addEventListener('click', e => { if(!e.target.closest) return; const b = e.target.closest('[data-wblfb]'); if(b){ e.preventDefault(); wbLinkMenu(b); return; }
   const m = document.querySelector('.wbl-fm'); if(m && !e.target.closest('.wbl-fm')) m.remove(); });
 document.addEventListener('change', e => { const m = e.target.closest && e.target.closest('.wbl-fm'); if(!m) return; const [dir, col] = m.dataset.for.split(':'), X = WB.lkf[dir][col];
