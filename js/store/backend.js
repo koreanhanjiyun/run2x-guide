@@ -193,9 +193,9 @@ window.Backend = (function(){
       await setMyTeam(c, tid, null);
       return {current: tid===c.team, deleted}; },
     /* 백업: 모든 시즌의 진행 상태·우리 팀 값, 논의, 이번 시즌 설정을 파일 하나로 (차단 목록·비밀번호는 넣지 않음) */
-    BACKUP_COLS: ['status','val','dv','mass','drivers','dtab','qa','meta'],
+    BACKUP_COLS: ['status','val','dv','mass','drivers','dtab','tp','qa','meta'],   /* tp = 도구별 팀 프리셋 (2026-11-12) */
     /* 문서 안에 시즌별 값(s: {시즌: …})을 두는 컬렉션: 불러오기 때 고른 시즌만 바꿈 */
-    SEASON_COLS: ['val','dv','mass','drivers','dtab'],
+    SEASON_COLS: ['val','dv','mass','drivers','dtab','tp'],
     async exportData(){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team, data = {};
       for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); data[col] = {}; q.docs.forEach(d=>{ data[col][d.id] = d.data(); }); }
       return {format:'run2x-team-backup', version:2, team:c.teamName, exportedAt:new Date().toISOString(), data}; },
@@ -235,6 +235,15 @@ window.Backend = (function(){
       for(let i=0;i<ops.length;i+=400){ const b = fs.batch(); ops.slice(i,i+400).forEach(o=> o[0]==='del' ? b.delete(fs.doc(o[1])) : b.set(fs.doc(o[1]), o[2])); await b.commit(); }
       return n; },
     /* 마지막으로 보던 위치를 계정에도 저장 (다른 기기에서 이어 보기, A2) */
+    /* 프리셋 (2026-11-12): 내 프리셋 = users/<나>/presets/<도구>__<0|1|2> (도구마다 3개), 팀 프리셋 = teams/<팀>/tp/<파트 코드>__<도구> = {s:{시즌:{…}}} (도구마다 1개, 담당 파트장 · 회장).
+       값은 {name, at, json} — json = 도구 내보내기 파일 글 (Firestore 는 배열 안 배열을 못 담아 글로) */
+    async presetList(tool){ const c = await teamCtx(); if(!c.uid) return null; const q = await c.F.fs.collection('users/'+c.uid+'/presets').get();
+      return q.docs.filter(d => d.id.startsWith(tool + '__')).map(d => Object.assign({slot: +d.id.split('__')[1]}, d.data())).sort((a, b) => a.slot - b.slot); },
+    async presetSave(tool, slot, o){ const c = await teamCtx(); if(!c.uid) throw err('anon', '로그인이 필요합니다.'); await c.F.fs.doc(`users/${c.uid}/presets/${tool}__${slot}`).set(o); },
+    async presetDel(tool, slot){ const c = await teamCtx(); if(!c.uid) return; await c.F.fs.doc(`users/${c.uid}/presets/${tool}__${slot}`).delete(); },
+    async teamPresetGet(id){ const c = await teamCtx(); if(!c.team) return null; const d = await c.F.fs.doc(`teams/${c.team}/tp/${id}`).get(); return d.exists ? d.data() : null; },
+    async teamPresetPut(id, season, o){ const c = await teamCtx(); if(!c.team) throw err('noteam', '팀이 없습니다.'); const ref = c.F.fs.doc(`teams/${c.team}/tp/${id}`), d = await ref.get();
+      const s = Object.assign({}, (d.exists && d.data().s) || {}); s[season] = Object.assign({}, o, {by: c.uid, byName: c.name || ''}); await ref.set({s}); },
     async saveLast(json){ const c = await teamCtx(); if(!c.uid) return; await c.F.fs.doc('users/'+c.uid).set({last: String(json).slice(0,4000)}, {merge:true}); },
     async mine(){ const c = await teamCtx(); return Object.entries(c.myTeams||{}).map(([id,name])=>({id, name})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko')); },
     /* 플랫폼 문의: 종류·위치(탭·단계·항목)와 함께. 개발자는 처리 상태를 바꾸고, 반복해서 부적절한 문의를 보내는 계정을 차단 */
