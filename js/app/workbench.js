@@ -232,7 +232,7 @@ function wbShellHTML(){ const T = wbT();
         <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
         <button type="button" class="btn small" data-wbimp>가져오기 .json</button><i class="wb-sep" aria-hidden="true"></i>
-        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구에서 값 · 표를 가져오거나 보냄 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
+        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구 · 대시보드에서 값 · 표를 가져옴 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
         ${T.share==='hp' ? `<details class="wb-hpdd"><summary class="btn small" title="도구 5 · 6 · 7 · 8 이 같은 하드포인트 한 벌을 씁니다 (이 브라우저 안). 어느 도구에서 고쳐도 다른 도구가 열 때 그 값을 씁니다.">하드포인트 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbhp="xlsx">내보내기 .xlsx</button><button type="button" class="btn small" data-wbhp="json">내보내기 .json</button><button type="button" class="btn small" data-wbhp="imp">가져오기 (.xlsx · .csv · .json)</button></span></details><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
@@ -563,18 +563,48 @@ async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
 /* 대시보드에서 가져오기 (예전 [대시보드 값으로 채우기], 2026-11-11): 대시보드 키가 있는 입력마다 한 줄 */
 function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
   return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; return ''; }}; }); }
-function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.links() : null) || {}; L.dash = wbDashRows(); WB.lk = L;
-  const sec = (dir, title, btn) => { const G = L[dir] || []; if(!G.length) return '';
-    return `<section class="wbl-sec"><h4>${title}</h4><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th><th>무엇을</th><th>${dir==='send' ? '받는 도구의 어디에 (덮어씀)' : '이 도구의 어디에 (덮어씀)'}</th><th>지금 그 자리</th><th>${dir==='send' ? '보낼 것' : '가져올 것'}</th></tr></thead>
-      <tbody>${G.map((r, i) => `<tr${r.ok ? '' : ' class="off"'}><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td><span class="wbl-tool">${wbEsc(r.tool)}</span> ${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`).join('')}</tbody></table>
+/* [도구 연결]: 가져오기만 (다른 도구로 보내기는 없음 — 한 도구가 다른 도구 값을 멋대로 바꾸는 일, 2026-11-12).
+   거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에 · 지금 그 자리 (값 있음 / 비어 있음) · 가져올 것 (값 있음 / 없음). 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
+   대시보드는 묶음끼리 모으고 묶음마다 줄 띄움 */
+const wbLinkCat = r => r.cat || String(r.to || '').replace(/<[^>]+>/g, '').replace(/^(입력|편집) › /, '').split(' › ')[0].replace(/ \(.*$/, '');
+const wbLinkEmpty = v => { const t = String(v == null ? '' : v).replace(/<[^>]+>/g, '').trim(); return !t || t==='—' || t==='비어 있음' || /^—( ·|$)/.test(t) && !/[0-9]/.test(t); };
+const WBLCOL = {tool:'wblt', cat:'wblc', ne:'wblne', ve:'wblve'};
+function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.links() : null) || {}; L.dash = wbDashRows(); delete L.send; WB.lk = L; WB.lkf = {get:{}, dash:{}};
+  const fb = (dir, col, nm) => `<span class="wbl-th">${nm}<button type="button" class="wbl-fb" data-wblfb="${dir}:${col}" aria-label="${nm} 거르기" title="거르기">▾</button></span>`;
+  const sec = (dir, title, btn) => { const G = L[dir] || []; if(!G.length) return ''; let last = null;
+    const first = {}; G.forEach((r, i) => { const c = wbLinkCat(r); if(!(c in first)) first[c] = i; });
+    const ord = G.map((r, i) => i).sort((x, y) => dir==='dash' ? first[wbLinkCat(G[x])] - first[wbLinkCat(G[y])] || x - y : x - y);   /* 대시보드는 묶음끼리 모음 */
+    const rows = ord.map(i => { const r = G[i], c = wbLinkCat(r), gap = dir==='dash' && c!==last ? `<tr class="wbl-grp"><td colspan="5">${wbEsc(c)}</td></tr>` : ''; last = c;
+      return gap + `<tr${r.ok ? '' : ' class="off"'} data-wblr data-wblt="${wbEsc(r.tool)}" data-wblc="${wbEsc(c)}" data-wblne="${wbLinkEmpty(r.now) ? '비어 있음' : '값 있음'}" data-wblve="${r.val ? '값 있음' : '없음'}"><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td>${dir==='get' ? `<span class="wbl-tool">${wbEsc(r.tool)}</span> ` : ''}${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`; }).join('');
+    return `<section class="wbl-sec" data-wbls="${dir}"><h4>${title}</h4><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th>
+      <th>${dir==='get' ? fb(dir, 'tool', '무엇을') : '무엇을'}</th><th>${fb(dir, 'cat', '이 도구의 어디에 (덮어씀)')}</th><th>${fb(dir, 'ne', '지금 그 자리')}</th><th>${fb(dir, 've', '가져올 것')}</th></tr></thead>
+      <tbody>${rows}</tbody></table>
       <div class="wbl-act"><button type="button" class="btn small pri" data-wblgo="${dir}"${G.some(r => r.ok) ? '' : ' disabled'}>${btn}</button></div></section>`; };
-  wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('dash', '대시보드에서 가져오기', '체크한 것 가져오기')}${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('send', '다른 도구로 보내기', '체크한 것 보내기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
-    <div class="dvi-foot"><span class="muted">복사입니다. 가져오거나 보낸 뒤 한쪽을 고쳐도 다른 쪽은 그대로입니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbl-box'); }
+  wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('dash', '대시보드에서 가져오기', '체크한 것 가져오기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
+    <div class="dvi-foot"><span class="muted">복사입니다. 가져온 뒤 한쪽을 고쳐도 다른 쪽은 그대로입니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbl-box'); }
+/* 거르기 적용: WB.lkf[dir][열] = 뺀 값들. 묶음 머리 줄도 그 묶음 줄이 다 숨으면 숨김 */
+function wbLinkFilt(sec){ const F = (WB.lkf || {})[sec.dataset.wbls] || {};
+  sec.querySelectorAll('tr[data-wblr]').forEach(tr => { tr.hidden = Object.entries(F).some(([c, X]) => X.size && X.has(tr.dataset[WBLCOL[c]])); });
+  sec.querySelectorAll('tr.wbl-grp').forEach(g => { let n = g.nextElementSibling, any = false; while(n && !n.classList.contains('wbl-grp')){ if(!n.hidden) any = true; n = n.nextElementSibling; } g.hidden = !any; });
+  sec.querySelectorAll('[data-wblfb]').forEach(b => { const c = b.dataset.wblfb.split(':')[1]; b.classList.toggle('on', !!(F[c] && F[c].size)); }); }
+/* 열 머리 ▾ 누르면 값 목록 (체크 = 보임). (모두) 로 한 번에 */
+function wbLinkMenu(btn){ const old = document.querySelector('.wbl-fm'); const same = old && old.dataset.for===btn.dataset.wblfb; if(old) old.remove(); if(same) return;
+  const [dir, col] = btn.dataset.wblfb.split(':'), sec = btn.closest('.wbl-sec'), X = ((WB.lkf[dir] = WB.lkf[dir] || {})[col] = WB.lkf[dir][col] || new Set());
+  const vals = [...new Set([...sec.querySelectorAll('tr[data-wblr]')].map(tr => tr.dataset[WBLCOL[col]]))];
+  const m = document.createElement('div'); m.className = 'wbl-fm'; m.dataset.for = btn.dataset.wblfb;
+  m.innerHTML = `<label class="all"><input type="checkbox" data-wblfa${X.size ? '' : ' checked'}> (모두)</label>${vals.map(v => `<label><input type="checkbox" data-wblfv="${wbEsc(v)}"${X.has(v) ? '' : ' checked'}> ${wbEsc(v)}</label>`).join('')}`;
+  btn.closest('th').appendChild(m); }
+document.addEventListener('click', e => { if(!e.target.closest) return; const b = e.target.closest('[data-wblfb]'); if(b){ e.preventDefault(); wbLinkMenu(b); return; }
+  const m = document.querySelector('.wbl-fm'); if(m && !e.target.closest('.wbl-fm')) m.remove(); });
+document.addEventListener('change', e => { const m = e.target.closest && e.target.closest('.wbl-fm'); if(!m) return; const [dir, col] = m.dataset.for.split(':'), X = WB.lkf[dir][col];
+  if(e.target.matches('[data-wblfa]')){ m.querySelectorAll('[data-wblfv]').forEach(c => { c.checked = e.target.checked; c.checked ? X.delete(c.dataset.wblfv) : X.add(c.dataset.wblfv); }); }
+  else { const v = e.target.dataset.wblfv; e.target.checked ? X.delete(v) : X.add(v); m.querySelector('[data-wblfa]').checked = !X.size; }
+  wbLinkFilt(m.closest('.wbl-sec')); });
 function wbLinkGo(dir){ const m = $('#wbm'), G = (WB.lk || {})[dir] || []; if(!m) return;
-  const sel = [...m.querySelectorAll(`[data-wblk^="${dir}:"]:checked`)].map(c => G[+c.dataset.wblk.split(':')[1]]).filter(r => r && r.ok);
+  const sel = [...m.querySelectorAll(`[data-wblk^="${dir}:"]:checked`)].filter(c => !c.closest('tr').hidden).map(c => G[+c.dataset.wblk.split(':')[1]]).filter(r => r && r.ok);
   if(!sel.length){ toast('체크한 항목이 없습니다.'); return; }
   const msg = sel.map(r => { try{ return r.run(); }catch(e){ return `${r.n}: 실패`; } }).filter(Boolean);
-  wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast(dir==='dash' ? `대시보드 값 ${sel.length}개를 가져왔습니다.` : (dir==='get' ? '가져왔습니다 — ' : '보냈습니다 — ') + msg.join(' · ')); }
+  wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast(dir==='dash' ? `대시보드 값 ${sel.length}개를 가져왔습니다.` : '가져왔습니다 — ' + msg.join(' · ')); }
 /* 출처 표시: 모드별 {도구: {키: '도구 X'}} */
 const WBSRC_KEY = 'run2x.wb.src';
 const wbSrcAll = () => { try{ return JSON.parse(localStorage.getItem(wbMK(WBSRC_KEY)) || '{}') || {}; }catch(e){ return {}; } };
@@ -682,7 +712,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbput]')){ if(!wbExBlock()) wbPutOpen(); return; }
   if(t.closest('[data-wblink]')){ if(!wbExBlock()) wbLinkOpen(); return; }
   { const lg = t.closest('[data-wblgo]'); if(lg){ wbLinkGo(lg.dataset.wblgo); return; } }
-  { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { c.checked = la.checked; }); } }
+  { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { if(!c.closest('tr').hidden) c.checked = la.checked; }); } }
   if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }

@@ -30,8 +30,8 @@ WB_TOOLS['G'] = {
   inEff(k){ if(k==='tg_v'){ const o = WB.R && WB.R.out; return o && isFinite(o.tg_v_o) ? o.tg_v_o : null; } return null; },
   inLock(k){ if(k==='tg_v' && WB.I.tgv_m !== 1) return '기본 차 값'; if(k==='xcop') return WB.I.cop_m !== 0 ? '무게 배분과 같게' : ''; return ''; },
   inOpt(k){ const seg = (attr, cur, items) => `<span class="t2-inopt"><span class="dc-seg" role="group">${items.map(([v, t]) => `<button type="button" ${attr}="${v}" aria-pressed="${String(cur)===v}">${t}</button>`).join('')}</span></span>`;
-    if(k==='tg_v') return seg('data-gtg', Math.round(WB.I.tg || 0), GTGN) + seg('data-gtgm', WB.I.tgv_m===1 ? 1 : 0, [['0', '기본 차 값'], ['1', '직접 입력']]);   /* 목표값: 숫자 0 을 '기본 차 값' 스위치로 쓰지 않음 (2026-11-11) */
-    if(k==='xcop') return seg('data-gcop', WB.I.cop_m !== 0 ? 1 : 0, [['1', '무게 배분'], ['0', '직접']]);
+    if(k==='tg_v') return seg('data-gtg', Math.round(WB.I.tg || 0), GTGN) + seg('data-gtgm', WB.I.tgv_m===1 ? 1 : 0, [['0', '기본 차 값'], ['1', '값 입력']]);   /* 목표값: 숫자 0 을 '기본 차 값' 스위치로 쓰지 않음 (2026-11-11) */
+    if(k==='xcop') return seg('data-gcop', WB.I.cop_m !== 0 ? 1 : 0, [['1', '무게 배분'], ['0', '값 입력']]);
     return ''; },
   inputs:[
     {k:'tg', n:'가로축 목표 (0 가속 · 1 스키드패드 · 2 오토크로스 · 3 내구 · 4 출발 종가속도 · 5 횡가속도 · 6 내구 에너지)', u:'', v:1, d:0, g:GG.tg, ui:'none'},

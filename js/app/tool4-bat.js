@@ -21,23 +21,21 @@ const t4PM = (k, txt) => typeof t2GridParse!=='function' ? null : k==='c' ? t2Pa
 const t4CellI = () => ({cellO: t4Use('o')==='tab' ? t4PM('o', T4C.o) : null, cellR: t4Use('r')==='tab' ? t4PM('r', T4C.r) : null, cellC: t4Use('c')==='tab' ? t4PM('c', T4C.c) : null});
 /* 결과 아래: 셀 표 편집 · 온도 o_T 에서 SOC 별 출력 */
 /* 셀 표 (2026-11-12): 표 3개는 [편집] 탭 맨 아래 (칸마다 고치는 표, 다른 표와 같음), 셀 온도 · SOC 별 출력은 [결과] 탭 */
-const T4HEAD = {o:['SOC % \\ 셀 온도 °C', '25'], r:['SOC % \\ 셀 온도 °C', '25'], c:['셀 온도 °C', '용량 Ah']};
-function t4Grid(k){ const R = String(T4C[k] || '').replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split(/[,\t]/).map(c => c.trim()));
-  const G = R.length ? R : [T4HEAD[k].slice(), T4HEAD[k].map(() => '')]; if(G.length===1) G.push(G[0].map(() => ''));
-  const w = Math.max(...G.map(r => r.length)); return G.map(r => Array.from({length:w}, (_, i) => r[i] ?? '')); }
-const t4GridText = G => G.filter((r, i) => i===0 || r.some(v => String(v).trim()!=='')).map(r => r.join(', ')).join('\n');
+/* 셀 표 3개 = 2P 칸 표 그대로 (WBGRID 't4:o' · 't4:r' · 't4:c', 2026-11-12). 고르기 [아래 표 | 위 상수] · 표 꺼짐 줄도 2P 와 같음 (위 상수 = 셀 사양 카드) */
 const t4CSet = (k, txt) => { T4C[k] = txt; T4C.u = {...(T4C.u || {}), [k]:'tab'}; t4CSave(); };
+[['o', 'V'], ['r', 'mΩ'], ['c', '']].forEach(([k, u]) => { WBGRID['t4:' + k] = {get:() => T4C[k] || '', set(txt){ t4CSet(k, txt); wbPaint(['tabs']); wbCalcSoon(); }, repaint:() => wbPaint(['tabs']),
+  head:k==='c' ? ['셀 온도 °C', '용량 Ah'] : ['SOC % \\ 셀 온도 °C', '25'], map:k!=='c', rl:k==='c' ? '온도' : 'SOC', cl:'온도', cu:'°C',
+  parse:txt => k==='c' ? t2PairParse(txt) : t2GridParse(txt, u), bad:k==='c' ? '온도 · 용량 행을 읽지 못했습니다.' : '표를 읽지 못했습니다. 첫 행 = 셀 온도 °C, 첫 열 = SOC %.'}; });
+const t4ConstNote = k => { const I = WB.I; return k==='o' ? `셀 ${wbFmt(I.c_vmin, 2)} ~ ${wbFmt(I.c_vmax, 2)} V 직선 (SOC 0 ~ 100 %)` : k==='r' ? `셀 내부저항 ${wbFmt(I.c_r, 1)} mΩ 일정` : `셀 용량 ${wbFmt(I.c_ah, 2)} Ah 일정`; };
 function t4CellEdHTML(){ const P = (k, txt, u) => k==='c' ? t2PairParse(txt) : t2GridParse(txt, u);
-  const box = (k, nm, u, tpl) => { const use = t4Use(k), seg = t4Seg('data-t4cu', use, [['tab', '표'], ['const', '셀 값 칸']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t4cuk="${k}"`);
-    if(use==='const') return `<div class="t4-cbox off"><div class="t4-cbh"><b>${nm}</b>${seg}</div></div>`;   /* [셀 값 칸]이면 표는 안 그림 */
-    const p = P(k, T4C[k], u), G = t4Grid(k), pc = k!=='c';
-    const cell = (v, ri, ci) => ri===0 && (ci===0 || !pc) ? `<th class="muted">${ci===0 && pc ? 'SOC \\ 온도' : wbEsc(v)}</th>` : `<td><input type="text" inputmode="decimal" value="${wbEsc(v)}" data-t4rqc="${k}:${ri}:${ci}"${ri===0 || (ci===0 && pc) ? ' class="hd"' : ''}></td>`;
-    return `<div class="t4-cbox" data-wbneed="t4:${k}"><div class="t4-cbh"><b>${nm}</b>${seg}</div>
-      <div class="t4-cbt"><button type="button" class="btn small" data-t4cra="${k}:row">+ 행 (${pc ? 'SOC' : '온도'})</button>${pc ? `<button type="button" class="btn small" data-t4cra="${k}:col">+ 열 (온도)</button>` : ''}${String(T4C[k] || '').trim() ? `<button type="button" class="btn small" data-t4crx="${k}">표 지우기</button>` : ''}
-        <button type="button" class="btn small" data-t4ctpl="${tpl}">양식 .xlsx</button><label class="btn small">파일 가져오기<input type="file" accept=".xlsx,.csv,.txt" data-t4cfile="${k}" hidden></label></div>
-      <div class="t9-crq t4-crq" data-t4crq="${k}"><table class="t2-tt t9-rqt">${G.map((r, ri) => `<tr>${r.map((v, ci) => cell(v, ri, ci)).join('')}</tr>`).join('')}</table></div>
-      ${String(T4C[k] || '').trim() && !p.map ? '<span class="wb-err">읽지 못함</span>' : ''}</div>`; };
-  return `<div class="wb-ig wb-elh">셀 표 (SOC × 온도) <span class="wb-meta">도구 2P [축전지 › 셀 표]가 복사해 감 · 셀 값 칸이면 전압은 SOC 에 직선</span></div><div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres')}${box('c', '셀 용량 (Ah)', '', 'bcap')}</div>`; }
+  const box = (k, nm, u, tpl) => { const use = t4Use(k), p = P(k, T4C[k], u), has = String(T4C[k] || '').trim();
+    const seg = `<span class="t2-use"><span class="muted">계산에 쓸 값</span>${t4Seg('data-t4cu', use, [['tab', '아래 표'], ['const', '위 상수']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t4cuk="${k}"`)}</span>`;
+    const head = `<div class="t4-cbh"><b>${nm}</b>${seg}</div>`;
+    if(use==='const') return `<div class="t4-cbox off">${head}<div class="t2-mfold off"><b>표 꺼짐</b><span>${t4ConstNote(k)}</span></div></div>`;   /* [위 상수]면 표는 안 그림 */
+    return `<div class="t4-cbox" data-wbneed="t4:${k}">${head}
+      <div class="t4-cbt">${has ? `<span class="muted">${p.map ? p.msg : '<span class="wb-err">읽지 못함</span>'}</span>` : ''}<button type="button" class="btn small" data-t4ctpl="${tpl}">양식 .xlsx</button><label class="btn small">파일 가져오기<input type="file" accept=".xlsx,.csv,.txt" data-t4cfile="${k}" hidden></label>${has ? `<button type="button" class="btn small" data-t4crx="${k}">표 지우기</button>` : ''}</div>
+      <div class="t2-tw t4-gw">${t2GridTable('t4:' + k, T4C[k] || '')}</div></div>`; };
+  return `<div class="wb-ig wb-elh">셀 표 (SOC × 온도) <span class="wb-meta">도구 2P [축전지 › 셀 표]가 가져감</span></div><div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres')}${box('c', '셀 용량 (Ah)', '', 'bcap')}</div>`; }
 /* 온도에 따라 바뀌는 표를 쓰는지 (OCV · 내부저항 표의 온도 열이 다름, 용량 표의 용량이 다름). 없으면 셀 온도 칸 · 슬라이더 막음 (2026-11-12) */
 function t4TempDep(){ const I = t4CellI(), g = M => M && Array.isArray(M.n) && M.n.length > 1 && (M.e || []).some(r => r.some(v => v !== r[0]));
   return g(I.cellO) || g(I.cellR) || (Array.isArray(I.cellC) && I.cellC.length > 1 && I.cellC.some(q => q[1] !== I.cellC[0][1])); }
@@ -53,17 +51,8 @@ function t4CellHTML(){ const R = WB.R, o = R && R.out, f = t4F, T = R && R.soc, 
       ${row('셀 OCV', t => f(t.v, 3) + ' V')}${row('셀 내부저항', t => f(t.r, 2) + ' mΩ')}${row('팩 무부하 전압', t => f(t.oc, 1) + ' V')}${row('팩 내부저항', t => f(t.rp, 1) + ' mΩ')}
       ${row('팩 부하 전압', t => f(t.load, 1) + ' V')}${row('부하 시 셀 전압', t => f(t.loadCell, 3) + ' V')}${row('단자 출력', t => isFinite(t.power) ? f(t.power, 2) + ' kW' : '성립 불가')}
       ${row('최소 셀 전압 판정', t => `<span class="${t.ok ? 'ok' : 'wb-err'}">${t.load <= 0 ? '성립 불가' : t.ok ? '충족' : '미달'}</span>`)}</tbody></table></div>` : ''}</section>`; }
-/* 셀 표 칸 고치기 · 붙여넣기 · 행 · 열 · 지우기 */
-document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4rqc]')) return; const [k, ri, ci] = e.target.dataset.t4rqc.split(':'), G = t4Grid(k);
-  G[+ri][+ci] = e.target.value.trim(); t4CSet(k, t4GridText(G)); wbCalcSoon(); });
-document.addEventListener('paste', e => { if(WB.id!=='4' || !e.target.closest) return; const t = e.target.closest('[data-t4crq]'); if(!t) return;
-  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();   // 한 칸이면 그 칸에 그대로
-  const k = t.dataset.t4crq, v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n'), p = k==='c' ? t2PairParse(v) : t2GridParse(v);
-  if(!p.map){ toast('표를 읽지 못했습니다.'); return; } t4CSet(k, v); wbPaint(['tabs']); wbCalcSoon(); });
-document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return;
-  const a = e.target.closest('[data-t4cra]'); if(a){ const [k, w] = a.dataset.t4cra.split(':'), G = t4Grid(k); if(w==='row') G.push(G[0].map(() => '')); else G.forEach(r => r.push(''));
-    T4C[k] = G.map(r => r.join(', ')).join('\n'); T4C.u = {...(T4C.u || {}), [k]:'tab'}; t4CSave(); wbPaint(['tabs']); return; }
-  const x = e.target.closest('[data-t4crx]'); if(x){ const k = x.dataset.t4crx; t4CSet(k, ''); wbPaint(['tabs']); wbCalcSoon(); } });
+/* 셀 표 지우기 (칸 고치기 · 붙여넣기 · 행 · 열은 2P 칸 표 공통 처리) */
+document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return; const x = e.target.closest('[data-t4crx]'); if(x){ const k = x.dataset.t4crx; t4CSet(k, ''); wbPaint(['tabs']); wbCalcSoon(); } });
 /* 셀 온도 슬라이더 (−10 ~ 90 °C): 끄는 동안 숫자 칸 따라 바뀜, 놓으면 계산 */
 document.addEventListener('input', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4ots]')) return; const n = document.querySelector('#wb [data-t4ot]'); if(n) n.value = e.target.value; });
 document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4ots]')) return; WB.I.o_T = +e.target.value; wbSave(); wbCalcSoon(); });

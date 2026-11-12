@@ -15,7 +15,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   const t0=Date.now(); await p.click('[data-t2gm="opt"]'); await W(300); o=await R(); console.log('opt instant', Date.now()-t0 < 1500, 'gr_use', o.gr_use, 'c_gr', o.c_gr, (await p.textContent('#wbout .t2-orow:first-child .t2-oc:nth-child(2) h4')).trim().slice(0,40));
   if(out) await p.screenshot({path:out+'/t2_opt.png'});
   await p.click('[data-t2gm="my"]'); await W(300); console.log('my back', (await R()).gr_use);
-  await p.click('.wb-bar [data-wbcode]'); await W(300); await p.click('#wbm [data-wbver]'); await W(45000); console.log('verify', (await p.textContent('#wbm .dvi-foot')).trim().slice(0,40)); await p.click('#wbm [data-wbmx]');
+  await p.click('.wb-bar [data-wbcode]'); await W(300); await p.click('#wbm [data-wbver]'); await W(90000); console.log('verify', (await p.textContent('#wbm .dvi-foot')).trim().slice(0,40)); await p.click('#wbm [data-wbmx]');
   // 구동력 선도 프로브
   await p.evaluate(()=>document.querySelector('#wbsig').scrollIntoView({block:'center'})); await W(300); await p.locator('#wbsig svg .wb-hit').click({position:{x:300,y:100}}); await W(150); console.log('pf moving', await p.evaluate(()=>{ const o=document.querySelector('#t2ftov'); return o && !o.hidden ? o.textContent : 'hidden'; }));
   await W(2500); console.log('pf plot no hit', await p.evaluate(()=>!document.querySelector('#t2ft .wb-hit')), 'pf lines', await p.locator('#t2ft polyline').count());

@@ -527,11 +527,7 @@ document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest ||
 /* 내 코스 주행 성격: 기록 주행 (k_e = 1) / 내구 주행 (현실 운전자면 k_e 적용) */
 document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2fend]'); if(!b) return;
   T2.free.end = +b.dataset.t2fend === 1 ? 1 : 0; t2Save(); wbPaint(['ext']); wbCalcSoon(); });
-document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2to9]'); if(!b || b.disabled) return; if(b.dataset.t2to9==='send' && wbExBlock()) return;
-  if(b.dataset.t2to9==='send'){ const o = WB.R && WB.R.out; if(!o || !isFinite(o.c_qm)) return; let s = {}; try{ s = JSON.parse(localStorage.getItem(wbStoreKey('9')) || '{}') || {}; }catch(err){ s = {}; }
-    Object.assign(s, {L_m:+o.c_qm.toFixed(1), L_i:+o.c_qi.toFixed(1), L_b:+o.c_qb.toFixed(1), v:+o.c_vavg.toFixed(2), t_run:Math.round(o.c_trun), t_amb:WB.I.t_amb});
-    try{ localStorage.setItem(wbStoreKey('9'), JSON.stringify(s)); }catch(err){} }
-  if(WB_TOOLS['9']) wbOpen('9'); });
+document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2to9]'); if(!b || b.disabled) return; if(WB_TOOLS['9']) wbOpen('9'); });
 function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
   if(grp==='model') return t2ModelPage();
   if(grp==='cool') return t2CoolLite();
@@ -623,18 +619,24 @@ function t2CellOpen(td){ if(td.querySelector('input,select')) return; const [i, 
   else { f = document.createElement('input'); f.type = k==='note' || td.dataset.t2g ? 'text' : 'number'; f.step = 'any'; f.value = td.dataset.t2v!=null ? td.dataset.t2v : k==='note' || td.dataset.t2g ? now : String(now).replace(/,/g, ''); }
   f.className = 't2-ci'; td.textContent = ''; td.appendChild(f); f.focus(); if(f.select) f.select(); let done = false;
   const was = td.dataset.t2v!=null ? td.dataset.t2v : now;
-  const commit = ok => { if(done) return; done = true; if(ok && f.value!==was) (td.dataset.t2g ? t2GridEdit : t2Edit)(+i, td.dataset.t2g ? +k : k, f.value); else t2Repaint(); };
+  const gk = td.dataset.t2g && td.closest('[data-t2gk]') ? td.closest('[data-t2gk]').dataset.t2gk : T2.etab;
+  const commit = ok => { if(done) return; done = true; if(ok && f.value!==was){ if(td.dataset.t2g) t2GridEdit(+i, +k, f.value, gk); else t2Edit(+i, k, f.value); } else if(WBGRID[gk]) WBGRID[gk].repaint(); else t2Repaint(); };
   f.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); commit(true); } else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); commit(false); } });
   f.addEventListener('blur', () => commit(true)); if(f.tagName==='SELECT') f.addEventListener('change', () => commit(true)); }
 
 /* ============================================================ 맵 편집: 모터 토크 곡선 · 효율 맵 · 타이어 하중 감도 */
 const t2Grid = txt => t2Lines(txt).filter(l => l.cells.length).map(l => l.cells);
 const t2GridText = g => g.map(r => r.join(', ')).join('\n');
-const t2MtText = k => k==='mt' ? T2.mtext : T2[k];
+/* 다른 도구도 2P 칸 표를 그대로 씀 (2026-11-12): WBGRID[k] = {get() 글, set(글), repaint(), head 빈 표 머리 행, map 맵 (첫 행 · 첫 열 머리), rl 행 이름, cl 열 이름, cu 열 단위, parse(글) → {map}, bad 못 읽을 때 글}.
+   k 는 'rq:회로:블럭' · 't4:o' 처럼 ':' 가 든 이름 (2P 표 이름과 겹치지 않음) */
+const WBGRID = {};
+/* 방열 표 요약 글: t2GridParse 는 SOC % · 온도 °C 로 적으므로 코어 풍속 m/s · 냉각수 유량 L/min 으로 바꿈 */
+const t2RadMsg = txt => { const m = t2GridParse(txt, 'kW').msg; return m ? m.replace(/SOC ([^,]*?) %/, '코어 풍속 $1 m/s').replace(/(셀 )?온도 ([^,]*?) °C/, '냉각수 유량 $2 L/min') : '비어 있음'; };
+const t2MtText = k => WBGRID[k] ? WBGRID[k].get() : k==='mt' ? T2.mtext : T2[k];
 /* 표를 처음 채우면 그 표를 쓰도록 [표] 로 (기본은 상수, 2026-11-11) */
 const t2UseAuto = (k, had) => { if(k!=='mt' && !had && t2HasMap(k)) T2.use[k] = 'tab'; };
-function t2MtSet(k, txt){ const had = t2HasMap(k); wbSrcDel('2', 't2:' + k); if(k==='mt') T2.mtext = txt; else T2[k] = txt; t2UseAuto(k, had); t2Repaint(); t2Soon(); wbPaint(['in']); }
-function t2GridEdit(r, c, v){ const k = T2.etab, g = t2Grid(t2MtText(k)); if(!g[r]) return; g[r][c] = String(v).trim(); t2MtSet(k, t2GridText(g)); }
+function t2MtSet(k, txt){ if(WBGRID[k]){ WBGRID[k].set(txt); return; } const had = t2HasMap(k); wbSrcDel('2', 't2:' + k); if(k==='mt') T2.mtext = txt; else T2[k] = txt; t2UseAuto(k, had); t2Repaint(); t2Soon(); wbPaint(['in']); }
+function t2GridEdit(r, c, v, k = T2.etab){ const g = t2Grid(t2MtText(k)); if(!g[r]) return; g[r][c] = String(v).trim(); t2MtSet(k, t2GridText(g)); }
 const T2ERULE = {
   mt:   '1열 회전수 rpm · 2열 피크 토크 · 3열 연속 토크 N·m. 위 [모터 표 기준 전압]에서 잰 곡선을 축전지 단자 전압과 유도 전압 비로 늘이고 줄입니다. 한 열만 있으면 다른 열은 위 [연속 ÷ 피크 토크 비율]로 채웁니다 (100 % = 디레이팅 없음). 디레이팅은 모델 단계에서 모터 열을 켤 때만: 시작 온도에서 피크, 끝 온도부터 연속 토크, 그 사이는 회전수마다 같은 비율로 보간.',
   eM:   '첫 행 = 회전수 rpm, 첫 열 = 토크 N·m, 칸 = 효율 %. 숫자 하나면 상수. 모터 손실(열)은 이 효율로 계산합니다.',
@@ -665,7 +667,7 @@ function t2MapOff(k){ const I = WB.I, th = t2Th();
   return ''; }
 function t2MapEdit(k){ const txt = t2MtText(k), has = t2HasMap(k), empty = !t2UseMap(k), off = k!=='mt' ? t2MapOff(k) : '';
   if(off) return `<div class="t2-mth"><b>${T2MTITLE[k].split(' — ')[0]}</b><span class="muted"> — ${T2MTITLE[k].split(' — ')[1]}</span></div><div class="t2-mfold off"><b>표 꺼짐</b><span>${off}</span></div>`;
-  const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : T2RAD.includes(k) ? (t2GridParse(txt, 'kW').msg || '비어 있음').replace('셀 온도', '냉각수 유량').replace('SOC', '코어 풍속') : k==='bO' ? (t2GridParse(txt, 'V').msg || '비어 있음') : k==='bR' ? (t2GridParse(txt, 'mΩ').msg || '비어 있음') : k==='bC' ? (t2PairParse(txt).msg || '비어 있음') : k==='dM' || k==='dI' ? (t2DerParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
+  const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : T2RAD.includes(k) ? t2RadMsg(txt) : k==='bO' ? (t2GridParse(txt, 'V').msg || '비어 있음') : k==='bR' ? (t2GridParse(txt, 'mΩ').msg || '비어 있음') : k==='bC' ? (t2PairParse(txt).msg || '비어 있음') : k==='dM' || k==='dI' ? (t2DerParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
   const useSeg = k==='mt' ? '' : `<span class="t2-use"><span class="muted">계산에 쓸 값</span>${t2Seg('data-t2use', t2UseSel(k), [['tab', '아래 표'], ['const', '위 상수']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t2uk="${k}"`)}</span>`;
   /* 표가 비어 있으면 (위 상수를 씀) 아래 표 · 그림은 접어 둠 (2026-11-11). 모터 토크는 늘 표라 접지 않음 */
   /* [위 상수]를 고르면 아래 표 · 그림은 접음 (값이 있어도), [아래 표]를 고르면 펼침 (비어 있으면 새 파일에서 필수 칸) (2026-11-11) */
@@ -686,22 +688,23 @@ function t2MotorMsg(M){ const P = M.pts.length ? M.pts : M.ptsC, c = Math.max(1,
   if(!P.length) return '비어 있음';
   return `${P.length}점 · ${wbFmt(P[0][0], 0)} ~ ${wbFmt(P[P.length-1][0], 0)} rpm · ${M.pts.length ? `피크 ${wbFmt(mx(M.pts), 1)} N·m` : `피크 = 연속 ÷ ${wbFmt(c, 0)} %`} · ${M.ptsC.length ? `연속 ${wbFmt(mx(M.ptsC), 1)} N·m` : `연속 = 피크 × ${wbFmt(c, 0)} %`}`; }
 /* 칸 표: 행 지우기 ×(행 끝) · [+ 행](표 아래 한 행) · 맵은 열 지우기 ×(맨 아래 행) · [+ 열](표 오른쪽 한 열) */
-function t2GridTable(k, txt){ const g = t2Grid(txt), rd = T2RAD.includes(k), map = k==='eM' || k==='eI' || k==='eD' || k==='bO' || k==='bR' || rd, bm = k==='bO' || k==='bR';
-  const addRow = n => `<tr class="t2-addr"><td colspan="${n}"><button type="button" data-t2gadd="row">+ 행${rd ? ' (코어 풍속)' : bm ? ' (SOC)' : map ? ' (토크)' : ''}</button></td></tr>`;
-  if(!g.length) return `<table class="t2-tt t2-gtab" data-t2gk="${k}"><tbody><tr><td class="t2-empty muted">비어 있습니다. 엑셀 표를 복사해 이 표를 누르고 Ctrl+V, 또는 아래 [+ 행] · [입력하기]의 파일 가져오기.</td></tr>${addRow(1)}</tbody></table>`;
+function t2GridTable(k, txt){ const O = WBGRID[k], g = t2Grid(txt), rd = !O && T2RAD.includes(k), bm = !O && (k==='bO' || k==='bR'), map = O ? !!O.map : k==='eM' || k==='eI' || k==='eD' || k==='bO' || k==='bR' || rd;
+  const rl = O ? O.rl : rd ? '코어 풍속' : bm ? 'SOC' : map ? '토크' : '', cl = O ? O.cl : rd ? '유량' : bm ? '온도' : '회전수', cu = O ? O.cu : rd ? 'L/min' : bm ? '°C' : 'rpm';
+  const addRow = n => `<tr class="t2-addr"><td colspan="${n}"><button type="button" data-t2gadd="row">+ 행${rl ? ` (${rl})` : ''}</button></td></tr>`;
+  if(!g.length) return `<table class="t2-tt t2-gtab" data-t2gk="${k}"><tbody><tr><td class="t2-empty muted">비어 있습니다. 엑셀 표를 복사해 이 표를 누르고 Ctrl+V, 또는 아래 [+ 행]${O ? '' : ' · [입력하기]의 파일 가져오기'}.</td></tr>${addRow(1)}</tbody></table>`;
   const head = !isFinite(parseFloat(g[0][0])) || (map && g.length > 1), rows = head ? g.slice(1) : g, off = head ? 1 : 0, nc = g.reduce((a, r) => Math.max(a, r.length), 0);
   const cell = (r, c, v, th) => `<${th ? 'th' : 'td'} class="t2-e${c===0 && map && !th ? ' t2-rh' : ''}" data-t2e="${r},${c}" data-t2g="1" tabindex="0">${wbEsc(v ?? '')}</${th ? 'th' : 'td'}>`;
   const nr = (head ? 1 : 0) + rows.length + (map ? 1 : 0);
-  const addCol = map ? `<th class="t2-addc" rowspan="${nr}"><button type="button" data-t2gadd="col">+ 열<br><span>(${rd ? '유량' : bm ? '온도' : '회전수'})</span></button></th>` : '';
+  const addCol = map ? `<th class="t2-addc" rowspan="${nr}"><button type="button" data-t2gadd="col">+ 열<br><span>(${cl})</span></button></th>` : '';
   const x = (i, lab) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdel="${i}" aria-label="${lab} 지우기" title="${lab} 지우기">×</button></td>`;
   // 머리 행도 tbody 안에 둠: [+ 열] 칸의 rowspan 이 행 묶음(thead · tbody)을 넘지 못하므로
   return `<table class="t2-tt t2-gtab${map ? ' map' : ''}" data-t2gk="${k}"><tbody>${head ? `<tr class="t2-hrow">${Array.from({length:nc}, (_, c) => cell(0, c, g[0][c], true)).join('')}<th class="t2-xc"></th>${addCol}</tr>` : ''}
     ${rows.map((r, i) => `<tr data-t2row="${i + off}">${Array.from({length:nc}, (_, c) => cell(i + off, c, r[c])).join('')}${x(i + off, `${i + 1}번 행`)}${!head && i===0 ? addCol : ''}</tr>`).join('')}
-    ${map ? `<tr class="t2-delc"><td class="t2-xc"></td>${Array.from({length:nc - 1}, (_, c) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdelc="${c + 1}" aria-label="${c + 1}번 열 지우기" title="${c + 1}번 열 (${wbEsc(g[0][c + 1] ?? '')} ${rd ? 'L/min' : bm ? '°C' : 'rpm'}) 지우기">×</button></td>`).join('')}<td class="t2-xc"></td></tr>` : ''}
+    ${map ? `<tr class="t2-delc"><td class="t2-xc"></td>${Array.from({length:nc - 1}, (_, c) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdelc="${c + 1}" aria-label="${c + 1}번 열 지우기" title="${c + 1}번 열 (${wbEsc(g[0][c + 1] ?? '')} ${cu}) 지우기">×</button></td>`).join('')}<td class="t2-xc"></td></tr>` : ''}
     ${addRow(nc + 1 + (map ? 1 : 0))}</tbody></table>`; }
 /* 빈 표에 [+ 행 · 열]: 머리 행부터 만듦 */
 const T2HEAD = {mt:['회전수 rpm', '피크 토크 N·m', '연속 토크 N·m'], tire:['하중 N', 'μ'], bO:['SOC % \\ 셀 온도 °C', '25'], bR:['SOC % \\ 셀 온도 °C', '25'], bC:['셀 온도 °C', '용량 Ah'], eM:['토크 N·m \\ 회전수 rpm', '0'], rqM:['코어 풍속 m/s \\ 유량 L/min', '8'], rqI:['코어 풍속 m/s \\ 유량 L/min', '8'], rqB:['코어 풍속 m/s \\ 유량 L/min', '8'], eI:['토크 N·m \\ 회전수 rpm', '0'], eD:['모터 토크 N·m \\ 모터 회전수 rpm', '0'], dM:['모터 온도 °C', '디레이팅 %'], dI:['인버터 온도 °C', '디레이팅 %']};
-function t2GridAdd(k, what){ const g = t2Grid(t2MtText(k)); if(!g.length) g.push(T2HEAD[k].slice());
+function t2GridAdd(k, what){ const g = t2Grid(t2MtText(k)); if(!g.length) g.push((WBGRID[k] ? WBGRID[k].head : T2HEAD[k]).slice());
   const nc = g.reduce((a, r) => Math.max(a, r.length), 0);
   if(what==='col'){ g.forEach(r => { while(r.length < nc) r.push(''); r.push(''); }); }
   else g.push(Array.from({length:nc}, () => ''));
@@ -858,7 +861,7 @@ function t2SlalomTight(rows){ const I = WB.I, b = I.w_car/2 + Math.max(0, I.rl_m
   return rows.map((r, i) => isFinite(r.sl) && (W[i][0] < 2*b - 1e-9 || W[i][1] < 2*b - 1e-9) ? i + 1 : 0).filter(Boolean); }
 /* 내 코스 표에 Ctrl+V: 엑셀에서 복사한 여러 칸(탭 · 줄바꿈)이면 표 전체를 바꿈. 첫 행에 열 이름이 있으면 그 이름으로, 없으면 양식 열 순서로 읽음 */
 /* 표에 Ctrl+V (모터 · 효율 · 타이어 · 셀 표): 엑셀 여러 칸이면 표 전체를 바꿈 (한 칸이면 그 칸 입력에 그대로). 붙여넣기 창은 없음 (48차 · 내 코스와 같게) */
-function t2ApplyText(k, v){ const had0 = t2HasMap(k);
+function t2ApplyText(k, v){ if(WBGRID[k]){ if(!WBGRID[k].parse(v).map){ toast(WBGRID[k].bad || '표를 읽지 못했습니다.'); return false; } WBGRID[k].set(v); return true; } const had0 = t2HasMap(k);
   if(k==='mt'){ if(!t2MotorParse(v).pts.length){ toast('회전수 · 토크 행을 읽지 못했습니다.'); return false; } T2.mtext = v; }
   else if(k==='tire'){ if(!t2TireParse(v).map){ toast('하중 · μ 행을 읽지 못했습니다.'); return false; } T2.tire = v; }
   else if(k==='bO' || k==='bR'){ if(!t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 셀 온도 °C, 첫 열 = SOC %.'); return false; } T2[k] = v; }
@@ -868,7 +871,7 @@ function t2ApplyText(k, v){ const had0 = t2HasMap(k);
   else if(k==='eM' || k==='eI' || k==='eD'){ if(!t2EffParse(v).map){ toast('효율을 읽지 못했습니다. 숫자 하나 또는 맵(첫 행 회전수, 첫 열 토크)이어야 합니다.'); return false; } T2[k] = v; }
   else return false;
   t2UseAuto(k, had0); wbSrcDel('2', 't2:' + k); t2Save(); t2Repaint(); t2Soon(); wbPaint(['in']); return true; }
-document.addEventListener('paste', e => { if(WB.id!=='2' || T2.tab!=='edit' || !e.target.closest) return; const tb = e.target.closest('[data-t2gk]'); if(!tb) return;
+document.addEventListener('paste', e => { if(WB.id!=='2' || T2.tab!=='edit' || !e.target.closest) return; const tb = e.target.closest('[data-t2gk]'); if(!tb || WBGRID[tb.dataset.t2gk]) return;
   const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return;   // 한 칸 붙이기는 그 칸 입력에 그대로
   e.preventDefault(); const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
   if(t2ApplyText(tb.dataset.t2gk, v)) toast(`붙인 내용으로 ${T2ET[tb.dataset.t2gk] || '표'}를 바꿨습니다 (표 전체).`); });
@@ -997,7 +1000,7 @@ function t2PtToRow(i){ const c = T2.ecourse, rows = t2CourseRows(c), M = T2.mpE;
   let a = 0; for(let r = 0; r < rows.length; r++){ a += rows[r].l; if(s < a) return r; } return rows.length - 1; }
 function t2PickX(svg, e){ const hit = svg.querySelector('.t2-pick'); if(!hit) return NaN; const rc = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, px = (e.clientX - rc.left)/rc.width*vb.width;
   return +hit.dataset.wbx0 + (px - +hit.dataset.wbl)/(+hit.dataset.wbw)*(+hit.dataset.wbx1 - +hit.dataset.wbx0); }
-document.addEventListener('click', e => { const t = e.target; if(!t.closest || !t.closest('#wbext .t2-fbox')) return;
+document.addEventListener('click', e => { const t = e.target; if(!t.closest || !t.closest('#wbext .t2-fbox')) return; { const gt = t.closest('[data-t2gk]'); if(gt && WBGRID[gt.dataset.t2gk]) return; }   /* 다른 도구 표는 아래 공통 처리 */
   const rc = t.closest('#t2mc rect[data-ij]'); if(rc){ const [i, j] = rc.dataset.ij.split(',').map(Number); t2Hl($(`#t2tt [data-t2e="${i + 1},${j + 1}"]`)); return; }
   const sv = t.closest('#t2mc svg'); if(sv && sv.querySelector('.t2-pick')){ const x = t2PickX(sv, e), g = t2Grid(t2MtText(T2.etab)); let best = -1;
     g.forEach((r, i) => { const v = parseFloat(r[0]); if(isFinite(v) && (best < 0 || Math.abs(v - x) < Math.abs(parseFloat(g[best][0]) - x))) best = i; });
@@ -1222,6 +1225,18 @@ function t2VizMus(I){ const Z = Array.from({length:61}, (_, i) => i*50), mu = Z.
   return {x:{d:Z, n:'바퀴 하나 수직 하중', u:'N'}, ys:[{k:'mu', d:mu, c:WB_COL[0], n:'μ', u:'', dd:2}, {k:'fy', d:Fy, c:WB_COL[2], n:'낼 수 있는 횡력 μ·Fz', u:'N', dd:0}], act:'mu',
     note:`정지 때 바퀴 하나 평균 하중 약 ${wbFmt(I.m*9.81/4, 0)} N. μ·Fz 가 꺾여 내려가기 시작하면 하중을 더 실어도 그 바퀴 힘이 늘지 않습니다.`}; }
 
+/* 다른 도구의 칸 표 (WBGRID): 칸 누르기 · Enter 로 고침, 행 · 열 지우기 · 더하기, 표에 Ctrl+V 로 표 전체 바꿈 (2P 표와 같은 동작) */
+document.addEventListener('click', e => { const t = e.target; if(!t.closest) return; const tb = t.closest('[data-t2gk]'); if(!tb || !WBGRID[tb.dataset.t2gk]) return; const k = tb.dataset.t2gk;
+  const gd = t.closest('[data-t2gdel]'); if(gd){ const g = t2Grid(t2MtText(k)); g.splice(+gd.dataset.t2gdel, 1); t2MtSet(k, t2GridText(g)); return; }
+  const gc = t.closest('[data-t2gdelc]'); if(gc){ t2GridDelCol(k, +gc.dataset.t2gdelc); return; }
+  const ga = t.closest('[data-t2gadd]'); if(ga){ t2GridAdd(k, ga.dataset.t2gadd); return; }
+  const ce = t.closest('td[data-t2e], th[data-t2e]'); if(ce) t2CellOpen(ce); });
+document.addEventListener('keydown', e => { if(e.key!=='Enter' || !e.target.closest || e.target.matches('input,select')) return; const ce = e.target.closest('td[data-t2e], th[data-t2e]'), tb = ce && ce.closest('[data-t2gk]');
+  if(tb && WBGRID[tb.dataset.t2gk]){ e.preventDefault(); t2CellOpen(ce); } });
+document.addEventListener('paste', e => { if(!e.target.closest) return; const tb = e.target.closest('[data-t2gk]'); if(!tb || !WBGRID[tb.dataset.t2gk] || e.target.matches('input')) return;
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();
+  t2ApplyText(tb.dataset.t2gk, txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n')); });
+
 /* ============================================================ 이 탭 사용법 */
 function t2TourTab(tab, et, course){ if(!T2.tourUndo && typeof tgUndo==='function'){ const t0 = T2.tab, e0 = T2.etab, c0 = T2.course; T2.tourUndo = true;
     tgUndo(() => { T2.tourUndo = false; T2.tab = t0; T2.etab = e0; if(T2.course!==c0) t2SetCourse(c0); else wbPaint(['ext', 'mid']); }); }
@@ -1366,7 +1381,7 @@ WB_TOOLS['2'] = {
     {k:'tr_rss', n:'정상 요레이트 (해석해)', u:'°/s', d:3, hide:true}, {k:'tr_r', n:'요레이트 (3 s, 수치)', u:'°/s', d:3, hide:true}, {k:'tr_gain', n:'요레이트 이득 r/δ', u:'1/s', d:3, hide:true},
     {k:'tr_ay', n:'횡가속도 (3 s)', u:'g', d:3, hide:true}, {k:'tr_os', n:'요레이트 오버슈트', u:'%', d:1, hide:true}, {k:'tr_t90', n:'요레이트 응답 시간 (조향 50 % → 요레이트 90 %)', u:'s', d:3, hide:true},
     {k:'tr_wn', n:'고유진동수 (2 자유도)', u:'Hz', d:3, hide:true}, {k:'tr_zeta', n:'감쇠비 (2 자유도)', u:'', d:3, hide:true}, {k:'tr_beta', n:'차체 각도 β (3 s)', u:'°', d:3, hide:true},
-    {k:'tr_phi', n:'롤각 (3 s, 수치)', u:'°', d:3, hide:true}, {k:'tr_phis', n:'롤각 (정상, 해석해)', u:'°', d:3, hide:true}, {k:'tr_kus', n:'언더스티어 구배 (축 코너링 강성)', u:'°/g', d:3, hide:true}, {k:'tmax_o', dk:'tmax', n:'모터 최대 토크 (피크 토크 표 최댓값)', d:1, hide:true}, {k:'q_cool', dk:'q_cool', d:2, hide:true}, {k:'q_mot', dk:'q_mot', d:0, hide:true}, {k:'q_inv', dk:'q_inv', d:0, hide:true}, {k:'q_bat', dk:'q_bat', d:0, hide:true}, {k:'v_end_avg', dk:'v_end_avg', d:1, hide:true},
+    {k:'tr_phi', n:'롤각 (3 s, 수치)', u:'°', d:3, hide:true}, {k:'tr_phis', n:'롤각 (정상, 해석해)', u:'°', d:3, hide:true}, {k:'tr_kus', n:'언더스티어 구배 (축 코너링 강성)', u:'°/g', d:3, hide:true}, {k:'tmax_o', n:'모터 최대 토크 (피크 토크 표 최댓값)', u:'N·m', d:1, hide:true}   /* 설정값이라 대시보드로 안 보냄 (2026-11-12) */, {k:'q_cool', dk:'q_cool', d:2, hide:true}, {k:'q_mot', dk:'q_mot', d:0, hide:true}, {k:'q_inv', dk:'q_inv', d:0, hide:true}, {k:'q_bat', dk:'q_bat', d:0, hide:true}, {k:'v_end_avg', dk:'v_end_avg', d:1, hide:true},
     {k:'t_free1', n:'내 코스 1번째 랩', u:'s', d:2, hide:true}, {k:'t_free2', n:'내 코스 2번째 랩', u:'s', d:4, hide:true}, {k:'t_freeavg', n:'내 코스 평균 랩', u:'s', d:4, hide:true},
     {k:'n_free', n:'내 코스 랩 수', u:'랩', d:0, hide:true}, {k:'e_free', n:'내 코스 2번째 랩 단자 에너지', u:'kWh', d:5, hide:true},
     {k:'ax_0', n:'가속 출발 종가속도', u:'g', d:2, hide:true}, {k:'ax_max', n:'가속 최대 종가속도', u:'g', d:2, hide:true}, {k:'v_endtop', n:'내구 최고 차속', u:'km/h', d:1, hide:true}, {k:'skid_roll', n:'스키드패드 롤각 (모델 단계 1)', u:'°', d:3, hide:true}, {k:'c_tw', n:'냉각수 끝 온도', u:'°C', d:3, hide:true}, {k:'c_tb', n:'축전지 끝 온도', u:'°C', d:3, hide:true}, {k:'cla_req', n:'필요 C_L·A', u:'m²', d:2, hide:true},
@@ -1403,22 +1418,21 @@ WB_TOOLS['2'] = {
   links(){ const o = WB.R && WB.R.out, rd = id => { try{ return JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ return {}; } }, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
     const cs = cool => { const C = (cool && cool.circuits) || []; return C.some(c => (c.blocks || []).length) ? `수랭 회로 ${C.filter(c => c.kind==='water').length}개 · 공랭 덕트 ${C.filter(c => c.kind!=='water').length}개` : ''; };
     const c9 = typeof T9!=='undefined' ? cs(T9.cool) : '', C4 = typeof t4CellGet==='function' ? t4CellGet() || {} : {};
-    const tb = (k, src, unit, P) => ({tool:'도구 4', n:T2ET[k], to:`축전지 › ${T2ET[k]}`, now:t2HasMap(k) ? P(t2MtText(k)).msg || '있음' : '비어 있음', val:src ? P(src).msg || '있음' : '', ok:!!src, why:'도구 4 [셀 표]가 비어 있음',
+    const tb = (k, src, unit, P) => ({tool:'도구 4', n:T2ET[k], cat:'축전지', to:`축전지 › ${T2ET[k]}`, now:t2HasMap(k) ? P(t2MtText(k)).msg || '있음' : '비어 있음', val:src ? P(src).msg || '있음' : '', ok:!!src, why:'도구 4 [셀 표]가 비어 있음',
       run(){ const had = t2HasMap(k); T2[k] = src; t2UseAuto(k, had); t2Save(); wbSrcSet('2', ['t2:' + k], '도구 4'); return T2ET[k]; }});
     const s9 = rd('9'), U = k => ((WB_TOOLS['9'] && WB_TOOLS['9'].inputs.find(d => d.k===k)) || {}).u || '', ok2 = !!(o && isFinite(o.c_qm)), why2 = '랩 시뮬 탭에서 계산한 뒤 보낼 수 있음';
-    const put9 = (keys, vals, nm) => () => { const s = rd('9'); keys.forEach((k, i) => { s[k] = vals()[i]; }); try{ localStorage.setItem(wbStoreKey('9'), JSON.stringify(s)); }catch(e){} wbSrcSet('9', keys, '도구 2P'); return nm; };
     return {
-      get:[{tool:'도구 9', n:'냉각 회로 배치', to:'편집 › 냉각 › 냉각 회로 (수랭 방식이 [냉각 회로]일 때 씀)', now:cs(t2Cwc().cool) || '비어 있음', val:c9, ok:!!c9, why:'도구 9 에 배치가 없음',
-          run(){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); t2Save(); wbSrcSet('2', ['t2:cool'], '도구 9'); return '냉각 회로 배치'; }},
+      get:[{tool:'도구 9', n:'냉각 회로 배치 + 부품 수랭 / 공랭', cat:'냉각', to:'편집 › 냉각 › 냉각 회로 (수랭 방식 = [냉각 회로], 냉각수 온도 계산 켬)', now:cs(t2Cwc().cool) || '비어 있음',
+          val:c9 ? `${c9} · ${['m', 'i', 'b'].map((p, j) => `${['모터', '인버터', '축전지'][j]} ${t9IsWater(p) ? '수랭' : '공랭'}`).join(' · ')}` : '', ok:!!c9, why:'도구 9 에 배치가 없음',
+          run(){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); Object.assign(WB.I, {cw_mode:1, m_cool:t9IsWater('m'), i_cool:t9IsWater('i'), b_cool:t9IsWater('b'), cw_on:1}); t2Save(); wbSrcSet('2', ['t2:cool'], '도구 9'); return '냉각 회로 배치'; }},
+        {tool:'도구 9', n:'외기 온도', cat:'환경', to:'입력 › 외기 온도', now:`${f(WB.I.t_amb, 0)} °C`, val:isFinite(s9.t_amb) ? `${f(s9.t_amb, 0)} °C` : '', ok:isFinite(s9.t_amb), why:'도구 9 의 외기 온도가 비어 있음',
+          run(){ WB.I.t_amb = s9.t_amb; wbSrcSet('2', ['t_amb'], '도구 9'); return '외기 온도'; }},
+        (() => { const R6 = (() => { try{ return JSON.parse(localStorage.getItem(wbMK('run2x.t6.rows')) || 'null'); }catch(e){ return null; } })(), n6 = R6 && Array.isArray(R6.rows) ? R6.rows.length : 0, S = Array.isArray(T2.stab) ? T2.stab : [];
+          return {tool:'도구 6', n:'조향각 표 (핸들 각 → 안쪽 · 바깥 바퀴 각)', cat:'조향', to:'편집 › 서스 · 조향 › 조향 기하 (최대 조향각 · 조향비 칸은 이 표 값으로 잠김)', now:S.length ? `조향각 표 ${S.length}점` : '없음 (100 % 애커먼 · 일정 조향비)',
+            val:n6 >= 2 ? `핸들 각 0 ~ ${wbFmt(R6.hw, 0)}° · ${n6}점 (도구 6 마지막 계산)` : '', ok:n6 >= 2, why:'도구 6 을 한 번 계산하면 가져올 수 있음',
+            run(){ T2.stab = R6.rows.map(r => r.slice()); t2Save(); wbSrcSet('2', ['t2:stab'], '도구 6'); return `조향각 표 ${n6}점`; }}; })(),
         tb('bO', C4.o, 'V', t => t2GridParse(t, 'V')), tb('bR', C4.r, 'mΩ', t => t2GridParse(t, 'mΩ')), tb('bC', C4.c, '', t2PairParse)],
-      send:[{tool:'도구 9', n:'주행 평균 발열 (모터 손실 · 인버터 손실 · 축전지 발열)', to:'도구 9 › 주행 평균 발열 3칸', now:`${f(s9.L_m, 0)} · ${f(s9.L_i, 0)} · ${f(s9.L_b, 0)} W`, val:ok2 ? `${f(o.c_qm, 0)} · ${f(o.c_qi, 0)} · ${f(o.c_qb, 0)} W` : '', ok:ok2, why:why2,
-          run:put9(['L_m', 'L_i', 'L_b'], () => [+o.c_qm.toFixed(1), +o.c_qi.toFixed(1), +o.c_qb.toFixed(1)], '주행 평균 발열')},
-        {tool:'도구 9', n:'평균 차속', to:'도구 9 › 평균 차속', now:`${f(s9.v, 1)} ${U('v')}`, val:ok2 ? `${f(o.c_vavg, 1)} km/h` : '', ok:ok2, why:why2, run:put9(['v'], () => [+o.c_vavg.toFixed(2)], '평균 차속')},
-        {tool:'도구 9', n:'주행 시간', to:'도구 9 › 주행 시간', now:`${f(s9.t_run, 0)} ${U('t_run')}`, val:ok2 ? `${f(o.c_trun, 0)} s` : '', ok:ok2, why:why2, run:put9(['t_run'], () => [Math.round(o.c_trun)], '주행 시간')},
-        {tool:'도구 9', n:'외기 온도', to:'도구 9 › 외기 온도', now:`${f(s9.t_amb, 0)} °C`, val:`${f(WB.I.t_amb, 0)} °C`, ok:isFinite(WB.I.t_amb), why:'이 도구의 외기 온도가 비어 있음', run:put9(['t_amb'], () => [WB.I.t_amb], '외기 온도')}],
-      info:['평균 발열 · 차속은 지금 랩 시뮬 결과 (고른 코스 · 랩) 의 평균입니다.',
-        '조향각 표는 도구 6 의 [도구 연결]에서 보냅니다 (이 도구에서 가져오려면 도구 6 계산 결과가 필요해서).',
-        '도구 1 · 4 · T 등의 설계값은 이 창 맨 위 [대시보드에서 가져오기]로 받습니다.'] }; },
+      info:[] }; },
   /* 뒤로가기 · 앞으로가기: 랩 시뮬 / 편집 탭 · 편집 묶음 · 코스 편집 쪽 */
   navGet: () => ({t:T2.tab, e:T2.etab, c:T2.ecourse}),
   navSet(s){ const tc = T2.tab!==s.t; T2.etab = s.e || T2.etab; T2.ecourse = s.c || T2.ecourse; T2.tab = s.t || T2.tab; T2.menu = ''; t2Save(); wbPaint(['ext']);
@@ -1432,6 +1446,8 @@ WB_TOOLS['2'] = {
   extSet(d){ if(!d || typeof d!=='object') return; t2Load(d); t2Save(); wbPaint(['ext', 'mid', 'in']); },
   /* 결과가 오면: 고른 모드를 꺼내 씀 (두 모드 모두 들어 있음) → 위 줄 · 지도 · 구동력 선도 */
   onResult(R){ if(R && R.modes) Object.assign(R, R.modes[T2.grMode]);
+    /* 시뮬 결과 중 도구 9 가 가져가는 값 (도구 9 [도구 연결]이 읽음, 2026-11-12) */
+    { const o = R && R.out; if(o && isFinite(o.c_qm)) try{ localStorage.setItem(wbMK('run2x.t2.res'), JSON.stringify({c_qm:o.c_qm, c_qi:o.c_qi, c_qb:o.c_qb, c_vavg:o.c_vavg, c_trun:o.c_trun})); }catch(e){} }
     if(T2.tab==='sim'){ const hr = $('#wbext .t2-hr'); if(hr) wbPaint(['ext']); t2MapRepaint(); t2PfSoon(); }
     else if(T2.etab==='mt'){ const c = $('#t2mc'); if(c) c.innerHTML = t2EditPlot('mt'); const f = $('#wbext .t2-fcap'); if(f) f.innerHTML = t2EditCap('mt'); } },
   onCursor(){ t2MapRepaint(); t2PfSoon(); },

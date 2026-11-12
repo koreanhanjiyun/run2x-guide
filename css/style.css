@@ -3322,7 +3322,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 /* 냉각 등 배치 행: 같은 행 카드 높이 · 모서리 맞춤 (2026-11-11) */
 .t2-cg .t2-lay{align-items:stretch}.t2-cg .t2-lay>div{display:flex;flex-direction:column}.t2-cg .t2-lay>div>*{flex:1 1 auto;box-sizing:border-box}
 /* [도구 연결]로 받을 수 있는 칸: 파란 테두리 (빈 필수면 안쪽만 빨강, 테두리는 파랑) */
-.wb-ir.wb-lnk input:not(:disabled),.t2-tw.wb-lnk{border-color:#2f6fd0!important}
+.wb-ir.wb-lnk input:not(:disabled),.t2-tw.wb-lnk{border-color:#2f6fd0!important;background:#eef4ff!important}   /* 다른 도구 · 대시보드에서 받을 수 있는 칸: 파란 테두리 + 옅은 파란 배경 (2026-11-12) */
 #wb.wb-needon .wb-ir.need.wb-lnk input{border-color:#2f6fd0!important;box-shadow:0 0 0 1px #2f6fd0 inset!important;background:#fff4f2!important}
 
 /* 계산하지 않을 때(빈 필수 칸 등) 자리 표시는 멈춘 빈 상자, 계산 중일 때만 움직임 (2026-11-11) */
@@ -3342,3 +3342,19 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 #wb.wb-needon .t4-cbox.need .t4-crq{box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7;border-color:transparent}
 .t4-ots{width:200px;accent-color:var(--accent,#6A4294)}.t4-bd{padding:2px 9px;border-radius:999px;background:var(--soft,#f3f5f8)}.t4-bd b{margin-left:4px}
 .t4-oi input:disabled{background:var(--soft,#f3f5f8);color:var(--mute,#6b7280);cursor:not-allowed}.t4-ots:disabled{opacity:.45;cursor:not-allowed}
+/* 85차: 다른 도구 표도 2P 칸 표 (t2-tw) */
+.t4-gw,.t9-gw{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.t4-cbox .t2-mfold,.t9-crqb .t2-mfold{margin:0}
+.t4-gw,.t9-gw{height:auto}
+#wb.wb-needon .t4-cbox.need .t4-gw,#wb .t9-crqb.need .t9-gw{box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7;border-color:transparent}
+/* 86차: [도구 연결] 거르기 · 대시보드 묶음 줄 */
+.wbl-filt{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:4px 0 8px;font-size:12.5px}.wbl-filt select{font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel)}
+.wbl-filt label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.wbl-t tr.wbl-grp td{padding:14px 6px 4px;font-size:12px;font-weight:700;color:var(--ink);background:transparent;border-bottom:1px solid var(--line-2)}
+.wbl-t tbody tr.wbl-grp:first-child td{padding-top:4px}
+/* 87차: [도구 연결] 열 머리 거르기 (엑셀처럼) */
+.wbl-t th{position:relative}.wbl-th{display:inline-flex;align-items:center;gap:4px}
+.wbl-fb{border:1px solid var(--line-2);background:var(--panel);border-radius:4px;font-size:10px;line-height:1;padding:2px 4px;cursor:pointer;color:var(--muted)}
+.wbl-fb:hover{color:var(--ink)}.wbl-fb.on{background:#2f6fd0;border-color:#2f6fd0;color:#fff}
+.wbl-fm{position:absolute;top:100%;left:0;z-index:30;min-width:180px;max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:2px;padding:6px 8px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.16);font-weight:400;font-size:12.5px;white-space:nowrap}
+.wbl-fm label{display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer}.wbl-fm label.all{border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:2px}
