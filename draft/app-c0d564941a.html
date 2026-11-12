@@ -3360,6 +3360,10 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t4-cbox.off .t4-cbh,.t9-crqb.off{opacity:1}
 #wb.wb-needon .t4-cbox.need textarea{border-color:#d33a2c;box-shadow:0 0 0 1px #d33a2c inset;background:#fff8f7}
 #wb .t9-crqb.need .t9-crq{border-radius:6px;box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7}
+/* 83차: 도구 4 셀 표 (편집 탭 · 칸 표), 셀 온도 슬라이더, 충족 경계 */
+.t4-cbt{display:flex;flex-wrap:wrap;gap:6px}.t4-crq{min-height:0}.t4-crq .t9-rqt input{width:58px}
+#wb.wb-needon .t4-cbox.need .t4-crq{box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7;border-color:transparent}
+.t4-ots{width:200px;accent-color:var(--accent,#6A4294)}.t4-bd{padding:2px 9px;border-radius:999px;background:var(--soft,#f3f5f8)}.t4-bd b{margin-left:4px}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -10547,7 +10551,8 @@ function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') 
   const cut = g => sides ? g.replace(/^(앞|뒤) · /, '') : g;
   return `<div class="wb-ebar">${nav}</div>
     ${!sides && T.edLay ? wbEditLay(T.edLay(), groups) : groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
-    ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }
+    ${T.editTail ? T.editTail() : ''}
+    ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }   /* editTail: 도구가 편집 탭 맨 아래에 붙이는 것 (도구 4 셀 표) */
 /* 편집 배치 (도구가 T.edLay 를 줄 때, 2026-11-11): 구역 [{h 머리, n 열 수, cards:[{g 묶음, span 칸, k 카드 안 열 수}]}]. 항목이 적으면 한 행 여러 카드,
    많으면 카드를 넓혀 안에서 열을 나눔 (세로 순서대로 채움). 배치에 없는 묶음은 맨 아래 카드로 */
 function wbEditLay(L, groups){ const used = new Set();
@@ -17784,29 +17789,57 @@ function t4CellGet(){ const o = {}; ['o', 'r', 'c'].forEach(k => { o[k] = t4Use(
 const t4PM = (k, txt) => typeof t2GridParse!=='function' ? null : k==='c' ? t2PairParse(txt).map : t2GridParse(txt).map;
 const t4CellI = () => ({cellO: t4Use('o')==='tab' ? t4PM('o', T4C.o) : null, cellR: t4Use('r')==='tab' ? t4PM('r', T4C.r) : null, cellC: t4Use('c')==='tab' ? t4PM('c', T4C.c) : null});
 /* 결과 아래: 셀 표 편집 · 온도 o_T 에서 SOC 별 출력 */
-function t4CellHTML(){ const R = WB.R, o = R && R.out, f = t4F, T = R && R.soc, P = (k, txt, u) => k==='c' ? t2PairParse(txt) : t2GridParse(txt, u);
-  const box = (k, nm, u, tpl, ph) => { const p = P(k, T4C[k], u), use = t4Use(k), seg = t4Seg('data-t4cu', use, [['tab', '표'], ['const', '셀 값 칸']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t4cuk="${k}"`);
+/* 셀 표 (2026-11-12): 표 3개는 [편집] 탭 맨 아래 (칸마다 고치는 표, 다른 표와 같음), 셀 온도 · SOC 별 출력은 [결과] 탭 */
+const T4HEAD = {o:['SOC % \\ 셀 온도 °C', '25'], r:['SOC % \\ 셀 온도 °C', '25'], c:['셀 온도 °C', '용량 Ah']};
+function t4Grid(k){ const R = String(T4C[k] || '').replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split(/[,\t]/).map(c => c.trim()));
+  const G = R.length ? R : [T4HEAD[k].slice(), T4HEAD[k].map(() => '')]; if(G.length===1) G.push(G[0].map(() => ''));
+  const w = Math.max(...G.map(r => r.length)); return G.map(r => Array.from({length:w}, (_, i) => r[i] ?? '')); }
+const t4GridText = G => G.filter((r, i) => i===0 || r.some(v => String(v).trim()!=='')).map(r => r.join(', ')).join('\n');
+const t4CSet = (k, txt) => { T4C[k] = txt; T4C.u = {...(T4C.u || {}), [k]:'tab'}; t4CSave(); };
+function t4CellEdHTML(){ const P = (k, txt, u) => k==='c' ? t2PairParse(txt) : t2GridParse(txt, u);
+  const box = (k, nm, u, tpl) => { const use = t4Use(k), seg = t4Seg('data-t4cu', use, [['tab', '표'], ['const', '셀 값 칸']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t4cuk="${k}"`);
     if(use==='const') return `<div class="t4-cbox off"><div class="t4-cbh"><b>${nm}</b>${seg}</div></div>`;   /* [셀 값 칸]이면 표는 안 그림 */
-    return `<div class="t4-cbox" data-wbneed="t4:${k}"><div class="t4-cbh"><b>${nm}</b>${seg}${T4C[k].trim() ? `<span class="muted">${p.map ? p.msg : p.msg || '읽지 못함'}</span>` : ''}
-      <button type="button" class="btn small" data-t4ctpl="${tpl}">양식 .xlsx</button><label class="btn small">파일 가져오기<input type="file" accept=".xlsx,.csv,.txt" data-t4cfile="${k}" hidden></label></div>
-      <textarea data-t4ct="${k}" rows="6" spellcheck="false" placeholder="${wbEsc(ph)}">${wbEsc(T4C[k])}</textarea></div>`; };
-  const row = (nm, fn) => `<tr><td>${nm}</td>${T.map(t => `<td>${fn(t)}</td>`).join('')}</tr>`;
-  return `<section class="wb-sec t4-cell" aria-label="셀 표"><div class="wb-h"><h3>셀 표 (SOC × 온도)</h3><span class="wb-meta">도구 2P [축전지 › 셀 표]가 복사해 감 · 셀 값 칸이면 전압은 SOC 에 직선</span></div>
-    <div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv', 'SOC % \\ 셀 온도 °C, 0, 25, 45\n0, 3.0, 3.05, 3.07\n50, 3.66, 3.7, 3.71\n100, 4.15, 4.2, 4.2')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres', 'SOC % \\ 셀 온도 °C, 0, 25, 45\n0, 60, 30, 24\n50, 45, 22, 18\n100, 50, 24, 20')}${box('c', '셀 용량 (Ah)', '', 'bcap', '셀 온도 °C, 용량 Ah\n0, 3.6\n25, 4.0\n45, 4.05')}</div>
-    <div class="t4-bar"><b>셀 온도</b><label class="t4-oi"><input type="number" step="any" value="${Number.isFinite(WB.I.o_T) ? WB.I.o_T : 25}" data-t4ot aria-label="셀 온도"> °C</label>
+    const p = P(k, T4C[k], u), G = t4Grid(k), pc = k!=='c';
+    const cell = (v, ri, ci) => ri===0 && (ci===0 || !pc) ? `<th class="muted">${ci===0 && pc ? 'SOC \\ 온도' : wbEsc(v)}</th>` : `<td><input type="text" inputmode="decimal" value="${wbEsc(v)}" data-t4rqc="${k}:${ri}:${ci}"${ri===0 || (ci===0 && pc) ? ' class="hd"' : ''}></td>`;
+    return `<div class="t4-cbox" data-wbneed="t4:${k}"><div class="t4-cbh"><b>${nm}</b>${seg}</div>
+      <div class="t4-cbt"><button type="button" class="btn small" data-t4cra="${k}:row">+ 행 (${pc ? 'SOC' : '온도'})</button>${pc ? `<button type="button" class="btn small" data-t4cra="${k}:col">+ 열 (온도)</button>` : ''}${String(T4C[k] || '').trim() ? `<button type="button" class="btn small" data-t4crx="${k}">표 지우기</button>` : ''}
+        <button type="button" class="btn small" data-t4ctpl="${tpl}">양식 .xlsx</button><label class="btn small">파일 가져오기<input type="file" accept=".xlsx,.csv,.txt" data-t4cfile="${k}" hidden></label></div>
+      <div class="t9-crq t4-crq" data-t4crq="${k}"><table class="t2-tt t9-rqt">${G.map((r, ri) => `<tr>${r.map((v, ci) => cell(v, ri, ci)).join('')}</tr>`).join('')}</table></div>
+      ${String(T4C[k] || '').trim() && !p.map ? '<span class="wb-err">읽지 못함</span>' : ''}</div>`; };
+  return `<div class="wb-ig wb-elh">셀 표 (SOC × 온도) <span class="wb-meta">도구 2P [축전지 › 셀 표]가 복사해 감 · 셀 값 칸이면 전압은 SOC 에 직선</span></div><div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres')}${box('c', '셀 용량 (Ah)', '', 'bcap')}</div>`; }
+function t4CellHTML(){ const R = WB.R, o = R && R.out, f = t4F, T = R && R.soc;
+  const row = (nm, fn) => `<tr><td>${nm}</td>${T.map(t => `<td>${fn(t)}</td>`).join('')}</tr>`, tT = Number.isFinite(WB.I.o_T) ? WB.I.o_T : 25;
+  const bd = o && (o.s_bd===0 ? '전 구간 충족' : Number.isFinite(o.s_bd) ? `SOC ${f(o.s_bd, 1)} %` : '전 구간 미달');
+  return `<section class="wb-sec t4-cell" aria-label="SOC 별 출력"><div class="wb-h"><h3>SOC 별 출력</h3></div>
+    <div class="t4-bar"><b>셀 온도</b><label class="t4-oi"><input type="number" step="any" value="${tT}" data-t4ot aria-label="셀 온도"> °C</label>
+      <input type="range" class="t4-ots" min="-10" max="90" step="1" value="${Math.max(-10, Math.min(90, tT))}" data-t4ots aria-label="셀 온도 슬라이더">
+      ${bd ? `<span class="t4-bd">충족 경계 <b>${bd}</b></span>` : ''}
       ${o ? `<span class="muted">이 온도 셀 용량 ${f(o.cap_T, 2)} Ah · 팩 에너지 ${f(o.e_T, 3)} kWh (OCV 평균 ${f(o.ocv_mean, 3)} V) · 표 전류 ${f(o.o_i, 1)} A</span>` : ''}</div>
     ${T ? `<div class="t4-tw"><table class="dvi-t t4-t"><thead><tr><th>SOC</th>${T.map(t => `<th>${t.sc} %</th>`).join('')}</tr></thead><tbody>
       ${row('셀 OCV', t => f(t.v, 3) + ' V')}${row('셀 내부저항', t => f(t.r, 2) + ' mΩ')}${row('팩 무부하 전압', t => f(t.oc, 1) + ' V')}${row('팩 내부저항', t => f(t.rp, 1) + ' mΩ')}
       ${row('팩 부하 전압', t => f(t.load, 1) + ' V')}${row('부하 시 셀 전압', t => f(t.loadCell, 3) + ' V')}${row('단자 출력', t => isFinite(t.power) ? f(t.power, 2) + ' kW' : '성립 불가')}
       ${row('최소 셀 전압 판정', t => `<span class="${t.ok ? 'ok' : 'wb-err'}">${t.load <= 0 ? '성립 불가' : t.ok ? '충족' : '미달'}</span>`)}</tbody></table></div>` : ''}</section>`; }
+/* 셀 표 칸 고치기 · 붙여넣기 · 행 · 열 · 지우기 */
+document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4rqc]')) return; const [k, ri, ci] = e.target.dataset.t4rqc.split(':'), G = t4Grid(k);
+  G[+ri][+ci] = e.target.value.trim(); t4CSet(k, t4GridText(G)); wbCalcSoon(); });
+document.addEventListener('paste', e => { if(WB.id!=='4' || !e.target.closest) return; const t = e.target.closest('[data-t4crq]'); if(!t) return;
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();   // 한 칸이면 그 칸에 그대로
+  const k = t.dataset.t4crq, v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n'), p = k==='c' ? t2PairParse(v) : t2GridParse(v);
+  if(!p.map){ toast('표를 읽지 못했습니다.'); return; } t4CSet(k, v); wbPaint(['tabs']); wbCalcSoon(); });
+document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return;
+  const a = e.target.closest('[data-t4cra]'); if(a){ const [k, w] = a.dataset.t4cra.split(':'), G = t4Grid(k); if(w==='row') G.push(G[0].map(() => '')); else G.forEach(r => r.push(''));
+    T4C[k] = G.map(r => r.join(', ')).join('\n'); T4C.u = {...(T4C.u || {}), [k]:'tab'}; t4CSave(); wbPaint(['tabs']); return; }
+  const x = e.target.closest('[data-t4crx]'); if(x){ const k = x.dataset.t4crx; t4CSet(k, ''); wbPaint(['tabs']); wbCalcSoon(); } });
+/* 셀 온도 슬라이더 (−10 ~ 90 °C): 끄는 동안 숫자 칸 따라 바뀜, 놓으면 계산 */
+document.addEventListener('input', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4ots]')) return; const n = document.querySelector('#wb [data-t4ot]'); if(n) n.value = e.target.value; });
+document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4ots]')) return; WB.I.o_T = +e.target.value; wbSave(); wbCalcSoon(); });
 document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches) return; const t = e.target;
-  if(t.matches('[data-t4ct]')){ T4C[t.dataset.t4ct] = t.value; t4CSave(); wbCalcSoon(); return; }
   if(t.matches('[data-t4ot]')){ const v = +t.value; if(Number.isFinite(v)){ WB.I.o_T = v; wbSave(); wbCalcSoon(); } return; }
   if(t.matches('[data-t4cfile]')){ const f = t.files && t.files[0], k = t.dataset.t4cfile; t.value = ''; if(!f || typeof t2ReadCells!=='function') return;
     t2ReadCells(f).then(cells => { const txt = cells.map(r => r.map(c => String(c ?? '').trim()).join(', ').replace(/(, )+$/, '')).filter(l => l.replace(/[, ]/g, '') && !l.startsWith('#')).join('\n');
-      const p = k==='c' ? t2PairParse(txt) : t2GridParse(txt); if(!p.map){ toast('표를 읽지 못했습니다.'); return; } T4C[k] = txt; t4CSave(); wbPaint(['ext']); wbCalcSoon(); toast(`${f.name}: ${String(p.msg).replace(/<[^>]+>/g, '')}`); }).catch(err => toast(String(err.message || err))); } });
+      const p = k==='c' ? t2PairParse(txt) : t2GridParse(txt); if(!p.map){ toast('표를 읽지 못했습니다.'); return; } t4CSet(k, txt); wbPaint(['tabs']); wbCalcSoon(); toast(`${f.name}: ${String(p.msg).replace(/<[^>]+>/g, '')}`); }).catch(err => toast(String(err.message || err))); } });
 document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return; const s = e.target.closest('[data-t4cu]'); if(!s || s.disabled) return;
-  const k = s.closest('[data-t4cuk]').dataset.t4cuk; T4C.u = {...(T4C.u || {}), [k]:s.dataset.t4cu}; t4CSave(); wbPaint(['ext']); wbCalcSoon(); });
+  const k = s.closest('[data-t4cuk]').dataset.t4cuk; T4C.u = {...(T4C.u || {}), [k]:s.dataset.t4cu}; t4CSave(); wbPaint(['tabs']); wbCalcSoon(); });
 document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return; const b = e.target.closest('[data-t4ctpl]'); if(b && typeof t2Template==='function') t2Template(b.dataset.t4ctpl, 'xlsx'); });
 const t4F = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
 const t4Seg = (attr, cur, items) => `<span class="dc-seg" role="group">${items.map(([k, t]) => `<button type="button" ${attr}="${k}" aria-pressed="${cur===k}">${t}</button>`).join('')}</span>`;
@@ -17905,18 +17938,17 @@ WB_TOOLS['4'] = {
     {k:'t_ok10', n:'최소 셀 전압 판정 (전압 범위 10 %, 1 = 충족)', u:'', d:0, g:'전기', hide:true}, {k:'t_cell10', n:'부하 시 셀 전압 (전압 범위 10 %)', u:'V', d:3, g:'전기', hide:true},
     {k:'c_vmax_o', dk:'c_vmax', d:2, g:'셀 값 (대시보드 반영 확인용)', hide:true}, {k:'c_vnom_o', dk:'c_vnom', d:2, g:'셀 값 (대시보드 반영 확인용)', hide:true}, {k:'c_vmin_o', dk:'c_vmin', d:2, g:'셀 값 (대시보드 반영 확인용)', hide:true},
     {k:'c_ah_o', dk:'c_ah', d:2, g:'셀 값 (대시보드 반영 확인용)', hide:true}, {k:'c_imax_o', dk:'c_imax', d:1, g:'셀 값 (대시보드 반영 확인용)', hide:true}, {k:'c_ich_o', dk:'c_ich', d:1, g:'셀 값 (대시보드 반영 확인용)', hide:true}, {k:'c_r_o', dk:'c_r', d:2, g:'셀 값 (대시보드 반영 확인용)', hide:true},
-    {k:'cap_T', n:'셀 표 온도의 셀 용량', u:'Ah', d:2, g:'셀 표 (온도)'}, {k:'e_T', n:'셀 표 온도의 팩 에너지', u:'kWh', d:3, g:'셀 표 (온도)'}, {k:'ocv_mean', n:'셀 OCV 평균 (SOC 0 ~ 100 %)', u:'V', d:3, g:'셀 표 (온도)'},
+    {k:'s_bd', n:'최소 셀 전압 충족 경계 SOC (이 SOC 이상 충족, 0 = 전 구간, 빈칸 = 전 구간 미달)', u:'%', d:2, g:'셀 표 (온도)', hide:true}, {k:'cap_T', n:'셀 표 온도의 셀 용량', u:'Ah', d:2, g:'셀 표 (온도)'}, {k:'e_T', n:'셀 표 온도의 팩 에너지', u:'kWh', d:3, g:'셀 표 (온도)'}, {k:'ocv_mean', n:'셀 OCV 평균 (SOC 0 ~ 100 %)', u:'V', d:3, g:'셀 표 (온도)'},
     {k:'s_ocv100', n:'셀 OCV (SOC 100 %)', u:'V', d:3, g:'셀 표 (온도)', hide:true}, {k:'s_r50', n:'셀 내부저항 (SOC 50 %)', u:'mΩ', d:2, g:'셀 표 (온도)', hide:true}, {k:'s_rp50', n:'팩 내부저항 (SOC 50 %)', u:'mΩ', d:2, g:'셀 표 (온도)', hide:true},
     {k:'s_p50', n:'단자 출력 (SOC 50 %)', u:'kW', d:3, g:'셀 표 (온도)', hide:true}, {k:'s_load0', n:'팩 부하 전압 (SOC 0 %)', u:'V', d:2, g:'셀 표 (온도)', hide:true}, {k:'cell_tab', n:'쓴 셀 표 (1 OCV + 2 저항 + 4 용량)', u:'', d:0, g:'셀 표 (온도)', hide:true},
     {k:'c_g_o', dk:'c_g', d:1, g:'셀 값 (대시보드 반영 확인용)', hide:true}, {k:'n_seg_d', dk:'n_seg', d:0, g:'셀 값 (대시보드 반영 확인용)', hide:true},
   ],
-  extHTML: t4ExtHTML, midHTML: () => t4MidHTML() + t4CellHTML(),
+  extHTML: t4ExtHTML, midHTML: () => t4MidHTML() + t4CellHTML(), editTail: t4CellEdHTML,
   onResult(){ const r = document.getElementById('t4rules'); if(r) r.innerHTML = t4Rules(); const y = document.getElementById('t4why'); if(y) y.textContent = t4Why();
     const m = document.getElementById('wbmid'); if(m) m.innerHTML = t4MidHTML() + t4CellHTML(); },
   extraI: t4CellI,
   /* [표]를 골랐는데 빈 표 → 필수 (2026-11-12) */
-  needExt(){ if(wbEx()) return []; return [['o', '셀 OCV 표'], ['r', '셀 내부저항 표'], ['c', '셀 용량 표']].filter(([k]) => t4Use(k)==='tab' && !String(T4C[k] || '').trim()).map(([k, n]) => ({k:'t4:' + k, n, g:'셀 표'})); },
-  needGo(k){ if(!String(k).startsWith('t4:')) return false; if(WB.tab!=='res') wbTabSet('res'); return true; },   /* 셀 표는 결과 탭 아래에 있음 */
+  needExt(){ if(wbEx()) return []; return [['o', '셀 OCV 표'], ['r', '셀 내부저항 표'], ['c', '셀 용량 표']].filter(([k]) => t4Use(k)==='tab' && !t4PM(k, T4C[k])).map(([k, n]) => ({k:'t4:' + k, n, g:'셀 표'})); },
   extGet: () => ({cell:{...T4C, u:{...(T4C.u || {})}}, presets:JSON.parse(JSON.stringify(T4.presets))}),   /* .json 내보내기에 셀 표 · 저장한 셀도 */
   extSet(d){ if(!d || typeof d!=='object') return; if(d.cell){ ['o', 'r', 'c'].forEach(k => { if(typeof d.cell[k]==='string') T4C[k] = d.cell[k]; }); T4C.u = d.cell.u && typeof d.cell.u==='object' ? {...d.cell.u} : {}; } if(Array.isArray(d.presets)) T4.presets = d.presets.filter(p => p && typeof p.name==='string' && p.cell); t4CSave(); t4PSave(); wbPaint(['ext']); },
   exReset(){ try{ localStorage.removeItem(wbMK(T4CK)); localStorage.removeItem(wbMK(T4PK)); }catch(e){} Object.assign(T4C, {o:'', r:'', c:'', u:{}}); T4.presets = []; },
@@ -17947,6 +17979,12 @@ WB_TOOLS['4'] = {
      src:'120 V → 28, 6 MJ → ⌊6 ÷ (4.2 × 4.5 × 0.0036)⌋ = 88, 12 kg → 171, 600 V: ⌊600 ÷ (8 × 4.2)⌋ = ⌊17.86⌋ = 17 → 17S, 136 × 4.2 = 571.2 V'},
     {n:'2024 차 팩 · 40T 5 × 14S7P (셀 4.2 / 3.6 / 2.5 V, 4.0 Ah, 35 A, 충전 6 A, 12 mΩ, 70 g)', I:{c_ah:4.0, c_imax:35, c_ich:6, c_r:12, c_g:70, n_seg:5, s_seg:14, n_p:7}, expect:{n_s:70, r_pack:120, i_bms_max:245, i_chg:42, e_pack:7.056, v_pack_max:294, ej_seg:5.92704},
      src:'S = 5 × 14 = 70, R = (70 ÷ 7) × 12 = 120 mΩ, I = 35 × 7 = 245 A, 충전 6 × 7 = 42 A, 에너지 70 × 3.6 × 4.0 × 7 ÷ 1000 = 7.056 kWh, 294 V, 세그먼트 98 셀 × 4.2 × 4.0 × 0.0036 = 5.92704 MJ'},
+    {n:'충족 경계 SOC · 셀 표 없음 (SOC 직선), 270 A', I:{o_T:25}, expect:{s_bd:39.705882},
+     src:'셀 전압 강하 = 270 ÷ 6 × 0.015 = 0.675 V, OCV = 2.5 + 1.7 × SOC ÷ 100 ≥ 2.5 + 0.675 → SOC ≥ 0.675 ÷ 1.7 × 100 = 39.706 %'},
+    {n:'충족 경계 SOC · 표 전류 0 A 면 전 구간 충족', I:{o_T:25, o_mode:2, o_i:0}, expect:{s_bd:0},
+     src:'강하 0 → SOC 0 % 에서도 셀 2.5 V ≥ 2.5 V'},
+    {n:'충족 경계 SOC · 내부저항 표 (SOC 0 → 100 % 에 40 → 20 mΩ, 온도 무관), 270 A', I:{o_T:25, cellR:{n:[0, 50], t:[0, 100], e:[[40, 40], [20, 20]]}}, expect:{s_bd:69.230769},
+     src:'r = 40 − 0.2 SOC [mΩ], 셀 전류 45 A → 강하 = 0.045 (40 − 0.2 SOC) = 1.8 − 0.009 SOC [V]. 2.5 + 0.017 SOC ≥ 2.5 + 1.8 − 0.009 SOC → 0.026 SOC ≥ 1.8 → SOC ≥ 69.231 %'},
     {n:'셀 표 없음 · SOC 직선 (OCV 평균 = (최대 + 최소) ÷ 2)', I:{o_T:25}, expect:{ocv_mean:3.35, e_T:6.5124, cap_T:4.5, s_ocv100:4.2, s_r50:15, cell_tab:0},
      src:'OCV = 2.5 + 1.7 × SOC → 평균 3.35 V, 팩 에너지 = 72 × 6 × 4.5 × 3.35 ÷ 1000 = 6.5124 kWh'},
     {n:'셀 표 · OCV 표 (온도 0 · 50 °C, SOC 0 · 100 %) 를 25 °C 에서 이중선형', I:{o_T:25, cellO:{n:[0, 50], t:[0, 100], e:[[3.0, 3.2], [4.0, 4.2]]}}, expect:{s_ocv100:4.1, ocv_mean:3.6, e_T:6.9984, cell_tab:1},
@@ -18022,6 +18060,11 @@ function calc(I) {
   const TT = Number.isFinite(I.o_T) ? I.o_T : 25, ocvAt = sc => cO ? t4Bil(cO, TT, sc) : c.vmin + (c.vmax - c.vmin) * sc / 100, rAt = sc => cR ? t4Bil(cR, TT, sc) : c.r;
   const soc = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0].map(sc => { const v = ocvAt(sc), r = rAt(sc), Rp = S / p * r / 1000 + xr / 1000, load = v * S - Io * Rp, loadCell = v - Io / p * r / 1000;
     return { sc, v, r, oc: v * S, rp: Rp * 1000, load, loadCell, power: load > 0 ? Io * load / 1000 : NaN, ok: loadCell >= c.vmin - 1e-10 && load > 0 }; });
+  // 최소 셀 전압 충족 경계 SOC: 이 SOC 이상에서 늘 충족 (100 % 미달이면 NaN, 0 % 까지 충족이면 0). 0.5 % 간격으로 내려가며 첫 미달을 찾고 이분법
+  const okAt = sc => { const v = ocvAt(sc), r = rAt(sc), Rp = S / p * r / 1000 + xr / 1000; return v - Io / p * r / 1000 >= c.vmin - 1e-10 && v * S - Io * Rp > 0; };
+  let s_bd = NaN;
+  if (okAt(100)) { let hi = 100, lo = null; for (let k = 199; k >= 0; k--) { const sc = k * 0.5; if (!okAt(sc)) { lo = sc; break; } hi = sc; }
+    if (lo === null) s_bd = 0; else { for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (okAt(m)) hi = m; else lo = m; } s_bd = hi; } }
   const capT = cC ? t4Tab1(cC, TT) : c.ah, ocvMean = (() => { let s2 = 0; for (let k = 0; k <= 20; k++) s2 += ocvAt(k * 5) * (k === 0 || k === 20 ? 0.5 : 1); return s2 / 20; })();
   const out = {
     n_s: S, n_p_o: p, s_seg_o: s, n_seg_o: n, cells: cells * n, cells_seg: cells,
@@ -18033,7 +18076,7 @@ function calc(I) {
     rule_vp: S * c.vmax <= 600 + 1e-9 ? 1 : 0,   // 규정 팩 최대 전압 600 V (1 = 충족)
     rule_v: s * c.vmax <= 120 + 1e-9 ? 1 : 0, rule_e: ej <= 6 + 1e-9 ? 1 : 0, rule_m: mseg <= 12 + 1e-9 ? 1 : 0,   // 규정 충족 (1 = 충족)
     o_i: Io, t_load_max: tab[0].load, t_p_max: tab[0].power, t_loss: tab[0].loss, t_p_nom: tab[1].power, t_ok10: tab[6].ok ? 1 : 0, t_cell10: tab[6].loadCell,
-    o_T: TT, cap_T: capT, e_T: S * p * capT * ocvMean / 1000, ocv_mean: ocvMean, s_ocv100: soc[0].v, s_r50: soc[5].r, s_rp50: soc[5].rp, s_p50: soc[5].power, s_load0: soc[10].load, cell_tab: (cO ? 1 : 0) + (cR ? 2 : 0) + (cC ? 4 : 0),
+    o_T: TT, s_bd, cap_T: capT, e_T: S * p * capT * ocvMean / 1000, ocv_mean: ocvMean, s_ocv100: soc[0].v, s_r50: soc[5].r, s_rp50: soc[5].rp, s_p50: soc[5].power, s_load0: soc[10].load, cell_tab: (cO ? 1 : 0) + (cR ? 2 : 0) + (cC ? 4 : 0),
     c_vmax_o: c.vmax, c_vnom_o: c.vnom, c_vmin_o: c.vmin, c_ah_o: c.ah, c_imax_o: c.amps, c_ich_o: I.c_ich > 0 ? I.c_ich : NaN, c_r_o: c.r, c_g_o: c.g, n_seg_d: n,   // 셀 값 · 세그먼트 수 (대시보드 반영 확인용, 입력 그대로)
   };
   return { out, tab, why, soc };
