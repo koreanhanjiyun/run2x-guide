@@ -77,13 +77,18 @@ function initFigRail(){ if($('#figRail')) return;
   window.__figFit=fit; window.addEventListener('resize',()=>requestAnimationFrame(fit));
   /* 2026-11-12: 파트 패널과 같은 규칙 — 마우스를 올리면 펼침 · 빼면 접힘 · 머리를 누르면 📌 고정 (다시 누르기 · 바깥 · × · Esc 로 풂). 펼칠 때 railSnake (layout.js) */
   let pin=false, ti=0, to=0, want=false;
-  const hideMd=()=>{ md.hidden=true; try{ window.__modeAnim.stop(); }catch(e){} };
-  const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
-    const tourOn=((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture; if(pn && pn.animate && !tourOn){ pn.animate([{opacity:0, transform:'translateX(28px)'},{opacity:1, transform:'none'}],{duration:240, easing:'cubic-bezier(.2,.7,.3,1)'}); md.animate([{opacity:0},{opacity:1}],{duration:200}); }
+  /* 99차 고침: 배너는 늘 세로 그대로 (가로로 바뀌면 커서가 배너 밖으로 빠져 열림 · 닫힘이 되풀이됨). 그림 창은 열 때 밀려 들어오고 닫을 때 거꾸로 빠짐 */
+  const tourOn=()=>((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
+  const outStop=()=>{ (md._out||[]).forEach(a=>{ try{ a.cancel(); }catch(e){} }); md._out=null; };
+  const hideMd=()=>{ if(md.hidden) return; const pn=md.querySelector('.fm-panel'), end=()=>{ outStop(); if(want) return; md.hidden=true; try{ window.__modeAnim.stop(); }catch(e){} };
+    if(!pn || !pn.animate || tourOn()){ end(); return; } outStop();
+    md._out=[pn.animate([{opacity:1, transform:'none'},{opacity:0, transform:'translateX(28px)'}],{duration:200, easing:'cubic-bezier(.4,0,.8,.4)', fill:'forwards'}), md.animate([{opacity:1},{opacity:0}],{duration:220, fill:'forwards'})];
+    Promise.all(md._out.map(a=>a.finished)).then(end,()=>{}); };
+  const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); const back=!md.hidden && md._out; outStop(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
+    if(pn && pn.animate && !tourOn() && !back){ pn.animate([{opacity:0, transform:'translateX(28px)'},{opacity:1, transform:'none'}],{duration:240, easing:'cubic-bezier(.2,.7,.3,1)'}); md.animate([{opacity:0},{opacity:1}],{duration:200}); }
     requestAnimationFrame(()=>{ fit(); setTimeout(fit,300); }); }); };
-  const SO={apply:on=>fr.classList.toggle('open',on), isOpen:()=>fr.classList.contains('open'), in:()=>{ showMd(); return []; }, out:()=>{ hideMd(); return []; }, instant:on=>{ on?showMd():hideMd(); }};
   const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
-  const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; if(typeof railSnake==='function') railSnake(fr,on,SO); else { SO.apply(on); SO.instant(on); } };
+  const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; fr.classList.toggle('on',on); on?showMd():hideMd(); };
   const open=()=>go(true), close=()=>{ pin=false; pinCls(); go(false); };
   const over=()=>fr.matches(':hover') || !!(md.querySelector('.fm-panel') && md.querySelector('.fm-panel').matches(':hover'));
   const enter=()=>{ clearTimeout(to); to=0; if(!want) ti=setTimeout(open,150); }, leave=()=>{ clearTimeout(ti); if(!pin && !to) to=setTimeout(()=>{ to=0; if(!pin && !over()) go(false); },300); };

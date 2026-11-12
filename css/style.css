@@ -3370,4 +3370,4 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 #partRail.rs-anim,#figRail.rs-anim{overflow:hidden}
 #figRail.pin .rail-h::after{content:"📌"!important;font-size:11px;margin-left:2px}
 #partRail.rs-snake .rail-b{display:none}
-#partRail.rs-snake:not(.coll) .rail-h,#figRail.rs-snake.open .rail-h{flex:1 0 auto;align-items:flex-start}   /* 글자가 움직이는 동안 배너 전체를 머리 색으로 */
+#partRail.rs-snake{background:var(--char);box-shadow:none}   /* 글자가 움직이는 동안 ㄱ자 배너 전체를 머리 색으로 */
