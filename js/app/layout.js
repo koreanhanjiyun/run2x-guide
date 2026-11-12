@@ -81,15 +81,15 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
   const chars = () => { const t = sp.firstChild, R = []; if(!t || t.nodeType !== 3) return R; const r = document.createRange();
     for(let i = 0; i < t.length; i++){ const ch = t.data[i]; if(!ch.trim()) continue; r.setStart(t, i); r.setEnd(t, i + 1); const b = r.getBoundingClientRect(); R.push({ch, x: b.left + b.width/2, y: b.top + b.height/2}); } return R; };
   const box = () => { const b = el.getBoundingClientRect(); return {w: b.width, h: b.height}; };
-  const D = 300, ease = 'cubic-bezier(.45,0,.25,1)';
+  const D = 460, ease = 'cubic-bezier(.45,0,.25,1)';
   const snake = (fromOpen, done) => {   /* fromOpen = 지금 펼친 머리(가로)에서 접는 쪽으로 가는지 */
     const c0 = chars(), b0 = box(), h0 = hd.getBoundingClientRect().height + 2; st.stage = 'snake';
     (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = [];   /* 접을 때: 칩 거두기 높이 고정을 풀어야 세로 막대가 보임 */
     apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), h1 = hd.getBoundingClientRect().height + 2;
     const cs = getComputedStyle(sp), font = cs.font, col = getComputedStyle(hd).color; sp.style.color = 'transparent';
-    const n = Math.min(c0.length, c1.length);
+    const n = Math.min(c0.length, c1.length), paths = [];
     for(let i = 0; i < n; i++){ const V = fromOpen ? c1[i] : c0[i], Hz = fromOpen ? c0[i] : c1[i];   /* V 세로 자리, Hz 가로 자리 */
-      const P = [V, {x: V.x, y: Hz.y}, Hz]; if(fromOpen) P.reverse(); const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y);
+      const P = [V, {x: V.x, y: Hz.y}, Hz]; if(fromOpen) P.reverse(); const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y); paths.push({V, Hz, P, k: L1 + L2 ? L1/(L1 + L2) : .5});
       const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`; 
       const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(P[0]); document.body.appendChild(d); st.clones.push(d);   /* 애니메이션이 시작되기 전 한 장면도 출발 자리에 */
       st.anims.push(d.animate([{transform: tf(P[0]), offset: 0}, {transform: tf(P[1]), offset: L1 + L2 ? L1/(L1 + L2) : .5}, {transform: tf(P[2]), offset: 1}], {duration: D, easing: ease, fill: 'both'})); }
@@ -97,8 +97,14 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
     const W = fromOpen ? b0.w : b1.w, v = fromOpen ? b1.w : b0.w, Hm = fromOpen ? b1.h : b0.h, hh = fromOpen ? h0 : h1;
     el.style.width = W + 'px'; el.style.height = Math.max(Hm, hh) + 'px';
     const r = 10, shape = (L, B, rh, rb) => `path("M ${L + r} 0 H ${W} V ${B} H ${W - v + rb} A ${rb} ${rb} 0 0 1 ${W - v} ${B - rb} V ${hh} H ${L + rh} A ${rh} ${rh} 0 0 1 ${L} ${hh - rh} V ${r} A ${r} ${r} 0 0 1 ${L + r} 0 Z")`;   /* 왼쪽 모서리는 배너처럼 둥글게 */
-    const Vs = shape(W - v, Hm, 0, r), Hs = shape(0, hh, r, 0); el.style.clipPath = fromOpen ? Hs : Vs;
-    const A = el.animate([{clipPath: fromOpen ? Hs : Vs}, {clipPath: fromOpen ? Vs : Hs}], {duration: D, easing: ease, fill: 'both'}); st.anims.push(A);
+    /* 배너 끝을 글자에 붙임 (101차 고침: 글자만 먼저 가던 것): 가로 막대 왼쪽 끝 = 첫 글자, 세로 막대 아래 끝 = 끝 글자 위치에서 구해 장면 24개로 */
+    const at = (q, p) => { const P = q.P, k = q.k, f = p < k ? p/k : (p - k)/(1 - k), a = p < k ? P[0] : P[1], b = p < k ? P[1] : P[2]; return {x: a.x + (b.x - a.x)*f, y: a.y + (b.y - a.y)*f}; };
+    const fr = p => { if(!paths.length) return p; const h = paths[0], t = paths[paths.length - 1], a = at(h, p), z = at(t, p);
+      const fl = h.V.x === h.Hz.x ? p : Math.min(1, Math.max(0, (h.V.x - a.x)/(h.V.x - h.Hz.x))), fb = t.V.y === t.Hz.y ? p : Math.min(1, Math.max(0, (t.V.y - z.y)/(t.V.y - t.Hz.y)));
+      const L = (W - v)*(1 - fl), B = Hm - (Hm - hh)*fb; return shape(L, B, Math.min(r, W - v - L), Math.min(r, B - hh)); };
+    const KF = []; for(let k = 0; k <= 24; k++){ const p = k/24; KF.push({clipPath: fr(p), offset: p}); }   /* fr 은 글자 자리로만 구하므로 펼침 · 접힘 같은 식 */
+    el.style.clipPath = KF[0].clipPath;
+    const A = el.animate(KF, {duration: D, easing: ease, fill: 'both'}); st.anims.push(A);
     st.stage = 'snake'; const want = st.open;
     A.onfinish = () => { const rev = A.playbackRate < 0; sp.style.color = ''; (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; st.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; el.style.width = el.style.height = el.style.clipPath = ''; el.classList.remove('rs-snake');
       if(rev){ apply(fromOpen); el.classList.remove('rs-anim'); st.stage = ''; if(o.instant) o.instant(fromOpen); const w = st.open; st.open = null; if(w !== fromOpen) railSnake(el, w, o); return; }
