@@ -89,7 +89,7 @@ function dashCalc(){ const C = DASH.C; return DASHCALC(dashP(), {v:C.v, R: C.str
 /* 대시보드 예시값 빼기 (2026-11-11): 아무도 안 넣은 값은 — 로. 그림 · 조건 · 파트 그림은 필요한 값이 다 있을 때만 그림 */
 const dashEx = k => DASH.ST[k]==='ex';
 const dashMissing = () => DASH.GROUPS.flatMap(g => g[1].map(r => r[0])).filter(dashEx);
-const dashNoFig = what => `<p class="dp-note dv-nofig">대시보드 설계값 ${dashMissing().length}개가 비어 있어 ${what}을 그리지 않습니다. 위 설계값을 채우면 그립니다 (예시값은 쓰지 않음).</p>`;
+const dashNoFig = what => `<p class="dp-note dv-nofig">대시보드 설계값 ${dashMissing().length}개가 비어 있어 ${what}을 그리지 않습니다.</p>`;
 function dashValuesHTML(){ const P = DASH.P;
   const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
   const calc = (k, v, u, inv, need) => (need || []).some(dashEx) ? `<div class="dv-r calc ex"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>—</b></span><span class="dv-s s-calc" title="계산값 (넣지 않은 값이 있어 계산 안 함)"></span></dd></div>` : calc0(k, v, u, inv);
@@ -149,7 +149,7 @@ function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
   dashSync(); dashClamp(); const ss = $('#dvseason'); if(ss) ss.textContent = dvSeason() + ' 시즌';
   if(all || which.includes('vals')) $('#dvals').innerHTML = dashValuesHTML();
   const nf = dashMissing().length > 0;   /* 비어 있는 값이 있으면 그림 · 조건 대신 안내 */
-  if(all || which.includes('cond')){ $('#dcond').innerHTML = nf ? '<h3 class="dc-h">주행 조건</h3><p class="dp-note dv-nofig">설계값을 다 채우면 차속 · 코너 반경 · 종가속을 골라 그림을 봅니다.</p>' : dashCondHTML(); if(!nf) dashBipolar(); }
+  if(all || which.includes('cond')){ $('#dcond').innerHTML = nf ? '<h3 class="dc-h">주행 조건</h3><p class="dp-note dv-nofig">비어 있는 설계값이 있어 고를 수 없습니다.</p>' : dashCondHTML(); if(!nf) dashBipolar(); }
   if(all || which.includes('figs')) $('#dfigs').innerHTML = nf ? dashNoFig('그림') : dashFigsHTML();
   if(all || which.includes('part')) $('#dpart').innerHTML = dashPartHTML(); }
 /* 값 고치기: 누르면 입력칸 → Enter·바깥 누르기로 저장, Esc 취소. 처음 넣는 값은 '검토 중'
