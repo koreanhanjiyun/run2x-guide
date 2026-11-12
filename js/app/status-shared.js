@@ -17,9 +17,9 @@ const PGROUP = {'샤시':['프레임','서스','조향','제동','구동계','�
 const partOK = (ps, role, p) => { ps=ps||[]; return ps.includes(p) || Object.keys(PGROUP).some(g=>ps.includes(g) && PGROUP[g].includes(p)) || (role==='head' && p==='공통'); };
 /* 담당 표시: 고른 그대로 (묶음 먼저). 예전 저장분의 '공통'은 생략 */
 const partsShow = ps => { ps=ps||[]; return [...Object.keys(PGROUP).filter(k=>ps.includes(k)), ...ps.filter(p=>!PGROUP[p] && p!=='공통')]; };
-/* 모든 파트가 묶음 하나에 속하는지 확인 (디버깅 모드에서 경고) */
+/* 모든 파트가 묶음 하나에 속하는지 확인 (콘솔 경고) */
 addEventListener('load', ()=>setTimeout(()=>{ const bad=PARTS.map(p=>p[0]).filter(p=>p!=='공통' && Object.values(PGROUP).filter(g=>g.includes(p)).length!==1);
-  if(bad.length){ console.warn('[파트 묶음] 샤시·전기 중 하나에 속하지 않는 파트:', bad); if(window.DEBUG) try{ toast('파트 묶음 확인: '+bad.join('·')+' 이(가) 샤시·전기 어느 한쪽에 속하지 않습니다.'); }catch(e){} } }, 1500));
+  if(bad.length){ console.warn('[파트 묶음] 샤시·전기 중 하나에 속하지 않는 파트:', bad); } }, 1500));
 /* 이 항목의 진행 상태·우리 팀 값을 바꿀 수 있나: 회장 전부, 팀장·파트장은 담당 파트만 (H10). 팀 저장소가 없으면 이 브라우저에서 자유롭게 */
 /* 지난 시즌(보는 시즌 ≠ 팀의 이번 시즌) 기록은 회장만 고침. 파트장은 시즌마다 바뀌므로 회장 모르게 지난 기록이 바뀌지 않게 */
 const pastLock = () => SH.on && !SH.canAdmin && typeof viewingOther==='function' && viewingOther();

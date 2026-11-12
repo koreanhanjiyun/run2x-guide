@@ -231,7 +231,7 @@ function wbShellHTML(){ const T = wbT();
         <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
         <button type="button" class="btn small" data-wbimp>가져오기 .json</button><button type="button" class="btn small" data-wbpre>프리셋 ▾</button><i class="wb-sep" aria-hidden="true"></i>
-        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구 · 대시보드에서 값 · 표를 가져옴 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
+        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구 · 대시보드에서 값 · 표를 가져옴 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button>` : ''}${T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wbdreset title="대시보드 칸과 이어진 입력을 모두 지금 대시보드 값으로 되돌림 (대시보드에 값이 없는 칸은 그대로)">대시보드 값으로 초기화</button>` : ''}${T.links || T.inputs.some(d => d.dk && !d.ui) ? '<i class="wb-sep" aria-hidden="true"></i>' : ''}
         ${T.share==='hp' ? `<details class="wb-hpdd"><summary class="btn small" title="도구 5 · 6 · 7 · 8 이 같은 하드포인트 한 벌을 씁니다 (이 브라우저 안). 어느 도구에서 고쳐도 다른 도구가 열 때 그 값을 씁니다.">하드포인트 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbhp="xlsx">내보내기 .xlsx</button><button type="button" class="btn small" data-wbhp="json">내보내기 .json</button><button type="button" class="btn small" data-wbhp="imp">가져오기 (.xlsx · .csv · .json)</button></span></details><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
@@ -499,14 +499,14 @@ function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); 
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
   m.classList.remove('wb-exmode', 't2-edit', 'm1-on', 'm1-tabdim'); if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null;
   wbModeSet('nf'); WBNAV.last = '';
-  if(!WBNAV.pop && !window.DEBUG && typeof navState==='function'){ try{ history.pushState(navState(), '', location.hash); }catch(e){} } }   /* 단추로 닫으면 사이트 기록을 한 칸 (뒤로가기 = 닫기 전 도구 화면) */
+  if(!WBNAV.pop && typeof navState==='function'){ try{ history.pushState(navState(), '', location.hash); }catch(e){} } }   /* 단추로 닫으면 사이트 기록을 한 칸 (뒤로가기 = 닫기 전 도구 화면) */
 
 /* ---------- 도구 안 뒤로가기 · 앞으로가기 (2026-11-11) ----------
    도구를 열 때 기록을 한 칸 쌓고, 도구 안에서 화면이 바뀔 때마다(결과 · 편집 탭, 도구 하위 탭 T.navGet, 다른 도구로 건너가기) 한 칸씩.
    도구를 연 첫 화면에서 뒤로가기 = 도구를 닫고 도구 목록. 기록 칸 = {wb:{id, m 모드, t 탭, s 도구 하위 탭}} */
 const WBNAV = {last:'', pop:false};
 const wbNavSnap = () => { const T = wbT(); return {id:WB.id, m:WBMODE, t:wbTabs(T) ? (WB.tab || 'res') : '', s:T && T.navGet ? T.navGet() : null, bg:typeof TAB!=='undefined' ? TAB : ''}; };
-function wbNavPush(first){ if(window.DEBUG || WBNAV.pop || !WB.id) return; const s = wbNavSnap(), k = JSON.stringify(s); if(!first && k===WBNAV.last) return; WBNAV.last = k;
+function wbNavPush(first){ if(WBNAV.pop || !WB.id) return; const s = wbNavSnap(), k = JSON.stringify(s); if(!first && k===WBNAV.last) return; WBNAV.last = k;
   try{ if(first && typeof navState==='function') history.replaceState(navState(), '', location.hash); history.pushState({wb:s}, '', location.hash); }catch(e){} }
 document.addEventListener('click', e => { if(WB.id && e.target.closest && e.target.closest('#wb')) setTimeout(() => wbNavPush(false), 0); });
 window.addEventListener('popstate', e => { const s = e.state && e.state.wb;
@@ -609,6 +609,14 @@ function wbLinkGo(dir){ const m = $('#wbm'), G = (WB.lk || {})[dir] || []; if(!m
   if(!sel.length){ toast('체크한 항목이 없습니다.'); return; }
   const msg = sel.map(r => { try{ return r.run(); }catch(e){ return `${r.n}: 실패`; } }).filter(Boolean);
   wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast(dir==='dash' ? `대시보드 값 ${sel.length}개를 가져왔습니다.` : '가져왔습니다 — ' + msg.join(' · ')); }
+/* [대시보드 값으로 초기화] (2026-11-13, 모든 도구 같은 자리 · 같은 동작): 다른 도구에서 가져와 시험해 본 값을 팀 확정값(대시보드)으로 되돌림.
+   대시보드 칸과 이어진 입력(dk, 숨김 · 잠긴 칸 제외) 중 대시보드에 값이 있는 것만. 한 번 더 눌러야 실행 (3 s) */
+function wbDashReset(b){ if(wbExBlock()) return;
+  if(!b.dataset.sure){ b.dataset.sure = '1'; b.classList.add('sure'); b.textContent = '한 번 더 누르면 초기화'; setTimeout(() => { if(b.isConnected){ delete b.dataset.sure; b.classList.remove('sure'); b.textContent = '대시보드 값으로 초기화'; } }, 3000); return; }
+  const T = wbT(); let n = 0, same = 0;
+  T.inputs.filter(d => d.dk && !d.ui && !(T.inLock && T.inLock(d.k))).forEach(d => { const db = wbDash(d.dk); if(!db) return;
+    if(isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) same++; else { WB.I[d.k] = db.v; n++; } wbSrcDel(WB.id, d.k); });
+  wbSave(); wbPaint(); wbCalcSoon(); toast(n ? `${n}칸을 대시보드 값으로 바꿨습니다.` : same ? '이미 모두 대시보드 값입니다.' : '대시보드에 값이 있는 칸이 없습니다.'); }
 /* 출처 표시: 모드별 {도구: {키: '도구 X'}} */
 const WBSRC_KEY = 'run2x.wb.src';
 const wbSrcAll = () => { try{ return JSON.parse(localStorage.getItem(wbMK(WBSRC_KEY)) || '{}') || {}; }catch(e){ return {}; } };
@@ -727,6 +735,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbput]')){ if(!wbExBlock()) wbPutOpen(); return; }
   if(t.closest('[data-wblink]')){ if(!wbExBlock()) wbLinkOpen(); return; }
   { const lg = t.closest('[data-wblgo]'); if(lg){ wbLinkGo(lg.dataset.wblgo); return; } }
+  { const dr = t.closest('[data-wbdreset]'); if(dr){ wbDashReset(dr); return; } }
   { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { if(!c.closest('tr').hidden) c.checked = la.checked; }); } }
   if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }

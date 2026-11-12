@@ -41,14 +41,13 @@ loadLocalStatus();
 
 /* ---------- 0.30.1 상단 시즌·저장 상태 칩 (모두에게 항상 표시) ---------- */
 function updSeasonChip(){ let c=$('#seasonChip'); const ab=$('#tourBtn'); if(!c && ab){ c=document.createElement('span'); c.id='seasonChip'; c.setAttribute('role','status'); ab.after(c); } if(!c) return;
-  const st = window.DEBUG ? 'dbg' : (!window.__shReady ? 'wait' : (SH.on ? 'on' : 'off'));
-  c.className='sc-'+st; c.innerHTML=`<b>${esc(SEASON)} 시즌${viewingOther()?' 보는 중':''}</b><span class="sc-dot"></span><span>${st==='on'?'연결됨':st==='off'?'연결 안 됨':st==='dbg'?'디버깅':'연결 확인 중'}</span>`;
+  const st = !window.__shReady ? 'wait' : (SH.on ? 'on' : 'off');
+  c.className='sc-'+st; c.innerHTML=`<b>${esc(SEASON)} 시즌${viewingOther()?' 보는 중':''}</b><span class="sc-dot"></span><span>${st==='on'?'연결됨':st==='off'?'연결 안 됨':'연결 확인 중'}</span>`;
   c.title = `${SEASON} 시즌 (회장이 정한 이번 시즌)\n` + ({
     on:'● 연결됨: 팀과 공유 중입니다. 내가 바꾼 진행 상태·팀 값·논의가 팀원 모두에게 바로 보입니다.',
     off:'● 연결 안 됨: 팀과 공유되지 않습니다. 진행 상태·팀 값·논의는 저장할 수 없어 저장·변경 버튼이 잠깁니다. 읽기와 계산기는 그대로 쓸 수 있고, 연결되면 다시 켜집니다.',
-    wait:'● 연결 확인 중: 팀 공유 저장소에 연결하고 있습니다. 연결될 때까지 저장·변경 버튼이 잠깁니다.',
-    dbg:'● 디버깅: 팀과 공유되지 않습니다. 모든 버튼을 실제처럼 눌러 볼 수 있고, 바꾼 내용은 이 브라우저에만 디버깅 데이터로 남습니다. 끄려면 DBG 버튼 → 디버깅 끄기.' })[st];
-  document.body.classList.toggle('conn-off', st!=='on' && st!=='dbg');
+    wait:'● 연결 확인 중: 팀 공유 저장소에 연결하고 있습니다. 연결될 때까지 저장·변경 버튼이 잠깁니다.' })[st];
+  document.body.classList.toggle('conn-off', st!=='on');
   document.body.classList.toggle('no-write', st==='on' && SH.canWrite===false);
   document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-ro'); const ro = st==='on' && SH.canWrite===false; if(ro && !w){ w=document.createElement('p'); w.className='qa-warn qa-ro'; w.dataset.k='ro'; w.textContent='지금 권한(뷰어·댓글 작성자)으로는 글을 남길 수 없습니다. 읽기만 가능합니다.'; f.prepend(w); } else if(!ro && w) w.remove(); });
   document.querySelectorAll('.qa-f').forEach(f=>{ let w=f.querySelector('.qa-warn:not(.qa-ro)'); if(st==='off'){ if(!w){ w=document.createElement('p'); w.className='qa-warn'; w.textContent='연결 안 됨: 글은 써 둘 수 있지만 남기기는 연결된 뒤에 됩니다.'; f.prepend(w); } } else if(w) w.remove(); const nt=f.querySelector('.qa-note'); if(nt) nt.hidden = st==='off'; });

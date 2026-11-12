@@ -11,8 +11,7 @@ const PIC = {
     <tr><td>${chipPic('tc-green','Run2X · 2026','연결됨')}</td><td>정상. 팀과 공유 중</td></tr>
     <tr><td>${chipPic('tc-orange','Run2X · 2025','지난 시즌 보는 중')}</td><td>주의. 내 화면만 지난 시즌</td></tr>
     <tr><td>${chipPic('tc-orange','Run2X · 2026','저장 안 한 변경 2')}</td><td>주의. 아래 막대에서 저장</td></tr>
-    <tr><td>${chipPic('tc-orange','','연결 끊김')}</td><td>주의. 새로고침</td></tr>
-    <tr><td>${chipPic('tc-red','2026 시즌','디버깅')}</td><td>개발자 시험 중(공유 안 됨)</td></tr></table>`,
+    <tr><td>${chipPic('tc-orange','','연결 끊김')}</td><td>주의. 새로고침</td></tr></table>`,
   depth: `<div class="tc-depth"><div><b>단계</b> P3-1 휠 패키징 <span>펼치면 ↓</span></div><div class="d2"><b>항목</b> 스크럽 반경 <span>펼치면 ↓</span></div><div class="d3">배경 · 왜 하나 · <b>핵심</b> · 우리 팀 값 · 참고 · 질문 · 계산기 · 💬 논의</div></div>`,
   card: `<div class="tc-card"><div class="k">핵심 <span>이 항목에서 정할 것 (설계 결론)</span></div><div class="r">참고 <span>배경 설명</span></div><div class="t">우리 팀 값 <span>시즌마다 팀이 기록한 값</span></div><div class="q">질문 ▸ <span>펼쳐서 근거·유도·그림</span></div><div class="c">💬 논의 <span>팀원끼리 댓글</span></div></div>`,
   edit: `<div class="tc-flow"><span>[편집]</span>→<span>값 입력</span>→<span>[적용]</span>→<span class="pri">아래 막대 [모두 저장]</span></div><p class="tc-n">[적용]은 입력칸을 닫기만 하고, 팀원에게는 [모두 저장]을 눌러야 보입니다.</p>`,
@@ -96,7 +95,7 @@ const TOUR = {
  graph: GRAPH_TOUR,
  tools: [
   ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
-  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. 점 색은 확정·검토 중·가정·계산값입니다. 값을 누르면 고칩니다.',{tab:'tools'}],
+  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. 점 색은 확정·검토 중·가정·계산값입니다. 여기서는 고치지 않고, 각 도구의 [대시보드에 반영]으로만 바뀝니다.',{tab:'tools'}],
   ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]에 마우스를 올리면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
   ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
   ['#dcond','주행 조건','차속·코너 반경·종가속·에어로 포함 여부를 바꾸거나 예시 상황을 누르면 그림과 아래 숫자가 같이 바뀝니다.',{tab:'tools'}],

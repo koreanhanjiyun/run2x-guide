@@ -1,0 +1,5766 @@
+{
+ "format": "run2x-team-backup",
+ "version": 2,
+ "team": "Run2X 데모팀",
+ "exportedAt": "2026-11-10T00:00:00.000Z",
+ "note": "시험용 더미 팀 (tools/dummy/make.js 로 만듦). 실제 팀 [가져오기]에서는 members 를 쓰지 않음",
+ "members": {
+  "u1": {
+   "role": "admin",
+   "parts": [],
+   "name": "한회장(회장)",
+   "email": "admin@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "admin",
+     "parts": []
+    },
+    "2026": {
+     "role": "admin",
+     "parts": []
+    }
+   }
+  },
+  "u5": {
+   "role": "head",
+   "parts": [
+    "샤시"
+   ],
+   "name": "최샤시(팀장)",
+   "email": "chassis@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "head",
+     "parts": [
+      "샤시"
+     ]
+    },
+    "2026": {
+     "role": "head",
+     "parts": [
+      "샤시"
+     ]
+    }
+   }
+  },
+  "u6": {
+   "role": "head",
+   "parts": [
+    "전기",
+    "회로"
+   ],
+   "name": "정전기(팀장)",
+   "email": "elec@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "head",
+     "parts": [
+      "전기",
+      "회로"
+     ]
+    },
+    "2026": {
+     "role": "head",
+     "parts": [
+      "전기",
+      "회로"
+     ]
+    }
+   }
+  },
+  "u3": {
+   "role": "lead",
+   "parts": [
+    "서스",
+    "조향"
+   ],
+   "name": "박서스(파트장)",
+   "email": "lead@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "서스",
+      "조향"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "서스",
+      "조향"
+     ]
+    }
+   }
+  },
+  "u4": {
+   "role": "lead",
+   "parts": [
+    "배터리",
+    "냉각"
+   ],
+   "name": "이배터리(파트장)",
+   "email": "bat@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "배터리",
+      "냉각"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "배터리",
+      "냉각"
+     ]
+    }
+   }
+  },
+  "u2": {
+   "role": "member",
+   "parts": [],
+   "name": "김팀원(팀원)",
+   "email": "member@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "l0": {
+   "role": "lead",
+   "parts": [
+    "프레임"
+   ],
+   "name": "최서연(파트장)",
+   "email": "l0@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "프레임"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "프레임"
+     ]
+    }
+   }
+  },
+  "l1": {
+   "role": "lead",
+   "parts": [
+    "제동"
+   ],
+   "name": "정예린(파트장)",
+   "email": "l1@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "제동"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "제동"
+     ]
+    }
+   }
+  },
+  "l2": {
+   "role": "lead",
+   "parts": [
+    "구동계"
+   ],
+   "name": "강채원(파트장)",
+   "email": "l2@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "구동계"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "구동계"
+     ]
+    }
+   }
+  },
+  "l3": {
+   "role": "lead",
+   "parts": [
+    "모터컨트롤러"
+   ],
+   "name": "조도윤(파트장)",
+   "email": "l3@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "모터컨트롤러"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "모터컨트롤러"
+     ]
+    }
+   }
+  },
+  "l4": {
+   "role": "lead",
+   "parts": [
+    "회로"
+   ],
+   "name": "윤건우(파트장)",
+   "email": "l4@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "회로"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "회로"
+     ]
+    }
+   }
+  },
+  "l5": {
+   "role": "lead",
+   "parts": [
+    "데이터로거"
+   ],
+   "name": "장준서(파트장)",
+   "email": "l5@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "데이터로거"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "데이터로거"
+     ]
+    }
+   }
+  },
+  "l6": {
+   "role": "lead",
+   "parts": [
+    "에어로"
+   ],
+   "name": "임하은(파트장)",
+   "email": "l6@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "lead",
+     "parts": [
+      "에어로"
+     ]
+    },
+    "2026": {
+     "role": "lead",
+     "parts": [
+      "에어로"
+     ]
+    }
+   }
+  },
+  "x0": {
+   "role": "member",
+   "parts": [],
+   "name": "오다인",
+   "email": "m0@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x1": {
+   "role": "member",
+   "parts": [],
+   "name": "서시우",
+   "email": "m1@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x2": {
+   "role": "member",
+   "parts": [],
+   "name": "신현우",
+   "email": "m2@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x3": {
+   "role": "member",
+   "parts": [],
+   "name": "권태윤",
+   "email": "m3@demo.run2x",
+   "seasons": {
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x4": {
+   "role": "member",
+   "parts": [],
+   "name": "황지아",
+   "email": "m4@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x5": {
+   "role": "member",
+   "parts": [],
+   "name": "안지호",
+   "email": "m5@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x6": {
+   "role": "member",
+   "parts": [],
+   "name": "송소율",
+   "email": "m6@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x7": {
+   "role": "member",
+   "parts": [],
+   "name": "류주원",
+   "email": "m7@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x8": {
+   "role": "member",
+   "parts": [],
+   "name": "홍유나",
+   "email": "m8@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x9": {
+   "role": "member",
+   "parts": [],
+   "name": "김민준",
+   "email": "m9@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x10": {
+   "role": "member",
+   "parts": [],
+   "name": "이서준",
+   "email": "m10@demo.run2x",
+   "seasons": {
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x11": {
+   "role": "member",
+   "parts": [],
+   "name": "박은우",
+   "email": "m11@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x12": {
+   "role": "member",
+   "parts": [],
+   "name": "최서연",
+   "email": "m12@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x13": {
+   "role": "member",
+   "parts": [],
+   "name": "정예린",
+   "email": "m13@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x14": {
+   "role": "member",
+   "parts": [],
+   "name": "강채원",
+   "email": "m14@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x15": {
+   "role": "member",
+   "parts": [],
+   "name": "조도윤",
+   "email": "m15@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x16": {
+   "role": "member",
+   "parts": [],
+   "name": "윤건우",
+   "email": "m16@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x17": {
+   "role": "member",
+   "parts": [],
+   "name": "장준서",
+   "email": "m17@demo.run2x",
+   "seasons": {}
+  },
+  "x18": {
+   "role": "member",
+   "parts": [],
+   "name": "임하은",
+   "email": "m18@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x19": {
+   "role": "member",
+   "parts": [],
+   "name": "한수아",
+   "email": "m19@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x20": {
+   "role": "member",
+   "parts": [],
+   "name": "오다인",
+   "email": "m20@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x21": {
+   "role": "member",
+   "parts": [],
+   "name": "서시우",
+   "email": "m21@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x22": {
+   "role": "member",
+   "parts": [],
+   "name": "신현우",
+   "email": "m22@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x23": {
+   "role": "member",
+   "parts": [],
+   "name": "권태윤",
+   "email": "m23@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x24": {
+   "role": "member",
+   "parts": [],
+   "name": "황지아",
+   "email": "m24@demo.run2x",
+   "seasons": {
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x25": {
+   "role": "member",
+   "parts": [],
+   "name": "안지호",
+   "email": "m25@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x26": {
+   "role": "member",
+   "parts": [],
+   "name": "송소율",
+   "email": "m26@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x27": {
+   "role": "member",
+   "parts": [],
+   "name": "류주원",
+   "email": "m27@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x28": {
+   "role": "member",
+   "parts": [],
+   "name": "홍유나",
+   "email": "m28@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x29": {
+   "role": "member",
+   "parts": [],
+   "name": "김민준",
+   "email": "m29@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x30": {
+   "role": "member",
+   "parts": [],
+   "name": "이서준",
+   "email": "m30@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x31": {
+   "role": "member",
+   "parts": [],
+   "name": "박은우",
+   "email": "m31@demo.run2x",
+   "seasons": {
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x32": {
+   "role": "member",
+   "parts": [],
+   "name": "최서연",
+   "email": "m32@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x33": {
+   "role": "member",
+   "parts": [],
+   "name": "정예린",
+   "email": "m33@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x34": {
+   "role": "member",
+   "parts": [],
+   "name": "강채원",
+   "email": "m34@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    },
+    "2026": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  },
+  "x35": {
+   "role": "member",
+   "parts": [],
+   "name": "조도윤",
+   "email": "m35@demo.run2x",
+   "seasons": {
+    "2025": {
+     "role": "member",
+     "parts": []
+    }
+   }
+  }
+ },
+ "data": {
+  "status": {
+   "2025-g_score": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_score",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-01-14T00:00:00.000Z"
+   },
+   "2026-g_score": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_score",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-11T00:00:00.000Z"
+   },
+   "2025-g_mass": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_mass",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-01-15T00:00:00.000Z"
+   },
+   "2026-g_mass": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_mass",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-12T00:00:00.000Z"
+   },
+   "2025-g_balance": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_balance",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-01-16T00:00:00.000Z"
+   },
+   "2026-g_balance": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_balance",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-13T00:00:00.000Z"
+   },
+   "2025-g_ay": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_ay",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-01-17T00:00:00.000Z"
+   },
+   "2026-g_ay": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_ay",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-14T00:00:00.000Z"
+   },
+   "2025-g_energy": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_energy",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-01-18T00:00:00.000Z"
+   },
+   "2026-g_energy": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_energy",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-10-15T00:00:00.000Z"
+   },
+   "2025-g_aero": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_aero",
+    "part": "에어로",
+    "by": "l6",
+    "at": "2026-01-19T00:00:00.000Z"
+   },
+   "2026-g_aero": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_aero",
+    "part": "에어로",
+    "by": "l6",
+    "at": "2026-10-16T00:00:00.000Z"
+   },
+   "2025-g_cool": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_cool",
+    "part": "냉각",
+    "by": "u4",
+    "at": "2026-01-20T00:00:00.000Z"
+   },
+   "2026-g_cool": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_cool",
+    "part": "냉각",
+    "by": "u4",
+    "at": "2026-10-17T00:00:00.000Z"
+   },
+   "2025-ae_height": {
+    "v": "done",
+    "season": "2025",
+    "item": "ae_height",
+    "part": "에어로",
+    "by": "l6",
+    "at": "2026-01-21T00:00:00.000Z"
+   },
+   "2026-ae_height": {
+    "v": "done",
+    "season": "2026",
+    "item": "ae_height",
+    "part": "에어로",
+    "by": "l6",
+    "at": "2026-10-18T00:00:00.000Z"
+   },
+   "2025-g_lapsim": {
+    "v": "done",
+    "season": "2025",
+    "item": "g_lapsim",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-01-22T00:00:00.000Z"
+   },
+   "2026-g_lapsim": {
+    "v": "done",
+    "season": "2026",
+    "item": "g_lapsim",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-19T00:00:00.000Z"
+   },
+   "2025-p_tire": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_tire",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-23T00:00:00.000Z"
+   },
+   "2026-p_tire": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_tire",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-20T00:00:00.000Z"
+   },
+   "2025-p_damper": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_damper",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-24T00:00:00.000Z"
+   },
+   "2026-p_damper": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_damper",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-21T00:00:00.000Z"
+   },
+   "2025-p_rack": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_rack",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-25T00:00:00.000Z"
+   },
+   "2026-p_rack": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_rack",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-22T00:00:00.000Z"
+   },
+   "2025-p_brake": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_brake",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-01-26T00:00:00.000Z"
+   },
+   "2026-p_brake": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_brake",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-10-23T00:00:00.000Z"
+   },
+   "2025-p_lsd": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_lsd",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-01-27T00:00:00.000Z"
+   },
+   "2026-p_lsd": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_lsd",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-10-24T00:00:00.000Z"
+   },
+   "2025-p_ratio": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_ratio",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-01-28T00:00:00.000Z"
+   },
+   "2026-p_ratio": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_ratio",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-10-25T00:00:00.000Z"
+   },
+   "2025-p_motor": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_motor",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-01-29T00:00:00.000Z"
+   },
+   "2026-p_motor": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_motor",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-10-26T00:00:00.000Z"
+   },
+   "2025-p_cell": {
+    "v": "done",
+    "season": "2025",
+    "item": "p_cell",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-01-30T00:00:00.000Z"
+   },
+   "2026-p_cell": {
+    "v": "done",
+    "season": "2026",
+    "item": "p_cell",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-10-27T00:00:00.000Z"
+   },
+   "2025-l_driver": {
+    "v": "done",
+    "season": "2025",
+    "item": "l_driver",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-01-31T00:00:00.000Z"
+   },
+   "2026-l_driver": {
+    "v": "done",
+    "season": "2026",
+    "item": "l_driver",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-10-28T00:00:00.000Z"
+   },
+   "2025-l_struct": {
+    "v": "done",
+    "season": "2025",
+    "item": "l_struct",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-02-01T00:00:00.000Z"
+   },
+   "2026-l_struct": {
+    "v": "done",
+    "season": "2026",
+    "item": "l_struct",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-10-29T00:00:00.000Z"
+   },
+   "2025-l_bat": {
+    "v": "done",
+    "season": "2025",
+    "item": "l_bat",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-02-02T00:00:00.000Z"
+   },
+   "2026-l_bat": {
+    "v": "done",
+    "season": "2026",
+    "item": "l_bat",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-10-30T00:00:00.000Z"
+   },
+   "2025-l_pt": {
+    "v": "done",
+    "season": "2025",
+    "item": "l_pt",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-02-03T00:00:00.000Z"
+   },
+   "2026-l_pt": {
+    "v": "done",
+    "season": "2026",
+    "item": "l_pt",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-10-31T00:00:00.000Z"
+   },
+   "2025-l_cool": {
+    "v": "done",
+    "season": "2025",
+    "item": "l_cool",
+    "part": "냉각",
+    "by": "u4",
+    "at": "2026-02-04T00:00:00.000Z"
+   },
+   "2026-l_cool": {
+    "v": "done",
+    "season": "2026",
+    "item": "l_cool",
+    "part": "냉각",
+    "by": "u4",
+    "at": "2026-11-01T00:00:00.000Z"
+   },
+   "2025-l_hv": {
+    "v": "done",
+    "season": "2025",
+    "item": "l_hv",
+    "part": "회로",
+    "by": "l4",
+    "at": "2026-02-05T00:00:00.000Z"
+   },
+   "2026-l_hv": {
+    "v": "done",
+    "season": "2026",
+    "item": "l_hv",
+    "part": "회로",
+    "by": "l4",
+    "at": "2026-11-02T00:00:00.000Z"
+   },
+   "2025-b_pedal": {
+    "v": "done",
+    "season": "2025",
+    "item": "b_pedal",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-02-06T00:00:00.000Z"
+   },
+   "2026-b_pedal": {
+    "v": "done",
+    "season": "2026",
+    "item": "b_pedal",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-11-03T00:00:00.000Z"
+   },
+   "2025-b_package": {
+    "v": "done",
+    "season": "2025",
+    "item": "b_package",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-02-07T00:00:00.000Z"
+   },
+   "2026-b_package": {
+    "v": "done",
+    "season": "2026",
+    "item": "b_package",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-11-04T00:00:00.000Z"
+   },
+   "2025-s_bjzone": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_bjzone",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-08T00:00:00.000Z"
+   },
+   "2026-s_bjzone": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_bjzone",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-11-05T00:00:00.000Z"
+   },
+   "2025-s_scrub": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_scrub",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-09T00:00:00.000Z"
+   },
+   "2026-s_scrub": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_scrub",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-11-06T00:00:00.000Z"
+   },
+   "2025-s_kpi": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_kpi",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-10T00:00:00.000Z"
+   },
+   "2026-s_kpi": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_kpi",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-11-07T00:00:00.000Z"
+   },
+   "2025-s_caster": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_caster",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-02-11T00:00:00.000Z"
+   },
+   "2026-s_caster": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_caster",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-11T00:00:00.000Z"
+   },
+   "2025-s_trail": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_trail",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-02-12T00:00:00.000Z"
+   },
+   "2026-s_trail": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_trail",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-12T00:00:00.000Z"
+   },
+   "2025-s_static": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_static",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-13T00:00:00.000Z"
+   },
+   "2026-s_static": {
+    "v": "doing",
+    "season": "2026",
+    "item": "s_static",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-13T00:00:00.000Z"
+   },
+   "2025-s_rollgrad": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_rollgrad",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-14T00:00:00.000Z"
+   },
+   "2026-s_rollgrad": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_rollgrad",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-14T00:00:00.000Z"
+   },
+   "2025-s_fvsa": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_fvsa",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-15T00:00:00.000Z"
+   },
+   "2026-s_fvsa": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_fvsa",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-15T00:00:00.000Z"
+   },
+   "2025-s_rc": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_rc",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-16T00:00:00.000Z"
+   },
+   "2026-s_rc": {
+    "v": "doing",
+    "season": "2026",
+    "item": "s_rc",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-16T00:00:00.000Z"
+   },
+   "2025-s_inboard_f": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_inboard_f",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-17T00:00:00.000Z"
+   },
+   "2026-s_inboard_f": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_inboard_f",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-17T00:00:00.000Z"
+   },
+   "2025-f_zone": {
+    "v": "done",
+    "season": "2025",
+    "item": "f_zone",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-02-18T00:00:00.000Z"
+   },
+   "2026-f_zone": {
+    "v": "done",
+    "season": "2026",
+    "item": "f_zone",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-10-18T00:00:00.000Z"
+   },
+   "2025-s_anti": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_anti",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-19T00:00:00.000Z"
+   },
+   "2026-s_anti": {
+    "v": "doing",
+    "season": "2026",
+    "item": "s_anti",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-19T00:00:00.000Z"
+   },
+   "2025-s_pivot": {
+    "v": "done",
+    "season": "2025",
+    "item": "s_pivot",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-20T00:00:00.000Z"
+   },
+   "2026-s_pivot": {
+    "v": "done",
+    "season": "2026",
+    "item": "s_pivot",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-20T00:00:00.000Z"
+   },
+   "2025-st_caster_fix": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_caster_fix",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-02-21T00:00:00.000Z"
+   },
+   "2026-st_caster_fix": {
+    "v": "done",
+    "season": "2026",
+    "item": "st_caster_fix",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-21T00:00:00.000Z"
+   },
+   "2025-st_maxsteer": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_maxsteer",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-02-22T00:00:00.000Z"
+   },
+   "2026-st_maxsteer": {
+    "v": "doing",
+    "season": "2026",
+    "item": "st_maxsteer",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-22T00:00:00.000Z"
+   },
+   "2025-st_arm": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_arm",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-14T00:00:00.000Z"
+   },
+   "2026-st_arm": {
+    "v": "done",
+    "season": "2026",
+    "item": "st_arm",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-23T00:00:00.000Z"
+   },
+   "2025-st_ack": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_ack",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-15T00:00:00.000Z"
+   },
+   "2026-st_ack": {
+    "v": "done",
+    "season": "2026",
+    "item": "st_ack",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-24T00:00:00.000Z"
+   },
+   "2025-st_rack": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_rack",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-16T00:00:00.000Z"
+   },
+   "2026-st_rack": {
+    "v": "doing",
+    "season": "2026",
+    "item": "st_rack",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-25T00:00:00.000Z"
+   },
+   "2025-v_bumpsteer": {
+    "v": "done",
+    "season": "2025",
+    "item": "v_bumpsteer",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-17T00:00:00.000Z"
+   },
+   "2025-v_3d": {
+    "v": "done",
+    "season": "2025",
+    "item": "v_3d",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-18T00:00:00.000Z"
+   },
+   "2026-v_3d": {
+    "v": "doing",
+    "season": "2026",
+    "item": "v_3d",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-27T00:00:00.000Z"
+   },
+   "2025-v_outboard": {
+    "v": "done",
+    "season": "2025",
+    "item": "v_outboard",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-19T00:00:00.000Z"
+   },
+   "2025-a_path": {
+    "v": "done",
+    "season": "2025",
+    "item": "a_path",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-20T00:00:00.000Z"
+   },
+   "2025-f_space": {
+    "v": "done",
+    "season": "2025",
+    "item": "f_space",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-01-21T00:00:00.000Z"
+   },
+   "2025-fz1_hp": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz1_hp",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-22T00:00:00.000Z"
+   },
+   "2026-fz1_hp": {
+    "v": "doing",
+    "season": "2026",
+    "item": "fz1_hp",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-31T00:00:00.000Z"
+   },
+   "2025-fz1_node": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz1_node",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-01-23T00:00:00.000Z"
+   },
+   "2025-fz1_jig": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz1_jig",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-01-24T00:00:00.000Z"
+   },
+   "2025-u_outboard": {
+    "v": "done",
+    "season": "2025",
+    "item": "u_outboard",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-25T00:00:00.000Z"
+   },
+   "2025-a_wheelrate": {
+    "v": "done",
+    "season": "2025",
+    "item": "a_wheelrate",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-26T00:00:00.000Z"
+   },
+   "2026-a_wheelrate": {
+    "v": "doing",
+    "season": "2026",
+    "item": "a_wheelrate",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-11-04T00:00:00.000Z"
+   },
+   "2025-a_mr": {
+    "v": "done",
+    "season": "2025",
+    "item": "a_mr",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-27T00:00:00.000Z"
+   },
+   "2025-a_spring": {
+    "v": "done",
+    "season": "2025",
+    "item": "a_spring",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-28T00:00:00.000Z"
+   },
+   "2025-a_damp": {
+    "v": "done",
+    "season": "2025",
+    "item": "a_damp",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-29T00:00:00.000Z"
+   },
+   "2025-a_bump": {
+    "v": "done",
+    "season": "2025",
+    "item": "a_bump",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-30T00:00:00.000Z"
+   },
+   "2025-a_heave": {
+    "v": "done",
+    "season": "2025",
+    "item": "a_heave",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-31T00:00:00.000Z"
+   },
+   "2025-b_dist": {
+    "v": "done",
+    "season": "2025",
+    "item": "b_dist",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-02-01T00:00:00.000Z"
+   },
+   "2025-b_regen": {
+    "v": "done",
+    "season": "2025",
+    "item": "b_regen",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-02-02T00:00:00.000Z"
+   },
+   "2025-ae_balance": {
+    "v": "done",
+    "season": "2025",
+    "item": "ae_balance",
+    "part": "에어로",
+    "by": "l6",
+    "at": "2026-02-03T00:00:00.000Z"
+   },
+   "2025-d_ramp": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_ramp",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-02-04T00:00:00.000Z"
+   },
+   "2025-d_torque": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_torque",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-05T00:00:00.000Z"
+   },
+   "2025-d_regen": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_regen",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-06T00:00:00.000Z"
+   },
+   "2025-d_tc": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_tc",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-07T00:00:00.000Z"
+   },
+   "2025-d_launch": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_launch",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-08T00:00:00.000Z"
+   },
+   "2025-d_apps": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_apps",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-09T00:00:00.000Z"
+   },
+   "2025-d_derate": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_derate",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-10T00:00:00.000Z"
+   },
+   "2025-d_effic": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_effic",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-11T00:00:00.000Z"
+   },
+   "2026-d_effic": {
+    "v": "doing",
+    "season": "2026",
+    "item": "d_effic",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-10-23T00:00:00.000Z"
+   },
+   "2025-d_inv": {
+    "v": "done",
+    "season": "2025",
+    "item": "d_inv",
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-02-12T00:00:00.000Z"
+   },
+   "2025-fz2_mount": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz2_mount",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-13T00:00:00.000Z"
+   },
+   "2025-fz2_rack": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz2_rack",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-02-14T00:00:00.000Z"
+   },
+   "2025-fz2_motor": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz2_motor",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-02-15T00:00:00.000Z"
+   },
+   "2025-fz2_bat": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz2_bat",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-02-16T00:00:00.000Z"
+   },
+   "2025-fz2_frame": {
+    "v": "done",
+    "season": "2025",
+    "item": "fz2_frame",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-02-17T00:00:00.000Z"
+   },
+   "2025-ae_mount": {
+    "v": "done",
+    "season": "2025",
+    "item": "ae_mount",
+    "part": "에어로",
+    "by": "l6",
+    "at": "2026-02-18T00:00:00.000Z"
+   },
+   "2025-ld_case": {
+    "v": "done",
+    "season": "2025",
+    "item": "ld_case",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-19T00:00:00.000Z"
+   },
+   "2025-ld_hp": {
+    "v": "done",
+    "season": "2025",
+    "item": "ld_hp",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-20T00:00:00.000Z"
+   },
+   "2025-u_upright": {
+    "v": "done",
+    "season": "2025",
+    "item": "u_upright",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-21T00:00:00.000Z"
+   },
+   "2025-u_shaft": {
+    "v": "done",
+    "season": "2025",
+    "item": "u_shaft",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-02-22T00:00:00.000Z"
+   },
+   "2025-u_arm": {
+    "v": "done",
+    "season": "2025",
+    "item": "u_arm",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-14T00:00:00.000Z"
+   },
+   "2025-u_rocker": {
+    "v": "done",
+    "season": "2025",
+    "item": "u_rocker",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-01-15T00:00:00.000Z"
+   },
+   "2025-b_disc": {
+    "v": "done",
+    "season": "2025",
+    "item": "b_disc",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-01-16T00:00:00.000Z"
+   },
+   "2025-st_column": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_column",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-17T00:00:00.000Z"
+   },
+   "2025-st_sensor": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_sensor",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-18T00:00:00.000Z"
+   },
+   "2025-st_link": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_link",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-19T00:00:00.000Z"
+   },
+   "2026-st_link": {
+    "v": "doing",
+    "season": "2026",
+    "item": "st_link",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-10-12T00:00:00.000Z"
+   },
+   "2025-b_pedalbox": {
+    "v": "done",
+    "season": "2025",
+    "item": "b_pedalbox",
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-01-20T00:00:00.000Z"
+   },
+   "2025-st_wheel": {
+    "v": "done",
+    "season": "2025",
+    "item": "st_wheel",
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-01-21T00:00:00.000Z"
+   },
+   "2025-f_tube": {
+    "v": "done",
+    "season": "2025",
+    "item": "f_tube",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-01-22T00:00:00.000Z"
+   },
+   "2025-f_bracket": {
+    "v": "done",
+    "season": "2025",
+    "item": "f_bracket",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-01-23T00:00:00.000Z"
+   },
+   "2025-e_sensor": {
+    "v": "done",
+    "season": "2025",
+    "item": "e_sensor",
+    "part": "회로",
+    "by": "l4",
+    "at": "2026-01-24T00:00:00.000Z"
+   },
+   "2025-pt_mount": {
+    "v": "done",
+    "season": "2025",
+    "item": "pt_mount",
+    "part": "구동계",
+    "by": "l2",
+    "at": "2026-01-25T00:00:00.000Z"
+   },
+   "2025-bat_box": {
+    "v": "done",
+    "season": "2025",
+    "item": "bat_box",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-01-26T00:00:00.000Z"
+   },
+   "2025-cool_sel": {
+    "v": "done",
+    "season": "2025",
+    "item": "cool_sel",
+    "part": "냉각",
+    "by": "u4",
+    "at": "2026-01-27T00:00:00.000Z"
+   },
+   "2025-e_hv": {
+    "v": "done",
+    "season": "2025",
+    "item": "e_hv",
+    "part": "회로",
+    "by": "l4",
+    "at": "2026-01-28T00:00:00.000Z"
+   },
+   "2025-e_harness": {
+    "v": "done",
+    "season": "2025",
+    "item": "e_harness",
+    "part": "회로",
+    "by": "l4",
+    "at": "2026-01-29T00:00:00.000Z"
+   },
+   "2025-e_daq": {
+    "v": "done",
+    "season": "2025",
+    "item": "e_daq",
+    "part": "데이터로거",
+    "by": "l5",
+    "at": "2026-01-30T00:00:00.000Z"
+   },
+   "2025-e_telem": {
+    "v": "done",
+    "season": "2025",
+    "item": "e_telem",
+    "part": "데이터로거",
+    "by": "l5",
+    "at": "2026-01-31T00:00:00.000Z"
+   },
+   "2025-e_dashui": {
+    "v": "done",
+    "season": "2025",
+    "item": "e_dashui",
+    "part": "데이터로거",
+    "by": "l5",
+    "at": "2026-02-01T00:00:00.000Z"
+   },
+   "2025-bat_elec": {
+    "v": "done",
+    "season": "2025",
+    "item": "bat_elec",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-02-02T00:00:00.000Z"
+   },
+   "2025-bat_cool": {
+    "v": "done",
+    "season": "2025",
+    "item": "bat_cool",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-02-03T00:00:00.000Z"
+   },
+   "2025-bat_bms": {
+    "v": "done",
+    "season": "2025",
+    "item": "bat_bms",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-02-04T00:00:00.000Z"
+   },
+   "2025-ae_duct": {
+    "v": "done",
+    "season": "2025",
+    "item": "ae_duct",
+    "part": "냉각",
+    "by": "u4",
+    "at": "2026-02-05T00:00:00.000Z"
+   },
+   "2026-ae_duct": {
+    "v": "doing",
+    "season": "2026",
+    "item": "ae_duct",
+    "part": "냉각",
+    "by": "u4",
+    "at": "2026-10-29T00:00:00.000Z"
+   },
+   "2025-ae_wing": {
+    "v": "done",
+    "season": "2025",
+    "item": "ae_wing",
+    "part": "에어로",
+    "by": "l6",
+    "at": "2026-02-06T00:00:00.000Z"
+   },
+   "2025-w_fea": {
+    "v": "done",
+    "season": "2025",
+    "item": "w_fea",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-07T00:00:00.000Z"
+   },
+   "2025-w_cg": {
+    "v": "done",
+    "season": "2025",
+    "item": "w_cg",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-08T00:00:00.000Z"
+   },
+   "2025-dw_draw": {
+    "v": "done",
+    "season": "2025",
+    "item": "dw_draw",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-09T00:00:00.000Z"
+   },
+   "2025-w_compl": {
+    "v": "done",
+    "season": "2025",
+    "item": "w_compl",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-10T00:00:00.000Z"
+   },
+   "2025-w_light": {
+    "v": "skip",
+    "season": "2025",
+    "item": "w_light",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-11T00:00:00.000Z"
+   },
+   "2025-x_int": {
+    "v": "skip",
+    "season": "2025",
+    "item": "x_int",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-12T00:00:00.000Z"
+   },
+   "2025-r_sef": {
+    "v": "skip",
+    "season": "2025",
+    "item": "r_sef",
+    "part": "프레임",
+    "by": "l0",
+    "at": "2026-02-13T00:00:00.000Z"
+   },
+   "2025-r_esf": {
+    "v": "skip",
+    "season": "2025",
+    "item": "r_esf",
+    "part": "회로",
+    "by": "l4",
+    "at": "2026-02-14T00:00:00.000Z"
+   },
+   "2025-r_bat": {
+    "v": "skip",
+    "season": "2025",
+    "item": "r_bat",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-02-15T00:00:00.000Z"
+   },
+   "2025-m_build": {
+    "v": "skip",
+    "season": "2025",
+    "item": "m_build",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-16T00:00:00.000Z"
+   },
+   "2025-t_static": {
+    "v": "skip",
+    "season": "2025",
+    "item": "t_static",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-17T00:00:00.000Z"
+   },
+   "2025-t_setup": {
+    "v": "doing",
+    "season": "2025",
+    "item": "t_setup",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-18T00:00:00.000Z"
+   },
+   "2025-t_precheck": {
+    "v": "doing",
+    "season": "2025",
+    "item": "t_precheck",
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-02-19T00:00:00.000Z"
+   },
+   "2025-t_skid": {
+    "v": "doing",
+    "season": "2025",
+    "item": "t_skid",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-20T00:00:00.000Z"
+   },
+   "2025-t_tune": {
+    "v": "doing",
+    "season": "2025",
+    "item": "t_tune",
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-02-21T00:00:00.000Z"
+   },
+   "2025-t_log": {
+    "v": "doing",
+    "season": "2025",
+    "item": "t_log",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-02-22T00:00:00.000Z"
+   },
+   "2026-t_log": {
+    "v": "doing",
+    "season": "2026",
+    "item": "t_log",
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-10-18T00:00:00.000Z"
+   }
+  },
+  "val": {
+   "d_inv": {
+    "s": {
+     "2025": {
+      "모드별 설정값": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "모드별 설정값": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      }
+     }
+    },
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-11-04T00:00:00.000Z"
+   },
+   "st_wheel": {
+    "s": {
+     "2025": {
+      "조향휠 지름": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "그립 형상": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      },
+      "버튼·표시 배치": {
+       "v": "(더미) 2025 확정 3",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "조향휠 지름": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "그립 형상": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      },
+      "버튼·표시 배치": {
+       "v": "(더미) 2026 목표 3",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "조향",
+    "by": "u3",
+    "at": "2026-11-03T00:00:00.000Z"
+   },
+   "bat_elec": {
+    "s": {
+     "2025": {
+      "직렬·병렬 수": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "세그먼트 분할": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      },
+      "버스바 재질·단면·연결 방식": {
+       "v": "(더미) 2025 확정 3",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-11-02T00:00:00.000Z"
+   },
+   "bat_cool": {
+    "s": {
+     "2025": {
+      "냉각 방식": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "팬·펌프": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      },
+      "유로·셀 간격": {
+       "v": "(더미) 2025 확정 3",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "냉각 방식": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "팬·펌프": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      },
+      "유로·셀 간격": {
+       "v": "(더미) 2026 목표 3",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-11-01T00:00:00.000Z"
+   },
+   "bat_bms": {
+    "s": {
+     "2025": {
+      "전압·온도·전류 한계": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "SOC 설정 (용량·전압표)": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "전압·온도·전류 한계": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "SOC 설정 (용량·전압표)": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "배터리",
+    "by": "u4",
+    "at": "2026-10-31T00:00:00.000Z"
+   },
+   "w_compl": {
+    "s": {
+     "2025": {
+      "허용 토·캠버 변화 (힘당)": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-30T00:00:00.000Z"
+   },
+   "w_light": {
+    "s": {
+     "2025": {
+      "작업량 어림 (상·중·하)": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "작업량 어림 (상·중·하)": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      }
+     }
+    },
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-29T00:00:00.000Z"
+   },
+   "t_driver": {
+    "s": {
+     "2025": {
+      "선발 기준": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "훈련 계획": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "선발 기준": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "훈련 계획": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-28T00:00:00.000Z"
+   },
+   "g_lapsim": {
+    "s": {
+     "2025": {
+      "모델 수준 (포인트매스 QSS부터)": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "코스 모델": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-27T00:00:00.000Z"
+   },
+   "d_apps": {
+    "s": {
+     "2025": {
+      "페달 맵 곡선": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "데드밴드": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "페달 맵 곡선": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "데드밴드": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-10-26T00:00:00.000Z"
+   },
+   "d_derate": {
+    "s": {
+     "2025": {
+      "디레이팅 시작·끝 온도": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "디레이팅 시작·끝 온도": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      }
+     }
+    },
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-10-25T00:00:00.000Z"
+   },
+   "d_effic": {
+    "s": {
+     "2025": {
+      "내구 출력 상한": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "랩별 에너지 예산": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-10-24T00:00:00.000Z"
+   },
+   "e_harness": {
+    "s": {
+     "2025": {
+      "커넥터 종류": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "배선 고정 간격·보호재": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "커넥터 종류": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "배선 고정 간격·보호재": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "회로",
+    "by": "l4",
+    "at": "2026-10-23T00:00:00.000Z"
+   },
+   "e_telem": {
+    "s": {
+     "2025": {
+      "실시간 채널·전송 주기": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "무선 송수신 장치": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "실시간 채널·전송 주기": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "무선 송수신 장치": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "데이터로거",
+    "by": "l5",
+    "at": "2026-10-22T00:00:00.000Z"
+   },
+   "e_dashui": {
+    "s": {
+     "2025": {
+      "표시 값·배치": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "색·경고 기준": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "데이터로거",
+    "by": "l5",
+    "at": "2026-10-21T00:00:00.000Z"
+   },
+   "e_daq": {
+    "s": {
+     "2025": {
+      "채널 목록": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "로거 구성": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "채널 목록": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "로거 구성": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "데이터로거",
+    "by": "l5",
+    "at": "2026-10-20T00:00:00.000Z"
+   },
+   "t_setup": {
+    "s": {
+     "2025": {
+      "기준 셋업": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "기준 셋업": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      }
+     }
+    },
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-19T00:00:00.000Z"
+   },
+   "t_precheck": {
+    "s": {
+     "2025": {
+      "모의 검차 일정": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-18T00:00:00.000Z"
+   },
+   "t_endur": {
+    "s": {
+     "2025": {
+      "누적 주행거리 목표": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "내구 모의 주행 횟수": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "누적 주행거리 목표": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "내구 모의 주행 횟수": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-17T00:00:00.000Z"
+   },
+   "a_heave": {
+    "s": {
+     "2025": {
+      "차고 변화 허용값": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "라이드 주파수 목표": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      },
+      "서드 스프링 적용 여부": {
+       "v": "(더미) 2025 확정 3",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "차고 변화 허용값": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "라이드 주파수 목표": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      },
+      "서드 스프링 적용 여부": {
+       "v": "(더미) 2026 목표 3",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-16T00:00:00.000Z"
+   },
+   "d_launch": {
+    "s": {
+     "2025": {
+      "목표 슬립률": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "토크 램프": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "모터컨트롤러",
+    "by": "l3",
+    "at": "2026-10-15T00:00:00.000Z"
+   },
+   "ld_case": {
+    "s": {
+     "2025": {
+      "하중 케이스": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "하중 배수": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "하중 케이스": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "하중 배수": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "공통",
+    "by": "u1",
+    "at": "2026-10-14T00:00:00.000Z"
+   },
+   "u_arm": {
+    "s": {
+     "2025": {
+      "튜브 규격": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      },
+      "로드엔드 규격": {
+       "v": "(더미) 2025 확정 2",
+       "why": "2025 차량 실측"
+      }
+     },
+     "2026": {
+      "튜브 규격": {
+       "v": "(더미) 2026 목표 1",
+       "why": "작년 실측 + 개선 목표"
+      },
+      "로드엔드 규격": {
+       "v": "(더미) 2026 목표 2",
+       "why": "랩 시뮬레이션 결과"
+      }
+     }
+    },
+    "part": "서스",
+    "by": "u3",
+    "at": "2026-10-13T00:00:00.000Z"
+   },
+   "b_pedalbox": {
+    "s": {
+     "2025": {
+      "페달비": {
+       "v": "(더미) 2025 확정 1",
+       "why": "2025 차량 실측"
+      }
+     }
+    },
+    "part": "제동",
+    "by": "l1",
+    "at": "2026-10-12T00:00:00.000Z"
+   }
+  },
+  "dv": {
+   "frame__m": {
+    "s": {
+     "2025": {
+      "v": 288,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-03-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 300,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-11-07T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__m_s": {
+    "s": {
+     "2025": {
+      "v": 234.4,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-03-24T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 240,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-11-06T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__h_s": {
+    "s": {
+     "2025": {
+      "v": 300.8,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "l0",
+      "at": "2026-03-23T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 300,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "l0",
+      "at": "2026-11-05T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__m_us_f": {
+    "s": {
+     "2025": {
+      "v": 12.24,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-03-22T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 12,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-11-04T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__m_us_r": {
+    "s": {
+     "2025": {
+      "v": 12.18,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-03-21T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 12,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-11-03T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__fr": {
+    "s": {
+     "2025": {
+      "v": 46.52,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-03-20T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 47.5,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-11-02T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__left": {
+    "s": {
+     "2025": {
+      "v": 51,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-03-19T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 50.2,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-11-01T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__h": {
+    "s": {
+     "2025": {
+      "v": 294.3,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-03-18T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 290,
+      "st": "asm",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-10-31T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__a_cg": {
+    "s": {
+     "2025": {
+      "v": 855.5,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-03-17T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 835,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-10-30T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__ixx": {
+    "s": {
+     "2025": {
+      "v": 30.03,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-03-16T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 30,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-10-29T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__iyy": {
+    "s": {
+     "2025": {
+      "v": 96.43,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-03-15T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 95,
+      "st": "calc",
+      "src": "",
+      "by": "l0",
+      "at": "2026-10-28T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__izz": {
+    "s": {
+     "2025": {
+      "v": 70.43,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-03-14T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 70,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l0",
+      "at": "2026-10-27T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__L": {
+    "s": {
+     "2025": {
+      "v": 1601,
+      "st": "ok",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-03-13T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1550,
+      "st": "ok",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-10-26T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tf": {
+    "s": {
+     "2025": {
+      "v": 1232,
+      "st": "ok",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-03-12T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1200,
+      "st": "ok",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-10-25T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tr": {
+    "s": {
+     "2025": {
+      "v": 1161,
+      "st": "ok",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-03-11T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1180,
+      "st": "ok",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-10-24T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__ride_h_f": {
+    "s": {
+     "2025": {
+      "v": 41.4,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-03-10T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 40,
+      "st": "rev",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-23T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__ride_h_r": {
+    "s": {
+     "2025": {
+      "v": 46.36,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-03-09T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__fw_gap": {
+    "s": {
+     "2025": {
+      "v": 34.37,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-03-08T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 35,
+      "st": "rev",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-21T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__gc_min": {
+    "s": {
+     "2025": {
+      "v": 29.81,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-03-07T00:00:00.000Z"
+     }
+    }
+   },
+   "all__score_goal": {
+    "s": {
+     "2025": {
+      "v": 671.3,
+      "st": "ok",
+      "src": "",
+      "by": "u1",
+      "at": "2026-03-06T00:00:00.000Z"
+     }
+    }
+   },
+   "all__t_acc": {
+    "s": {
+     "2025": {
+      "v": 4.155,
+      "st": "ok",
+      "src": "",
+      "by": "u1",
+      "at": "2026-03-05T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 4.2,
+      "st": "rev",
+      "src": "",
+      "by": "u1",
+      "at": "2026-10-18T00:00:00.000Z"
+     }
+    }
+   },
+   "all__t_skid": {
+    "s": {
+     "2025": {
+      "v": 0,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u1",
+      "at": "2026-03-04T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u1",
+      "at": "2026-10-17T00:00:00.000Z"
+     }
+    }
+   },
+   "all__t_ax": {
+    "s": {
+     "2025": {
+      "v": 61.53,
+      "st": "ok",
+      "src": "",
+      "by": "u1",
+      "at": "2026-03-03T00:00:00.000Z"
+     }
+    }
+   },
+   "all__t_end": {
+    "s": {
+     "2025": {
+      "v": 1484,
+      "st": "ok",
+      "src": "",
+      "by": "u1",
+      "at": "2026-03-02T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1500,
+      "st": "ok",
+      "src": "",
+      "by": "u1",
+      "at": "2026-10-15T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__ay_max": {
+    "s": {
+     "2025": {
+      "v": 1.604,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-01T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1.6,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-14T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__ay_max_sim": {
+    "s": {
+     "2025": {
+      "v": 1.704,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-28T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1.65,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-07T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__k_us": {
+    "s": {
+     "2025": {
+      "v": 0.309,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-27T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.3,
+      "st": "rev",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-06T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__k_us_meas": {
+    "s": {
+     "2025": {
+      "v": 0.35,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-26T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.35,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-05T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__r_eff": {
+    "s": {
+     "2025": {
+      "v": 232.5,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 229,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-11-04T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__r_load": {
+    "s": {
+     "2025": {
+      "v": 223.7,
+      "st": "ok",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-02-24T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 220,
+      "st": "rev",
+      "src": "도구 1 질량 · 무게중심 계산기",
+      "by": "u3",
+      "at": "2026-11-03T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__rim_d": {
+    "s": {
+     "2025": {
+      "v": 9.88,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-23T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 10,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-02T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__rim_in": {
+    "s": {
+     "2025": {
+      "v": 25.59,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-22T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 25,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-01T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__mu": {
+    "s": {
+     "2025": {
+      "v": 1.538,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-21T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1.5,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-31T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__mu_s": {
+    "s": {
+     "2025": {
+      "v": 0.239,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-20T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__c_alpha_f": {
+    "s": {
+     "2025": {
+      "v": 675.8,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-19T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__c_alpha_r": {
+    "s": {
+     "2025": {
+      "v": 707.4,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-18T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tire_fz0": {
+    "s": {
+     "2025": {
+      "v": 733.5,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-17T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 736,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-27T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tire_ca0": {
+    "s": {
+     "2025": {
+      "v": 437,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-16T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 450,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-26T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tire_cn": {
+    "s": {
+     "2025": {
+      "v": 0.825,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-15T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.8,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-25T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tire_c": {
+    "s": {
+     "2025": {
+      "v": 1.34,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-14T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1.3,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-24T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tire_e": {
+    "s": {
+     "2025": {
+      "v": 0,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-13T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-23T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__tire_relax": {
+    "s": {
+     "2025": {
+      "v": 0.288,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-12T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.3,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-22T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__kt_tire": {
+    "s": {
+     "2025": {
+      "v": 96.6,
+      "st": "ok",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-02-11T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__scrub": {
+    "s": {
+     "2025": {
+      "v": 20.19,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-10T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__kpi": {
+    "s": {
+     "2025": {
+      "v": 7.135,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-09T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 7,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-19T00:00:00.000Z"
+     }
+    }
+   },
+   "str__caster": {
+    "s": {
+     "2025": {
+      "v": 5.075,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-08T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 5,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-18T00:00:00.000Z"
+     }
+    }
+   },
+   "str__trail": {
+    "s": {
+     "2025": {
+      "v": 18.55,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-07T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 18,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-17T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__camber_f": {
+    "s": {
+     "2025": {
+      "v": -2.97,
+      "st": "ok",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-02-06T00:00:00.000Z"
+     },
+     "2026": {
+      "v": -3,
+      "st": "ok",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-10-16T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__camber_r": {
+    "s": {
+     "2025": {
+      "v": -1.998,
+      "st": "ok",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-02-05T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__toe_f": {
+    "s": {
+     "2025": {
+      "v": 0,
+      "st": "ok",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-02-04T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0,
+      "st": "asm",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-10-14T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__toe_r": {
+    "s": {
+     "2025": {
+      "v": 0,
+      "st": "ok",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-02-03T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0,
+      "st": "ok",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-11-07T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__camber_gain_f": {
+    "s": {
+     "2025": {
+      "v": 0.83,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-02T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.8,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-06T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__camber_gain_r": {
+    "s": {
+     "2025": {
+      "v": 0.609,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-01T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.6,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-05T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__rc_f": {
+    "s": {
+     "2025": {
+      "v": 29.33,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-01-31T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__rc_r": {
+    "s": {
+     "2025": {
+      "v": 50.26,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-01-30T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__anti_dive": {
+    "s": {
+     "2025": {
+      "v": 15.32,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-01-29T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 15,
+      "st": "rev",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-02T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__anti_squat": {
+    "s": {
+     "2025": {
+      "v": 20,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-01-28T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__roll_grad": {
+    "s": {
+     "2025": {
+      "v": 0.969,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-01-27T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-31T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__k_roll": {
+    "s": {
+     "2025": {
+      "v": 507.5,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-01-26T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 500,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-30T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__lltd": {
+    "s": {
+     "2025": {
+      "v": 47.67,
+      "st": "ok",
+      "src": "도구 8 하중 산출 (3D)",
+      "by": "u3",
+      "at": "2026-01-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 49.5,
+      "st": "asm",
+      "src": "도구 8 하중 산출 (3D)",
+      "by": "u3",
+      "at": "2026-10-29T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__rsd": {
+    "s": {
+     "2025": {
+      "v": 51.97,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-03-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 50,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-28T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__kw_f": {
+    "s": {
+     "2025": {
+      "v": 21.86,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-24T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 22,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-27T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__kw_r": {
+    "s": {
+     "2025": {
+      "v": 26.47,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-23T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 26,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-26T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__f_ride_f": {
+    "s": {
+     "2025": {
+      "v": 3.174,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-22T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__f_ride_r": {
+    "s": {
+     "2025": {
+      "v": 3.473,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-21T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 3.5,
+      "st": "rev",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-24T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__mr_f": {
+    "s": {
+     "2025": {
+      "v": 0.889,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-20T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.9,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-23T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__mr_r": {
+    "s": {
+     "2025": {
+      "v": 0.917,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-19T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.9,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-22T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__ks_f": {
+    "s": {
+     "2025": {
+      "v": 45.81,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-18T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 45,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-21T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__ks_r": {
+    "s": {
+     "2025": {
+      "v": 48.79,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-17T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 50,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-20T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__karb_f": {
+    "s": {
+     "2025": {
+      "v": 155.8,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-16T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 150,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-19T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__karb_r": {
+    "s": {
+     "2025": {
+      "v": 101.1,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-15T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 100,
+      "st": "calc",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-18T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__k_heave": {
+    "s": {
+     "2025": {
+      "v": 41.34,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-14T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 40,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-17T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__cd_f": {
+    "s": {
+     "2025": {
+      "v": 1517,
+      "st": "ok",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-13T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__cd_r": {
+    "s": {
+     "2025": {
+      "v": 1500,
+      "st": "ok",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-12T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1500,
+      "st": "rev",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-15T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__c_roll": {
+    "s": {
+     "2025": {
+      "v": 31.07,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-03-11T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 30,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-14T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__zeta": {
+    "s": {
+     "2025": {
+      "v": 0.682,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-10T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.7,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-07T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__dh_max": {
+    "s": {
+     "2025": {
+      "v": 20.26,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-09T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 20,
+      "st": "rev",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-06T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__damper_stroke": {
+    "s": {
+     "2025": {
+      "v": 55.03,
+      "st": "ok",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-08T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 55,
+      "st": "ok",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-11-05T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__damper_len": {
+    "s": {
+     "2025": {
+      "v": 214.2,
+      "st": "ok",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-03-07T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__margin_camber": {
+    "s": {
+     "2025": {
+      "v": 0.492,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-06T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.5,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-03T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__margin_toe": {
+    "s": {
+     "2025": {
+      "v": 0.102,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-05T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__meas_camber_load": {
+    "s": {
+     "2025": {
+      "v": 0.196,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-04T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.2,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-01T00:00:00.000Z"
+     }
+    }
+   },
+   "sus__meas_toe_load": {
+    "s": {
+     "2025": {
+      "v": 0.048,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-03T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.05,
+      "st": "rev",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-31T00:00:00.000Z"
+     }
+    }
+   },
+   "str__rmin": {
+    "s": {
+     "2025": {
+      "v": 3.306,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-03-02T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 3.2,
+      "st": "rev",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-30T00:00:00.000Z"
+     }
+    }
+   },
+   "str__delta_max": {
+    "s": {
+     "2025": {
+      "v": 35.25,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-03-01T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 34,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-29T00:00:00.000Z"
+     }
+    }
+   },
+   "str__ackermann": {
+    "s": {
+     "2025": {
+      "v": 61.26,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-28T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 60,
+      "st": "rev",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-28T00:00:00.000Z"
+     }
+    }
+   },
+   "str__rack_c": {
+    "s": {
+     "2025": {
+      "v": 92.87,
+      "st": "ok",
+      "src": "도구 6 조향 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-02-27T00:00:00.000Z"
+     }
+    }
+   },
+   "str__steer_ratio": {
+    "s": {
+     "2025": {
+      "v": 4.854,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-02-26T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 5,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-26T00:00:00.000Z"
+     }
+    }
+   },
+   "str__rack_travel": {
+    "s": {
+     "2025": {
+      "v": 30.75,
+      "st": "ok",
+      "src": "도구 6 조향 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-02-25T00:00:00.000Z"
+     }
+    }
+   },
+   "str__knuckle_l": {
+    "s": {
+     "2025": {
+      "v": 67.25,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-24T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 70,
+      "st": "calc",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-24T00:00:00.000Z"
+     }
+    }
+   },
+   "str__sw_d": {
+    "s": {
+     "2025": {
+      "v": 269.3,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-23T00:00:00.000Z"
+     }
+    }
+   },
+   "str__sw_torque_max": {
+    "s": {
+     "2025": {
+      "v": 7.766,
+      "st": "ok",
+      "src": "",
+      "by": "u3",
+      "at": "2026-02-22T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__brake_bias": {
+    "s": {
+     "2025": {
+      "v": 74.63,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-21T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__pedal_ratio": {
+    "s": {
+     "2025": {
+      "v": 2.72,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-20T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 2.73,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-10-20T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__mc_f": {
+    "s": {
+     "2025": {
+      "v": 16.1,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-19T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 15.88,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-10-19T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__mc_r": {
+    "s": {
+     "2025": {
+      "v": 15.77,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-18T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__cal_area_f": {
+    "s": {
+     "2025": {
+      "v": 750,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-17T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 766.6,
+      "st": "asm",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-10-17T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__cal_area_r": {
+    "s": {
+     "2025": {
+      "v": 745.3,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-16T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 766.6,
+      "st": "rev",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-10-16T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__pad_mu": {
+    "s": {
+     "2025": {
+      "v": 0.31,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-15T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__disc_d_f": {
+    "s": {
+     "2025": {
+      "v": 188.5,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-14T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__disc_d_r": {
+    "s": {
+     "2025": {
+      "v": 180.7,
+      "st": "ok",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-13T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__disc_t": {
+    "s": {
+     "2025": {
+      "v": 4.047,
+      "st": "ok",
+      "src": "",
+      "by": "l1",
+      "at": "2026-02-12T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 4,
+      "st": "ok",
+      "src": "",
+      "by": "l1",
+      "at": "2026-11-06T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__pv_knee": {
+    "s": {
+     "2025": {
+      "v": 31.19,
+      "st": "ok",
+      "src": "",
+      "by": "l1",
+      "at": "2026-02-11T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__pv_slope": {
+    "s": {
+     "2025": {
+      "v": 0.497,
+      "st": "ok",
+      "src": "",
+      "by": "l1",
+      "at": "2026-02-10T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.5,
+      "st": "ok",
+      "src": "",
+      "by": "l1",
+      "at": "2026-11-04T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__pedal_force": {
+    "s": {
+     "2025": {
+      "v": 624.3,
+      "st": "calc",
+      "src": "",
+      "by": "l1",
+      "at": "2026-02-09T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 650,
+      "st": "calc",
+      "src": "",
+      "by": "l1",
+      "at": "2026-11-03T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__cla": {
+    "s": {
+     "2025": {
+      "v": 2.902,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-02-08T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 3,
+      "st": "asm",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-11-02T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__cda": {
+    "s": {
+     "2025": {
+      "v": 1.431,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-02-07T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1.4,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-11-01T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__aero_bal": {
+    "s": {
+     "2025": {
+      "v": 46.28,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-02-06T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 45,
+      "st": "rev",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-31T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__xcop": {
+    "s": {
+     "2025": {
+      "v": 707,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-02-05T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 698,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-10-30T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__hcop": {
+    "s": {
+     "2025": {
+      "v": 414.9,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-02-04T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 420,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l6",
+      "at": "2026-10-29T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__dh_sens": {
+    "s": {
+     "2025": {
+      "v": 0.5,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-02-03T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.5,
+      "st": "rev",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-28T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__has_drs": {
+    "s": {
+     "2025": {
+      "v": 0,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-02-02T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0,
+      "st": "rev",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-27T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__cla_drs": {
+    "s": {
+     "2025": {
+      "v": 2.037,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-02-01T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 2,
+      "st": "asm",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-26T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__cda_drs": {
+    "s": {
+     "2025": {
+      "v": 0.935,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-01-31T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.9,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-25T00:00:00.000Z"
+     }
+    }
+   },
+   "aero__xcop_drs": {
+    "s": {
+     "2025": {
+      "v": 932.9,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-01-30T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 900,
+      "st": "ok",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-24T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__pmax": {
+    "s": {
+     "2025": {
+      "v": 77.31,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-01-29T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 80,
+      "st": "asm",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-10-23T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__tmax": {
+    "s": {
+     "2025": {
+      "v": 233.8,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-01-28T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 230,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-10-22T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__nmax": {
+    "s": {
+     "2025": {
+      "v": 6737,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-01-27T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 6500,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-10-21T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__gr": {
+    "s": {
+     "2025": {
+      "v": 3.476,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-01-26T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 3.55,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-10-20T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__vmax": {
+    "s": {
+     "2025": {
+      "v": 124,
+      "st": "calc",
+      "src": "",
+      "by": "l2",
+      "at": "2026-01-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 120,
+      "st": "calc",
+      "src": "",
+      "by": "l2",
+      "at": "2026-10-19T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__eta_dt": {
+    "s": {
+     "2025": {
+      "v": 96.03,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-03-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 95,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-10-18T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__j_eq": {
+    "s": {
+     "2025": {
+      "v": 0.498,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-03-24T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.5,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-10-17T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__crr": {
+    "s": {
+     "2025": {
+      "v": 0.015,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-03-23T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__lsd_preload": {
+    "s": {
+     "2025": {
+      "v": 10.15,
+      "st": "ok",
+      "src": "",
+      "by": "l2",
+      "at": "2026-03-22T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 10,
+      "st": "ok",
+      "src": "",
+      "by": "l2",
+      "at": "2026-10-15T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__lsd_ramp_acc": {
+    "s": {
+     "2025": {
+      "v": 43.88,
+      "st": "ok",
+      "src": "",
+      "by": "l2",
+      "at": "2026-03-21T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 45,
+      "st": "ok",
+      "src": "",
+      "by": "l2",
+      "at": "2026-10-14T00:00:00.000Z"
+     }
+    }
+   },
+   "pt__lsd_ramp_dec": {
+    "s": {
+     "2025": {
+      "v": 61.91,
+      "st": "ok",
+      "src": "",
+      "by": "l2",
+      "at": "2026-03-20T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 60,
+      "st": "ok",
+      "src": "",
+      "by": "l2",
+      "at": "2026-11-07T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__regen_tmax": {
+    "s": {
+     "2025": {
+      "v": 233.4,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-03-19T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 230,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-11-06T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__slip_target": {
+    "s": {
+     "2025": {
+      "v": 9.85,
+      "st": "ok",
+      "src": "",
+      "by": "l3",
+      "at": "2026-03-18T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 10,
+      "st": "ok",
+      "src": "",
+      "by": "l3",
+      "at": "2026-11-05T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__derate_t0": {
+    "s": {
+     "2025": {
+      "v": 77.64,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-03-17T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 80,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-11-04T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__derate_t1": {
+    "s": {
+     "2025": {
+      "v": 101.5,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-03-16T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 100,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-11-03T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__inv_derate_t0": {
+    "s": {
+     "2025": {
+      "v": 48.85,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-03-15T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 50,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-11-02T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__inv_derate_t1": {
+    "s": {
+     "2025": {
+      "v": 82.79,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-03-14T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__p_endur": {
+    "s": {
+     "2025": {
+      "v": 35.35,
+      "st": "ok",
+      "src": "",
+      "by": "l3",
+      "at": "2026-03-13T00:00:00.000Z"
+     }
+    }
+   },
+   "mc__e_lap": {
+    "s": {
+     "2025": {
+      "v": 0.307,
+      "st": "calc",
+      "src": "",
+      "by": "l3",
+      "at": "2026-03-12T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.3,
+      "st": "calc",
+      "src": "",
+      "by": "l3",
+      "at": "2026-10-30T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__e_pack": {
+    "s": {
+     "2025": {
+      "v": 7.549,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-03-11T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 7.4,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-10-29T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_vmax": {
+    "s": {
+     "2025": {
+      "v": 4.143,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-03-10T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 4.2,
+      "st": "asm",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-28T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_vnom": {
+    "s": {
+     "2025": {
+      "v": 3.614,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-03-09T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 3.6,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-27T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_vmin": {
+    "s": {
+     "2025": {
+      "v": 2.54,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-03-08T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 2.5,
+      "st": "rev",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-26T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_ah": {
+    "s": {
+     "2025": {
+      "v": 3.872,
+      "st": "ok",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-03-07T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_r": {
+    "s": {
+     "2025": {
+      "v": 12.11,
+      "st": "ok",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-03-06T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_imax": {
+    "s": {
+     "2025": {
+      "v": 35.23,
+      "st": "ok",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-03-05T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_ich": {
+    "s": {
+     "2025": {
+      "v": 5.867,
+      "st": "ok",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-03-04T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 6,
+      "st": "rev",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-10-22T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__c_g": {
+    "s": {
+     "2025": {
+      "v": 71.75,
+      "st": "ok",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-03-03T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__n_seg": {
+    "s": {
+     "2025": {
+      "v": 5.162,
+      "st": "ok",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-03-02T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__n_s": {
+    "s": {
+     "2025": {
+      "v": 71.07,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-03-01T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 70,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-19T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__n_p": {
+    "s": {
+     "2025": {
+      "v": 7.164,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-02-28T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 7,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-18T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__v_pack": {
+    "s": {
+     "2025": {
+      "v": 409.7,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-02-27T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 400,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-10-17T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__r_pack": {
+    "s": {
+     "2025": {
+      "v": 124,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-02-26T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 120,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-16T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__m_pack": {
+    "s": {
+     "2025": {
+      "v": 43.09,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-02-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 42,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-10-15T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__driver_k": {
+    "s": {
+     "2025": {
+      "v": 0.978,
+      "st": "ok",
+      "src": "",
+      "by": "u4",
+      "at": "2026-02-24T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.95,
+      "st": "rev",
+      "src": "",
+      "by": "u4",
+      "at": "2026-10-14T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__e_target": {
+    "s": {
+     "2025": {
+      "v": 0,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-02-23T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-11-07T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__q_cool": {
+    "s": {
+     "2025": {
+      "v": 5.851,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-02-22T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 6,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-11-06T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__q_mot": {
+    "s": {
+     "2025": {
+      "v": 729.3,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-02-21T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 750,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-11-05T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__q_inv": {
+    "s": {
+     "2025": {
+      "v": 507.6,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-02-20T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 490,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-11-04T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__q_bat": {
+    "s": {
+     "2025": {
+      "v": 1138,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-02-19T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1180,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-11-03T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__v_end_avg": {
+    "s": {
+     "2025": {
+      "v": 51.99,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-02-18T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 53,
+      "st": "calc",
+      "src": "도구 9 냉각 계통 계산기",
+      "by": "u4",
+      "at": "2026-11-02T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__cool_c": {
+    "s": {
+     "2025": {
+      "v": 15444,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-02-17T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 15000,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-11-01T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__cool_ua0": {
+    "s": {
+     "2025": {
+      "v": 58.93,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-02-16T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 60,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-10-31T00:00:00.000Z"
+     }
+    }
+   },
+   "cool__cool_ua60": {
+    "s": {
+     "2025": {
+      "v": 240.6,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-02-15T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 250,
+      "st": "calc",
+      "src": "",
+      "by": "u4",
+      "at": "2026-10-30T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__i_bms_max": {
+    "s": {
+     "2025": {
+      "v": 246.2,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-02-14T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 245,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-29T00:00:00.000Z"
+     }
+    }
+   },
+   "bat__i_chg": {
+    "s": {
+     "2025": {
+      "v": 41.41,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-02-13T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 42,
+      "st": "calc",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-28T00:00:00.000Z"
+     }
+    }
+   },
+   "frame__k_tors": {
+    "s": {
+     "2025": {
+      "v": 2445,
+      "st": "ok",
+      "src": "",
+      "by": "l0",
+      "at": "2026-02-12T00:00:00.000Z"
+     }
+    }
+   },
+   "all__dist_goal": {
+    "s": {
+     "2025": {
+      "v": 21.2,
+      "st": "ok",
+      "src": "",
+      "by": "u1",
+      "at": "2026-02-11T00:00:00.000Z"
+     }
+    }
+   }
+  },
+  "tp": {
+   "frame__1": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"1\",\"name\":\"질량 · 무게중심 계산기\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"L\":1550,\"tf\":1200,\"tr\":1180,\"r_load\":220},\"ext\":{\"mass\":{\"g01\":{\"s\":{\"2025\":{\"name\":\"프레임 · 방화벽\",\"cat\":\"s\",\"x\":910,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"스페이스 프레임\",\"m\":33.28,\"n\":1},{\"name\":\"방화벽 판\",\"m\":0.83,\"n\":2},{\"name\":\"리벳 · 볼트\",\"m\":0.42,\"n\":1}],\"ord\":1},\"2026\":{\"name\":\"프레임 · 방화벽\",\"cat\":\"s\",\"x\":910,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"스페이스 프레임\",\"m\":32,\"n\":1},{\"name\":\"방화벽 판\",\"m\":0.8,\"n\":2},{\"name\":\"리벳 · 볼트\",\"m\":0.4,\"n\":1}],\"ord\":1}}},\"g02\":{\"s\":{\"2025\":{\"name\":\"시트 · 헤드레스트\",\"cat\":\"s\",\"x\":760,\"y\":0,\"z\":380,\"hue\":265,\"items\":[{\"name\":\"시트\",\"m\":2.39,\"n\":1},{\"name\":\"헤드레스트\",\"m\":0.62,\"n\":1},{\"name\":\"벨트\",\"m\":1.14,\"n\":1}],\"ord\":2},\"2026\":{\"name\":\"시트 · 헤드레스트\",\"cat\":\"s\",\"x\":760,\"y\":0,\"z\":380,\"hue\":265,\"items\":[{\"name\":\"시트\",\"m\":2.3,\"n\":1},{\"name\":\"헤드레스트\",\"m\":0.6,\"n\":1},{\"name\":\"벨트\",\"m\":1.1,\"n\":1}],\"ord\":2}}},\"g03\":{\"s\":{\"2025\":{\"name\":\"카울 · 언더트레이\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"카울\",\"m\":5.41,\"n\":1},{\"name\":\"언더트레이\",\"m\":1.46,\"n\":1},{\"name\":\"패스너\",\"m\":0.02,\"n\":24}],\"ord\":3},\"2026\":{\"name\":\"카울 · 언더트레이\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"카울\",\"m\":5.2,\"n\":1},{\"name\":\"언더트레이\",\"m\":1.4,\"n\":1},{\"name\":\"패스너\",\"m\":0.02,\"n\":24}],\"ord\":3}}},\"g04\":{\"s\":{\"2025\":{\"name\":\"앞 업라이트 assy 왼\",\"cat\":\"uf\",\"x\":1560,\"y\":560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.14,\"n\":1},{\"name\":\"허브\",\"m\":0.94,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.83,\"n\":1},{\"name\":\"베어링\",\"m\":0.21,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.73,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.21,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":4},\"2026\":{\"name\":\"앞 업라이트 assy 왼\",\"cat\":\"uf\",\"x\":1560,\"y\":560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.1,\"n\":1},{\"name\":\"허브\",\"m\":0.9,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.8,\"n\":1},{\"name\":\"베어링\",\"m\":0.2,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.7,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.2,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":4}}},\"g05\":{\"s\":{\"2025\":{\"name\":\"뒤 업라이트 assy 왼\",\"cat\":\"ur\",\"x\":0,\"y\":550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.25,\"n\":1},{\"name\":\"허브\",\"m\":1.14,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.73,\"n\":1},{\"name\":\"베어링\",\"m\":0.26,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.78,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.16,\"n\":1,\"half\":true}],\"ord\":5},\"2026\":{\"name\":\"뒤 업라이트 assy 왼\",\"cat\":\"ur\",\"x\":0,\"y\":550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.2,\"n\":1},{\"name\":\"허브\",\"m\":1.1,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.7,\"n\":1},{\"name\":\"베어링\",\"m\":0.25,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.75,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.15,\"n\":1,\"half\":true}],\"ord\":5}}},\"g06\":{\"s\":{\"2025\":{\"name\":\"앞 업라이트 assy 오른\",\"cat\":\"uf\",\"x\":1560,\"y\":-560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.14,\"n\":1},{\"name\":\"허브\",\"m\":0.94,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.83,\"n\":1},{\"name\":\"베어링\",\"m\":0.21,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.73,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.21,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":6},\"2026\":{\"name\":\"앞 업라이트 assy 오른\",\"cat\":\"uf\",\"x\":1560,\"y\":-560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.1,\"n\":1},{\"name\":\"허브\",\"m\":0.9,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.8,\"n\":1},{\"name\":\"베어링\",\"m\":0.2,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.7,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.2,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":6}}},\"g07\":{\"s\":{\"2025\":{\"name\":\"뒤 업라이트 assy 오른\",\"cat\":\"ur\",\"x\":0,\"y\":-550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.25,\"n\":1},{\"name\":\"허브\",\"m\":1.14,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.73,\"n\":1},{\"name\":\"베어링\",\"m\":0.26,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.78,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.16,\"n\":1,\"half\":true}],\"ord\":7},\"2026\":{\"name\":\"뒤 업라이트 assy 오른\",\"cat\":\"ur\",\"x\":0,\"y\":-550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.2,\"n\":1},{\"name\":\"허브\",\"m\":1.1,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.7,\"n\":1},{\"name\":\"베어링\",\"m\":0.25,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.75,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.15,\"n\":1,\"half\":true}],\"ord\":7}}},\"g08\":{\"s\":{\"2025\":{\"name\":\"댐퍼 · 벨크랭크 (앞)\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":520,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.83,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.42,\"n\":2},{\"name\":\"ARB\",\"m\":0.62,\"n\":0}],\"ord\":8},\"2026\":{\"name\":\"댐퍼 · 벨크랭크 (앞)\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":520,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.8,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.4,\"n\":2},{\"name\":\"ARB\",\"m\":0.6,\"n\":0}],\"ord\":8}}},\"g09\":{\"s\":{\"2025\":{\"name\":\"댐퍼 · 벨크랭크 (뒤)\",\"cat\":\"s\",\"x\":110,\"y\":0,\"z\":470,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.83,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.42,\"n\":2},{\"name\":\"ARB\",\"m\":0.62,\"n\":1}],\"ord\":9},\"2026\":{\"name\":\"댐퍼 · 벨크랭크 (뒤)\",\"cat\":\"s\",\"x\":110,\"y\":0,\"z\":470,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.8,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.4,\"n\":2},{\"name\":\"ARB\",\"m\":0.6,\"n\":1}],\"ord\":9}}},\"g10\":{\"s\":{\"2025\":{\"name\":\"조향\",\"cat\":\"s\",\"x\":1660,\"y\":0,\"z\":210,\"hue\":40,\"items\":[{\"name\":\"랙 · 피니언\",\"m\":1.35,\"n\":1},{\"name\":\"타이로드\",\"m\":0.21,\"n\":2,\"half\":true},{\"name\":\"스티어링 휠\",\"m\":0.94,\"n\":1},{\"name\":\"칼럼\",\"m\":0.42,\"n\":1}],\"ord\":10},\"2026\":{\"name\":\"조향\",\"cat\":\"s\",\"x\":1660,\"y\":0,\"z\":210,\"hue\":40,\"items\":[{\"name\":\"랙 · 피니언\",\"m\":1.3,\"n\":1},{\"name\":\"타이로드\",\"m\":0.2,\"n\":2,\"half\":true},{\"name\":\"스티어링 휠\",\"m\":0.9,\"n\":1},{\"name\":\"칼럼\",\"m\":0.4,\"n\":1}],\"ord\":10}}},\"g11\":{\"s\":{\"2025\":{\"name\":\"페달 박스 · 유압\",\"cat\":\"s\",\"x\":1990,\"y\":0,\"z\":250,\"hue\":5,\"items\":[{\"name\":\"페달 박스\",\"m\":2.7,\"n\":1},{\"name\":\"마스터실린더\",\"m\":0.47,\"n\":2},{\"name\":\"리저버\",\"m\":0.1,\"n\":2}],\"ord\":11},\"2026\":{\"name\":\"페달 박스 · 유압\",\"cat\":\"s\",\"x\":1990,\"y\":0,\"z\":250,\"hue\":5,\"items\":[{\"name\":\"페달 박스\",\"m\":2.6,\"n\":1},{\"name\":\"마스터실린더\",\"m\":0.45,\"n\":2},{\"name\":\"리저버\",\"m\":0.1,\"n\":2}],\"ord\":11}}},\"g12\":{\"s\":{\"2025\":{\"name\":\"모터 · 디퍼렌셜\",\"cat\":\"s\",\"x\":60,\"y\":0,\"z\":225,\"hue\":130,\"items\":[{\"name\":\"모터\",\"m\":12.9,\"n\":1},{\"name\":\"디퍼렌셜\",\"m\":4.06,\"n\":1},{\"name\":\"체인\",\"m\":0.83,\"n\":1},{\"name\":\"텐셔너\",\"m\":0.16,\"n\":2},{\"name\":\"드라이브샤프트 (CV축)\",\"m\":1.14,\"n\":2,\"half\":true}],\"ord\":12},\"2026\":{\"name\":\"모터 · 디퍼렌셜\",\"cat\":\"s\",\"x\":60,\"y\":0,\"z\":225,\"hue\":130,\"items\":[{\"name\":\"모터\",\"m\":12.4,\"n\":1},{\"name\":\"디퍼렌셜\",\"m\":3.9,\"n\":1},{\"name\":\"체인\",\"m\":0.8,\"n\":1},{\"name\":\"텐셔너\",\"m\":0.15,\"n\":2},{\"name\":\"드라이브샤프트 (CV축)\",\"m\":1.1,\"n\":2,\"half\":true}],\"ord\":12}}},\"g13\":{\"s\":{\"2025\":{\"name\":\"인버터\",\"cat\":\"s\",\"x\":360,\"y\":0,\"z\":580,\"hue\":220,\"items\":[{\"name\":\"모터 컨트롤러\",\"m\":6.76,\"n\":1},{\"name\":\"HV 케이블\",\"m\":0.94,\"n\":1}],\"ord\":13},\"2026\":{\"name\":\"인버터\",\"cat\":\"s\",\"x\":360,\"y\":0,\"z\":580,\"hue\":220,\"items\":[{\"name\":\"모터 컨트롤러\",\"m\":6.5,\"n\":1},{\"name\":\"HV 케이블\",\"m\":0.9,\"n\":1}],\"ord\":13}}},\"g14\":{\"s\":{\"2025\":{\"name\":\"축전지\",\"cat\":\"s\",\"x\":476,\"y\":0,\"z\":210,\"hue\":25,\"items\":[{\"name\":\"셀 모듈\",\"m\":4.47,\"n\":6},{\"name\":\"컨테이너\",\"m\":6.34,\"n\":1},{\"name\":\"BMS\",\"m\":0.62,\"n\":1},{\"name\":\"저전압 배터리\",\"m\":1.25,\"n\":1}],\"ord\":14},\"2026\":{\"name\":\"축전지\",\"cat\":\"s\",\"x\":476,\"y\":0,\"z\":210,\"hue\":25,\"items\":[{\"name\":\"셀 모듈\",\"m\":4.3,\"n\":6},{\"name\":\"컨테이너\",\"m\":6.1,\"n\":1},{\"name\":\"BMS\",\"m\":0.6,\"n\":1},{\"name\":\"저전압 배터리\",\"m\":1.2,\"n\":1}],\"ord\":14}}},\"g15\":{\"s\":{\"2025\":{\"name\":\"냉각 왼\",\"cat\":\"s\",\"x\":860,\"y\":430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.35,\"n\":1},{\"name\":\"팬\",\"m\":0.62,\"n\":1},{\"name\":\"호스\",\"m\":0.62,\"n\":1}],\"ord\":15},\"2026\":{\"name\":\"냉각 왼\",\"cat\":\"s\",\"x\":860,\"y\":430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.3,\"n\":1},{\"name\":\"팬\",\"m\":0.6,\"n\":1},{\"name\":\"호스\",\"m\":0.6,\"n\":1}],\"ord\":15}}},\"g16\":{\"s\":{\"2025\":{\"name\":\"냉각 오른\",\"cat\":\"s\",\"x\":860,\"y\":-430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.35,\"n\":1},{\"name\":\"팬\",\"m\":0.62,\"n\":1},{\"name\":\"펌프\",\"m\":0.83,\"n\":1}],\"ord\":16},\"2026\":{\"name\":\"냉각 오른\",\"cat\":\"s\",\"x\":860,\"y\":-430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.3,\"n\":1},{\"name\":\"팬\",\"m\":0.6,\"n\":1},{\"name\":\"펌프\",\"m\":0.8,\"n\":1}],\"ord\":16}}},\"g17\":{\"s\":{\"2025\":{\"name\":\"앞날개\",\"cat\":\"s\",\"x\":2240,\"y\":0,\"z\":170,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.66,\"n\":1},{\"name\":\"플랩\",\"m\":0.62,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.26,\"n\":2}],\"ord\":17},\"2026\":{\"name\":\"앞날개\",\"cat\":\"s\",\"x\":2240,\"y\":0,\"z\":170,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.6,\"n\":1},{\"name\":\"플랩\",\"m\":0.6,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.25,\"n\":2}],\"ord\":17}}},\"g18\":{\"s\":{\"2025\":{\"name\":\"뒤날개\",\"cat\":\"s\",\"x\":-60,\"y\":0,\"z\":900,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.87,\"n\":1},{\"name\":\"플랩\",\"m\":0.73,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.31,\"n\":2},{\"name\":\"스완넥\",\"m\":0.73,\"n\":1}],\"ord\":18},\"2026\":{\"name\":\"뒤날개\",\"cat\":\"s\",\"x\":-60,\"y\":0,\"z\":900,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.8,\"n\":1},{\"name\":\"플랩\",\"m\":0.7,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.3,\"n\":2},{\"name\":\"스완넥\",\"m\":0.7,\"n\":1}],\"ord\":18}}}},\"drv\":{\"d1\":{\"s\":{\"2025\":{\"label\":\"시험 1\",\"sex\":\"m\",\"height\":175,\"mass\":70,\"gear\":{\"helmet\":0,\"suit\":0,\"belt\":0},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1780,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}},\"2026\":{\"label\":\"시험 1\",\"sex\":\"m\",\"height\":175,\"mass\":68,\"gear\":{\"helmet\":1.4,\"suit\":1.1,\"belt\":0.9},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1780,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}}}},\"d2\":{\"s\":{\"2026\":{\"label\":\"시험 2\",\"sex\":\"m\",\"height\":184,\"mass\":80,\"gear\":{\"helmet\":1.5,\"suit\":1.3,\"belt\":0.9},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1780,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}}}},\"d3\":{\"s\":{\"2026\":{\"label\":\"시험 3\",\"sex\":\"f\",\"height\":165,\"mass\":58,\"gear\":{\"helmet\":1.3,\"suit\":1,\"belt\":0.9},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1620,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}}}}},\"season\":\"2026\",\"dsel\":\"d1\"}}",
+      "by": "l0",
+      "byName": "최서연(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"1\",\"name\":\"질량 · 무게중심 계산기\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"L\":1550,\"tf\":1200,\"tr\":1180,\"r_load\":220},\"ext\":{\"mass\":{\"g01\":{\"s\":{\"2025\":{\"name\":\"프레임 · 방화벽\",\"cat\":\"s\",\"x\":910,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"스페이스 프레임\",\"m\":33.28,\"n\":1},{\"name\":\"방화벽 판\",\"m\":0.83,\"n\":2},{\"name\":\"리벳 · 볼트\",\"m\":0.42,\"n\":1}],\"ord\":1},\"2026\":{\"name\":\"프레임 · 방화벽\",\"cat\":\"s\",\"x\":910,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"스페이스 프레임\",\"m\":32,\"n\":1},{\"name\":\"방화벽 판\",\"m\":0.8,\"n\":2},{\"name\":\"리벳 · 볼트\",\"m\":0.4,\"n\":1}],\"ord\":1}}},\"g02\":{\"s\":{\"2025\":{\"name\":\"시트 · 헤드레스트\",\"cat\":\"s\",\"x\":760,\"y\":0,\"z\":380,\"hue\":265,\"items\":[{\"name\":\"시트\",\"m\":2.39,\"n\":1},{\"name\":\"헤드레스트\",\"m\":0.62,\"n\":1},{\"name\":\"벨트\",\"m\":1.14,\"n\":1}],\"ord\":2},\"2026\":{\"name\":\"시트 · 헤드레스트\",\"cat\":\"s\",\"x\":760,\"y\":0,\"z\":380,\"hue\":265,\"items\":[{\"name\":\"시트\",\"m\":2.3,\"n\":1},{\"name\":\"헤드레스트\",\"m\":0.6,\"n\":1},{\"name\":\"벨트\",\"m\":1.1,\"n\":1}],\"ord\":2}}},\"g03\":{\"s\":{\"2025\":{\"name\":\"카울 · 언더트레이\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"카울\",\"m\":5.41,\"n\":1},{\"name\":\"언더트레이\",\"m\":1.46,\"n\":1},{\"name\":\"패스너\",\"m\":0.02,\"n\":24}],\"ord\":3},\"2026\":{\"name\":\"카울 · 언더트레이\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":330,\"hue\":265,\"items\":[{\"name\":\"카울\",\"m\":5.2,\"n\":1},{\"name\":\"언더트레이\",\"m\":1.4,\"n\":1},{\"name\":\"패스너\",\"m\":0.02,\"n\":24}],\"ord\":3}}},\"g04\":{\"s\":{\"2025\":{\"name\":\"앞 업라이트 assy 왼\",\"cat\":\"uf\",\"x\":1560,\"y\":560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.14,\"n\":1},{\"name\":\"허브\",\"m\":0.94,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.83,\"n\":1},{\"name\":\"베어링\",\"m\":0.21,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.73,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.21,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":4},\"2026\":{\"name\":\"앞 업라이트 assy 왼\",\"cat\":\"uf\",\"x\":1560,\"y\":560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.1,\"n\":1},{\"name\":\"허브\",\"m\":0.9,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.8,\"n\":1},{\"name\":\"베어링\",\"m\":0.2,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.7,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.2,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":4}}},\"g05\":{\"s\":{\"2025\":{\"name\":\"뒤 업라이트 assy 왼\",\"cat\":\"ur\",\"x\":0,\"y\":550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.25,\"n\":1},{\"name\":\"허브\",\"m\":1.14,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.73,\"n\":1},{\"name\":\"베어링\",\"m\":0.26,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.78,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.16,\"n\":1,\"half\":true}],\"ord\":5},\"2026\":{\"name\":\"뒤 업라이트 assy 왼\",\"cat\":\"ur\",\"x\":0,\"y\":550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.2,\"n\":1},{\"name\":\"허브\",\"m\":1.1,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.7,\"n\":1},{\"name\":\"베어링\",\"m\":0.25,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.75,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.15,\"n\":1,\"half\":true}],\"ord\":5}}},\"g06\":{\"s\":{\"2025\":{\"name\":\"앞 업라이트 assy 오른\",\"cat\":\"uf\",\"x\":1560,\"y\":-560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.14,\"n\":1},{\"name\":\"허브\",\"m\":0.94,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.83,\"n\":1},{\"name\":\"베어링\",\"m\":0.21,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.73,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.21,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":6},\"2026\":{\"name\":\"앞 업라이트 assy 오른\",\"cat\":\"uf\",\"x\":1560,\"y\":-560,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.1,\"n\":1},{\"name\":\"허브\",\"m\":0.9,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.8,\"n\":1},{\"name\":\"베어링\",\"m\":0.2,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.7,\"n\":2,\"half\":true},{\"name\":\"푸시로드\",\"m\":0.2,\"n\":1,\"half\":true},{\"name\":\"로드엔드\",\"m\":0.05,\"n\":4,\"half\":true}],\"ord\":6}}},\"g07\":{\"s\":{\"2025\":{\"name\":\"뒤 업라이트 assy 오른\",\"cat\":\"ur\",\"x\":0,\"y\":-550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.25,\"n\":1},{\"name\":\"허브\",\"m\":1.14,\"n\":1},{\"name\":\"디스크\",\"m\":0.73,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.73,\"n\":1},{\"name\":\"베어링\",\"m\":0.26,\"n\":2},{\"name\":\"휠\",\"m\":3.12,\"n\":1},{\"name\":\"타이어\",\"m\":4.78,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.78,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.16,\"n\":1,\"half\":true}],\"ord\":7},\"2026\":{\"name\":\"뒤 업라이트 assy 오른\",\"cat\":\"ur\",\"x\":0,\"y\":-550,\"z\":240,\"hue\":190,\"items\":[{\"name\":\"너클\",\"m\":1.2,\"n\":1},{\"name\":\"허브\",\"m\":1.1,\"n\":1},{\"name\":\"디스크\",\"m\":0.7,\"n\":1},{\"name\":\"캘리퍼\",\"m\":0.7,\"n\":1},{\"name\":\"베어링\",\"m\":0.25,\"n\":2},{\"name\":\"휠\",\"m\":3,\"n\":1},{\"name\":\"타이어\",\"m\":4.6,\"n\":1},{\"name\":\"휠 너트\",\"m\":0.03,\"n\":4},{\"name\":\"위시본\",\"m\":0.75,\"n\":2,\"half\":true},{\"name\":\"토 링크\",\"m\":0.15,\"n\":1,\"half\":true}],\"ord\":7}}},\"g08\":{\"s\":{\"2025\":{\"name\":\"댐퍼 · 벨크랭크 (앞)\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":520,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.83,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.42,\"n\":2},{\"name\":\"ARB\",\"m\":0.62,\"n\":0}],\"ord\":8},\"2026\":{\"name\":\"댐퍼 · 벨크랭크 (앞)\",\"cat\":\"s\",\"x\":1410,\"y\":0,\"z\":520,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.8,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.4,\"n\":2},{\"name\":\"ARB\",\"m\":0.6,\"n\":0}],\"ord\":8}}},\"g09\":{\"s\":{\"2025\":{\"name\":\"댐퍼 · 벨크랭크 (뒤)\",\"cat\":\"s\",\"x\":110,\"y\":0,\"z\":470,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.83,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.42,\"n\":2},{\"name\":\"ARB\",\"m\":0.62,\"n\":1}],\"ord\":9},\"2026\":{\"name\":\"댐퍼 · 벨크랭크 (뒤)\",\"cat\":\"s\",\"x\":110,\"y\":0,\"z\":470,\"hue\":190,\"items\":[{\"name\":\"댐퍼\",\"m\":0.8,\"n\":2,\"half\":true},{\"name\":\"벨크랭크\",\"m\":0.4,\"n\":2},{\"name\":\"ARB\",\"m\":0.6,\"n\":1}],\"ord\":9}}},\"g10\":{\"s\":{\"2025\":{\"name\":\"조향\",\"cat\":\"s\",\"x\":1660,\"y\":0,\"z\":210,\"hue\":40,\"items\":[{\"name\":\"랙 · 피니언\",\"m\":1.35,\"n\":1},{\"name\":\"타이로드\",\"m\":0.21,\"n\":2,\"half\":true},{\"name\":\"스티어링 휠\",\"m\":0.94,\"n\":1},{\"name\":\"칼럼\",\"m\":0.42,\"n\":1}],\"ord\":10},\"2026\":{\"name\":\"조향\",\"cat\":\"s\",\"x\":1660,\"y\":0,\"z\":210,\"hue\":40,\"items\":[{\"name\":\"랙 · 피니언\",\"m\":1.3,\"n\":1},{\"name\":\"타이로드\",\"m\":0.2,\"n\":2,\"half\":true},{\"name\":\"스티어링 휠\",\"m\":0.9,\"n\":1},{\"name\":\"칼럼\",\"m\":0.4,\"n\":1}],\"ord\":10}}},\"g11\":{\"s\":{\"2025\":{\"name\":\"페달 박스 · 유압\",\"cat\":\"s\",\"x\":1990,\"y\":0,\"z\":250,\"hue\":5,\"items\":[{\"name\":\"페달 박스\",\"m\":2.7,\"n\":1},{\"name\":\"마스터실린더\",\"m\":0.47,\"n\":2},{\"name\":\"리저버\",\"m\":0.1,\"n\":2}],\"ord\":11},\"2026\":{\"name\":\"페달 박스 · 유압\",\"cat\":\"s\",\"x\":1990,\"y\":0,\"z\":250,\"hue\":5,\"items\":[{\"name\":\"페달 박스\",\"m\":2.6,\"n\":1},{\"name\":\"마스터실린더\",\"m\":0.45,\"n\":2},{\"name\":\"리저버\",\"m\":0.1,\"n\":2}],\"ord\":11}}},\"g12\":{\"s\":{\"2025\":{\"name\":\"모터 · 디퍼렌셜\",\"cat\":\"s\",\"x\":60,\"y\":0,\"z\":225,\"hue\":130,\"items\":[{\"name\":\"모터\",\"m\":12.9,\"n\":1},{\"name\":\"디퍼렌셜\",\"m\":4.06,\"n\":1},{\"name\":\"체인\",\"m\":0.83,\"n\":1},{\"name\":\"텐셔너\",\"m\":0.16,\"n\":2},{\"name\":\"드라이브샤프트 (CV축)\",\"m\":1.14,\"n\":2,\"half\":true}],\"ord\":12},\"2026\":{\"name\":\"모터 · 디퍼렌셜\",\"cat\":\"s\",\"x\":60,\"y\":0,\"z\":225,\"hue\":130,\"items\":[{\"name\":\"모터\",\"m\":12.4,\"n\":1},{\"name\":\"디퍼렌셜\",\"m\":3.9,\"n\":1},{\"name\":\"체인\",\"m\":0.8,\"n\":1},{\"name\":\"텐셔너\",\"m\":0.15,\"n\":2},{\"name\":\"드라이브샤프트 (CV축)\",\"m\":1.1,\"n\":2,\"half\":true}],\"ord\":12}}},\"g13\":{\"s\":{\"2025\":{\"name\":\"인버터\",\"cat\":\"s\",\"x\":360,\"y\":0,\"z\":580,\"hue\":220,\"items\":[{\"name\":\"모터 컨트롤러\",\"m\":6.76,\"n\":1},{\"name\":\"HV 케이블\",\"m\":0.94,\"n\":1}],\"ord\":13},\"2026\":{\"name\":\"인버터\",\"cat\":\"s\",\"x\":360,\"y\":0,\"z\":580,\"hue\":220,\"items\":[{\"name\":\"모터 컨트롤러\",\"m\":6.5,\"n\":1},{\"name\":\"HV 케이블\",\"m\":0.9,\"n\":1}],\"ord\":13}}},\"g14\":{\"s\":{\"2025\":{\"name\":\"축전지\",\"cat\":\"s\",\"x\":476,\"y\":0,\"z\":210,\"hue\":25,\"items\":[{\"name\":\"셀 모듈\",\"m\":4.47,\"n\":6},{\"name\":\"컨테이너\",\"m\":6.34,\"n\":1},{\"name\":\"BMS\",\"m\":0.62,\"n\":1},{\"name\":\"저전압 배터리\",\"m\":1.25,\"n\":1}],\"ord\":14},\"2026\":{\"name\":\"축전지\",\"cat\":\"s\",\"x\":476,\"y\":0,\"z\":210,\"hue\":25,\"items\":[{\"name\":\"셀 모듈\",\"m\":4.3,\"n\":6},{\"name\":\"컨테이너\",\"m\":6.1,\"n\":1},{\"name\":\"BMS\",\"m\":0.6,\"n\":1},{\"name\":\"저전압 배터리\",\"m\":1.2,\"n\":1}],\"ord\":14}}},\"g15\":{\"s\":{\"2025\":{\"name\":\"냉각 왼\",\"cat\":\"s\",\"x\":860,\"y\":430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.35,\"n\":1},{\"name\":\"팬\",\"m\":0.62,\"n\":1},{\"name\":\"호스\",\"m\":0.62,\"n\":1}],\"ord\":15},\"2026\":{\"name\":\"냉각 왼\",\"cat\":\"s\",\"x\":860,\"y\":430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.3,\"n\":1},{\"name\":\"팬\",\"m\":0.6,\"n\":1},{\"name\":\"호스\",\"m\":0.6,\"n\":1}],\"ord\":15}}},\"g16\":{\"s\":{\"2025\":{\"name\":\"냉각 오른\",\"cat\":\"s\",\"x\":860,\"y\":-430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.35,\"n\":1},{\"name\":\"팬\",\"m\":0.62,\"n\":1},{\"name\":\"펌프\",\"m\":0.83,\"n\":1}],\"ord\":16},\"2026\":{\"name\":\"냉각 오른\",\"cat\":\"s\",\"x\":860,\"y\":-430,\"z\":300,\"hue\":160,\"items\":[{\"name\":\"라디에이터\",\"m\":1.3,\"n\":1},{\"name\":\"팬\",\"m\":0.6,\"n\":1},{\"name\":\"펌프\",\"m\":0.8,\"n\":1}],\"ord\":16}}},\"g17\":{\"s\":{\"2025\":{\"name\":\"앞날개\",\"cat\":\"s\",\"x\":2240,\"y\":0,\"z\":170,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.66,\"n\":1},{\"name\":\"플랩\",\"m\":0.62,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.26,\"n\":2}],\"ord\":17},\"2026\":{\"name\":\"앞날개\",\"cat\":\"s\",\"x\":2240,\"y\":0,\"z\":170,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.6,\"n\":1},{\"name\":\"플랩\",\"m\":0.6,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.25,\"n\":2}],\"ord\":17}}},\"g18\":{\"s\":{\"2025\":{\"name\":\"뒤날개\",\"cat\":\"s\",\"x\":-60,\"y\":0,\"z\":900,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.87,\"n\":1},{\"name\":\"플랩\",\"m\":0.73,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.31,\"n\":2},{\"name\":\"스완넥\",\"m\":0.73,\"n\":1}],\"ord\":18},\"2026\":{\"name\":\"뒤날개\",\"cat\":\"s\",\"x\":-60,\"y\":0,\"z\":900,\"hue\":205,\"items\":[{\"name\":\"메인 플레인\",\"m\":1.8,\"n\":1},{\"name\":\"플랩\",\"m\":0.7,\"n\":2},{\"name\":\"엔드플레이트\",\"m\":0.3,\"n\":2},{\"name\":\"스완넥\",\"m\":0.7,\"n\":1}],\"ord\":18}}}},\"drv\":{\"d1\":{\"s\":{\"2025\":{\"label\":\"시험 1\",\"sex\":\"m\",\"height\":175,\"mass\":70,\"gear\":{\"helmet\":0,\"suit\":0,\"belt\":0},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1780,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}},\"2026\":{\"label\":\"시험 1\",\"sex\":\"m\",\"height\":175,\"mass\":68,\"gear\":{\"helmet\":1.4,\"suit\":1.1,\"belt\":0.9},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1780,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}}}},\"d2\":{\"s\":{\"2026\":{\"label\":\"시험 2\",\"sex\":\"m\",\"height\":184,\"mass\":80,\"gear\":{\"helmet\":1.5,\"suit\":1.3,\"belt\":0.9},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1780,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}}}},\"d3\":{\"s\":{\"2026\":{\"label\":\"시험 3\",\"sex\":\"f\",\"height\":165,\"mass\":58,\"gear\":{\"helmet\":1.3,\"suit\":1,\"belt\":0.9},\"back\":32,\"hip\":{\"x\":970,\"z\":230},\"pedal\":{\"x\":1620,\"z\":250},\"sw\":{\"x\":1185,\"z\":500},\"seg\":{}}}}},\"season\":\"2026\",\"dsel\":\"d1\"}}",
+      "by": "l0",
+      "byName": "최서연(파트장)"
+     }
+    }
+   },
+   "all__2": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"2\",\"name\":\"랩타임 시뮬레이터 (정밀)\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"w_car\":1.41,\"oh_f\":0.92,\"oh_r\":0.44,\"mu\":1.5,\"mu_s\":0.246,\"r_eff\":229,\"crr\":0.015,\"cla\":3,\"cda\":1.4,\"xcop\":698,\"hcop\":420,\"pmax\":80,\"rg_tmax\":230,\"tmax\":230,\"nmax\":6500,\"v_ref\":710,\"ke_ratio\":0.6523,\"eta_mot\":95,\"eta_inv\":97,\"eff_mg\":0,\"inv_r\":30,\"c_pct\":100,\"dr_t0\":80,\"dr_t1\":100,\"kt\":0.64,\"i_pk\":400,\"i_ct\":200,\"ict_m\":1,\"i_cpct\":100,\"di_t0\":50,\"di_t1\":85,\"th_c\":6000,\"th_r\":0.02,\"m_ha0\":10,\"m_ha60\":40,\"th_cool\":40,\"cw_tw\":40,\"cw_cp\":4.18,\"cw_rho\":1000,\"i_wtw\":40,\"i_wcp\":4.18,\"i_wrho\":1000,\"b_wtw\":40,\"b_wcp\":4.18,\"b_wrho\":1000,\"th_init\":40,\"gr\":3.55,\"eta_dt\":95,\"j_eq\":0.5,\"pk_dir\":0,\"n_s\":70,\"n_p\":7,\"c_vmax\":4.2,\"c_vnom\":3.6,\"c_vmin\":2.5,\"c_ah\":4,\"r_pack\":120,\"p_vmax\":294,\"p_vnom\":252,\"p_vmin\":175,\"p_ah\":28,\"i_bms_max\":245,\"i_chg\":42,\"e_target\":0,\"e_lim\":0,\"drv\":0,\"dr_real\":0,\"dr_ks\":0.95,\"dr_ke\":0.7,\"rg_on\":0,\"wc_on\":1,\"dl_on\":0,\"fz0_m\":0,\"rl_on\":0,\"rl_m\":0.2,\"rl_b\":1,\"md\":0,\"th_on\":0,\"cw_on\":0,\"in_on\":0,\"m_cool\":0,\"i_cool\":0,\"b_cool\":0,\"i_c\":2000,\"i_r\":0.05,\"i_init\":40,\"i_ha0\":5,\"i_ha60\":20,\"bt_on\":0,\"t_amb\":25,\"cw_mode\":0,\"cw_v\":1.2,\"cw_q\":8,\"cw_ra\":0.06,\"cw_kd\":0.3,\"cw_fan\":0.08,\"cw_fm\":0,\"cw_fon\":50,\"cw_ua\":250,\"cw_itd\":60,\"cw_cm\":0,\"i_wv\":1.2,\"i_wq\":8,\"i_wra\":0.06,\"i_wkd\":0.3,\"i_wfan\":0.08,\"i_wfm\":0,\"i_wfon\":50,\"i_wua\":250,\"i_witd\":60,\"i_wcm\":0,\"b_wv\":1.2,\"b_wq\":8,\"b_wra\":0.06,\"b_wkd\":0.3,\"b_wfan\":0.08,\"b_wfm\":0,\"b_wfon\":50,\"b_wua\":250,\"b_witd\":60,\"b_wcm\":0,\"b_c\":30000,\"b_ha\":15,\"b_ha60\":15,\"b_r\":0.05,\"b_t0\":25,\"b_alpha\":0.01,\"h_rcf\":30,\"h_rcr\":50,\"k_roll\":500,\"rsd\":50,\"tire_fz0\":736,\"tire_ca0\":450,\"tire_cn\":0.8,\"tire_c\":1.3,\"tire_e\":0,\"tire_relax\":0.3,\"tr_ks\":2,\"steer_ratio\":5,\"delta_max\":34,\"izz\":70,\"ixx\":30,\"m_us_f\":12,\"m_us_r\":12,\"c_roll\":30,\"v_test\":60,\"ay_test\":0.4,\"t_skid\":0},\"ext\":{\"course\":\"end\",\"lap\":{\"end\":\"1\",\"free\":\"1\"},\"free\":{\"text\":\"종류, 길이 m, 반경 m, 왼쪽 폭 m, 오른쪽 폭 m, 슬라럼 콘 간격 m\\n직선, 25, , 2, 2  # 출발 직선\\n직선, 60, , 5, 5, 10  # 슬라럼 (콘 간격 10 m · 폭 10 m)\\n직선, 20\\n왼쪽, 31.42, 20, 3, 2  # 왼쪽 90° (지름 40 m · 바깥 넓음)\\n직선, 40, , 2, 2\\n오른쪽, 7.85, 10  # 시케인\\n왼쪽, 7.85, 10\\n왼쪽, 7.85, 10\\n오른쪽, 7.85, 10\\n직선, 30\\n왼쪽, 15.71, 5  # 왼쪽 헤어핀 (지름 10 m)\\n직선, 35\\n오른쪽, 47.12, 30, 5, 5, 8  # 곡선 위 슬라럼 (반경 30 m · 콘 간격 8 m · 폭 10 m)\\n직선, 36, , 5, 5, 6  # 짧은 슬라럼 (콘 간격 6 m · 폭 10 m)\\n직선, 40\\n오른쪽, 17.28, 5.5\\n직선, 25\\n왼쪽, 23.56, 15\\n직선, 50\\n오른쪽, 31.42, 10\\n직선, 30\",\"laps\":1,\"s0\":0,\"end\":0},\"mtext\":\"회전수 rpm, 최대 토크 N·m, 연속 토크 N·m\\n0, 224.4, 108.1\\n200, 226.4, 109.6\\n400, 228.7, 111.1\\n600, 230.3, 112.2\\n800, 230.0, 112.1\\n1000, 230.0, 111.7\\n1200, 230.0, 111.7\\n1400, 229.9, 111.7\\n1600, 229.8, 111.5\\n1800, 229.8, 111.7\\n2000, 230.0, 111.7\\n2200, 230.0, 111.7\\n2400, 229.8, 111.7\\n2600, 230.0, 112.1\\n2800, 230.0, 111.5\\n3000, 230.0, 111.7\\n3200, 230.0, 111.7\\n3400, 229.9, 111.7\\n3600, 230.0, 111.7\\n3800, 230.0, 111.5\\n4000, 230.0, 111.7\\n4200, 230.0, 111.7\\n4400, 230.0, 111.7\\n4600, 229.7, 111.7\\n4800, 231.1, 111.7\\n5000, 230.0, 111.4\\n5200, 225.6, 112.2\\n5400, 219.1, 112.8\\n5600, 212.4, 110.3\\n5800, 204.9, 105.6\\n6000, 196.5, 100.9\\n6200, 190.3, 97.3\\n6400, 184.1, 93.7\\n6500, 181.1, 92.0\",\"eM\":\"토크 N·m \\\\ 회전수 rpm, 0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000, 4250, 4500, 4750, 5000, 5250, 5500\\n0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n10, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n20, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.2, 86.3, 86.3, 86.3, 86.3, 86.3, 86.2, 86.1, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n30, 86.0, 86.0, 86.0, 86.4, 87.0, 87.5, 87.8, 87.9, 88.0, 88.0, 88.0, 88.0, 87.9, 87.8, 87.7, 87.4, 86.9, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n40, 86.0, 86.0, 86.5, 87.5, 88.2, 88.9, 89.4, 89.5, 89.6, 89.6, 89.6, 89.6, 89.6, 89.6, 89.6, 89.3, 88.8, 87.6, 86.0, 86.0, 86.0, 86.0, 86.0\\n50, 86.0, 86.0, 87.1, 88.3, 89.3, 90.5, 91.4, 91.9, 92.1, 92.1, 92.1, 92.1, 92.1, 92.1, 92.0, 91.7, 91.0, 89.7, 88.0, 86.0, 86.0, 86.0, 86.0\\n60, 86.0, 86.0, 87.4, 89.0, 90.6, 92.7, 93.7, 94.1, 94.2, 94.3, 94.3, 94.2, 94.1, 94.1, 94.1, 94.0, 93.3, 92.2, 90.2, 87.7, 86.0, 86.0, 86.0\\n70, 86.0, 86.0, 87.6, 89.5, 92.2, 94.1, 94.3, 94.5, 94.9, 95.4, 95.4, 95.3, 95.0, 94.8, 94.6, 94.4, 94.3, 94.1, 92.7, 89.8, 87.0, 86.0, 86.0\\n80, 86.0, 86.0, 87.8, 89.8, 93.1, 94.3, 94.5, 94.9, 95.6, 96.1, 96.1, 96.1, 96.0, 95.7, 95.2, 94.9, 94.7, 94.5, 94.2, 92.2, 89.1, 86.0, 86.0\\n90, 86.0, 86.0, 87.9, 90.4, 93.2, 94.4, 94.8, 95.3, 96.1, 96.2, 96.3, 96.2, 96.2, 96.1, 96.0, 95.5, 95.0, 94.8, 94.5, 94.0, 91.1, 87.6, 86.0\\n100, 86.0, 86.0, 88.0, 90.5, 92.4, 94.4, 94.9, 95.8, 96.2, 96.4, 96.5, 96.4, 96.4, 96.3, 96.2, 96.1, 95.5, 95.1, 94.8, 94.3, 92.9, 89.6, 86.0\\n110, 86.0, 86.0, 87.8, 89.9, 90.7, 94.5, 95.2, 96.1, 96.3, 96.3, 96.3, 96.3, 96.3, 96.2, 96.2, 96.1, 95.7, 95.3, 95.0, 94.6, 94.1, 90.4, 87.3\\n120, 86.0, 86.0, 87.7, 90.5, 90.8, 94.6, 95.4, 96.1, 96.2, 96.2, 96.1, 96.1, 96.1, 96.1, 96.0, 95.9, 95.7, 95.4, 95.2, 94.8, 94.3, 92.5, 89.3\\n130, 86.0, 86.0, 87.5, 90.3, 92.6, 94.7, 95.5, 95.9, 95.9, 96.0, 95.9, 95.9, 95.9, 95.8, 95.8, 95.7, 95.6, 95.4, 95.2, 94.9, 94.4, 94.0, 91.0\\n140, 86.0, 86.0, 87.1, 89.8, 92.8, 94.7, 95.4, 95.6, 95.7, 95.7, 95.7, 95.7, 95.7, 95.6, 95.6, 95.5, 95.4, 95.3, 95.1, 94.9, 94.5, 94.2, 91.8\\n150, 86.0, 86.0, 86.7, 89.4, 92.3, 94.7, 95.2, 95.4, 95.4, 95.5, 95.5, 95.5, 95.4, 95.4, 95.3, 95.3, 95.2, 95.1, 95.0, 94.8, 94.5, 94.2, 94.0\\n160, 86.0, 86.0, 86.3, 88.9, 91.8, 94.3, 95.0, 95.1, 95.2, 95.2, 95.2, 95.2, 95.2, 95.2, 95.1, 95.1, 95.0, 94.9, 94.8, 94.7, 94.5, 94.3, 94.1\\n170, 86.0, 86.0, 86.0, 88.4, 91.2, 93.9, 94.6, 94.8, 94.9, 95.0, 95.0, 95.0, 95.0, 94.9, 94.9, 94.8, 94.8, 94.7, 94.6, 94.5, 94.4, 94.2, 94.0\\n180, 86.0, 86.0, 86.0, 87.8, 90.5, 92.9, 94.2, 94.4, 94.6, 94.7, 94.7, 94.7, 94.6, 94.6, 94.6, 94.5, 94.5, 94.5, 94.4, 94.3, 94.3, 94.2, 94.0\\n190, 86.0, 86.0, 86.0, 87.3, 89.7, 92.0, 93.4, 94.1, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.2, 94.2, 94.2, 94.1, 94.1, 94.0\\n200, 86.0, 86.0, 86.0, 86.6, 89.1, 91.2, 92.6, 93.3, 93.8, 94.0, 94.0, 94.0, 94.0, 94.0, 94.0, 94.0, 94.0, 93.9, 93.8, 93.8, 93.8, 93.6, 92.7\\n210, 86.0, 86.0, 86.0, 86.0, 88.4, 90.6, 91.8, 92.2, 92.5, 92.8, 92.7, 92.7, 92.7, 92.7, 92.7, 92.6, 92.7, 92.5, 92.3, 92.1, 91.8, 91.4, 90.9\\n220, 86.0, 86.0, 86.0, 86.0, 87.5, 89.9, 90.9, 91.1, 91.3, 91.3, 91.2, 91.2, 91.3, 91.3, 91.3, 91.4, 91.4, 91.0, 90.8, 90.5, 89.9, 90.1, 90.5\\n230, 86.0, 86.0, 86.0, 86.0, 86.5, 88.5, 90.0, 90.2, 90.2, 90.1, 90.1, 90.1, 89.8, 90.2, 89.8, 90.1, 90.1, 90.1, 90.1, 90.1, 90.1, 90.1, 90.1\\n240, 86.0, 86.0, 86.0, 86.0, 86.0, 86.8, 87.3, 87.5, 87.5, 87.4, 87.4, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.0\\n250, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\",\"eI\":\"\",\"tire\":\"\",\"bO\":\"\",\"bR\":\"\",\"bC\":\"\",\"rqM\":\"\",\"rqI\":\"\",\"rqB\":\"\",\"eD\":\"\",\"dM\":\"\",\"dI\":\"\",\"stab\":[[3.174,0.781,0.78],[6.348,1.563,1.559],[9.522,2.346,2.338],[12.696,3.131,3.116],[15.87,3.918,3.893],[19.044,4.706,4.67],[22.218,5.496,5.447],[25.392,6.288,6.225],[28.566,7.082,7.002],[31.74,7.879,7.78],[34.914,8.678,8.558],[38.088,9.48,9.336],[41.262,10.284,10.116],[44.436,11.092,10.896],[47.61,11.903,11.678],[50.784,12.718,12.46],[53.958,13.536,13.245],[57.132,14.358,14.03],[60.306,15.184,14.818],[63.48,16.014,15.607],[66.654,16.849,16.398],[69.828,17.688,17.192],[73.002,18.533,17.988],[76.176,19.383,18.786],[79.35,20.238,19.588],[82.524,21.099,20.393],[85.698,21.966,21.2],[88.872,22.84,22.012],[92.046,23.72,22.827],[95.22,24.608,23.646],[98.394,25.503,24.469],[101.568,26.405,25.296],[104.742,27.316,26.129],[107.916,28.236,26.966],[111.09,29.165,27.809],[114.264,30.103,28.658],[117.438,31.052,29.512],[120.612,32.012,30.373],[123.786,32.983,31.241],[126.96,33.965,32.116]],\"grMode\":\"my\",\"ecourse\":\"end\",\"use\":{\"mt\":\"tab\",\"eM\":\"const\",\"eI\":\"const\",\"tire\":\"const\",\"bO\":\"const\",\"bR\":\"const\",\"bC\":\"const\",\"rqM\":\"const\",\"rqI\":\"const\",\"rqB\":\"const\",\"eD\":\"const\",\"dM\":\"const\",\"dI\":\"const\"}}}",
+      "by": "u1",
+      "byName": "한회장(회장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"2\",\"name\":\"랩타임 시뮬레이터 (정밀)\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"w_car\":1.41,\"oh_f\":0.92,\"oh_r\":0.44,\"mu\":1.5,\"mu_s\":0.246,\"r_eff\":229,\"crr\":0.015,\"cla\":3,\"cda\":1.4,\"xcop\":698,\"hcop\":420,\"pmax\":80,\"rg_tmax\":230,\"tmax\":230,\"nmax\":6500,\"v_ref\":710,\"ke_ratio\":0.6523,\"eta_mot\":95,\"eta_inv\":97,\"eff_mg\":0,\"inv_r\":30,\"c_pct\":100,\"dr_t0\":80,\"dr_t1\":100,\"kt\":0.64,\"i_pk\":400,\"i_ct\":200,\"ict_m\":1,\"i_cpct\":100,\"di_t0\":50,\"di_t1\":85,\"th_c\":6000,\"th_r\":0.02,\"m_ha0\":10,\"m_ha60\":40,\"th_cool\":40,\"cw_tw\":40,\"cw_cp\":4.18,\"cw_rho\":1000,\"i_wtw\":40,\"i_wcp\":4.18,\"i_wrho\":1000,\"b_wtw\":40,\"b_wcp\":4.18,\"b_wrho\":1000,\"th_init\":40,\"gr\":3.55,\"eta_dt\":95,\"j_eq\":0.5,\"pk_dir\":0,\"n_s\":70,\"n_p\":7,\"c_vmax\":4.2,\"c_vnom\":3.6,\"c_vmin\":2.5,\"c_ah\":4,\"r_pack\":120,\"p_vmax\":294,\"p_vnom\":252,\"p_vmin\":175,\"p_ah\":28,\"i_bms_max\":245,\"i_chg\":42,\"e_target\":0,\"e_lim\":0,\"drv\":0,\"dr_real\":0,\"dr_ks\":0.95,\"dr_ke\":0.7,\"rg_on\":0,\"wc_on\":1,\"dl_on\":0,\"fz0_m\":0,\"rl_on\":0,\"rl_m\":0.2,\"rl_b\":1,\"md\":0,\"th_on\":0,\"cw_on\":0,\"in_on\":0,\"m_cool\":0,\"i_cool\":0,\"b_cool\":0,\"i_c\":2000,\"i_r\":0.05,\"i_init\":40,\"i_ha0\":5,\"i_ha60\":20,\"bt_on\":0,\"t_amb\":25,\"cw_mode\":0,\"cw_v\":1.2,\"cw_q\":8,\"cw_ra\":0.06,\"cw_kd\":0.3,\"cw_fan\":0.08,\"cw_fm\":0,\"cw_fon\":50,\"cw_ua\":250,\"cw_itd\":60,\"cw_cm\":0,\"i_wv\":1.2,\"i_wq\":8,\"i_wra\":0.06,\"i_wkd\":0.3,\"i_wfan\":0.08,\"i_wfm\":0,\"i_wfon\":50,\"i_wua\":250,\"i_witd\":60,\"i_wcm\":0,\"b_wv\":1.2,\"b_wq\":8,\"b_wra\":0.06,\"b_wkd\":0.3,\"b_wfan\":0.08,\"b_wfm\":0,\"b_wfon\":50,\"b_wua\":250,\"b_witd\":60,\"b_wcm\":0,\"b_c\":30000,\"b_ha\":15,\"b_ha60\":15,\"b_r\":0.05,\"b_t0\":25,\"b_alpha\":0.01,\"h_rcf\":30,\"h_rcr\":50,\"k_roll\":500,\"rsd\":50,\"tire_fz0\":736,\"tire_ca0\":450,\"tire_cn\":0.8,\"tire_c\":1.3,\"tire_e\":0,\"tire_relax\":0.3,\"tr_ks\":2,\"steer_ratio\":5,\"delta_max\":34,\"izz\":70,\"ixx\":30,\"m_us_f\":12,\"m_us_r\":12,\"c_roll\":30,\"v_test\":60,\"ay_test\":0.4,\"t_skid\":0},\"ext\":{\"course\":\"end\",\"lap\":{\"end\":\"1\",\"free\":\"1\"},\"free\":{\"text\":\"종류, 길이 m, 반경 m, 왼쪽 폭 m, 오른쪽 폭 m, 슬라럼 콘 간격 m\\n직선, 25, , 2, 2  # 출발 직선\\n직선, 60, , 5, 5, 10  # 슬라럼 (콘 간격 10 m · 폭 10 m)\\n직선, 20\\n왼쪽, 31.42, 20, 3, 2  # 왼쪽 90° (지름 40 m · 바깥 넓음)\\n직선, 40, , 2, 2\\n오른쪽, 7.85, 10  # 시케인\\n왼쪽, 7.85, 10\\n왼쪽, 7.85, 10\\n오른쪽, 7.85, 10\\n직선, 30\\n왼쪽, 15.71, 5  # 왼쪽 헤어핀 (지름 10 m)\\n직선, 35\\n오른쪽, 47.12, 30, 5, 5, 8  # 곡선 위 슬라럼 (반경 30 m · 콘 간격 8 m · 폭 10 m)\\n직선, 36, , 5, 5, 6  # 짧은 슬라럼 (콘 간격 6 m · 폭 10 m)\\n직선, 40\\n오른쪽, 17.28, 5.5\\n직선, 25\\n왼쪽, 23.56, 15\\n직선, 50\\n오른쪽, 31.42, 10\\n직선, 30\",\"laps\":1,\"s0\":0,\"end\":0},\"mtext\":\"회전수 rpm, 최대 토크 N·m, 연속 토크 N·m\\n0, 224.4, 108.1\\n200, 226.4, 109.6\\n400, 228.7, 111.1\\n600, 230.3, 112.2\\n800, 230.0, 112.1\\n1000, 230.0, 111.7\\n1200, 230.0, 111.7\\n1400, 229.9, 111.7\\n1600, 229.8, 111.5\\n1800, 229.8, 111.7\\n2000, 230.0, 111.7\\n2200, 230.0, 111.7\\n2400, 229.8, 111.7\\n2600, 230.0, 112.1\\n2800, 230.0, 111.5\\n3000, 230.0, 111.7\\n3200, 230.0, 111.7\\n3400, 229.9, 111.7\\n3600, 230.0, 111.7\\n3800, 230.0, 111.5\\n4000, 230.0, 111.7\\n4200, 230.0, 111.7\\n4400, 230.0, 111.7\\n4600, 229.7, 111.7\\n4800, 231.1, 111.7\\n5000, 230.0, 111.4\\n5200, 225.6, 112.2\\n5400, 219.1, 112.8\\n5600, 212.4, 110.3\\n5800, 204.9, 105.6\\n6000, 196.5, 100.9\\n6200, 190.3, 97.3\\n6400, 184.1, 93.7\\n6500, 181.1, 92.0\",\"eM\":\"토크 N·m \\\\ 회전수 rpm, 0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000, 4250, 4500, 4750, 5000, 5250, 5500\\n0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n10, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n20, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.2, 86.3, 86.3, 86.3, 86.3, 86.3, 86.2, 86.1, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n30, 86.0, 86.0, 86.0, 86.4, 87.0, 87.5, 87.8, 87.9, 88.0, 88.0, 88.0, 88.0, 87.9, 87.8, 87.7, 87.4, 86.9, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\\n40, 86.0, 86.0, 86.5, 87.5, 88.2, 88.9, 89.4, 89.5, 89.6, 89.6, 89.6, 89.6, 89.6, 89.6, 89.6, 89.3, 88.8, 87.6, 86.0, 86.0, 86.0, 86.0, 86.0\\n50, 86.0, 86.0, 87.1, 88.3, 89.3, 90.5, 91.4, 91.9, 92.1, 92.1, 92.1, 92.1, 92.1, 92.1, 92.0, 91.7, 91.0, 89.7, 88.0, 86.0, 86.0, 86.0, 86.0\\n60, 86.0, 86.0, 87.4, 89.0, 90.6, 92.7, 93.7, 94.1, 94.2, 94.3, 94.3, 94.2, 94.1, 94.1, 94.1, 94.0, 93.3, 92.2, 90.2, 87.7, 86.0, 86.0, 86.0\\n70, 86.0, 86.0, 87.6, 89.5, 92.2, 94.1, 94.3, 94.5, 94.9, 95.4, 95.4, 95.3, 95.0, 94.8, 94.6, 94.4, 94.3, 94.1, 92.7, 89.8, 87.0, 86.0, 86.0\\n80, 86.0, 86.0, 87.8, 89.8, 93.1, 94.3, 94.5, 94.9, 95.6, 96.1, 96.1, 96.1, 96.0, 95.7, 95.2, 94.9, 94.7, 94.5, 94.2, 92.2, 89.1, 86.0, 86.0\\n90, 86.0, 86.0, 87.9, 90.4, 93.2, 94.4, 94.8, 95.3, 96.1, 96.2, 96.3, 96.2, 96.2, 96.1, 96.0, 95.5, 95.0, 94.8, 94.5, 94.0, 91.1, 87.6, 86.0\\n100, 86.0, 86.0, 88.0, 90.5, 92.4, 94.4, 94.9, 95.8, 96.2, 96.4, 96.5, 96.4, 96.4, 96.3, 96.2, 96.1, 95.5, 95.1, 94.8, 94.3, 92.9, 89.6, 86.0\\n110, 86.0, 86.0, 87.8, 89.9, 90.7, 94.5, 95.2, 96.1, 96.3, 96.3, 96.3, 96.3, 96.3, 96.2, 96.2, 96.1, 95.7, 95.3, 95.0, 94.6, 94.1, 90.4, 87.3\\n120, 86.0, 86.0, 87.7, 90.5, 90.8, 94.6, 95.4, 96.1, 96.2, 96.2, 96.1, 96.1, 96.1, 96.1, 96.0, 95.9, 95.7, 95.4, 95.2, 94.8, 94.3, 92.5, 89.3\\n130, 86.0, 86.0, 87.5, 90.3, 92.6, 94.7, 95.5, 95.9, 95.9, 96.0, 95.9, 95.9, 95.9, 95.8, 95.8, 95.7, 95.6, 95.4, 95.2, 94.9, 94.4, 94.0, 91.0\\n140, 86.0, 86.0, 87.1, 89.8, 92.8, 94.7, 95.4, 95.6, 95.7, 95.7, 95.7, 95.7, 95.7, 95.6, 95.6, 95.5, 95.4, 95.3, 95.1, 94.9, 94.5, 94.2, 91.8\\n150, 86.0, 86.0, 86.7, 89.4, 92.3, 94.7, 95.2, 95.4, 95.4, 95.5, 95.5, 95.5, 95.4, 95.4, 95.3, 95.3, 95.2, 95.1, 95.0, 94.8, 94.5, 94.2, 94.0\\n160, 86.0, 86.0, 86.3, 88.9, 91.8, 94.3, 95.0, 95.1, 95.2, 95.2, 95.2, 95.2, 95.2, 95.2, 95.1, 95.1, 95.0, 94.9, 94.8, 94.7, 94.5, 94.3, 94.1\\n170, 86.0, 86.0, 86.0, 88.4, 91.2, 93.9, 94.6, 94.8, 94.9, 95.0, 95.0, 95.0, 95.0, 94.9, 94.9, 94.8, 94.8, 94.7, 94.6, 94.5, 94.4, 94.2, 94.0\\n180, 86.0, 86.0, 86.0, 87.8, 90.5, 92.9, 94.2, 94.4, 94.6, 94.7, 94.7, 94.7, 94.6, 94.6, 94.6, 94.5, 94.5, 94.5, 94.4, 94.3, 94.3, 94.2, 94.0\\n190, 86.0, 86.0, 86.0, 87.3, 89.7, 92.0, 93.4, 94.1, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.3, 94.2, 94.2, 94.2, 94.1, 94.1, 94.0\\n200, 86.0, 86.0, 86.0, 86.6, 89.1, 91.2, 92.6, 93.3, 93.8, 94.0, 94.0, 94.0, 94.0, 94.0, 94.0, 94.0, 94.0, 93.9, 93.8, 93.8, 93.8, 93.6, 92.7\\n210, 86.0, 86.0, 86.0, 86.0, 88.4, 90.6, 91.8, 92.2, 92.5, 92.8, 92.7, 92.7, 92.7, 92.7, 92.7, 92.6, 92.7, 92.5, 92.3, 92.1, 91.8, 91.4, 90.9\\n220, 86.0, 86.0, 86.0, 86.0, 87.5, 89.9, 90.9, 91.1, 91.3, 91.3, 91.2, 91.2, 91.3, 91.3, 91.3, 91.4, 91.4, 91.0, 90.8, 90.5, 89.9, 90.1, 90.5\\n230, 86.0, 86.0, 86.0, 86.0, 86.5, 88.5, 90.0, 90.2, 90.2, 90.1, 90.1, 90.1, 89.8, 90.2, 89.8, 90.1, 90.1, 90.1, 90.1, 90.1, 90.1, 90.1, 90.1\\n240, 86.0, 86.0, 86.0, 86.0, 86.0, 86.8, 87.3, 87.5, 87.5, 87.4, 87.4, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.3, 87.0\\n250, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0, 86.0\",\"eI\":\"\",\"tire\":\"\",\"bO\":\"\",\"bR\":\"\",\"bC\":\"\",\"rqM\":\"\",\"rqI\":\"\",\"rqB\":\"\",\"eD\":\"\",\"dM\":\"\",\"dI\":\"\",\"stab\":[[3.174,0.781,0.78],[6.348,1.563,1.559],[9.522,2.346,2.338],[12.696,3.131,3.116],[15.87,3.918,3.893],[19.044,4.706,4.67],[22.218,5.496,5.447],[25.392,6.288,6.225],[28.566,7.082,7.002],[31.74,7.879,7.78],[34.914,8.678,8.558],[38.088,9.48,9.336],[41.262,10.284,10.116],[44.436,11.092,10.896],[47.61,11.903,11.678],[50.784,12.718,12.46],[53.958,13.536,13.245],[57.132,14.358,14.03],[60.306,15.184,14.818],[63.48,16.014,15.607],[66.654,16.849,16.398],[69.828,17.688,17.192],[73.002,18.533,17.988],[76.176,19.383,18.786],[79.35,20.238,19.588],[82.524,21.099,20.393],[85.698,21.966,21.2],[88.872,22.84,22.012],[92.046,23.72,22.827],[95.22,24.608,23.646],[98.394,25.503,24.469],[101.568,26.405,25.296],[104.742,27.316,26.129],[107.916,28.236,26.966],[111.09,29.165,27.809],[114.264,30.103,28.658],[117.438,31.052,29.512],[120.612,32.012,30.373],[123.786,32.983,31.241],[126.96,33.965,32.116]],\"grMode\":\"my\",\"ecourse\":\"end\",\"use\":{\"mt\":\"tab\",\"eM\":\"const\",\"eI\":\"const\",\"tire\":\"const\",\"bO\":\"const\",\"bR\":\"const\",\"bC\":\"const\",\"rqM\":\"const\",\"rqI\":\"const\",\"rqB\":\"const\",\"eD\":\"const\",\"dM\":\"const\",\"dI\":\"const\"}}}",
+      "by": "u1",
+      "byName": "한회장(회장)"
+     }
+    }
+   },
+   "brk__3": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"3\",\"name\":\"제동 시스템 사이징 \",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"mu\":1.5,\"r_load\":236,\"cla\":3,\"xcop\":775,\"v_b\":0,\"f_ped\":981,\"pedal_ratio\":2.73,\"brake_bias\":73.6,\"eta_b\":100,\"mc_f\":15.875,\"mc_r\":15.875,\"cal_area_f\":766.6,\"cal_area_r\":766.6,\"pad_mu\":0.32,\"disc_d_f\":187,\"disc_d_r\":187,\"pad_h\":0,\"v_stop\":100,\"n_stop\":5,\"m_disc_f\":0.45,\"m_disc_r\":0.45,\"c_disc\":460,\"f_probe\":1200}}",
+      "by": "l1",
+      "byName": "정예린(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"3\",\"name\":\"제동 시스템 사이징 \",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"mu\":1.5,\"r_load\":236,\"cla\":3,\"xcop\":775,\"v_b\":0,\"f_ped\":981,\"pedal_ratio\":2.73,\"brake_bias\":73.6,\"eta_b\":100,\"mc_f\":15.875,\"mc_r\":15.875,\"cal_area_f\":766.6,\"cal_area_r\":766.6,\"pad_mu\":0.32,\"disc_d_f\":187,\"disc_d_r\":187,\"pad_h\":0,\"v_stop\":100,\"n_stop\":5,\"m_disc_f\":0.45,\"m_disc_r\":0.45,\"c_disc\":460,\"f_probe\":1200}}",
+      "by": "l1",
+      "byName": "정예린(파트장)"
+     }
+    }
+   },
+   "bat__4": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"4\",\"name\":\"축전지 팩 계산기\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"c_vmax\":4.2,\"c_vnom\":3.6,\"c_vmin\":2.5,\"c_ah\":4,\"c_imax\":35,\"c_ich\":6,\"c_r\":12,\"c_g\":70,\"n_seg\":5,\"s_seg\":14,\"n_p\":7,\"x_mseg\":0,\"x_mpack\":0,\"v_inv\":420,\"vi_on\":1,\"x_r\":0,\"i_lim\":245,\"il_on\":0,\"auto\":0,\"o_mode\":0,\"o_T\":25,\"o_i\":0},\"ext\":{\"cell\":{\"o\":\"\",\"r\":\"\",\"c\":\"\",\"u\":{}},\"presets\":[]}}",
+      "by": "u4",
+      "byName": "이배터리(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"4\",\"name\":\"축전지 팩 계산기\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"c_vmax\":4.2,\"c_vnom\":3.6,\"c_vmin\":2.5,\"c_ah\":4,\"c_imax\":35,\"c_ich\":6,\"c_r\":12,\"c_g\":70,\"n_seg\":5,\"s_seg\":14,\"n_p\":7,\"x_mseg\":0,\"x_mpack\":0,\"v_inv\":420,\"vi_on\":1,\"x_r\":0,\"i_lim\":245,\"il_on\":0,\"auto\":0,\"o_mode\":0,\"o_T\":25,\"o_i\":0},\"ext\":{\"cell\":{\"o\":\"\",\"r\":\"\",\"c\":\"\",\"u\":{}},\"presets\":[]}}",
+      "by": "u4",
+      "byName": "이배터리(파트장)"
+     }
+    }
+   },
+   "sus__5": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"5\",\"name\":\"서스 기하 (3D 기구학)\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"tf\":1200,\"tr\":1180,\"r_load\":236,\"camber_f\":-3,\"camber_r\":-2,\"toe_f\":0,\"toe_r\":0,\"h\":290,\"L\":1550,\"brake_bias\":73.6,\"s_max\":40,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9,\"r_lf_x\":100,\"r_lf_y\":218.1,\"r_lf_z\":154.1,\"r_lr_x\":-25,\"r_lr_y\":218.1,\"r_lr_z\":154.1,\"r_lo_x\":-1,\"r_lo_y\":539.6,\"r_lo_z\":169.2,\"r_uf_x\":100,\"r_uf_y\":251.6,\"r_uf_z\":309.6,\"r_ur_x\":-25,\"r_ur_y\":251.6,\"r_ur_z\":309.6,\"r_uo_x\":-25,\"r_uo_y\":501.5,\"r_uo_z\":365.5,\"r_ti_x\":160,\"r_ti_y\":218.1,\"r_ti_z\":154.1,\"r_to_x\":59,\"r_to_y\":539.2,\"r_to_z\":169.1}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"5\",\"name\":\"서스 기하 (3D 기구학)\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"tf\":1200,\"tr\":1180,\"r_load\":236,\"camber_f\":-3,\"camber_r\":-2,\"toe_f\":0,\"toe_r\":0,\"h\":290,\"L\":1550,\"brake_bias\":73.6,\"s_max\":40,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9,\"r_lf_x\":100,\"r_lf_y\":218.1,\"r_lf_z\":154.1,\"r_lr_x\":-25,\"r_lr_y\":218.1,\"r_lr_z\":154.1,\"r_lo_x\":-1,\"r_lo_y\":539.6,\"r_lo_z\":169.2,\"r_uf_x\":100,\"r_uf_y\":251.6,\"r_uf_z\":309.6,\"r_ur_x\":-25,\"r_ur_y\":251.6,\"r_ur_z\":309.6,\"r_uo_x\":-25,\"r_uo_y\":501.5,\"r_uo_z\":365.5,\"r_ti_x\":160,\"r_ti_y\":218.1,\"r_ti_z\":154.1,\"r_to_x\":59,\"r_to_y\":539.2,\"r_to_z\":169.1}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     }
+    }
+   },
+   "str__6": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"6\",\"name\":\"조향 (3D 기구학)\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"L\":1550,\"tf\":1200,\"fr\":47.5,\"r_load\":236,\"camber_f\":-3,\"toe_f\":0,\"rack_c\":90,\"rack_travel\":31.74,\"d_ref\":15,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"6\",\"name\":\"조향 (3D 기구학)\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"L\":1550,\"tf\":1200,\"fr\":47.5,\"r_load\":236,\"camber_f\":-3,\"toe_f\":0,\"rack_c\":90,\"rack_travel\":31.74,\"d_ref\":15,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     }
+    }
+   },
+   "sus__7": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"7\",\"name\":\"액추에이션 · 스프링\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"h_s\":300,\"L\":1550,\"tf\":1200,\"tr\":1180,\"m_us_f\":12,\"m_us_r\":12,\"r_load\":236,\"rc_f\":30,\"rc_r\":50,\"ixx\":30,\"ks_f\":45,\"ks_r\":50,\"mr_f\":0.9,\"mr_r\":0.9,\"karb_f\":150,\"karb_r\":100,\"kt\":100,\"cd_f\":1500,\"cd_r\":1500,\"sh_l_f\":210,\"sh_s_f\":55,\"sh_l_r\":190,\"sh_s_r\":45,\"mr_m\":0,\"camber_f\":-3,\"camber_r\":-2,\"s_max\":30,\"pa_arm_f\":1,\"pa_arm_r\":0,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9,\"f_pa_x\":-4.8,\"f_pa_y\":462.2,\"f_pa_z\":361.4,\"f_pr_x\":-4.8,\"f_pr_y\":314,\"f_pr_z\":566.2,\"f_rp_x\":-4.8,\"f_rp_y\":253,\"f_rp_z\":551,\"f_rq_x\":95.2,\"f_rq_y\":253,\"f_rq_z\":551,\"f_dr_x\":-4.8,\"f_dr_y\":250.8,\"f_dr_z\":619.9,\"f_db_x\":-4.8,\"f_db_y\":48.6,\"f_db_z\":610.3,\"r_lf_x\":100,\"r_lf_y\":218.1,\"r_lf_z\":154.1,\"r_lr_x\":-25,\"r_lr_y\":218.1,\"r_lr_z\":154.1,\"r_lo_x\":-1,\"r_lo_y\":539.6,\"r_lo_z\":169.2,\"r_uf_x\":100,\"r_uf_y\":251.6,\"r_uf_z\":309.6,\"r_ur_x\":-25,\"r_ur_y\":251.6,\"r_ur_z\":309.6,\"r_uo_x\":-25,\"r_uo_y\":501.5,\"r_uo_z\":365.5,\"r_ti_x\":160,\"r_ti_y\":218.1,\"r_ti_z\":154.1,\"r_to_x\":59,\"r_to_y\":539.2,\"r_to_z\":169.1,\"r_pa_x\":5,\"r_pa_y\":488.4,\"r_pa_z\":193.3,\"r_pr_x\":5,\"r_pr_y\":260.4,\"r_pr_z\":401,\"r_rp_x\":5,\"r_rp_y\":218,\"r_rp_z\":362,\"r_rq_x\":105,\"r_rq_y\":218,\"r_rq_z\":362,\"r_dr_x\":5,\"r_dr_y\":201.6,\"r_dr_z\":439.1,\"r_db_x\":5,\"r_db_y\":21.9,\"r_db_z\":395.2}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"7\",\"name\":\"액추에이션 · 스프링\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"h_s\":300,\"L\":1550,\"tf\":1200,\"tr\":1180,\"m_us_f\":12,\"m_us_r\":12,\"r_load\":236,\"rc_f\":30,\"rc_r\":50,\"ixx\":30,\"ks_f\":45,\"ks_r\":50,\"mr_f\":0.9,\"mr_r\":0.9,\"karb_f\":150,\"karb_r\":100,\"kt\":100,\"cd_f\":1500,\"cd_r\":1500,\"sh_l_f\":210,\"sh_s_f\":55,\"sh_l_r\":190,\"sh_s_r\":45,\"mr_m\":0,\"camber_f\":-3,\"camber_r\":-2,\"s_max\":30,\"pa_arm_f\":1,\"pa_arm_r\":0,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9,\"f_pa_x\":-4.8,\"f_pa_y\":462.2,\"f_pa_z\":361.4,\"f_pr_x\":-4.8,\"f_pr_y\":314,\"f_pr_z\":566.2,\"f_rp_x\":-4.8,\"f_rp_y\":253,\"f_rp_z\":551,\"f_rq_x\":95.2,\"f_rq_y\":253,\"f_rq_z\":551,\"f_dr_x\":-4.8,\"f_dr_y\":250.8,\"f_dr_z\":619.9,\"f_db_x\":-4.8,\"f_db_y\":48.6,\"f_db_z\":610.3,\"r_lf_x\":100,\"r_lf_y\":218.1,\"r_lf_z\":154.1,\"r_lr_x\":-25,\"r_lr_y\":218.1,\"r_lr_z\":154.1,\"r_lo_x\":-1,\"r_lo_y\":539.6,\"r_lo_z\":169.2,\"r_uf_x\":100,\"r_uf_y\":251.6,\"r_uf_z\":309.6,\"r_ur_x\":-25,\"r_ur_y\":251.6,\"r_ur_z\":309.6,\"r_uo_x\":-25,\"r_uo_y\":501.5,\"r_uo_z\":365.5,\"r_ti_x\":160,\"r_ti_y\":218.1,\"r_ti_z\":154.1,\"r_to_x\":59,\"r_to_y\":539.2,\"r_to_z\":169.1,\"r_pa_x\":5,\"r_pa_y\":488.4,\"r_pa_z\":193.3,\"r_pr_x\":5,\"r_pr_y\":260.4,\"r_pr_z\":401,\"r_rp_x\":5,\"r_rp_y\":218,\"r_rp_z\":362,\"r_rq_x\":105,\"r_rq_y\":218,\"r_rq_z\":362,\"r_dr_x\":5,\"r_dr_y\":201.6,\"r_dr_z\":439.1,\"r_db_x\":5,\"r_db_y\":21.9,\"r_db_z\":395.2}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     }
+    }
+   },
+   "sus__8": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"8\",\"name\":\"하중 산출 (3D)\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"lltd\":49.5,\"mu\":1.5,\"cla\":3,\"xcop\":775,\"v_c\":0,\"nz\":1,\"r_load\":236,\"camber_f\":-3,\"camber_r\":-2,\"pa_arm_f\":1,\"pa_arm_r\":0,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9,\"f_pa_x\":-4.8,\"f_pa_y\":462.2,\"f_pa_z\":361.4,\"f_pr_x\":-4.8,\"f_pr_y\":314,\"f_pr_z\":566.2,\"r_lf_x\":100,\"r_lf_y\":218.1,\"r_lf_z\":154.1,\"r_lr_x\":-25,\"r_lr_y\":218.1,\"r_lr_z\":154.1,\"r_lo_x\":-1,\"r_lo_y\":539.6,\"r_lo_z\":169.2,\"r_uf_x\":100,\"r_uf_y\":251.6,\"r_uf_z\":309.6,\"r_ur_x\":-25,\"r_ur_y\":251.6,\"r_ur_z\":309.6,\"r_uo_x\":-25,\"r_uo_y\":501.5,\"r_uo_z\":365.5,\"r_ti_x\":160,\"r_ti_y\":218.1,\"r_ti_z\":154.1,\"r_to_x\":59,\"r_to_y\":539.2,\"r_to_z\":169.1,\"r_pa_x\":5,\"r_pa_y\":488.4,\"r_pa_z\":193.3,\"r_pr_x\":5,\"r_pr_y\":260.4,\"r_pr_z\":401}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"8\",\"name\":\"하중 산출 (3D)\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"lltd\":49.5,\"mu\":1.5,\"cla\":3,\"xcop\":775,\"v_c\":0,\"nz\":1,\"r_load\":236,\"camber_f\":-3,\"camber_r\":-2,\"pa_arm_f\":1,\"pa_arm_r\":0,\"f_lf_x\":170.2,\"f_lf_y\":212.7,\"f_lf_z\":131.3,\"f_lr_x\":-179.8,\"f_lr_y\":212.7,\"f_lr_z\":131.3,\"f_lo_x\":2,\"f_lo_y\":561.6,\"f_lo_z\":151.2,\"f_uf_x\":170.2,\"f_uf_y\":246.7,\"f_uf_z\":288,\"f_ur_x\":-179.8,\"f_ur_y\":246.7,\"f_ur_z\":288,\"f_uo_x\":-11.6,\"f_uo_y\":516.6,\"f_uo_z\":346,\"f_ti_x\":12.2,\"f_ti_y\":220.7,\"f_ti_z\":169.5,\"f_to_x\":56.3,\"f_to_y\":550.1,\"f_to_z\":199.9,\"f_pa_x\":-4.8,\"f_pa_y\":462.2,\"f_pa_z\":361.4,\"f_pr_x\":-4.8,\"f_pr_y\":314,\"f_pr_z\":566.2,\"r_lf_x\":100,\"r_lf_y\":218.1,\"r_lf_z\":154.1,\"r_lr_x\":-25,\"r_lr_y\":218.1,\"r_lr_z\":154.1,\"r_lo_x\":-1,\"r_lo_y\":539.6,\"r_lo_z\":169.2,\"r_uf_x\":100,\"r_uf_y\":251.6,\"r_uf_z\":309.6,\"r_ur_x\":-25,\"r_ur_y\":251.6,\"r_ur_z\":309.6,\"r_uo_x\":-25,\"r_uo_y\":501.5,\"r_uo_z\":365.5,\"r_ti_x\":160,\"r_ti_y\":218.1,\"r_ti_z\":154.1,\"r_to_x\":59,\"r_to_y\":539.2,\"r_to_z\":169.1,\"r_pa_x\":5,\"r_pa_y\":488.4,\"r_pa_z\":193.3,\"r_pr_x\":5,\"r_pr_y\":260.4,\"r_pr_z\":401}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     }
+    }
+   },
+   "cool__9": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"9\",\"name\":\"냉각 계통 계산기\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"t_amb\":25,\"v\":53,\"t_run\":1390,\"t0\":25,\"L_m\":750,\"L_i\":490,\"L_b\":1180,\"th_c\":6000,\"th_r\":0.02,\"m_ha0\":10,\"m_ha60\":40,\"i_c\":2000,\"i_r\":0.05,\"i_ha0\":5,\"i_ha60\":20,\"b_c\":30000,\"b_r\":0.05,\"b_ha\":15,\"b_ha60\":15},\"ext\":{\"cool\":{\"circuits\":[{\"id\":\"w1\",\"kind\":\"water\",\"name\":\"수랭 회로 1\",\"p\":{\"cp\":4180,\"rho\":1000,\"mu\":1,\"Vh\":0.5},\"blocks\":[{\"id\":\"k1\",\"t\":\"rad\",\"x\":40,\"y\":70,\"p\":{\"A\":0.06,\"kd\":0.3,\"fan\":0.08,\"UA\":250,\"V\":0.6}},{\"id\":\"k2\",\"t\":\"pump\",\"x\":280,\"y\":67,\"p\":{\"flow\":8}},{\"id\":\"k3\",\"t\":\"i\",\"x\":440,\"y\":70,\"p\":{\"V\":0.2}},{\"id\":\"k4\",\"t\":\"m\",\"x\":670,\"y\":70,\"p\":{\"V\":0.3}}],\"links\":[[\"k1\",\"k2\",null,{}],[\"k2\",\"k3\",null,{}],[\"k3\",\"k4\",null,{}],[\"k4\",\"k1\",null,{}]],\"selB\":[],\"selL\":[],\"view\":{\"x\":-10,\"y\":-35.400000000000006,\"w\":880}},{\"id\":\"a1\",\"kind\":\"air\",\"name\":\"공랭 덕트 1\",\"p\":{},\"blocks\":[{\"id\":\"k5\",\"t\":\"in\",\"x\":40,\"y\":67,\"p\":{\"A\":0.02,\"kd\":0.5,\"fan\":0.03}},{\"id\":\"k6\",\"t\":\"b\",\"x\":360,\"y\":70,\"p\":{}},{\"id\":\"k7\",\"t\":\"out\",\"x\":680,\"y\":67,\"p\":{}}],\"links\":[[\"k5\",\"k6\",null,{}],[\"k6\",\"k7\",null,{}]],\"selB\":[],\"selL\":[],\"view\":{\"x\":-10,\"y\":-33.72,\"w\":804}}]}}}",
+      "by": "u4",
+      "byName": "이배터리(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"9\",\"name\":\"냉각 계통 계산기\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"t_amb\":25,\"v\":53,\"t_run\":1390,\"t0\":25,\"L_m\":750,\"L_i\":490,\"L_b\":1180,\"th_c\":6000,\"th_r\":0.02,\"m_ha0\":10,\"m_ha60\":40,\"i_c\":2000,\"i_r\":0.05,\"i_ha0\":5,\"i_ha60\":20,\"b_c\":30000,\"b_r\":0.05,\"b_ha\":15,\"b_ha60\":15},\"ext\":{\"cool\":{\"circuits\":[{\"id\":\"w1\",\"kind\":\"water\",\"name\":\"수랭 회로 1\",\"p\":{\"cp\":4180,\"rho\":1000,\"mu\":1,\"Vh\":0.5},\"blocks\":[{\"id\":\"k1\",\"t\":\"rad\",\"x\":40,\"y\":70,\"p\":{\"A\":0.06,\"kd\":0.3,\"fan\":0.08,\"UA\":250,\"V\":0.6}},{\"id\":\"k2\",\"t\":\"pump\",\"x\":280,\"y\":67,\"p\":{\"flow\":8}},{\"id\":\"k3\",\"t\":\"i\",\"x\":440,\"y\":70,\"p\":{\"V\":0.2}},{\"id\":\"k4\",\"t\":\"m\",\"x\":670,\"y\":70,\"p\":{\"V\":0.3}}],\"links\":[[\"k1\",\"k2\",null,{}],[\"k2\",\"k3\",null,{}],[\"k3\",\"k4\",null,{}],[\"k4\",\"k1\",null,{}]],\"selB\":[],\"selL\":[],\"view\":{\"x\":-10,\"y\":-35.400000000000006,\"w\":880}},{\"id\":\"a1\",\"kind\":\"air\",\"name\":\"공랭 덕트 1\",\"p\":{},\"blocks\":[{\"id\":\"k5\",\"t\":\"in\",\"x\":40,\"y\":67,\"p\":{\"A\":0.02,\"kd\":0.5,\"fan\":0.03}},{\"id\":\"k6\",\"t\":\"b\",\"x\":360,\"y\":70,\"p\":{}},{\"id\":\"k7\",\"t\":\"out\",\"x\":680,\"y\":67,\"p\":{}}],\"links\":[[\"k5\",\"k6\",null,{}],[\"k6\",\"k7\",null,{}]],\"selB\":[],\"selL\":[],\"view\":{\"x\":-10,\"y\":-33.72,\"w\":804}}]}}}",
+      "by": "u4",
+      "byName": "이배터리(파트장)"
+     }
+    }
+   },
+   "all__G": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"G\",\"name\":\"목표 · 요구값 (경량 시뮬)\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"tg\":1,\"tgv_m\":0,\"tg_v\":0,\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"r_eff\":229,\"mu\":1.5,\"mu_s\":0.246,\"crr\":0.015,\"gr\":3.55,\"eta_dt\":95,\"tmax\":230,\"nmax\":6500,\"pmax\":80,\"eta_mot\":95,\"eta_inv\":97,\"cla\":3,\"ld\":2.5,\"cda0\":0.2,\"cop_m\":1,\"xcop\":698,\"dr_ks\":0.95,\"dr_ke\":0.7}}",
+      "by": "u1",
+      "byName": "한회장(회장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"G\",\"name\":\"목표 · 요구값 (경량 시뮬)\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"tg\":1,\"tgv_m\":0,\"tg_v\":0,\"m\":300,\"fr\":47.5,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"r_eff\":229,\"mu\":1.5,\"mu_s\":0.246,\"crr\":0.015,\"gr\":3.55,\"eta_dt\":95,\"tmax\":230,\"nmax\":6500,\"pmax\":80,\"eta_mot\":95,\"eta_inv\":97,\"cla\":3,\"ld\":2.5,\"cda0\":0.2,\"cop_m\":1,\"xcop\":698,\"dr_ks\":0.95,\"dr_ke\":0.7}}",
+      "by": "u1",
+      "byName": "한회장(회장)"
+     }
+    }
+   },
+   "sus__T": {
+    "s": {
+     "2025": {
+      "name": "2025 팀 기준안",
+      "at": "2026-03-15T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"T\",\"name\":\"타이어 모델\",\"ver\":1,\"season\":\"2025\",\"at\":\"2026-03-15T00:00:00.000Z\",\"inputs\":{\"mu\":1.5,\"mu_s\":0.246,\"fz0\":736,\"ca0\":450,\"cn\":0.8,\"tc\":1.3,\"te\":0,\"relax\":0.3,\"mux\":1,\"ck0\":20,\"tcx\":1.65,\"tex\":0,\"bxa\":8,\"byk\":8,\"m\":300,\"fr\":47.5,\"a_p\":4,\"fz_p\":900,\"k_p\":5,\"t_sk\":5.086,\"r_sk\":9.125,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"lltd\":49.5,\"cla\":3,\"xcop\":775}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     },
+     "2026": {
+      "name": "2026 팀 기준안",
+      "at": "2026-11-04T00:00:00.000Z",
+      "json": "{\"format\":\"run2x-tool\",\"tool\":\"T\",\"name\":\"타이어 모델\",\"ver\":1,\"season\":\"2026\",\"at\":\"2026-11-04T00:00:00.000Z\",\"inputs\":{\"mu\":1.5,\"mu_s\":0.246,\"fz0\":736,\"ca0\":450,\"cn\":0.8,\"tc\":1.3,\"te\":0,\"relax\":0.3,\"mux\":1,\"ck0\":20,\"tcx\":1.65,\"tex\":0,\"bxa\":8,\"byk\":8,\"m\":300,\"fr\":47.5,\"a_p\":4,\"fz_p\":900,\"k_p\":5,\"t_sk\":5.086,\"r_sk\":9.125,\"h\":290,\"L\":1550,\"tf\":1200,\"tr\":1180,\"lltd\":49.5,\"cla\":3,\"xcop\":775}}",
+      "by": "u3",
+      "byName": "박서스(파트장)"
+     }
+    }
+   }
+  },
+  "qa": {
+   "dq1": {
+    "v": 2,
+    "item": "g_score",
+    "parent": "",
+    "text": "배점 비중은 작년 결과 기준으로 잡나요, 올해 규정 기준으로 잡나요?",
+    "by": "u2",
+    "at": "2026-11-01T00:00:00.000Z"
+   },
+   "dq2": {
+    "v": 2,
+    "item": "g_score",
+    "parent": "dq1",
+    "text": "올해 규정 기준으로 잡고, 작년 결과는 참고 칸에 적어 둡시다.",
+    "by": "u1",
+    "at": "2026-11-02T00:00:00.000Z"
+   },
+   "dq3": {
+    "v": 2,
+    "item": "g_ay",
+    "parent": "",
+    "text": "무게 목표 240 kg은 배터리 팩 무게가 확정된 뒤에 다시 봐야 할 것 같습니다.",
+    "by": "u3",
+    "at": "2026-11-03T00:00:00.000Z"
+   },
+   "dq4": {
+    "v": 2,
+    "item": "g_ay",
+    "parent": "dq3",
+    "text": "팩은 다음 주 셀 사양 정해지면 알려 드릴게요.",
+    "by": "u4",
+    "at": "2026-11-04T00:00:00.000Z"
+   },
+   "dq5": {
+    "v": 2,
+    "item": "p_tire",
+    "parent": "",
+    "text": "하드포인트 좌표는 작년 차에서 바꾼 점만 표시해 두면 좋겠습니다.",
+    "by": "u3",
+    "at": "2026-11-05T00:00:00.000Z"
+   },
+   "dq6": {
+    "v": 2,
+    "item": "p_tire",
+    "parent": "dq5",
+    "text": "도구 5 프리셋에 2025 기준안 올려 두었습니다.",
+    "by": "x21",
+    "at": "2026-11-06T00:00:00.000Z"
+   },
+   "dq7": {
+    "v": 2,
+    "item": "p_brake",
+    "parent": "",
+    "text": "디스크 두께 4 mm로 열 용량이 충분한지 도구 3 결과 같이 봐 주세요.",
+    "by": "l1",
+    "at": "2026-11-06T00:00:00.000Z"
+   },
+   "dq8": {
+    "v": 2,
+    "item": "p_brake",
+    "parent": "dq7",
+    "text": "내구 10 랩 기준으로 여유 있습니다.",
+    "by": "x15",
+    "at": "2026-11-07T00:00:00.000Z"
+   },
+   "dq9": {
+    "v": 2,
+    "item": "g_cool",
+    "parent": "",
+    "text": "라디에이터 하나로 될지, 둘로 나눌지 정해야 합니다.",
+    "by": "u4",
+    "at": "2026-11-07T00:00:00.000Z"
+   },
+   "dq10": {
+    "v": 2,
+    "item": "g_cool",
+    "parent": "dq9",
+    "text": "도구 9 에서 둘 다 계산해 보고 정합시다.",
+    "by": "u6",
+    "at": "2026-11-08T00:00:00.000Z"
+   },
+   "dq11": {
+    "v": 2,
+    "item": "p_rack",
+    "parent": "",
+    "text": "애커먼 60 %는 작년 값 그대로입니다. 바꿀 근거 있으면 알려 주세요.",
+    "by": "u3",
+    "at": "2026-11-08T00:00:00.000Z"
+   },
+   "dq12": {
+    "v": 2,
+    "item": "l_driver",
+    "parent": "",
+    "text": "비틀림 강성 측정 지그 일정 잡아야 합니다.",
+    "by": "u5",
+    "at": "2026-11-09T00:00:00.000Z"
+   },
+   "dq13": {
+    "v": 2,
+    "item": "g_aero",
+    "parent": "",
+    "text": "(2025) 윙 탈착 시간 측정 결과 정리했습니다.",
+    "by": "x28",
+    "at": "2026-02-23T00:00:00.000Z"
+   },
+   "dq14": {
+    "v": 2,
+    "item": "p_lsd",
+    "parent": "",
+    "text": "(2025) 감속비 3.6 으로 확정, 가속 기록 4.3 s.",
+    "by": "l2",
+    "at": "2026-03-05T00:00:00.000Z"
+   }
+  },
+  "meta": {
+   "season": {
+    "season": "2026"
+   },
+   "records": {
+    "2022": {
+     "보고서": 98,
+     "가속": 35,
+     "스키드패드": 30,
+     "오토크로스": 70,
+     "내구": 120,
+     "효율": 18,
+     "순위": "18위"
+    },
+    "2024": {
+     "보고서": 120,
+     "가속": 48,
+     "스키드패드": 40,
+     "오토크로스": 96,
+     "내구": 0,
+     "효율": 0,
+     "순위": "14위 (내구 미완주)"
+    },
+    "2025": {
+     "보고서": 142,
+     "가속": 61,
+     "스키드패드": 55,
+     "오토크로스": 118,
+     "내구": 190,
+     "효율": 31,
+     "순위": "7위"
+    }
+   }
+  }
+ }
+}

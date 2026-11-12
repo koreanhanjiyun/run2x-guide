@@ -1,6 +1,6 @@
 /* ============================================================
    저장소 어댑터 — 화면 코드는 Backend.use('db' | 'user')만 부릅니다.
-   우선순위: 디버깅이면 없음 → Firebase 설정이 있으면 Firebase → Claude 아티팩트 안이면 Claude → 없음
+   우선순위: Firebase 설정이 있으면 Firebase → Claude 아티팩트 안이면 Claude → 없음
 
    Firebase(다중 팀):
    - 팀 데이터는 teams/<팀ID>/ 아래에 팀별로 저장. 화면 코드가 부르는 'status/..', 'qa', 'meta/season' 등은
@@ -12,7 +12,7 @@ window.Backend = (function(){
   const CFG = window.RUN2X_CONFIG || {};
   const hasFB = () => !!(CFG.firebase && CFG.firebase.apiKey);
   const hasClaude = () => !!(window.claude && typeof window.claude.use === 'function');
-  const kind = () => window.DEBUG ? 'none' : hasFB() ? 'firebase' : hasClaude() ? 'claude' : 'none';
+  const kind = () => hasFB() ? 'firebase' : hasClaude() ? 'claude' : 'none';
   const TEAMKEY = 'run2x.team';
   const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
   const lsSet = (k,v) => { try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v); }catch(e){} };

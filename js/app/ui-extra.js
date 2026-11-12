@@ -4,7 +4,7 @@ function initNext(){
   annotate($('#flow-list'));
   document.querySelectorAll('#goal-tree .gwhy').forEach(g=>annotate(g));
   applyModes(); refreshVals(); spyToc(); updateGraphHint();
-  initChangelog(); initDebug(); decorate(); tocFx(); initLinks(); initQA(); initRefFold(); requestAnimationFrame(gtreeLines); narrowCheck(); const fb=$('#z-fs'); if(fb) fb.innerHTML=FS_OUT;
+  initChangelog(); decorate(); tocFx(); initLinks(); initQA(); initRefFold(); requestAnimationFrame(gtreeLines); narrowCheck(); const fb=$('#z-fs'); if(fb) fb.innerHTML=FS_OUT;
 }
 function updateGraphHint(){ const h=$('#gstart'); if(h) h.hidden = !!(((typeof PSET!=='undefined')&&PSET.size)||SEL||SHOWALL); }
 

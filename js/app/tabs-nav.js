@@ -16,12 +16,12 @@ function showTab(t, keep){
 }
 /* 이동 기록: 브라우저 뒤로·앞으로 버튼으로 이동 (A9). 지금 위치를 현재 기록에 저장하고 새 기록을 하나 쌓음 */
 const navState = () => ({tab:TAB, sys:(typeof START!=='undefined'?START.sys:''), y:window.scrollY, sel:(typeof SEL!=='undefined'?SEL:null), v:(typeof view!=='undefined'?{...view}:null)});
-function pushHist(){ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
+function pushHist(){ try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
 window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true); try{ history.replaceState(h, '', location.hash); }catch(_){}   /* showTab 이 지운 이 칸의 상태를 되살림 (앞으로가기에 필요) */
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
   requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
 /* 스크롤이 멈추면 지금 위치를 현재 기록에 덮어써 둠 (앞으로 가기에도 위치 유지) */
-{ let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(window.DEBUG || (typeof WB!=='undefined' && WB.id)) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
+{ let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(typeof WB!=='undefined' && WB.id) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
 let SCR=null;
 function smoothScrollTo(getY, done){
   if(SCR) cancelAnimationFrame(SCR);
@@ -62,7 +62,7 @@ document.addEventListener('click',ev=>{
 function goHome(){ const inSub = typeof START!=='undefined' && !!START.sys; if(TAB!=='start' || window.scrollY>10 || inSub) pushHist(); showTab('start', true);
   /* 시작 탭 안의 세부 목표·시스템 화면을 보고 있었으면 시작 탭 첫 화면으로 */
   if(inSub){ try{ renderStart(''); window.scrollTo({top:0, behavior:'instant'}); }catch(e){} }
-  if(!window.DEBUG){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
   requestAnimationFrame(()=>smoothScrollTo(()=>0)); }
 document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='처음 화면으로'; el.setAttribute('aria-label', el.classList.contains('wordmark') ? 'RUN2X 처음 화면으로' : '처음 화면으로');
   el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goHome(); } }); });

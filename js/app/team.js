@@ -16,7 +16,7 @@
   const fail = (e, t) => { console.error(e); say(t || (Backend.denied(e) ? '권한이 없습니다.' : '처리하지 못했습니다. 잠시 후 다시 시도해 주십시오.')); };
 
   /* ---------- 칩 ---------- */
-  /* 상태 칩 (H9): 초록=정상, 주황=주의(지난 시즌 보는 중·저장 안 한 변경·연결 끊김), 빨강=디버깅, 회색=로그인 전·팀 없음 */
+  /* 상태 칩 (H9): 초록=정상, 주황=주의(지난 시즌 보는 중·저장 안 한 변경·연결 끊김), 회색=로그인 전·팀 없음 */
   const CHIP = {
     anon:   {cls:'sc-wait', txt:'로그인', tip:'로그인 안 됨: 가이드와 계산기는 그대로 쓸 수 있습니다. 팀 데이터(진행 상태·팀 값·논의)는 로그인하고 팀원이 되면 보입니다. 눌러서 로그인.'},
     noteam: {cls:'sc-wait', txt:'팀 없음',  tip:'팀 없음: 팀 이름과 비밀번호로 가입하거나 새 팀을 만들면 팀 데이터를 쓸 수 있습니다. 눌러서 팀 가입.'},
@@ -24,7 +24,7 @@
     error:  {cls:'sc-off',  txt:'연결 끊김', tip:'연결 끊김: 팀 저장소에 연결하지 못했습니다. 읽기와 계산기는 그대로 쓸 수 있습니다. 새로고침해 보십시오.'}
   };
   function paintChip(){
-    if(!C || window.DEBUG) return; const c=document.getElementById('seasonChip'); if(!c) return;
+    if(!C) return; const c=document.getElementById('seasonChip'); if(!c) return;
     const k = CHIP[C.state] || CHIP.error;
     const tn = [...(C.teamName||'')]; const short = tn.length>10 ? tn.slice(0,10).join('')+'…' : C.teamName;
     const vw = (typeof viewingOther==='function' && viewingOther()), dr = (typeof draftCount==='function' ? draftCount() : 0);
