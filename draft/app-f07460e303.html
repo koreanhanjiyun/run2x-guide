@@ -3383,6 +3383,10 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wbl-fm label{display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer}.wbl-fm label.all{border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:2px}
 .wbl-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}.wbl-ve{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer}
 .wbl-h{align-items:center}.wbl-h h4{margin-bottom:6px}.wbl-h .wbl-ve{margin-bottom:6px}
+/* 95차: 프리셋 창 */
+.wbp-box{max-width:620px}.wbp-sec{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.wbp-sec h4{margin:0 0 2px}
+.wbp-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line)}.wbp-r b{min-width:120px}.wbp-r .muted{margin-right:auto}
+.wbp-new{display:flex;gap:8px;margin-top:6px}.wbp-new input{flex:1;min-width:0;padding:5px 8px;border:1px solid var(--line-2);border-radius:6px;font:inherit}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -3890,9 +3894,9 @@ window.Backend = (function(){
       await setMyTeam(c, tid, null);
       return {current: tid===c.team, deleted}; },
     /* 백업: 모든 시즌의 진행 상태·우리 팀 값, 논의, 이번 시즌 설정을 파일 하나로 (차단 목록·비밀번호는 넣지 않음) */
-    BACKUP_COLS: ['status','val','dv','mass','drivers','dtab','qa','meta'],
+    BACKUP_COLS: ['status','val','dv','mass','drivers','dtab','tp','qa','meta'],   /* tp = 도구별 팀 프리셋 (2026-11-12) */
     /* 문서 안에 시즌별 값(s: {시즌: …})을 두는 컬렉션: 불러오기 때 고른 시즌만 바꿈 */
-    SEASON_COLS: ['val','dv','mass','drivers','dtab'],
+    SEASON_COLS: ['val','dv','mass','drivers','dtab','tp'],
     async exportData(){ const c = await teamCtx(); const fs = c.F.fs, P = 'teams/'+c.team, data = {};
       for(const col of Team.BACKUP_COLS){ const q = await fs.collection(P+'/'+col).get(); data[col] = {}; q.docs.forEach(d=>{ data[col][d.id] = d.data(); }); }
       return {format:'run2x-team-backup', version:2, team:c.teamName, exportedAt:new Date().toISOString(), data}; },
@@ -3932,6 +3936,15 @@ window.Backend = (function(){
       for(let i=0;i<ops.length;i+=400){ const b = fs.batch(); ops.slice(i,i+400).forEach(o=> o[0]==='del' ? b.delete(fs.doc(o[1])) : b.set(fs.doc(o[1]), o[2])); await b.commit(); }
       return n; },
     /* 마지막으로 보던 위치를 계정에도 저장 (다른 기기에서 이어 보기, A2) */
+    /* 프리셋 (2026-11-12): 내 프리셋 = users/<나>/presets/<도구>__<0|1|2> (도구마다 3개), 팀 프리셋 = teams/<팀>/tp/<파트 코드>__<도구> = {s:{시즌:{…}}} (도구마다 1개, 담당 파트장 · 회장).
+       값은 {name, at, json} — json = 도구 내보내기 파일 글 (Firestore 는 배열 안 배열을 못 담아 글로) */
+    async presetList(tool){ const c = await teamCtx(); if(!c.uid) return null; const q = await c.F.fs.collection('users/'+c.uid+'/presets').get();
+      return q.docs.filter(d => d.id.startsWith(tool + '__')).map(d => Object.assign({slot: +d.id.split('__')[1]}, d.data())).sort((a, b) => a.slot - b.slot); },
+    async presetSave(tool, slot, o){ const c = await teamCtx(); if(!c.uid) throw err('anon', '로그인이 필요합니다.'); await c.F.fs.doc(`users/${c.uid}/presets/${tool}__${slot}`).set(o); },
+    async presetDel(tool, slot){ const c = await teamCtx(); if(!c.uid) return; await c.F.fs.doc(`users/${c.uid}/presets/${tool}__${slot}`).delete(); },
+    async teamPresetGet(id){ const c = await teamCtx(); if(!c.team) return null; const d = await c.F.fs.doc(`teams/${c.team}/tp/${id}`).get(); return d.exists ? d.data() : null; },
+    async teamPresetPut(id, season, o){ const c = await teamCtx(); if(!c.team) throw err('noteam', '팀이 없습니다.'); const ref = c.F.fs.doc(`teams/${c.team}/tp/${id}`), d = await ref.get();
+      const s = Object.assign({}, (d.exists && d.data().s) || {}); s[season] = Object.assign({}, o, {by: c.uid, byName: c.name || ''}); await ref.set({s}); },
     async saveLast(json){ const c = await teamCtx(); if(!c.uid) return; await c.F.fs.doc('users/'+c.uid).set({last: String(json).slice(0,4000)}, {merge:true}); },
     async mine(){ const c = await teamCtx(); return Object.entries(c.myTeams||{}).map(([id,name])=>({id, name})).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko')); },
     /* 플랫폼 문의: 종류·위치(탭·단계·항목)와 함께. 개발자는 처리 상태를 바꾸고, 반복해서 부적절한 문의를 보내는 계정을 차단 */
@@ -10518,7 +10531,7 @@ function wbShellHTML(){ const T = wbT();
         ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}<i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
-        <button type="button" class="btn small" data-wbimp>가져오기 .json</button><i class="wb-sep" aria-hidden="true"></i>
+        <button type="button" class="btn small" data-wbimp>가져오기 .json</button><button type="button" class="btn small" data-wbpre>프리셋 ▾</button><i class="wb-sep" aria-hidden="true"></i>
         ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구 · 대시보드에서 값 · 표를 가져옴 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
         ${T.share==='hp' ? `<details class="wb-hpdd"><summary class="btn small" title="도구 5 · 6 · 7 · 8 이 같은 하드포인트 한 벌을 씁니다 (이 브라우저 안). 어느 도구에서 고쳐도 다른 도구가 열 때 그 값을 씁니다.">하드포인트 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbhp="xlsx">내보내기 .xlsx</button><button type="button" class="btn small" data-wbhp="json">내보내기 .json</button><button type="button" class="btn small" data-wbhp="imp">가져오기 (.xlsx · .csv · .json)</button></span></details><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
@@ -10903,16 +10916,27 @@ const wbSrcGet = (id, k) => (wbSrcAll()[id] || {})[k] || '';
 const wbSrcTag = (id, k) => { const s = id ? wbSrcGet(id, k) : ''; return s ? `<span class="wb-src" title="[도구 연결]로 ${wbEsc(s)}에서 복사한 값 (고치면 이 표시는 사라짐)">${wbEsc(s)}에서</span>` : ''; };
 
 /* .json 내보내기 · 가져오기 (사이트 양식) */
-function wbExport(){ const T = wbT(), doc = {format:'run2x-tool', tool:WB.id, name:T.name, ver:1, season:typeof dvSeason==='function' ? dvSeason() : '', at:new Date().toISOString(), inputs:{...WB.I}, ...(T.extGet ? {ext:T.extGet()} : {})};   /* ext: 도구가 따로 가진 표(트랙 · 모터 곡선 등) */
+/* 도구 파일 내용 (내보내기 · 프리셋 같은 형식). ext: 도구가 따로 가진 표(트랙 · 모터 곡선 등) */
+const wbDoc = () => { const T = wbT(); return {format:'run2x-tool', tool:WB.id, name:T.name, ver:1, season:typeof dvSeason==='function' ? dvSeason() : '', at:new Date().toISOString(), inputs:{...WB.I}, ...(T.extGet ? {ext:T.extGet()} : {})}; };
+/* 도구 파일 내용을 지금 도구에 넣음 → 넣은 입력 수 (다른 도구 파일이면 -1) */
+function wbApplyDoc(d){ if(!d || d.format!=='run2x-tool' || !d.inputs || d.tool!==WB.id) return -1;
+  let n = 0; wbT().inputs.forEach(x => { const v = d.inputs[x.k]; if(typeof v==='number' && isFinite(v)){ WB.I[x.k] = v; n++; } });
+  if(d.ext && wbT().extSet) wbT().extSet(d.ext);
+  wbSave(); wbPaint(['in', 'tabs', 'ext']); wbCalc(); return n; }
+function wbExport(){ const doc = wbDoc();
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(doc, null, 2)], {type:'application/json'}));
   a.download = `run2x_${WB.id}_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0); }
 function wbImport(file){ const fr = new FileReader(); fr.onload = () => { let d;
     try{ d = JSON.parse(fr.result); }catch(e){ toast('.json 파일을 읽지 못했습니다.'); return; }
+    /* 팀 백업(시즌 내보내기) 파일이면 그 안의 이 도구 팀 프리셋 (가장 최근 시즌) */
+    if(d && d.format==='run2x-team-backup' && d.data){ const E = Object.entries(d.data.tp || {}).find(([id]) => id.split('__')[1]===WB.id), s = E && E[1] && E[1].s ? E[1].s : {}, se = Object.keys(s).sort().pop();
+      if(!se){ toast('이 파일에 이 도구의 팀 프리셋이 없습니다.'); return; }
+      let doc = null; try{ doc = JSON.parse(s[se].json); }catch(e){}
+      const n = wbApplyDoc(doc); if(n < 0){ toast('팀 프리셋을 읽지 못했습니다.'); return; }
+      toast(`${se} 시즌 팀 프리셋 "${wbEsc(s[se].name || '')}"을 가져왔습니다.`); return; }
     if(!d || d.format!=='run2x-tool' || !d.inputs){ toast('이 사이트에서 내보낸 도구 파일이 아닙니다.'); return; }
     if(d.tool!==WB.id){ toast(`다른 도구(${wbEsc(d.name || d.tool)})의 파일입니다.`); return; }
-    let n = 0; wbT().inputs.forEach(x => { const v = d.inputs[x.k]; if(typeof v==='number' && isFinite(v)){ WB.I[x.k] = v; n++; } });
-    if(d.ext && wbT().extSet) wbT().extSet(d.ext);
-    wbSave(); wbPaint(['in']); wbCalc(); toast(`입력 ${n}개를 가져왔습니다${d.at ? ' (' + d.at.slice(0,10) + ' 저장본)' : ''}.`); };
+    const n = wbApplyDoc(d); toast(`입력 ${n}개를 가져왔습니다${d.at ? ' (' + d.at.slice(0,10) + ' 저장본)' : ''}.`); };
   fr.readAsText(file); }
 
 /* ---------- 3D 화면 (three.js, 처음 열 때 불러옴) ---------- */
@@ -11114,6 +11138,51 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(WBV.k && !t.closest('#wbvz')) wbVizClose(); });
 document.addEventListener('input', e => { if(!WBV.k || !e.target.closest || !e.target.closest('[data-wbi]')) return; setTimeout(() => { const p = $('#wbvz'); if(p){ p.innerHTML = wbVizHTML(); wbVizPlace(); } }, 0); });
 document.addEventListener('keydown', e => { if(e.key==='Escape' && WBV.k){ e.preventDefault(); e.stopPropagation(); wbVizClose(); } }, true);
+
+/* ---------- 프리셋 (2026-11-12 관리자 결정) ----------
+   - 내 프리셋: 로그인한 계정에 도구마다 3개까지 (지금 도구 상태 전체 = 내보내기 파일과 같은 내용). 넘으면 알림
+   - 팀 프리셋: 팀에 도구마다 1개, 내 프리셋 하나를 그 도구 담당 파트장 · 회장이 이번 시즌 팀 프리셋으로 내보냄 (새로 내보내면 바뀜)
+   - 팀 백업(시즌 내보내기) 파일에 팀 프리셋이 함께 들어가고, 도구의 [가져오기 .json]이 그 파일에서 이 도구 팀 프리셋을 꺼내 옴 */
+const WBTPART = {'1':'프레임', '2':'공통', 'G':'공통', '3':'제동', '4':'배터리', '5':'서스', '6':'조향', '7':'서스', '8':'서스', '9':'냉각', 'T':'서스'};
+const wbTpId = id => `${(typeof PCODE_OF!=='undefined' && PCODE_OF[WBTPART[id]]) || 'all'}__${id}`;
+const wbTpCan = id => typeof SH!=='undefined' && SH.on && !pastLock() && (SH.canAdmin || (isLeadRole(SH.role) && partOK(SH.parts, SH.role, WBTPART[id])));
+const WBP = {list:[], tp:null, arm:''};
+const wbPreDate = a => a ? String(a).slice(0, 10) : '';
+async function wbPresetOpen(){ if(wbExBlock()) return;
+  const ok = window.Backend && Backend.kind()==='firebase' ? await Backend.Team.ctx().then(c => !!c.uid).catch(() => false) : false;
+  if(!ok){ toast('프리셋은 로그인하면 쓸 수 있습니다.'); return; }
+  WBP.arm = ''; try{ WBP.list = await Backend.Team.presetList(WB.id) || []; }catch(e){ WBP.list = []; }
+  try{ const d = typeof SH!=='undefined' && SH.on ? await Backend.Team.teamPresetGet(wbTpId(WB.id)) : null; WBP.tp = d && d.s ? d.s[dvSeason()] || null : null; }catch(e){ WBP.tp = null; }
+  wbPresetPaint(); }
+function wbPresetPaint(){ const T = wbT(), can = wbTpCan(WB.id), arm = (k, txt, lab) => WBP.arm===k ? `확인 — ${txt}` : lab;
+  const tp = SH && SH.on ? `<section class="wbp-sec"><h4>팀 프리셋 <span class="muted">${wbEsc(dvSeason())} 시즌</span></h4>${WBP.tp ? `<div class="wbp-r"><b>${wbEsc(WBP.tp.name || '')}</b><span class="muted">${wbEsc(WBP.tp.byName || '')} · ${wbPreDate(WBP.tp.at)}</span><button type="button" class="btn small" data-wbpl="tp">${arm('l:tp', '덮어쓰기', '불러오기')}</button></div>` : '<p class="muted">없음</p>'}</section>` : '';
+  const mine = WBP.list.map(p => `<div class="wbp-r"><b>${wbEsc(p.name || '')}</b><span class="muted">${wbPreDate(p.at)}</span>
+      <button type="button" class="btn small" data-wbpl="${p.slot}">${arm('l:' + p.slot, '덮어쓰기', '불러오기')}</button>${can ? `<button type="button" class="btn small" data-wbpt="${p.slot}">${arm('t:' + p.slot, '팀 프리셋 바꾸기', '팀 프리셋으로')}</button>` : ''}<button type="button" class="btn small" data-wbpd="${p.slot}">${arm('d:' + p.slot, '지우기', '지우기')}</button></div>`).join('');
+  wbModal(wbMHead(`프리셋 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${tp}<section class="wbp-sec"><h4>내 프리셋</h4>${mine || '<p class="muted">없음</p>'}
+      <div class="wbp-new"><input type="text" maxlength="40" placeholder="프리셋 이름" data-wbpn aria-label="프리셋 이름"><button type="button" class="btn small pri" data-wbps>지금 상태 저장</button></div></section></div>
+    <div class="dvi-foot"><span></span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbp-box'); }
+async function wbPresetSave(){ const inp = document.querySelector('#wbm [data-wbpn]'), nm = (inp && inp.value || '').trim(); if(!nm){ if(inp) inp.focus(); return; }
+  const same = WBP.list.find(p => p.name===nm);
+  if(same && WBP.arm!=='s'){ WBP.arm = 's'; const b = document.querySelector('#wbm [data-wbps]'); if(b) b.textContent = `확인 — "${nm}" 덮어쓰기`; return; }
+  const used = new Set(WBP.list.map(p => p.slot)), slot = same ? same.slot : [0, 1, 2].find(i => !used.has(i));
+  if(slot == null){ toast('프리셋은 도구마다 3개까지입니다. 기존 프리셋을 지운 뒤 저장하세요.'); return; }
+  const o = {name:nm, at:new Date().toISOString(), json:JSON.stringify(wbDoc())};
+  try{ await Backend.Team.presetSave(WB.id, slot, o); toast(`"${nm}" 저장`); await wbPresetOpen(); }catch(e){ toast('저장하지 못했습니다.'); } }
+document.addEventListener('click', async e => { const t = e.target; if(!t.closest) return;
+  if(t.closest('[data-wbpre]')){ wbPresetOpen(); return; }
+  if(!t.closest('#wbm .wbp-box, #wbm') || !document.querySelector('#wbm [data-wbps]')) return;
+  if(t.closest('[data-wbps]')){ wbPresetSave(); return; }
+  const l = t.closest('[data-wbpl]'), d = t.closest('[data-wbpd]'), tp = t.closest('[data-wbpt]'); if(!l && !d && !tp) return;
+  const key = l ? 'l:' + l.dataset.wbpl : d ? 'd:' + d.dataset.wbpd : 't:' + tp.dataset.wbpt;
+  if(WBP.arm!==key){ WBP.arm = key; wbPresetPaint(); return; }   /* 두 번 눌러 확인 */
+  WBP.arm = '';
+  if(l){ const p = l.dataset.wbpl==='tp' ? WBP.tp : WBP.list.find(x => String(x.slot)===l.dataset.wbpl); let doc = null; try{ doc = JSON.parse(p.json); }catch(err){}
+    const n = wbApplyDoc(doc); if(n < 0){ toast('프리셋을 읽지 못했습니다.'); return; } wbModalClose(); toast(`"${p.name}" 불러옴`); return; }
+  if(d){ try{ await Backend.Team.presetDel(WB.id, +d.dataset.wbpd); }catch(err){} await wbPresetOpen(); return; }
+  if(tp){ const p = WBP.list.find(x => String(x.slot)===tp.dataset.wbpt);
+    try{ await Backend.Team.teamPresetPut(wbTpId(WB.id), dvSeason(), {name:p.name, at:new Date().toISOString(), json:p.json}); toast(`"${p.name}"을 팀 프리셋으로 내보냈습니다.`); await wbPresetOpen(); }
+    catch(err){ toast(Backend.denied && Backend.denied(err) ? '이 도구 담당 파트장 · 회장만 팀 프리셋을 내보낼 수 있습니다.' : '내보내지 못했습니다.'); } } });
+document.addEventListener('input', e => { if(e.target.matches && e.target.matches('#wbm [data-wbpn]') && WBP.arm==='s'){ WBP.arm = ''; const b = document.querySelector('#wbm [data-wbps]'); if(b) b.textContent = '지금 상태 저장'; } });
 </script>
 <script>
 /* FSK 2026 내구레이스 공식 코스 (관리자 제공 cone2track .json 을 옮김, 2026-11-05).
