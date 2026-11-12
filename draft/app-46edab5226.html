@@ -3387,6 +3387,13 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wbp-box{max-width:620px}.wbp-sec{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.wbp-sec h4{margin:0 0 2px}
 .wbp-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line)}.wbp-r b{min-width:120px}.wbp-r .muted{margin-right:auto}
 .wbp-new{display:flex;gap:8px;margin-top:6px}.wbp-new input{flex:1;min-width:0;padding:5px 8px;border:1px solid var(--line-2);border-radius:6px;font:inherit}
+
+/* 오른쪽 배너 펼침 애니메이션 (2026-11-12, layout.js railSnake): 움직이는 머리 글자 복제 · 애니메이션 중 넘침 가림 · 좌표계 배너 고정 표시 */
+.rs-ch{position:fixed;z-index:90;pointer-events:none;white-space:nowrap;line-height:1;letter-spacing:0;transform:translate(-50%,-50%)}
+#partRail.rs-anim,#figRail.rs-anim{overflow:hidden}
+#figRail.pin .rail-h::after{content:"📌"!important;font-size:11px;margin-left:2px}
+#partRail.rs-snake .rail-b{display:none}
+#partRail.rs-snake:not(.coll) .rail-h,#figRail.rs-snake.open .rail-h{flex:1 0 auto;align-items:flex-start}   /* 글자가 움직이는 동안 배너 전체를 머리 색으로 */
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -8253,11 +8260,27 @@ function initFigRail(){ if($('#figRail')) return;
     const z=Math.max(0.55, avail/h); pn.style.zoom=String(Math.floor(z*1000)/1000);
     if(pn.getBoundingClientRect().height>avail+1){ pn.style.maxHeight=(avail/z)+'px'; if(bd) bd.style.overflowY='auto'; } };
   window.__figFit=fit; window.addEventListener('resize',()=>requestAnimationFrame(fit));
-  const close=()=>{ md.hidden=true; fr.classList.remove('open'); try{ window.__modeAnim.stop(); }catch(e){} }, open=()=>{ loadCoord(()=>{ build(); md.hidden=false; fr.classList.add('open'); try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} requestAnimationFrame(()=>{ fit(); setTimeout(fit,300); }); }); };
-  fr.querySelector('#figToggle').addEventListener('click',()=>{ md.hidden?open():close(); });
+  /* 2026-11-12: 파트 패널과 같은 규칙 — 마우스를 올리면 펼침 · 빼면 접힘 · 머리를 누르면 📌 고정 (다시 누르기 · 바깥 · × · Esc 로 풂). 펼칠 때 railSnake (layout.js) */
+  let pin=false, ti=0, to=0, want=false;
+  const hideMd=()=>{ md.hidden=true; try{ window.__modeAnim.stop(); }catch(e){} };
+  const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
+    const tourOn=((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture; if(pn && pn.animate && !tourOn){ pn.animate([{opacity:0, transform:'translateX(28px)'},{opacity:1, transform:'none'}],{duration:240, easing:'cubic-bezier(.2,.7,.3,1)'}); md.animate([{opacity:0},{opacity:1}],{duration:200}); }
+    requestAnimationFrame(()=>{ fit(); setTimeout(fit,300); }); }); };
+  const SO={apply:on=>fr.classList.toggle('open',on), isOpen:()=>fr.classList.contains('open'), in:()=>{ showMd(); return []; }, out:()=>{ hideMd(); return []; }, instant:on=>{ on?showMd():hideMd(); }};
+  const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
+  const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; if(typeof railSnake==='function') railSnake(fr,on,SO); else { SO.apply(on); SO.instant(on); } };
+  const open=()=>go(true), close=()=>{ pin=false; pinCls(); go(false); };
+  const over=()=>fr.matches(':hover') || !!(md.querySelector('.fm-panel') && md.querySelector('.fm-panel').matches(':hover'));
+  const enter=()=>{ clearTimeout(to); to=0; if(!want) ti=setTimeout(open,150); }, leave=()=>{ clearTimeout(ti); if(!pin && !to) to=setTimeout(()=>{ to=0; if(!pin && !over()) go(false); },300); };
+  fr.addEventListener('mouseenter',enter); fr.addEventListener('mouseleave',leave);
+  md.addEventListener('mouseover',e=>{ if(e.target.closest('.fm-panel')){ clearTimeout(to); to=0; } else if(!pin && want) leave(); });
+  md.addEventListener('mouseout',e=>{ if(e.target.closest('.fm-panel') && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.fm-panel'))) leave(); });
+  pinCls();
+  fr.querySelector('#figToggle').addEventListener('click',()=>{ if(!pin){ pin=true; pinCls(); open(); } else { pin=false; pinCls(); if(!over()) go(false); } });
   md.addEventListener('click',e=>{ if(e.target===md || e.target.closest('.fm-x')) close(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !md.hidden) close(); });
-  const place=()=>{ const r=$('#partRail'); let top; if(r && !r.hidden){ const b=r.getBoundingClientRect(); top=b.bottom+10; } else { top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50)+14; } fr.style.top=top+'px'; fr.hidden = !(TAB==='steps'||TAB==='graph'||TAB==='parts'||TAB==='tools'); if(fr.hidden && !md.hidden){ close(); } };
+  const place=()=>{ const r=$('#partRail'); let top; if(r && !r.hidden){ const b=r.getBoundingClientRect(); top=b.bottom+10;
+    if(r._rs && r._rs.stage) top = r._rs.stage==='snake' && fr._minTop ? fr._minTop : Math.max(top, fr._minTop||0); else if(r.classList.contains('coll')) fr._minTop=top; }   /* 파트 패널이 움직이는 동안: 접힌 때 자리 아래로는 올라가지 않음 (머리 높이로 줄 때 좌표계 배너가 오르내리지 않게) */ else { top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50)+14; } fr.style.top=top+'px'; fr.hidden = !(TAB==='steps'||TAB==='graph'||TAB==='parts'||TAB==='tools'); if(fr.hidden && !md.hidden){ close(); } };
   window.__figPlace=place;
   try{ new ResizeObserver(place).observe($('#partRail')); }catch(e){} window.addEventListener('resize',place); place(); }
 function applyPart(){ try{ initFigRail(); window.__figPlace(); }catch(e){}
@@ -20930,11 +20953,57 @@ syncTabsA11y(); document.body.classList.add('tab-'+TAB);
 /* 비교안 D4(연결도 상세 칸)는 상세 칸을 없애면서 함께 없앰 */
 window.setCompare = (k,on) => { document.body.classList.toggle(k, on); SETP('cmp.'+k, on?'1':'0'); try{ window.__figPlace&&window.__figPlace(); }catch(e){} };
 
+/* ---------- 오른쪽 배너 펼침 애니메이션 (2026-11-12): 머리 글자가 ㄱ자 길(세로 줄 위로 → 모서리에서 왼쪽)을 따라 가로로 눕고,
+   배너는 그동안 폭이 넓어지고 높이가 머리 높이로 줄어듦 → 다 펴지면 내용(in)이 이어서 나옴. 닫을 때는 내용(out)을 먼저 거두고 거꾸로 되감음.
+   apply(open) = 클래스만 바꾸는 함수. 사용법 중에는 애니메이션 없이 바로 바꿈. 도중에 반대로 바뀌면 그 자리에서 되돌아감 ---------- */
+function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.rail-h'), sp = hd && hd.querySelector('span');
+  const st = el._rs || (el._rs = {open: null, stage: '', anims: [], clones: []});
+  const clean = () => { [...st.anims, ...(st.keep||[])].forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; el.classList.remove('rs-anim', 'rs-snake'); el.style.width = el.style.height = ''; st.stage = ''; };
+  const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
+  if(st.open === open && st.stage) return;
+  if(st.stage === 'snake' && st.open !== open){ st.open = open; st.anims.forEach(a => a.reverse()); return; }   /* 글자 이동 중 반대로 → 되감기 */
+  if(st.stage){ clean(); sp && (sp.style.color = ''); if(o.isOpen() === open){ st.open = null; if(o.instant) o.instant(open); return; } }   /* 내용 단계 중 반대로 → 지금 자리에서 다시 시작 */
+  st.open = open;
+  if(tourOn || !sp || !el.animate || el.hidden){ apply(open); if(o.instant) o.instant(open); st.open = null; return; }
+  const chars = () => { const t = sp.firstChild, R = []; if(!t || t.nodeType !== 3) return R; const r = document.createRange();
+    for(let i = 0; i < t.length; i++){ const ch = t.data[i]; if(!ch.trim()) continue; r.setStart(t, i); r.setEnd(t, i + 1); const b = r.getBoundingClientRect(); R.push({ch, x: b.left + b.width/2, y: b.top + b.height/2}); } return R; };
+  const box = () => { const b = el.getBoundingClientRect(); return {w: b.width, h: b.height}; };
+  const D = 300, ease = 'cubic-bezier(.45,0,.25,1)';
+  const snake = (fromOpen, done) => {   /* fromOpen = 지금 펼친 머리(가로)에서 접는 쪽으로 가는지 */
+    const c0 = chars(), b0 = box(); st.stage = 'snake'; apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), hh = hd.getBoundingClientRect().height + 2;
+    const cs = getComputedStyle(sp), font = cs.font, col = getComputedStyle(hd).color; sp.style.color = 'transparent';
+    const n = Math.min(c0.length, c1.length);
+    for(let i = 0; i < n; i++){ const V = fromOpen ? c1[i] : c0[i], Hz = fromOpen ? c0[i] : c1[i];   /* V 세로 자리, Hz 가로 자리 */
+      const P = [V, {x: V.x, y: Hz.y}, Hz]; if(fromOpen) P.reverse(); const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y);
+      const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`; document.body.appendChild(d); st.clones.push(d);
+      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`;
+      st.anims.push(d.animate([{transform: tf(P[0]), offset: 0}, {transform: tf(P[1]), offset: L1 + L2 ? L1/(L1 + L2) : .5}, {transform: tf(P[2]), offset: 1}], {duration: D, easing: ease, fill: 'both'})); }
+    const hEnd = fromOpen ? b1.h : hh, hBeg = fromOpen ? hh : b0.h;
+    const A = el.animate([{width: b0.w + 'px', height: hBeg + 'px'}, {width: b1.w + 'px', height: hEnd + 'px'}], {duration: D, easing: ease, fill: 'both'}); st.anims.push(A);
+    st.stage = 'snake'; const want = st.open;
+    A.onfinish = () => { const rev = A.playbackRate < 0; sp.style.color = ''; (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; st.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; el.style.width = el.style.height = ''; el.classList.remove('rs-snake');
+      if(rev){ apply(fromOpen); el.classList.remove('rs-anim'); st.stage = ''; if(o.instant) o.instant(fromOpen); const w = st.open; st.open = null; if(w !== fromOpen) railSnake(el, w, o); return; }
+      done(hh); }; };
+  if(open){ snake(false, hh => { st.stage = 'in'; const r = o.in ? o.in(hh) : null; const fin = () => { el.classList.remove('rs-anim'); el.style.height = ''; st.stage = ''; st.anims = []; st.open = null; };
+      if(r && r.length){ st.anims = r; Promise.all(r.map(a => a.finished)).then(fin, () => {}); } else fin(); }); }
+  else { const r = o.out ? o.out() : null; st.stage = 'out'; el.classList.add('rs-anim');
+    const go = () => { st.keep = st.anims; st.anims = []; snake(true, () => { el.classList.remove('rs-anim'); st.stage = ''; st.open = null; }); };
+    if(r && r.length){ st.anims = r; Promise.all(r.map(a => a.finished)).then(go, () => {}); } else go(); } }
+/* 파트 패널 내용: 칩이 위에서부터 차례로 (펼칠 때) · 한 번에 (접을 때). 배너 높이도 같이 */
+const railBIn = (el, hh) => { const ks = [...el.querySelectorAll('.rail-b > :not([hidden])')], full = el.getBoundingClientRect().height, T = 220 + 35*ks.length;
+  return [el.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,0,.2,1)'}),
+    ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-10px)'}, {opacity: 1, transform: 'none'}], {duration: 220, delay: 35*i, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards'}))]; };
+const railBOut = el => { const ks = [...el.querySelectorAll('.rail-b > :not([hidden])')], hd = el.querySelector('.rail-h'), full = el.getBoundingClientRect().height, hh = hd.getBoundingClientRect().height + 2;
+  return [el.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: 160, easing: 'ease-in', fill: 'forwards'}), ...ks.map(k => k.animate([{opacity: 1}, {opacity: 0}], {duration: 120, fill: 'forwards'}))]; };
+
 /* ---------- 파트 패널: 마우스를 올리면 펼침, 빼면 접힘, 머리를 누르면 고정 ---------- */
 (()=>{ const rail=$('#partRail'); if(!rail) return; let ti=0, to=0;
   let pin = PREF('railpin','0')==='1';
-  const set = open => { rail.classList.toggle('coll', !open); rail.classList.toggle('pin', pin); try{ applyPart(); }catch(e){} const h=rail.querySelector('.rail-h'); if(h){ h.setAttribute('aria-expanded', String(open)); h.title = pin ? '고정 풀기 (마우스를 빼면 접힘)' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; } };
-  setTimeout(()=>set(pin), 0);   /* 목록을 처음 그린 뒤(init.js)에 적용 */
+  const cls = open => { rail.classList.toggle('coll', !open); try{ applyPart(); }catch(e){} };
+  const set = (open, now) => { rail.classList.toggle('pin', pin); const h=rail.querySelector('.rail-h'); if(h){ h.setAttribute('aria-expanded', String(open)); h.title = pin ? '고정 풀기 (마우스를 빼면 접힘)' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; }
+    const cur = rail._rs && rail._rs.stage ? rail._rs.open : !rail.classList.contains('coll'); if(cur === open) return;
+    if(now) cls(open); else railSnake(rail, open, {apply: cls, isOpen: () => !rail.classList.contains('coll'), in: hh => railBIn(rail, hh), out: () => railBOut(rail)}); };
+  setTimeout(()=>set(pin, true), 0);   /* 목록을 처음 그린 뒤(init.js)에 적용 */
   rail.addEventListener('mouseenter', ()=>{ clearTimeout(to); ti=setTimeout(()=>set(true), 150); });
   rail.addEventListener('mouseleave', ()=>{ clearTimeout(ti); if(!pin) to=setTimeout(()=>set(false), 300); });
   rail.addEventListener('focusin', ()=>{ clearTimeout(to); set(true); });
@@ -21052,13 +21121,13 @@ const TOUR = {
   ['#it-s_scrub .tk>.tk-d','논의','팀원끼리 이 항목에 대해 이야기하는 곳입니다. 답글을 달 수 있고, 내 글은 고치거나 지울 수 있습니다. 새 글이 있으면 항목 줄에 글 수가 뜹니다.',{...SC}],
   ['#crumb','지금 위치','내려 읽는 동안 지금 단계 › 항목을 위에 한 줄로 보여 줍니다. 눌러서 그 머리로 가거나 [이 항목 접기]·[모두 접기]로 닫습니다.',{...SC,sync:true,prep:()=>{ openScrub(); const it=$('#it-s_scrub'); if(it) window.scrollTo({top:it.getBoundingClientRect().top+scrollY+260,behavior:'instant'}); }}],
   ['#partRail','파트 강조','평소에는 접혀 있고 마우스를 올리면 펼쳐집니다(빼면 다시 접힘). 파트를 고르면 그 파트 항목만 진하게 보이고 나머지는 흐려지며, 여러 개 고를 수 있습니다. 머리를 누르면 펼친 채 고정(📌)됩니다.',{...SC,sync:true,prep:()=>{ const r=$('#partRail'); if(r) r.classList.remove('coll'); }}],
-  ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너를 누르면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다. 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
+  ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너에 마우스를 올리면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다(빼면 닫힘). 배너를 누르면 펼친 채 고정(📌)되고, 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
  ],
  graph: GRAPH_TOUR,
  tools: [
   ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
   ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. 점 색은 확정·검토 중·가정·계산값입니다. 값을 누르면 고칩니다.',{tab:'tools'}],
-  ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]을 누르면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
+  ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]에 마우스를 올리면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
   ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
   ['#dcond','주행 조건','차속·코너 반경·종가속·에어로 포함 여부를 바꾸거나 예시 상황을 누르면 그림과 아래 숫자가 같이 바뀝니다.',{tab:'tools'}],
   ['#dpart','파트별','파트별 선도입니다. 전체 범위의 그래프에 지금 조건을 세로 점선으로 표시합니다. 회색 탭은 그 계산 도구를 만들 때 열립니다.',{tab:'tools'}],
