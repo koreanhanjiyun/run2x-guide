@@ -3341,3 +3341,4 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t4-cbt{display:flex;flex-wrap:wrap;gap:6px}.t4-crq{min-height:0}.t4-crq .t9-rqt input{width:58px}
 #wb.wb-needon .t4-cbox.need .t4-crq{box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7;border-color:transparent}
 .t4-ots{width:200px;accent-color:var(--accent,#6A4294)}.t4-bd{padding:2px 9px;border-radius:999px;background:var(--soft,#f3f5f8)}.t4-bd b{margin-left:4px}
+.t4-oi input:disabled{background:var(--soft,#f3f5f8);color:var(--mute,#6b7280);cursor:not-allowed}.t4-ots:disabled{opacity:.45;cursor:not-allowed}

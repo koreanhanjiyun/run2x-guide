@@ -38,12 +38,15 @@ function t4CellEdHTML(){ const P = (k, txt, u) => k==='c' ? t2PairParse(txt) : t
       <div class="t9-crq t4-crq" data-t4crq="${k}"><table class="t2-tt t9-rqt">${G.map((r, ri) => `<tr>${r.map((v, ci) => cell(v, ri, ci)).join('')}</tr>`).join('')}</table></div>
       ${String(T4C[k] || '').trim() && !p.map ? '<span class="wb-err">읽지 못함</span>' : ''}</div>`; };
   return `<div class="wb-ig wb-elh">셀 표 (SOC × 온도) <span class="wb-meta">도구 2P [축전지 › 셀 표]가 복사해 감 · 셀 값 칸이면 전압은 SOC 에 직선</span></div><div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres')}${box('c', '셀 용량 (Ah)', '', 'bcap')}</div>`; }
-function t4CellHTML(){ const R = WB.R, o = R && R.out, f = t4F, T = R && R.soc;
+/* 온도에 따라 바뀌는 표를 쓰는지 (OCV · 내부저항 표의 온도 열이 다름, 용량 표의 용량이 다름). 없으면 셀 온도 칸 · 슬라이더 막음 (2026-11-12) */
+function t4TempDep(){ const I = t4CellI(), g = M => M && Array.isArray(M.n) && M.n.length > 1 && (M.e || []).some(r => r.some(v => v !== r[0]));
+  return g(I.cellO) || g(I.cellR) || (Array.isArray(I.cellC) && I.cellC.length > 1 && I.cellC.some(q => q[1] !== I.cellC[0][1])); }
+function t4CellHTML(){ const R = WB.R, o = R && R.out, f = t4F, T = R && R.soc, td = t4TempDep();
   const row = (nm, fn) => `<tr><td>${nm}</td>${T.map(t => `<td>${fn(t)}</td>`).join('')}</tr>`, tT = Number.isFinite(WB.I.o_T) ? WB.I.o_T : 25;
   const bd = o && (o.s_bd===0 ? '전 구간 충족' : Number.isFinite(o.s_bd) ? `SOC ${f(o.s_bd, 1)} %` : '전 구간 미달');
   return `<section class="wb-sec t4-cell" aria-label="SOC 별 출력"><div class="wb-h"><h3>SOC 별 출력</h3></div>
-    <div class="t4-bar"><b>셀 온도</b><label class="t4-oi"><input type="number" step="any" value="${tT}" data-t4ot aria-label="셀 온도"> °C</label>
-      <input type="range" class="t4-ots" min="-10" max="90" step="1" value="${Math.max(-10, Math.min(90, tT))}" data-t4ots aria-label="셀 온도 슬라이더">
+    <div class="t4-bar"><b>셀 온도</b><label class="t4-oi"><input type="number" step="any" value="${tT}" data-t4ot aria-label="셀 온도"${td ? '' : ' disabled'}> °C</label>
+      <input type="range" class="t4-ots" min="-10" max="90" step="1" value="${Math.max(-10, Math.min(90, tT))}" data-t4ots aria-label="셀 온도 슬라이더"${td ? '' : ' disabled'}>
       ${bd ? `<span class="t4-bd">충족 경계 <b>${bd}</b></span>` : ''}
       ${o ? `<span class="muted">이 온도 셀 용량 ${f(o.cap_T, 2)} Ah · 팩 에너지 ${f(o.e_T, 3)} kWh (OCV 평균 ${f(o.ocv_mean, 3)} V) · 표 전류 ${f(o.o_i, 1)} A</span>` : ''}</div>
     ${T ? `<div class="t4-tw"><table class="dvi-t t4-t"><thead><tr><th>SOC</th>${T.map(t => `<th>${t.sc} %</th>`).join('')}</tr></thead><tbody>
@@ -142,7 +145,7 @@ WB_TOOLS['4'] = {
     {k:'c_ah', dk:'c_ah', v:4.0, d:2, g:T4G.cell}, {k:'c_imax', dk:'c_imax', v:35, d:1, g:T4G.cell}, {k:'c_ich', dk:'c_ich', v:6, d:1, g:T4G.cell}, {k:'c_r', dk:'c_r', v:12, d:2, g:T4G.cell}, {k:'c_g', dk:'c_g', v:70, d:1, g:T4G.cell},
     {k:'n_seg', dk:'n_seg', v:5, d:0, g:T4G.cfg}, {k:'s_seg', n:'세그먼트 직렬 수 (S)', u:'개', v:14, d:0, g:T4G.cfg}, {k:'n_p', dk:'n_p', n:'병렬 수 (P)', v:7, d:0, g:T4G.cfg},
     {k:'x_mseg', n:'세그먼트당 추가 무게 (버스바 · 케이스 등)', u:'kg', v:0, d:2, g:T4G.add}, {k:'x_mpack', n:'팩 전체 추가 무게 (박스 · 배선 등)', u:'kg', v:0, d:2, g:T4G.add},
-    {k:'v_inv', n:'인버터 최대 직류 전압 (구동계 부품 정격은 축전지 최대 전압 이상)', u:'V', v:420, d:0, g:T4G.add}, {k:'vi_on', n:'인버터 최대 전압 확인 (1 = 확인, 0 = 확인 안 함)', u:'', v:0, d:0, g:T4G.add, ui:'none'},
+    {k:'v_inv', n:'인버터 최대 직류 전압 (구동계 부품 정격은 축전지 최대 전압 이상)', u:'V', v:420, d:0, g:T4G.add}, {k:'vi_on', n:'인버터 최대 전압 확인 (1 = 확인, 0 = 확인 안 함)', u:'', v:1, d:0, g:T4G.add, ui:'none'},
     {k:'x_r', n:'팩 전체 추가 저항 (버스바 · 퓨즈 · 커넥터)', u:'mΩ', v:0, d:2, g:T4G.add}, {k:'i_lim', n:'팩 사용 전류 제한', u:'A', v:245, d:0, g:T4G.add}, {k:'il_on', n:'팩 사용 전류 (1 = 제한 적용, 0 = 셀 사양 최대)', u:'', v:0, d:0, g:T4G.add, ui:'none'},
     {k:'auto', n:'구성 방식 (0 수동 · 1 병렬 자동 · 2 직렬 자동)', u:'', v:0, d:0, g:T4G.cfg, ui:'none'},
     {k:'o_mode', n:'출력 표 전류 (0 제한 적용 · 1 셀 최대 · 2 직접)', u:'', v:0, d:0, g:T4G.add, ui:'none'}, {k:'o_T', n:'셀 표 온도', u:'°C', v:25, d:1, g:T4G.add, ui:'none'}, {k:'o_i', n:'출력 표 전류 (직접)', u:'A', v:0, d:0, g:T4G.add, ui:'none'},
