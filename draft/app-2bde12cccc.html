@@ -20963,7 +20963,7 @@ window.setCompare = (k,on) => { document.body.classList.toggle(k, on); SETP('cmp
    apply(open) = 클래스만 바꾸는 함수. 사용법 중에는 애니메이션 없이 바로 바꿈. 도중에 반대로 바뀌면 그 자리에서 되돌아감 ---------- */
 function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.rail-h'), sp = hd && hd.querySelector('span');
   const st = el._rs || (el._rs = {open: null, stage: '', anims: [], clones: []});
-  const clean = () => { [...st.anims, ...(st.keep||[])].forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; el.classList.remove('rs-anim', 'rs-snake'); el.style.width = el.style.height = ''; st.stage = ''; };
+  const clean = () => { [...st.anims, ...(st.keep||[])].forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; el.classList.remove('rs-anim', 'rs-snake'); el.style.width = el.style.height = el.style.clipPath = ''; st.stage = ''; };
   const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
   if(st.open === open && st.stage) return;
   if(st.stage === 'snake' && st.open !== open){ st.open = open; st.anims.forEach(a => a.reverse()); return; }   /* 글자 이동 중 반대로 → 되감기 */
@@ -20975,21 +20975,24 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
   const box = () => { const b = el.getBoundingClientRect(); return {w: b.width, h: b.height}; };
   const D = 300, ease = 'cubic-bezier(.45,0,.25,1)';
   const snake = (fromOpen, done) => {   /* fromOpen = 지금 펼친 머리(가로)에서 접는 쪽으로 가는지 */
-    const c0 = chars(), b0 = box(), h0 = hd.getBoundingClientRect().height + 2; st.stage = 'snake'; apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), h1 = hd.getBoundingClientRect().height + 2;
+    const c0 = chars(), b0 = box(), h0 = hd.getBoundingClientRect().height + 2; st.stage = 'snake';
+    (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = [];   /* 접을 때: 칩 거두기 높이 고정을 풀어야 세로 막대가 보임 */
+    apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), h1 = hd.getBoundingClientRect().height + 2;
     const cs = getComputedStyle(sp), font = cs.font, col = getComputedStyle(hd).color; sp.style.color = 'transparent';
     const n = Math.min(c0.length, c1.length);
     for(let i = 0; i < n; i++){ const V = fromOpen ? c1[i] : c0[i], Hz = fromOpen ? c0[i] : c1[i];   /* V 세로 자리, Hz 가로 자리 */
       const P = [V, {x: V.x, y: Hz.y}, Hz]; if(fromOpen) P.reverse(); const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y);
-      const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`; document.body.appendChild(d); st.clones.push(d);
-      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`;
+      const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`; 
+      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(P[0]); document.body.appendChild(d); st.clones.push(d);   /* 애니메이션이 시작되기 전 한 장면도 출발 자리에 */
       st.anims.push(d.animate([{transform: tf(P[0]), offset: 0}, {transform: tf(P[1]), offset: L1 + L2 ? L1/(L1 + L2) : .5}, {transform: tf(P[2]), offset: 1}], {duration: D, easing: ease, fill: 'both'})); }
     /* 배너 모양 = ㄱ자 (위 가로 막대 + 오른쪽 세로 막대): 상자는 두 모양을 다 담는 크기로 두고 clip-path 로 가로 막대는 왼쪽으로 늘고 세로 막대는 위로 줄게 (사각형으로 바뀌어 보이지 않게) */
     const W = fromOpen ? b0.w : b1.w, v = fromOpen ? b1.w : b0.w, Hm = fromOpen ? b1.h : b0.h, hh = fromOpen ? h0 : h1;
     el.style.width = W + 'px'; el.style.height = Math.max(Hm, hh) + 'px';
-    const shape = (L, B) => `polygon(${L}px 0px, ${W}px 0px, ${W}px ${B}px, ${W - v}px ${B}px, ${W - v}px ${hh}px, ${L}px ${hh}px)`, Vs = shape(W - v, Hm), Hs = shape(0, hh);
+    const r = 10, shape = (L, B, rh, rb) => `path("M ${L + r} 0 H ${W} V ${B} H ${W - v + rb} A ${rb} ${rb} 0 0 1 ${W - v} ${B - rb} V ${hh} H ${L + rh} A ${rh} ${rh} 0 0 1 ${L} ${hh - rh} V ${r} A ${r} ${r} 0 0 1 ${L + r} 0 Z")`;   /* 왼쪽 모서리는 배너처럼 둥글게 */
+    const Vs = shape(W - v, Hm, 0, r), Hs = shape(0, hh, r, 0); el.style.clipPath = fromOpen ? Hs : Vs;
     const A = el.animate([{clipPath: fromOpen ? Hs : Vs}, {clipPath: fromOpen ? Vs : Hs}], {duration: D, easing: ease, fill: 'both'}); st.anims.push(A);
     st.stage = 'snake'; const want = st.open;
-    A.onfinish = () => { const rev = A.playbackRate < 0; sp.style.color = ''; (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; st.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; el.style.width = el.style.height = ''; el.classList.remove('rs-snake');
+    A.onfinish = () => { const rev = A.playbackRate < 0; sp.style.color = ''; (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; st.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; el.style.width = el.style.height = el.style.clipPath = ''; el.classList.remove('rs-snake');
       if(rev){ apply(fromOpen); el.classList.remove('rs-anim'); st.stage = ''; if(o.instant) o.instant(fromOpen); const w = st.open; st.open = null; if(w !== fromOpen) railSnake(el, w, o); return; }
       done(hh); }; };
   if(open){ snake(false, hh => { st.stage = 'in'; const r = o.in ? o.in(hh) : null; const fin = () => { el.classList.remove('rs-anim'); el.style.height = ''; st.stage = ''; st.anims = []; st.open = null; };
