@@ -10851,7 +10851,7 @@ async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
 function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
   return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; return ''; }}; }); }
 /* [도구 연결]: 가져오기만 (다른 도구로 보내기는 없음 — 한 도구가 다른 도구 값을 멋대로 바꾸는 일, 2026-11-12).
-   거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에. 그리고 [가져올 값 없는 줄 빼기] 하나. 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
+   거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에. 그리고 [가져올 값 없는 줄 제외] 하나. 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
    대시보드는 묶음끼리 모으고 묶음마다 줄 띄움 */
 const wbLinkCat = r => r.cat || String(r.to || '').replace(/<[^>]+>/g, '').replace(/^(입력|편집) › /, '').split(' › ')[0].replace(/ \(.*$/, '');
 const wbLinkEmpty = v => { const t = String(v == null ? '' : v).replace(/<[^>]+>/g, '').trim(); return !t || t==='—' || t==='비어 있음' || /^—( ·|$)/.test(t) && !/[0-9]/.test(t); };
@@ -10863,7 +10863,7 @@ function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.li
     const ord = G.map((r, i) => i).sort((x, y) => dir==='dash' ? first[wbLinkCat(G[x])] - first[wbLinkCat(G[y])] || x - y : x - y);   /* 대시보드는 묶음끼리 모음 */
     const rows = ord.map(i => { const r = G[i], c = wbLinkCat(r), gap = dir==='dash' && c!==last ? `<tr class="wbl-grp"><td colspan="5">${wbEsc(c)}</td></tr>` : ''; last = c;
       return gap + `<tr${r.ok ? '' : ' class="off"'} data-wblr data-wblt="${wbEsc(r.tool)}" data-wblc="${wbEsc(c)}" data-wblne="${wbLinkEmpty(r.now) ? '비어 있음' : '값 있음'}" data-wblve="${r.val ? '값 있음' : '없음'}"><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td>${dir==='get' ? `<span class="wbl-tool">${wbEsc(r.tool)}</span> ` : ''}${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`; }).join('');
-    return `<section class="wbl-sec" data-wbls="${dir}"><div class="wbl-h"><h4>${title}</h4><label class="wbl-ve"><input type="checkbox" data-wblvx> 가져올 값 없는 줄 빼기</label></div><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th>
+    return `<section class="wbl-sec" data-wbls="${dir}"><div class="wbl-h"><h4>${title}</h4><label class="wbl-ve"><input type="checkbox" data-wblvx> 가져올 값 없는 줄 제외</label></div><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th>
       <th>${dir==='get' ? fb(dir, 'tool', '무엇을') : '무엇을'}</th><th>${fb(dir, 'cat', '이 도구의 어디에 (덮어씀)')}</th><th>이 도구의 지금 값</th><th>가져올 값</th></tr></thead>
       <tbody>${rows}</tbody></table>
       <div class="wbl-act"><button type="button" class="btn small pri" data-wblgo="${dir}"${G.some(r => r.ok) ? '' : ' disabled'}>${btn}</button></div></section>`; };
