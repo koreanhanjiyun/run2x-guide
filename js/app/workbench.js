@@ -16,22 +16,22 @@ const WB = { id:null, I:{}, R:null, err:'', ms:0, xi:0, sel:new Set(), act:'', c
 const wbT = () => WB_TOOLS[WB.id];
 const wbEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wbFmt = (x, d) => (typeof x==='number' && isFinite(x)) ? x.toLocaleString('ko-KR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
-/* ---------- 예제 · 새 파일 (2026-11-10 관리자 결정) ----------
+/* ---------- 예제 · 내 파일 (2026-11-10 관리자 결정) ----------
    예제 = 튜토리얼용 임의 데이터 (도구 기본값 · 예시 표). 설계에 쓰지 않음 → 내보내기 · 가져오기 · 대시보드(가져오기 · 반영) · 다른 도구로 보내기 막음.
-   새 파일 = 모두 빈칸 (고정 종목 코스 · 모델 선택 · 고정 상수만). 사이트는 차량 데이터를 주지 않음. 빈칸이 있으면 계산하지 않고 필요한 칸을 빨갛게.
-   두 모드는 저장을 따로 (키 끝 @ex · @nf). 도구 목록 줄에 커서를 올리면 [예제 | 새 파일] 로 바뀌어 고른 쪽으로 엶. 도구 안에서 다른 도구로 넘어가면 지금 모드 그대로.
+   내 파일 = 모두 빈칸 (고정 종목 코스 · 모델 선택 · 고정 상수만). 사이트는 차량 데이터를 주지 않음. 빈칸이 있으면 계산하지 않고 필요한 칸을 빨갛게.
+   두 모드는 저장을 따로 (키 끝 @ex · @nf). 도구 목록 줄에 커서를 올리면 [예제 | 내 파일] 로 바뀌어 고른 쪽으로 엶. 도구 안에서 다른 도구로 넘어가면 지금 모드 그대로.
    검증표는 모드와 상관없이 늘 입력 정의의 기본값(d.v) 위에서 돎. 예전 저장본(모드 없는 키)은 버림. */
-let WBMODE = 'nf', WBMODE_ON = true;   /* 처음 = 새 파일 (도구마다 wbModeReg 로 바로 읽음) */
+let WBMODE = 'nf', WBMODE_ON = true;   /* 처음 = 내 파일 (도구마다 wbModeReg 로 바로 읽음) */
 const wbEx = () => WBMODE==='ex';
 const wbMK = k => k + (WBMODE==='ex' ? '@ex' : '@nf');
-const WB_MODE_LOAD = [], wbModeReg = f => { WB_MODE_LOAD.push(f); try{ f(WBMODE); }catch(e){ console.error('mode load', e); } };   /* 도구마다 (mode) => 그 모드 저장본을 읽음 (없으면 예제 = 예시값 · 새 파일 = 빈칸) */
+const WB_MODE_LOAD = [], wbModeReg = f => { WB_MODE_LOAD.push(f); try{ f(WBMODE); }catch(e){ console.error('mode load', e); } };   /* 도구마다 (mode) => 그 모드 저장본을 읽음 (없으면 예제 = 예시값 · 내 파일 = 빈칸) */
 function wbModeSet(m){ m = m==='ex' ? 'ex' : 'nf'; if(WBMODE_ON && m===WBMODE) return; WBMODE = m; WBMODE_ON = true;
   WB_MODE_LOAD.forEach(f => { try{ f(m); }catch(e){ console.error('mode load', e); } }); }
-/* [예제 | 새 파일] 두 단추 (도구 목록 줄 · 파트 페이지 단추 안). 부모 .wb-mpick 에 커서 · 포커스가 오면 보임 */
-const wbModeBtns = (id, t) => `<span class="wb-mp-b" role="group" aria-label="${wbEsc(String(t).replace(/<[^>]+>/g, ''))} 열기"><button type="button" class="wb-mp-ex" data-wbo="${id}" data-wbm="ex"><b>예제</b><span>튜토리얼 · 임의 데이터</span></button><button type="button" class="wb-mp-nf" data-wbo="${id}" data-wbm="nf"><b>새 파일</b><span>빈칸에서 설계</span></button></span>`;
-const wbModeName = m => (m || WBMODE)==='ex' ? '예제' : '새 파일';
+/* [예제 | 내 파일] 두 단추 (도구 목록 줄 · 파트 페이지 단추 안). 부모 .wb-mpick 에 커서 · 포커스가 오면 보임 */
+const wbModeBtns = (id, t) => `<span class="wb-mp-b" role="group" aria-label="${wbEsc(String(t).replace(/<[^>]+>/g, ''))} 열기"><button type="button" class="wb-mp-ex" data-wbo="${id}" data-wbm="ex"><b>예제</b><span>튜토리얼 · 임의 데이터</span></button><button type="button" class="wb-mp-nf" data-wbo="${id}" data-wbm="nf"><b>내 파일</b><span>내 설계 이어서</span></button></span>`;
+const wbModeName = m => (m || WBMODE)==='ex' ? '예제' : '내 파일';
 /* 예제에서 막는 것: 이유를 알림 */
-function wbExBlock(){ if(!wbEx()) return false; toast('예제는 튜토리얼용 임의 데이터라 내보내기 · 가져오기 · 대시보드 연결을 쓰지 않습니다. 도구 목록에서 [새 파일]로 여세요.'); return true; }
+function wbExBlock(){ if(!wbEx()) return false; toast('예제는 튜토리얼용 임의 데이터라 내보내기 · 가져오기 · 대시보드 연결을 쓰지 않습니다. 도구 목록에서 [내 파일]로 여세요.'); return true; }
 /* 예전 저장본 (모드 나누기 전 키) 버림 — 한 번만 */
 try{ if(!localStorage.getItem('run2x.mode.v1')){ ['1', '2', 'G', '4', '9', 'T', '5', '6', '7', '3', '8'].forEach(id => localStorage.removeItem('run2x.wb.' + id));
     ['run2x.wb.2.ext.v2', 'run2x.t9', 'run2x.wb.share.hp', 'run2x.t4.presets', 'run2x.t4.cell'].forEach(k => localStorage.removeItem(k));
@@ -108,7 +108,7 @@ new MutationObserver(() => { if(WBZ.key) wbZoomMark(); }).observe(document.docum
 document.addEventListener('keydown', e => { if(e.key==='Escape' && WBZ.key){ wbZoomSet(null); } });
 function wbKill(){ if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
   Object.keys(WB.wait).forEach(id => { const f = WB.wait[id]; delete WB.wait[id]; f({ok:false, cancelled:true}); }); }
-/* 새 파일: 계산에 필요한데 빈 칸 = 화면에 있고(ui:'none' 아님) 잠기지 않은 칸 + 도구가 알리는 표 (T.needExt → [{n, go}]) */
+/* 내 파일: 계산에 필요한데 빈 칸 = 화면에 있고(ui:'none' 아님) 잠기지 않은 칸 + 도구가 알리는 표 (T.needExt → [{n, go}]) */
 function wbNeed(){ const T = wbT(); if(!T) return []; const L = [];
   T.inputs.forEach(d => { if(d.ui==='none' || (T.inLock && T.inLock(d.k)) || (T.inNeed && T.inNeed(d.k)===false)) return; if(!isFinite(WB.I[d.k])) L.push({k:d.k, n:wbInName(d).replace(/<[^>]+>/g, ''), g:d.g || ''}); });
   if(T.needExt) (T.needExt() || []).forEach(x => L.push(x)); return L; }
@@ -458,7 +458,7 @@ function wbLoad(id){ const T = WB_TOOLS[id], I = {}; let saved = {};
   try{ saved = JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ saved = {}; }
   const sh = T.share && WB_SHARE[T.share] ? wbShareGet(T.share) : null, re = sh ? WB_SHARE[T.share].re : null;
   T.inputs.forEach(d => { const c = sh && re.test(d.k) ? sh[d.k] : undefined, s = saved[d.k];
-    I[d.k] = typeof c==='number' && isFinite(c) ? c : typeof s==='number' && isFinite(s) ? s : (wbEx() || d.ui==='none' || d.keep ? d.v : NaN); });   /* 같이 쓰는 값 > 이 도구 저장값 > (예제 = 기본값 · 새 파일 = 빈칸, 모델 선택 · 고정 상수(ui:'none') · 운전자 계수(keep)는 늘 기본) */
+    I[d.k] = typeof c==='number' && isFinite(c) ? c : typeof s==='number' && isFinite(s) ? s : (wbEx() || d.ui==='none' || d.keep ? d.v : NaN); });   /* 같이 쓰는 값 > 이 도구 저장값 > (예제 = 기본값 · 내 파일 = 빈칸, 모델 선택 · 고정 상수(ui:'none') · 운전자 계수(keep)는 늘 기본) */
   return I; }
 function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(WB.I)); }catch(e){} const T = WB_TOOLS[WB.id]; if(T && T.share) wbShareSet(T.share, WB.I); }
 /* 하드포인트 파일: 행 = 축 · 점 · 이름 · x · y · z [mm] (차량 좌표: x 앞 · y 바깥 · z 위, 왼쪽 바퀴). 도구 5 · 6 · 7 · 8 의 점을 모두 담음 */
@@ -490,7 +490,7 @@ function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id]
   WB.id = id; WB.need = []; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
-  WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 새 파일 빈칸: 편집 탭에서 시작 */
+  WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 내 파일 빈칸: 편집 탭에서 시작 */
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
   m.classList.remove('t2-edit', 'm1-on', 'm1-tabdim');   /* 도구 2P 편집 탭 표시가 다른 도구로 남아 결과를 가리던 것 (2026-11-11). 2P 는 그릴 때 다시 붙임 */
   m.classList.toggle('wb-exmode', wbEx()); m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
@@ -520,7 +520,7 @@ window.addEventListener('popstate', e => { const s = e.state && e.state.wb;
     if(s.bg && typeof TAB!=='undefined' && TAB!==s.bg){ showTab(s.bg, true); try{ history.replaceState(e.state, '', location.hash); }catch(_){} }   /* 도구 뒤 사이트 탭 */
     if(WB.id!==s.id || WBMODE!==s.m) wbOpen(s.id, null, s.m);
     const T = wbT(); if(!T) return; if(s.t && wbTabs(T) && (WB.tab || 'res')!==s.t) wbTabSet(s.t); if(s.s && T.navSet) T.navSet(s.s); }
-  finally{ WBNAV.pop = false; if(WB.id) WBNAV.last = JSON.stringify(wbNavSnap()); } });   /* 작업창 밖(파트 페이지 등)은 늘 새 파일(실제 설계) 쪽 상태 */
+  finally{ WBNAV.pop = false; if(WB.id) WBNAV.last = JSON.stringify(wbNavSnap()); } });   /* 작업창 밖(파트 페이지 등)은 늘 내 파일(실제 설계) 쪽 상태 */
 
 /* ---------- 작은 창 (검증표 · 코드 보기 · 대시보드에 반영) ---------- */
 function wbModal(html, cls){ let m = $('#wbm'); if(!m){ m = document.createElement('div'); m.id = 'wbm'; m.className = 'dv-modal wb-modal'; document.body.appendChild(m); }

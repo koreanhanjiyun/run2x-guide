@@ -12,7 +12,7 @@
    - 저장소가 없으면(로그인 전) 이 브라우저에 저장
    ============================================================ */
 const MASSKEY = 'run2x.mass.v2', DRVKEY = 'run2x.drv.v2', M1COLKEY = 'run2x.m1.hues';
-let MASS = {}, DRVS = {}, MASS_T = null, DRVS_T = null;   /* MASS_T · DRVS_T = 팀 저장소에서 받은 값 (새 파일 · 로그인일 때 씀) */
+let MASS = {}, DRVS = {}, MASS_T = null, DRVS_T = null;   /* MASS_T · DRVS_T = 팀 저장소에서 받은 값 (내 파일 · 로그인일 때 씀) */
 /* 예제 질량 표 · 드라이버 (튜토리얼용 임의 데이터, 이번 · 지난 시즌) */
 function M1EXSEED(){ const mass={}, o={n:0}, S0=m1Season(), S1=String(+S0 - 1);
   const HUE={frame:265,sus:190,str:40,brk:5,pt:130,mc:220,bat:25,cool:160,aero:205};
@@ -37,7 +37,7 @@ function M1EXSEED(){ const mass={}, o={n:0}, S0=m1Season(), S1=String(+S0 - 1);
   G('aero','뒤날개','s',-60,0,900,[['메인 플레인',1.8],['플랩',0.7,2],['엔드플레이트',0.3,2],['스완넥',0.7]]);
   const D=(label,height,mass,sex,gear)=>({label,sex:sex||'m',height,mass,gear:gear||{helmet:0,suit:0,belt:0},back:32,hip:{x:970,z:230},pedal:{x:1780,z:250},sw:{x:1185,z:500},seg:{}});
   return {mass, drv:{d1:{s:{[S0]:D('시험 1',175,68,'m',{helmet:1.4,suit:1.1,belt:0.9}),[S1]:D('시험 1',175,70)}}, d2:{s:{[S0]:D('시험 2',184,80,'m',{helmet:1.5,suit:1.3,belt:0.9})}}, d3:{s:{[S0]:Object.assign(D('시험 3',165,58,'f',{helmet:1.3,suit:1.0,belt:0.9}),{pedal:{x:1620,z:250}})}}}}; }
-/* 모드: 예제 = 이 브라우저의 예제 저장본 (없으면 위 예시), 팀 저장소에 쓰지 않음 · 새 파일 = 팀 저장소(로그인) 또는 이 브라우저 새 파일 저장본, 없으면 빈 표 */
+/* 모드: 예제 = 이 브라우저의 예제 저장본 (없으면 위 예시), 팀 저장소에 쓰지 않음 · 내 파일 = 팀 저장소(로그인) 또는 이 브라우저 내 파일 저장본, 없으면 빈 표 */
 wbModeReg(m => { const rd = k => { try{ return JSON.parse(localStorage.getItem(wbMK(k)) || 'null'); }catch(e){ return null; } };
   if(m==='ex'){ const a = rd(MASSKEY), b = rd(DRVKEY); if(a && b){ MASS = a; DRVS = b; } else { const T = M1EXSEED(); MASS = a || T.mass; DRVS = b || T.drv; } }
   else if(typeof SH!=='undefined' && SH.on){ MASS = MASS_T || {}; DRVS = DRVS_T || {}; }
@@ -49,7 +49,7 @@ const M1DRV = {d1:'1st', d2:'2nd', d3:'3rd'};
 const M1HC = {d1:'#c2410c', d2:'#257a47', d3:'#1d5f9a'};   /* 헬멧 색: 1st 주황 · 2nd 초록 · 3rd 파랑 (2026-11-12) */
 /* 드라이버 기본값: 예시 차량(그림 윤곽, 휠베이스 1550) 시트 · 페달 · 핸들 자리(뒤 차축 기준 x)에 남성 175 cm · 70 kg, 장비 0 */
 const M1DDEF0 = () => ({label:'', sex:'m', height:175, mass:70, gear:{helmet:0, suit:0, belt:0}, back:32, neck:0, foot:20, helm:M1HD, hip:{x:960, z:230}, pedal:{x:1770, z:250}, sw:{x:1175, z:500}, seg:{}});
-/* 새 파일: 드라이버 키 · 몸무게는 빈칸에서 (자세 손잡이 자리만 그림 기준) */
+/* 내 파일: 드라이버 키 · 몸무게는 빈칸에서 (자세 손잡이 자리만 그림 기준) */
 const M1DDEF = () => wbEx() ? M1DDEF0() : {...M1DDEF0(), height:NaN, mass:NaN};
 const m1Num0 = v => typeof v==='number' && Number.isFinite(v);
 const M1SEG = {head:'머리', neck:'목', trunk:'몸통', uarm:'상완', farm:'하완', hand:'손', thigh:'허벅지', shank:'정강이', foot:'발'};
@@ -242,11 +242,11 @@ function m1DrvLocal(k){ const d = m1Drv(k) || M1DDEF(); if(!(+d.height > 0 && +d
 const m1DOf = (R, k) => (R && R.drv && R.drv[k]) || m1DrvLocal(k);
 /* 차 형상이 없으면 그림 자리에 [차 형상 넣기] */
 const m1NoShp = view => typeof shGet==='function' && !shGet(view) && !wbEx();
-const m1ShpCta = view => { if(!m1NoShp(view)) return ''; setTimeout(m1CtaPlace, 30); return `<button type="button" class="btn small m1-shpcta" data-shpopen>차 형상 넣기</button>`; };
+const m1ShpCta = view => { if(!m1NoShp(view)) return ''; setTimeout(m1CtaPlace, 30); return `<button type="button" class="btn small m1-shpcta" data-shpopen="${view}">차 형상 넣기</button>`; };   /* 옆면 · 윗면 따로 (윗면은 2026-11-12) */
 /* 차 형상이 없을 때: 예시 차 바깥 윤곽(겹친 부품을 메워 한 덩어리의 테두리)을 연보라 선으로, 그 위 오른쪽 끝에 [차 형상 넣기]를 붙임 (2026-11-11) */
 const M1ENVF = `<defs><filter id="m1envf" x="-10%" y="-20%" width="120%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="40" result="d"/><feMorphology in="d" operator="erode" radius="40" result="c"/><feMorphology in="c" operator="dilate" radius="2.5" result="o"/><feComposite in="o" in2="c" operator="out" result="r"/><feFlood flood-color="#b39ddb"/><feComposite in2="r" operator="in"/></filter></defs>`;
-const m1Env = g => `<g class="m1-env" filter="url(#m1envf)">${g}</g>`;
-function m1CtaPlace(){ document.querySelectorAll('#wb .m1-shpcta').forEach(b => { const box = b.parentElement, env = box && box.querySelector('.m1-env'); if(!env) return;
+const m1Env = (g, view = 'side') => `<g class="m1-env" data-env="${view}" filter="url(#m1envf)">${g}</g>`;
+function m1CtaPlace(){ document.querySelectorAll('#wb .m1-shpcta').forEach(b => { const box = b.parentElement, env = box && box.querySelector(`.m1-env[data-env="${b.dataset.shpopen || 'side'}"]`); if(!env) return;
   const r = env.getBoundingClientRect(), c = box.getBoundingClientRect(); if(!r.width) return;
   b.style.left = `${Math.max(0, r.right - c.left - b.offsetWidth + 6)}px`; b.style.top = `${Math.max(0, r.top - c.top - b.offsetHeight/2)}px`; b.style.right = 'auto'; }); }
 window.addEventListener('resize', () => { if(WB.id==='1') m1CtaPlace(); });
@@ -390,12 +390,12 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
   let sv = `<svg class="m1-fig cf-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="질량 분포: 옆에서 · 위에서">
     <text x="${c1 + 4}" y="18" class="m1-tl b">옆에서</text><text x="${c2 + 4}" y="18" class="m1-tl b">위에서</text>
     <line x1="${c1 + colw + gap/2}" y1="30" x2="${c1 + colw + gap/2}" y2="${H - 20}" stroke="var(--line)"/>
-    ${WB.id==='1' && m1NoShp('side') ? M1ENVF + m1Env(CARFIG.carSide(ts, L, r, s)) : ''}${CARFIG.carSide(ts, L, r, s)}<line x1="${c1}" y1="280" x2="${c1 + colw}" y2="280" class="cf-gnd"/>${CARFIG.carTop(tt, L, r, s, I.tf, I.tr)}`;
+    ${WB.id==='1' && (m1NoShp('side') || m1NoShp('top')) ? M1ENVF : ''}${WB.id==='1' && m1NoShp('side') ? m1Env(CARFIG.carSide(ts, L, r, s)) : ''}${CARFIG.carSide(ts, L, r, s)}<line x1="${c1}" y1="280" x2="${c1 + colw}" y2="280" class="cf-gnd"/>${WB.id==='1' && m1NoShp('top') ? m1Env(CARFIG.carTop(tt, L, r, s, I.tf, I.tr), 'top') : ''}${CARFIG.carTop(tt, L, r, s, I.tf, I.tr)}`;
   items.slice().sort((a, b) => b.m - a.m).forEach(it => { const c = colOf(it), R_ = rr(it.m), p1 = ts(L - it.x, it.z), p2 = tt(L - it.x, -it.y), tl = `<title>${wbEsc(it.name || '')} ${wbFmt(it.m, 1)} kg</title>`;
     sv += `<circle cx="${p1[0].toFixed(1)}" cy="${p1[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle><circle cx="${p2[0].toFixed(1)}" cy="${p2[1].toFixed(1)}" r="${R_.toFixed(1)}" fill="${c}" fill-opacity=".3" stroke="${c}">${tl}</circle>`; });
   if(o.m > 0){ sv += sym(ts(L - o.x_cg, o.h), '#d92d20', 9) + sym(tt(L - o.x_cg, -o.y_cg), '#d92d20', 9); if(o.m_s > 0) sv += sym(ts(L - o.x_s, o.h_s), '#6A4294', 7); }
   sv += `</svg><div class="wb-leg"><span><i style="background:#d92d20"></i>차 전체 CG</span><span><i style="background:#6A4294"></i>현가상 CG</span><span class="muted">원 색 = 카드 색 (드라이버 = 헬멧 색) · 원 넓이 ∝ 질량 · 원에 마우스를 올리면 어셈블리 이름</span></div>`;
-  return (WB.id==='1' && !wbEx() ? m1ShpCta('side') : '') + sv; }
+  return (WB.id==='1' && !wbEx() ? m1ShpCta('side') + m1ShpCta('top') : '') + sv; }
 
 /* ---------- 대시보드 '파트별 > 질량 · 무게중심': 팀 질량 표 · 드라이버로 계산한 결과(읽기 전용) ---------- */
 const M1P = { R:null, key:'', busy:false, w:null };
@@ -466,7 +466,7 @@ WB_TOOLS['1'] = {
     [['mass', d.mass], ['drv', d.drv]].forEach(([kind, S]) => { if(S && typeof S==='object') Object.entries(S).forEach(([id, doc]) => { const v = doc && doc.s && (doc.s[se] || doc.s[m1Season()]); if(v){ m1Store(kind, id, v); n++; } }); });
     if(n) toast(`질량 표 · 드라이버 ${n}개를 이번 시즌 칸으로 가져왔습니다.`); wbPaint(['ext']); },
   exReset(){ try{ localStorage.removeItem(wbMK(MASSKEY)); localStorage.removeItem(wbMK(DRVKEY)); }catch(e){} const T = M1EXSEED(); MASS = T.mass; DRVS = T.drv; },
-  /* 새 파일: 질량 표 · 고른 드라이버 키 · 몸무게 */
+  /* 내 파일: 질량 표 · 고른 드라이버 키 · 몸무게 */
   needExt(){ const L = [], d = m1Drv(M1.dsel) || M1DDEF();
     if(!m1Groups().some(g => m1GSum(g) > 0)) L.push({k:'m1:mass', n:'부품 질량 표 (질량이 있는 어셈블리 1개 이상)', g:'표 입력'});
     if(!m1Num0(d.height) || !m1Num0(d.mass)) L.push({k:'m1:drv', n:`드라이버 ${M1DRV[M1.dsel]} 키 · 몸무게`, g:'드라이버 모델'});

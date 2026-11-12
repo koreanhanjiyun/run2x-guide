@@ -73,7 +73,7 @@ const TOOL_LIST = [
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
   /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
   const rows = TOOL_LIST.map(r => [W[r[0]] && W[r[0]].no ? W[r[0]].no : r[0], ...r.slice(1), W[r[0]] ? r[0] : '']);
-  /* 커서를 올리면 (또는 Tab 으로 오면) 줄이 [예제 | 새 파일] 두 단추로 바뀜 → 고른 모드로 엶 */
+  /* 커서를 올리면 (또는 Tab 으로 오면) 줄이 [예제 | 내 파일] 두 단추로 바뀜 → 고른 모드로 엶 */
   return rows.map(([n,t,s,i,o,id]) => id ? `<li class="tt-on wb-mpick" data-wbrow="${id}"><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">열기 →</span>${wbModeBtns(id, t)}</li>`
     : `<li><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">준비 중</span></li>`).join(''); }
 const dashVmax = P => P.nmax/P.gr*2*Math.PI*(P.rt/1000)*60/1000;   /* 모터 회전수 한계 최고속 [km/h] */

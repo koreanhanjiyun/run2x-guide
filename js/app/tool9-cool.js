@@ -18,10 +18,10 @@ const T9COOL_DEF = () => ({ circuits:[
     {id:'k5', t:'in', x:40, y:67, p:{A:0.02, kd:0.5, fan:0.03}}, {id:'k6', t:'b', x:360, y:70, p:{}}, {id:'k7', t:'out', x:680, y:67, p:{}}],
    links:[['k5', 'k6'], ['k6', 'k7']]}] });
 const T9 = { cool:T9COOL_DEF() };
-/* 새 파일 = 회로 틀(수랭 회로 1 · 공랭 덕트 1)만, 블럭 · 호스 · 냉각수 값 없음 */
+/* 내 파일 = 회로 틀(수랭 회로 1 · 공랭 덕트 1)만, 블럭 · 호스 · 냉각수 값 없음 */
 const T9COOL_NEW = () => ({ circuits:T9COOL_DEF().circuits.map(c => ({...c, p:{}, sel:'', blocks:c.kind==='air' ? c.blocks.filter(b => b.t==='in' || b.t==='out').map(b => ({...b, p:{}})) : [], links:[]})) });   /* 공랭 덕트는 입구 · 출구 블럭은 늘 있음 (값은 빈칸) */
-/* 저장본 정리 (2026-11-11): 공랭 덕트에는 입구 · 출구가 늘 1개씩 (빼지도 더하지도 못함). 새 파일(nf)에 남은 예전 기본 블럭
-   (기본 배치 id k1 ~ k4 · k6, 값 없음) 은 지움 → 새 파일 회로에 부품이 미리 들어가 있지 않게 */
+/* 저장본 정리 (2026-11-11): 공랭 덕트에는 입구 · 출구가 늘 1개씩 (빼지도 더하지도 못함). 내 파일(nf)에 남은 예전 기본 블럭
+   (기본 배치 id k1 ~ k4 · k6, 값 없음) 은 지움 → 내 파일 회로에 부품이 미리 들어가 있지 않게 */
 function t9CoolNorm(cool, nf){ if(!cool || !Array.isArray(cool.circuits)) return cool; const DEFB = Object.fromEntries(T9COOL_DEF().circuits.flatMap(c => c.blocks).filter(b => b.t!=='in' && b.t!=='out').map(b => [b.id, b]));   // 기본 배치 블럭 (id · 종류 · 자리 모두 같아야 예전 기본으로 봄)
   cool.circuits.forEach(c => { if(!Array.isArray(c.blocks)) c.blocks = []; if(!Array.isArray(c.links)) c.links = [];
     if(nf){ const dead = new Set(c.blocks.filter(b => { const d = DEFB[b.id]; return d && d.t===b.t && d.x===b.x && d.y===b.y && !Object.keys(b.p || {}).length; }).map(b => b.id)); if(dead.size){ c.blocks = c.blocks.filter(b => !dead.has(b.id)); c.links = c.links.filter(([a, b]) => !dead.has(a) && !dead.has(b)); } }
@@ -169,14 +169,14 @@ const t9RadTab = B => B && B.t==='rad' && t9RqUse(B)==='tab' && typeof t2GridPar
 const t9RqMiss = B => B && B.t==='rad' && t9RqUse(B)==='tab' && !t9RadTab(B);
 const t9LX = l => (l[3] && typeof l[3]==='object') ? l[3] : (l[3] = {});   // 호스 값 · 꺾임점
 const t9CParams = (C, B) => B.t==='rad' ? T9CP.rad.filter(([k]) => k!=='fm') : B.t==='pump' ? T9CP.pump.filter(([k]) => k!=='pc' && (t9CV(B.p, T9CP.pump).pc===1 ? k!=='flow' : k==='flow')) : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t][1]==='part' ? T9CP.partW : [];
-/* 블럭 값: 넣은 값, 없으면 예제 = 기본값 · 새 파일 = 빈칸 (NaN, 펌프 방식 pc 같은 고르기만 기본) */
+/* 블럭 값: 넣은 값, 없으면 예제 = 기본값 · 내 파일 = 빈칸 (NaN, 펌프 방식 pc 같은 고르기만 기본) */
 /* 수랭 회로 냉각수 칸: 도구 2P (시간 따라 계산) 는 회로마다 냉각수 온도 (고정 · 출발 값) 를 더 받음. 도구 9 는 정상 상태라 안 받음 (2026-11-11) */
 const T9CPW = () => WB.id==='2' ? [['Tw', '냉각수 온도 (고정 · 출발)', '°C', 0, 40], ...T9CP.water] : T9CP.water;
 /* 블럭 그림에 쓰는 값 = 그 블럭의 모든 값 (고르는 값 포함) */
 const t9CAll = (C, B) => B.t==='rad' ? T9CP.rad : B.t==='pump' ? T9CP.pump : B.t==='in' ? T9CP.in : C.kind==='water' && T9CB[B.t] && T9CB[B.t][1]==='part' ? T9CP.partW : [];
 const T9CHOICE = ['pc', 'fm'];   /* 고르는 값 (숫자 칸 아님) */
 const t9CV = (o, def) => { const r = {}; def.forEach(([k, , , , v]) => { const x = (o || {})[k]; r[k] = x !== '' && x != null && isFinite(+x) ? +x : (wbEx() || T9CHOICE.includes(k) ? v : NaN); }); return r; };
-/* 새 파일: 회로에 쓰는 블럭 · 호스 · 냉각수 값 중 빈칸 */
+/* 내 파일: 회로에 쓰는 블럭 · 호스 · 냉각수 값 중 빈칸 */
 /* 블럭에 빈 값이 있나 (그림에서 빨간 테두리) */
 const t9BMiss = (C, b) => !wbEx() && (t9RqMiss(b) || t9CParams(C, b).some(([k]) => !(b.t==='rad' && (t9RqUse(b)==='tab' ? k==='UA' : k==='itd')) && !(b.t==='rad' && k==='fon' && t9CV(b.p, T9CP.rad).fm!==1) && !isFinite(t9CV(b.p, t9CParams(C, b))[k])));
 function t9Blank(C){ const L = [], nm = (b) => T9CB[b.t] ? T9CB[b.t][0] : b.t, miss = (o, def, skip = {}) => def.filter(([k]) => !skip[k] && !isFinite(t9CV(o, def)[k])).map(([, n]) => n);

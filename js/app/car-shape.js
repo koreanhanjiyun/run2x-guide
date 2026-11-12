@@ -186,7 +186,7 @@ async function shEditSaved(){ const cur = shGet(SHP.view); if(!cur) return; shRe
   catch(e){ toast(e.message || '다시 열지 못했습니다.'); shReset(); }
   SHP.busy = false; shPaint(); }
 const shReset = () => { SHP.raw = null; SHP.src = null; SHP.stage = ''; SHP.crop = null; SHP.drag = null; SHP.pan = null; SHP.vb = null; SHP.pts = []; };
-function shOpen(btn){ SHP.ret = btn || null; shReset(); const m = shEl(); shPaint(); m.hidden = false; const f = m.querySelector('[data-shpx]'); if(f) f.focus(); }
+function shOpen(btn){ SHP.ret = btn || null; shReset(); if(btn && SHV[btn.dataset.shpopen]) SHP.view = btn.dataset.shpopen;   /* data-shpopen="top" 이면 윗면 탭으로 */ const m = shEl(); shPaint(); m.hidden = false; const f = m.querySelector('[data-shpx]'); if(f) f.focus(); }
 function shClose(){ const m = $('#shpm'); if(m) m.hidden = true; shReset(); if(SHP.ret && SHP.ret.isConnected) SHP.ret.focus(); }
 async function shFile(file){ if(!file) return; const ext = (file.name.split('.').pop() || '').toLowerCase();
   if(!['png','jpg','jpeg','webp','dxf'].includes(ext)){ const msg = `읽을 수 없는 파일입니다 (.${ext || '확장자 없음'}). 올릴 수 있는 파일: 이미지 .png .jpg .webp, 도면 .dxf. CAD 파일은 [다른 이름으로 저장 → DXF]로 저장해 올려 주십시오.`;
