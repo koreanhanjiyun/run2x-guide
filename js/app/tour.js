@@ -193,7 +193,7 @@ function tgRestore(s){
 const TG_SKIPID = new Set(['tour','demoBar','demoDiag','tip','busyBar','mobileNote']);
 /* 본문이 실제로 놓이는 폭. 시안 뷰어에서는 짧은 페이지일 때 clientWidth(1920)가 스크롤바 자리를 빼지 않아 body(1905)와 달라져 복제 화면이 오른쪽으로 밀렸음 */
 const tgW = () => { const b=document.body, cs=getComputedStyle(b); return Math.round(b.getBoundingClientRect().width + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight)); };
-function tgClone(fx){ const W=tgW(), H=innerHeight;
+function tgClone(fx){ const W=tgW(), H=innerHeight; if(TR){ const t=$('#toc'); TR.tocOpen = !!t && !t.classList.contains('coll'); }
   const page=document.createElement('div'); page.className='tg-page'; page.style.width=W+'px'; page.style.height=document.documentElement.scrollHeight+'px';
   const fix=document.createElement('div'); fix.className='tg-fix'; fix.style.width=W+'px'; fix.style.height=H+'px';
   for(const el of [...document.body.children]){ if(/^(SCRIPT|STYLE|LINK|NOSCRIPT|TEMPLATE)$/.test(el.tagName) || TG_SKIPID.has(el.id) || el.classList.contains('toast')) continue;
@@ -315,6 +315,8 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     /* 1·2: 설명 카드 → 하이라이트를 지우고 화면 전체를 어둑하게 */
     if(TR.inited){ await tgSleep(200); if(TR!==tk) return; tgDim(true); tgHole(null); await tgSleep(220); if(TR!==tk) return; }
     while(i>=0 && i<TR.steps.length){ const st=TR.steps[i], o=st[3]||{}; TR.keepCrumb=!!o.sync;
+      /* 좁은 화면(1400 px 미만)에서는 목차가 본문 위에 떠서 가림: 목차 단계가 아니면 접어 둠 (2026-11-13) */
+      { const t=$('#toc'); if(t && document.body.classList.contains('toc-narrow') && !/#toc/.test(st[0])){ if(!t.classList.contains('coll')){ t.classList.add('coll'); try{ tocFx(); }catch(e){} await tgFrame(); if(TR!==tk) return; } if(TR.tocOpen) TR.sig=null; } }   /* 복제본에 목차가 펼쳐져 있으면 다시 복제 (진짜 목차는 바깥 누르기로 이미 접혔을 수 있음) */
       /* 4: 화면을 바꾸는 버튼(탭·하위 화면·보기 방식·항목)을 누르는 모습 → 바뀐 화면으로 서서히 */
       for(const c of tgClicks(o)){
         if(TR.inited && dir>0){ const be=o.inner && tourVis(c.sel); if(be){ await tgInner(o.inner, be); if(TR!==tk) return; } await tgPress(c.sel); } if(TR!==tk) return;
