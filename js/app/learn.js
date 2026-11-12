@@ -5,7 +5,6 @@
 const PREF = (k,d)=>{ try{ const v=localStorage.getItem('run2x.'+k); return v===null?d:v; }catch(e){ return d; } };
 const SETP = (k,v)=>{ try{ localStorage.setItem('run2x.'+k,v); }catch(e){} };
 let VMODE = PREF('view','full');      // flow | full
-let UMODE = 'study';     // 회장 모드는 없앰 (C11). 편집은 항목별 [편집]과 팀 탭에서
 let SEASON = PREF('season', String(new Date().getFullYear()));
 const D2R = Math.PI/180;
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -34,13 +33,6 @@ function openGoal(mi,di){ if(typeof openGoalPage==='function'){ openGoalPage(mi,
   requestAnimationFrame(()=>smoothScrollTo(()=>d.getBoundingClientRect().top+window.scrollY-tabh-70, ()=>markHere(d))); }
 
 /* ---------- 앞뒤 연결 그림 ---------- */
-function ioMap(id){
-  const ins=(IN[id]||[]).map(i=>EDGES[i]), outs=(OUT[id]||[]).map(i=>EDGES[i]), me=IT[id];
-  const box=(oid,lbl)=>`<button class="iom-b" data-goto="${oid}" style="--pc:${pc(IT[oid].p)}"><b>${IT[oid].n}</b><small>${IT[oid].s} · ${IT[oid].p}</small><em>${lbl}</em></button>`;
-  return `<div class="iom"><div class="iom-h ih">받는 정보 ${ins.length}</div><div></div><div class="iom-h" style="text-align:center">이 항목</div><div></div><div class="iom-h oh">넘기는 결과 ${outs.length}</div>
-    <div class="iom-c">${ins.length?ins.map(e=>box(e[0],e[2])).join(''):'<span class="iom-none">없음 (시작점)</span>'}</div>
-    <div class="iom-ar">→</div><div class="iom-me" style="--pc:${pc(me.p)}"><b>${me.n}</b><small>${me.s} · ${me.p}</small></div><div class="iom-ar">→</div>
-    <div class="iom-c">${outs.length?outs.map(e=>box(e[1],e[2])).join(''):'<span class="iom-none">없음 (끝점)</span>'}</div></div>`; }
 
 /* ---------- 계산기 (카드 공식과 동일) ---------- */
 const f1 = (x,d) => (Math.round(x*Math.pow(10,d||1))/Math.pow(10,d||1)).toLocaleString('ko-KR');
@@ -84,10 +76,6 @@ function runCalc(box){ const c=CALC[box.dataset.calc]; const v={};
   const o=box.querySelector('.calc-out'); subify(o); if(box.dataset.ran){ o.classList.remove('co-flash'); void o.offsetWidth; o.classList.add('co-flash'); } box.dataset.ran='1'; }
 
 /* ---------- 확인 질문 ---------- */
-function selfCheck(items){ const qs=[];
-  items.forEach(i=>{ if(!i.c || qs.length>=3) return; const L=CARD[i.c].L; const k=L.findIndex(q=>/^질문\s*\d/.test(q.h)); if(k>=0) qs.push([i.id,k,L[k].h.replace(/^질문\s*\d+\.\s*/,'')]); });
-  if(!qs.length) return '';
-  return `<div class="selfcheck"><div class="sec-label">이 단계 확인 질문 · 먼저 답해 보고 여십시오</div><ol>${qs.map(([id,k,h])=>`<li><span>${h}</span> <span class="muted">(${IT[id].n})</span> <button class="lnk" data-qgo="${id}|${k}">답 보기</button></li>`).join('')}</ol></div>`; }
 function openQ(id,k){ pushHist(); setVM('full'); showTab('steps', true);
   const it=IT[id], st=$('#st-'+it.s), el=$('#it-'+id); if(!st||!el) return; st.open=true; fillItem(el); el.open=true;
   const q=el.querySelectorAll(':scope > .dbody > .stack > details.q')[k]; if(!q) return; q.open=true;
@@ -191,13 +179,12 @@ function refreshVals(){ document.querySelectorAll('.tval').forEach(el=>{ if(el.d
 /* ---------- 보기 · 모드 · 학습 경로 · 목차 ---------- */
 function setVM(v){ if(VMODE===v) return; VMODE=v; SETP('view',v); applyModes(); }
 function applyModes(){
-  document.body.classList.toggle('vm-flow', VMODE==='flow'); document.body.classList.toggle('um-manage', UMODE==='manage');
+  document.body.classList.toggle('vm-flow', VMODE==='flow');
   document.querySelectorAll('[data-vm]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.vm===VMODE)));
-  UMODE='study'; const ab=$('#admbtn'); if(ab) ab.hidden=true;
   document.querySelectorAll('.stbox[data-id]').forEach(el=>{ if(el.dataset.edit!=='1') renderSB(el); });
   $('#step-list').hidden = VMODE==='flow'; $('#flow-list').hidden = VMODE!=='flow';
   document.querySelectorAll('.vtabs [data-vm]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.vm===VMODE)));
-  refreshVals(); updateToc(); try{ admPlace(); renderAdm(); }catch(e){} }
+  refreshVals(); updateToc(); }
 function renderOnboard(){ const el=$('#onboard'); if(!el) return;
   if(PREF('onboard','1')==='0'){ el.innerHTML=`<button class="lnk" id="ob-show" style="font-size:13.5px">처음 왔다면: 읽는 순서 보기</button>`; return; }
   el.innerHTML=`<div class="onb"><div class="onb-h"><b>처음 왔다면 이 순서로 읽으십시오</b><button class="lnk" id="ob-hide" style="font-size:13px">접기</button></div><ol class="onb-steps">
@@ -235,8 +222,6 @@ function gotoStep(sid){
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click',e=>{
   const vm=e.target.closest('[data-vm]'); if(vm){ setVM(vm.dataset.vm); return; }
-  const ab=e.target.closest('#admbtn'); if(ab){ if(ab.disabled) return; UMODE = UMODE==='manage'?'study':'manage'; SETP('mode',UMODE); applyModes(); return; }
-  const um=e.target.closest('[data-um]'); if(um){ if(um.disabled) return; UMODE=um.dataset.um; SETP('mode',UMODE); applyModes(); return; }
   const ob=e.target.closest('[data-ob]'); if(ob){ const k=ob.dataset.ob;
     if(k==='goals'){ pushHist(); showTab('start'); if(typeof renderStart==='function') renderStart(''); requestAnimationFrame(()=>{ const g=document.querySelector('#v-start .st-goals'); if(g) window.scrollTo({top:g.getBoundingClientRect().top+scrollY-80, behavior:'instant'}); }); } else if(k==='flow'){ setVM('flow'); smoothScrollTo(()=>document.querySelector('.vtabs').getBoundingClientRect().top+window.scrollY-70); } else { setVM('full'); openStep('P0'); } return; }
   if(e.target.closest('#ob-hide')){ SETP('onboard','0'); renderOnboard(); return; }
@@ -249,4 +234,4 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{ const c=e.target.closest('details.calc'); if(c && e.target.matches('[data-ck]')) runCalc(c);
   if(e.target.classList.contains('season-in')){ const v=e.target.value.trim(); if(/^\d{4}$/.test(v)){ SEASON=v; SETP('season',v); document.querySelectorAll('.season-in').forEach(x=>{ if(x!==e.target) x.value=v; }); refreshValsExcept(e.target); } } });
 window.addEventListener('scroll', spyToc, {passive:true});
-function afterStatus(){ updateToc(); try{ renderAdm(); }catch(e){} }
+function afterStatus(){ updateToc(); }

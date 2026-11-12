@@ -14,9 +14,6 @@ const T2TRACK_EX = ['종류, 길이 m, 반경 m, 왼쪽 폭 m, 오른쪽 폭 m, 
   '직선, 25, , 2, 2  # 출발 직선', '직선, 60, , 5, 5, 10  # 슬라럼 (콘 간격 10 m · 폭 10 m)', '직선, 20', '왼쪽, 31.42, 20, 3, 2  # 왼쪽 90° (지름 40 m · 바깥 넓음)', '직선, 40, , 2, 2',
   '오른쪽, 7.85, 10  # 시케인', '왼쪽, 7.85, 10', '왼쪽, 7.85, 10', '오른쪽, 7.85, 10', '직선, 30', '왼쪽, 15.71, 5  # 왼쪽 헤어핀 (지름 10 m)', '직선, 35',
   '오른쪽, 47.12, 30, 5, 5, 8  # 곡선 위 슬라럼 (반경 30 m · 콘 간격 8 m · 폭 10 m)', '직선, 36, , 5, 5, 6  # 짧은 슬라럼 (콘 간격 6 m · 폭 10 m)', '직선, 40', '오른쪽, 17.28, 5.5', '직선, 25', '왼쪽, 23.56, 15', '직선, 50', '오른쪽, 31.42, 10', '직선, 30'].join('\n');
-const T2MOTOR_PH = '첫 행은 열 이름, 그 아래 한 행에 회전수 · 피크 토크 · 연속 토크\n회전수 rpm, 피크 토크 N·m, 연속 토크 N·m\n0, 230, 110\n4800, 230, 112\n6500, 180, 92\n\n한 열만 있으면 다른 열은 [연속 ÷ 피크 토크 비율]로 채움.';
-const T2TIRE_PH = '비우면 위 [타이어 마찰계수] · [μ 하중 감도]를 씁니다.\n숫자 하나 = 하중과 상관없는 μ\n표 = 한 행에 바퀴 하나 수직 하중 N, μ\n하중 N, μ\n0, 1.8\n1000, 1.6\n2000, 1.45';
-const T2EFF_PH = '비우면 위 상수 칸의 효율을 씁니다.\n숫자 하나 = 상수 효율 [%] (예: 97)\n맵 = 첫 행은 회전수, 첫 열은 토크, 칸은 효율 %\n토크 N·m \\ 회전수 rpm, 0, 2000, 4000\n50, 88, 93, 92\n150, 90, 95, 94\n230, 87, 93, 92';
 /* 화면 상태 (이 브라우저에 저장). free.text = 내 코스 표를 글로 (한 행에 한 구간) */
 const T2 = { tab:'sim', etab:'course', course:'end', lap:{end:'1', free:'1'}, free:{text:'', laps:1, s0:0, end:0}, mtext:'', eM:'', eI:'', tire:'', bO:'', bR:'', bC:'', grMode:'my',
              menu:'', paste:'', zoom:{k:1, cx:.5, cy:.5}, zoomE:{k:1, cx:.5, cy:.5}, timer:0,
@@ -47,10 +44,6 @@ function t2Load(s){ if(!s || typeof s!=='object') return;
   /* 69차부터 [아래 표] = 빈 표여도 표를 씀(필수). 예전 저장본에 빈 표인데 'tab' 이 남아 있으면 [위 상수]로 (2026-11-11) */
   Object.keys(T2.use).forEach(k => { if(k!=='mt' && T2.use[k]==='tab' && !String(T2[k] || '').trim()) T2.use[k] = 'const'; }); }
 /* 예전에 저장된 예시 효율 맵: 기본 맵과 크기가 같고 몇 칸(8칸 이하)만 3 %p 넘게 낮은 '구멍'이면 지금 기본 맵으로 바꿈 */
-function t2EffFix(txt){ try{ if(typeof EMRAX228==='undefined' || txt===EMRAX228.eff) return txt; const A = t2EffParse(txt).map, B = t2EffParse(EMRAX228.eff).map; if(!A || !B) return txt;
-  if(A.n.length!==B.n.length || A.t.length!==B.t.length || A.n.some((v, j) => v!==B.n[j]) || A.t.some((v, i) => v!==B.t[i])) return txt;
-  let d = 0, low = true; A.e.forEach((r, i) => r.forEach((v, j) => { const x = B.e[i][j]; if(Math.abs(v - x) > 1e-6){ d++; if(!(v < x - 3)) low = false; } }));
-  return d > 0 && d <= 8 && low ? EMRAX228.eff : txt; }catch(e){ return txt; } }
 wbModeReg(m => { t2ModeReset(m); try{ t2Load({...JSON.parse(localStorage.getItem(wbMK(T2KEY)) || '{}'), fromLS:1}); }catch(e){} });
 /* 도구 2P 자체 냉각 회로 (편집 탭 [냉각], 도구 9 와 같은 편집기 · 같은 형식). 처음엔 도구 9 의 기본 배치, [도구 9 에서 가져오기]는 복사 */
 function t2Cwc(){ if(!T2.cwc) T2.cwc = {cool: typeof T9COOL_DEF==='function' ? (wbEx() ? T9COOL_DEF() : T9COOL_NEW()) : {circuits:[]}};
@@ -1217,9 +1210,6 @@ function t2DynHTML(R, cn){ const o = R.out, md = WB.I.md || 0; if(md < 2) return
 document.addEventListener('toggle', e => { if(e.target.matches && e.target.matches('[data-t2bmore]')) T2.bmore = e.target.open; }, true);
 
 /* 입력 옆 '모양 보기': 하중 감도 → 바퀴 하중에 따른 μ 와 낼 수 있는 횡력 */
-function t2VizMus(I){ const Z = Array.from({length:61}, (_, i) => i*50), mu = Z.map(z => Math.max(0, I.mu - I.mu_s*(z - (I.tire_fz0 > 0 ? I.tire_fz0 : 0))/1000)), Fy = Z.map((z, i) => mu[i]*z);
-  return {x:{d:Z, n:'바퀴 하나 수직 하중', u:'N'}, ys:[{k:'mu', d:mu, c:WB_COL[0], n:'μ', u:'', dd:2}, {k:'fy', d:Fy, c:WB_COL[2], n:'낼 수 있는 횡력 μ·Fz', u:'N', dd:0}], act:'mu',
-    note:`정지 때 바퀴 하나 평균 하중 약 ${wbFmt(I.m*9.81/4, 0)} N. μ·Fz 가 꺾여 내려가기 시작하면 하중을 더 실어도 그 바퀴 힘이 늘지 않습니다.`}; }
 
 /* 다른 도구의 칸 표 (WBGRID): 칸 누르기 · Enter 로 고침, 행 · 열 지우기 · 더하기, 표에 Ctrl+V 로 표 전체 바꿈 (2P 표와 같은 동작) */
 document.addEventListener('click', e => { const t = e.target; if(!t.closest) return; const tb = t.closest('[data-t2gk]'); if(!tb || !WBGRID[tb.dataset.t2gk]) return; const k = tb.dataset.t2gk;

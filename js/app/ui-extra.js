@@ -4,7 +4,7 @@ function initNext(){
   annotate($('#flow-list'));
   document.querySelectorAll('#goal-tree .gwhy').forEach(g=>annotate(g));
   applyModes(); refreshVals(); spyToc(); updateGraphHint();
-  initChangelog(); initDebug(); decorate(); tocFx(); initAdm(); initLinks(); initQA(); initRefFold(); requestAnimationFrame(gtreeLines); narrowCheck(); const fb=$('#z-fs'); if(fb) fb.innerHTML=FS_OUT;
+  initChangelog(); initDebug(); decorate(); tocFx(); initLinks(); initQA(); initRefFold(); requestAnimationFrame(gtreeLines); narrowCheck(); const fb=$('#z-fs'); if(fb) fb.innerHTML=FS_OUT;
 }
 function updateGraphHint(){ const h=$('#gstart'); if(h) h.hidden = !!(((typeof PSET!=='undefined')&&PSET.size)||SEL||SHOWALL); }
 
@@ -23,8 +23,7 @@ function toggleFS(){ const w=document.querySelector('.gwrap');
 document.addEventListener('fullscreenchange',()=>fsUI(!!document.fullscreenElement));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape' && document.body.classList.contains('gmax')) setMax(false); });
 document.addEventListener('click',e=>{
-  if(e.target.closest('#z-fs')){ toggleFS(); return; }
-  if(e.target.closest('[data-gclose]')){ clearSel(); return; } });
+  if(e.target.closest('#z-fs')){ toggleFS(); return; } });
 
 /* ---------- 목차 접기 · 너비 조절 ---------- */
 document.addEventListener('click',e=>{ const f=e.target.closest('.toc-h'); if(!f) return; const t=$('#toc'), open=t._ts ? !t._ts.open : t.classList.contains('coll');

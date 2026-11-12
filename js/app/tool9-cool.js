@@ -540,7 +540,7 @@ function t9XBar(){ return ''; }   /* 도구 2P 와 주고받기는 윗줄 [도�
 /* [도구 연결 ▾]: 도구 2P 시뮬 결과 (주행 평균 발열 · 평균 차속 · 주행 시간) 가져오기. 2P 의 설정값은 가져오지 않음, 다른 도구로 보내기도 없음 (2026-11-12):
    상세값은 바깥 도구 → 2P 로 모이고, 2P 는 시뮬 결과 (발열 · 평균 차속 · 주행 시간) 만 내보냄 (관리자 결정 2026-11-12). 2P 설정을 옮기려면 JSON 내보내기 · 가져오기 */
 function t9Links(){ const s2 = t9Read('2'), o = WB.R && WB.R.out, D = WB_TOOLS['9'].inputs, u = k => (D.find(d => d.k===k) || {}).u || '', fv = (v, k) => isFinite(v) ? `${+(+v).toPrecision(4)} ${u(k)}`.trim() : '—';
-  const okC = !!(o && (o.n_w > 0 || o.n_a > 0)), C2 = typeof t2Cwc==='function' ? ((t2Cwc().cool || {}).circuits || []) : [];
+  const C2 = typeof t2Cwc==='function' ? ((t2Cwc().cool || {}).circuits || []) : [];
   const parts = ['m', 'i', 'b'].map((p, j) => `${['모터', '인버터', '축전지'][j]} ${t9IsWater(p) ? '수랭' : '공랭'}`).join(' · ');
   return {
     get:(() => { const r = (() => { try{ return JSON.parse(localStorage.getItem(wbMK('run2x.t2.res')) || 'null'); }catch(e){ return null; } })(), ok = !!(r && isFinite(r.c_qm)), why = '도구 2P 랩 시뮬을 한 번 계산하면 가져올 수 있음';

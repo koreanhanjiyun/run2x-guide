@@ -224,7 +224,7 @@ function calc(I) {
   };
   // 트래블 곡선
   const sm = Math.max(5, I.s_max || 40), n = 40, xs = [], sig = { cf: [], cr: [], tf_: [], tr_: [], rcf: [], rcr: [], yf: [], yr: [], kf: [], cs: [] };
-  let qF = null, qR = null; const XF0 = K3D.plain(mF.X), XR0 = K3D.plain(mR.X);
+  const XF0 = K3D.plain(mF.X), XR0 = K3D.plain(mR.X);
   for (let i = 0; i <= n; i++) { const s = -sm + 2 * sm * i / n; xs.push(+s.toFixed(3));
     const a = K3D.metrics(F, s), b = K3D.metrics(R, s);
     sig.cf.push(a.X.cam); sig.cr.push(b.X.cam); sig.tf_.push(-(a.X.head - XF0.head) + (I.toe_f || 0)); sig.tr_.push(-(b.X.head - XR0.head) + (I.toe_r || 0));

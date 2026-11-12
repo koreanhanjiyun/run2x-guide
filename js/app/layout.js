@@ -62,10 +62,6 @@ syncTabsA11y(); document.body.classList.add('tab-'+TAB);
   document.body.appendChild(m); document.body.classList.add('mobile-note');
   m.addEventListener('click', e=>{ if(e.target.closest('[data-mncopy]')) copyText(location.href.split('#')[0], '주소를 복사했습니다. PC에서 열어 주십시오'); if(e.target.closest('[data-mnclose]')){ m.remove(); document.body.classList.remove('mobile-note'); } }); })();
 
-/* ---------- 비교안 스위치 (B3·D4 대기 항목, 시안에서만 바꿈) ---------- */
-/* 비교안 D4(연결도 상세 칸)는 상세 칸을 없애면서 함께 없앰 */
-window.setCompare = (k,on) => { document.body.classList.toggle(k, on); SETP('cmp.'+k, on?'1':'0'); try{ window.__figPlace&&window.__figPlace(); }catch(e){} };
-
 /* ---------- 오른쪽 배너 펼침 애니메이션 (2026-11-12): 머리 글자가 ㄱ자 길(세로 줄 위로 → 모서리에서 왼쪽)을 따라 가로로 눕고,
    배너는 그동안 폭이 넓어지고 높이가 머리 높이로 줄어듦 → 다 펴지면 내용(in)이 이어서 나옴. 닫을 때는 내용(out)을 먼저 거두고 거꾸로 되감음.
    apply(open) = 클래스만 바꾸는 함수. 사용법 중에는 애니메이션 없이 바로 바꿈. 도중에 반대로 바뀌면 그 자리에서 되돌아감 ---------- */
@@ -122,6 +118,18 @@ const railBOut = el => { const ks = [...el.querySelectorAll('.rail-b > :not([hid
   const T = 130 + 16*ks.length;   /* 펼칠 때를 거꾸로: 아래 칩부터 위로 차례로 들어가며 배너 높이도 같이 줄어듦 */
   return [el.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: T, easing: 'cubic-bezier(.5,0,.7,.4)', fill: 'forwards'}),
     ...ks.map((k, i) => k.animate([{opacity: 1, transform: 'none'}, {opacity: 0, transform: 'translateY(-10px)'}], {duration: 130, delay: 16*(ks.length - 1 - i), easing: 'ease-in', fill: 'both'}))]; };
+
+/* ---------- 창을 단추에서 꺼내기 · 단추로 넣기 (2026-11-12): 좌표계·거동 그림 창, 문의 창. 창이 단추 자리에서 작게 시작해 제자리로 커지며 날아오고, 닫을 때 거꾸로.
+   open = 보인 직후 부름, close = 숨기기 전에 부르고 끝나면 done(). 도중에 반대로 바뀌면 앞 것을 멈추고 그 자리에서. 사용법 중에는 바로 ---------- */
+function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
+  if(el._pop){ try{ el._pop.cancel(); }catch(e){} el._pop = null; }
+  if(tourOn || !el.animate || !src || !src.getBoundingClientRect){ if(done) done(); return; }
+  const P = el.getBoundingClientRect(), B = src.getBoundingClientRect(); if(!P.width || !B.width){ if(done) done(); return; }
+  const z = parseFloat(getComputedStyle(el).zoom) || 1;   /* 그림 창은 화면 높이에 맞춰 zoom 으로 줄어 있을 수 있음: 옮길 거리는 zoom 전 단위로 */
+  const dx = ((B.left + B.width/2) - (P.left + P.width/2))/z, dy = ((B.top + B.height/2) - (P.top + P.height/2))/z, s = Math.max(.04, Math.min(B.width/P.width, B.height/P.height));
+  const K = [{transform: `translate(${dx}px,${dy}px) scale(${s})`, opacity: 0}, {transform: `translate(${dx*.15}px,${dy*.15}px) scale(${.6 + s*.4})`, opacity: 1, offset: .55}, {transform: 'none', opacity: 1}];
+  const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 340 : 260, easing: open ? 'cubic-bezier(.2,.8,.25,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
+  el._pop = a; a.onfinish = () => { if(el._pop !== a) return; el._pop = null; if(done) done(); a.cancel(); }; }
 
 /* ---------- 목차 펼침 · 접힘 애니메이션 (2026-11-12, 파트 패널의 거울판): 목차는 왼쪽에 붙고 접힌 막대(왼쪽 0)와 펼친 창(왼쪽 14 px)의 자리가 달라
    목차 자체를 자르지 않고 그 위에 머리 색 판(.ts-ov, 화면 좌표 clip-path)을 띄워 ㄱ자(거울) 모양을 그림. 펼친 뒤 단계 목록이 위에서부터 차례로 · 접을 때 아래에서부터 거둠.

@@ -18,8 +18,6 @@ function stepHTML(s){
   const ncard = items.filter(i=>i.c).length;
   const ids = new Set(items.map(i=>i.id)); const inc=[], out=[];
   EDGES.forEach(e=>{ if(ids.has(e[1]) && !ids.has(e[0])) inc.push(e); if(ids.has(e[0]) && !ids.has(e[1])) out.push(e); });
-  const exl = (arr, side) => arr.map(e=>{ const o = IT[side==='in'?e[0]:e[1]], me = IT[side==='in'?e[1]:e[0]];
-    return `<li><b>${o.s}</b> <button class="lnk" data-goto="${o.id}">${o.n}</button> <span class="muted">(${o.p})</span> ${side==='in'?'→':'←'} ${me.n} <span class="muted">— ${e[2]}</span></li>`; }).join('');
   const itemHTML = items.map(i=>`<details class="item" id="it-${i.id}" data-item="${i.id}"><summary>
       <span class="iname" role="heading" aria-level="3">${i.n}</span>${chip(i.p)}${i.c?'<span class="badge b-card">상세</span>':''}${CHIP[i.id]?`<span class="ptchip" title="이 항목을 마치면 확정되는 것 · 좌표: ISO 8855 (파트 패널 아래 좌표계·거동 참고)${PART_OF[i.id]?' · 쓰이는 부품: '+PART_OF[i.id].join(', '):''}">${chipTxt(CHIP[i.id])}</span>`:''}
       <span class="sright"><span class="ipill" data-id="${i.id}" hidden></span><button class="btn gbtn" data-graph="${i.id}">연결도</button></span></summary>

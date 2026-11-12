@@ -72,8 +72,6 @@ function m1Store(kind, id, val){ const se = m1Season(), STORE = kind==='mass' ? 
   try{ localStorage.setItem(wbMK(kind==='mass' ? MASSKEY : DRVKEY), JSON.stringify(STORE)); }catch(e){} }
 /* 질량 표 · 드라이버는 다른 도구처럼 이 브라우저에만 저장 (2026-11-12 관리자 결정). 예전 팀 저장소(mass · drivers)는 읽지도 쓰지도 않음 (데이터는 그대로 남음) */
 /* 다른 사람이 고친 값이 들어오면: 입력 중인 칸이 없을 때만 다시 그림 */
-function m1Live(){ m1PartDirty(); if(WB.id!=='1') return; const a = document.activeElement;
-  if(!M1.drag && !M1.pick && !M1.mv && !(a && a.closest && a.closest('#wbext') && a.matches('input, select'))) wbPaint(['ext']); wbRefresh(); }
 
 /* ---------- 표 입력 ---------- */
 const m1Num = (v, attrs) => `<input type="number" step="any" ${attrs} value="${v==null || !isFinite(v) ? '' : v}">`;

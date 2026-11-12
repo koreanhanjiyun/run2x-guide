@@ -29,7 +29,6 @@ function wbModeSet(m){ m = m==='ex' ? 'ex' : 'nf'; if(WBMODE_ON && m===WBMODE) r
   WB_MODE_LOAD.forEach(f => { try{ f(m); }catch(e){ console.error('mode load', e); } }); }
 /* [예제 | 내 파일] 두 단추 (도구 목록 줄 · 파트 페이지 단추 안). 부모 .wb-mpick 에 커서 · 포커스가 오면 보임 */
 const wbModeBtns = (id, t) => `<span class="wb-mp-b" role="group" aria-label="${wbEsc(String(t).replace(/<[^>]+>/g, ''))} 열기"><button type="button" class="wb-mp-ex" data-wbo="${id}" data-wbm="ex"><b>예제</b><span>튜토리얼 · 임의 데이터</span></button><button type="button" class="wb-mp-nf" data-wbo="${id}" data-wbm="nf"><b>내 파일</b><span>내 설계 이어서</span></button></span>`;
-const wbModeName = m => (m || WBMODE)==='ex' ? '예제' : '내 파일';
 /* 예제에서 막는 것: 이유를 알림 */
 function wbExBlock(){ if(!wbEx()) return false; toast('예제는 튜토리얼용 임의 데이터라 내보내기 · 가져오기 · 대시보드 연결을 쓰지 않습니다. 도구 목록에서 [내 파일]로 여세요.'); return true; }
 /* 예전 저장본 (모드 나누기 전 키) 버림 — 한 번만 */
@@ -348,10 +347,6 @@ function wbOutCards(T, R, cmp){ const out = R.out || {};
 function wbXDef(){ const T = wbT(); return {n: (T.x && T.x.n) || 'x', u: (T.x && T.x.u) || ''}; }
 function wbMainHTML(){ const R = WB.R; if(!R) return '';
   return wbT().figure ? wbT().figure(wbInputs(), R) : ''; }
-function wbMainLineHTML(){ const R = WB.R; if(!R || !R.x) return '';   /* 예전 '결과 그래프'(선). 지금은 쓰지 않음 */
-  const ys = (R.main || []).filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u, dd:wbSigDef(k).d}));
-  return wbPlot({id:'main', w:640, h:300, x:{d:R.x.d, ...wbXDef()}, ys, xi:WB.xi, label:'결과 그래프'})
-    + `<div class="wb-leg"><span class="wb-legx">${wbEsc(wbXDef().n)} <b>${wbFmt(R.x.d[WB.xi], 1)}</b> ${wbEsc(wbXDef().u)}</span>${ys.map(y => `<span><i style="background:${y.c}"></i>${wbEsc(y.n)} <b>${wbFmt(y.d[WB.xi], wbSigDef(y.k).d||0)}</b> ${wbEsc(y.u)}</span>`).join('')}</div>`; }
 /* 신호 선택 그래프: 가로축 고르기 → 기본 축 · 신호(XY) · 입력 훑기 */
 const wbOutDef = k => wbT().outputs.find(o => o.k===k);
 const wbOutName = d => d.n || (d.dk && DK[d.dk] ? DK[d.dk].n : d.k);

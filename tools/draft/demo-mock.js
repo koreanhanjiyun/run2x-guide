@@ -128,7 +128,6 @@ try{ if(!localStorage.getItem('run2x.mass.v5')){ const T=M1SEED(); localStorage.
  const ROLES=[['none','비로그인'],['member','팀원'],['head','팀장 (샤시)'],['lead','파트장 (서스·조향)'],['admin','회장']];
  function bar(){ const b=document.createElement('div'); b.id='demoBar';
   b.innerHTML=`<span class="db-dot" aria-hidden="true">시안</span><div class="db-in"><span class="db-l">보는 사람</span>${ROLES.map(([k,l])=>`<button type="button" data-demorole="${k}" aria-pressed="${st.role===k}">${l}</button>`).join('')}<span class="db-sep"></span><button type="button" data-demofirst>첫 방문 다시 보기</button><button type="button" data-demodiag title="참고 탭 스크롤 버그 확인용">높이 진단</button><button type="button" data-demoreset title="데모 데이터를 처음 상태로">데모 데이터 초기화</button></div>`;
-  setTimeout(()=>b.querySelectorAll('[data-cmp]').forEach(c=>{ c.checked=document.body.classList.contains(c.dataset.cmp); c.onchange=()=>window.setCompare&&setCompare(c.dataset.cmp,c.checked); }),500);
   document.body.appendChild(b);
   b.addEventListener('click',e=>{ const r=e.target.closest('[data-demorole]'); if(r){ setRole(r.dataset.demorole); return; }
    if(e.target.closest('[data-demofirst]')){ try{ ['visited','tourdone','lastpos','bgopen','ttsub'].forEach(k=>localStorage.removeItem('run2x.'+k)); }catch(err){} history.replaceState(null,'',location.pathname+location.search); location.reload(); return; }

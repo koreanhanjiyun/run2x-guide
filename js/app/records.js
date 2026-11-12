@@ -14,7 +14,6 @@ function renderRecords(){ const el=$('#fsRec'); if(!el) return;
   if(!recVisible()){ el.innerHTML = `<h3>우리 팀 기록</h3><p class="muted">로그인하고 팀에 가입하면 지난 시즌 우리 팀 기록(종목별 점수)이 여기에 보입니다.</p>`; return; }
   const cols = FS_SCORE.map(x=>x[0]), data = RECSTAGE || REC, seasons = Object.keys(data).filter(k=>/^\d{4}$/.test(k)).sort().reverse();
   const sum = r => cols.reduce((a,c)=>a+(+r[c]||0),0);
-  const pct = (v,max) => v===''||v==null ? '' : `<i class="rec-p" style="width:${Math.min(100,Math.max(0,(+v||0)/max*100))}%"></i>`;
   let h = `<div class="rec-h"><h3>우리 팀 기록</h3>${RECSTAGE && !RECEDIT ? '<span class="pend-tag">저장 전</span>' : ''}<span class="tv-sp"></span>${recCan() ? (RECEDIT ? `<button type="button" class="btn small pri" data-recok>적용</button><button type="button" class="btn small" data-recno>취소</button>` : `<button type="button" class="btn small" data-recedit>편집</button>`) : ''}</div>`;
   if(RECEDIT){ const S = RECY || SEASON, r = (RECSTAGE||REC)[S] || {};
     h += `<p class="muted tp-small"><label>입력할 시즌 <input type="number" class="rec-y" min="2000" max="2100" value="${esc(S)}" aria-label="입력할 시즌"></label> · [적용]은 입력을 닫기만 하고, 팀원에게 보이려면 아래 막대의 [모두 저장]을 누르십시오.</p>

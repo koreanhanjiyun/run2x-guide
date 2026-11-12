@@ -14,7 +14,6 @@ const M6TOUR = [
 const T6G = {car:'차 · 바퀴', rack:'랙 · 기준'};
 /* 도구 2P 로 조향각 표 보내기: 결과 곡선 (핸들 각 0 ~ 최대, 41 점) 의 [핸들 각, 안쪽 바퀴, 바깥 바퀴] → 도구 2P 가 기하 조향각 · 최대 조향각 · 조향비 · 최소 회전 반경 · 핸들 속도에 씀 */
 const t6Rows = () => { const R = WB.R; if(!R || !R.x || !R.sig) return []; return R.x.d.map((h, j) => [h, R.sig.di[j], R.sig.dout[j]]).filter(r => r.every(Number.isFinite) && r[0] > 0 && r[1] > 0 && r[2] > 0); };
-function t6MidHTML(){ return ''; }   /* 도구 2P 로 보내기는 윗줄 [도구 연결 ▾] 로 옮김 (2026-11-11) */
 /* 조향각 표를 계산할 때마다 저장 (도구 2P [도구 연결]이 가져감, 다른 도구로 보내기는 없음 2026-11-12) */
 const t6RowsSave = () => { const rows = t6Rows(); if(rows.length < 2) return; try{ localStorage.setItem(wbMK('run2x.t6.rows'), JSON.stringify({rows:rows.map(r => r.map(x => +x.toFixed(4))), hw:WB.R.out.hw_max})); }catch(e){} };
 const t6Pt = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];

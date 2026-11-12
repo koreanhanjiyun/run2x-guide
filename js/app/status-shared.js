@@ -5,7 +5,6 @@ const STKEY='run2x.status.v1'; let STATUS={};
 try{ STATUS = JSON.parse(localStorage.getItem(STKEY)||'{}') || {}; }catch(e){ STATUS={}; }
 function saveStatus(){ try{ localStorage.setItem(STKEY, JSON.stringify(STATUS)); }catch(e){} }
 const ST_LABEL={todo:'예정',doing:'진행 중',done:'완료',skip:'제외'};
-function stCtl(id){ const v=STATUS[id]||'todo'; return `<span class="stmeta" data-id="${id}"></span><span class="stctl" data-stid="${id}">${['todo','doing','done','skip'].map(k=>`<button class="stbtn st-${k}" data-st="${k}" aria-pressed="${v===k}">${ST_LABEL[k]}</button>`).join('')}</span>`; }
 /* 팀 공유 모드: db 'status/<항목>' = {v, by, at, epoch}, 'meta/state' = {epoch} (초기화는 편집 권한자만) */
 const SH = {on:false, db:null, user:null, me:null, epoch:0, raw:{}, meta:{}, canWrite:true, canAdmin:false, role:null, parts:[], q:{}};
 /* 역할: admin(회장) / head(팀장) / lead(파트장) / member(팀원). 팀장과 파트장은 권한이 같고 표시만 다름 */
@@ -29,7 +28,7 @@ const canEditAny = () => !SH.on ? true : (SH.canAdmin || (!pastLock() && isLeadR
 function rebuildShared(){ STATUS={}; SH.meta={};
   Object.entries(SH.raw).forEach(([id,d])=>{ if(!d || (d.epoch||0)!==SH.epoch) return; if(d.v==='doing'||d.v==='done'||d.v==='skip'){ STATUS[id]=d.v; SH.meta[id]={by:d.by,at:d.at}; } });
   refreshStatus(); }
-function stNote(t){ const n=$('#stnote'); if(n){ n.textContent=t; n.hidden=!t; } }
+function stNote(t){ if(t) toast(t); }   /* 예전엔 안 보이는 관리 창 칸에 적혀 사용자가 못 봤음 → 알림으로 (2026-11-12) */
 function setStatus(id,v){
   if(!SH.on){ if(v==='todo') delete STATUS[id]; else STATUS[id]=v; saveStatus(); refreshStatus(); return; }
   if(!SH.canWrite){ stNote('보기 전용 권한이라 진행 상태를 바꿀 수 없습니다.'); return; }
@@ -48,8 +47,6 @@ async function resetShared(){
   catch(e){ stNote('초기화하지 못했습니다.'); }
 }
 function refreshMode(){ if(window.__nextReady && typeof applyModes==='function') setTimeout(applyModes,0);
-  const m=$('#stmode'); if(m){ m.textContent = SH.on ? '팀 공유' : '이 브라우저에만 저장'; m.className = 'stmode'+(SH.on?' on':''); }
-  const r=$('#st-reset'); if(r) r.hidden = SH.on && !SH.canAdmin;
   document.body.classList.toggle('st-ro', SH.on && !SH.canWrite);
 }
 async function fillMeta(){
@@ -89,13 +86,8 @@ function refreshStatus(){
   STEPS.forEach(s=>{ const its=ITEMS.filter(i=>i.s===s.id), all=its.length>0 && its.every(i=>STATUS[i.id]==='skip'); const st=document.getElementById('st-'+s.id); if(st) st.classList.toggle('st-allskip',all); const fs=document.querySelector(`#flow-list .flow-step[data-fs="${s.id}"]`); if(fs) fs.classList.toggle('st-allskip',all); });
   document.querySelectorAll('[data-goto],[data-fid]').forEach(b=>b.classList.toggle('st-skip', STATUS[b.dataset.goto||b.dataset.fid]==='skip'));
   fillMeta();
-  const sum=$('#stsum'); if(sum){ const d=ITEMS.filter(i=>STATUS[i.id]==='done').length, g=ITEMS.filter(i=>STATUS[i.id]==='doing').length, k=ITEMS.filter(i=>STATUS[i.id]==='skip').length;
-    sum.innerHTML=`<span class="sc-done">완료 ${d}</span> · <span class="sc-doing">진행 중 ${g}</span> · 예정 ${ITEMS.length-d-g-k}${k?` · <span class="sc-skip">제외 ${k}</span>`:''}`; }
   if(typeof afterStatus==='function' && window.__nextReady) afterStatus();
 }
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('.stbtn'); if(b){ ev.preventDefault(); ev.stopPropagation(); setStatus(b.closest('.stctl').dataset.stid, b.dataset.st); return; }
-  if(ev.target.closest('#st-reset')){ $('#st-confirm').hidden=false; $('#st-reset').hidden=true; return; }
-  if(ev.target.closest('#st-no')){ $('#st-confirm').hidden=true; $('#st-reset').hidden=false; return; }
-  if(ev.target.closest('#st-yes')){ resetShared(); $('#st-confirm').hidden=true; $('#st-reset').hidden=false; refreshMode(); return; }
 }, true);

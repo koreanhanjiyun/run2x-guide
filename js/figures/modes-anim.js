@@ -82,11 +82,11 @@ function initFigRail(){ if($('#figRail')) return;
   const outStop=()=>{ (md._out||[]).forEach(a=>{ try{ a.cancel(); }catch(e){} }); md._out=null; };
   const hideMd=()=>{ if(md.hidden) return; const pn=md.querySelector('.fm-panel'), end=()=>{ outStop(); if(want) return; md.hidden=true; try{ window.__modeAnim.stop(); }catch(e){} };
     if(!pn || !pn.animate || tourOn()){ end(); return; } outStop();
-    md._out=[pn.animate([{opacity:1, transform:'none'},{opacity:0, transform:'translateX(28px)'}],{duration:200, easing:'cubic-bezier(.4,0,.8,.4)', fill:'forwards'}), md.animate([{opacity:1},{opacity:0}],{duration:220, fill:'forwards'})];
+    md._out=[md.animate([{opacity:1},{opacity:0}],{duration:260, easing:'ease-in', fill:'forwards'})]; popFrom(pn, $('#figToggle'), false);   /* 그림 창은 단추로 빨려 들어감 (layout.js popFrom) */
     Promise.all(md._out.map(a=>a.finished)).then(end,()=>{}); };
   const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); const back=!md.hidden && md._out; outStop(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
-    if(pn && pn.animate && !tourOn() && !back){ pn.animate([{opacity:0, transform:'translateX(28px)'},{opacity:1, transform:'none'}],{duration:240, easing:'cubic-bezier(.2,.7,.3,1)'}); md.animate([{opacity:0},{opacity:1}],{duration:200}); }
-    requestAnimationFrame(()=>{ fit(); setTimeout(fit,300); }); }); };
+    fit(); if(pn && pn.animate && !tourOn()){ if(!back) md.animate([{opacity:0},{opacity:1}],{duration:300}); popFrom(pn, $('#figToggle'), true); }   /* 크기 맞춘 뒤 단추에서 꺼냄 */
+    requestAnimationFrame(()=>{ fit(); setTimeout(fit,360); }); }); };
   const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
   const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; fr.classList.toggle('on',on); on?showMd():hideMd(); };
   const open=()=>go(true), close=()=>{ pin=false; pinCls(); go(false); };

@@ -1,5 +1,5 @@
 /* ---------- 0.31.1 연결 안 됨: 저장·변경 버튼만 잠금 (입력·읽기·계산기는 그대로) ---------- */
-const CONN_LOCK='.stbtn,[data-draft=save],.qa-f button[type=submit],.qa-esave,.qa-del,.tk-reply,.sn-prev,.sn-next,.sn-val,#st-reset,#st-yes';
+const CONN_LOCK='.stbtn,[data-draft=save],.qa-f button[type=submit],.qa-esave,.qa-del,.tk-reply,.sn-prev,.sn-next,.sn-val';
 const connOff=()=>document.body.classList.contains('conn-off');
 const NOWRITE_LOCK='.qa-f button[type=submit],.qa-esave,.qa-del,.tk-reply';
 document.addEventListener('click',e=>{ if(!document.body.classList.contains('no-write')) return; const b=e.target.closest(NOWRITE_LOCK); if(!b) return; e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); toast('지금 권한으로는 글을 남길 수 없습니다.'); }, true);
@@ -35,7 +35,7 @@ function initDebug(){ if(!window.DEBUG) return; document.body.classList.add('dbg
   function render(){ if(pop.hidden) return; const c=cnt(), er=window.__dbgErr||[];
     pop.innerHTML=`<div class="dbg-h">디버깅 <span>팀 데이터에 저장되지 않음</span></div>
       <table><tr><th>공유 저장소</th><td>사용 안 함 (디버깅 데이터는 이 브라우저에만)</td></tr>
-      <tr><th>시즌</th><td>${esc(SEASON)}</td></tr><tr><th>화면 모드</th><td>${UMODE==='manage'?'회장':'보기'}</td></tr>
+      <tr><th>시즌</th><td>${esc(SEASON)}</td></tr>
       <tr><th>디버깅 데이터</th><td>논의 ${c.q} · 진행 상태 ${c.st} · 팀 값 ${c.tv}</td></tr>
       <tr><th>내용 버전</th><td>${esc(ver())}</td></tr>
       <tr><th>오류</th><td>${er.length? er.map(x=>`<div class="dbg-er"><b>${x.t}</b> ${esc(x.m)}</div>`).join('') : '<span class="muted">없음</span>'}</td></tr></table>

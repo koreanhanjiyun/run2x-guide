@@ -166,22 +166,8 @@ function applySel(){
   if(SEL){ const eg=$('#edges'); eg.querySelectorAll('path.in,path.out').forEach(p=>eg.appendChild(p)); }
   if(typeof updateGraphHint==='function') updateGraphHint();
 }
-function panelHTML(id){ const it=IT[id]; const st=STEPS[SIDX[it.s]];
-  const ins=(IN[id]||[]).map(i=>EDGES[i]), outs=(OUT[id]||[]).map(i=>EDGES[i]);
-  const li=(oid,lbl,cls)=>`<li class="${cls}"><button class="lnk" data-sel="${oid}">${IT[oid].n}</button><span class="lbl">${IT[oid].s} · ${IT[oid].p} — ${lbl}</span></li>`;
-  return `<div class="chips"><span class="chip" style="font-family:var(--f-display);font-weight:700;color:var(--accent)">${it.s}</span>${chip(it.p)}${it.c?'<span class="badge b-card">상세</span>':''}</div>
-  <h3>${it.n}</h3><div class="strow"><span class="ipill" data-id="${id}" hidden></span><div class="stbox" data-id="${id}" hidden></div></div><p class="muted" style="font-size:14px">${PHASES[PHASE_OF[it.s]].k} ${st.t.replace('★ ','')} 단계</p>
-  ${actHTML(id,true)}
-  ${it.c?`<div class="concl" style="font-size:14px"><b class="tag">참고</b>${CARD[it.c].c}</div>`:''}
-  <div><button class="btn pri" data-open="${id}">${it.c?'상세 카드 열기':'설계 탭에서 보기'}</button></div>
-  <div><div class="ih">받는 정보 ${ins.length}</div>${ins.length?`<ul>${ins.map(e=>li(e[0],e[2],'i')).join('')}</ul>`:'<p class="muted" style="font-size:13.5px">없음</p>'}</div>
-  <div><div class="oh">넘기는 결과 ${outs.length}</div>${outs.length?`<ul>${outs.map(e=>li(e[1],e[2],'o')).join('')}</ul>`:'<p class="muted" style="font-size:13.5px">없음</p>'}</div>`; }
-function emptyPanel(){ return `<h3>항목을 선택하십시오</h3><p class="muted" style="font-size:14.5px">상자를 누르면 그 항목이 받는 선(파랑)과 넘기는 선(초록)이 강조되고, 여기에 내용이 정리됩니다.</p>
-  <div class="note">보라 점 = 상세 카드 있음<br>점선 = 뒤 단계 결과로 앞 단계 값을 다시 계산하는 되돌림</div>
-  <div class="sec-label">규모</div><p style="font-size:14px">항목 ${ITEMS.length}개 · 연결 ${EDGES.length}개 · 단계 ${STEPS.length}개</p>`; }
-function setPanel(html){ const p=$('#gpanel'); if(!p) return; p.hidden=!SEL; p.innerHTML=(SEL?'<button class="gp-x" data-gclose aria-label="닫기" title="닫기">×</button>':'')+html; subify(p); try{ p.querySelectorAll('.stbox').forEach(renderSB); refreshStatus(); }catch(e){} p.scrollTop=0; refreshStatus(); }
-function selectItem(id, center){ SEL=id; applySel(); setPanel(panelHTML(id)); if(center){ centerOn(id); setTimeout(()=>graphFlash(id),450); } }
-function clearSel(){ SEL=null; applySel(); setPanel(emptyPanel()); }
+function selectItem(id, center){ SEL=id; applySel(); if(center){ centerOn(id); setTimeout(()=>graphFlash(id),450); } }
+function clearSel(){ SEL=null; applySel(); }
 function renderPartFilter(){
   const rail=$('#partRail'); let coll=false; try{ coll = localStorage.getItem('run2x.rail')==='1'; const _pv = localStorage.getItem('run2x.part'); let _pa=[]; try{ _pa = JSON.parse(_pv); }catch(_){ _pa = _pv ? [_pv] : []; } if(!Array.isArray(_pa)) _pa = _pa ? [String(_pa)] : []; PSET = new Set(_pa.filter(p=>PCOL[p])); PSEL = PSET.size ? [...PSET].pop() : null; }catch(e){}
   rail.innerHTML = `<button class="rail-h" id="railToggle" title="파트 패널 접기/펼치기"><span>파트</span><i></i></button><div class="rail-b">${PARTS.map(([p])=>`<button class="rchip" aria-pressed="false" data-part="${p}"><span class="dot" style="background:${pc(p)}"></span>${p}</button>`).join('')}<button class="rclr" id="railClear" hidden>선택 해제</button></div>`;
@@ -191,7 +177,7 @@ function renderPartFilter(){
     if(e.target.closest('#railClear')){ PSET.clear(); PSEL=null; try{ localStorage.removeItem('run2x.part'); }catch(_){} applyPart(); return; }
     const b=e.target.closest('[data-part]'); if(!b) return;
     const _p=b.dataset.part; if(PSET.has(_p)) PSET.delete(_p); else PSET.add(_p); PSEL = PSET.size ? [...PSET].pop() : null; try{ PSET.size ? localStorage.setItem('run2x.part',JSON.stringify([...PSET])) : localStorage.removeItem('run2x.part'); }catch(_){}
-    if(SEL){ SEL=null; setPanel(emptyPanel()); } applyPart();
+    if(SEL){ SEL=null; } applyPart();
   });
 }
 

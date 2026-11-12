@@ -68,22 +68,15 @@
   const ord = {admin:0,head:1,lead:2,member:3};
   /* 보는 시즌(SEASON)에서의 역할: 이번 시즌이면 지금 역할, 지난 시즌이면 그 시즌 명단 기록 */
   const roleIn = (m, S) => { if(S===TEAM_SEASON || !m.seasons || !m.seasons[S]) return {role:rlOf(m), parts:Array.isArray(m.parts)?m.parts:[]}; const r=m.seasons[S]; return {role:r.role||'member', parts:r.parts||[]}; };
-  const roleLabel = r => isLeadRole(r.role) ? `${ROLE[r.role]} · ${r.parts.length?partsShow(r.parts).join('·'):'담당 없음'}` : ROLE[r.role];
   /* 담당 칩: 팀장은 묶음(샤시·전기) + 파트, 파트장은 파트만 */
   const chipsOf = role => role==='head' ? [...Object.keys(PGROUP), ...PL()] : PL();
   const chipOn = (ps, p) => ps.includes(p);
   const chipHtml = e => chipsOf(e.role).map(p=>{ const on=chipOn(e.parts,p); return `<button type="button" class="tp-pchip${on?' on':''}${PGROUP[p]?' grp':''}" data-tmpart="${p}" aria-pressed="${on}"${PGROUP[p]?` title="${PGROUP[p].join('·')} 항목 모두 편집"`:''}>${p}</button>`; }).join('');
   /* 칩 누르기: 그 칩 하나만 켜고 끔 (묶음 칩 하나로 그 묶음 파트 모두 편집, 겸업 파트는 따로 켜서 표시) */
   const togglePart = (ps, p) => ps.includes(p) ? ps.filter(x=>x!==p) : [...ps, p];
-  const sortM = (ms, S) => ms.sort((a,b)=>ord[roleIn(a,S).role]-ord[roleIn(b,S).role]||String(a.name).localeCompare(String(b.name),'ko'));
-  /* 팀원 카드 격자 (H12): 왼쪽→오른쪽으로 채우고 줄을 넘김 */
-  function memberGrid(ms, S){ return `<div class="tp-grid">${sortM(ms,S).map(m=>{ const r=roleIn(m,S), me=m.uid===C.uid;
-      return `<div class="tp-card" data-uid="${esc(m.uid)}"><b>${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''}</b><span class="tp-role${r.role!=='member'?' a':''}">${esc(roleLabel(r))}</span></div>`; }).join('') || '<p class="muted tp-small">없습니다.</p>'}</div>`; }
-  function splitSeason(ms, S){ const now=[], past=[]; ms.forEach(m=>(T.inSeason(m,S)?now:past).push(m)); return {now, past}; }
   /* ---------- 팀원 표 (40명 이상 대비): 가나다순 · 검색(이름·역할·파트, 초성) · 역할·명단 거르기 ---------- */
   const MFS = { view:{ q:'', role:'', scope:'now' }, manage:{ q:'', role:'', scope:'all' } };
   let SSEL = '';   /* 팀 설정에서 고른 해 (보는 시즌과 따로) */
-  const snBtn = d => `<button type="button" class="tt-sn ${d<0?'sn-prev':'sn-next'}" data-ttsn="${d}" aria-label="${d<0?'이전':'다음'} 시즌">${typeof SN_SVG!=='undefined'?SN_SVG[d<0?0:1]:(d<0?'◀':'▶')}</button>`;
   const byName = (a,b) => String(a.name||'').localeCompare(String(b.name||''),'ko');
   const byRoleName = S => (a,b) => (ord[roleIn(a,S).role]-ord[roleIn(b,S).role]) || byName(a,b);   /* 회장 → 팀장 → 파트장 → 팀원, 같은 역할은 가나다 */
   const mKey = (m, r) => { const t=[m.name||'', ROLE[r.role]||'', partsShow(r.parts).join(' '), (r.parts||[]).join(' ')].join(' '); return (t+' '+(typeof cho==='function'?cho(t):'')).toLowerCase(); };
@@ -133,33 +126,11 @@
       Object.keys(MP).forEach(k=>delete MP[k]);
       if(meDemoted) return setTimeout(()=>location.reload(), 600);
       renderTM().catch(()=>{}); } });
-  function manageCard(m, admins){ const e=eff(m), me=m.uid===C.uid, open=!!(TMOPEN[m.uid]), pend=!!MP[m.uid];
-    return `<div class="tp-card${pend?' pend':''}${open?' open':''}" data-uid="${esc(m.uid)}" data-role="${rlOf(m)}">
-      <div class="tp-ch"><b>${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''}</b>${pend?'<span class="pend-tag">저장 전</span>':''}<button type="button" class="btn small" data-tmopen>${open?'접기':'변경'}</button></div>
-      <span class="tp-role${e.role!=='member'?' a':''}">${e.active?esc(roleLabel(e)):'이번 시즌 명단에서 뺌'}</span>
-      ${open?`<div class="tp-edit">
-        <label class="tp-small"><input type="checkbox" data-tmact${e.active?' checked':''}> ${esc(TEAM_SEASON)} 시즌 명단에 있음</label>
-        <div class="tp-row"><span class="tp-small muted">역할</span><select data-tmrole aria-label="역할"${e.active?'':' disabled'}>${RL.map(r=>`<option value="${r}"${r===e.role?' selected':''}>${ROLE[r]}</option>`).join('')}</select></div>
-        ${isLeadRole(e.role)&&e.active?`<div class="tp-parts"><span class="muted tp-small">담당 파트</span>${chipHtml(e)}</div>`:''}
-        ${me?'':`<div class="tp-row tp-danger-row"><button type="button" class="lnk" data-tp="kick">팀에서 내보내기</button><button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button></div>`}
-      </div>`:''}</div>`; }
-  const TMOPEN = {};
   const NMOPEN = {};   /* 팀원 표: 이름 고치는 줄 */
   const cleanName = v => String(v||'').replace(/\s+/g,' ').trim();
   const CHIPOPEN = {};   /* 팀원 표: 담당 칩을 펼쳐 고르는 줄 (기본은 고른 칩만 보임) */
 
-  /* ---------- 관리 창 "팀 관리" (회장, 회장 모드) ---------- */
   const TM = () => document.querySelector('#v-team .adm-tm');
-  /* 관리 창 옆에 한 단 더 펼쳐지는 팀 관리 창 */
-  let TMP = null;
-  function tmPanel(){ if(TMP) return TMP; TMP=document.createElement('aside'); TMP.id='tmPanel'; TMP.hidden=true; TMP.setAttribute('aria-label','팀 관리');
-    TMP.innerHTML=`<div class="adm-h"><b>팀 관리</b><span class="adm-sub"></span><button type="button" class="tm-x" aria-label="닫기" title="닫기">×</button></div><div class="adm-b"><div class="adm-tm"></div></div>`;
-    document.body.appendChild(TMP); return TMP; }
-  function tmSync(){ const on = !!TMP && !TMP.hidden; document.body.classList.toggle('tm-on', on); const b=document.querySelector('#admPanel .adm-tmopen'); if(b){ b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); const a=b.querySelector('.tmo-a'); if(a) a.textContent = on ? '닫기 ›' : '‹ 열기'; } }
-  function tmOpen(){ tmPanel(); TMP.hidden=false; TMP.querySelector('.adm-sub').textContent = C.teamName||''; tmSync(); renderTM().catch(err=>fail(err)); }
-  function tmClose(){ if(TMP) TMP.hidden=true; tmSync(); }
-  function tmShow(){ const ok = C && C.state==='member' && C.role==='admin'; const sec=document.querySelector('#admPanel .adm-team'); if(sec) sec.hidden = !ok;
-    const ap=document.getElementById('admPanel'); if(TMP && !TMP.hidden && (!ok || !ap || ap.hidden)) tmClose(); }
   async function renderTM(){ const R=TM(); if(!R || !C || C.role!=='admin') return; const c=C;
     let ms=[], bl=[], pw=''; try{ [ms, bl, pw] = await Promise.all([T.members(), T.blockedList(), T.secretPw()]); }catch(e){ console.error(e); }
     const admins = ms.filter(m=>m.role==='admin').length;
@@ -253,13 +224,14 @@
       if(bl.length) h += `<div class="tp-sec"><div class="sec-label">문의 차단한 계정 (${bl.length})</div>` + bl.map(b=>`<div class="tp-person" data-uid="${esc(b.uid)}"><span>${esc(b.name||'')} <span class="muted">${esc(b.email||'')}</span></span><span><button type="button" class="lnk" data-tp="fbunblock">차단 해제</button></span></div>`).join('') + `</div>`;
     }
     B.innerHTML = h; }
-  async function fbOpen(pre){ fbPanel(); FBP.hidden=false; const b=document.querySelector('.topask'); if(b) b.setAttribute('aria-expanded','true');
+  let FBSRC = null;   /* 문의 창을 연 단추 (닫을 때 그리로 들어감) */
+  async function fbOpen(pre){ fbPanel(); const was=FBP.hidden && !FBP._closing; FBP._closing=false; FBP.hidden=false; const b=document.querySelector('.topask'); if(b) b.setAttribute('aria-expanded','true'); if(was || FBP._pop) popFrom(FBP, FBSRC || b, true);
     /* 닫았다 다시 열어도 쓰던 문의(종류·위치·항목·내용)는 그대로 */
     const q=s=>FBP.querySelector(s), old={kind:q('.tp-fbkind')?.value, where:q('.tp-fbwhere')?.value, item:q('.tp-fbitem')?.value, text:q('.tp-fb')?.value||''};
     FBP.querySelector('.fbp-b').innerHTML='<p class="muted tp-small">불러오는 중…</p>'; try{ await fbRender(); }catch(e){ fail(e); }
     if(old.text.trim()){ if(!pre){ try{ if(q('.tp-fbkind') && old.kind) q('.tp-fbkind').value=old.kind; if(q('.tp-fbwhere') && old.where){ q('.tp-fbwhere').value=old.where; fillItems(); } if(q('.tp-fbitem') && old.item) q('.tp-fbitem').value=old.item; }catch(e){} } if(q('.tp-fb')) q('.tp-fb').value=old.text; }
     const t=FBP.querySelector('.tp-fb'); if(t){ if(pre && IT[pre]){ FBP.querySelector('.tp-fbkind').value='오류'; const w=FBP.querySelector('.tp-fbwhere'); w.value='step:'+IT[pre].s; fillItems(); FBP.querySelector('.tp-fbitem').value=pre; } t.focus(); } }
-  function fbClose(){ if(FBP) FBP.hidden=true; const b=document.querySelector('.topask'); if(b) b.setAttribute('aria-expanded','false'); }
+  function fbClose(){ const b=document.querySelector('.topask'); if(b) b.setAttribute('aria-expanded','false'); if(!FBP || FBP.hidden) return; FBP._closing=true; popFrom(FBP, FBSRC || b, false, ()=>{ if(FBP._closing){ FBP.hidden=true; FBP._closing=false; } }); }
   /* 플랫폼 문의 위치: 사이트 전체 / 탭 / 설계 단계 › 항목 */
   const TABS = [['start','시작 탭'],['graph','설계 탭 · 연결도 보기'],['tools','도구 탭'],['ref','참고 탭']];
   const plain = t => String(t||'').replace(/<[^>]+>/g,'').replace(/\$/g,'');
@@ -300,7 +272,7 @@
         say(`복구했습니다 · ${ses.length?ses.join('·')+' 시즌 · ':''}진행 상태 ${n.status} · 우리 팀 값 ${n.val} · 되살린 논의 ${n.qa}`); return setTimeout(()=>location.reload(), 1400); }
       case 'rename': { const n=R.querySelector('.tp-rn').value, pi=R.querySelector('.tp-rnpw'), pw=pi ? pi.value : '';
         try{ await T.rename(n, pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; }
-        if(TMP) TMP.querySelector('.adm-sub').textContent = C.teamName; paintChip(); say('팀 이름을 바꿨습니다. 초대 문구를 다시 복사해 공유하십시오.'); return again(); }
+        paintChip(); say('팀 이름을 바꿨습니다. 초대 문구를 다시 복사해 공유하십시오.'); return again(); }
       case 'seasonreset': { if(!el.dataset.confirm){ el.dataset.confirm='1'; el.textContent=`한 번 더 누르면 ${SEASON} 시즌을 지웁니다`; return; } await resetShared(); return again(); }
       case 'pw': { const i=R.querySelector('.tp-pw'); try{ await T.changePassword(i.value); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } i.value=''; again(); return say('비밀번호를 바꿨습니다. 팀원에게 새 비밀번호를 알려 주십시오.'); }
       case 'promote': await T.setRole(uid,'admin'); say('회장으로 지정했습니다.'); return again();
@@ -339,14 +311,13 @@
   }
 
   document.addEventListener('click', e=>{
-    const fo=e.target.closest('.tp-fbopen'); if(fo){ e.preventDefault(); e.stopPropagation(); if(FBP && !FBP.hidden && fo.classList.contains('topask')) return fbClose(); fbOpen(fo.dataset.item); return; }
+    const fo=e.target.closest('.tp-fbopen'); if(fo){ e.preventDefault(); e.stopPropagation(); if(FBP && !FBP.hidden && !FBP._closing && fo.classList.contains('topask')) return fbClose(); FBSRC=fo; fbOpen(fo.dataset.item); return; }
     if(FBP && !FBP.hidden){ if(e.target.closest('.fbp-x')){ e.preventDefault(); fbClose(); return; }
       const fb = e.target.closest('#fbPanel [data-tp]'); if(fb){ e.preventDefault(); act(fb.dataset.tp, fb).catch(err=>fail(err)); return; }
       /* 바깥 클릭으로는 닫지 않음 (글자를 끌어 고르다 칸 밖에서 손을 떼도 닫히지 않게). 닫기는 ×·[문의] 버튼 */ }
     if(e.target.closest('#seasonChip.sc-team')){ e.preventDefault(); e.stopPropagation(); open('account'); return; }
     if(e.target.closest('.tp-open')){ e.preventDefault(); e.stopPropagation(); open('account'); return; }
     const tmc = e.target.closest('.adm-tm [data-tmchips]'); if(tmc){ e.preventDefault(); const u=tmc.closest('.tp-card').dataset.uid; CHIPOPEN[u]=!CHIPOPEN[u]; renderTM().catch(err=>fail(err)); return; }
-    const tmo = e.target.closest('.adm-tm [data-tmopen]'); if(tmo){ e.preventDefault(); const u=tmo.closest('.tp-card').dataset.uid; TMOPEN[u]=!TMOPEN[u]; renderTM().catch(err=>fail(err)); return; }
     const tpp = e.target.closest('.adm-tm [data-tmpart]'); if(tpp){ e.preventDefault(); const u=tpp.closest('.tp-card').dataset.uid, m=MS.find(x=>x.uid===u), p=tpp.dataset.tmpart, ps=eff(m).parts;
       stage(u, {parts: togglePart(ps, p)}); renderTM().catch(err=>fail(err)); return; }
     const tss = e.target.closest('.adm-tm [data-tss]'); if(tss){ e.preventDefault(); SSEL = String(+(SSEL||TEAM_SEASON) + +tss.dataset.tss); renderTM().catch(err=>fail(err)); return; }
@@ -389,16 +360,9 @@
     const f=document.createElement('button'); f.type='button'; f.className='authbtn tp-fbopen'; f.textContent='플랫폼 문의'; vl.appendChild(f);
     const b=document.createElement('button'); b.type='button'; b.className='authbtn tp-open'; b.textContent = C.uid ? `${C.email} · 팀·계정` : '로그인'; vl.appendChild(b); }
 
-  /* 새 댓글 알림 (관리 버튼): 이 브라우저에서 마지막으로 본 뒤 다른 사람이 남긴 논의 글 수 */
-  function paintQ(){ const ab=document.getElementById('admbtn'); if(!ab) return; let b=ab.querySelector('.adm-new'); const n = (C && C.state==='member' && typeof tkNewTotal==='function') ? tkNewTotal() : 0;
-    if(!n){ if(b) b.remove(); } else { if(!b){ b=document.createElement('span'); b.className='adm-new'; ab.appendChild(b); } b.textContent=`새 댓글 ${n}`; }
-    const hd=document.querySelector('#admPanel [data-l="qa"]'); if(hd){ let k=hd.parentElement.querySelector('.qa-seen'); if(n && !k){ k=document.createElement('button'); k.type='button'; k.className='btn small qa-seen'; hd.before(k); } if(k){ if(n) k.textContent=`새 댓글 ${n}건 · 모두 읽음으로`; else k.remove(); } } }
-  document.addEventListener('click', e=>{ if(!e.target.closest('.qa-seen')) return; e.preventDefault(); tkSeenAll(); paintQ(); });
-  { const _rq = renderQA; renderQA = async function(){ const r = await _rq.apply(this, arguments); try{ paintQ(); }catch(e){} return r; }; }
-  { const _ra = renderAdm; renderAdm = function(){ const r=_ra.apply(this, arguments); try{ paintQ(); requestAnimationFrame(tmShow); }catch(e){} return r; }; }
   /* 팀 정보가 늦게 도착해도, 그 사이 열려 있던 팀원·계정 / 팀 설정 화면을 다시 그림 (새로고침·로그인 직후 "불러오는 중…" 멈춤 방지) */
   const repaintOpen = () => setTimeout(()=>{ try{ if(typeof TAB==='undefined' || TAB!=='team') return;
     if(document.querySelector('#v-team [data-ttp=account]:not([hidden])')) window.__ttAccount();
     if(document.querySelector('#v-team [data-ttp=settings]:not([hidden])')) window.__ttSettings(); }catch(e){} }, 0);
-  Backend.Team.ctx().then(c=>{ C=c; document.body.classList.toggle('no-team', c.state!=='member'); tmShow(); setTimeout(paintQ, 1500); paintChip(); foot(); repaintOpen(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; document.body.classList.add('no-team'); paintChip(); repaintOpen(); });
+  Backend.Team.ctx().then(c=>{ C=c; document.body.classList.toggle('no-team', c.state!=='member'); paintChip(); foot(); repaintOpen(); if(c.notice) setTimeout(()=>say(c.notice), 600); }).catch(e=>{ console.error(e); C={state:'error'}; document.body.classList.add('no-team'); paintChip(); repaintOpen(); });
 })();

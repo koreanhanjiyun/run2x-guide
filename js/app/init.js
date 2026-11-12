@@ -1,4 +1,4 @@
-renderSteps(); renderGoals(); renderRefs(); renderFlow(); renderGraph(); renderPartFilter(); initPanZoom(); applyView(); setPanel(emptyPanel()); refreshStatus(); refreshMode(); initShared(); applyPart(); initSearch(); initGlossary(); initNext(); window.__nextReady=true;
+renderSteps(); renderGoals(); renderRefs(); renderFlow(); renderGraph(); renderPartFilter(); initPanZoom(); applyView(); refreshStatus(); refreshMode(); initShared(); applyPart(); initSearch(); initGlossary(); initNext(); window.__nextReady=true;
 subify(document.body);
 /* 수식: 도구가 준비되면 그림. 못 오면(파일 오류·20초 초과) TeX 원문으로 */
 { const mjGo=()=>{ try{ document.head.appendChild(MathJax.svgStylesheet()); }catch(e){} renderMath(document); try{ subifySvg(document); }catch(e){} };
@@ -15,7 +15,6 @@ document.addEventListener('click', e=>{
   const cs = getComputedStyle(document.documentElement), tabh = parseFloat(cs.getPropertyValue('--tabh'))||50, sth = parseFloat(cs.getPropertyValue('--sth'))||58;
   const off0 = d.classList.contains('item') ? tabh + sth + 6 : tabh + 6;
   const off = Math.max(off0, (window.innerHeight + tabh - sm.offsetHeight)/2);
-  const isItem = d.classList.contains('item');
   requestAnimationFrame(()=>requestAnimationFrame(()=>smoothScrollTo(()=>d.getBoundingClientRect().top + window.scrollY - off, ()=>{ d.classList.remove('cflash'); void d.offsetWidth; d.classList.add('cflash'); setTimeout(()=>d.classList.remove('cflash'),1700); })));
 }, true);
 document.addEventListener('toggle', e=>{ const d=e.target; if(d.tagName==='DETAILS' && !d.open) d.querySelectorAll('details[open]').forEach(x=>{ x.open=false; }); }, true);
