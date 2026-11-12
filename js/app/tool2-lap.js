@@ -34,10 +34,12 @@ function t2ModeReset(m){ const ex = m==='ex', EM = typeof EMRAX228!=='undefined'
   Object.assign(T2, {course:'end', ecourse:'end', lap:{end:'1', free:'1'}, free:{text:ex ? T2TRACK_EX : '', laps:1, s0:0, end:0}, mtext:ex && EM ? EM.torque : '', eM:ex && EM ? EM.eff : '', eI:'', tire:'', bO:'', bR:'', bC:'', rqM:'', rqI:'', rqB:'', eD:'', dM:'', dI:'', eD:'', dM:'', dI:'',
     grMode:'my', use:{mt:'tab', eM:'const', eI:'const', tire:'const', bO:'const', bR:'const', bC:'const', rqM:'const', rqI:'const', rqB:'const', eD:'const', dM:'const', dI:'const'}, stab:ex ? T2STAB_DEF.map(r => r.slice()) : [], cwc:null, cwcN:0, coolOld:null, menu:'', tab:'sim', etab:'course'}); }
 const T2COURSES = ['free', 'ax', 'end', 'acc', 'skid'];
+/* 예시 코스 판 (글의 해시). 예제 저장본이 예전 예시 코스 판이면 그 코스 글은 버리고 지금 예시로 (71차 슬라럼 폭 등이 옛 저장본에 가려지던 문제, 2026-11-12) */
+const T2EXV = (s => { let h = 0; for(let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); })(T2TRACK_EX);
 function t2Load(s){ if(!s || typeof s!=='object') return;
   if(T2COURSES.includes(s.course)) T2.course = s.course; T2.ecourse = T2COURSES.includes(s.ecourse) ? s.ecourse : T2.course;
   if(s.use && typeof s.use==='object') ['mt', 'eM', 'eI', 'tire', 'bO', 'bR', 'bC', 'rqM', 'rqI', 'rqB', 'eD', 'dM', 'dI'].forEach(k => { if(s.use[k]==='tab' || s.use[k]==='const') T2.use[k] = s.use[k]; }); ['rqM', 'rqI', 'rqB', 'eD', 'dM', 'dI'].forEach(k => { if(typeof s[k]==='string') T2[k] = s[k]; }); if(s.lap && typeof s.lap==='object') Object.assign(T2.lap, s.lap);
-  if(s.free && typeof s.free.text==='string') Object.assign(T2.free, {text:s.free.text, laps:Math.max(1, Math.round(+s.free.laps || 1)), s0:Math.max(0, +s.free.s0 || 0), end:s.free.end === 1 ? 1 : 0});
+  if(s.free && typeof s.free.text==='string' && !(s.fromLS && WBMODE==='ex' && s.exv!==T2EXV)) Object.assign(T2.free, {text:s.free.text, laps:Math.max(1, Math.round(+s.free.laps || 1)), s0:Math.max(0, +s.free.s0 || 0), end:s.free.end === 1 ? 1 : 0});
   if(s.cwc && s.cwc.cool && Array.isArray(s.cwc.cool.circuits)) T2.cwc = {cool:s.cwc.cool};   // 도구 2P 자체 냉각 회로 (도구 9 와 따로)
   if(s.cool && Array.isArray(s.cool.circuits)) T2.coolOld = s.cool;   // 예전 저장본의 냉각 배치 → 도구 9 가 처음 열 때 가져감
   if(typeof s.mtext==='string') T2.mtext = s.mtext; if(typeof s.eM==='string') T2.eM = s.eM; if(typeof s.eI==='string') T2.eI = s.eI; if(typeof s.tire==='string') T2.tire = s.tire; if(Array.isArray(s.stab)) T2.stab = s.stab;   /* [] = 지운 것 (100 % 애커먼) */ ['bO', 'bR', 'bC'].forEach(k => { if(typeof s[k]==='string') T2[k] = s[k]; });
@@ -49,14 +51,14 @@ function t2EffFix(txt){ try{ if(typeof EMRAX228==='undefined' || txt===EMRAX228.
   if(A.n.length!==B.n.length || A.t.length!==B.t.length || A.n.some((v, j) => v!==B.n[j]) || A.t.some((v, i) => v!==B.t[i])) return txt;
   let d = 0, low = true; A.e.forEach((r, i) => r.forEach((v, j) => { const x = B.e[i][j]; if(Math.abs(v - x) > 1e-6){ d++; if(!(v < x - 3)) low = false; } }));
   return d > 0 && d <= 8 && low ? EMRAX228.eff : txt; }catch(e){ return txt; } }
-wbModeReg(m => { t2ModeReset(m); try{ t2Load(JSON.parse(localStorage.getItem(wbMK(T2KEY)) || '{}')); }catch(e){} });
+wbModeReg(m => { t2ModeReset(m); try{ t2Load({...JSON.parse(localStorage.getItem(wbMK(T2KEY)) || '{}'), fromLS:1}); }catch(e){} });
 /* 도구 2P 자체 냉각 회로 (편집 탭 [냉각], 도구 9 와 같은 편집기 · 같은 형식). 처음엔 도구 9 의 기본 배치, [도구 9 에서 가져오기]는 복사 */
 function t2Cwc(){ if(!T2.cwc) T2.cwc = {cool: typeof T9COOL_DEF==='function' ? (wbEx() ? T9COOL_DEF() : T9COOL_NEW()) : {circuits:[]}};
   if(!T2.cwcN && typeof t9CoolNorm==='function'){ t9CoolNorm(T2.cwc.cool, !wbEx()); T2.cwcN = 1; }   /* 공랭 덕트 입구 · 출구 보장, 새 파일의 예전 기본 블럭 정리 */
   return T2.cwc; }
 /* 저장 · 내보내기에 같은 상태 (t2State). 화면 위치(tab · etab)는 저장만 */
 const t2State = () => JSON.parse(JSON.stringify({...(T2.coolOld ? {cool:T2.coolOld} : {}), ...(T2.cwc ? {cwc:{cool:T2.cwc.cool}} : {}), course:T2.course, lap:T2.lap, free:T2.free, mtext:T2.mtext, eM:T2.eM, eI:T2.eI, tire:T2.tire, bO:T2.bO, bR:T2.bR, bC:T2.bC, rqM:T2.rqM, rqI:T2.rqI, rqB:T2.rqB, eD:T2.eD, dM:T2.dM, dI:T2.dI, stab:T2.stab || null, grMode:T2.grMode, ecourse:T2.ecourse, use:T2.use}));
-const t2Save = () => { try{ localStorage.setItem(wbMK(T2KEY), JSON.stringify({...t2State(), tab:T2.tab, etab:T2.etab})); }catch(e){} };
+const t2Save = () => { try{ localStorage.setItem(wbMK(T2KEY), JSON.stringify({...t2State(), tab:T2.tab, etab:T2.etab, exv:T2EXV})); }catch(e){} };
 
 /* ---------- 글 · 파일 → 표 ---------- */
 /* ---------- 파일 가져오기: .csv · .txt · .xlsx ---------- */
