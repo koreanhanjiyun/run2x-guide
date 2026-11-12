@@ -27,7 +27,9 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-gclose]')){ clearSel(); return; } });
 
 /* ---------- 목차 접기 · 너비 조절 ---------- */
-document.addEventListener('click',e=>{ const f=e.target.closest('.toc-h'); if(!f) return; const t=$('#toc'); t.classList.toggle('coll'); if(!document.body.classList.contains('toc-narrow')) SETP('tocc', t.classList.contains('coll')?'1':'0'); tocFx(); });
+document.addEventListener('click',e=>{ const f=e.target.closest('.toc-h'); if(!f) return; const t=$('#toc'), open=t._ts ? !t._ts.open : t.classList.contains('coll');
+  const apply=o=>{ t.classList.toggle('coll', !o); if(!document.body.classList.contains('toc-narrow')) SETP('tocc', o?'0':'1'); tocFx(); };
+  if(typeof tocSnake==='function'){ tocSnake(t, open, apply); if(t._ts) t._ts.open = open; } else apply(open); });   /* 2026-11-12 펼침 · 접힘 애니메이션 (layout.js) */
 document.addEventListener('pointerdown',e=>{ const h=e.target.closest('.toc-rs'); if(!h) return; e.preventDefault(); const t=$('#toc'); const left=t.getBoundingClientRect().left; h.setPointerCapture(e.pointerId); document.body.classList.add('toc-drag');
   const mv=ev=>{ setTocW(ev.clientX-left); tocFx(); };
   const up=ev=>{ h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up); document.body.classList.remove('toc-drag'); SETP('tocw', String(Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tocw'))))); };

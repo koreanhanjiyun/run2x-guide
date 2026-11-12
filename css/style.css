@@ -3371,3 +3371,5 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 #figRail.pin .rail-h::after{content:"📌"!important;font-size:11px;margin-left:2px}
 #partRail.rs-snake .rail-b{display:none}
 #partRail.rs-snake{background:var(--char);box-shadow:none}   /* 글자가 움직이는 동안 ㄱ자 배너 전체를 머리 색으로 */
+#toc.ts-hide{visibility:hidden}
+.ts-ov{position:fixed;inset:0;z-index:31;pointer-events:none}   /* 목차 ㄱ자(거울) 판 (layout.js tocSnake) */
