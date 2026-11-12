@@ -63,6 +63,7 @@ WB_TOOLS['5'] = {
     {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T5G.car}, {k:'camber_r', dk:'camber_r', v:-2, d:2, g:T5G.car}, {k:'toe_f', dk:'toe_f', v:0, d:2, g:T5G.car}, {k:'toe_r', dk:'toe_r', v:0, d:2, g:T5G.car},
     {k:'h', dk:'h', v:290, d:0, g:T5G.car}, {k:'L', dk:'L', v:1550, d:0, g:T5G.car}, {k:'brake_bias', dk:'brake_bias', v:73.6, d:1, g:T5G.car},
     {k:'s_max', n:'그래프 트래블 범위 (±)', u:'mm', v:40, d:0, g:T5G.car},
+    {k:'margin_camber', dk:'margin_camber', u:'°', d:2, g:'공유 기록 (대시보드)', opt:true}, {k:'margin_toe', dk:'margin_toe', u:'°', d:2, g:'공유 기록 (대시보드)', opt:true},   /* 공유 기록 (계산에 안 씀, 2026-11-12) */
     ...k3dIn('f', t5Cv), ...k3dIn('r', t5Cv),
   ],
   outputs:[

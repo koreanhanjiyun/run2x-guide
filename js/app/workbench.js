@@ -110,7 +110,7 @@ function wbKill(){ if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.ws
   Object.keys(WB.wait).forEach(id => { const f = WB.wait[id]; delete WB.wait[id]; f({ok:false, cancelled:true}); }); }
 /* 내 파일: 계산에 필요한데 빈 칸 = 화면에 있고(ui:'none' 아님) 잠기지 않은 칸 + 도구가 알리는 표 (T.needExt → [{n, go}]) */
 function wbNeed(){ const T = wbT(); if(!T) return []; const L = [];
-  T.inputs.forEach(d => { if(d.ui==='none' || (T.inLock && T.inLock(d.k)) || (T.inNeed && T.inNeed(d.k)===false)) return; if(!isFinite(WB.I[d.k])) L.push({k:d.k, n:wbInName(d).replace(/<[^>]+>/g, ''), g:d.g || ''}); });
+  T.inputs.forEach(d => { if(d.ui==='none' || d.opt || (T.inLock && T.inLock(d.k)) || (T.inNeed && T.inNeed(d.k)===false)) return; if(!isFinite(WB.I[d.k])) L.push({k:d.k, n:wbInName(d).replace(/<[^>]+>/g, ''), g:d.g || ''}); });
   if(T.needExt) (T.needExt() || []).forEach(x => L.push(x)); return L; }
 const wbNeedK = k => (WB.need || []).some(x => x.k===k);
 /* 빈 필수 칸 빨강: 다시 그리지 않고 그 자리에서 (입력 중인 칸의 포커스 유지). 도구 화면의 표 · 블럭은 [data-wbneed="키"] 로 */
@@ -547,15 +547,22 @@ function wbCodeOpen(){ wbModal(wbMHead('코드 · 검증') + wbCTabs('code') + `
     <div class="dvi-body"><textarea class="wb-ta" spellcheck="false" aria-label="계산 코드">${wbEsc(wbCode())}</textarea></div>
     <div class="dvi-foot"><span class="wb-cmsg muted" id="wbcmsg"></span><span class="dvi-btns"><button type="button" class="btn small" data-wbcreset>원래 코드로</button><button type="button" class="btn small" data-wbmx>닫기</button><button type="button" class="btn small pri" data-wbcrun>이 코드로 계산</button></span></div>`, 'wb-wide wb-codebox'); }
 /* 대시보드에 반영: 대시보드 키가 있는 결과만. 담당이 아닌 값은 고를 수 없음. 반영한 값은 '계산값', 출처 = 도구 이름 */
-function wbPutOpen(){ const T = wbT(), R = WB.R; if(!R){ toast('계산 결과가 없습니다.'); return; }
-  const ks = T.outputs.filter(d => d.dk && R.out && isFinite(R.out[d.k]));
-  wbModal(wbMHead('대시보드에 반영') + (ks.length ? `<div class="dvi-body"><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>대시보드 지금</th><th>계산값</th></tr></thead><tbody>${ks.map(d => { const db = wbDash(d.dk), ok = canEditDv(d.dk), v = +R.out[d.k].toFixed(d.d||0);
-      return `<tr><td><input type="checkbox" data-wbpk="${d.k}"${ok?' checked':' disabled'} aria-label="${DK[d.dk].n}"></td><td>${DK[d.dk].n}${ok?'':' <span class="muted">(담당 아님)</span>'}</td><td>${db ? wbFmt(db.v, d.d||0) + (db.st==='ex'?' <span class="muted">예시값</span>':'') : '—'}</td><td><b>${wbFmt(v, d.d||0)}</b> ${wbEsc(DK[d.dk].u)}</td></tr>`; }).join('')}</tbody></table></div>
-    <div class="dvi-foot"><span class="muted">반영한 값은 ${typeof dvSeason==='function' ? dvSeason() : ''} 시즌에 '계산값', 출처 '${wbEsc(T.name)}'로 들어갑니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>취소</button><button type="button" class="btn small pri" data-wbpgo>반영</button></span></div>`
-    : `<div class="dvi-body"><p class="muted">이 도구에는 대시보드로 보낼 결과가 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-wbmx>닫기</button></div>`)); }
-async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
-  for(const cb of m.querySelectorAll('[data-wbpk]:checked')){ const d = T.outputs.find(o => o.k===cb.dataset.wbpk);
-    if(await dvSave(d.dk, {v: +R.out[d.k].toFixed(d.d||0), st:'calc', src:T.name})) n++; }
+/* [대시보드에 반영] (2026-11-12): 계산 결과(출력) + 이 도구 입력 중 대시보드 칸인 것. 권한은 칸의 담당 파트 (도구와 상관없음) → 담당인 입력 칸만 보임.
+   같은 칸에 입력이 둘 이상(예: 댐퍼 앞 · 뒤)이면 값이 같을 때만 보냄. 처음 체크 = 계산값은 대시보드와 다를 때, 입력값은 대시보드가 비었을 때만 (다른 도구에서 받아 쓰는 입력이 대시보드를 덮지 않게) */
+function wbPutRows(){ const T = wbT(), R = WB.R, rows = [], seen = new Set();
+  (T.outputs || []).filter(d => d.dk && R && R.out && isFinite(R.out[d.k])).forEach(d => { seen.add(d.dk); rows.push({dk:d.dk, d:d.d||0, v:+R.out[d.k].toFixed(d.d||0), kind:'계산값', st:'calc'}); });
+  const by = {}; T.inputs.filter(d => d.dk && d.ui!=='none' && !seen.has(d.dk) && isFinite(WB.I[d.k]) && !(T.inLock && T.inLock(d.k))).forEach(d => { (by[d.dk] = by[d.dk] || []).push(d); });
+  Object.entries(by).forEach(([dk, L]) => { if(!canEditDv(dk)) return; const vs = [...new Set(L.map(d => +(+WB.I[d.k]).toFixed(L[0].d != null ? L[0].d : 2)))];
+    rows.push({dk, d:L[0].d != null ? L[0].d : 2, v:vs[0], kind:'입력값', st:'ok', bad:vs.length > 1 ? `값이 다름 (${vs.map(v => wbFmt(v, L[0].d != null ? L[0].d : 2)).join(' · ')})` : ''}); });
+  return rows; }
+function wbPutOpen(){ const T = wbT(); const rows = wbPutRows(); WB.put = rows;
+  if(!rows.length){ wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><p class="muted">보낼 값이 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-wbmx>닫기</button></div>`); return; }
+  wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>종류</th><th>대시보드 지금</th><th>보낼 값</th></tr></thead><tbody>${rows.map((r, i) => { const db = wbDash(r.dk), ok = canEditDv(r.dk) && !r.bad, same = db && db.st!=='ex' && Math.abs(db.v - r.v) <= 1e-9*Math.max(1, Math.abs(r.v)), u = DK[r.dk].u ? ' ' + DK[r.dk].u : '';
+      return `<tr${ok ? '' : ' class="off"'}><td><input type="checkbox" data-wbpk="${i}"${ok && !same && (r.st==='calc' || !db || db.st==='ex') ? ' checked' : ''}${ok ? '' : ' disabled'} aria-label="${wbEsc(String(DK[r.dk].n).replace(/<[^>]+>/g, ''))}"></td><td>${DK[r.dk].n}${canEditDv(r.dk) ? '' : ' <span class="muted">(담당 아님)</span>'}</td><td class="muted">${r.kind}</td><td>${db && db.st!=='ex' ? wbFmt(db.v, r.d) + u : '—'}</td><td>${r.bad ? `<span class="muted">${r.bad}</span>` : `<b>${wbFmt(r.v, r.d)}</b>${u}`}</td></tr>`; }).join('')}</tbody></table></div>
+    <div class="dvi-foot"><span class="muted">출처 '${wbEsc(T.name)}'</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>취소</button><button type="button" class="btn small pri" data-wbpgo>체크한 것 반영</button></span></div>`); }
+async function wbPutGo(){ const T = wbT(), m = $('#wbm'); let n = 0;
+  for(const cb of m.querySelectorAll('[data-wbpk]:checked')){ const r = (WB.put || [])[+cb.dataset.wbpk]; if(!r) continue;
+    if(await dvSave(r.dk, {v: r.v, st: r.st, src: T.name})) n++; }
   wbModalClose(); toast(`${n}개 값을 대시보드에 반영했습니다.`); wbPaint(['in','out']); }
 /* ---------- 도구 연결 (2026-11-11): 다른 도구와 주고받는 것을 한 창에 (체크해서 가져오기 · 보내기)
    도구가 T.links() → {get:[행], send:[행], info:[글]}, 행 = {tool 상대 도구, n 무엇, to 덮어쓸 곳, now 지금, val 가져올 · 보낼 값, ok, why 못 하는 까닭, run()}.

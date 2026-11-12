@@ -48,6 +48,7 @@ WB_TOOLS['3'] = {
     {k:'v_stop', n:'정지 시작 차속 (디스크 온도)', u:'km/h', v:100, d:0, g:T3G.th}, {k:'n_stop', n:'연속 정지 횟수 (사이 냉각 없음)', u:'회', v:5, d:0, g:T3G.th},
     {k:'m_disc_f', n:'디스크 하나 질량 (앞)', u:'kg', v:0.45, d:3, g:T3G.disc}, {k:'m_disc_r', n:'디스크 하나 질량 (뒤)', u:'kg', v:0.45, d:3, g:T3G.disc},
     {k:'c_disc', n:'디스크 비열 (강 460)', u:'J/(kg·K)', v:460, d:0, g:T3G.disc},
+    {k:'disc_t', dk:'disc_t', u:'mm', d:1, g:T3G.disc, opt:true},   /* 공유 기록 (계산에 안 씀, 2026-11-12) */
     {k:'f_probe', n:'탐침 답력 (곡선 위 한 점)', u:'N', v:1200, d:0, g:T3G.cprobe},
   ],
   outputs:[
