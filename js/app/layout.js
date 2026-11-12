@@ -66,11 +66,57 @@ syncTabsA11y(); document.body.classList.add('tab-'+TAB);
 /* 비교안 D4(연결도 상세 칸)는 상세 칸을 없애면서 함께 없앰 */
 window.setCompare = (k,on) => { document.body.classList.toggle(k, on); SETP('cmp.'+k, on?'1':'0'); try{ window.__figPlace&&window.__figPlace(); }catch(e){} };
 
+/* ---------- 오른쪽 배너 펼침 애니메이션 (2026-11-12): 머리 글자가 ㄱ자 길(세로 줄 위로 → 모서리에서 왼쪽)을 따라 가로로 눕고,
+   배너는 그동안 폭이 넓어지고 높이가 머리 높이로 줄어듦 → 다 펴지면 내용(in)이 이어서 나옴. 닫을 때는 내용(out)을 먼저 거두고 거꾸로 되감음.
+   apply(open) = 클래스만 바꾸는 함수. 사용법 중에는 애니메이션 없이 바로 바꿈. 도중에 반대로 바뀌면 그 자리에서 되돌아감 ---------- */
+function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.rail-h'), sp = hd && hd.querySelector('span');
+  const st = el._rs || (el._rs = {open: null, stage: '', anims: [], clones: []});
+  const clean = () => { [...st.anims, ...(st.keep||[])].forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; el.classList.remove('rs-anim', 'rs-snake'); el.style.width = el.style.height = ''; st.stage = ''; };
+  const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
+  if(st.open === open && st.stage) return;
+  if(st.stage === 'snake' && st.open !== open){ st.open = open; st.anims.forEach(a => a.reverse()); return; }   /* 글자 이동 중 반대로 → 되감기 */
+  if(st.stage){ clean(); sp && (sp.style.color = ''); if(o.isOpen() === open){ st.open = null; if(o.instant) o.instant(open); return; } }   /* 내용 단계 중 반대로 → 지금 자리에서 다시 시작 */
+  st.open = open;
+  if(tourOn || !sp || !el.animate || el.hidden){ apply(open); if(o.instant) o.instant(open); st.open = null; return; }
+  const chars = () => { const t = sp.firstChild, R = []; if(!t || t.nodeType !== 3) return R; const r = document.createRange();
+    for(let i = 0; i < t.length; i++){ const ch = t.data[i]; if(!ch.trim()) continue; r.setStart(t, i); r.setEnd(t, i + 1); const b = r.getBoundingClientRect(); R.push({ch, x: b.left + b.width/2, y: b.top + b.height/2}); } return R; };
+  const box = () => { const b = el.getBoundingClientRect(); return {w: b.width, h: b.height}; };
+  const D = 300, ease = 'cubic-bezier(.45,0,.25,1)';
+  const snake = (fromOpen, done) => {   /* fromOpen = 지금 펼친 머리(가로)에서 접는 쪽으로 가는지 */
+    const c0 = chars(), b0 = box(); st.stage = 'snake'; apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), hh = hd.getBoundingClientRect().height + 2;
+    const cs = getComputedStyle(sp), font = cs.font, col = getComputedStyle(hd).color; sp.style.color = 'transparent';
+    const n = Math.min(c0.length, c1.length);
+    for(let i = 0; i < n; i++){ const V = fromOpen ? c1[i] : c0[i], Hz = fromOpen ? c0[i] : c1[i];   /* V 세로 자리, Hz 가로 자리 */
+      const P = [V, {x: V.x, y: Hz.y}, Hz]; if(fromOpen) P.reverse(); const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y);
+      const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`; document.body.appendChild(d); st.clones.push(d);
+      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`;
+      st.anims.push(d.animate([{transform: tf(P[0]), offset: 0}, {transform: tf(P[1]), offset: L1 + L2 ? L1/(L1 + L2) : .5}, {transform: tf(P[2]), offset: 1}], {duration: D, easing: ease, fill: 'both'})); }
+    const hEnd = fromOpen ? b1.h : hh, hBeg = fromOpen ? hh : b0.h;
+    const A = el.animate([{width: b0.w + 'px', height: hBeg + 'px'}, {width: b1.w + 'px', height: hEnd + 'px'}], {duration: D, easing: ease, fill: 'both'}); st.anims.push(A);
+    st.stage = 'snake'; const want = st.open;
+    A.onfinish = () => { const rev = A.playbackRate < 0; sp.style.color = ''; (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; st.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; el.style.width = el.style.height = ''; el.classList.remove('rs-snake');
+      if(rev){ apply(fromOpen); el.classList.remove('rs-anim'); st.stage = ''; if(o.instant) o.instant(fromOpen); const w = st.open; st.open = null; if(w !== fromOpen) railSnake(el, w, o); return; }
+      done(hh); }; };
+  if(open){ snake(false, hh => { st.stage = 'in'; const r = o.in ? o.in(hh) : null; const fin = () => { el.classList.remove('rs-anim'); el.style.height = ''; st.stage = ''; st.anims = []; st.open = null; };
+      if(r && r.length){ st.anims = r; Promise.all(r.map(a => a.finished)).then(fin, () => {}); } else fin(); }); }
+  else { const r = o.out ? o.out() : null; st.stage = 'out'; el.classList.add('rs-anim');
+    const go = () => { st.keep = st.anims; st.anims = []; snake(true, () => { el.classList.remove('rs-anim'); st.stage = ''; st.open = null; }); };
+    if(r && r.length){ st.anims = r; Promise.all(r.map(a => a.finished)).then(go, () => {}); } else go(); } }
+/* 파트 패널 내용: 칩이 위에서부터 차례로 (펼칠 때) · 한 번에 (접을 때). 배너 높이도 같이 */
+const railBIn = (el, hh) => { const ks = [...el.querySelectorAll('.rail-b > :not([hidden])')], full = el.getBoundingClientRect().height, T = 220 + 35*ks.length;
+  return [el.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,0,.2,1)'}),
+    ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-10px)'}, {opacity: 1, transform: 'none'}], {duration: 220, delay: 35*i, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards'}))]; };
+const railBOut = el => { const ks = [...el.querySelectorAll('.rail-b > :not([hidden])')], hd = el.querySelector('.rail-h'), full = el.getBoundingClientRect().height, hh = hd.getBoundingClientRect().height + 2;
+  return [el.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: 160, easing: 'ease-in', fill: 'forwards'}), ...ks.map(k => k.animate([{opacity: 1}, {opacity: 0}], {duration: 120, fill: 'forwards'}))]; };
+
 /* ---------- 파트 패널: 마우스를 올리면 펼침, 빼면 접힘, 머리를 누르면 고정 ---------- */
 (()=>{ const rail=$('#partRail'); if(!rail) return; let ti=0, to=0;
   let pin = PREF('railpin','0')==='1';
-  const set = open => { rail.classList.toggle('coll', !open); rail.classList.toggle('pin', pin); try{ applyPart(); }catch(e){} const h=rail.querySelector('.rail-h'); if(h){ h.setAttribute('aria-expanded', String(open)); h.title = pin ? '고정 풀기 (마우스를 빼면 접힘)' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; } };
-  setTimeout(()=>set(pin), 0);   /* 목록을 처음 그린 뒤(init.js)에 적용 */
+  const cls = open => { rail.classList.toggle('coll', !open); try{ applyPart(); }catch(e){} };
+  const set = (open, now) => { rail.classList.toggle('pin', pin); const h=rail.querySelector('.rail-h'); if(h){ h.setAttribute('aria-expanded', String(open)); h.title = pin ? '고정 풀기 (마우스를 빼면 접힘)' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; }
+    const cur = rail._rs && rail._rs.stage ? rail._rs.open : !rail.classList.contains('coll'); if(cur === open) return;
+    if(now) cls(open); else railSnake(rail, open, {apply: cls, isOpen: () => !rail.classList.contains('coll'), in: hh => railBIn(rail, hh), out: () => railBOut(rail)}); };
+  setTimeout(()=>set(pin, true), 0);   /* 목록을 처음 그린 뒤(init.js)에 적용 */
   rail.addEventListener('mouseenter', ()=>{ clearTimeout(to); ti=setTimeout(()=>set(true), 150); });
   rail.addEventListener('mouseleave', ()=>{ clearTimeout(ti); if(!pin) to=setTimeout(()=>set(false), 300); });
   rail.addEventListener('focusin', ()=>{ clearTimeout(to); set(true); });

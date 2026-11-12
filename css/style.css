@@ -3364,3 +3364,10 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .wbp-box{max-width:620px}.wbp-sec{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.wbp-sec h4{margin:0 0 2px}
 .wbp-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line)}.wbp-r b{min-width:120px}.wbp-r .muted{margin-right:auto}
 .wbp-new{display:flex;gap:8px;margin-top:6px}.wbp-new input{flex:1;min-width:0;padding:5px 8px;border:1px solid var(--line-2);border-radius:6px;font:inherit}
+
+/* 오른쪽 배너 펼침 애니메이션 (2026-11-12, layout.js railSnake): 움직이는 머리 글자 복제 · 애니메이션 중 넘침 가림 · 좌표계 배너 고정 표시 */
+.rs-ch{position:fixed;z-index:90;pointer-events:none;white-space:nowrap;line-height:1;letter-spacing:0;transform:translate(-50%,-50%)}
+#partRail.rs-anim,#figRail.rs-anim{overflow:hidden}
+#figRail.pin .rail-h::after{content:"📌"!important;font-size:11px;margin-left:2px}
+#partRail.rs-snake .rail-b{display:none}
+#partRail.rs-snake:not(.coll) .rail-h,#figRail.rs-snake.open .rail-h{flex:1 0 auto;align-items:flex-start}   /* 글자가 움직이는 동안 배너 전체를 머리 색으로 */

@@ -75,11 +75,27 @@ function initFigRail(){ if($('#figRail')) return;
     const z=Math.max(0.55, avail/h); pn.style.zoom=String(Math.floor(z*1000)/1000);
     if(pn.getBoundingClientRect().height>avail+1){ pn.style.maxHeight=(avail/z)+'px'; if(bd) bd.style.overflowY='auto'; } };
   window.__figFit=fit; window.addEventListener('resize',()=>requestAnimationFrame(fit));
-  const close=()=>{ md.hidden=true; fr.classList.remove('open'); try{ window.__modeAnim.stop(); }catch(e){} }, open=()=>{ loadCoord(()=>{ build(); md.hidden=false; fr.classList.add('open'); try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} requestAnimationFrame(()=>{ fit(); setTimeout(fit,300); }); }); };
-  fr.querySelector('#figToggle').addEventListener('click',()=>{ md.hidden?open():close(); });
+  /* 2026-11-12: 파트 패널과 같은 규칙 — 마우스를 올리면 펼침 · 빼면 접힘 · 머리를 누르면 📌 고정 (다시 누르기 · 바깥 · × · Esc 로 풂). 펼칠 때 railSnake (layout.js) */
+  let pin=false, ti=0, to=0, want=false;
+  const hideMd=()=>{ md.hidden=true; try{ window.__modeAnim.stop(); }catch(e){} };
+  const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
+    const tourOn=((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture; if(pn && pn.animate && !tourOn){ pn.animate([{opacity:0, transform:'translateX(28px)'},{opacity:1, transform:'none'}],{duration:240, easing:'cubic-bezier(.2,.7,.3,1)'}); md.animate([{opacity:0},{opacity:1}],{duration:200}); }
+    requestAnimationFrame(()=>{ fit(); setTimeout(fit,300); }); }); };
+  const SO={apply:on=>fr.classList.toggle('open',on), isOpen:()=>fr.classList.contains('open'), in:()=>{ showMd(); return []; }, out:()=>{ hideMd(); return []; }, instant:on=>{ on?showMd():hideMd(); }};
+  const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
+  const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; if(typeof railSnake==='function') railSnake(fr,on,SO); else { SO.apply(on); SO.instant(on); } };
+  const open=()=>go(true), close=()=>{ pin=false; pinCls(); go(false); };
+  const over=()=>fr.matches(':hover') || !!(md.querySelector('.fm-panel') && md.querySelector('.fm-panel').matches(':hover'));
+  const enter=()=>{ clearTimeout(to); to=0; if(!want) ti=setTimeout(open,150); }, leave=()=>{ clearTimeout(ti); if(!pin && !to) to=setTimeout(()=>{ to=0; if(!pin && !over()) go(false); },300); };
+  fr.addEventListener('mouseenter',enter); fr.addEventListener('mouseleave',leave);
+  md.addEventListener('mouseover',e=>{ if(e.target.closest('.fm-panel')){ clearTimeout(to); to=0; } else if(!pin && want) leave(); });
+  md.addEventListener('mouseout',e=>{ if(e.target.closest('.fm-panel') && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.fm-panel'))) leave(); });
+  pinCls();
+  fr.querySelector('#figToggle').addEventListener('click',()=>{ if(!pin){ pin=true; pinCls(); open(); } else { pin=false; pinCls(); if(!over()) go(false); } });
   md.addEventListener('click',e=>{ if(e.target===md || e.target.closest('.fm-x')) close(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !md.hidden) close(); });
-  const place=()=>{ const r=$('#partRail'); let top; if(r && !r.hidden){ const b=r.getBoundingClientRect(); top=b.bottom+10; } else { top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50)+14; } fr.style.top=top+'px'; fr.hidden = !(TAB==='steps'||TAB==='graph'||TAB==='parts'||TAB==='tools'); if(fr.hidden && !md.hidden){ close(); } };
+  const place=()=>{ const r=$('#partRail'); let top; if(r && !r.hidden){ const b=r.getBoundingClientRect(); top=b.bottom+10;
+    if(r._rs && r._rs.stage) top = r._rs.stage==='snake' && fr._minTop ? fr._minTop : Math.max(top, fr._minTop||0); else if(r.classList.contains('coll')) fr._minTop=top; }   /* 파트 패널이 움직이는 동안: 접힌 때 자리 아래로는 올라가지 않음 (머리 높이로 줄 때 좌표계 배너가 오르내리지 않게) */ else { top=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50)+14; } fr.style.top=top+'px'; fr.hidden = !(TAB==='steps'||TAB==='graph'||TAB==='parts'||TAB==='tools'); if(fr.hidden && !md.hidden){ close(); } };
   window.__figPlace=place;
   try{ new ResizeObserver(place).observe($('#partRail')); }catch(e){} window.addEventListener('resize',place); place(); }
 function applyPart(){ try{ initFigRail(); window.__figPlace(); }catch(e){}
