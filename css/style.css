@@ -3337,3 +3337,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .t4-cbox.off .t4-cbh,.t9-crqb.off{opacity:1}
 #wb.wb-needon .t4-cbox.need textarea{border-color:#d33a2c;box-shadow:0 0 0 1px #d33a2c inset;background:#fff8f7}
 #wb .t9-crqb.need .t9-crq{border-radius:6px;box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7}
+/* 83차: 도구 4 셀 표 (편집 탭 · 칸 표), 셀 온도 슬라이더, 충족 경계 */
+.t4-cbt{display:flex;flex-wrap:wrap;gap:6px}.t4-crq{min-height:0}.t4-crq .t9-rqt input{width:58px}
+#wb.wb-needon .t4-cbox.need .t4-crq{box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7;border-color:transparent}
+.t4-ots{width:200px;accent-color:var(--accent,#6A4294)}.t4-bd{padding:2px 9px;border-radius:999px;background:var(--soft,#f3f5f8)}.t4-bd b{margin-left:4px}
