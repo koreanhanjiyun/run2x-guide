@@ -1871,7 +1871,6 @@ details.item .tv-s{color:var(--ink-2)}
 
 .dv-r.ex .dv-v b{color:var(--muted);font-weight:500}
 button.dv-s{border:0;padding:0;cursor:pointer}button.dv-s:hover{outline:2px solid var(--line-2);outline-offset:2px}
-.dv-s.s-ex{background:#fff;box-shadow:inset 0 0 0 1.4px var(--line-2);background-image:repeating-linear-gradient(45deg,var(--line-2) 0 1px,transparent 1px 3px)}
 .dv-r dt .term{border-bottom-style:dotted}
 #tip .tip-l{margin:0 0 3px}#tip .tip-u{color:var(--muted);font-weight:400;font-size:12px}#tip code{font-size:11.5px;color:var(--ink-2)}
 /* 지난 시즌 값 가져오기 창 (가운데 뜨는 창) */
@@ -1892,7 +1891,11 @@ button.dv-s{border:0;padding:0;cursor:pointer}button.dv-s:hover{outline:2px soli
 .dvi-btns{display:flex;gap:8px;flex:none}
 .dvi-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;font-size:12.5px}
 .dv-s{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
-.dv-s.s-ok{background:var(--out)}.dv-s.s-rev{background:#fff;box-shadow:inset 0 0 0 1.6px var(--muted)}.dv-s.s-asm{background:#d97706}.dv-s.s-calc{background:#fff;box-shadow:inset 0 0 0 1.6px var(--in)}
+/* 대시보드와의 관계 표시 (2026-11-13 범례 개편, 한 가지 색): ● 입력값 · 대시보드 값 그대로 / ○ 계산값 / ◎ 대시보드와 다름 / ◌ 대시보드 비어 있음 / 비어 있음은 표시 없음 */
+.dv-s.s-in{background:var(--accent)}.dv-s.s-calc{background:transparent;box-shadow:inset 0 0 0 1.6px var(--accent)}
+.dv-s.s-dif{background:radial-gradient(circle,var(--accent) 0 1.6px,transparent 2px);box-shadow:inset 0 0 0 1.4px var(--accent)}
+.dv-s.s-emp{background:transparent;border:1.4px dashed var(--muted);box-sizing:border-box}.dv-s.s-none{visibility:hidden}
+.dv-leg .dv-dash{margin-right:4px;color:var(--muted)}
 .dv-leg{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:4px 0 0;font-size:12.5px;color:var(--muted)}
 .dv-leg span{display:inline-flex;align-items:center;gap:6px}.dv-leg i{font-style:normal}
 .dv-legn{margin-left:auto}
@@ -2535,7 +2538,6 @@ html.wb-lock #tip{z-index:95}
 
 .wb-st{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;flex:none;cursor:help}
 .wb-st.sq{border-radius:1.5px;background:#c3c7cf}
-.wb-st.own{outline:2px solid var(--accent);outline-offset:1.5px}
 .wb-ir.own input{border-color:var(--accent);background:#faf7ff}
 .wb-inleg{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 6px;font-size:11.5px;color:var(--muted)}.wb-inleg span{display:inline-flex;align-items:center}
 /* 도구 2: 코스 고르기 · 공식 코스 지도 · 랩별 기록 · 모터 탭 */
@@ -3040,8 +3042,6 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 /* 냉각 등 배치 행: 같은 행 카드 높이 · 모서리 맞춤 (2026-11-11) */
 .t2-cg .t2-lay{align-items:stretch}.t2-cg .t2-lay>div{display:flex;flex-direction:column}.t2-cg .t2-lay>div>*{flex:1 1 auto;box-sizing:border-box}
 /* [도구 연결]로 받을 수 있는 칸: 파란 테두리 (빈 필수면 안쪽만 빨강, 테두리는 파랑) */
-.wb-ir.wb-lnk input:not(:disabled),.t2-tw.wb-lnk{border-color:#2f6fd0!important}   /* 다른 도구 · 대시보드에서 받을 수 있는 칸: 파란 테두리만 (옅은 파란 배경은 2026-11-12 되돌림) */
-#wb.wb-needon .wb-ir.need.wb-lnk input{border-color:#2f6fd0!important;box-shadow:0 0 0 1px #2f6fd0 inset!important;background:#fff4f2!important}
 
 /* 계산하지 않을 때(빈 필수 칸 등) 자리 표시는 멈춘 빈 상자, 계산 중일 때만 움직임 (2026-11-11) */
 #wb:not(.wb-busy) :is(.wb-skel, .wb-skelmode),#wb:not(.wb-busy) :is(.wb-skel, .wb-skelmode) *{animation:none!important}

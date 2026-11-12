@@ -35,7 +35,7 @@ async (opt) => {
   DKEYS.forEach((d, i) => { const b = BASE[d.k]; if(!isFinite(b)) return; const s = {};
     SEASONS.forEach((se, j) => { if(se === NOW && rnd() < 0.3 && !d.calc && !SHOWN.has(d.k)) return;   /* 이번 시즌은 70 % 쯤만 (대시보드 화면 칸은 다 채움 → 그림이 그려짐) */
       const v = d.u === '예/아니오' ? b : rd(se === NOW ? b : b*(1 + (rnd() - 0.5)*0.08), b);
-      const st = d.calc ? 'calc' : se !== NOW ? 'ok' : pick(['ok', 'ok', 'ok', 'rev', 'rev', 'asm']);
+      const st = d.calc ? 'calc' : 'ok';   /* 보기 전용 대시보드에는 [대시보드에 반영]으로 입력값 ok · 계산값 calc 만 들어옴 */
       s[se] = {v, st, src: SRC[d.k] || '', by: leadOf(d.p), at: iso(se === NOW ? 3 + i % 25 : 230 + i % 60)}; });
     if(Object.keys(s).length) dv[`${PCODE_OF[d.p] || 'all'}__${d.k}`] = {s}; });
   /* ---------- 진행 상태: 2025 거의 끝 · 2026 앞 단계 위주 ---------- */

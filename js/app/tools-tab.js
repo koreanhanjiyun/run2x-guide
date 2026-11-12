@@ -44,12 +44,15 @@ async function dvSave(k, patch){
 /* 팀 저장소 연결: 다른 저장소 구독(onSharedReady) 뒤에 이어 붙임 */
 { const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
     db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = r; dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
-/* 설계 탭 항목에 붙는 팀 설계값(읽기 전용). 고치기는 도구 탭에서 (값 한곳 원칙) */
+/* 설계 탭 항목에 붙는 팀 설계값(읽기 전용) */
+/* 대시보드 값 표시 (2026-11-13 범례 개편): ● 입력값(도구 입력을 반영, 예전 확정 · 검토 중 · 가정 포함) · ○ 계산값 · 비어 있으면 표시 없이 — */
+const dvMk = st => st==='calc' ? 'calc' : (!st || st==='ex') ? 'none' : 'in';
+const dvMkL = st => ({calc:'계산값', none:'비어 있음', in:'입력값'})[dvMk(st)];
 const DK_BY_ITEM = DKEYS.reduce((o, d) => { if(d.it) (o[d.it] = o[d.it] || []).push(d.k); return o; }, {});
 function dvLinkedHTML(id, se){ const ks = DK_BY_ITEM[id]; if(!ks || !ks.length) return '';
   const row = k => { const e = dvEntry(k, se), has = e && typeof e.v==='number', st = has ? (e.st||'rev') : '';
-    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} <span class="dv-s s-${st}" title="${DASH.STL[st]||''}"></span>` : '<span class="muted">—</span>'}</td></tr>`; };
-  return `<div class="tv-dv"><div class="tv-dvh"><span class="sec-label">팀 설계값</span><button type="button" class="lnk" data-gotools>도구 탭에서 보기 · 고치기</button></div><table class="kvt tv-t">${ks.map(row).join('')}</table></div>`; }
+    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} <span class="dv-s s-${dvMk(st)}" title="${dvMkL(st)}${e.src?' · '+esc(e.src):''}"></span>` : '<span class="muted">—</span>'}</td></tr>`; };
+  return `<div class="tv-dv"><div class="tv-dvh"><span class="sec-label">팀 설계값</span><button type="button" class="lnk" data-gotools>도구 탭에서 보기</button></div><table class="kvt tv-t">${ks.map(row).join('')}</table></div>`; }
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-gotools]')){ e.preventDefault(); showTab('tools'); smoothScrollTo(() => 0); } });
 /* 그림·계산에 쓰는 값: 이번 시즌 저장값, 없으면 예시값 */
 function dashSync(){ DASH.GROUPS.forEach(g => g[1].forEach(([k, , ex]) => { const e = dvEntry(k), has = e && typeof e.v==='number' && isFinite(e.v);
@@ -92,14 +95,14 @@ const dashMissing = () => DASH.GROUPS.flatMap(g => g[1].map(r => r[0])).filter(d
 const dashNoFig = what => `<p class="dp-note dv-nofig">대시보드 설계값 ${dashMissing().length}개가 비어 있어 ${what}을 그리지 않습니다.</p>`;
 function dashValuesHTML(){ const P = DASH.P;
   const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
-  const calc = (k, v, u, inv, need) => (need || []).some(dashEx) ? `<div class="dv-r calc ex"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>—</b></span><span class="dv-s s-calc" title="계산값 (넣지 않은 값이 있어 계산 안 함)"></span></dd></div>` : calc0(k, v, u, inv);
+  const calc = (k, v, u, inv, need) => (need || []).some(dashEx) ? `<div class="dv-r calc ex"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>—</b></span><span class="dv-s s-none"></span></dd></div>` : calc0(k, v, u, inv);
   const calc0 = (k, v, u, inv) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-calc" title="계산값"></span></dd></div>`;
   const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr', ['L', 'fr']);
   return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
-      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd><span class="dv-v ro"${e&&e.src ? ` title="${esc(e.src)}에서 반영"` : ''}>${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}</span><span class="dv-s s-${st}" title="${DASH.STL[st]}${e&&e.src?' · '+esc(e.src):''}"></span></dd></div>` + (k==='left' ? acg() : ''); }).join('')}
+      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd><span class="dv-v ro"${e&&e.src ? ` title="${esc(e.src)}에서 반영"` : ''}>${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}</span><span class="dv-s s-${dvMk(st)}" title="${dvMkL(st)}${e&&e.src?' · '+esc(e.src):''}${e&&e.at?' · '+String(e.at).slice(0,10):''}"></span></dd></div>` + (k==='left' ? acg() : ''); }).join('')}
       ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h', null, ['nmax', 'gr', 'r_eff']) : ''}
       </dl></section>`).join('')}</div>
-    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><i class="dv-s s-asm"></i>가정</span><span><i class="dv-s s-calc"></i>계산값</span><span><i class="dv-s s-ex"></i>비어 있음</span><span class="dv-legn">${SH.on ? '' : '팀에 로그인하지 않아 이 브라우저에만 저장됩니다.'}</span></p>`;
+    <p class="dv-leg"><span><i class="dv-s s-in"></i>입력값</span><span><i class="dv-s s-calc"></i>계산값</span><span><b class="dv-dash">—</b>비어 있음</span>${SH.on ? '' : '<span class="dv-legn">팀에 로그인하지 않아 이 브라우저에만 저장됩니다.</span>'}</p>`;
 }
 function dashReadHTML(){ const K = dashCalc(), f = (v,d) => v.toFixed(d);
   const row = (l, v, cls) => `<div class="dr-r"><dt>${l}</dt><dd class="${cls||''}">${v}</dd></div>`;
