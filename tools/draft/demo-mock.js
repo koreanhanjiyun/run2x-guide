@@ -127,7 +127,7 @@ try{ if(!localStorage.getItem('run2x.mass.v5')){ const T=M1SEED(); localStorage.
  /* 역할 전환 막대 */
  const ROLES=[['none','비로그인'],['member','팀원'],['head','팀장 (샤시)'],['lead','파트장 (서스·조향)'],['admin','회장']];
  function bar(){ const b=document.createElement('div'); b.id='demoBar';
-  b.innerHTML=`<b>시안 23</b><span class="db-l">보는 사람</span>${ROLES.map(([k,l])=>`<button type="button" data-demorole="${k}" aria-pressed="${st.role===k}">${l}</button>`).join('')}<span class="db-sep"></span><button type="button" data-demofirst>첫 방문 다시 보기</button><button type="button" data-demodiag title="참고 탭 스크롤 버그 확인용">높이 진단</button><button type="button" data-demoreset title="데모 데이터를 처음 상태로">데모 데이터 초기화</button>`;
+  b.innerHTML=`<span class="db-dot" aria-hidden="true">시안</span><div class="db-in"><span class="db-l">보는 사람</span>${ROLES.map(([k,l])=>`<button type="button" data-demorole="${k}" aria-pressed="${st.role===k}">${l}</button>`).join('')}<span class="db-sep"></span><button type="button" data-demofirst>첫 방문 다시 보기</button><button type="button" data-demodiag title="참고 탭 스크롤 버그 확인용">높이 진단</button><button type="button" data-demoreset title="데모 데이터를 처음 상태로">데모 데이터 초기화</button></div>`;
   setTimeout(()=>b.querySelectorAll('[data-cmp]').forEach(c=>{ c.checked=document.body.classList.contains(c.dataset.cmp); c.onchange=()=>window.setCompare&&setCompare(c.dataset.cmp,c.checked); }),500);
   document.body.appendChild(b);
   b.addEventListener('click',e=>{ const r=e.target.closest('[data-demorole]'); if(r){ setRole(r.dataset.demorole); return; }
@@ -141,8 +141,11 @@ try{ if(!localStorage.getItem('run2x.mass.v5')){ const T=M1SEED(); localStorage.
          return ['사용법 화면: x '+Math.round(r.left)+' 폭 '+Math.round(r.width), '복제 화면 폭: '+(pg?pg.style.width:'-'), '실제 제목 x: '+(rv?Math.round(rv.getBoundingClientRect().left*10)/10:'-')+' / 복제 제목 x: '+(cv?Math.round(cv.getBoundingClientRect().left*10)/10:'-')]; })()].join('\n');
      let o=document.getElementById('demoDiag'); if(!o){ o=document.createElement('pre'); o.id='demoDiag'; o.style.cssText='position:fixed;right:12px;bottom:60px;z-index:9960;background:#1d2430;color:#e9edf3;font:12px/1.5 monospace;padding:10px 12px;border-radius:8px;white-space:pre;max-width:90vw;user-select:text'; o.onclick=()=>o.remove(); document.body.appendChild(o); } o.textContent=t+'\n(누르면 닫힘)'; return; }
    if(e.target.closest('[data-demoreset]')){ st.db=null; DB=null; persist(); location.reload(); } }); }
- const css=document.createElement('style'); css.textContent=`#demoBar{position:fixed;z-index:9950!important;left:max(12px,env(safe-area-inset-left,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:9000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:calc(100vw - 24px);padding:8px 10px;border-radius:10px;background:#1d2430;color:#e9edf3;font:12.5px/1.3 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.28)}
- #demoBar b{color:#ffb454;margin-right:4px}#demoBar label{display:inline-flex;align-items:center;gap:4px;cursor:pointer}#demoBar .db-l{opacity:.7}#demoBar .db-sep{width:1px;height:18px;background:#4a5568;margin:0 2px}
+ const css=document.createElement('style'); css.textContent=`#demoBar{position:fixed;z-index:9950;left:max(12px,env(safe-area-inset-left,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;height:42px;max-width:42px;overflow:hidden;border-radius:21px;background:#1d2430;color:#e9edf3;font:12.5px/1.3 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.28);transition:max-width .35s ease}
+ #demoBar:hover{max-width:calc(100vw - 24px)}
+ #demoBar .db-dot{flex:0 0 42px;height:42px;display:grid;place-items:center;border-radius:50%;color:#ffb454;font-weight:700;font-size:12px;cursor:default}
+ #demoBar .db-in{display:flex;align-items:center;gap:6px;white-space:nowrap;padding-right:12px;opacity:0;transition:opacity .2s ease}#demoBar:hover .db-in{opacity:1}
+ #demoBar label{display:inline-flex;align-items:center;gap:4px;cursor:pointer}#demoBar .db-l{opacity:.7}#demoBar .db-sep{flex:0 0 1px;height:18px;background:#4a5568;margin:0 2px}
  #demoBar button{font:inherit;color:inherit;background:#2c3646;border:1px solid #3f4b5e;border-radius:6px;padding:4px 9px;cursor:pointer}
  #demoBar button:hover{background:#384457}#demoBar button[aria-pressed=true]{background:#ffb454;color:#1d2430;border-color:#ffb454;font-weight:600}
  @media print{#demoBar{display:none}}`;
