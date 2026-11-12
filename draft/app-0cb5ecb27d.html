@@ -3345,7 +3345,7 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 /* 냉각 등 배치 행: 같은 행 카드 높이 · 모서리 맞춤 (2026-11-11) */
 .t2-cg .t2-lay{align-items:stretch}.t2-cg .t2-lay>div{display:flex;flex-direction:column}.t2-cg .t2-lay>div>*{flex:1 1 auto;box-sizing:border-box}
 /* [도구 연결]로 받을 수 있는 칸: 파란 테두리 (빈 필수면 안쪽만 빨강, 테두리는 파랑) */
-.wb-ir.wb-lnk input:not(:disabled),.t2-tw.wb-lnk{border-color:#2f6fd0!important}
+.wb-ir.wb-lnk input:not(:disabled),.t2-tw.wb-lnk{border-color:#2f6fd0!important;background:#eef4ff!important}   /* 다른 도구 · 대시보드에서 받을 수 있는 칸: 파란 테두리 + 옅은 파란 배경 (2026-11-12) */
 #wb.wb-needon .wb-ir.need.wb-lnk input{border-color:#2f6fd0!important;box-shadow:0 0 0 1px #2f6fd0 inset!important;background:#fff4f2!important}
 
 /* 계산하지 않을 때(빈 필수 칸 등) 자리 표시는 멈춘 빈 상자, 계산 중일 때만 움직임 (2026-11-11) */
@@ -3365,6 +3365,22 @@ button.t2-tgb{font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 #wb.wb-needon .t4-cbox.need .t4-crq{box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7;border-color:transparent}
 .t4-ots{width:200px;accent-color:var(--accent,#6A4294)}.t4-bd{padding:2px 9px;border-radius:999px;background:var(--soft,#f3f5f8)}.t4-bd b{margin-left:4px}
 .t4-oi input:disabled{background:var(--soft,#f3f5f8);color:var(--mute,#6b7280);cursor:not-allowed}.t4-ots:disabled{opacity:.45;cursor:not-allowed}
+/* 85차: 다른 도구 표도 2P 칸 표 (t2-tw) */
+.t4-gw,.t9-gw{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.t4-cbox .t2-mfold,.t9-crqb .t2-mfold{margin:0}
+.t4-gw,.t9-gw{height:auto}
+#wb.wb-needon .t4-cbox.need .t4-gw,#wb .t9-crqb.need .t9-gw{box-shadow:0 0 0 1.5px #d33a2c;background:#fff8f7;border-color:transparent}
+/* 86차: [도구 연결] 거르기 · 대시보드 묶음 줄 */
+.wbl-filt{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:4px 0 8px;font-size:12.5px}.wbl-filt select{font:inherit;padding:3px 6px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel)}
+.wbl-filt label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.wbl-t tr.wbl-grp td{padding:14px 6px 4px;font-size:12px;font-weight:700;color:var(--ink);background:transparent;border-bottom:1px solid var(--line-2)}
+.wbl-t tbody tr.wbl-grp:first-child td{padding-top:4px}
+/* 87차: [도구 연결] 열 머리 거르기 (엑셀처럼) */
+.wbl-t th{position:relative}.wbl-th{display:inline-flex;align-items:center;gap:4px}
+.wbl-fb{border:1px solid var(--line-2);background:var(--panel);border-radius:4px;font-size:10px;line-height:1;padding:2px 4px;cursor:pointer;color:var(--muted)}
+.wbl-fb:hover{color:var(--ink)}.wbl-fb.on{background:#2f6fd0;border-color:#2f6fd0;color:#fff}
+.wbl-fm{position:absolute;top:100%;left:0;z-index:30;min-width:180px;max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:2px;padding:6px 8px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 8px 24px rgba(20,24,40,.16);font-weight:400;font-size:12.5px;white-space:nowrap}
+.wbl-fm label{display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer}.wbl-fm label.all{border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:2px}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -10501,7 +10517,7 @@ function wbShellHTML(){ const T = wbT();
         <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
         <button type="button" class="btn small" data-wbimp>가져오기 .json</button><i class="wb-sep" aria-hidden="true"></i>
-        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구에서 값 · 표를 가져오거나 보냄 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
+        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구 · 대시보드에서 값 · 표를 가져옴 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button><i class="wb-sep" aria-hidden="true"></i>` : ''}
         ${T.share==='hp' ? `<details class="wb-hpdd"><summary class="btn small" title="도구 5 · 6 · 7 · 8 이 같은 하드포인트 한 벌을 씁니다 (이 브라우저 안). 어느 도구에서 고쳐도 다른 도구가 열 때 그 값을 씁니다.">하드포인트 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbhp="xlsx">내보내기 .xlsx</button><button type="button" class="btn small" data-wbhp="json">내보내기 .json</button><button type="button" class="btn small" data-wbhp="imp">가져오기 (.xlsx · .csv · .json)</button></span></details><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
@@ -10832,18 +10848,48 @@ async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
 /* 대시보드에서 가져오기 (예전 [대시보드 값으로 채우기], 2026-11-11): 대시보드 키가 있는 입력마다 한 줄 */
 function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
   return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; return ''; }}; }); }
-function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.links() : null) || {}; L.dash = wbDashRows(); WB.lk = L;
-  const sec = (dir, title, btn) => { const G = L[dir] || []; if(!G.length) return '';
-    return `<section class="wbl-sec"><h4>${title}</h4><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th><th>무엇을</th><th>${dir==='send' ? '받는 도구의 어디에 (덮어씀)' : '이 도구의 어디에 (덮어씀)'}</th><th>지금 그 자리</th><th>${dir==='send' ? '보낼 것' : '가져올 것'}</th></tr></thead>
-      <tbody>${G.map((r, i) => `<tr${r.ok ? '' : ' class="off"'}><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td><span class="wbl-tool">${wbEsc(r.tool)}</span> ${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`).join('')}</tbody></table>
+/* [도구 연결]: 가져오기만 (다른 도구로 보내기는 없음 — 한 도구가 다른 도구 값을 멋대로 바꾸는 일, 2026-11-12).
+   거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에 · 지금 그 자리 (값 있음 / 비어 있음) · 가져올 것 (값 있음 / 없음). 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
+   대시보드는 묶음끼리 모으고 묶음마다 줄 띄움 */
+const wbLinkCat = r => r.cat || String(r.to || '').replace(/<[^>]+>/g, '').replace(/^(입력|편집) › /, '').split(' › ')[0].replace(/ \(.*$/, '');
+const wbLinkEmpty = v => { const t = String(v == null ? '' : v).replace(/<[^>]+>/g, '').trim(); return !t || t==='—' || t==='비어 있음' || /^—( ·|$)/.test(t) && !/[0-9]/.test(t); };
+const WBLCOL = {tool:'wblt', cat:'wblc', ne:'wblne', ve:'wblve'};
+function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.links() : null) || {}; L.dash = wbDashRows(); delete L.send; WB.lk = L; WB.lkf = {get:{}, dash:{}};
+  const fb = (dir, col, nm) => `<span class="wbl-th">${nm}<button type="button" class="wbl-fb" data-wblfb="${dir}:${col}" aria-label="${nm} 거르기" title="거르기">▾</button></span>`;
+  const sec = (dir, title, btn) => { const G = L[dir] || []; if(!G.length) return ''; let last = null;
+    const first = {}; G.forEach((r, i) => { const c = wbLinkCat(r); if(!(c in first)) first[c] = i; });
+    const ord = G.map((r, i) => i).sort((x, y) => dir==='dash' ? first[wbLinkCat(G[x])] - first[wbLinkCat(G[y])] || x - y : x - y);   /* 대시보드는 묶음끼리 모음 */
+    const rows = ord.map(i => { const r = G[i], c = wbLinkCat(r), gap = dir==='dash' && c!==last ? `<tr class="wbl-grp"><td colspan="5">${wbEsc(c)}</td></tr>` : ''; last = c;
+      return gap + `<tr${r.ok ? '' : ' class="off"'} data-wblr data-wblt="${wbEsc(r.tool)}" data-wblc="${wbEsc(c)}" data-wblne="${wbLinkEmpty(r.now) ? '비어 있음' : '값 있음'}" data-wblve="${r.val ? '값 있음' : '없음'}"><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td>${dir==='get' ? `<span class="wbl-tool">${wbEsc(r.tool)}</span> ` : ''}${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`; }).join('');
+    return `<section class="wbl-sec" data-wbls="${dir}"><h4>${title}</h4><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th>
+      <th>${dir==='get' ? fb(dir, 'tool', '무엇을') : '무엇을'}</th><th>${fb(dir, 'cat', '이 도구의 어디에 (덮어씀)')}</th><th>${fb(dir, 'ne', '지금 그 자리')}</th><th>${fb(dir, 've', '가져올 것')}</th></tr></thead>
+      <tbody>${rows}</tbody></table>
       <div class="wbl-act"><button type="button" class="btn small pri" data-wblgo="${dir}"${G.some(r => r.ok) ? '' : ' disabled'}>${btn}</button></div></section>`; };
-  wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('dash', '대시보드에서 가져오기', '체크한 것 가져오기')}${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('send', '다른 도구로 보내기', '체크한 것 보내기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
-    <div class="dvi-foot"><span class="muted">복사입니다. 가져오거나 보낸 뒤 한쪽을 고쳐도 다른 쪽은 그대로입니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbl-box'); }
+  wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('dash', '대시보드에서 가져오기', '체크한 것 가져오기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
+    <div class="dvi-foot"><span class="muted">복사입니다. 가져온 뒤 한쪽을 고쳐도 다른 쪽은 그대로입니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbl-box'); }
+/* 거르기 적용: WB.lkf[dir][열] = 뺀 값들. 묶음 머리 줄도 그 묶음 줄이 다 숨으면 숨김 */
+function wbLinkFilt(sec){ const F = (WB.lkf || {})[sec.dataset.wbls] || {};
+  sec.querySelectorAll('tr[data-wblr]').forEach(tr => { tr.hidden = Object.entries(F).some(([c, X]) => X.size && X.has(tr.dataset[WBLCOL[c]])); });
+  sec.querySelectorAll('tr.wbl-grp').forEach(g => { let n = g.nextElementSibling, any = false; while(n && !n.classList.contains('wbl-grp')){ if(!n.hidden) any = true; n = n.nextElementSibling; } g.hidden = !any; });
+  sec.querySelectorAll('[data-wblfb]').forEach(b => { const c = b.dataset.wblfb.split(':')[1]; b.classList.toggle('on', !!(F[c] && F[c].size)); }); }
+/* 열 머리 ▾ 누르면 값 목록 (체크 = 보임). (모두) 로 한 번에 */
+function wbLinkMenu(btn){ const old = document.querySelector('.wbl-fm'); const same = old && old.dataset.for===btn.dataset.wblfb; if(old) old.remove(); if(same) return;
+  const [dir, col] = btn.dataset.wblfb.split(':'), sec = btn.closest('.wbl-sec'), X = ((WB.lkf[dir] = WB.lkf[dir] || {})[col] = WB.lkf[dir][col] || new Set());
+  const vals = [...new Set([...sec.querySelectorAll('tr[data-wblr]')].map(tr => tr.dataset[WBLCOL[col]]))];
+  const m = document.createElement('div'); m.className = 'wbl-fm'; m.dataset.for = btn.dataset.wblfb;
+  m.innerHTML = `<label class="all"><input type="checkbox" data-wblfa${X.size ? '' : ' checked'}> (모두)</label>${vals.map(v => `<label><input type="checkbox" data-wblfv="${wbEsc(v)}"${X.has(v) ? '' : ' checked'}> ${wbEsc(v)}</label>`).join('')}`;
+  btn.closest('th').appendChild(m); }
+document.addEventListener('click', e => { if(!e.target.closest) return; const b = e.target.closest('[data-wblfb]'); if(b){ e.preventDefault(); wbLinkMenu(b); return; }
+  const m = document.querySelector('.wbl-fm'); if(m && !e.target.closest('.wbl-fm')) m.remove(); });
+document.addEventListener('change', e => { const m = e.target.closest && e.target.closest('.wbl-fm'); if(!m) return; const [dir, col] = m.dataset.for.split(':'), X = WB.lkf[dir][col];
+  if(e.target.matches('[data-wblfa]')){ m.querySelectorAll('[data-wblfv]').forEach(c => { c.checked = e.target.checked; c.checked ? X.delete(c.dataset.wblfv) : X.add(c.dataset.wblfv); }); }
+  else { const v = e.target.dataset.wblfv; e.target.checked ? X.delete(v) : X.add(v); m.querySelector('[data-wblfa]').checked = !X.size; }
+  wbLinkFilt(m.closest('.wbl-sec')); });
 function wbLinkGo(dir){ const m = $('#wbm'), G = (WB.lk || {})[dir] || []; if(!m) return;
-  const sel = [...m.querySelectorAll(`[data-wblk^="${dir}:"]:checked`)].map(c => G[+c.dataset.wblk.split(':')[1]]).filter(r => r && r.ok);
+  const sel = [...m.querySelectorAll(`[data-wblk^="${dir}:"]:checked`)].filter(c => !c.closest('tr').hidden).map(c => G[+c.dataset.wblk.split(':')[1]]).filter(r => r && r.ok);
   if(!sel.length){ toast('체크한 항목이 없습니다.'); return; }
   const msg = sel.map(r => { try{ return r.run(); }catch(e){ return `${r.n}: 실패`; } }).filter(Boolean);
-  wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast(dir==='dash' ? `대시보드 값 ${sel.length}개를 가져왔습니다.` : (dir==='get' ? '가져왔습니다 — ' : '보냈습니다 — ') + msg.join(' · ')); }
+  wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast(dir==='dash' ? `대시보드 값 ${sel.length}개를 가져왔습니다.` : '가져왔습니다 — ' + msg.join(' · ')); }
 /* 출처 표시: 모드별 {도구: {키: '도구 X'}} */
 const WBSRC_KEY = 'run2x.wb.src';
 const wbSrcAll = () => { try{ return JSON.parse(localStorage.getItem(wbMK(WBSRC_KEY)) || '{}') || {}; }catch(e){ return {}; } };
@@ -10951,7 +10997,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wbput]')){ if(!wbExBlock()) wbPutOpen(); return; }
   if(t.closest('[data-wblink]')){ if(!wbExBlock()) wbLinkOpen(); return; }
   { const lg = t.closest('[data-wblgo]'); if(lg){ wbLinkGo(lg.dataset.wblgo); return; } }
-  { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { c.checked = la.checked; }); } }
+  { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { if(!c.closest('tr').hidden) c.checked = la.checked; }); } }
   if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }
@@ -12297,11 +12343,7 @@ document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest ||
 /* 내 코스 주행 성격: 기록 주행 (k_e = 1) / 내구 주행 (현실 운전자면 k_e 적용) */
 document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2fend]'); if(!b) return;
   T2.free.end = +b.dataset.t2fend === 1 ? 1 : 0; t2Save(); wbPaint(['ext']); wbCalcSoon(); });
-document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2to9]'); if(!b || b.disabled) return; if(b.dataset.t2to9==='send' && wbExBlock()) return;
-  if(b.dataset.t2to9==='send'){ const o = WB.R && WB.R.out; if(!o || !isFinite(o.c_qm)) return; let s = {}; try{ s = JSON.parse(localStorage.getItem(wbStoreKey('9')) || '{}') || {}; }catch(err){ s = {}; }
-    Object.assign(s, {L_m:+o.c_qm.toFixed(1), L_i:+o.c_qi.toFixed(1), L_b:+o.c_qb.toFixed(1), v:+o.c_vavg.toFixed(2), t_run:Math.round(o.c_trun), t_amb:WB.I.t_amb});
-    try{ localStorage.setItem(wbStoreKey('9'), JSON.stringify(s)); }catch(err){} }
-  if(WB_TOOLS['9']) wbOpen('9'); });
+document.addEventListener('click', e => { if(WB.id!=='2' || !e.target.closest) return; const b = e.target.closest('[data-t2to9]'); if(!b || b.disabled) return; if(WB_TOOLS['9']) wbOpen('9'); });
 function t2EditBody(){ const et = T2.etab, grp = t2Grp(et);
   if(grp==='model') return t2ModelPage();
   if(grp==='cool') return t2CoolLite();
@@ -12393,18 +12435,24 @@ function t2CellOpen(td){ if(td.querySelector('input,select')) return; const [i, 
   else { f = document.createElement('input'); f.type = k==='note' || td.dataset.t2g ? 'text' : 'number'; f.step = 'any'; f.value = td.dataset.t2v!=null ? td.dataset.t2v : k==='note' || td.dataset.t2g ? now : String(now).replace(/,/g, ''); }
   f.className = 't2-ci'; td.textContent = ''; td.appendChild(f); f.focus(); if(f.select) f.select(); let done = false;
   const was = td.dataset.t2v!=null ? td.dataset.t2v : now;
-  const commit = ok => { if(done) return; done = true; if(ok && f.value!==was) (td.dataset.t2g ? t2GridEdit : t2Edit)(+i, td.dataset.t2g ? +k : k, f.value); else t2Repaint(); };
+  const gk = td.dataset.t2g && td.closest('[data-t2gk]') ? td.closest('[data-t2gk]').dataset.t2gk : T2.etab;
+  const commit = ok => { if(done) return; done = true; if(ok && f.value!==was){ if(td.dataset.t2g) t2GridEdit(+i, +k, f.value, gk); else t2Edit(+i, k, f.value); } else if(WBGRID[gk]) WBGRID[gk].repaint(); else t2Repaint(); };
   f.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); commit(true); } else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); commit(false); } });
   f.addEventListener('blur', () => commit(true)); if(f.tagName==='SELECT') f.addEventListener('change', () => commit(true)); }
 
 /* ============================================================ 맵 편집: 모터 토크 곡선 · 효율 맵 · 타이어 하중 감도 */
 const t2Grid = txt => t2Lines(txt).filter(l => l.cells.length).map(l => l.cells);
 const t2GridText = g => g.map(r => r.join(', ')).join('\n');
-const t2MtText = k => k==='mt' ? T2.mtext : T2[k];
+/* 다른 도구도 2P 칸 표를 그대로 씀 (2026-11-12): WBGRID[k] = {get() 글, set(글), repaint(), head 빈 표 머리 행, map 맵 (첫 행 · 첫 열 머리), rl 행 이름, cl 열 이름, cu 열 단위, parse(글) → {map}, bad 못 읽을 때 글}.
+   k 는 'rq:회로:블럭' · 't4:o' 처럼 ':' 가 든 이름 (2P 표 이름과 겹치지 않음) */
+const WBGRID = {};
+/* 방열 표 요약 글: t2GridParse 는 SOC % · 온도 °C 로 적으므로 코어 풍속 m/s · 냉각수 유량 L/min 으로 바꿈 */
+const t2RadMsg = txt => { const m = t2GridParse(txt, 'kW').msg; return m ? m.replace(/SOC ([^,]*?) %/, '코어 풍속 $1 m/s').replace(/(셀 )?온도 ([^,]*?) °C/, '냉각수 유량 $2 L/min') : '비어 있음'; };
+const t2MtText = k => WBGRID[k] ? WBGRID[k].get() : k==='mt' ? T2.mtext : T2[k];
 /* 표를 처음 채우면 그 표를 쓰도록 [표] 로 (기본은 상수, 2026-11-11) */
 const t2UseAuto = (k, had) => { if(k!=='mt' && !had && t2HasMap(k)) T2.use[k] = 'tab'; };
-function t2MtSet(k, txt){ const had = t2HasMap(k); wbSrcDel('2', 't2:' + k); if(k==='mt') T2.mtext = txt; else T2[k] = txt; t2UseAuto(k, had); t2Repaint(); t2Soon(); wbPaint(['in']); }
-function t2GridEdit(r, c, v){ const k = T2.etab, g = t2Grid(t2MtText(k)); if(!g[r]) return; g[r][c] = String(v).trim(); t2MtSet(k, t2GridText(g)); }
+function t2MtSet(k, txt){ if(WBGRID[k]){ WBGRID[k].set(txt); return; } const had = t2HasMap(k); wbSrcDel('2', 't2:' + k); if(k==='mt') T2.mtext = txt; else T2[k] = txt; t2UseAuto(k, had); t2Repaint(); t2Soon(); wbPaint(['in']); }
+function t2GridEdit(r, c, v, k = T2.etab){ const g = t2Grid(t2MtText(k)); if(!g[r]) return; g[r][c] = String(v).trim(); t2MtSet(k, t2GridText(g)); }
 const T2ERULE = {
   mt:   '1열 회전수 rpm · 2열 피크 토크 · 3열 연속 토크 N·m. 위 [모터 표 기준 전압]에서 잰 곡선을 축전지 단자 전압과 유도 전압 비로 늘이고 줄입니다. 한 열만 있으면 다른 열은 위 [연속 ÷ 피크 토크 비율]로 채웁니다 (100 % = 디레이팅 없음). 디레이팅은 모델 단계에서 모터 열을 켤 때만: 시작 온도에서 피크, 끝 온도부터 연속 토크, 그 사이는 회전수마다 같은 비율로 보간.',
   eM:   '첫 행 = 회전수 rpm, 첫 열 = 토크 N·m, 칸 = 효율 %. 숫자 하나면 상수. 모터 손실(열)은 이 효율로 계산합니다.',
@@ -12435,7 +12483,7 @@ function t2MapOff(k){ const I = WB.I, th = t2Th();
   return ''; }
 function t2MapEdit(k){ const txt = t2MtText(k), has = t2HasMap(k), empty = !t2UseMap(k), off = k!=='mt' ? t2MapOff(k) : '';
   if(off) return `<div class="t2-mth"><b>${T2MTITLE[k].split(' — ')[0]}</b><span class="muted"> — ${T2MTITLE[k].split(' — ')[1]}</span></div><div class="t2-mfold off"><b>표 꺼짐</b><span>${off}</span></div>`;
-  const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : T2RAD.includes(k) ? (t2GridParse(txt, 'kW').msg || '비어 있음').replace('셀 온도', '냉각수 유량').replace('SOC', '코어 풍속') : k==='bO' ? (t2GridParse(txt, 'V').msg || '비어 있음') : k==='bR' ? (t2GridParse(txt, 'mΩ').msg || '비어 있음') : k==='bC' ? (t2PairParse(txt).msg || '비어 있음') : k==='dM' || k==='dI' ? (t2DerParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
+  const msg = k==='mt' ? t2MotorMsg(t2MotorParse(txt)) : k==='tire' ? (t2TireParse(txt).msg || '비어 있음') : T2RAD.includes(k) ? t2RadMsg(txt) : k==='bO' ? (t2GridParse(txt, 'V').msg || '비어 있음') : k==='bR' ? (t2GridParse(txt, 'mΩ').msg || '비어 있음') : k==='bC' ? (t2PairParse(txt).msg || '비어 있음') : k==='dM' || k==='dI' ? (t2DerParse(txt).msg || '비어 있음') : (t2EffParse(txt).msg || '비어 있음');
   const useSeg = k==='mt' ? '' : `<span class="t2-use"><span class="muted">계산에 쓸 값</span>${t2Seg('data-t2use', t2UseSel(k), [['tab', '아래 표'], ['const', '위 상수']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t2uk="${k}"`)}</span>`;
   /* 표가 비어 있으면 (위 상수를 씀) 아래 표 · 그림은 접어 둠 (2026-11-11). 모터 토크는 늘 표라 접지 않음 */
   /* [위 상수]를 고르면 아래 표 · 그림은 접음 (값이 있어도), [아래 표]를 고르면 펼침 (비어 있으면 새 파일에서 필수 칸) (2026-11-11) */
@@ -12456,22 +12504,23 @@ function t2MotorMsg(M){ const P = M.pts.length ? M.pts : M.ptsC, c = Math.max(1,
   if(!P.length) return '비어 있음';
   return `${P.length}점 · ${wbFmt(P[0][0], 0)} ~ ${wbFmt(P[P.length-1][0], 0)} rpm · ${M.pts.length ? `피크 ${wbFmt(mx(M.pts), 1)} N·m` : `피크 = 연속 ÷ ${wbFmt(c, 0)} %`} · ${M.ptsC.length ? `연속 ${wbFmt(mx(M.ptsC), 1)} N·m` : `연속 = 피크 × ${wbFmt(c, 0)} %`}`; }
 /* 칸 표: 행 지우기 ×(행 끝) · [+ 행](표 아래 한 행) · 맵은 열 지우기 ×(맨 아래 행) · [+ 열](표 오른쪽 한 열) */
-function t2GridTable(k, txt){ const g = t2Grid(txt), rd = T2RAD.includes(k), map = k==='eM' || k==='eI' || k==='eD' || k==='bO' || k==='bR' || rd, bm = k==='bO' || k==='bR';
-  const addRow = n => `<tr class="t2-addr"><td colspan="${n}"><button type="button" data-t2gadd="row">+ 행${rd ? ' (코어 풍속)' : bm ? ' (SOC)' : map ? ' (토크)' : ''}</button></td></tr>`;
-  if(!g.length) return `<table class="t2-tt t2-gtab" data-t2gk="${k}"><tbody><tr><td class="t2-empty muted">비어 있습니다. 엑셀 표를 복사해 이 표를 누르고 Ctrl+V, 또는 아래 [+ 행] · [입력하기]의 파일 가져오기.</td></tr>${addRow(1)}</tbody></table>`;
+function t2GridTable(k, txt){ const O = WBGRID[k], g = t2Grid(txt), rd = !O && T2RAD.includes(k), bm = !O && (k==='bO' || k==='bR'), map = O ? !!O.map : k==='eM' || k==='eI' || k==='eD' || k==='bO' || k==='bR' || rd;
+  const rl = O ? O.rl : rd ? '코어 풍속' : bm ? 'SOC' : map ? '토크' : '', cl = O ? O.cl : rd ? '유량' : bm ? '온도' : '회전수', cu = O ? O.cu : rd ? 'L/min' : bm ? '°C' : 'rpm';
+  const addRow = n => `<tr class="t2-addr"><td colspan="${n}"><button type="button" data-t2gadd="row">+ 행${rl ? ` (${rl})` : ''}</button></td></tr>`;
+  if(!g.length) return `<table class="t2-tt t2-gtab" data-t2gk="${k}"><tbody><tr><td class="t2-empty muted">비어 있습니다. 엑셀 표를 복사해 이 표를 누르고 Ctrl+V, 또는 아래 [+ 행]${O ? '' : ' · [입력하기]의 파일 가져오기'}.</td></tr>${addRow(1)}</tbody></table>`;
   const head = !isFinite(parseFloat(g[0][0])) || (map && g.length > 1), rows = head ? g.slice(1) : g, off = head ? 1 : 0, nc = g.reduce((a, r) => Math.max(a, r.length), 0);
   const cell = (r, c, v, th) => `<${th ? 'th' : 'td'} class="t2-e${c===0 && map && !th ? ' t2-rh' : ''}" data-t2e="${r},${c}" data-t2g="1" tabindex="0">${wbEsc(v ?? '')}</${th ? 'th' : 'td'}>`;
   const nr = (head ? 1 : 0) + rows.length + (map ? 1 : 0);
-  const addCol = map ? `<th class="t2-addc" rowspan="${nr}"><button type="button" data-t2gadd="col">+ 열<br><span>(${rd ? '유량' : bm ? '온도' : '회전수'})</span></button></th>` : '';
+  const addCol = map ? `<th class="t2-addc" rowspan="${nr}"><button type="button" data-t2gadd="col">+ 열<br><span>(${cl})</span></button></th>` : '';
   const x = (i, lab) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdel="${i}" aria-label="${lab} 지우기" title="${lab} 지우기">×</button></td>`;
   // 머리 행도 tbody 안에 둠: [+ 열] 칸의 rowspan 이 행 묶음(thead · tbody)을 넘지 못하므로
   return `<table class="t2-tt t2-gtab${map ? ' map' : ''}" data-t2gk="${k}"><tbody>${head ? `<tr class="t2-hrow">${Array.from({length:nc}, (_, c) => cell(0, c, g[0][c], true)).join('')}<th class="t2-xc"></th>${addCol}</tr>` : ''}
     ${rows.map((r, i) => `<tr data-t2row="${i + off}">${Array.from({length:nc}, (_, c) => cell(i + off, c, r[c])).join('')}${x(i + off, `${i + 1}번 행`)}${!head && i===0 ? addCol : ''}</tr>`).join('')}
-    ${map ? `<tr class="t2-delc"><td class="t2-xc"></td>${Array.from({length:nc - 1}, (_, c) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdelc="${c + 1}" aria-label="${c + 1}번 열 지우기" title="${c + 1}번 열 (${wbEsc(g[0][c + 1] ?? '')} ${rd ? 'L/min' : bm ? '°C' : 'rpm'}) 지우기">×</button></td>`).join('')}<td class="t2-xc"></td></tr>` : ''}
+    ${map ? `<tr class="t2-delc"><td class="t2-xc"></td>${Array.from({length:nc - 1}, (_, c) => `<td class="t2-xc"><button type="button" class="t2-x" data-t2gdelc="${c + 1}" aria-label="${c + 1}번 열 지우기" title="${c + 1}번 열 (${wbEsc(g[0][c + 1] ?? '')} ${cu}) 지우기">×</button></td>`).join('')}<td class="t2-xc"></td></tr>` : ''}
     ${addRow(nc + 1 + (map ? 1 : 0))}</tbody></table>`; }
 /* 빈 표에 [+ 행 · 열]: 머리 행부터 만듦 */
 const T2HEAD = {mt:['회전수 rpm', '피크 토크 N·m', '연속 토크 N·m'], tire:['하중 N', 'μ'], bO:['SOC % \\ 셀 온도 °C', '25'], bR:['SOC % \\ 셀 온도 °C', '25'], bC:['셀 온도 °C', '용량 Ah'], eM:['토크 N·m \\ 회전수 rpm', '0'], rqM:['코어 풍속 m/s \\ 유량 L/min', '8'], rqI:['코어 풍속 m/s \\ 유량 L/min', '8'], rqB:['코어 풍속 m/s \\ 유량 L/min', '8'], eI:['토크 N·m \\ 회전수 rpm', '0'], eD:['모터 토크 N·m \\ 모터 회전수 rpm', '0'], dM:['모터 온도 °C', '디레이팅 %'], dI:['인버터 온도 °C', '디레이팅 %']};
-function t2GridAdd(k, what){ const g = t2Grid(t2MtText(k)); if(!g.length) g.push(T2HEAD[k].slice());
+function t2GridAdd(k, what){ const g = t2Grid(t2MtText(k)); if(!g.length) g.push((WBGRID[k] ? WBGRID[k].head : T2HEAD[k]).slice());
   const nc = g.reduce((a, r) => Math.max(a, r.length), 0);
   if(what==='col'){ g.forEach(r => { while(r.length < nc) r.push(''); r.push(''); }); }
   else g.push(Array.from({length:nc}, () => ''));
@@ -12628,7 +12677,7 @@ function t2SlalomTight(rows){ const I = WB.I, b = I.w_car/2 + Math.max(0, I.rl_m
   return rows.map((r, i) => isFinite(r.sl) && (W[i][0] < 2*b - 1e-9 || W[i][1] < 2*b - 1e-9) ? i + 1 : 0).filter(Boolean); }
 /* 내 코스 표에 Ctrl+V: 엑셀에서 복사한 여러 칸(탭 · 줄바꿈)이면 표 전체를 바꿈. 첫 행에 열 이름이 있으면 그 이름으로, 없으면 양식 열 순서로 읽음 */
 /* 표에 Ctrl+V (모터 · 효율 · 타이어 · 셀 표): 엑셀 여러 칸이면 표 전체를 바꿈 (한 칸이면 그 칸 입력에 그대로). 붙여넣기 창은 없음 (48차 · 내 코스와 같게) */
-function t2ApplyText(k, v){ const had0 = t2HasMap(k);
+function t2ApplyText(k, v){ if(WBGRID[k]){ if(!WBGRID[k].parse(v).map){ toast(WBGRID[k].bad || '표를 읽지 못했습니다.'); return false; } WBGRID[k].set(v); return true; } const had0 = t2HasMap(k);
   if(k==='mt'){ if(!t2MotorParse(v).pts.length){ toast('회전수 · 토크 행을 읽지 못했습니다.'); return false; } T2.mtext = v; }
   else if(k==='tire'){ if(!t2TireParse(v).map){ toast('하중 · μ 행을 읽지 못했습니다.'); return false; } T2.tire = v; }
   else if(k==='bO' || k==='bR'){ if(!t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 셀 온도 °C, 첫 열 = SOC %.'); return false; } T2[k] = v; }
@@ -12638,7 +12687,7 @@ function t2ApplyText(k, v){ const had0 = t2HasMap(k);
   else if(k==='eM' || k==='eI' || k==='eD'){ if(!t2EffParse(v).map){ toast('효율을 읽지 못했습니다. 숫자 하나 또는 맵(첫 행 회전수, 첫 열 토크)이어야 합니다.'); return false; } T2[k] = v; }
   else return false;
   t2UseAuto(k, had0); wbSrcDel('2', 't2:' + k); t2Save(); t2Repaint(); t2Soon(); wbPaint(['in']); return true; }
-document.addEventListener('paste', e => { if(WB.id!=='2' || T2.tab!=='edit' || !e.target.closest) return; const tb = e.target.closest('[data-t2gk]'); if(!tb) return;
+document.addEventListener('paste', e => { if(WB.id!=='2' || T2.tab!=='edit' || !e.target.closest) return; const tb = e.target.closest('[data-t2gk]'); if(!tb || WBGRID[tb.dataset.t2gk]) return;
   const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return;   // 한 칸 붙이기는 그 칸 입력에 그대로
   e.preventDefault(); const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
   if(t2ApplyText(tb.dataset.t2gk, v)) toast(`붙인 내용으로 ${T2ET[tb.dataset.t2gk] || '표'}를 바꿨습니다 (표 전체).`); });
@@ -12767,7 +12816,7 @@ function t2PtToRow(i){ const c = T2.ecourse, rows = t2CourseRows(c), M = T2.mpE;
   let a = 0; for(let r = 0; r < rows.length; r++){ a += rows[r].l; if(s < a) return r; } return rows.length - 1; }
 function t2PickX(svg, e){ const hit = svg.querySelector('.t2-pick'); if(!hit) return NaN; const rc = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, px = (e.clientX - rc.left)/rc.width*vb.width;
   return +hit.dataset.wbx0 + (px - +hit.dataset.wbl)/(+hit.dataset.wbw)*(+hit.dataset.wbx1 - +hit.dataset.wbx0); }
-document.addEventListener('click', e => { const t = e.target; if(!t.closest || !t.closest('#wbext .t2-fbox')) return;
+document.addEventListener('click', e => { const t = e.target; if(!t.closest || !t.closest('#wbext .t2-fbox')) return; { const gt = t.closest('[data-t2gk]'); if(gt && WBGRID[gt.dataset.t2gk]) return; }   /* 다른 도구 표는 아래 공통 처리 */
   const rc = t.closest('#t2mc rect[data-ij]'); if(rc){ const [i, j] = rc.dataset.ij.split(',').map(Number); t2Hl($(`#t2tt [data-t2e="${i + 1},${j + 1}"]`)); return; }
   const sv = t.closest('#t2mc svg'); if(sv && sv.querySelector('.t2-pick')){ const x = t2PickX(sv, e), g = t2Grid(t2MtText(T2.etab)); let best = -1;
     g.forEach((r, i) => { const v = parseFloat(r[0]); if(isFinite(v) && (best < 0 || Math.abs(v - x) < Math.abs(parseFloat(g[best][0]) - x))) best = i; });
@@ -12992,6 +13041,18 @@ function t2VizMus(I){ const Z = Array.from({length:61}, (_, i) => i*50), mu = Z.
   return {x:{d:Z, n:'바퀴 하나 수직 하중', u:'N'}, ys:[{k:'mu', d:mu, c:WB_COL[0], n:'μ', u:'', dd:2}, {k:'fy', d:Fy, c:WB_COL[2], n:'낼 수 있는 횡력 μ·Fz', u:'N', dd:0}], act:'mu',
     note:`정지 때 바퀴 하나 평균 하중 약 ${wbFmt(I.m*9.81/4, 0)} N. μ·Fz 가 꺾여 내려가기 시작하면 하중을 더 실어도 그 바퀴 힘이 늘지 않습니다.`}; }
 
+/* 다른 도구의 칸 표 (WBGRID): 칸 누르기 · Enter 로 고침, 행 · 열 지우기 · 더하기, 표에 Ctrl+V 로 표 전체 바꿈 (2P 표와 같은 동작) */
+document.addEventListener('click', e => { const t = e.target; if(!t.closest) return; const tb = t.closest('[data-t2gk]'); if(!tb || !WBGRID[tb.dataset.t2gk]) return; const k = tb.dataset.t2gk;
+  const gd = t.closest('[data-t2gdel]'); if(gd){ const g = t2Grid(t2MtText(k)); g.splice(+gd.dataset.t2gdel, 1); t2MtSet(k, t2GridText(g)); return; }
+  const gc = t.closest('[data-t2gdelc]'); if(gc){ t2GridDelCol(k, +gc.dataset.t2gdelc); return; }
+  const ga = t.closest('[data-t2gadd]'); if(ga){ t2GridAdd(k, ga.dataset.t2gadd); return; }
+  const ce = t.closest('td[data-t2e], th[data-t2e]'); if(ce) t2CellOpen(ce); });
+document.addEventListener('keydown', e => { if(e.key!=='Enter' || !e.target.closest || e.target.matches('input,select')) return; const ce = e.target.closest('td[data-t2e], th[data-t2e]'), tb = ce && ce.closest('[data-t2gk]');
+  if(tb && WBGRID[tb.dataset.t2gk]){ e.preventDefault(); t2CellOpen(ce); } });
+document.addEventListener('paste', e => { if(!e.target.closest) return; const tb = e.target.closest('[data-t2gk]'); if(!tb || !WBGRID[tb.dataset.t2gk] || e.target.matches('input')) return;
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();
+  t2ApplyText(tb.dataset.t2gk, txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n')); });
+
 /* ============================================================ 이 탭 사용법 */
 function t2TourTab(tab, et, course){ if(!T2.tourUndo && typeof tgUndo==='function'){ const t0 = T2.tab, e0 = T2.etab, c0 = T2.course; T2.tourUndo = true;
     tgUndo(() => { T2.tourUndo = false; T2.tab = t0; T2.etab = e0; if(T2.course!==c0) t2SetCourse(c0); else wbPaint(['ext', 'mid']); }); }
@@ -13136,7 +13197,7 @@ WB_TOOLS['2'] = {
     {k:'tr_rss', n:'정상 요레이트 (해석해)', u:'°/s', d:3, hide:true}, {k:'tr_r', n:'요레이트 (3 s, 수치)', u:'°/s', d:3, hide:true}, {k:'tr_gain', n:'요레이트 이득 r/δ', u:'1/s', d:3, hide:true},
     {k:'tr_ay', n:'횡가속도 (3 s)', u:'g', d:3, hide:true}, {k:'tr_os', n:'요레이트 오버슈트', u:'%', d:1, hide:true}, {k:'tr_t90', n:'요레이트 응답 시간 (조향 50 % → 요레이트 90 %)', u:'s', d:3, hide:true},
     {k:'tr_wn', n:'고유진동수 (2 자유도)', u:'Hz', d:3, hide:true}, {k:'tr_zeta', n:'감쇠비 (2 자유도)', u:'', d:3, hide:true}, {k:'tr_beta', n:'차체 각도 β (3 s)', u:'°', d:3, hide:true},
-    {k:'tr_phi', n:'롤각 (3 s, 수치)', u:'°', d:3, hide:true}, {k:'tr_phis', n:'롤각 (정상, 해석해)', u:'°', d:3, hide:true}, {k:'tr_kus', n:'언더스티어 구배 (축 코너링 강성)', u:'°/g', d:3, hide:true}, {k:'tmax_o', dk:'tmax', n:'모터 최대 토크 (피크 토크 표 최댓값)', d:1, hide:true}, {k:'q_cool', dk:'q_cool', d:2, hide:true}, {k:'q_mot', dk:'q_mot', d:0, hide:true}, {k:'q_inv', dk:'q_inv', d:0, hide:true}, {k:'q_bat', dk:'q_bat', d:0, hide:true}, {k:'v_end_avg', dk:'v_end_avg', d:1, hide:true},
+    {k:'tr_phi', n:'롤각 (3 s, 수치)', u:'°', d:3, hide:true}, {k:'tr_phis', n:'롤각 (정상, 해석해)', u:'°', d:3, hide:true}, {k:'tr_kus', n:'언더스티어 구배 (축 코너링 강성)', u:'°/g', d:3, hide:true}, {k:'tmax_o', n:'모터 최대 토크 (피크 토크 표 최댓값)', u:'N·m', d:1, hide:true}   /* 설정값이라 대시보드로 안 보냄 (2026-11-12) */, {k:'q_cool', dk:'q_cool', d:2, hide:true}, {k:'q_mot', dk:'q_mot', d:0, hide:true}, {k:'q_inv', dk:'q_inv', d:0, hide:true}, {k:'q_bat', dk:'q_bat', d:0, hide:true}, {k:'v_end_avg', dk:'v_end_avg', d:1, hide:true},
     {k:'t_free1', n:'내 코스 1번째 랩', u:'s', d:2, hide:true}, {k:'t_free2', n:'내 코스 2번째 랩', u:'s', d:4, hide:true}, {k:'t_freeavg', n:'내 코스 평균 랩', u:'s', d:4, hide:true},
     {k:'n_free', n:'내 코스 랩 수', u:'랩', d:0, hide:true}, {k:'e_free', n:'내 코스 2번째 랩 단자 에너지', u:'kWh', d:5, hide:true},
     {k:'ax_0', n:'가속 출발 종가속도', u:'g', d:2, hide:true}, {k:'ax_max', n:'가속 최대 종가속도', u:'g', d:2, hide:true}, {k:'v_endtop', n:'내구 최고 차속', u:'km/h', d:1, hide:true}, {k:'skid_roll', n:'스키드패드 롤각 (모델 단계 1)', u:'°', d:3, hide:true}, {k:'c_tw', n:'냉각수 끝 온도', u:'°C', d:3, hide:true}, {k:'c_tb', n:'축전지 끝 온도', u:'°C', d:3, hide:true}, {k:'cla_req', n:'필요 C_L·A', u:'m²', d:2, hide:true},
@@ -13173,22 +13234,21 @@ WB_TOOLS['2'] = {
   links(){ const o = WB.R && WB.R.out, rd = id => { try{ return JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ return {}; } }, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
     const cs = cool => { const C = (cool && cool.circuits) || []; return C.some(c => (c.blocks || []).length) ? `수랭 회로 ${C.filter(c => c.kind==='water').length}개 · 공랭 덕트 ${C.filter(c => c.kind!=='water').length}개` : ''; };
     const c9 = typeof T9!=='undefined' ? cs(T9.cool) : '', C4 = typeof t4CellGet==='function' ? t4CellGet() || {} : {};
-    const tb = (k, src, unit, P) => ({tool:'도구 4', n:T2ET[k], to:`축전지 › ${T2ET[k]}`, now:t2HasMap(k) ? P(t2MtText(k)).msg || '있음' : '비어 있음', val:src ? P(src).msg || '있음' : '', ok:!!src, why:'도구 4 [셀 표]가 비어 있음',
+    const tb = (k, src, unit, P) => ({tool:'도구 4', n:T2ET[k], cat:'축전지', to:`축전지 › ${T2ET[k]}`, now:t2HasMap(k) ? P(t2MtText(k)).msg || '있음' : '비어 있음', val:src ? P(src).msg || '있음' : '', ok:!!src, why:'도구 4 [셀 표]가 비어 있음',
       run(){ const had = t2HasMap(k); T2[k] = src; t2UseAuto(k, had); t2Save(); wbSrcSet('2', ['t2:' + k], '도구 4'); return T2ET[k]; }});
     const s9 = rd('9'), U = k => ((WB_TOOLS['9'] && WB_TOOLS['9'].inputs.find(d => d.k===k)) || {}).u || '', ok2 = !!(o && isFinite(o.c_qm)), why2 = '랩 시뮬 탭에서 계산한 뒤 보낼 수 있음';
-    const put9 = (keys, vals, nm) => () => { const s = rd('9'); keys.forEach((k, i) => { s[k] = vals()[i]; }); try{ localStorage.setItem(wbStoreKey('9'), JSON.stringify(s)); }catch(e){} wbSrcSet('9', keys, '도구 2P'); return nm; };
     return {
-      get:[{tool:'도구 9', n:'냉각 회로 배치', to:'편집 › 냉각 › 냉각 회로 (수랭 방식이 [냉각 회로]일 때 씀)', now:cs(t2Cwc().cool) || '비어 있음', val:c9, ok:!!c9, why:'도구 9 에 배치가 없음',
-          run(){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); t2Save(); wbSrcSet('2', ['t2:cool'], '도구 9'); return '냉각 회로 배치'; }},
+      get:[{tool:'도구 9', n:'냉각 회로 배치 + 부품 수랭 / 공랭', cat:'냉각', to:'편집 › 냉각 › 냉각 회로 (수랭 방식 = [냉각 회로], 냉각수 온도 계산 켬)', now:cs(t2Cwc().cool) || '비어 있음',
+          val:c9 ? `${c9} · ${['m', 'i', 'b'].map((p, j) => `${['모터', '인버터', '축전지'][j]} ${t9IsWater(p) ? '수랭' : '공랭'}`).join(' · ')}` : '', ok:!!c9, why:'도구 9 에 배치가 없음',
+          run(){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); Object.assign(WB.I, {cw_mode:1, m_cool:t9IsWater('m'), i_cool:t9IsWater('i'), b_cool:t9IsWater('b'), cw_on:1}); t2Save(); wbSrcSet('2', ['t2:cool'], '도구 9'); return '냉각 회로 배치'; }},
+        {tool:'도구 9', n:'외기 온도', cat:'환경', to:'입력 › 외기 온도', now:`${f(WB.I.t_amb, 0)} °C`, val:isFinite(s9.t_amb) ? `${f(s9.t_amb, 0)} °C` : '', ok:isFinite(s9.t_amb), why:'도구 9 의 외기 온도가 비어 있음',
+          run(){ WB.I.t_amb = s9.t_amb; wbSrcSet('2', ['t_amb'], '도구 9'); return '외기 온도'; }},
+        (() => { const R6 = (() => { try{ return JSON.parse(localStorage.getItem(wbMK('run2x.t6.rows')) || 'null'); }catch(e){ return null; } })(), n6 = R6 && Array.isArray(R6.rows) ? R6.rows.length : 0, S = Array.isArray(T2.stab) ? T2.stab : [];
+          return {tool:'도구 6', n:'조향각 표 (핸들 각 → 안쪽 · 바깥 바퀴 각)', cat:'조향', to:'편집 › 서스 · 조향 › 조향 기하 (최대 조향각 · 조향비 칸은 이 표 값으로 잠김)', now:S.length ? `조향각 표 ${S.length}점` : '없음 (100 % 애커먼 · 일정 조향비)',
+            val:n6 >= 2 ? `핸들 각 0 ~ ${wbFmt(R6.hw, 0)}° · ${n6}점 (도구 6 마지막 계산)` : '', ok:n6 >= 2, why:'도구 6 을 한 번 계산하면 가져올 수 있음',
+            run(){ T2.stab = R6.rows.map(r => r.slice()); t2Save(); wbSrcSet('2', ['t2:stab'], '도구 6'); return `조향각 표 ${n6}점`; }}; })(),
         tb('bO', C4.o, 'V', t => t2GridParse(t, 'V')), tb('bR', C4.r, 'mΩ', t => t2GridParse(t, 'mΩ')), tb('bC', C4.c, '', t2PairParse)],
-      send:[{tool:'도구 9', n:'주행 평균 발열 (모터 손실 · 인버터 손실 · 축전지 발열)', to:'도구 9 › 주행 평균 발열 3칸', now:`${f(s9.L_m, 0)} · ${f(s9.L_i, 0)} · ${f(s9.L_b, 0)} W`, val:ok2 ? `${f(o.c_qm, 0)} · ${f(o.c_qi, 0)} · ${f(o.c_qb, 0)} W` : '', ok:ok2, why:why2,
-          run:put9(['L_m', 'L_i', 'L_b'], () => [+o.c_qm.toFixed(1), +o.c_qi.toFixed(1), +o.c_qb.toFixed(1)], '주행 평균 발열')},
-        {tool:'도구 9', n:'평균 차속', to:'도구 9 › 평균 차속', now:`${f(s9.v, 1)} ${U('v')}`, val:ok2 ? `${f(o.c_vavg, 1)} km/h` : '', ok:ok2, why:why2, run:put9(['v'], () => [+o.c_vavg.toFixed(2)], '평균 차속')},
-        {tool:'도구 9', n:'주행 시간', to:'도구 9 › 주행 시간', now:`${f(s9.t_run, 0)} ${U('t_run')}`, val:ok2 ? `${f(o.c_trun, 0)} s` : '', ok:ok2, why:why2, run:put9(['t_run'], () => [Math.round(o.c_trun)], '주행 시간')},
-        {tool:'도구 9', n:'외기 온도', to:'도구 9 › 외기 온도', now:`${f(s9.t_amb, 0)} °C`, val:`${f(WB.I.t_amb, 0)} °C`, ok:isFinite(WB.I.t_amb), why:'이 도구의 외기 온도가 비어 있음', run:put9(['t_amb'], () => [WB.I.t_amb], '외기 온도')}],
-      info:['평균 발열 · 차속은 지금 랩 시뮬 결과 (고른 코스 · 랩) 의 평균입니다.',
-        '조향각 표는 도구 6 의 [도구 연결]에서 보냅니다 (이 도구에서 가져오려면 도구 6 계산 결과가 필요해서).',
-        '도구 1 · 4 · T 등의 설계값은 이 창 맨 위 [대시보드에서 가져오기]로 받습니다.'] }; },
+      info:[] }; },
   /* 뒤로가기 · 앞으로가기: 랩 시뮬 / 편집 탭 · 편집 묶음 · 코스 편집 쪽 */
   navGet: () => ({t:T2.tab, e:T2.etab, c:T2.ecourse}),
   navSet(s){ const tc = T2.tab!==s.t; T2.etab = s.e || T2.etab; T2.ecourse = s.c || T2.ecourse; T2.tab = s.t || T2.tab; T2.menu = ''; t2Save(); wbPaint(['ext']);
@@ -13202,6 +13262,8 @@ WB_TOOLS['2'] = {
   extSet(d){ if(!d || typeof d!=='object') return; t2Load(d); t2Save(); wbPaint(['ext', 'mid', 'in']); },
   /* 결과가 오면: 고른 모드를 꺼내 씀 (두 모드 모두 들어 있음) → 위 줄 · 지도 · 구동력 선도 */
   onResult(R){ if(R && R.modes) Object.assign(R, R.modes[T2.grMode]);
+    /* 시뮬 결과 중 도구 9 가 가져가는 값 (도구 9 [도구 연결]이 읽음, 2026-11-12) */
+    { const o = R && R.out; if(o && isFinite(o.c_qm)) try{ localStorage.setItem(wbMK('run2x.t2.res'), JSON.stringify({c_qm:o.c_qm, c_qi:o.c_qi, c_qb:o.c_qb, c_vavg:o.c_vavg, c_trun:o.c_trun})); }catch(e){} }
     if(T2.tab==='sim'){ const hr = $('#wbext .t2-hr'); if(hr) wbPaint(['ext']); t2MapRepaint(); t2PfSoon(); }
     else if(T2.etab==='mt'){ const c = $('#t2mc'); if(c) c.innerHTML = t2EditPlot('mt'); const f = $('#wbext .t2-fcap'); if(f) f.innerHTML = t2EditCap('mt'); } },
   onCursor(){ t2MapRepaint(); t2PfSoon(); },
@@ -15515,8 +15577,8 @@ WB_TOOLS['G'] = {
   inEff(k){ if(k==='tg_v'){ const o = WB.R && WB.R.out; return o && isFinite(o.tg_v_o) ? o.tg_v_o : null; } return null; },
   inLock(k){ if(k==='tg_v' && WB.I.tgv_m !== 1) return '기본 차 값'; if(k==='xcop') return WB.I.cop_m !== 0 ? '무게 배분과 같게' : ''; return ''; },
   inOpt(k){ const seg = (attr, cur, items) => `<span class="t2-inopt"><span class="dc-seg" role="group">${items.map(([v, t]) => `<button type="button" ${attr}="${v}" aria-pressed="${String(cur)===v}">${t}</button>`).join('')}</span></span>`;
-    if(k==='tg_v') return seg('data-gtg', Math.round(WB.I.tg || 0), GTGN) + seg('data-gtgm', WB.I.tgv_m===1 ? 1 : 0, [['0', '기본 차 값'], ['1', '직접 입력']]);   /* 목표값: 숫자 0 을 '기본 차 값' 스위치로 쓰지 않음 (2026-11-11) */
-    if(k==='xcop') return seg('data-gcop', WB.I.cop_m !== 0 ? 1 : 0, [['1', '무게 배분'], ['0', '직접']]);
+    if(k==='tg_v') return seg('data-gtg', Math.round(WB.I.tg || 0), GTGN) + seg('data-gtgm', WB.I.tgv_m===1 ? 1 : 0, [['0', '기본 차 값'], ['1', '값 입력']]);   /* 목표값: 숫자 0 을 '기본 차 값' 스위치로 쓰지 않음 (2026-11-11) */
+    if(k==='xcop') return seg('data-gcop', WB.I.cop_m !== 0 ? 1 : 0, [['1', '무게 배분'], ['0', '값 입력']]);
     return ''; },
   inputs:[
     {k:'tg', n:'가로축 목표 (0 가속 · 1 스키드패드 · 2 오토크로스 · 3 내구 · 4 출발 종가속도 · 5 횡가속도 · 6 내구 에너지)', u:'', v:1, d:0, g:GG.tg, ui:'none'},
@@ -17791,23 +17853,21 @@ const t4PM = (k, txt) => typeof t2GridParse!=='function' ? null : k==='c' ? t2Pa
 const t4CellI = () => ({cellO: t4Use('o')==='tab' ? t4PM('o', T4C.o) : null, cellR: t4Use('r')==='tab' ? t4PM('r', T4C.r) : null, cellC: t4Use('c')==='tab' ? t4PM('c', T4C.c) : null});
 /* 결과 아래: 셀 표 편집 · 온도 o_T 에서 SOC 별 출력 */
 /* 셀 표 (2026-11-12): 표 3개는 [편집] 탭 맨 아래 (칸마다 고치는 표, 다른 표와 같음), 셀 온도 · SOC 별 출력은 [결과] 탭 */
-const T4HEAD = {o:['SOC % \\ 셀 온도 °C', '25'], r:['SOC % \\ 셀 온도 °C', '25'], c:['셀 온도 °C', '용량 Ah']};
-function t4Grid(k){ const R = String(T4C[k] || '').replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split(/[,\t]/).map(c => c.trim()));
-  const G = R.length ? R : [T4HEAD[k].slice(), T4HEAD[k].map(() => '')]; if(G.length===1) G.push(G[0].map(() => ''));
-  const w = Math.max(...G.map(r => r.length)); return G.map(r => Array.from({length:w}, (_, i) => r[i] ?? '')); }
-const t4GridText = G => G.filter((r, i) => i===0 || r.some(v => String(v).trim()!=='')).map(r => r.join(', ')).join('\n');
+/* 셀 표 3개 = 2P 칸 표 그대로 (WBGRID 't4:o' · 't4:r' · 't4:c', 2026-11-12). 고르기 [아래 표 | 위 상수] · 표 꺼짐 줄도 2P 와 같음 (위 상수 = 셀 사양 카드) */
 const t4CSet = (k, txt) => { T4C[k] = txt; T4C.u = {...(T4C.u || {}), [k]:'tab'}; t4CSave(); };
+[['o', 'V'], ['r', 'mΩ'], ['c', '']].forEach(([k, u]) => { WBGRID['t4:' + k] = {get:() => T4C[k] || '', set(txt){ t4CSet(k, txt); wbPaint(['tabs']); wbCalcSoon(); }, repaint:() => wbPaint(['tabs']),
+  head:k==='c' ? ['셀 온도 °C', '용량 Ah'] : ['SOC % \\ 셀 온도 °C', '25'], map:k!=='c', rl:k==='c' ? '온도' : 'SOC', cl:'온도', cu:'°C',
+  parse:txt => k==='c' ? t2PairParse(txt) : t2GridParse(txt, u), bad:k==='c' ? '온도 · 용량 행을 읽지 못했습니다.' : '표를 읽지 못했습니다. 첫 행 = 셀 온도 °C, 첫 열 = SOC %.'}; });
+const t4ConstNote = k => { const I = WB.I; return k==='o' ? `셀 ${wbFmt(I.c_vmin, 2)} ~ ${wbFmt(I.c_vmax, 2)} V 직선 (SOC 0 ~ 100 %)` : k==='r' ? `셀 내부저항 ${wbFmt(I.c_r, 1)} mΩ 일정` : `셀 용량 ${wbFmt(I.c_ah, 2)} Ah 일정`; };
 function t4CellEdHTML(){ const P = (k, txt, u) => k==='c' ? t2PairParse(txt) : t2GridParse(txt, u);
-  const box = (k, nm, u, tpl) => { const use = t4Use(k), seg = t4Seg('data-t4cu', use, [['tab', '표'], ['const', '셀 값 칸']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t4cuk="${k}"`);
-    if(use==='const') return `<div class="t4-cbox off"><div class="t4-cbh"><b>${nm}</b>${seg}</div></div>`;   /* [셀 값 칸]이면 표는 안 그림 */
-    const p = P(k, T4C[k], u), G = t4Grid(k), pc = k!=='c';
-    const cell = (v, ri, ci) => ri===0 && (ci===0 || !pc) ? `<th class="muted">${ci===0 && pc ? 'SOC \\ 온도' : wbEsc(v)}</th>` : `<td><input type="text" inputmode="decimal" value="${wbEsc(v)}" data-t4rqc="${k}:${ri}:${ci}"${ri===0 || (ci===0 && pc) ? ' class="hd"' : ''}></td>`;
-    return `<div class="t4-cbox" data-wbneed="t4:${k}"><div class="t4-cbh"><b>${nm}</b>${seg}</div>
-      <div class="t4-cbt"><button type="button" class="btn small" data-t4cra="${k}:row">+ 행 (${pc ? 'SOC' : '온도'})</button>${pc ? `<button type="button" class="btn small" data-t4cra="${k}:col">+ 열 (온도)</button>` : ''}${String(T4C[k] || '').trim() ? `<button type="button" class="btn small" data-t4crx="${k}">표 지우기</button>` : ''}
-        <button type="button" class="btn small" data-t4ctpl="${tpl}">양식 .xlsx</button><label class="btn small">파일 가져오기<input type="file" accept=".xlsx,.csv,.txt" data-t4cfile="${k}" hidden></label></div>
-      <div class="t9-crq t4-crq" data-t4crq="${k}"><table class="t2-tt t9-rqt">${G.map((r, ri) => `<tr>${r.map((v, ci) => cell(v, ri, ci)).join('')}</tr>`).join('')}</table></div>
-      ${String(T4C[k] || '').trim() && !p.map ? '<span class="wb-err">읽지 못함</span>' : ''}</div>`; };
-  return `<div class="wb-ig wb-elh">셀 표 (SOC × 온도) <span class="wb-meta">도구 2P [축전지 › 셀 표]가 복사해 감 · 셀 값 칸이면 전압은 SOC 에 직선</span></div><div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres')}${box('c', '셀 용량 (Ah)', '', 'bcap')}</div>`; }
+  const box = (k, nm, u, tpl) => { const use = t4Use(k), p = P(k, T4C[k], u), has = String(T4C[k] || '').trim();
+    const seg = `<span class="t2-use"><span class="muted">계산에 쓸 값</span>${t4Seg('data-t4cu', use, [['tab', '아래 표'], ['const', '위 상수']]).replace('<span class="dc-seg"', `<span class="dc-seg" data-t4cuk="${k}"`)}</span>`;
+    const head = `<div class="t4-cbh"><b>${nm}</b>${seg}</div>`;
+    if(use==='const') return `<div class="t4-cbox off">${head}<div class="t2-mfold off"><b>표 꺼짐</b><span>${t4ConstNote(k)}</span></div></div>`;   /* [위 상수]면 표는 안 그림 */
+    return `<div class="t4-cbox" data-wbneed="t4:${k}">${head}
+      <div class="t4-cbt">${has ? `<span class="muted">${p.map ? p.msg : '<span class="wb-err">읽지 못함</span>'}</span>` : ''}<button type="button" class="btn small" data-t4ctpl="${tpl}">양식 .xlsx</button><label class="btn small">파일 가져오기<input type="file" accept=".xlsx,.csv,.txt" data-t4cfile="${k}" hidden></label>${has ? `<button type="button" class="btn small" data-t4crx="${k}">표 지우기</button>` : ''}</div>
+      <div class="t2-tw t4-gw">${t2GridTable('t4:' + k, T4C[k] || '')}</div></div>`; };
+  return `<div class="wb-ig wb-elh">셀 표 (SOC × 온도) <span class="wb-meta">도구 2P [축전지 › 셀 표]가 가져감</span></div><div class="t4-cboxes">${box('o', '셀 OCV (V)', 'V', 'bocv')}${box('r', '셀 내부저항 (mΩ)', 'mΩ', 'bres')}${box('c', '셀 용량 (Ah)', '', 'bcap')}</div>`; }
 /* 온도에 따라 바뀌는 표를 쓰는지 (OCV · 내부저항 표의 온도 열이 다름, 용량 표의 용량이 다름). 없으면 셀 온도 칸 · 슬라이더 막음 (2026-11-12) */
 function t4TempDep(){ const I = t4CellI(), g = M => M && Array.isArray(M.n) && M.n.length > 1 && (M.e || []).some(r => r.some(v => v !== r[0]));
   return g(I.cellO) || g(I.cellR) || (Array.isArray(I.cellC) && I.cellC.length > 1 && I.cellC.some(q => q[1] !== I.cellC[0][1])); }
@@ -17823,17 +17883,8 @@ function t4CellHTML(){ const R = WB.R, o = R && R.out, f = t4F, T = R && R.soc, 
       ${row('셀 OCV', t => f(t.v, 3) + ' V')}${row('셀 내부저항', t => f(t.r, 2) + ' mΩ')}${row('팩 무부하 전압', t => f(t.oc, 1) + ' V')}${row('팩 내부저항', t => f(t.rp, 1) + ' mΩ')}
       ${row('팩 부하 전압', t => f(t.load, 1) + ' V')}${row('부하 시 셀 전압', t => f(t.loadCell, 3) + ' V')}${row('단자 출력', t => isFinite(t.power) ? f(t.power, 2) + ' kW' : '성립 불가')}
       ${row('최소 셀 전압 판정', t => `<span class="${t.ok ? 'ok' : 'wb-err'}">${t.load <= 0 ? '성립 불가' : t.ok ? '충족' : '미달'}</span>`)}</tbody></table></div>` : ''}</section>`; }
-/* 셀 표 칸 고치기 · 붙여넣기 · 행 · 열 · 지우기 */
-document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4rqc]')) return; const [k, ri, ci] = e.target.dataset.t4rqc.split(':'), G = t4Grid(k);
-  G[+ri][+ci] = e.target.value.trim(); t4CSet(k, t4GridText(G)); wbCalcSoon(); });
-document.addEventListener('paste', e => { if(WB.id!=='4' || !e.target.closest) return; const t = e.target.closest('[data-t4crq]'); if(!t) return;
-  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();   // 한 칸이면 그 칸에 그대로
-  const k = t.dataset.t4crq, v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n'), p = k==='c' ? t2PairParse(v) : t2GridParse(v);
-  if(!p.map){ toast('표를 읽지 못했습니다.'); return; } t4CSet(k, v); wbPaint(['tabs']); wbCalcSoon(); });
-document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return;
-  const a = e.target.closest('[data-t4cra]'); if(a){ const [k, w] = a.dataset.t4cra.split(':'), G = t4Grid(k); if(w==='row') G.push(G[0].map(() => '')); else G.forEach(r => r.push(''));
-    T4C[k] = G.map(r => r.join(', ')).join('\n'); T4C.u = {...(T4C.u || {}), [k]:'tab'}; t4CSave(); wbPaint(['tabs']); return; }
-  const x = e.target.closest('[data-t4crx]'); if(x){ const k = x.dataset.t4crx; t4CSet(k, ''); wbPaint(['tabs']); wbCalcSoon(); } });
+/* 셀 표 지우기 (칸 고치기 · 붙여넣기 · 행 · 열은 2P 칸 표 공통 처리) */
+document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return; const x = e.target.closest('[data-t4crx]'); if(x){ const k = x.dataset.t4crx; t4CSet(k, ''); wbPaint(['tabs']); wbCalcSoon(); } });
 /* 셀 온도 슬라이더 (−10 ~ 90 °C): 끄는 동안 숫자 칸 따라 바뀜, 놓으면 계산 */
 document.addEventListener('input', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4ots]')) return; const n = document.querySelector('#wb [data-t4ot]'); if(n) n.value = e.target.value; });
 document.addEventListener('change', e => { if(WB.id!=='4' || !e.target.matches || !e.target.matches('[data-t4ots]')) return; WB.I.o_T = +e.target.value; wbSave(); wbCalcSoon(); });
@@ -18431,13 +18482,16 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
     const form = (title, def, obj, attr, lock = {}) => `<div class="t9-cform"><b>${title}</b>${def.map(([k, n, u, d]) => { const v = t9CV(obj, def)[k];
         return `<label class="t9-cfi${!lock[k] && !isFinite(v) ? ' need' : ''}"><span>${n}</span><input type="number" step="any" value="${isFinite(v) ? v : ''}" ${attr} name="${k}"${lock[k] ? ` disabled title="${lock[k]}"` : ''}><i>${u}</i>${lock[k] ? `<em class="t9-clk">${lock[k]}</em>` : ''}</label>`; }).join('')}</div>`;
     const radTab = B => { const use = t9RqUse(B), id = `${C.id}:${B.id}`;
-      const G = t9RqGrid(B.p && B.p.rq);   // 칸마다 바로 고치는 표 (다른 표와 같음): 첫 행 = 유량, 첫 열 = 풍속
-      const seg = `<span class="dc-seg" role="group">${[['tab', '표'], ['const', 'UA']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span>`;
-      if(use==='const') return `<div class="t9-cform t9-crqb off"><b>방열 표 (스펙 시트)</b><span class="t2-use">${seg}</span></div>`;   /* [UA]면 표는 안 그림 */
-      return `<div class="t9-cform t9-crqb${t9RqMiss(B) && !wbEx() ? ' need' : ''}"><b>방열 표 (스펙 시트)</b><span class="muted">첫 행 = 냉각수 유량 L/min · 첫 열 = 코어 풍속 m/s · 칸 = 방열량 kW · 엑셀에서 복사해 표를 누르고 Ctrl+V</span>
-        <span class="t2-use">${seg}
-          <button type="button" class="btn small" data-t9crqa="${id}:row">+ 행 (풍속)</button><button type="button" class="btn small" data-t9crqa="${id}:col">+ 열 (유량)</button>${B.p && B.p.rq ? `<button type="button" class="btn small" data-t9crqx="${id}">표 지우기</button>` : ''}</span>
-        <div class="t9-crq" data-t9crq="${id}"><table class="t2-tt t9-rqt">${G.map((r, ri) => `<tr>${r.map((v, ci) => ri===0 && ci===0 ? '<th class="muted">풍속 \\ 유량</th>' : `<td><input type="text" inputmode="decimal" value="${wbEsc(v)}" data-t9rqc="${id}:${ri}:${ci}"${ri===0 || ci===0 ? ' class="hd"' : ''}></td>`).join('')}</tr>`).join('')}</table></div></div>`; };
+      /* 2P 칸 표 그대로 (WBGRID 'rq:회로:블럭') · 고르기 [아래 표 | 위 상수] · 표 꺼짐 줄도 2P 와 같음 (2026-11-12) */
+      const gk = 'rq:' + id; WBGRID[gk] = {get:() => (t9RadB(id).p || {}).rq || '', set(txt){ const R = t9RadB(id); R.p = R.p || {}; R.p.rq = txt; R.p.rqUse = 'tab'; t9CoolSet(); }, repaint:() => t9CoolUI(),
+        head:['코어 풍속 m/s \\ 유량 L/min', '8'], map:true, rl:'코어 풍속', cl:'유량', cu:'L/min', parse:txt => t2GridParse(txt), bad:'표를 읽지 못했습니다. 첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s, 칸 = 방열량 kW.'};
+      const seg = `<span class="t2-use"><span class="muted">계산에 쓸 값</span><span class="dc-seg" role="group">${[['tab', '아래 표'], ['const', '위 상수']].map(([q, nm]) => `<button type="button" data-t9crqu="${id}:${q}" aria-pressed="${use===q}">${nm}</button>`).join('')}</span></span>`;
+      const ua = t9CV(B.p || {}, t9CParams(C, B)).UA;
+      if(use==='const') return `<div class="t9-cform t9-crqb off"><b>방열 표 (스펙 시트)</b>${seg}<div class="t2-mfold off"><b>표 꺼짐</b><span>UA ${isFinite(ua) ? wbFmt(ua, 0) : '—'} W/K (코어 풍속 5 m/s) × (풍속 ÷ 5)^0.6</span></div></div>`;   /* [위 상수]면 표는 안 그림 */
+      const M = B.p && B.p.rq ? t2GridParse(B.p.rq).map : null, msg = B.p && B.p.rq ? t2RadMsg(B.p.rq) : '';
+      return `<div class="t9-cform t9-crqb${t9RqMiss(B) && !wbEx() ? ' need' : ''}"><b>방열 표 (스펙 시트)</b>${seg}
+        <span class="t2-use">${msg ? `<span class="muted">${M ? msg : '<span class="wb-err">읽지 못함</span>'}</span>` : ''}${B.p && B.p.rq ? `<button type="button" class="btn small" data-t9crqx="${id}">표 지우기</button>` : ''}</span>
+        <div class="t2-tw t9-gw">${t2GridTable(gk, B.p && B.p.rq || '')}</div></div>`; };
     const B = C.selB.length===1 && !C.selL.length ? by.get(C.selB[0]) : null, Lj = C.selL.length===1 && !C.selB.length ? C.selL[0] : -1;
     const hose = () => { const l = C.links[Lj], A = by.get(l[0]), Bt = by.get(l[1]); if(!A || !Bt) return ''; const o = C.links.filter(q => q[0]===l[0]), k = o.indexOf(l) + 1;
       let info = '';
@@ -18451,7 +18505,7 @@ function t9CoolPage(){ const CC = t9S().cool.circuits, nw = CC.filter(c => c.kin
       return `<div class="t9-csel"><div class="t9-cform"><b>덕트 ${T9CB[A.t][0]} → ${T9CB[Bt.t][0]}</b>${o.length > 1 ? o.map((q, m) => { const Bq = by.get(q[1]);
           return `<label class="t9-cfi"><span>${m + 1}번 (→ ${T9CB[Bq.t][0]}) 비율</span><input type="number" step="any" min="1" max="99" value="${(+(q[2] || 1/o.length)*100).toFixed(1)}" data-t9crat="${C.id}:${jj[m]}"><i>%</i></label>`; }).join('') : '<span class="muted">갈라지지 않은 덕트 (공기 100 %)</span>'}</div></div>`; };
     const panel = Lj >= 0 ? hose()
-      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? {...(t9RqUse(B)==='tab' ? {UA:'표 사용'} : {itd:'UA 사용'}), ...(t9CV(B.p, T9CP.rad).fm===1 ? {} : {fon:'팬 늘 켬'})} : {}) + (B.t==='rad' ? `<div class="t9-cform"><b>팬 켜기</b><span class="dc-seg" role="group">${[[0, '늘 켬'], [1, '냉각수 온도로']].map(([q, nm]) => `<button type="button" data-t9cfm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.rad).fm===q}">${nm}</button>`).join('')}</span></div>` + radTab(B) : '') + (B.t==='pump' ? `<div class="t9-cform"><b>유량 정하기</b><span class="dc-seg" role="group">${[[0, '유량 고정'], [1, '펌프 곡선']].map(([q, nm]) => `<button type="button" data-t9cpm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.pump).pc===q}">${nm}</button>`).join('')}</span><span class="muted">${t9CV(B.p, T9CP.pump).pc===1 ? '올리는 압력 = 막힘 압력 × (1 − (유량 ÷ 최대 유량)²), 호스 · 블럭 압력 강하와 만나는 점에서 유량이 정해짐 (펌프 스펙 시트의 곡선 양 끝)' : '회로 압력 강하와 상관없이 이 유량'}</span></div>` : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
+      : B ? `<div class="t9-csel">${t9CParams(C, B).length ? form(`${T9CB[B.t][0]} 블럭`, t9CParams(C, B), B.p, `data-t9cbp="${C.id}:${B.id}"`, B.t==='rad' ? {...(t9RqUse(B)==='tab' ? {UA:'표 사용'} : {itd:'UA 사용'}), ...(t9CV(B.p, T9CP.rad).fm===1 ? {} : {fon:'팬 늘 켬'})} : {}) + (B.t==='rad' ? `<div class="t9-cform"><b>팬 켜기</b><span class="dc-seg" role="group">${[[0, '팬 늘 켬'], [1, '냉각수 온도로']].map(([q, nm]) => `<button type="button" data-t9cfm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.rad).fm===q}">${nm}</button>`).join('')}</span></div>` + radTab(B) : '') + (B.t==='pump' ? `<div class="t9-cform"><b>유량 정하기</b><span class="dc-seg" role="group">${[[0, '유량 고정'], [1, '펌프 곡선']].map(([q, nm]) => `<button type="button" data-t9cpm="${C.id}:${B.id}:${q}" aria-pressed="${t9CV(B.p, T9CP.pump).pc===q}">${nm}</button>`).join('')}</span><span class="muted">${t9CV(B.p, T9CP.pump).pc===1 ? '올리는 압력 = 막힘 압력 × (1 − (유량 ÷ 최대 유량)²), 호스 · 블럭 압력 강하와 만나는 점에서 유량이 정해짐 (펌프 스펙 시트의 곡선 양 끝)' : '회로 압력 강하와 상관없이 이 유량'}</span></div>` : '') : `<div class="t9-cform"><b>${T9CB[B.t][0]} 블럭</b><span class="muted">${T9CB[B.t][1]==='part' ? '부품 쪽 값(열용량 · 열저항 · hA)은 그 부품 항목에 있습니다.' : '입력 없음'}</span></div>`}</div>`
       : C.selB.length + C.selL.length ? `<p class="muted t9-cmsg">블럭 ${C.selB.length}개 · ${C.kind==='water' ? '호스' : '덕트'} ${C.selL.length}개 고름 · 끌면 같이 옮겨지고 Delete 로 지움</p>`
       : (h => `<ul class="muted t9-cmsg t9-chelp"><li><b>끌기</b> 블럭 옮기기 · 빈 곳 = 영역 고르기 (Shift = 더해 고르기)</li><li><b>잇기</b> 파란 점 ↔ 흰 점 끌어 놓기 · 호스 끝을 끌면 옮김</li><li><b>가르기 · 합치기</b> 합류 · 분기점 (${C.kind==='water' ? '호스' : '덕트'} 위에 놓아도 생김)${C.kind==='water' ? '' : ' · 갈래 비율 입력'}</li><li><b>${h} 토막</b> 끌어서 옮김 · 두 번 누르면 자동 경로</li><li><b>보기</b> 휠 = 확대 · 축소 (그림을 한 번 누른 뒤) · 휠 버튼 끌기 = 이동 · 빈 곳 두 번 = 전체</li><li><b>지우기</b> Delete</li></ul>`)(C.kind==='water' ? '호스' : '덕트');
     return `<div class="t9-cc" data-t9cc="${C.id}" data-wbneed="t9:${C.id}"><div class="t9-cch"><b>${wbEsc(C.name)}</b>
@@ -18500,23 +18554,11 @@ document.addEventListener('keydown', e => { if(!t9On() || (e.target.matches && e
   if(!['Delete', 'Backspace'].includes(e.key)) return; const C = t9S().cool.circuits.find(c => { t9Sel(c); return c.selB.length || c.selL.length; }); if(!C) return;
   e.preventDefault(); t9CDelSel(C); });
 /* 라디 방열 표: 글자 ↔ 칸 (첫 칸은 머리), 빈 표면 2 × 2 빈칸 */
-function t9RqGrid(txt){ const R = String(txt || '').replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split(/[,\t]/).map(c => c.trim()));
-  if(!R.length) return [['', ''], ['', '']]; const w = Math.max(...R.map(r => r.length)); return R.map(r => Array.from({length:w}, (_, k) => r[k] ?? '')); }
-const t9RqText = G => G.map(r => r.join(', ')).join('\n');
-document.addEventListener('change', e => { if(!t9On() || !e.target.matches || !e.target.matches('[data-t9rqc]')) return; const a = e.target.dataset.t9rqc.split(':'), B = t9RadB(a[0] + ':' + a[1]), G = t9RqGrid(B.p && B.p.rq);
-  G[+a[2]][+a[3]] = e.target.value.trim(); B.p = B.p || {}; B.p.rq = t9RqText(G); if(!B.p.rqUse) B.p.rqUse = 'tab'; t9CoolSet(); });
-/* 라디 방열 표: 붙여넣기 · 행 · 열 더하기 · 표 / UA 고르기 · 지우기 */
+/* 라디 방열 표: 표 / 상수 고르기 · 지우기 (칸 고치기 · 붙여넣기 · 행 · 열은 2P 칸 표 공통 처리) */
 const t9RadB = id => { const [cid, bid] = id.split(':'); return t9CC(cid).blocks.find(b => b.id===bid); };
-document.addEventListener('paste', e => { if(!t9On() || !e.target.closest) return; const t = e.target.closest('[data-t9crq]'); if(!t) return;
-  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if(!/[\t\n]/.test(txt.trim())) return; e.preventDefault();   // 한 칸이면 그 칸에 그대로
-  const v = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()).join(', ')).join('\n');
-  if(typeof t2GridParse!=='function' || !t2GridParse(v).map){ toast('표를 읽지 못했습니다. 첫 행 = 냉각수 유량 L/min, 첫 열 = 코어 풍속 m/s, 칸 = 방열량 kW.'); return; }
-  const B = t9RadB(t.dataset.t9crq); B.p = B.p || {}; B.p.rq = v; B.p.rqUse = 'tab'; t9CoolSet(); toast('방열 표를 넣었습니다.'); });
 document.addEventListener('click', e => { if(!t9On() || !e.target.closest) return;
   const u = e.target.closest('[data-t9crqu]'); if(u){ const a = u.dataset.t9crqu.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p.rqUse = a[2]; t9CoolSet(); return; }
   const x = e.target.closest('[data-t9crqx]'); if(x){ const B = t9RadB(x.dataset.t9crqx); delete B.p.rq; B.p.rqUse = 'tab'; t9CoolSet(); return; }
-  const ad = e.target.closest('[data-t9crqa]'); if(ad){ const a = ad.dataset.t9crqa.split(':'), B = t9RadB(a[0] + ':' + a[1]), G = t9RqGrid(B.p && B.p.rq); if(a[2]==='row') G.push(G[0].map(() => '')); else G.forEach(r => r.push(''));
-    B.p = B.p || {}; B.p.rq = t9RqText(G); t9CoolUI(); }
   const fmb = e.target.closest('[data-t9cfm]'); if(fmb){ const a = fmb.dataset.t9cfm.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p = B.p || {}; B.p.fm = +a[2]; t9CoolSet(); return; }
   const pm = e.target.closest('[data-t9cpm]'); if(pm){ const a = pm.dataset.t9cpm.split(':'), B = t9RadB(a[0] + ':' + a[1]); B.p = B.p || {}; B.p.pc = +a[2]; t9CoolSet(); } });
 /* 갈라진 덕트 비율 입력 (%): 하나를 바꾸면 나머지를 그 비율대로 줄이거나 늘려 합 100 % */
@@ -18629,7 +18671,6 @@ document.addEventListener('wheel', e => { if(!t9On() || !e.target.closest) retur
 let T9VT = 0;
 
 /* ---------- 도구 2P 와 주고받기 */
-const T9PART = ['th_c', 'th_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_c', 'b_r', 'b_ha', 'b_ha60', 't_amb'];   // 도구 2P 와 같은 키 (부품 열 값 · 외기)
 const t9Read = id => { try{ return JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ return {}; } };
 /* 부품이 수랭 회로에 있으면 1 (도구 2P 수랭), 아니면 0 (공랭 덕트 · 회로 밖 → 도구 2P 공랭 = 부품 hA) */
 const t9IsWater = p => { const C = t9CoolWhere(p); return C && C.kind==='water' ? 1 : 0; };
@@ -18638,30 +18679,19 @@ function t9ExtHTML(){ const w = $('#wb'); if(w) w.classList.remove('t2-edit');  
     ${t9CoolPage()}</div>`; }
 /* 주고받기 줄 (계산 결과가 바뀌면 이것만 다시 그림: onResult) */
 function t9XBar(){ return ''; }   /* 도구 2P 와 주고받기는 윗줄 [도구 연결 ▾] 로 옮김 (2026-11-11) */
-/* [도구 연결 ▾]: 도구 2P 에서 부품 열 값 가져오기, 도구 2P 로 회로 보내기 */
+/* [도구 연결 ▾]: 도구 2P 시뮬 결과 (주행 평균 발열 · 평균 차속 · 주행 시간) 가져오기. 2P 의 설정값은 가져오지 않음, 다른 도구로 보내기도 없음 (2026-11-12):
+   상세값은 바깥 도구 → 2P 로 모이고, 2P 는 시뮬 결과 (발열 · 평균 차속 · 주행 시간) 만 내보냄 (관리자 결정 2026-11-12). 2P 설정을 옮기려면 JSON 내보내기 · 가져오기 */
 function t9Links(){ const s2 = t9Read('2'), o = WB.R && WB.R.out, D = WB_TOOLS['9'].inputs, u = k => (D.find(d => d.k===k) || {}).u || '', fv = (v, k) => isFinite(v) ? `${+(+v).toPrecision(4)} ${u(k)}`.trim() : '—';
-  const grp = (nm, keys) => { const has = keys.filter(k => typeof s2[k]==='number' && isFinite(s2[k]));
-    return {tool:'도구 2P', n:nm, to:`입력 › ${nm} (${keys.length}칸)`, now:keys.map(k => fv(WB.I[k], k)).join(' · '), val:keys.map(k => fv(s2[k], k)).join(' · '), ok:has.length > 0, why:'도구 2P 에 저장된 값이 없음',
-      run(){ has.forEach(k => { WB.I[k] = s2[k]; }); wbSrcSet('9', has, '도구 2P'); return nm; }}; };
   const okC = !!(o && (o.n_w > 0 || o.n_a > 0)), C2 = typeof t2Cwc==='function' ? ((t2Cwc().cool || {}).circuits || []) : [];
   const parts = ['m', 'i', 'b'].map((p, j) => `${['모터', '인버터', '축전지'][j]} ${t9IsWater(p) ? '수랭' : '공랭'}`).join(' · ');
   return {
-    get:[grp('모터 열 값 (열용량 · 냉각수까지 열저항 · 공랭 hA 정지 · 60 km/h)', ['th_c', 'th_r', 'm_ha0', 'm_ha60']), grp('인버터 열 값', ['i_c', 'i_r', 'i_ha0', 'i_ha60']), grp('축전지 열 값', ['b_c', 'b_r', 'b_ha', 'b_ha60']), grp('외기 온도', ['t_amb'])],
-    send:[{tool:'도구 2P', n:'냉각 회로 배치 + 부품 수랭 / 공랭', to:'도구 2P › 편집 › 냉각 › 냉각 회로, 수랭 방식 = [냉각 회로], 냉각수 온도 계산 켬', now:C2.some(c => (c.blocks || []).length) ? `수랭 회로 ${C2.filter(c => c.kind==='water').length}개 · 공랭 덕트 ${C2.filter(c => c.kind!=='water').length}개 · 수랭 방식 ${s2.cw_mode===1 ? '냉각 회로' : '부품별 독립'}` : '비어 있음',
-        val:okC ? `수랭 회로 ${o.n_w}개 · 공랭 덕트 ${o.n_a}개 · ${parts} (직렬 · 병렬 · 회로 여러 개 그대로)` : '', ok:okC, why:'계산에 수랭 회로나 공랭 덕트가 들어가야 보낼 수 있음',
-        run(){ const s = t9Read('2'); Object.assign(s, {cw_mode:1, m_cool:t9IsWater('m'), i_cool:t9IsWater('i'), b_cool:t9IsWater('b'), cw_on:1}); localStorage.setItem(wbStoreKey('2'), JSON.stringify(s));
-          if(typeof t2Cwc==='function'){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); t2Save(); } wbSrcSet('2', ['t2:cool'], '도구 9'); return '냉각 회로 배치'; }},
-      {tool:'도구 2P', n:'외기 온도', to:'도구 2P › 외기 온도', now:fv(s2.t_amb, 't_amb'), val:fv(WB.I.t_amb, 't_amb'), ok:isFinite(WB.I.t_amb), why:'이 도구의 외기 온도가 비어 있음',
-        run(){ const s = t9Read('2'); s.t_amb = WB.I.t_amb; localStorage.setItem(wbStoreKey('2'), JSON.stringify(s)); wbSrcSet('2', ['t_amb'], '도구 9'); return '외기 온도'; }}],
-    info:['주행 평균 발열 · 평균 차속 · 주행 시간은 도구 2P 의 [도구 연결]에서 보냅니다 (도구 2P 랩 시뮬 결과라서).'] }; }
-document.addEventListener('click', e => { if(WB.id!=='9' || !e.target.closest) return; const b = e.target.closest('[data-t9x]'); if(!b || b.disabled) return; if(b.dataset.t9x==='put' && wbExBlock()) return;
-  if(b.dataset.t9x==='get'){ const s = t9Read('2'), D = WB_TOOLS['2'] ? WB_TOOLS['2'].inputs : []; let n = 0;
-    T9PART.forEach(k => { const d = D.find(q => q.k===k), v = typeof s[k]==='number' && isFinite(s[k]) ? s[k] : d && wbEx() ? d.v : NaN; if(Number.isFinite(v)){ WB.I[k] = v; n++; } });
-    wbSave(); wbPaint(['in']); wbCalcSoon(); toast(`도구 2P 의 부품 열 값 ${n}개를 가져왔습니다.`); return; }
-  if(b.dataset.t9x==='put'){ const o = WB.R && WB.R.out; if(!o || !(o.n_w > 0 || o.n_a > 0)) return; const s = t9Read('2');
-    Object.assign(s, {cw_mode:1, m_cool:t9IsWater('m'), i_cool:t9IsWater('i'), b_cool:t9IsWater('b'), cw_on:1, t_amb:WB.I.t_amb});   /* 공랭 / 수랭 단추도 맞춰 둠 (부품별 독립으로 돌아갈 때) */
-    try{ localStorage.setItem(wbStoreKey('2'), JSON.stringify(s)); if(typeof t2Cwc==='function'){ t2Cwc().cool = JSON.parse(JSON.stringify(T9.cool)); t2Save(); }   /* 배치는 도구 2P 자체 회로로 복사 (그 뒤로는 따로) */
-      toast('이 회로 배치를 도구 2P 로 복사했습니다 (수랭 방식 = 냉각 회로, 냉각수 온도 계산 켬). 도구 2P 에서 고쳐도 이 도구에는 영향이 없습니다.'); }catch(err){ toast('저장하지 못했습니다.'); } } });
+    get:(() => { const r = (() => { try{ return JSON.parse(localStorage.getItem(wbMK('run2x.t2.res')) || 'null'); }catch(e){ return null; } })(), ok = !!(r && isFinite(r.c_qm)), why = '도구 2P 랩 시뮬을 한 번 계산하면 가져올 수 있음';
+      const row = (n, keys, vals, cat) => ({tool:'도구 2P', n, cat, to:`입력 › ${n}`, now:keys.map(k => fv(WB.I[k], k)).join(' · '), val:ok ? vals().map((v, i) => fv(v, keys[i])).join(' · ') : '', ok, why,
+        run(){ const v = vals(); keys.forEach((k, i) => { WB.I[k] = v[i]; }); wbSrcSet('9', keys, '도구 2P'); return n; }});
+      return [row('주행 평균 발열 (모터 손실 · 인버터 손실 · 축전지 발열)', ['L_m', 'L_i', 'L_b'], () => [+r.c_qm.toFixed(1), +r.c_qi.toFixed(1), +r.c_qb.toFixed(1)], '주행 조건'),
+        row('평균 차속', ['v'], () => [+r.c_vavg.toFixed(2)], '주행 조건'), row('주행 시간', ['t_run'], () => [Math.round(r.c_trun)], '주행 조건')]; })(),
+    info:[] }; }
+/* (옛 [data-t9x] 주고받기 단추 처리는 2026-11-12 에 지움: 단추는 2026-11-11 에 [도구 연결 ▾] 로 옮겨 없음) */
 
 /* ============================================================ 이 탭 사용법 */
 const M9TOUR = [
@@ -18710,7 +18740,7 @@ WB_TOOLS['9'] = {
   links: () => t9Links(),
   /* 회로의 빈칸 (빨간 점선 블럭 · 호스 · 냉각수) → 필수 목록 · 편집 탭 빨간 점 (2026-11-12) */
   needExt(){ if(wbEx()) return []; return ((T9.cool || {}).circuits || []).filter(C => C.blocks.length && t9Blank(C).length).map(C => ({k:'t9:' + C.id, n:`${C.name} 빈칸`, g:'냉각 회로'})); },
-  lnkKeys:['th_c', 'th_r', 'm_ha0', 'm_ha60', 'i_c', 'i_r', 'i_ha0', 'i_ha60', 'b_c', 'b_r', 'b_ha', 'b_ha60', 't_amb', 'L_m', 'L_i', 'L_b', 'v', 't_run'],
+  lnkKeys:['L_m', 'L_i', 'L_b', 'v', 't_run'],   /* 도구 2P 시뮬 결과로 받는 칸 */
   extHTML: t9ExtHTML, extraI: () => ({cool: t9CoolCompile().net}),
   extGet: () => ({cool:JSON.parse(JSON.stringify(T9.cool))}),   /* .json 내보내기에 회로 배치도 */
   extSet(d){ if(d && d.cool && Array.isArray(d.cool.circuits)){ T9.cool = d.cool; t9Save(); wbPaint(['ext']); } },
@@ -19384,14 +19414,8 @@ const T6G = {car:'차 · 바퀴', rack:'랙 · 기준'};
 /* 도구 2P 로 조향각 표 보내기: 결과 곡선 (핸들 각 0 ~ 최대, 41 점) 의 [핸들 각, 안쪽 바퀴, 바깥 바퀴] → 도구 2P 가 기하 조향각 · 최대 조향각 · 조향비 · 최소 회전 반경 · 핸들 속도에 씀 */
 const t6Rows = () => { const R = WB.R; if(!R || !R.x || !R.sig) return []; return R.x.d.map((h, j) => [h, R.sig.di[j], R.sig.dout[j]]).filter(r => r.every(Number.isFinite) && r[0] > 0 && r[1] > 0 && r[2] > 0); };
 function t6MidHTML(){ return ''; }   /* 도구 2P 로 보내기는 윗줄 [도구 연결 ▾] 로 옮김 (2026-11-11) */
-function t6Links(){ const rows = t6Rows(), n = rows.length, S = typeof T2!=='undefined' && Array.isArray(T2.stab) ? T2.stab : [];
-  const now = !S.length ? '없음 (100 % 애커먼 · 일정 조향비)' : typeof T2STAB_DEF!=='undefined' && JSON.stringify(S)===JSON.stringify(T2STAB_DEF) ? `기본 표 ${S.length}점` : `조향각 표 ${S.length}점`;
-  return {send:[{tool:'도구 2P', n:'조향각 표 (핸들 각 → 안쪽 · 바깥 바퀴 각)', to:'도구 2P › 서스 · 조향 › 조향 기하 (최대 조향각 · 조향비 칸은 이 표 값으로 잠김)', now,
-    val:n >= 2 ? `핸들 각 0 ~ ${wbFmt(WB.R.out.hw_max, 0)}° · ${n}점 (링크 기하 그대로)` : '', ok:n >= 2 && typeof T2!=='undefined', why:'계산이 끝나면 보낼 수 있음',
-    run(){ T2.stab = rows.map(r => r.map(x => +x.toFixed(4))); if(typeof t2Save==='function') t2Save(); wbSrcSet('2', ['t2:stab'], '도구 6'); return `조향각 표 ${n}점`; }}]}; }
-document.addEventListener('click', e => { if(WB.id!=='6' || !e.target.closest) return; const b = e.target.closest('[data-t6x]'); if(!b || b.disabled) return; if(wbExBlock()) return;
-  const rows = t6Rows(); if(rows.length < 2 || typeof T2==='undefined') return; T2.stab = rows.map(r => r.map(x => +x.toFixed(4))); if(typeof t2Save==='function') t2Save();
-  toast(`조향각 표 ${rows.length}점을 도구 2P 로 보냈습니다 (도구 2P 의 최대 조향각 · 조향비 칸은 이 표 값으로 잠김).`); wbPaint(['mid']); });
+/* 조향각 표를 계산할 때마다 저장 (도구 2P [도구 연결]이 가져감, 다른 도구로 보내기는 없음 2026-11-12) */
+const t6RowsSave = () => { const rows = t6Rows(); if(rows.length < 2) return; try{ localStorage.setItem(wbMK('run2x.t6.rows'), JSON.stringify({rows:rows.map(r => r.map(x => +x.toFixed(4))), hw:WB.R.out.hw_max})); }catch(e){} };
 const t6Pt = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
 WB_TOOLS['6'] = {
   share:'hp', no:'6', stage:'P3-4~5', name:'조향 (3D 기구학)',
@@ -19418,7 +19442,7 @@ WB_TOOLS['6'] = {
   ],
   sigs:[{k:'di', n:'안쪽 바퀴 조향각', u:'°', d:2}, {k:'dout', n:'바깥 바퀴 조향각', u:'°', d:2}, {k:'dideal', n:'완전 애커먼 안쪽 각', u:'°', d:2}, {k:'ack', n:'애커먼', u:'%', d:1},
         {k:'ci', n:'캠버 · 안쪽 바퀴', u:'°', d:2}, {k:'co', n:'캠버 · 바깥 바퀴', u:'°', d:2}, {k:'ji', n:'잭킹 · 안쪽 바퀴', u:'mm', d:2}, {k:'jo', n:'잭킹 · 바깥 바퀴', u:'mm', d:2}],
-  sigOn:['di', 'dout', 'dideal'], xiStart:'end', links: () => t6Links(),
+  sigOn:['di', 'dout', 'dideal'], xiStart:'end', onResult(){ t6RowsSave(); },
   tour: M6TOUR,
   verifyBase:{camber_f:0, toe_f:0, tf:1200, r_load:236, L:1550, fr:47.5, rack_c:90, rack_travel:30, d_ref:15,
     f_lf_x:175, f_lf_y:200, f_lf_z:100, f_lr_x:-175, f_lr_y:200, f_lr_z:100, f_lo_x:0, f_lo_y:560, f_lo_z:100, f_uf_x:175, f_uf_y:200, f_uf_z:300, f_ur_x:-175, f_ur_y:200, f_ur_z:300, f_uo_x:0, f_uo_y:560, f_uo_z:300, f_ti_x:-70, f_ti_y:200, f_ti_z:200, f_to_x:-70, f_to_y:545, f_to_z:200},   // 검증 기본 = 킹핀 수직 · 링크 한 평면 (예전 윗면 2D 와 같은 꼴)
