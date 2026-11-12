@@ -1,3 +1,14 @@
+/* 시안 저장 공간 분리 (2026-11-12): 시안과 실제 사이트는 주소(koreanhanjiyun.github.io)가 같아 브라우저 저장소를 같이 씀 →
+   시안에서는 localStorage 키 앞에 'draft:' 를 붙여 실제 사이트 저장값을 읽지도 바꾸지도 않음 */
+(function(){ const P = 'draft:', S = Storage.prototype, g = S.getItem, st = S.setItem, rm = S.removeItem, ky = S.key, cl = S.clear;
+  const isL = o => { try{ return o === window.localStorage; }catch(e){ return false; } };
+  const mine = o => { const a = []; for(let i = 0; i < o.length; i++){ const k = ky.call(o, i); if(k && k.startsWith(P)) a.push(k); } return a; };
+  S.getItem = function(k){ return g.call(this, isL(this) ? P + k : k); };
+  S.setItem = function(k, v){ return st.call(this, isL(this) ? P + k : k, v); };
+  S.removeItem = function(k){ return rm.call(this, isL(this) ? P + k : k); };
+  S.clear = function(){ if(!isL(this)) return cl.call(this); mine(this).forEach(k => rm.call(this, k)); };
+  S.key = function(i){ if(!isL(this)) return ky.call(this, i); const k = mine(this)[i]; return k ? k.slice(P.length) : null; };
+})();
 /* 도구 1 시험 데이터: 묶음(좌표 x = 앞 차축에서 뒤로) · 항목(질량 × 개수) · 드라이버. 로그인 전 모드에도 이 브라우저 저장소에 한 번 넣음 */
 function M1SEED(){ const mass={}, o={n:0};
   const HUE={frame:265,sus:190,str:40,brk:5,pt:130,mc:220,bat:25,cool:160,aero:205};

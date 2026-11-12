@@ -391,18 +391,28 @@ function m1Figure(I, R){ const o = R.out, items = (I.items || []).concat(R.drvIt
   sv += `</svg><div class="wb-leg"><span><i style="background:#d92d20"></i>차 전체 CG</span><span><i style="background:#6A4294"></i>현가상 CG</span><span class="muted">원 색 = 카드 색 (드라이버 = 헬멧 색) · 원 넓이 ∝ 질량 · 원에 마우스를 올리면 어셈블리 이름</span></div>`;
   return (WB.id==='1' && !wbEx() ? m1ShpCta('side') + m1ShpCta('top') : '') + sv; }
 
-/* ---------- 대시보드 '파트별 > 질량 · 무게중심': 팀 질량 표 · 드라이버로 계산한 결과(읽기 전용) ---------- */
+/* ---------- 대시보드 '파트별 > 질량 · 무게중심': 도구 1 팀 프리셋 (이번 시즌) 의 질량 표 · 드라이버 + 대시보드 휠베이스 · 트레드로 계산 (읽기 전용, 2026-11-12) ---------- */
+const M1TP = {d:null, done:false, busy:false};
+async function m1TpLoad(){ if(M1TP.busy) return; M1TP.busy = true; let r = null;
+  try{ if(window.Backend && Backend.kind()==='firebase' && typeof SH!=='undefined' && SH.on){ const d = await Backend.Team.teamPresetGet(wbTpId('1')), e = d && d.s && d.s[dvSeason()];
+      const doc = e ? JSON.parse(e.json) : null; if(doc && doc.ext && doc.ext.mass) r = {mass:doc.ext.mass, drv:doc.ext.drv || {}, dsel:doc.ext.dsel || 'd1', name:e.name || ''}; } }catch(err){ r = null; }
+  M1TP.d = r; M1TP.done = true; M1TP.busy = false; M1P.key = ''; if(typeof DASH!=='undefined' && DASH.part==='frame' && typeof dashPaint==='function') dashPaint(['part']); }
+const m1WithTP = fn => { const a = MASS, b = DRVS, c = M1.dsel; MASS = M1TP.d.mass; DRVS = M1TP.d.drv; M1.dsel = M1TP.d.dsel; try{ return fn(); } finally{ MASS = a; DRVS = b; M1.dsel = c; } };
+/* 대시보드 파트 탭에서 부름: 팀 프리셋이 없으면 그리지 않음 */
+function m1TpPart(){ if(!M1TP.done){ m1TpLoad(); return '<p class="muted">불러오는 중…</p>'; }
+  if(!M1TP.d) return '<p class="dp-note dv-nofig">도구 1 팀 프리셋이 없어 그리지 않습니다.</p>';
+  return m1WithTP(m1PartHTML); }
 const M1P = { R:null, key:'', busy:false, w:null };
 function m1PartDirty(){ M1P.key = ''; if(typeof DASH!=='undefined' && DASH.part==='frame' && $('#m1part')) m1PartRun(); }
-function m1PartInputs(){ const v = k => { const d = wbDash(k); return d ? d.v : NaN; }; return {L:v('L'), tf:v('tf'), tr:v('tr'), r_load:v('r_load'), ...m1ExtraI()}; }   /* 대시보드에 넣은 값만 (예시값 · 기본값 없음) */
+function m1PartInputs(){ const v = k => { const d = wbDash(k); return d ? d.v : NaN; }; return {L:v('L'), tf:v('tf'), tr:v('tr'), r_load:v('r_load'), ...(M1TP.d ? m1WithTP(m1ExtraI) : {})}; }   /* 대시보드에 넣은 값만 (예시값 · 기본값 없음) */
 function m1PartRun(){ const I = m1PartInputs(), key = JSON.stringify(I); if(key===M1P.key || M1P.busy) return; M1P.busy = true;
   try{ if(!M1P.w){ M1P.w = new Worker(URL.createObjectURL(new Blob([WB_TOOLS['1'].code + '\n;self.onmessage = e => { try{ postMessage({ok:true, r:calc(e.data)}); }catch(err){ postMessage({ok:false}); } };'], {type:'text/javascript'}))); } }catch(e){ M1P.busy = false; return; }
-  M1P.w.onmessage = e => { M1P.busy = false; M1P.key = key; if(e.data.ok){ M1P.R = e.data.r; const b = $('#m1part'); if(b) b.innerHTML = m1PartBody(I, M1P.R); } };
+  M1P.w.onmessage = e => { M1P.busy = false; M1P.key = key; if(e.data.ok){ M1P.R = e.data.r; const b = $('#m1part'); if(b && M1TP.d) b.innerHTML = m1WithTP(() => m1PartBody(I, M1P.R)); } };
   M1P.w.postMessage(I); }
-function m1PartBody(I, R){ const o = R.out; if(!(o.m > 0)) return '<p class="muted">팀 질량 표가 비어 있습니다. 도구 1에서 어셈블리를 넣으십시오.</p>';
+function m1PartBody(I, R){ const o = R.out; if(!(o.m > 0)) return '<p class="muted">팀 프리셋 질량 표가 비어 있습니다.</p>';
   return `<div class="m1-pf">${m1Figure(I, R)}</div>${wbOutCards(WB_TOOLS['1'], R, false)}`; }
 function m1PartHTML(){ setTimeout(m1PartRun, 0);
-  return `<div class="m1-part"><p class="dp-note">팀 질량 표(어셈블리 ${m1Groups().length}개)와 ${M1DRV[M1.dsel]} 드라이버, 대시보드의 휠베이스 · 트레드로 계산한 결과입니다. 고치기는 <span class="wb-mpick wb-mpi" tabindex="-1"><span class="lnk">도구 1 질량 · 무게중심 계산기</span>${wbModeBtns('1', '도구 1')}</span>에서 합니다.</p><div id="m1part">${M1P.R ? m1PartBody(m1PartInputs(), M1P.R) : '<p class="muted">계산 중…</p>'}</div></div>`; }
+  return `<div class="m1-part"><p class="dp-note">도구 1 팀 프리셋 "${wbEsc(M1TP.d ? M1TP.d.name : '')}" (어셈블리 ${m1Groups().length}개 · ${M1DRV[M1.dsel]} 드라이버) · 대시보드 휠베이스 · 트레드</p><div id="m1part">${M1P.R ? m1PartBody(m1PartInputs(), M1P.R) : '<p class="muted">계산 중…</p>'}</div></div>`; }
 
 /* ---------- 이 탭 사용법 (사이트 사용법과 같은 방식). 단계: [선택자, 제목, 설명, {click, inner}]
    - 표 탭이 바뀌는 단계는 포인터가 탭을 누르는 모습 → 서서히 바뀜 (click). 끝나면 원래 탭으로
@@ -455,7 +465,7 @@ WB_TOOLS['1'] = {
     {k:'ixx', dk:'ixx', d:1, g:'관성 모멘트'}, {k:'iyy', dk:'iyy', d:1, g:'관성 모멘트'}, {k:'izz', dk:'izz', d:1, g:'관성 모멘트'}
   ],
   extHTML: m1ExtHTML, extraI: m1ExtraI, figure: m1Figure,
-  extGet: () => ({mass:JSON.parse(JSON.stringify(MASS)), drv:JSON.parse(JSON.stringify(DRVS)), season:m1Season()}),   /* .json 내보내기에 질량 표 · 드라이버도 (이번 시즌 칸을 가져옴) */
+  extGet: () => ({mass:JSON.parse(JSON.stringify(MASS)), drv:JSON.parse(JSON.stringify(DRVS)), season:m1Season(), dsel:M1.dsel}),   /* .json 내보내기에 질량 표 · 드라이버도 (이번 시즌 칸을 가져옴) */
   extSet(d){ if(!d || typeof d!=='object') return; const se = d.season || m1Season(); let n = 0;
     [['mass', d.mass], ['drv', d.drv]].forEach(([kind, S]) => { if(S && typeof S==='object') Object.entries(S).forEach(([id, doc]) => { const v = doc && doc.s && (doc.s[se] || doc.s[m1Season()]); if(v){ m1Store(kind, id, v); n++; } }); });
     if(n) toast(`질량 표 · 드라이버 ${n}개를 이번 시즌 칸으로 가져왔습니다.`); wbPaint(['ext']); },

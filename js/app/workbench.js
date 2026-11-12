@@ -880,6 +880,6 @@ document.addEventListener('click', async e => { const t = e.target; if(!t.closes
     const n = wbApplyDoc(doc); if(n < 0){ toast('프리셋을 읽지 못했습니다.'); return; } wbModalClose(); toast(`"${p.name}" 불러옴`); return; }
   if(d){ try{ await Backend.Team.presetDel(WB.id, +d.dataset.wbpd); }catch(err){} await wbPresetOpen(); return; }
   if(tp){ const p = WBP.list.find(x => String(x.slot)===tp.dataset.wbpt);
-    try{ await Backend.Team.teamPresetPut(wbTpId(WB.id), dvSeason(), {name:p.name, at:new Date().toISOString(), json:p.json}); toast(`"${p.name}"을 팀 프리셋으로 내보냈습니다.`); await wbPresetOpen(); }
+    try{ await Backend.Team.teamPresetPut(wbTpId(WB.id), dvSeason(), {name:p.name, at:new Date().toISOString(), json:p.json}); toast(`"${p.name}"을 팀 프리셋으로 내보냈습니다.`); if(WB.id==='1' && typeof M1TP!=='undefined') M1TP.done = false; await wbPresetOpen(); }
     catch(err){ toast(Backend.denied && Backend.denied(err) ? '이 도구 담당 파트장 · 회장만 팀 프리셋을 내보낼 수 있습니다.' : '내보내지 못했습니다.'); } } });
 document.addEventListener('input', e => { if(e.target.matches && e.target.matches('#wbm [data-wbpn]') && WBP.arm==='s'){ WBP.arm = ''; const b = document.querySelector('#wbm [data-wbps]'); if(b) b.textContent = '지금 상태 저장'; } });
