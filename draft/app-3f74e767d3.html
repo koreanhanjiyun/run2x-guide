@@ -30252,7 +30252,7 @@ const TOUR = {
   ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
  ],
  steps: [
-  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:()=>{ const t=$('#toc'); if(t) t.classList.remove('coll'); window.scrollTo({top:0,behavior:'instant'}); }}],
+  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:()=>{ const t=$('#toc'); if(t){ t.classList.remove('coll'); try{ tocFx(); }catch(e){} } window.scrollTo({top:0,behavior:'instant'}); }}],
   ['#v-steps header .legend','표시 배지',`항목 줄과 본문에 붙는 표시입니다. ${B('b-card','상세')} 상세 카드(그림·표가 많은 긴 설명)가 있는 항목, ${B('b-assume','가정값')} 설명용 숫자라 팀 실측값으로 바꿀 것입니다.`,{tab:'steps',vm:'full',union:'span:nth-child(-n+2)'}],
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
   ['#flow-list','흐름만 보기','단계마다 핵심 한 줄만 이어 보여 줍니다. 전체 순서를 빠르게 훑을 때 씁니다. 줄의 [열기 ›]를 누르면 전체 보기의 그 항목으로 갑니다.',{tab:'steps',vm:'flow'}],
@@ -30498,7 +30498,9 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     if(TR.inited){ await tgSleep(200); if(TR!==tk) return; tgDim(true); tgHole(null); await tgSleep(220); if(TR!==tk) return; }
     while(i>=0 && i<TR.steps.length){ const st=TR.steps[i], o=st[3]||{}; TR.keepCrumb=!!o.sync;
       /* 좁은 화면(1400 px 미만)에서는 목차가 본문 위에 떠서 가림: 목차 단계가 아니면 접어 둠 (2026-11-13) */
-      { const t=$('#toc'); if(t && document.body.classList.contains('toc-narrow') && !/#toc/.test(st[0])){ if(!t.classList.contains('coll')){ t.classList.add('coll'); try{ tocFx(); }catch(e){} await tgFrame(); if(TR!==tk) return; } if(TR.tocOpen) TR.sig=null; } }   /* 복제본에 목차가 펼쳐져 있으면 다시 복제 (진짜 목차는 바깥 누르기로 이미 접혔을 수 있음) */
+      { const t=$('#toc'); if(t && !/#toc/.test(st[0])){   /* 114차: 목차 단계 밖에서는 좁은 창 = 접힘, 넓은 창 = 사용법 시작 때 상태 (목차 단계가 펼친 채로 남아 본문을 가리던 것) */
+        const want = document.body.classList.contains('toc-narrow') || /(^|\s)coll(\s|$)/.test((TR.snap && TR.snap.toc) || '');
+        if(t.classList.contains('coll') !== want){ t.classList.toggle('coll', want); try{ tocFx(); }catch(e){} await tgFrame(); if(TR!==tk) return; TR.sig=null; } else if(want && TR.tocOpen) TR.sig=null; } }   /* 복제본에 목차가 펼쳐져 있으면 다시 복제 (진짜 목차는 바깥 누르기로 이미 접혔을 수 있음) */
       /* 4: 화면을 바꾸는 버튼(탭·하위 화면·보기 방식·항목)을 누르는 모습 → 바뀐 화면으로 서서히 */
       for(const c of tgClicks(o)){
         if(TR.inited && dir>0){ const be=o.inner && tourVis(c.sel); if(be){ await tgInner(o.inner, be); if(TR!==tk) return; } await tgPress(c.sel); } if(TR!==tk) return;
