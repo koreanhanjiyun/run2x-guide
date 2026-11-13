@@ -1915,7 +1915,7 @@ button.dv-s{border:0;padding:0;cursor:pointer}button.dv-s:hover{outline:2px soli
 .dvi-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;font-size:12.5px}
 .dv-s{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
 /* 대시보드와의 관계 표시 (2026-11-13 범례 개편, 한 가지 색): ● 입력값 · 대시보드 값 그대로 / ○ 계산값 / ◎ 대시보드와 다름 / ◌ 대시보드 비어 있음 / 비어 있음은 표시 없음 */
-.dv-s.s-in{background:var(--accent)}.dv-s.s-ok{background:#2e9e5b}.dv-s.s-rev{background:#ec8a12}   /* 대시보드: 확정 초록 · 검토 중 주황 (채운 원) */.dv-s.s-calc{background:transparent;box-shadow:inset 0 0 0 1.6px var(--accent)}
+.dv-s.s-in{background:#2e9e5b}   /* ● 대시보드 값 = 초록 (2026-11-13 관리자) */.dv-s.s-calc{background:transparent;box-shadow:inset 0 0 0 1.6px var(--accent)}
 .dv-s.s-dif{width:10px;height:10px;box-sizing:border-box;border:1.5px solid var(--accent);background:var(--accent);box-shadow:inset 0 0 0 1.5px var(--panel);margin-left:-1px;margin-right:5px}   /* ◎ 고리 + 가운데 점: 배율 100 % 에서 ● 와 구분되게 10 px (자리 폭은 ● 와 같게) */
 .dv-s.s-emp{background:transparent;border:1.4px dashed var(--muted);box-sizing:border-box}.dv-s.s-none{visibility:hidden}
 .dv-leg .dv-dash{margin-right:4px;color:var(--muted)}
@@ -3115,6 +3115,13 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .ts-ov{position:fixed;inset:0;z-index:31;pointer-events:none}   /* 목차 ㄱ자(거울) 판 (layout.js tocSnake) */
 #wb [data-wbdreset].sure{color:var(--verify-fg);background:var(--verify-bg);border-color:var(--verify-fg)}   /* 한 번 더 누르면 실행 */
 .dvi-t .dvi-rev{text-align:center}.dvi-t td .dv-s{margin-left:6px;vertical-align:middle}
+.dv-re{display:inline-block;margin-left:3px;color:#d9480f;font-weight:700;font-size:12.5px;line-height:1;cursor:help}   /* ↻ 다시 계산 필요 · 대시보드가 바뀜 */
+.wb-st.wb-chg{width:auto;height:auto;border-radius:0;background:none;color:#d9480f;font-style:normal;font-weight:700;font-size:12px;line-height:1;margin-right:4px;cursor:pointer}
+.wb-chgnote{margin:0 0 10px;padding:6px 8px;border-radius:6px;background:#fff4e6;color:#8a3b07;font-size:12.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wb-chgnote .btn{margin-left:auto}
+.dvi-t .dvi-note{margin-left:6px}
+.dv-s.dv-re{width:auto;height:auto;border-radius:0;background:none;margin-left:0}
+.dvi-body .wb-chgnote{display:block;margin:0 0 10px}.dvi-body .wb-chgnote .dv-re{margin:0 4px 0 0}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -5961,12 +5968,18 @@ window.__RUN2X_DUMMY = {
    "frame__m_s": {
     "s": {
      "2025": {
-      "v": 234.4,
+      "v": 236,
       "st": "ok",
       "kind": "calc",
       "src": "질량 · 무게중심 계산기",
       "by": "l0",
-      "at": "2026-03-24T00:00:00.000Z"
+      "at": "2026-03-24T00:00:00.000Z",
+      "deps": {
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6
+      }
      },
      "2026": {
       "v": 240,
@@ -5974,19 +5987,56 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "질량 · 무게중심 계산기",
       "by": "l0",
-      "at": "2026-11-06T00:00:00.000Z"
+      "at": "2026-11-06T00:00:00.000Z",
+      "deps": {
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220
+      }
      }
     }
    },
    "frame__h_s": {
     "s": {
      "2025": {
-      "v": 300.8,
+      "v": 305.5,
       "st": "ok",
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "l0",
-      "at": "2026-03-23T00:00:00.000Z"
+      "at": "2026-03-23T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 300,
@@ -5994,14 +6044,45 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "l0",
-      "at": "2026-11-05T00:00:00.000Z"
+      "at": "2026-11-05T00:00:00.000Z",
+      "deps": {
+       "m": 294,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "frame__m_us_f": {
     "s": {
      "2025": {
-      "v": 12.24,
+      "v": 11.84,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -6021,7 +6102,7 @@ window.__RUN2X_DUMMY = {
    "frame__m_us_r": {
     "s": {
      "2025": {
-      "v": 12.18,
+      "v": 12.24,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -6041,7 +6122,7 @@ window.__RUN2X_DUMMY = {
    "frame__fr": {
     "s": {
      "2025": {
-      "v": 46.52,
+      "v": 48.2,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -6061,12 +6142,18 @@ window.__RUN2X_DUMMY = {
    "frame__left": {
     "s": {
      "2025": {
-      "v": 51,
+      "v": 51.47,
       "st": "ok",
       "kind": "calc",
       "src": "질량 · 무게중심 계산기",
       "by": "l0",
-      "at": "2026-03-19T00:00:00.000Z"
+      "at": "2026-03-19T00:00:00.000Z",
+      "deps": {
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6
+      }
      },
      "2026": {
       "v": 50.2,
@@ -6074,14 +6161,20 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "질량 · 무게중심 계산기",
       "by": "l0",
-      "at": "2026-11-01T00:00:00.000Z"
+      "at": "2026-11-01T00:00:00.000Z",
+      "deps": {
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220
+      }
      }
     }
    },
    "frame__h": {
     "s": {
      "2025": {
-      "v": 294.3,
+      "v": 287.1,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -6101,7 +6194,7 @@ window.__RUN2X_DUMMY = {
    "frame__a_cg": {
     "s": {
      "2025": {
-      "v": 855.5,
+      "v": 848.2,
       "st": "ok",
       "kind": "calc",
       "src": "",
@@ -6121,12 +6214,66 @@ window.__RUN2X_DUMMY = {
    "frame__ixx": {
     "s": {
      "2025": {
-      "v": 30.03,
+      "v": 30.44,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l0",
-      "at": "2026-03-16T00:00:00.000Z"
+      "at": "2026-03-16T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 30,
@@ -6134,19 +6281,79 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l0",
-      "at": "2026-10-29T00:00:00.000Z"
+      "at": "2026-10-29T00:00:00.000Z",
+      "deps": {
+       "m": 294,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "frame__iyy": {
     "s": {
      "2025": {
-      "v": 96.43,
+      "v": 98.21,
       "st": "ok",
       "kind": "calc",
       "src": "질량 · 무게중심 계산기",
       "by": "l0",
-      "at": "2026-03-15T00:00:00.000Z"
+      "at": "2026-03-15T00:00:00.000Z",
+      "deps": {
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6
+      }
      },
      "2026": {
       "v": 95,
@@ -6154,19 +6361,79 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "질량 · 무게중심 계산기",
       "by": "l0",
-      "at": "2026-10-28T00:00:00.000Z"
+      "at": "2026-10-28T00:00:00.000Z",
+      "deps": {
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220
+      }
      }
     }
    },
    "frame__izz": {
     "s": {
      "2025": {
-      "v": 70.43,
+      "v": 67.89,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l0",
-      "at": "2026-03-14T00:00:00.000Z"
+      "at": "2026-03-14T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 70,
@@ -6174,14 +6441,68 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l0",
-      "at": "2026-10-27T00:00:00.000Z"
+      "at": "2026-10-27T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__L": {
     "s": {
      "2025": {
-      "v": 1601,
+      "v": 1602,
       "st": "ok",
       "kind": "in",
       "src": "도구 1 질량 · 무게중심 계산기",
@@ -6201,7 +6522,7 @@ window.__RUN2X_DUMMY = {
    "sus__tf": {
     "s": {
      "2025": {
-      "v": 1232,
+      "v": 1214,
       "st": "ok",
       "kind": "in",
       "src": "도구 1 질량 · 무게중심 계산기",
@@ -6210,7 +6531,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 1200,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "도구 1 질량 · 무게중심 계산기",
       "by": "u3",
@@ -6221,7 +6542,7 @@ window.__RUN2X_DUMMY = {
    "sus__tr": {
     "s": {
      "2025": {
-      "v": 1161,
+      "v": 1219,
       "st": "ok",
       "kind": "in",
       "src": "도구 1 질량 · 무게중심 계산기",
@@ -6241,7 +6562,7 @@ window.__RUN2X_DUMMY = {
    "aero__ride_h_f": {
     "s": {
      "2025": {
-      "v": 41.4,
+      "v": 39.59,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -6261,39 +6582,39 @@ window.__RUN2X_DUMMY = {
    "aero__ride_h_r": {
     "s": {
      "2025": {
-      "v": 46.36,
+      "v": 46.21,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "l6",
       "at": "2026-03-09T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 45,
+      "st": "ok",
+      "kind": "in",
+      "src": "",
+      "by": "l6",
+      "at": "2026-10-22T00:00:00.000Z"
      }
     }
    },
    "aero__fw_gap": {
     "s": {
      "2025": {
-      "v": 34.37,
+      "v": 34.03,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "l6",
       "at": "2026-03-08T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 35,
-      "st": "ok",
-      "kind": "in",
-      "src": "",
-      "by": "l6",
-      "at": "2026-10-21T00:00:00.000Z"
      }
     }
    },
    "aero__gc_min": {
     "s": {
      "2025": {
-      "v": 29.81,
+      "v": 29.83,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -6305,19 +6626,27 @@ window.__RUN2X_DUMMY = {
    "all__score_goal": {
     "s": {
      "2025": {
-      "v": 671.3,
+      "v": 672.7,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u1",
       "at": "2026-03-06T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 650,
+      "st": "ok",
+      "kind": "in",
+      "src": "",
+      "by": "u1",
+      "at": "2026-10-19T00:00:00.000Z"
      }
     }
    },
    "all__t_acc": {
     "s": {
      "2025": {
-      "v": 4.155,
+      "v": 4.277,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -6343,78 +6672,116 @@ window.__RUN2X_DUMMY = {
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u1",
       "at": "2026-03-04T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 0,
-      "st": "rev",
-      "kind": "in",
-      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
-      "by": "u1",
-      "at": "2026-10-17T00:00:00.000Z"
      }
     }
    },
    "all__t_ax": {
     "s": {
      "2025": {
-      "v": 61.53,
+      "v": 62.3,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u1",
       "at": "2026-03-03T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 62,
+      "st": "ok",
+      "kind": "in",
+      "src": "",
+      "by": "u1",
+      "at": "2026-10-16T00:00:00.000Z"
      }
     }
    },
    "all__t_end": {
     "s": {
      "2025": {
-      "v": 1484,
+      "v": 1491,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u1",
       "at": "2026-03-02T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 1500,
-      "st": "ok",
-      "kind": "in",
-      "src": "",
-      "by": "u1",
-      "at": "2026-10-15T00:00:00.000Z"
      }
     }
    },
    "sus__ay_max": {
     "s": {
      "2025": {
-      "v": 1.604,
+      "v": 1.652,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u3",
       "at": "2026-03-01T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 1.6,
-      "st": "ok",
-      "kind": "in",
-      "src": "",
-      "by": "u3",
-      "at": "2026-10-14T00:00:00.000Z"
      }
     }
    },
    "sus__ay_max_sim": {
     "s": {
      "2025": {
-      "v": 1.704,
+      "v": 1.632,
       "st": "ok",
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-28T00:00:00.000Z"
+      "at": "2026-02-28T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 1.65,
@@ -6422,14 +6789,68 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-11-07T00:00:00.000Z"
+      "at": "2026-11-07T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__k_us": {
     "s": {
      "2025": {
-      "v": 0.309,
+      "v": 0.304,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -6469,7 +6890,7 @@ window.__RUN2X_DUMMY = {
    "sus__r_eff": {
     "s": {
      "2025": {
-      "v": 232.5,
+      "v": 227.3,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -6489,7 +6910,7 @@ window.__RUN2X_DUMMY = {
    "sus__r_load": {
     "s": {
      "2025": {
-      "v": 223.7,
+      "v": 217.6,
       "st": "ok",
       "kind": "in",
       "src": "도구 1 질량 · 무게중심 계산기",
@@ -6509,7 +6930,7 @@ window.__RUN2X_DUMMY = {
    "sus__rim_d": {
     "s": {
      "2025": {
-      "v": 9.88,
+      "v": 9.87,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -6529,27 +6950,19 @@ window.__RUN2X_DUMMY = {
    "sus__rim_in": {
     "s": {
      "2025": {
-      "v": 25.59,
+      "v": 25.23,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u3",
       "at": "2026-02-22T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 25,
-      "st": "rev",
-      "kind": "in",
-      "src": "",
-      "by": "u3",
-      "at": "2026-11-01T00:00:00.000Z"
      }
     }
    },
    "sus__mu": {
     "s": {
      "2025": {
-      "v": 1.538,
+      "v": 1.549,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -6569,48 +6982,126 @@ window.__RUN2X_DUMMY = {
    "sus__mu_s": {
     "s": {
      "2025": {
-      "v": 0.239,
+      "v": 0.253,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
       "at": "2026-02-20T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.246,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-10-30T00:00:00.000Z"
      }
     }
    },
    "sus__c_alpha_f": {
     "s": {
      "2025": {
-      "v": 675.8,
+      "v": 657,
       "st": "ok",
       "kind": "in",
       "src": "타이어 모델",
       "by": "u3",
       "at": "2026-02-19T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 650,
+      "st": "ok",
+      "kind": "in",
+      "src": "타이어 모델",
+      "by": "u3",
+      "at": "2026-10-29T00:00:00.000Z"
      }
     }
    },
    "sus__c_alpha_r": {
     "s": {
      "2025": {
-      "v": 707.4,
+      "v": 700.3,
       "st": "ok",
       "kind": "in",
       "src": "타이어 모델",
       "by": "u3",
       "at": "2026-02-18T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 700,
+      "st": "ok",
+      "kind": "in",
+      "src": "타이어 모델",
+      "by": "u3",
+      "at": "2026-10-28T00:00:00.000Z"
      }
     }
    },
    "sus__tire_fz0": {
     "s": {
      "2025": {
-      "v": 733.5,
+      "v": 761.9,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-17T00:00:00.000Z"
+      "at": "2026-02-17T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 736,
@@ -6618,19 +7109,127 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-27T00:00:00.000Z"
+      "at": "2026-10-27T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__tire_ca0": {
     "s": {
      "2025": {
-      "v": 437,
+      "v": 457.5,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-16T00:00:00.000Z"
+      "at": "2026-02-16T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 450,
@@ -6638,19 +7237,127 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-26T00:00:00.000Z"
+      "at": "2026-10-26T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__tire_cn": {
     "s": {
      "2025": {
-      "v": 0.825,
+      "v": 0.806,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-15T00:00:00.000Z"
+      "at": "2026-02-15T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 0.8,
@@ -6658,19 +7365,127 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-25T00:00:00.000Z"
+      "at": "2026-10-25T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__tire_c": {
     "s": {
      "2025": {
-      "v": 1.34,
+      "v": 1.282,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-14T00:00:00.000Z"
+      "at": "2026-02-14T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 1.3,
@@ -6678,7 +7493,61 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-24T00:00:00.000Z"
+      "at": "2026-10-24T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
@@ -6690,7 +7559,61 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-13T00:00:00.000Z"
+      "at": "2026-02-13T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 0,
@@ -6698,19 +7621,127 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-23T00:00:00.000Z"
+      "at": "2026-10-23T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__tire_relax": {
     "s": {
      "2025": {
-      "v": 0.288,
+      "v": 0.291,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-12T00:00:00.000Z"
+      "at": "2026-02-12T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 0.3,
@@ -6718,7 +7749,61 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-22T00:00:00.000Z"
+      "at": "2026-10-22T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
@@ -6731,13 +7816,21 @@ window.__RUN2X_DUMMY = {
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
       "at": "2026-02-11T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 100,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-21T00:00:00.000Z"
      }
     }
    },
    "sus__scrub": {
     "s": {
      "2025": {
-      "v": 20.19,
+      "v": 19.45,
       "st": "ok",
       "kind": "in",
       "src": "서스 기하 (3D 기구학)",
@@ -6749,12 +7842,26 @@ window.__RUN2X_DUMMY = {
    "sus__kpi": {
     "s": {
      "2025": {
-      "v": 7.135,
+      "v": 7.278,
       "st": "ok",
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-02-09T00:00:00.000Z"
+      "at": "2026-02-09T00:00:00.000Z",
+      "deps": {
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6,
+       "camber_f": -2.913,
+       "camber_r": -2.062,
+       "toe_f": 0,
+       "toe_r": 0,
+       "h": 287.1,
+       "L": 1602,
+       "brake_bias": 73.96,
+       "margin_camber": 0.494,
+       "margin_toe": 0.102
+      }
      },
      "2026": {
       "v": 7,
@@ -6762,19 +7869,47 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-10-19T00:00:00.000Z"
+      "at": "2026-10-19T00:00:00.000Z",
+      "deps": {
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220,
+       "camber_f": -3,
+       "camber_r": -2,
+       "toe_f": 0,
+       "toe_r": "e",
+       "h": 290,
+       "L": 1550,
+       "brake_bias": 73.6,
+       "margin_camber": 0.5,
+       "margin_toe": 0.1
+      }
      }
     }
    },
    "str__caster": {
     "s": {
      "2025": {
-      "v": 5.075,
+      "v": 5.053,
       "st": "ok",
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-02-08T00:00:00.000Z"
+      "at": "2026-02-08T00:00:00.000Z",
+      "deps": {
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6,
+       "camber_f": -2.913,
+       "camber_r": -2.062,
+       "toe_f": 0,
+       "toe_r": 0,
+       "h": 287.1,
+       "L": 1602,
+       "brake_bias": 73.96,
+       "margin_camber": 0.494,
+       "margin_toe": 0.102
+      }
      },
      "2026": {
       "v": 5,
@@ -6782,19 +7917,47 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-10-18T00:00:00.000Z"
+      "at": "2026-10-18T00:00:00.000Z",
+      "deps": {
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220,
+       "camber_f": -3,
+       "camber_r": -2,
+       "toe_f": 0,
+       "toe_r": "e",
+       "h": 290,
+       "L": 1550,
+       "brake_bias": 73.6,
+       "margin_camber": 0.5,
+       "margin_toe": 0.1
+      }
      }
     }
    },
    "str__trail": {
     "s": {
      "2025": {
-      "v": 18.55,
+      "v": 17.94,
       "st": "ok",
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-02-07T00:00:00.000Z"
+      "at": "2026-02-07T00:00:00.000Z",
+      "deps": {
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6,
+       "camber_f": -2.913,
+       "camber_r": -2.062,
+       "toe_f": 0,
+       "toe_r": 0,
+       "h": 287.1,
+       "L": 1602,
+       "brake_bias": 73.96,
+       "margin_camber": 0.494,
+       "margin_toe": 0.102
+      }
      },
      "2026": {
       "v": 18,
@@ -6802,14 +7965,28 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-10-17T00:00:00.000Z"
+      "at": "2026-10-17T00:00:00.000Z",
+      "deps": {
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220,
+       "camber_f": -3,
+       "camber_r": -2,
+       "toe_f": 0,
+       "toe_r": "e",
+       "h": 290,
+       "L": 1550,
+       "brake_bias": 73.6,
+       "margin_camber": 0.5,
+       "margin_toe": 0.1
+      }
      }
     }
    },
    "sus__camber_f": {
     "s": {
      "2025": {
-      "v": -2.97,
+      "v": -2.913,
       "st": "ok",
       "kind": "in",
       "src": "도구 5 서스 기하 (3D 기구학)",
@@ -6818,7 +7995,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": -3,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "도구 5 서스 기하 (3D 기구학)",
       "by": "u3",
@@ -6829,12 +8006,20 @@ window.__RUN2X_DUMMY = {
    "sus__camber_r": {
     "s": {
      "2025": {
-      "v": -1.998,
+      "v": -2.062,
       "st": "ok",
       "kind": "in",
       "src": "도구 5 서스 기하 (3D 기구학)",
       "by": "u3",
       "at": "2026-02-05T00:00:00.000Z"
+     },
+     "2026": {
+      "v": -2,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 5 서스 기하 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-10-15T00:00:00.000Z"
      }
     }
    },
@@ -6867,26 +8052,32 @@ window.__RUN2X_DUMMY = {
       "src": "도구 5 서스 기하 (3D 기구학)",
       "by": "u3",
       "at": "2026-02-03T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 0,
-      "st": "rev",
-      "kind": "in",
-      "src": "도구 5 서스 기하 (3D 기구학)",
-      "by": "u3",
-      "at": "2026-11-07T00:00:00.000Z"
      }
     }
    },
    "sus__camber_gain_f": {
     "s": {
      "2025": {
-      "v": 0.83,
+      "v": 0.769,
       "st": "ok",
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-02-02T00:00:00.000Z"
+      "at": "2026-02-02T00:00:00.000Z",
+      "deps": {
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6,
+       "camber_f": -2.913,
+       "camber_r": -2.062,
+       "toe_f": 0,
+       "toe_r": 0,
+       "h": 287.1,
+       "L": 1602,
+       "brake_bias": 73.96,
+       "margin_camber": 0.494,
+       "margin_toe": 0.102
+      }
      },
      "2026": {
       "v": 0.8,
@@ -6894,19 +8085,47 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-11-06T00:00:00.000Z"
+      "at": "2026-11-06T00:00:00.000Z",
+      "deps": {
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220,
+       "camber_f": -3,
+       "camber_r": -2,
+       "toe_f": 0,
+       "toe_r": "e",
+       "h": 290,
+       "L": 1550,
+       "brake_bias": 73.6,
+       "margin_camber": 0.5,
+       "margin_toe": 0.1
+      }
      }
     }
    },
    "sus__camber_gain_r": {
     "s": {
      "2025": {
-      "v": 0.609,
+      "v": 0.58,
       "st": "ok",
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-02-01T00:00:00.000Z"
+      "at": "2026-02-01T00:00:00.000Z",
+      "deps": {
+       "tf": 1214,
+       "tr": 1219,
+       "r_load": 217.6,
+       "camber_f": -2.913,
+       "camber_r": -2.062,
+       "toe_f": 0,
+       "toe_r": 0,
+       "h": 287.1,
+       "L": 1602,
+       "brake_bias": 73.96,
+       "margin_camber": 0.494,
+       "margin_toe": 0.102
+      }
      },
      "2026": {
       "v": 0.6,
@@ -6914,14 +8133,28 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
-      "at": "2026-11-05T00:00:00.000Z"
+      "at": "2026-11-05T00:00:00.000Z",
+      "deps": {
+       "tf": 1200,
+       "tr": 1180,
+       "r_load": 220,
+       "camber_f": -3,
+       "camber_r": -2,
+       "toe_f": 0,
+       "toe_r": "e",
+       "h": 290,
+       "L": 1550,
+       "brake_bias": 73.6,
+       "margin_camber": 0.5,
+       "margin_toe": 0.1
+      }
      }
     }
    },
    "sus__rc_f": {
     "s": {
      "2025": {
-      "v": 29.33,
+      "v": 30.28,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -6933,39 +8166,39 @@ window.__RUN2X_DUMMY = {
    "sus__rc_r": {
     "s": {
      "2025": {
-      "v": 50.26,
+      "v": 50.96,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
       "at": "2026-01-30T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 50,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u3",
+      "at": "2026-11-03T00:00:00.000Z"
      }
     }
    },
    "sus__anti_dive": {
     "s": {
      "2025": {
-      "v": 15.32,
+      "v": 15.23,
       "st": "ok",
       "kind": "in",
       "src": "서스 기하 (3D 기구학)",
       "by": "u3",
       "at": "2026-01-29T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 15,
-      "st": "ok",
-      "kind": "in",
-      "src": "서스 기하 (3D 기구학)",
-      "by": "u3",
-      "at": "2026-11-02T00:00:00.000Z"
      }
     }
    },
    "sus__anti_squat": {
     "s": {
      "2025": {
-      "v": 20,
+      "v": 20.61,
       "st": "ok",
       "kind": "in",
       "src": "서스 기하 (3D 기구학)",
@@ -6977,7 +8210,7 @@ window.__RUN2X_DUMMY = {
    "sus__roll_grad": {
     "s": {
      "2025": {
-      "v": 0.969,
+      "v": 0.99,
       "st": "ok",
       "kind": "in",
       "src": "액추에이션 · 스프링",
@@ -6986,7 +8219,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 1,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "액추에이션 · 스프링",
       "by": "u3",
@@ -6997,12 +8230,66 @@ window.__RUN2X_DUMMY = {
    "sus__k_roll": {
     "s": {
      "2025": {
-      "v": 507.5,
+      "v": 484.7,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-01-26T00:00:00.000Z"
+      "at": "2026-01-26T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 500,
@@ -7010,14 +8297,68 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-30T00:00:00.000Z"
+      "at": "2026-10-30T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__lltd": {
     "s": {
      "2025": {
-      "v": 47.67,
+      "v": 47.53,
       "st": "ok",
       "kind": "in",
       "src": "도구 8 하중 산출 (3D)",
@@ -7037,7 +8378,7 @@ window.__RUN2X_DUMMY = {
    "sus__rsd": {
     "s": {
      "2025": {
-      "v": 51.97,
+      "v": 50.55,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -7057,12 +8398,43 @@ window.__RUN2X_DUMMY = {
    "sus__kw_f": {
     "s": {
      "2025": {
-      "v": 21.86,
+      "v": 21.16,
       "st": "ok",
       "kind": "calc",
       "src": "액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-24T00:00:00.000Z"
+      "at": "2026-03-24T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 22,
@@ -7070,19 +8442,81 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-27T00:00:00.000Z"
+      "at": "2026-10-27T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__kw_r": {
     "s": {
      "2025": {
-      "v": 26.47,
+      "v": 25.35,
       "st": "ok",
       "kind": "calc",
       "src": "액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-23T00:00:00.000Z"
+      "at": "2026-03-23T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 26,
@@ -7090,51 +8524,113 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-26T00:00:00.000Z"
+      "at": "2026-10-26T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__f_ride_f": {
     "s": {
      "2025": {
-      "v": 3.174,
+      "v": 3.217,
       "st": "ok",
       "kind": "in",
       "src": "액추에이션 · 스프링",
       "by": "u3",
       "at": "2026-03-22T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 3.2,
+      "st": "ok",
+      "kind": "in",
+      "src": "액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-25T00:00:00.000Z"
      }
     }
    },
    "sus__f_ride_r": {
     "s": {
      "2025": {
-      "v": 3.473,
+      "v": 3.435,
       "st": "ok",
       "kind": "in",
       "src": "액추에이션 · 스프링",
       "by": "u3",
       "at": "2026-03-21T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 3.5,
-      "st": "ok",
-      "kind": "in",
-      "src": "액추에이션 · 스프링",
-      "by": "u3",
-      "at": "2026-10-24T00:00:00.000Z"
      }
     }
    },
    "sus__mr_f": {
     "s": {
      "2025": {
-      "v": 0.889,
+      "v": 0.879,
       "st": "ok",
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-20T00:00:00.000Z"
+      "at": "2026-03-20T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 0.9,
@@ -7142,19 +8638,81 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-23T00:00:00.000Z"
+      "at": "2026-10-23T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__mr_r": {
     "s": {
      "2025": {
-      "v": 0.917,
+      "v": 0.868,
       "st": "ok",
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-19T00:00:00.000Z"
+      "at": "2026-03-19T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 0.9,
@@ -7162,19 +8720,81 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-22T00:00:00.000Z"
+      "at": "2026-10-22T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__ks_f": {
     "s": {
      "2025": {
-      "v": 45.81,
+      "v": 45.72,
       "st": "ok",
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-18T00:00:00.000Z"
+      "at": "2026-03-18T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 45,
@@ -7182,19 +8802,81 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-21T00:00:00.000Z"
+      "at": "2026-10-21T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__ks_r": {
     "s": {
      "2025": {
-      "v": 48.79,
+      "v": 49.99,
       "st": "ok",
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-17T00:00:00.000Z"
+      "at": "2026-03-17T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 50,
@@ -7202,19 +8884,81 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-20T00:00:00.000Z"
+      "at": "2026-10-20T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__karb_f": {
     "s": {
      "2025": {
-      "v": 155.8,
+      "v": 145.3,
       "st": "ok",
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-16T00:00:00.000Z"
+      "at": "2026-03-16T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 150,
@@ -7222,19 +8966,81 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-19T00:00:00.000Z"
+      "at": "2026-10-19T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__karb_r": {
     "s": {
      "2025": {
-      "v": 101.1,
+      "v": 97,
       "st": "ok",
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-03-15T00:00:00.000Z"
+      "at": "2026-03-15T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "h_s": 305.5,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "r_load": 217.6,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "ixx": 30.44,
+       "ks_f": 45.72,
+       "ks_r": 49.99,
+       "mr_f": 0.879,
+       "mr_r": 0.868,
+       "karb_f": 145.3,
+       "karb_r": 97,
+       "kt_tire": 96.6,
+       "cd_f": 1546,
+       "cd_r": 1559,
+       "damper_len": 216.5,
+       "damper_stroke": 53.83,
+       "k_heave": 41.26,
+       "zeta": 0.686,
+       "dh_max": 20.61,
+       "camber_f": -2.913,
+       "camber_r": -2.062
+      }
      },
      "2026": {
       "v": 100,
@@ -7242,14 +9048,45 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
-      "at": "2026-10-18T00:00:00.000Z"
+      "at": "2026-10-18T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "h_s": 300,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "r_load": 220,
+       "rc_f": "e",
+       "rc_r": 50,
+       "ixx": 30,
+       "ks_f": 45,
+       "ks_r": 50,
+       "mr_f": 0.9,
+       "mr_r": 0.9,
+       "karb_f": 150,
+       "karb_r": 100,
+       "kt_tire": 100,
+       "cd_f": 1500,
+       "cd_r": 1500,
+       "damper_len": 210,
+       "damper_stroke": 55,
+       "k_heave": 40,
+       "zeta": 0.7,
+       "dh_max": 20,
+       "camber_f": -3,
+       "camber_r": -2
+      }
      }
     }
    },
    "sus__k_heave": {
     "s": {
      "2025": {
-      "v": 41.34,
+      "v": 41.26,
       "st": "ok",
       "kind": "calc",
       "src": "",
@@ -7269,19 +9106,27 @@ window.__RUN2X_DUMMY = {
    "sus__cd_f": {
     "s": {
      "2025": {
-      "v": 1517,
+      "v": 1546,
       "st": "ok",
       "kind": "in",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
       "at": "2026-03-13T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 1500,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-10-16T00:00:00.000Z"
      }
     }
    },
    "sus__cd_r": {
     "s": {
      "2025": {
-      "v": 1500,
+      "v": 1559,
       "st": "ok",
       "kind": "in",
       "src": "도구 7 액추에이션 · 스프링",
@@ -7301,12 +9146,66 @@ window.__RUN2X_DUMMY = {
    "sus__c_roll": {
     "s": {
      "2025": {
-      "v": 31.07,
+      "v": 30.64,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-03-11T00:00:00.000Z"
+      "at": "2026-03-11T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 30,
@@ -7314,14 +9213,68 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-14T00:00:00.000Z"
+      "at": "2026-10-14T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "sus__zeta": {
     "s": {
      "2025": {
-      "v": 0.682,
+      "v": 0.686,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7330,7 +9283,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 0.7,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u3",
@@ -7341,7 +9294,7 @@ window.__RUN2X_DUMMY = {
    "sus__dh_max": {
     "s": {
      "2025": {
-      "v": 20.26,
+      "v": 20.61,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7361,7 +9314,7 @@ window.__RUN2X_DUMMY = {
    "sus__damper_stroke": {
     "s": {
      "2025": {
-      "v": 55.03,
+      "v": 53.83,
       "st": "ok",
       "kind": "in",
       "src": "도구 7 액추에이션 · 스프링",
@@ -7381,19 +9334,27 @@ window.__RUN2X_DUMMY = {
    "sus__damper_len": {
     "s": {
      "2025": {
-      "v": 214.2,
+      "v": 216.5,
       "st": "ok",
       "kind": "in",
       "src": "도구 7 액추에이션 · 스프링",
       "by": "u3",
       "at": "2026-03-07T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 210,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 7 액추에이션 · 스프링",
+      "by": "u3",
+      "at": "2026-11-04T00:00:00.000Z"
      }
     }
    },
    "sus__margin_camber": {
     "s": {
      "2025": {
-      "v": 0.492,
+      "v": 0.494,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7419,13 +9380,21 @@ window.__RUN2X_DUMMY = {
       "src": "",
       "by": "u3",
       "at": "2026-03-05T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.1,
+      "st": "ok",
+      "kind": "in",
+      "src": "",
+      "by": "u3",
+      "at": "2026-11-02T00:00:00.000Z"
      }
     }
    },
    "sus__meas_camber_load": {
     "s": {
      "2025": {
-      "v": 0.196,
+      "v": 0.204,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7445,7 +9414,7 @@ window.__RUN2X_DUMMY = {
    "sus__meas_toe_load": {
     "s": {
      "2025": {
-      "v": 0.048,
+      "v": 0.049,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7465,7 +9434,7 @@ window.__RUN2X_DUMMY = {
    "str__rmin": {
     "s": {
      "2025": {
-      "v": 3.306,
+      "v": 3.324,
       "st": "ok",
       "kind": "in",
       "src": "조향 (3D 기구학)",
@@ -7485,12 +9454,66 @@ window.__RUN2X_DUMMY = {
    "str__delta_max": {
     "s": {
      "2025": {
-      "v": 35.25,
+      "v": 34.36,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-03-01T00:00:00.000Z"
+      "at": "2026-03-01T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 34,
@@ -7498,34 +9521,80 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-29T00:00:00.000Z"
+      "at": "2026-10-29T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "str__ackermann": {
     "s": {
      "2025": {
-      "v": 61.26,
+      "v": 62.01,
       "st": "ok",
       "kind": "in",
       "src": "조향 (3D 기구학)",
       "by": "u3",
       "at": "2026-02-28T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 60,
-      "st": "ok",
-      "kind": "in",
-      "src": "조향 (3D 기구학)",
-      "by": "u3",
-      "at": "2026-10-28T00:00:00.000Z"
      }
     }
    },
    "str__rack_c": {
     "s": {
      "2025": {
-      "v": 92.87,
+      "v": 91.05,
       "st": "ok",
       "kind": "in",
       "src": "도구 6 조향 (3D 기구학)",
@@ -7537,12 +9606,66 @@ window.__RUN2X_DUMMY = {
    "str__steer_ratio": {
     "s": {
      "2025": {
-      "v": 4.854,
+      "v": 4.999,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-02-26T00:00:00.000Z"
+      "at": "2026-02-26T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 5,
@@ -7550,31 +9673,103 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u3",
-      "at": "2026-10-26T00:00:00.000Z"
+      "at": "2026-10-26T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "str__rack_travel": {
     "s": {
      "2025": {
-      "v": 30.75,
+      "v": 32.43,
       "st": "ok",
       "kind": "in",
       "src": "도구 6 조향 (3D 기구학)",
       "by": "u3",
       "at": "2026-02-25T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 31.74,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 6 조향 (3D 기구학)",
+      "by": "u3",
+      "at": "2026-10-25T00:00:00.000Z"
      }
     }
    },
    "str__knuckle_l": {
     "s": {
      "2025": {
-      "v": 67.25,
+      "v": 69.9,
       "st": "ok",
       "kind": "calc",
       "src": "조향 (3D 기구학)",
       "by": "u3",
-      "at": "2026-02-24T00:00:00.000Z"
+      "at": "2026-02-24T00:00:00.000Z",
+      "deps": {
+       "L": 1602,
+       "tf": 1214,
+       "fr": 48.2,
+       "r_load": 217.6,
+       "camber_f": -2.913,
+       "toe_f": 0,
+       "rack_c": 91.05,
+       "rack_travel": 32.43
+      }
      },
      "2026": {
       "v": 70,
@@ -7582,14 +9777,24 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "조향 (3D 기구학)",
       "by": "u3",
-      "at": "2026-10-24T00:00:00.000Z"
+      "at": "2026-10-24T00:00:00.000Z",
+      "deps": {
+       "L": 1550,
+       "tf": 1200,
+       "fr": 47.5,
+       "r_load": 220,
+       "camber_f": -3,
+       "toe_f": 0,
+       "rack_c": "e",
+       "rack_travel": 31.74
+      }
      }
     }
    },
    "str__sw_d": {
     "s": {
      "2025": {
-      "v": 269.3,
+      "v": 258.9,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7601,31 +9806,47 @@ window.__RUN2X_DUMMY = {
    "str__sw_torque_max": {
     "s": {
      "2025": {
-      "v": 7.766,
+      "v": 8.104,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u3",
       "at": "2026-02-22T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 8,
+      "st": "ok",
+      "kind": "in",
+      "src": "",
+      "by": "u3",
+      "at": "2026-10-22T00:00:00.000Z"
      }
     }
    },
    "brk__brake_bias": {
     "s": {
      "2025": {
-      "v": 74.63,
+      "v": 73.96,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
       "by": "l1",
       "at": "2026-02-21T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 73.6,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-10-21T00:00:00.000Z"
      }
     }
    },
    "brk__pedal_ratio": {
     "s": {
      "2025": {
-      "v": 2.72,
+      "v": 2.786,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
@@ -7645,12 +9866,24 @@ window.__RUN2X_DUMMY = {
    "brk__mc_f": {
     "s": {
      "2025": {
-      "v": 16.1,
+      "v": 16.19,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
       "by": "l1",
       "at": "2026-02-19T00:00:00.000Z"
+     }
+    }
+   },
+   "brk__mc_r": {
+    "s": {
+     "2025": {
+      "v": 15.62,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-02-18T00:00:00.000Z"
      },
      "2026": {
       "v": 15.88,
@@ -7658,26 +9891,14 @@ window.__RUN2X_DUMMY = {
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
       "by": "l1",
-      "at": "2026-10-19T00:00:00.000Z"
-     }
-    }
-   },
-   "brk__mc_r": {
-    "s": {
-     "2025": {
-      "v": 15.77,
-      "st": "ok",
-      "kind": "in",
-      "src": "도구 3 제동 시스템 사이징",
-      "by": "l1",
-      "at": "2026-02-18T00:00:00.000Z"
+      "at": "2026-10-18T00:00:00.000Z"
      }
     }
    },
    "brk__cal_area_f": {
     "s": {
      "2025": {
-      "v": 750,
+      "v": 748.4,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
@@ -7697,63 +9918,79 @@ window.__RUN2X_DUMMY = {
    "brk__cal_area_r": {
     "s": {
      "2025": {
-      "v": 745.3,
+      "v": 753.8,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
       "by": "l1",
       "at": "2026-02-16T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 766.6,
-      "st": "ok",
-      "kind": "in",
-      "src": "도구 3 제동 시스템 사이징",
-      "by": "l1",
-      "at": "2026-10-16T00:00:00.000Z"
      }
     }
    },
    "brk__pad_mu": {
     "s": {
      "2025": {
-      "v": 0.31,
+      "v": 0.324,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
       "by": "l1",
       "at": "2026-02-15T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.32,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-10-15T00:00:00.000Z"
      }
     }
    },
    "brk__disc_d_f": {
     "s": {
      "2025": {
-      "v": 188.5,
+      "v": 180.6,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
       "by": "l1",
       "at": "2026-02-14T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 187,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-10-14T00:00:00.000Z"
      }
     }
    },
    "brk__disc_d_r": {
     "s": {
      "2025": {
-      "v": 180.7,
+      "v": 191.8,
       "st": "ok",
       "kind": "in",
       "src": "도구 3 제동 시스템 사이징",
       "by": "l1",
       "at": "2026-02-13T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 187,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 3 제동 시스템 사이징",
+      "by": "l1",
+      "at": "2026-11-07T00:00:00.000Z"
      }
     }
    },
    "brk__disc_t": {
     "s": {
      "2025": {
-      "v": 4.047,
+      "v": 4.131,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7773,7 +10010,7 @@ window.__RUN2X_DUMMY = {
    "brk__pv_knee": {
     "s": {
      "2025": {
-      "v": 31.19,
+      "v": 31.1,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7785,7 +10022,7 @@ window.__RUN2X_DUMMY = {
    "brk__pv_slope": {
     "s": {
      "2025": {
-      "v": 0.497,
+      "v": 0.51,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7794,7 +10031,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 0.5,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "",
       "by": "l1",
@@ -7805,12 +10042,32 @@ window.__RUN2X_DUMMY = {
    "brk__pedal_force": {
     "s": {
      "2025": {
-      "v": 624.3,
+      "v": 661.6,
       "st": "ok",
       "kind": "calc",
       "src": "제동 시스템 사이징 ",
       "by": "l1",
-      "at": "2026-02-09T00:00:00.000Z"
+      "at": "2026-02-09T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "mu": 1.549,
+       "r_load": 217.6,
+       "cla": 2.889,
+       "xcop": 703.9,
+       "pedal_ratio": 2.786,
+       "brake_bias": 73.96,
+       "mc_f": 16.19,
+       "mc_r": 15.62,
+       "cal_area_f": 748.4,
+       "cal_area_r": 753.8,
+       "pad_mu": 0.324,
+       "disc_d_f": 180.6,
+       "disc_d_r": 191.8,
+       "disc_t": 4.131
+      }
      },
      "2026": {
       "v": 650,
@@ -7818,14 +10075,34 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "제동 시스템 사이징 ",
       "by": "l1",
-      "at": "2026-11-03T00:00:00.000Z"
+      "at": "2026-11-03T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "mu": 1.5,
+       "r_load": 220,
+       "cla": 3,
+       "xcop": 698,
+       "pedal_ratio": 2.73,
+       "brake_bias": 73.6,
+       "mc_f": "e",
+       "mc_r": 15.88,
+       "cal_area_f": 766.6,
+       "cal_area_r": "e",
+       "pad_mu": 0.32,
+       "disc_d_f": 187,
+       "disc_d_r": 187,
+       "disc_t": 4
+      }
      }
     }
    },
    "aero__cla": {
     "s": {
      "2025": {
-      "v": 2.902,
+      "v": 2.889,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -7845,7 +10122,7 @@ window.__RUN2X_DUMMY = {
    "aero__cda": {
     "s": {
      "2025": {
-      "v": 1.431,
+      "v": 1.353,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -7865,32 +10142,78 @@ window.__RUN2X_DUMMY = {
    "aero__aero_bal": {
     "s": {
      "2025": {
-      "v": 46.28,
+      "v": 43.51,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "l6",
       "at": "2026-02-06T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 45,
-      "st": "ok",
-      "kind": "in",
-      "src": "",
-      "by": "l6",
-      "at": "2026-10-31T00:00:00.000Z"
      }
     }
    },
    "aero__xcop": {
     "s": {
      "2025": {
-      "v": 707,
+      "v": 703.9,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l6",
-      "at": "2026-02-05T00:00:00.000Z"
+      "at": "2026-02-05T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 698,
@@ -7898,14 +10221,68 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l6",
-      "at": "2026-10-30T00:00:00.000Z"
+      "at": "2026-10-30T00:00:00.000Z",
+      "deps": {
+       "m": 294,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "aero__hcop": {
     "s": {
      "2025": {
-      "v": 414.9,
+      "v": 409.7,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -7925,7 +10302,7 @@ window.__RUN2X_DUMMY = {
    "aero__dh_sens": {
     "s": {
      "2025": {
-      "v": 0.5,
+      "v": 0.488,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7951,21 +10328,13 @@ window.__RUN2X_DUMMY = {
       "src": "",
       "by": "l6",
       "at": "2026-02-02T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 0,
-      "st": "ok",
-      "kind": "in",
-      "src": "",
-      "by": "l6",
-      "at": "2026-10-27T00:00:00.000Z"
      }
     }
    },
    "aero__cla_drs": {
     "s": {
      "2025": {
-      "v": 2.037,
+      "v": 1.993,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -7985,7 +10354,7 @@ window.__RUN2X_DUMMY = {
    "aero__cda_drs": {
     "s": {
      "2025": {
-      "v": 0.935,
+      "v": 0.894,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -8005,7 +10374,7 @@ window.__RUN2X_DUMMY = {
    "aero__xcop_drs": {
     "s": {
      "2025": {
-      "v": 932.9,
+      "v": 919.8,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -8025,7 +10394,7 @@ window.__RUN2X_DUMMY = {
    "mc__pmax": {
     "s": {
      "2025": {
-      "v": 77.31,
+      "v": 79.47,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8045,12 +10414,66 @@ window.__RUN2X_DUMMY = {
    "mc__tmax": {
     "s": {
      "2025": {
-      "v": 233.8,
+      "v": 225,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l3",
-      "at": "2026-01-28T00:00:00.000Z"
+      "at": "2026-01-28T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 230,
@@ -8058,14 +10481,68 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l3",
-      "at": "2026-10-22T00:00:00.000Z"
+      "at": "2026-10-22T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "mc__nmax": {
     "s": {
      "2025": {
-      "v": 6737,
+      "v": 6747,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8085,7 +10562,7 @@ window.__RUN2X_DUMMY = {
    "pt__gr": {
     "s": {
      "2025": {
-      "v": 3.476,
+      "v": 3.671,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8094,7 +10571,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 3.55,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l2",
@@ -8105,12 +10582,66 @@ window.__RUN2X_DUMMY = {
    "pt__vmax": {
     "s": {
      "2025": {
-      "v": 124,
+      "v": 116.4,
       "st": "ok",
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "l2",
-      "at": "2026-01-25T00:00:00.000Z"
+      "at": "2026-01-25T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 120,
@@ -8118,47 +10649,85 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "l2",
-      "at": "2026-10-19T00:00:00.000Z"
+      "at": "2026-10-19T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "pt__eta_dt": {
     "s": {
      "2025": {
-      "v": 96.03,
+      "v": 95.78,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l2",
       "at": "2026-03-25T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 95,
-      "st": "ok",
-      "kind": "in",
-      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
-      "by": "l2",
-      "at": "2026-10-18T00:00:00.000Z"
      }
     }
    },
    "pt__j_eq": {
     "s": {
      "2025": {
-      "v": 0.498,
+      "v": 0.483,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l2",
       "at": "2026-03-24T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 0.5,
-      "st": "ok",
-      "kind": "in",
-      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
-      "by": "l2",
-      "at": "2026-10-17T00:00:00.000Z"
      }
     }
    },
@@ -8171,13 +10740,21 @@ window.__RUN2X_DUMMY = {
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l2",
       "at": "2026-03-23T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 0.015,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l2",
+      "at": "2026-10-16T00:00:00.000Z"
      }
     }
    },
    "pt__lsd_preload": {
     "s": {
      "2025": {
-      "v": 10.15,
+      "v": 9.98,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -8197,7 +10774,7 @@ window.__RUN2X_DUMMY = {
    "pt__lsd_ramp_acc": {
     "s": {
      "2025": {
-      "v": 43.88,
+      "v": 43.47,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -8217,27 +10794,19 @@ window.__RUN2X_DUMMY = {
    "pt__lsd_ramp_dec": {
     "s": {
      "2025": {
-      "v": 61.91,
+      "v": 59.11,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "l2",
       "at": "2026-03-20T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 60,
-      "st": "ok",
-      "kind": "in",
-      "src": "",
-      "by": "l2",
-      "at": "2026-11-07T00:00:00.000Z"
      }
     }
    },
    "mc__regen_tmax": {
     "s": {
      "2025": {
-      "v": 233.4,
+      "v": 220.9,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8246,7 +10815,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 230,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l3",
@@ -8257,27 +10826,19 @@ window.__RUN2X_DUMMY = {
    "mc__slip_target": {
     "s": {
      "2025": {
-      "v": 9.85,
+      "v": 9.67,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "l3",
       "at": "2026-03-18T00:00:00.000Z"
-     },
-     "2026": {
-      "v": 10,
-      "st": "rev",
-      "kind": "in",
-      "src": "",
-      "by": "l3",
-      "at": "2026-11-05T00:00:00.000Z"
      }
     }
    },
    "mc__derate_t0": {
     "s": {
      "2025": {
-      "v": 77.64,
+      "v": 82.71,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8286,7 +10847,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 80,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l3",
@@ -8297,7 +10858,7 @@ window.__RUN2X_DUMMY = {
    "mc__derate_t1": {
     "s": {
      "2025": {
-      "v": 101.5,
+      "v": 102.1,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8306,7 +10867,7 @@ window.__RUN2X_DUMMY = {
      },
      "2026": {
       "v": 100,
-      "st": "rev",
+      "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l3",
@@ -8317,7 +10878,7 @@ window.__RUN2X_DUMMY = {
    "mc__inv_derate_t0": {
     "s": {
      "2025": {
-      "v": 48.85,
+      "v": 51.42,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8337,36 +10898,106 @@ window.__RUN2X_DUMMY = {
    "mc__inv_derate_t1": {
     "s": {
      "2025": {
-      "v": 82.79,
+      "v": 87.05,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "l3",
       "at": "2026-03-14T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 85,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "l3",
+      "at": "2026-11-01T00:00:00.000Z"
      }
     }
    },
    "mc__p_endur": {
     "s": {
      "2025": {
-      "v": 35.35,
+      "v": 35.2,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "l3",
       "at": "2026-03-13T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 35,
+      "st": "ok",
+      "kind": "in",
+      "src": "",
+      "by": "l3",
+      "at": "2026-10-31T00:00:00.000Z"
      }
     }
    },
    "mc__e_lap": {
     "s": {
      "2025": {
-      "v": 0.307,
+      "v": 0.298,
       "st": "ok",
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "l3",
-      "at": "2026-03-12T00:00:00.000Z"
+      "at": "2026-03-12T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 0.3,
@@ -8374,19 +11005,85 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "l3",
-      "at": "2026-10-30T00:00:00.000Z"
+      "at": "2026-10-30T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "bat__e_pack": {
     "s": {
      "2025": {
-      "v": 7.549,
+      "v": 7.397,
       "st": "ok",
       "kind": "calc",
       "src": "축전지 팩 계산기",
       "by": "u4",
-      "at": "2026-03-11T00:00:00.000Z"
+      "at": "2026-03-11T00:00:00.000Z",
+      "deps": {
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "c_imax": 36.33,
+       "c_ich": 5.798,
+       "c_r": 11.99,
+       "c_g": 72.14,
+       "n_seg": 5.095,
+       "n_p": 6.853
+      }
      },
      "2026": {
       "v": 7.4,
@@ -8394,14 +11091,26 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "축전지 팩 계산기",
       "by": "u4",
-      "at": "2026-10-29T00:00:00.000Z"
+      "at": "2026-10-29T00:00:00.000Z",
+      "deps": {
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "c_imax": 35,
+       "c_ich": 6,
+       "c_r": 12,
+       "c_g": 70,
+       "n_seg": 5,
+       "n_p": 7
+      }
      }
     }
    },
    "bat__c_vmax": {
     "s": {
      "2025": {
-      "v": 4.143,
+      "v": 4.275,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8421,7 +11130,7 @@ window.__RUN2X_DUMMY = {
    "bat__c_vnom": {
     "s": {
      "2025": {
-      "v": 3.614,
+      "v": 3.638,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8441,7 +11150,7 @@ window.__RUN2X_DUMMY = {
    "bat__c_vmin": {
     "s": {
      "2025": {
-      "v": 2.54,
+      "v": 2.577,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
@@ -8461,43 +11170,67 @@ window.__RUN2X_DUMMY = {
    "bat__c_ah": {
     "s": {
      "2025": {
-      "v": 3.872,
+      "v": 4.156,
       "st": "ok",
       "kind": "in",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
       "at": "2026-03-07T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 4,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
+      "by": "u4",
+      "at": "2026-10-25T00:00:00.000Z"
      }
     }
    },
    "bat__c_r": {
     "s": {
      "2025": {
-      "v": 12.11,
+      "v": 11.99,
       "st": "ok",
       "kind": "in",
       "src": "도구 4 축전지 팩 계산기",
       "by": "u4",
       "at": "2026-03-06T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 12,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-10-24T00:00:00.000Z"
      }
     }
    },
    "bat__c_imax": {
     "s": {
      "2025": {
-      "v": 35.23,
+      "v": 36.33,
       "st": "ok",
       "kind": "in",
       "src": "도구 4 축전지 팩 계산기",
       "by": "u4",
       "at": "2026-03-05T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 35,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-10-23T00:00:00.000Z"
      }
     }
    },
    "bat__c_ich": {
     "s": {
      "2025": {
-      "v": 5.867,
+      "v": 5.798,
       "st": "ok",
       "kind": "in",
       "src": "도구 4 축전지 팩 계산기",
@@ -8517,36 +11250,106 @@ window.__RUN2X_DUMMY = {
    "bat__c_g": {
     "s": {
      "2025": {
-      "v": 71.75,
+      "v": 72.14,
       "st": "ok",
       "kind": "in",
       "src": "도구 4 축전지 팩 계산기",
       "by": "u4",
       "at": "2026-03-03T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 70,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-10-21T00:00:00.000Z"
      }
     }
    },
    "bat__n_seg": {
     "s": {
      "2025": {
-      "v": 5.162,
+      "v": 5.095,
       "st": "ok",
       "kind": "in",
       "src": "도구 4 축전지 팩 계산기",
       "by": "u4",
       "at": "2026-03-02T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 5,
+      "st": "ok",
+      "kind": "in",
+      "src": "도구 4 축전지 팩 계산기",
+      "by": "u4",
+      "at": "2026-10-20T00:00:00.000Z"
      }
     }
    },
    "bat__n_s": {
     "s": {
      "2025": {
-      "v": 71.07,
+      "v": 71.61,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-03-01T00:00:00.000Z"
+      "at": "2026-03-01T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 70,
@@ -8554,19 +11357,127 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-10-19T00:00:00.000Z"
+      "at": "2026-10-19T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "bat__n_p": {
     "s": {
      "2025": {
-      "v": 7.164,
+      "v": 6.853,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-02-28T00:00:00.000Z"
+      "at": "2026-02-28T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 7,
@@ -8574,19 +11485,85 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-10-18T00:00:00.000Z"
+      "at": "2026-10-18T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "bat__v_pack": {
     "s": {
      "2025": {
-      "v": 409.7,
+      "v": 387.3,
       "st": "ok",
       "kind": "calc",
       "src": "축전지 팩 계산기",
       "by": "u4",
-      "at": "2026-02-27T00:00:00.000Z"
+      "at": "2026-02-27T00:00:00.000Z",
+      "deps": {
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "c_imax": 36.33,
+       "c_ich": 5.798,
+       "c_r": 11.99,
+       "c_g": 72.14,
+       "n_seg": 5.095,
+       "n_p": 6.853
+      }
      },
      "2026": {
       "v": 400,
@@ -8594,19 +11571,85 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "축전지 팩 계산기",
       "by": "u4",
-      "at": "2026-10-17T00:00:00.000Z"
+      "at": "2026-10-17T00:00:00.000Z",
+      "deps": {
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "c_imax": 35,
+       "c_ich": 6,
+       "c_r": 12,
+       "c_g": 70,
+       "n_seg": 5,
+       "n_p": 7
+      }
      }
     }
    },
    "bat__r_pack": {
     "s": {
      "2025": {
-      "v": 124,
+      "v": 122.9,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-02-26T00:00:00.000Z"
+      "at": "2026-02-26T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 120,
@@ -8614,19 +11657,85 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-10-16T00:00:00.000Z"
+      "at": "2026-10-16T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "bat__m_pack": {
     "s": {
      "2025": {
-      "v": 43.09,
+      "v": 42.71,
       "st": "ok",
       "kind": "calc",
       "src": "축전지 팩 계산기",
       "by": "u4",
-      "at": "2026-02-25T00:00:00.000Z"
+      "at": "2026-02-25T00:00:00.000Z",
+      "deps": {
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "c_imax": 36.33,
+       "c_ich": 5.798,
+       "c_r": 11.99,
+       "c_g": 72.14,
+       "n_seg": 5.095,
+       "n_p": 6.853
+      }
      },
      "2026": {
       "v": 42,
@@ -8634,14 +11743,26 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "축전지 팩 계산기",
       "by": "u4",
-      "at": "2026-10-15T00:00:00.000Z"
+      "at": "2026-10-15T00:00:00.000Z",
+      "deps": {
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "c_imax": 35,
+       "c_ich": 6,
+       "c_r": 12,
+       "c_g": 70,
+       "n_seg": 5,
+       "n_p": 7
+      }
      }
     }
    },
    "bat__driver_k": {
     "s": {
      "2025": {
-      "v": 0.978,
+      "v": 0.946,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -8666,7 +11787,61 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-02-23T00:00:00.000Z"
+      "at": "2026-02-23T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 0,
@@ -8674,19 +11849,127 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-11-07T00:00:00.000Z"
+      "at": "2026-11-07T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "cool__q_cool": {
     "s": {
      "2025": {
-      "v": 5.851,
+      "v": 5.89,
       "st": "ok",
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-02-22T00:00:00.000Z"
+      "at": "2026-02-22T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 6,
@@ -8694,19 +11977,79 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-11-06T00:00:00.000Z"
+      "at": "2026-11-06T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "cool__q_mot": {
     "s": {
      "2025": {
-      "v": 729.3,
+      "v": 746,
       "st": "ok",
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-02-21T00:00:00.000Z"
+      "at": "2026-02-21T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 54.37,
+       "q_mot": 746,
+       "q_inv": 477.8,
+       "q_bat": 1155
+      }
      },
      "2026": {
       "v": 750,
@@ -8714,19 +12057,31 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-11-05T00:00:00.000Z"
+      "at": "2026-11-05T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 53,
+       "q_mot": 750,
+       "q_inv": 490,
+       "q_bat": 1180
+      }
      }
     }
    },
    "cool__q_inv": {
     "s": {
      "2025": {
-      "v": 507.6,
+      "v": 477.8,
       "st": "ok",
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-02-20T00:00:00.000Z"
+      "at": "2026-02-20T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 54.37,
+       "q_mot": 746,
+       "q_inv": 477.8,
+       "q_bat": 1155
+      }
      },
      "2026": {
       "v": 490,
@@ -8734,19 +12089,31 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-11-04T00:00:00.000Z"
+      "at": "2026-11-04T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 53,
+       "q_mot": 750,
+       "q_inv": 490,
+       "q_bat": 1180
+      }
      }
     }
    },
    "cool__q_bat": {
     "s": {
      "2025": {
-      "v": 1138,
+      "v": 1155,
       "st": "ok",
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-02-19T00:00:00.000Z"
+      "at": "2026-02-19T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 54.37,
+       "q_mot": 746,
+       "q_inv": 477.8,
+       "q_bat": 1155
+      }
      },
      "2026": {
       "v": 1180,
@@ -8754,19 +12121,31 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-11-03T00:00:00.000Z"
+      "at": "2026-11-03T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 53,
+       "q_mot": 750,
+       "q_inv": 490,
+       "q_bat": 1180
+      }
      }
     }
    },
    "cool__v_end_avg": {
     "s": {
      "2025": {
-      "v": 51.99,
+      "v": 54.37,
       "st": "ok",
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-02-18T00:00:00.000Z"
+      "at": "2026-02-18T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 54.37,
+       "q_mot": 746,
+       "q_inv": 477.8,
+       "q_bat": 1155
+      }
      },
      "2026": {
       "v": 53,
@@ -8774,19 +12153,31 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 9 냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-11-02T00:00:00.000Z"
+      "at": "2026-11-02T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 53,
+       "q_mot": 750,
+       "q_inv": 490,
+       "q_bat": 1180
+      }
      }
     }
    },
    "cool__cool_c": {
     "s": {
      "2025": {
-      "v": 15444,
+      "v": 15219,
       "st": "ok",
       "kind": "calc",
       "src": "냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-02-17T00:00:00.000Z"
+      "at": "2026-02-17T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 54.37,
+       "q_mot": 746,
+       "q_inv": 477.8,
+       "q_bat": 1155
+      }
      },
      "2026": {
       "v": 15000,
@@ -8794,19 +12185,31 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-11-01T00:00:00.000Z"
+      "at": "2026-11-01T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 53,
+       "q_mot": 750,
+       "q_inv": 490,
+       "q_bat": 1180
+      }
      }
     }
    },
    "cool__cool_ua0": {
     "s": {
      "2025": {
-      "v": 58.93,
+      "v": 58.16,
       "st": "ok",
       "kind": "calc",
       "src": "냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-02-16T00:00:00.000Z"
+      "at": "2026-02-16T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 54.37,
+       "q_mot": 746,
+       "q_inv": 477.8,
+       "q_bat": 1155
+      }
      },
      "2026": {
       "v": 60,
@@ -8814,19 +12217,31 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-10-31T00:00:00.000Z"
+      "at": "2026-10-31T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 53,
+       "q_mot": 750,
+       "q_inv": 490,
+       "q_bat": 1180
+      }
      }
     }
    },
    "cool__cool_ua60": {
     "s": {
      "2025": {
-      "v": 240.6,
+      "v": 258.4,
       "st": "ok",
       "kind": "calc",
       "src": "냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-02-15T00:00:00.000Z"
+      "at": "2026-02-15T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 54.37,
+       "q_mot": 746,
+       "q_inv": 477.8,
+       "q_bat": 1155
+      }
      },
      "2026": {
       "v": 250,
@@ -8834,19 +12249,79 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "냉각 계통 계산기",
       "by": "u4",
-      "at": "2026-10-30T00:00:00.000Z"
+      "at": "2026-10-30T00:00:00.000Z",
+      "deps": {
+       "v_end_avg": 53,
+       "q_mot": 750,
+       "q_inv": 490,
+       "q_bat": 1180
+      }
      }
     }
    },
    "bat__i_bms_max": {
     "s": {
      "2025": {
-      "v": 246.2,
+      "v": 237.8,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-02-14T00:00:00.000Z"
+      "at": "2026-02-14T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 245,
@@ -8854,19 +12329,127 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-10-29T00:00:00.000Z"
+      "at": "2026-10-29T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "bat__i_chg": {
     "s": {
      "2025": {
-      "v": 41.41,
+      "v": 40.39,
       "st": "ok",
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-02-13T00:00:00.000Z"
+      "at": "2026-02-13T00:00:00.000Z",
+      "deps": {
+       "m": 288,
+       "fr": 48.2,
+       "h": 287.1,
+       "L": 1602,
+       "tf": 1214,
+       "tr": 1219,
+       "mu": 1.549,
+       "mu_s": 0.253,
+       "r_eff": 227.3,
+       "crr": 0.015,
+       "cla": 2.889,
+       "cda": 1.353,
+       "xcop": 703.9,
+       "hcop": 409.7,
+       "pmax": 79.47,
+       "regen_tmax": 220.9,
+       "tmax": 225,
+       "nmax": 6747,
+       "derate_t0": 82.71,
+       "derate_t1": 102.1,
+       "inv_derate_t0": 51.42,
+       "inv_derate_t1": 87.05,
+       "gr": 3.671,
+       "eta_dt": 95.78,
+       "j_eq": 0.483,
+       "n_s": 71.61,
+       "n_p": 6.853,
+       "c_vmax": 4.275,
+       "c_vnom": 3.638,
+       "c_vmin": 2.577,
+       "c_ah": 4.156,
+       "r_pack": 122.9,
+       "i_bms_max": 237.8,
+       "i_chg": 40.39,
+       "e_target": 0,
+       "rc_f": 30.28,
+       "rc_r": 50.96,
+       "k_roll": 484.7,
+       "rsd": 50.55,
+       "tire_fz0": 761.9,
+       "tire_ca0": 457.5,
+       "tire_cn": 0.806,
+       "tire_c": 1.282,
+       "tire_e": 0,
+       "tire_relax": 0.291,
+       "steer_ratio": 4.999,
+       "delta_max": 34.36,
+       "izz": 67.89,
+       "ixx": 30.44,
+       "m_us_f": 11.84,
+       "m_us_r": 12.24,
+       "c_roll": 30.64
+      }
      },
      "2026": {
       "v": 42,
@@ -8874,14 +12457,68 @@ window.__RUN2X_DUMMY = {
       "kind": "calc",
       "src": "도구 2P 랩타임 시뮬레이터 (정밀)",
       "by": "u4",
-      "at": "2026-10-28T00:00:00.000Z"
+      "at": "2026-10-28T00:00:00.000Z",
+      "deps": {
+       "m": 300,
+       "fr": 47.5,
+       "h": 290,
+       "L": 1550,
+       "tf": 1200,
+       "tr": 1180,
+       "mu": 1.5,
+       "mu_s": 0.246,
+       "r_eff": 229,
+       "crr": 0.015,
+       "cla": 3,
+       "cda": 1.4,
+       "xcop": 698,
+       "hcop": 420,
+       "pmax": 80,
+       "regen_tmax": 230,
+       "tmax": 230,
+       "nmax": 6500,
+       "derate_t0": 80,
+       "derate_t1": 100,
+       "inv_derate_t0": 50,
+       "inv_derate_t1": 85,
+       "gr": 3.55,
+       "eta_dt": "e",
+       "j_eq": "e",
+       "n_s": 70,
+       "n_p": 7,
+       "c_vmax": 4.2,
+       "c_vnom": 3.6,
+       "c_vmin": 2.5,
+       "c_ah": 4,
+       "r_pack": 120,
+       "i_bms_max": 245,
+       "i_chg": 42,
+       "e_target": 0,
+       "rc_f": "e",
+       "rc_r": 50,
+       "k_roll": 500,
+       "rsd": 50,
+       "tire_fz0": 736,
+       "tire_ca0": 450,
+       "tire_cn": 0.8,
+       "tire_c": 1.3,
+       "tire_e": 0,
+       "tire_relax": 0.3,
+       "steer_ratio": 5,
+       "delta_max": 34,
+       "izz": 70,
+       "ixx": 30,
+       "m_us_f": 12,
+       "m_us_r": 12,
+       "c_roll": 30
+      }
      }
     }
    },
    "frame__k_tors": {
     "s": {
      "2025": {
-      "v": 2445,
+      "v": 2580,
       "st": "ok",
       "kind": "in",
       "src": "",
@@ -8893,12 +12530,20 @@ window.__RUN2X_DUMMY = {
    "all__dist_goal": {
     "s": {
      "2025": {
-      "v": 21.2,
+      "v": 21.49,
       "st": "ok",
       "kind": "in",
       "src": "",
       "by": "u1",
       "at": "2026-02-11T00:00:00.000Z"
+     },
+     "2026": {
+      "v": 22,
+      "st": "ok",
+      "kind": "in",
+      "src": "",
+      "by": "u1",
+      "at": "2026-10-26T00:00:00.000Z"
      }
     }
    }
@@ -9149,7 +12794,7 @@ window.__RUN2X_DUMMY = {
     "item": "p_tire",
     "parent": "dq5",
     "text": "도구 5 프리셋에 2025 기준안 올려 두었습니다.",
-    "by": "x21",
+    "by": "x24",
     "at": "2026-11-06T00:00:00.000Z"
    },
    "dq7": {
@@ -9165,7 +12810,7 @@ window.__RUN2X_DUMMY = {
     "item": "p_brake",
     "parent": "dq7",
     "text": "내구 10 랩 기준으로 여유 있습니다.",
-    "by": "x15",
+    "by": "x4",
     "at": "2026-11-07T00:00:00.000Z"
    },
    "dq9": {
@@ -9205,7 +12850,7 @@ window.__RUN2X_DUMMY = {
     "item": "g_aero",
     "parent": "",
     "text": "(2025) 윙 탈착 시간 측정 결과 정리했습니다.",
-    "by": "x28",
+    "by": "x2",
     "at": "2026-02-23T00:00:00.000Z"
    },
    "dq14": {
@@ -15624,23 +19269,21 @@ async function dvSave(k, patch){
 { const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
     db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = r; dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
 /* 설계 탭 항목에 붙는 팀 설계값(읽기 전용) */
-/* 대시보드 값 상태 (2026-11-13 관리자 결정): ● 확정(초록) · ● 검토 중(주황) · — 비어 있음. 계산값은 따로 표시 안 함.
-   검토 중은 도구 [대시보드에 반영] 때 파트장이 고름. 종속: 계산값(kind 'calc' · 옛 st 'calc')은 그 값을 낸 도구(src)가 쓰는 대시보드 입력 중 하나라도
-   검토 중이면 따라서 검토 중으로 보임 (저장값은 그대로 — 위 값이 확정되면 저절로 확정으로 돌아옴, 담당 파트 권한과 무관) */
-function dvToolByName(n){ if(typeof WB_TOOLS==='undefined' || !n) return null; for(const id in WB_TOOLS){ const T = WB_TOOLS[id]; if(T && (T.name===n || `도구 ${T.no || id} ${T.name || ''}`.trim()===n)) return T; } return null; }
-function dvState(k, se, seen){ const e = dvEntry(k, se); if(!e || typeof e.v!=='number') return {c:'none', l:'비어 있음', why:[]};
-  if(e.st==='rev' || e.st==='asm') return {c:'rev', l:'검토 중', why:[]};
-  if(e.kind==='calc' || e.st==='calc'){ seen = seen || new Set([k]); const T = dvToolByName(e.src), why = [];
-    if(T) (T.inputs || []).forEach(d => { if(!d.dk || d.ui==='none' || seen.has(d.dk)) return; seen.add(d.dk); if(dvState(d.dk, se, seen).c==='rev') why.push(d.dk); });
-    if(why.length) return {c:'rev', l:'검토 중', why}; }
-  return {c:'ok', l:'확정', why:[]}; }
-function dvStateTip(k, st, e){ return `${st.l}${st.why.length ? ` (따라서: ${st.why.map(x => DK[x] ? DK[x].n.replace(/<[^>]+>/g, '') : x).join(', ')} 검토 중)` : ''}${e && e.src ? ' · ' + esc(e.src) : ''}${e && e.at ? ' · ' + String(e.at).slice(0, 10) : ''}`; }
-/* 대시보드가 스스로 계산하는 칸(무게중심 위치 · 최고속): 쓰는 값 중 하나라도 검토 중이면 검토 중 */
-function dvNeedState(need){ const why = (need || []).filter(k => dvState(k).c==='rev'); return why.length ? {c:'rev', l:'검토 중', why} : {c:'ok', l:'확정', why:[]}; }
+/* 대시보드 값 표시 (2026-11-13 관리자 결정, 검토 중 없앰): ● 대시보드 값 · ↻ 다시 계산 필요 · — 비어 있음.
+   ↻ = 계산값(kind 'calc')인데, 반영할 때 쓴 대시보드 입력(deps, [대시보드에 반영] 때 저장 — 대시보드와 같던 칸은 값, 다르던 칸은 null)이
+   지금 대시보드 값과 다르거나 null 이 있을 때. 그 도구에서 지금 대시보드 값으로 다시 계산해 반영하면 사라짐. deps 가 없는 옛 값은 ↻ 없음 */
+function dvState(k, se){ const e = dvEntry(k, se); if(!e || typeof e.v!=='number') return {c:'none', l:'비어 있음', re:[]};
+  const re = [];
+  if(e.kind==='calc' && e.deps && typeof e.deps==='object') Object.entries(e.deps).forEach(([d, v]) => { const c = dvEntry(d, se), now = c && typeof c.v==='number' ? c.v : null;
+    if(v==='e'){ if(now!=null) re.push({k:d, from:null, to:now}); } else if(v==null) re.push({k:d, diff:true}); else if(now==null || Math.abs(now - v) > 1e-9*Math.max(1, Math.abs(v))) re.push({k:d, from:v, to:now}); });
+  return {c:'in', l:'대시보드 값', re}; }
+const dvKN = k => DK[k] ? String(DK[k].n).replace(/<[^>]+>/g, '') : k;
+function dvStateTip(k, st, e){ return `${st.re.length ? '다시 계산 필요: ' + st.re.map(r => r.diff ? `${dvKN(r.k)} (대시보드와 다른 값으로 계산함)` : `${dvKN(r.k)} ${r.from==null ? '비어 있음' : r.from} → ${r.to==null ? '비어 있음' : r.to}`).join(', ') + ' · ' : ''}${e && e.src ? esc(e.src) : ''}${e && e.by ? '' : ''}${e && e.at ? ' · ' + String(e.at).slice(0, 10) : ''}`; }
+const dvMark = (k, se, e) => { const q = dvState(k, se); return q.c==='none' ? '<span class="dv-s s-none"></span>' : (q.re.length ? `<span class="dv-s dv-re" title="${dvStateTip(k, q, e)}">↻</span>` : `<span class="dv-s s-in" title="${dvStateTip(k, q, e)}"></span>`); };
 const DK_BY_ITEM = DKEYS.reduce((o, d) => { if(d.it) (o[d.it] = o[d.it] || []).push(d.k); return o; }, {});
 function dvLinkedHTML(id, se){ const ks = DK_BY_ITEM[id]; if(!ks || !ks.length) return '';
   const row = k => { const e = dvEntry(k, se), has = e && typeof e.v==='number', st = has ? (e.st||'rev') : '';
-    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} ${(() => { const q = dvState(k, se); return `<span class="dv-s s-${q.c}" title="${dvStateTip(k, q, e)}"></span>`; })()}` : '<span class="muted">—</span>'}</td></tr>`; };
+    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} ${dvMark(k, se, e)}` : '<span class="muted">—</span>'}</td></tr>`; };
   return `<div class="tv-dv"><div class="tv-dvh"><span class="sec-label">팀 설계값</span><button type="button" class="lnk" data-gotools>도구 탭에서 보기</button></div><table class="kvt tv-t">${ks.map(row).join('')}</table></div>`; }
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-gotools]')){ e.preventDefault(); showTab('tools'); smoothScrollTo(() => 0); } });
 /* 그림·계산에 쓰는 값: 이번 시즌 저장값, 없으면 예시값 */
@@ -15685,13 +19328,13 @@ const dashNoFig = what => `<p class="dp-note dv-nofig">대시보드 설계값 ${
 function dashValuesHTML(){ const P = DASH.P;
   const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
   const calc = (k, v, u, inv, need) => (need || []).some(dashEx) ? `<div class="dv-r calc ex"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>—</b></span><span class="dv-s s-none"></span></dd></div>` : calc0(k, v, u, inv, need);
-  const calc0 = (k, v, u, inv, need) => { const q = dvNeedState(need); return `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-${q.c}" title="${dvStateTip(k, q)} · 대시보드가 계산"></span></dd></div>`; };
+  const calc0 = (k, v, u, inv, need) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-in" title="대시보드가 계산"></span></dd></div>`;
   const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr', ['L', 'fr']);
   return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
-      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd><span class="dv-v ro"${e&&e.src ? ` title="${esc(e.src)}에서 반영"` : ''}>${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}</span>${(() => { const q = dvState(k); return `<span class="dv-s s-${q.c}" title="${dvStateTip(k, q, e)}"></span>`; })()}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
+      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd><span class="dv-v ro"${e&&e.src ? ` title="${esc(e.src)}에서 반영"` : ''}>${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}</span>${dvMark(k, undefined, e)}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
       ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h', null, ['nmax', 'gr', 'r_eff']) : ''}
       </dl></section>`).join('')}</div>
-    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><b class="dv-dash">—</b>비어 있음</span>${SH.on ? '' : '<span class="dv-legn">팀에 로그인하지 않아 이 브라우저에만 저장됩니다.</span>'}</p>`;
+    <p class="dv-leg"><span><i class="dv-s s-in"></i>대시보드 값</span><span><b class="dv-re">↻</b>다시 계산 필요</span><span><b class="dv-dash">—</b>비어 있음</span>${SH.on ? '' : '<span class="dv-legn">팀에 로그인하지 않아 이 브라우저에만 저장됩니다.</span>'}</p>`;
 }
 function dashReadHTML(){ const K = dashCalc(), f = (v,d) => v.toFixed(d);
   const row = (l, v, cls) => `<div class="dr-r"><dt>${l}</dt><dd class="${cls||''}">${v}</dd></div>`;
@@ -16022,23 +19665,34 @@ function wbShellHTML(){ const T = wbT();
         ${T.noSig ? '' : `<section class="wb-sec" aria-label="신호 선택 그래프"><div class="wb-h"><h3>신호 선택 그래프</h3><span class="wb-meta">신호마다 자기 눈금 · 이름을 누르면 그 신호의 눈금 · 그래프를 누르거나 끌면 프로브</span></div>
           <div class="wb-sig"><div class="wb-sl" id="wbsl"></div><div id="wbsig" class="wb-plotbox wb-panes" tabindex="0" data-zm="cur"></div></div></section>`}
       </div></div>`; }
+/* 대시보드 기준값 (2026-11-13): 칸마다 도구가 마지막으로 맞춘 대시보드 값. 브라우저에만 · 모드별 (예제는 안 씀).
+   맞추는 때 = [대시보드 값으로 초기화] · [도구 연결] 대시보드에서 가져오기 · [대시보드에 반영]으로 그 칸을 보냄 · ↻ 를 눌러 '확인함' · 처음 본 때.
+   대시보드 값이 기준값과 다르면 ↻ (대시보드가 바뀜 → 따라 바꿔야 함). ◎ (내가 고침)와 다름 */
+const WBB = {};
+function wbBaseMap(){ const K = 'run2x.wb.base@' + (wbEx() ? 'ex' : 'nf'); if(!WBB[K]){ try{ WBB[K] = JSON.parse(localStorage.getItem(K) || '{}'); }catch(e){ WBB[K] = {}; } } return [K, WBB[K]]; }
+function wbBaseSet(k, v){ if(wbEx() || !WB.id) return; const [K, A] = wbBaseMap(), t = A[WB.id] = A[WB.id] || {}; if(v==null) delete t[k]; else t[k] = v; try{ localStorage.setItem(K, JSON.stringify(A)); }catch(e){} }
+function wbChg(d){ if(wbEx() || !d.dk || !WB.id) return null; const db = wbDash(d.dk); if(!db) return null; const b = (wbBaseMap()[1][WB.id] || {})[d.k];
+  if(b==null){ wbBaseSet(d.k, db.v); return null; } return Math.abs(b - db.v) <= 1e-9*Math.max(1, Math.abs(db.v)) ? null : {from:b, db}; }
+function wbChgList(){ const T = wbT(); return T ? T.inputs.filter(d => d.dk && d.ui!=='none' && !(T.inLock && T.inLock(d.k)) && wbChg(d)) : []; }
+function wbChgNote(){ const n = wbChgList().length; return n ? `<p class="wb-chgnote"><b class="dv-re">↻</b>대시보드 값 ${n}개가 바뀌었습니다<button type="button" class="btn small" data-wbdreset>대시보드 값으로 초기화</button></p>` : ''; }
 /* 입력 칸 앞 표시 (2026-11-13, 범례 개편): 확정도가 아니라 '대시보드와의 관계'. 대시보드는 보기 전용이라 상태(확정 · 검토 중 · 가정)를 정할 곳이 없어짐.
    ● 대시보드 값 그대로 · ◎ 대시보드와 다름(직접 고침 · 다른 도구에서 가져옴) · ◌ 대시보드와 이어진 칸인데 대시보드가 비어 있음 · ■ 이 도구에서만 쓰는 값.
    마우스를 올리면 담당 파트 · 대시보드 값 · 출처 · 반영한 사람 */
-function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2;
+function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2, chg = K ? wbChg(d) : null;
+  if(chg) return `<i class="wb-st wb-chg" data-wbbase="${d.k}" role="button" tabindex="0" title="${wbEsc(`${K.n.replace(/<[^>]+>/g, '')} · 대시보드가 바뀜 ${wbFmt(chg.from, dd)} → ${wbFmt(chg.db.v, dd)} ${K.u || ''}${chg.db.src ? ` (${chg.db.src}${chg.db.at ? ' · ' + String(chg.db.at).slice(0, 10) : ''})` : ''} · 눌러서 확인함 (내 값 그대로)`)}">↻</i>`;
   if(!K) return `<i class="wb-st sq" title="이 도구에서만 쓰는 값 (대시보드와 공유 안 함)"></i>`;
   const part = K.p + (K.p2 ? ' · ' + K.p2 : '');
   if(!db) return `<i class="wb-st dv-s s-emp" title="${wbEsc(K.n)} · 담당 ${wbEsc(part)} · 대시보드 비어 있음"></i>`;
   const who = [db.src, db.by, db.at ? String(db.at).slice(0, 10) : ''].filter(Boolean).join(' · ');
-  const q = typeof dvState==='function' ? dvState(d.dk) : null, tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''}${q ? ` ${q.l}` : ''}${who ? ` (${who})` : ''}${own ? ` → 지금 ${isFinite(v) ? wbFmt(v, dd) : '빈칸'} (대시보드와 다름)` : ''}`;
+  const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''}${who ? ` (${who})` : ''}${own ? ` → 지금 ${isFinite(v) ? wbFmt(v, dd) : '빈칸'} (대시보드와 다름)` : ''}`;
   return `<i class="wb-st dv-s ${own ? 's-dif' : 's-in'}" title="${wbEsc(tip)}"></i>`; }
-const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 앞 표시의 뜻"><span><i class="wb-st dv-s s-in"></i>대시보드 값</span><span><i class="wb-st dv-s s-dif"></i>대시보드와 다름</span><span><i class="wb-st dv-s s-emp"></i>대시보드 비어 있음</span><span><i class="wb-st sq"></i>이 도구 전용</span></p>`;
+const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 앞 표시의 뜻"><span><i class="wb-st dv-s s-in"></i>대시보드 값</span><span><i class="wb-st dv-s s-dif"></i>대시보드와 다름</span><span><i class="wb-st dv-s s-emp"></i>대시보드 비어 있음</span><span><i class="wb-st sq"></i>이 도구 전용</span><span><i class="wb-st wb-chg">↻</i>대시보드가 바뀜</span></p>`;
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
    도구가 입력을 자기 화면(도구 2P 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
 function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2P) · 탭 도구 = 핵심 입력(key:true)만 */
-  if(!list.length) return WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
-  if(!list.length && T.inEmpty) return WB_INLEG + T.inEmpty;
-  return WB_INLEG + wbInRows(list); }
+  if(!list.length) return wbChgNote() + WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
+  if(!list.length && T.inEmpty) return wbChgNote() + WB_INLEG + T.inEmpty;
+  return wbChgNote() + WB_INLEG + wbInRows(list); }
 /* 편집 탭 본문: 입력 묶음(d.g)마다 카드 (묶음 이름이 '앞 · ' · '뒤 · ' 로 시작하면 [차 · 공통 | 앞 | 뒤] 로 나눔) */
 function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') return '';
   const list = T.inputs.filter(d => !d.ui), sides = list.some(d => /^(앞|뒤) · /.test(d.g || ''));
@@ -16310,45 +19964,44 @@ function wbCodeOpen(){ wbModal(wbMHead('코드 · 검증') + wbCTabs('code') + `
     <div class="dvi-body"><textarea class="wb-ta" spellcheck="false" aria-label="계산 코드">${wbEsc(wbCode())}</textarea></div>
     <div class="dvi-foot"><span class="wb-cmsg muted" id="wbcmsg"></span><span class="dvi-btns"><button type="button" class="btn small" data-wbcreset>원래 코드로</button><button type="button" class="btn small" data-wbmx>닫기</button><button type="button" class="btn small pri" data-wbcrun>이 코드로 계산</button></span></div>`, 'wb-wide wb-codebox'); }
 /* 대시보드에 반영: 대시보드 키가 있는 결과만. 담당이 아닌 값은 고를 수 없음. 반영한 값은 '계산값', 출처 = 도구 이름 */
-/* [대시보드에 반영] (2026-11-12, 검토 중 2026-11-13): 계산값(출력) + 이 도구 입력 중 대시보드 칸인 것. 권한은 칸의 담당 파트 → 담당인 입력 칸만 보임.
+/* [대시보드에 반영] (2026-11-12, 2026-11-13 검토 중 없앰 · deps): 계산값(출력) + 이 도구 입력 중 대시보드 칸인 것. 권한은 칸의 담당 파트 → 담당인 입력 칸만 보임.
    같은 칸에 입력이 둘 이상(예: 댐퍼 앞 · 뒤)이면 값이 같을 때만 보냄. 처음 체크 = 계산값은 대시보드와 다를 때, 입력값은 대시보드가 비었을 때만.
-   [검토 중] = 확정 전 중간 값. 계산값은 이 도구 입력에 따르므로, 보내는 입력 중 검토 중이 있거나 · 안 보내는 입력이 대시보드의 검토 중 값 그대로이면 같이 검토 중 (고를 수 없음) */
+   계산값에는 deps (이 도구의 대시보드 입력: 대시보드와 같으면 그 값, 다르거나 비었으면 null — 개인 시험값은 남기지 않음)를 같이 저장 → 대시보드 ↻ 다시 계산 필요 */
 function wbPutRows(){ const T = wbT(), R = WB.R, rows = [], seen = new Set();
   (T.outputs || []).filter(d => d.dk && R && R.out && isFinite(R.out[d.k])).forEach(d => { seen.add(d.dk); rows.push({dk:d.dk, d:d.d||0, v:+R.out[d.k].toFixed(d.d||0), kind:'계산값', calc:true}); });
   const by = {}; T.inputs.filter(d => d.dk && d.ui!=='none' && !seen.has(d.dk) && isFinite(WB.I[d.k]) && !(T.inLock && T.inLock(d.k))).forEach(d => { (by[d.dk] = by[d.dk] || []).push(d); });
   Object.entries(by).forEach(([dk, L]) => { if(!canEditDv(dk)) return; const dd = L[0].d != null ? L[0].d : 2, vs = [...new Set(L.map(d => +(+WB.I[d.k]).toFixed(dd)))];
     rows.push({dk, d:dd, v:vs[0], kind:'입력값', bad:vs.length > 1 ? `값이 다름 (${vs.map(v => wbFmt(v, dd)).join(' · ')})` : ''}); });
   return rows; }
-/* 계산값이 따라서 검토 중이 되는 까닭 (없으면 빈 배열) */
-function wbPutDep(){ const T = wbT(), m = $('#wbm'), rows = WB.put || [], why = [];
-  const sendRev = new Set(rows.map((r, i) => (!r.calc && m.querySelector(`[data-wbpk="${i}"]`)?.checked && m.querySelector(`[data-wbprev="${i}"]`)?.checked) ? r.dk : null).filter(Boolean));
-  const sending = new Set(rows.map((r, i) => (!r.calc && m.querySelector(`[data-wbpk="${i}"]`)?.checked) ? r.dk : null).filter(Boolean));
-  T.inputs.forEach(d => { if(!d.dk || d.ui==='none' || why.includes(d.dk)) return;
-    if(sendRev.has(d.dk)) why.push(d.dk);
-    else if(!sending.has(d.dk) && typeof dvState==='function' && dvState(d.dk).c==='rev'){ const db = wbDash(d.dk); if(db && isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) why.push(d.dk); } });
-  return why; }
-function wbPutSync(){ const m = $('#wbm'); if(!m) return; const why = wbPutDep(), nm = why.map(x => String(DK[x].n).replace(/<[^>]+>/g, '')).join(', ');
-  (WB.put || []).forEach((r, i) => { if(!r.calc) return; const c = m.querySelector(`[data-wbprev="${i}"]`); if(!c) return;
-    if(why.length){ if(!c.disabled) c.dataset.was = c.checked ? '1' : ''; c.checked = true; c.disabled = true; c.title = `${nm} 검토 중이라 따라서 검토 중`; }
-    else if(c.disabled){ c.disabled = false; c.checked = c.dataset.was==='1'; c.title = ''; } }); }
+/* 계산값이 쓴 대시보드 입력. sendIn = 이번에 같이 보내는 입력 {dk: 값} (보낸 뒤 대시보드 값이 되므로 같은 것으로 봄) */
+function wbPutDeps(sendIn){ const T = wbT(), deps = {};
+  T.inputs.forEach(d => { if(!d.dk || d.ui==='none' || (T.inLock && T.inLock(d.k)) || d.dk in deps) return; const v = WB.I[d.k];
+    if(d.dk in sendIn){ deps[d.dk] = sendIn[d.dk]; return; } const db = wbDash(d.dk);
+    deps[d.dk] = !db ? 'e' : isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v)) ? db.v : null; });
+  return deps; }
+function wbPutSync(){ const m = $('#wbm'); if(!m) return; const rows = WB.put || [], sendIn = {};
+  rows.forEach((r, i) => { if(!r.calc && !r.bad && m.querySelector(`[data-wbpk="${i}"]`)?.checked) sendIn[r.dk] = r.v; });
+  const deps = wbPutDeps(sendIn), off = Object.keys(deps).filter(k => deps[k]==null), nm = off.map(k => String(DK[k].n).replace(/<[^>]+>/g, '')).join(', ');
+  rows.forEach((r, i) => { if(!r.calc) return; const c = m.querySelector(`[data-wbpnote="${i}"]`); if(c){ c.hidden = !off.length; c.title = off.length ? `대시보드와 다른 입력으로 계산: ${nm}` : ''; } });
+  const all = m.querySelector('[data-wbpnall]'); if(all){ all.hidden = !off.length || !rows.some(r => r.calc); all.innerHTML = `<b class="dv-re">↻</b>계산값은 대시보드와 다른 입력(${wbEsc(nm)})으로 계산해, 반영해도 대시보드에 ↻ 다시 계산 필요로 표시됩니다.`; } }
 function wbPutOpen(){ const T = wbT(); const rows = wbPutRows(); WB.put = rows;
   if(!rows.length){ wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><p class="muted">보낼 값이 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-wbmx>닫기</button></div>`); return; }
-  wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>종류</th><th>대시보드 지금</th><th>보낼 값</th><th>검토 중</th></tr></thead><tbody>${rows.map((r, i) => { const db = wbDash(r.dk), ok = canEditDv(r.dk) && !r.bad, same = db && db.st!=='ex' && Math.abs(db.v - r.v) <= 1e-9*Math.max(1, Math.abs(r.v)), u = DK[r.dk].u ? ' ' + DK[r.dk].u : '';
-      const q = typeof dvState==='function' && db ? dvState(r.dk) : null, now = db && db.st!=='ex' ? `${wbFmt(db.v, r.d)}${u}${q ? ` <i class="dv-s s-${q.c}" title="${q.l}"></i>` : ''}` : '—';
+  wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><p class="wb-chgnote" data-wbpnall hidden></p><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>종류</th><th>대시보드 지금</th><th>보낼 값</th></tr></thead><tbody>${rows.map((r, i) => { const db = wbDash(r.dk), ok = canEditDv(r.dk) && !r.bad, same = db && db.st!=='ex' && Math.abs(db.v - r.v) <= 1e-9*Math.max(1, Math.abs(r.v)), u = DK[r.dk].u ? ' ' + DK[r.dk].u : '';
       const nm = wbEsc(String(DK[r.dk].n).replace(/<[^>]+>/g, ''));
-      return `<tr${ok ? '' : ' class="off"'}><td><input type="checkbox" data-wbpk="${i}"${ok && !same && (r.calc || !db || db.st==='ex') ? ' checked' : ''}${ok ? '' : ' disabled'} aria-label="${nm} 보내기"></td><td>${DK[r.dk].n}${canEditDv(r.dk) ? '' : ' <span class="muted">(담당 아님)</span>'}</td><td class="muted">${r.kind}</td><td>${now}</td><td>${r.bad ? `<span class="muted">${r.bad}</span>` : `<b>${wbFmt(r.v, r.d)}</b>${u}`}</td><td class="dvi-rev"><input type="checkbox" data-wbprev="${i}"${ok ? '' : ' disabled'}${q && q.c==='rev' && !q.why.length && same ? ' checked' : ''} aria-label="${nm} 검토 중"></td></tr>`; }).join('')}</tbody></table></div>
+      return `<tr${ok ? '' : ' class="off"'}><td><input type="checkbox" data-wbpk="${i}"${ok && !same && (r.calc || !db || db.st==='ex') ? ' checked' : ''}${ok ? '' : ' disabled'} aria-label="${nm} 보내기"></td><td>${DK[r.dk].n}${canEditDv(r.dk) ? '' : ' <span class="muted">(담당 아님)</span>'}</td><td class="muted">${r.kind}</td><td>${db && db.st!=='ex' ? wbFmt(db.v, r.d) + u : '—'}</td><td>${r.bad ? `<span class="muted">${r.bad}</span>` : `<b>${wbFmt(r.v, r.d)}</b>${u}`}${r.calc ? ` <b class="dv-re dvi-note" data-wbpnote="${i}" hidden>↻</b>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
     <div class="dvi-foot"><span class="muted">출처 '${wbEsc(T.name)}'</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>취소</button><button type="button" class="btn small pri" data-wbpgo>체크한 것 반영</button></span></div>`);
-  wbPutSync(); $('#wbm').addEventListener('change', e => { if(e.target.matches('[data-wbpk],[data-wbprev]')) wbPutSync(); }); }
-async function wbPutGo(){ const T = wbT(), m = $('#wbm'); let n = 0;
-  for(const cb of m.querySelectorAll('[data-wbpk]:checked')){ const i = +cb.dataset.wbpk, r = (WB.put || [])[i]; if(!r) continue; const rev = !!m.querySelector(`[data-wbprev="${i}"]`)?.checked;
-    if(await dvSave(r.dk, {v: r.v, st: rev ? 'rev' : 'ok', kind: r.calc ? 'calc' : 'in', src: T.name})) n++; }
+  wbPutSync(); $('#wbm').addEventListener('change', e => { if(e.target.matches('[data-wbpk]')) wbPutSync(); }); }
+async function wbPutGo(){ const T = wbT(), m = $('#wbm'), rows = WB.put || [], pick = [...m.querySelectorAll('[data-wbpk]:checked')].map(cb => rows[+cb.dataset.wbpk]).filter(Boolean); let n = 0;
+  const sendIn = {}; pick.forEach(r => { if(!r.calc && !r.bad) sendIn[r.dk] = r.v; }); const deps = wbPutDeps(sendIn);
+  for(const r of pick){ if(await dvSave(r.dk, r.calc ? {v: r.v, st: 'ok', kind: 'calc', src: T.name, deps} : {v: r.v, st: 'ok', kind: 'in', src: T.name, deps: null})) n++;
+    if(!r.calc) T.inputs.forEach(d => { if(d.dk===r.dk) wbBaseSet(d.k, r.v); }); }
   wbModalClose(); toast(`${n}개 값을 대시보드에 반영했습니다.`); wbPaint(['in','out']); }
 /* ---------- 도구 연결 (2026-11-11): 다른 도구와 주고받는 것을 한 창에 (체크해서 가져오기 · 보내기)
    도구가 T.links() → {get:[행], send:[행], info:[글]}, 행 = {tool 상대 도구, n 무엇, to 덮어쓸 곳, now 지금, val 가져올 · 보낼 값, ok, why 못 하는 까닭, run()}.
    run() 은 그 행을 실제로 복사하고 짧은 글을 돌려줌. 가져온 칸 · 표에는 출처 표시 (wbSrcSet), 사용자가 그 칸을 고치면 지움 */
 /* 대시보드에서 가져오기 (예전 [대시보드 값으로 채우기], 2026-11-11): 대시보드 키가 있는 입력마다 한 줄 */
 function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
-  return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; return ''; }}; }); }
+  return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; wbBaseSet(d.k, db.v); return ''; }}; }); }
 /* [도구 연결]: 가져오기만 (다른 도구로 보내기는 없음 — 한 도구가 다른 도구 값을 멋대로 바꾸는 일, 2026-11-12).
    거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에. 그리고 [가져올 값 없는 줄 제외] 하나. 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
    대시보드는 묶음끼리 모으고 묶음마다 줄 띄움 */
@@ -16399,7 +20052,7 @@ function wbDashReset(b){ if(wbExBlock()) return;
   if(!b.dataset.sure){ b.dataset.sure = '1'; b.classList.add('sure'); b.textContent = '한 번 더 누르면 초기화'; setTimeout(() => { if(b.isConnected){ delete b.dataset.sure; b.classList.remove('sure'); b.textContent = '대시보드 값으로 초기화'; } }, 3000); return; }
   const T = wbT(); let n = 0, same = 0;
   T.inputs.filter(d => d.dk && !d.ui && !(T.inLock && T.inLock(d.k))).forEach(d => { const db = wbDash(d.dk); if(!db) return;
-    if(isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) same++; else { WB.I[d.k] = db.v; n++; } wbSrcDel(WB.id, d.k); });
+    if(isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) same++; else { WB.I[d.k] = db.v; n++; } wbSrcDel(WB.id, d.k); wbBaseSet(d.k, db.v); });
   wbSave(); wbPaint(); wbCalcSoon(); toast(n ? `${n}칸을 대시보드 값으로 바꿨습니다.` : same ? '이미 모두 대시보드 값입니다.' : '대시보드에 값이 있는 칸이 없습니다.'); }
 /* 출처 표시: 모드별 {도구: {키: '도구 X'}} */
 const WBSRC_KEY = 'run2x.wb.src';
@@ -16520,6 +20173,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wblink]')){ if(!wbExBlock()) wbLinkOpen(); return; }
   { const lg = t.closest('[data-wblgo]'); if(lg){ wbLinkGo(lg.dataset.wblgo); return; } }
   { const dr = t.closest('[data-wbdreset]'); if(dr){ wbDashReset(dr); return; } }
+  { const bb = t.closest('[data-wbbase]'); if(bb){ const d = wbT().inputs.find(x => x.k===bb.dataset.wbbase), db = d && wbDash(d.dk); if(db){ wbBaseSet(d.k, db.v); wbPaint(['in']); toast('확인함: 내 값은 그대로 둡니다.'); } return; } }
   { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { if(!c.closest('tr').hidden) c.checked = la.checked; }); } }
   if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
@@ -26623,7 +30277,7 @@ const TOUR = {
  graph: GRAPH_TOUR,
  tools: [
   ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
-  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. 초록 점은 확정, 주황 점은 검토 중입니다(계산값은 쓰는 값 중 하나라도 검토 중이면 따라서 검토 중). 여기서는 고치지 않고, 각 도구의 [대시보드에 반영]으로만 바뀝니다.',{tab:'tools'}],
+  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. ↻ 는 계산에 쓴 값이 그 뒤 바뀌어 그 도구에서 다시 계산해야 하는 값입니다. 여기서는 고치지 않고, 각 도구의 [대시보드에 반영]으로만 바뀝니다.',{tab:'tools'}],
   ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]에 마우스를 올리면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
   ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
   ['#dcond','주행 조건','차속·코너 반경·종가속·에어로 포함 여부를 바꾸거나 예시 상황을 누르면 그림과 아래 숫자가 같이 바뀝니다.',{tab:'tools'}],
