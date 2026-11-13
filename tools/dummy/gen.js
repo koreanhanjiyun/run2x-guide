@@ -30,13 +30,14 @@ async (opt) => {
     pedal_force:650, aero_bal:45, dh_sens:0.5, has_drs:0, cla_drs:2.0, cda_drs:0.9, xcop_drs:900, vmax:120, lsd_preload:10, lsd_ramp_acc:45, lsd_ramp_dec:60, slip_target:10, p_endur:35, e_lap:0.3, e_pack:7.4, v_pack:400,
     m_pack:42, driver_k:0.95, q_cool:6, cool_c:15000, cool_ua0:60, cool_ua60:250, k_tors:2500, dist_goal:22};
   const SRC = {}; Object.entries(WB_TOOLS).forEach(([id, T]) => (T.inputs || []).forEach(d => { if(d.dk && isFinite(d.v) && !(d.dk in BASE)){ BASE[d.dk] = d.v; SRC[d.dk] = `도구 ${T.no || id} ${T.name || ''}`.trim(); } }));
+  Object.entries(WB_TOOLS).forEach(([id, T]) => (T.outputs || []).forEach(d => { if(d.dk && !SRC[d.dk]) SRC[d.dk] = T.name; }));   /* 계산값: 낸 도구 (src) → 그 도구 입력이 검토 중이면 따라서 검토 중 */
   const rd = (v, ref) => { const a = Math.abs(ref); const dg = a >= 1000 ? 0 : a >= 100 ? 1 : a >= 10 ? 2 : 3; return +v.toFixed(dg); };
   const dv = {}, SHOWN = new Set(DASH.GROUPS.flatMap(g => g[1].map(r => r[0])));
   DKEYS.forEach((d, i) => { const b = BASE[d.k]; if(!isFinite(b)) return; const s = {};
     SEASONS.forEach((se, j) => { if(se === NOW && rnd() < 0.3 && !d.calc && !SHOWN.has(d.k)) return;   /* 이번 시즌은 70 % 쯤만 (대시보드 화면 칸은 다 채움 → 그림이 그려짐) */
       const v = d.u === '예/아니오' ? b : rd(se === NOW ? b : b*(1 + (rnd() - 0.5)*0.08), b);
-      const st = d.calc ? 'calc' : 'ok';   /* 보기 전용 대시보드에는 [대시보드에 반영]으로 입력값 ok · 계산값 calc 만 들어옴 */
-      s[se] = {v, st, src: SRC[d.k] || '', by: leadOf(d.p), at: iso(se === NOW ? 3 + i % 25 : 230 + i % 60)}; });
+      const st = se === NOW && !d.calc && rnd() < 0.2 ? 'rev' : 'ok';   /* 확정 · 검토 중 (2026 만 20 % 검토 중). 계산값은 kind 'calc' — 쓰는 값이 검토 중이면 따라서 검토 중으로 보임 */
+      s[se] = {v, st, kind: d.calc ? 'calc' : 'in', src: SRC[d.k] || '', by: leadOf(d.p), at: iso(se === NOW ? 3 + i % 25 : 230 + i % 60)}; });
     if(Object.keys(s).length) dv[`${PCODE_OF[d.p] || 'all'}__${d.k}`] = {s}; });
   /* ---------- 진행 상태: 2025 거의 끝 · 2026 앞 단계 위주 ---------- */
   const status = {}, its = ITEMS.slice().sort((a, b) => (SIDX[a.s] || 0) - (SIDX[b.s] || 0));
