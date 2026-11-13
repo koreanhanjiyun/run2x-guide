@@ -1344,6 +1344,11 @@ header.top.slim .legend{font-size:var(--fs-xs);gap:4px 16px}
 .wrap{max-width:var(--content)}
 #v-steps.wrap,body #v-steps.wrap{max-width:none;margin:0;padding-left:calc(var(--tocx, 178px) + 48px);padding-right:calc(var(--railw) + 40px);align-items:center}
 #v-steps.wrap>*{width:min(100%, var(--content))}
+/* 116차: 목차를 펴고 접을 때 본문 · 경로 줄도 목차 애니메이션(tocSnake 360 ms · 같은 곡선)과 같이 밀림. 처음 그릴 때 · 너비 끌기 · 사용법 중에는 바로 */
+body.toc-ready #v-steps.wrap{transition:padding-left .36s cubic-bezier(.45,0,.25,1)}
+body.toc-ready #crumb{transition:left .36s cubic-bezier(.45,0,.25,1)}
+body.toc-ready #crumb .cr-in{transition:margin-left .36s cubic-bezier(.45,0,.25,1)}
+body.toc-drag #v-steps.wrap,body.toc-drag #crumb,body.toc-drag #crumb .cr-in,body:has(#tour) #v-steps.wrap,body:has(#tour) #crumb,body:has(#tour) #crumb .cr-in{transition:none}
 body.rail-coll #v-steps.wrap{padding-right:64px}
 body.toc-narrow #v-steps.wrap{padding-left:72px}
 #v-ref.wrap{max-width:1120px}

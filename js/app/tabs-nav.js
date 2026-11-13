@@ -183,7 +183,9 @@ function graphAlign(){ const st=document.querySelector('#v-steps'), gv=document.
 /* 목차를 접거나 펴서 너비(--tocx)가 바뀌면 연결도 머리·그림 자리도 다시 맞춤 */
 { const re = () => { if(TAB==='graph') try{ graphAlign(); }catch(e){} };
   try{ new MutationObserver(re).observe(document.documentElement, {attributes:true, attributeFilter:['style','class']}); new MutationObserver(re).observe(document.body, {attributes:true, attributeFilter:['class']}); }catch(e){}
-  const t = document.getElementById('toc'); if(t && 'ResizeObserver' in window) try{ new ResizeObserver(re).observe(t); }catch(e){} }
+  const t = document.getElementById('toc'); if(t && 'ResizeObserver' in window) try{ new ResizeObserver(re).observe(t); }catch(e){}
+  document.addEventListener('transitionend', e => { if(e.propertyName==='padding-left' && e.target.id==='v-steps') re(); });   /* 116차: 본문이 부드럽게 밀린 뒤 다시 맞춤 */
+  setTimeout(() => document.body.classList.add('toc-ready'), 800); }   /* 처음 그릴 때(저장된 목차 너비 적용)는 애니메이션 없이 */
 /* 맨 위로 버튼: 화면 한 높이 이상 내려가면 오른쪽 아래에 뜸 (모든 탭) */
 { const b = document.createElement('button'); b.type='button'; b.id='toTop'; b.hidden=true; b.setAttribute('aria-label','맨 위로'); b.title='맨 위로';
   b.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
