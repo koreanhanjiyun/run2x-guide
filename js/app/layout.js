@@ -119,7 +119,7 @@ const railBOut = el => { const ks = [...el.querySelectorAll('.rail-b > :not([hid
   return [el.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: T, easing: 'cubic-bezier(.5,0,.7,.4)', fill: 'forwards'}),
     ...ks.map((k, i) => k.animate([{opacity: 1, transform: 'none'}, {opacity: 0, transform: 'translateY(-10px)'}], {duration: 130, delay: 16*(ks.length - 1 - i), easing: 'ease-in', fill: 'both'}))]; };
 
-/* ---------- 창을 단추에서 꺼내기 · 단추로 넣기 (2026-11-12): 문의 창 (좌표계·거동 그림 창은 113차부터 가운데서 스윽, modes-anim.js popC). 창이 단추 자리에서 작게 시작해 제자리로 커지며 날아오고, 닫을 때 거꾸로.
+/* ---------- 창을 단추에서 꺼내기 · 단추로 넣기 (2026-11-12): 좌표계·거동 그림 창, 문의 창. 창이 단추 자리에서 작게 시작해 제자리로 커지며 날아오고, 닫을 때 거꾸로.
    open = 보인 직후 부름, close = 숨기기 전에 부르고 끝나면 done(). 도중에 반대로 바뀌면 앞 것을 멈추고 그 자리에서. 사용법 중에는 바로 ---------- */
 function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
   if(el._pop){ try{ el._pop.cancel(); }catch(e){} el._pop = null; }
@@ -127,7 +127,8 @@ function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof T
   const P = el.getBoundingClientRect(), B = src.getBoundingClientRect(); if(!P.width || !B.width){ if(done) done(); return; }
   const z = parseFloat(getComputedStyle(el).zoom) || 1;   /* 그림 창은 화면 높이에 맞춰 zoom 으로 줄어 있을 수 있음: 옮길 거리는 zoom 전 단위로 */
   const dx = ((B.left + B.width/2) - (P.left + P.width/2))/z, dy = ((B.top + B.height/2) - (P.top + P.height/2))/z, s = Math.max(.04, Math.min(B.width/P.width, B.height/P.height));
-  const K = [{transform: `translate(${dx}px,${dy}px) scale(${s})`, opacity: 0}, {transform: `translate(${dx*.15}px,${dy*.15}px) scale(${.6 + s*.4})`, opacity: 1, offset: .55}, {transform: 'none', opacity: 1}];
+  /* 114차: 이동과 커짐이 같은 진행도로 (가운데 키프레임을 없앰: 예전엔 55 % 지점에서 이동 85 % · 크기 60 % 라 먼저 날아온 뒤 커졌음). 불투명도만 앞 25 % 에서 따로 */
+  const K = [{transform: `translate(${dx}px,${dy}px) scale(${s})`, opacity: 0}, {opacity: 1, offset: .25}, {transform: 'none', opacity: 1}];
   const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 340 : 260, easing: open ? 'cubic-bezier(.25,.7,.5,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
   el._pop = a; a.onfinish = () => { if(el._pop !== a) return; el._pop = null; if(done) done(); a.cancel(); }; }
 

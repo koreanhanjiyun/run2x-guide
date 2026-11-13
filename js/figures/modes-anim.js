@@ -79,15 +79,13 @@ function initFigRail(){ if($('#figRail')) return;
   let pin=false, ti=0, to=0, want=false;
   /* 99차 고침: 배너는 늘 세로 그대로 (가로로 바뀌면 커서가 배너 밖으로 빠져 열림 · 닫힘이 되풀이됨). 그림 창은 열 때 밀려 들어오고 닫을 때 거꾸로 빠짐 */
   const tourOn=()=>((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
-  /* 113차: 열기 · 닫기 같은 곡선 (direction reverse 라 닫기는 천천히 시작해 빨리 사라짐) */
-  const popC=(pn,open)=>pn.animate([{opacity:0,transform:'translateY(10px) scale(.97)'},{opacity:1,transform:'none'}],{duration:open?240:200, easing:'cubic-bezier(.2,.7,.3,1)', direction:open?'normal':'reverse', fill:'both'});
   const outStop=()=>{ (md._out||[]).forEach(a=>{ try{ a.cancel(); }catch(e){} }); md._out=null; };
   const hideMd=()=>{ if(md.hidden) return; const pn=md.querySelector('.fm-panel'), end=()=>{ outStop(); if(want) return; md.hidden=true; try{ window.__modeAnim.stop(); }catch(e){} };
     if(!pn || !pn.animate || tourOn()){ end(); return; } outStop();
-    md._out=[md.animate([{backgroundColor:'rgba(20,16,32,.38)'},{backgroundColor:'rgba(20,16,32,0)'}],{duration:260, easing:'ease-in', fill:'forwards'})]; md._out.push(popC(pn,false));   /* 113차: 가운데서 스윽 사라짐 (단추로 빨려 들어가는 것은 없앰) */
+    md._out=[md.animate([{backgroundColor:'rgba(20,16,32,.38)'},{backgroundColor:'rgba(20,16,32,0)'}],{duration:260, easing:'ease-in', fill:'forwards'})]; popFrom(pn, $('#figToggle'), false);   /* 그림 창은 단추로 빨려 들어감 (layout.js popFrom) · 114차: 113차 가운데 방식을 되돌림 */
     Promise.all(md._out.map(a=>a.finished)).then(end,()=>{}); };
   const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); const back=!md.hidden && md._out; outStop(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
-    fit(); if(pn && pn.animate && !tourOn()){ if(!back) md.animate([{backgroundColor:'rgba(20,16,32,0)'},{backgroundColor:'rgba(20,16,32,.38)'}],{duration:300});   /* 112차: 배경만 흐려짐 (창 전체 opacity 를 쓰면 날아오는 창까지 안 보였음) */ if(pn._pc){ try{ pn._pc.cancel(); }catch(e){} } const a=popC(pn,true); pn._pc=a; a.onfinish=()=>{ if(pn._pc===a){ pn._pc=null; a.cancel(); } }; }   /* 113차: 가운데서 스윽 나옴 */
+    fit(); if(pn && pn.animate && !tourOn()){ if(!back) md.animate([{backgroundColor:'rgba(20,16,32,0)'},{backgroundColor:'rgba(20,16,32,.38)'}],{duration:300});   /* 112차: 배경만 흐려짐 (창 전체 opacity 를 쓰면 날아오는 창까지 안 보였음) */ popFrom(pn, $('#figToggle'), true); }   /* 크기 맞춘 뒤 단추에서 꺼냄 */
     requestAnimationFrame(()=>{ fit(); setTimeout(fit,360); }); }); };
   const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
   const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; fr.classList.toggle('on',on); on?showMd():hideMd(); };
