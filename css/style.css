@@ -1892,7 +1892,7 @@ button.dv-s{border:0;padding:0;cursor:pointer}button.dv-s:hover{outline:2px soli
 .dvi-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;font-size:12.5px}
 .dv-s{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
 /* 대시보드와의 관계 표시 (2026-11-13 범례 개편, 한 가지 색): ● 입력값 · 대시보드 값 그대로 / ○ 계산값 / ◎ 대시보드와 다름 / ◌ 대시보드 비어 있음 / 비어 있음은 표시 없음 */
-.dv-s.s-in{background:var(--accent)}.dv-s.s-ok{background:#2e9e5b}.dv-s.s-rev{background:#ec8a12}   /* 대시보드: 확정 초록 · 검토 중 주황 (채운 원) */.dv-s.s-calc{background:transparent;box-shadow:inset 0 0 0 1.6px var(--accent)}
+.dv-s.s-in{background:#2e9e5b}   /* ● 대시보드 값 = 초록 (2026-11-13 관리자) */.dv-s.s-calc{background:transparent;box-shadow:inset 0 0 0 1.6px var(--accent)}
 .dv-s.s-dif{width:10px;height:10px;box-sizing:border-box;border:1.5px solid var(--accent);background:var(--accent);box-shadow:inset 0 0 0 1.5px var(--panel);margin-left:-1px;margin-right:5px}   /* ◎ 고리 + 가운데 점: 배율 100 % 에서 ● 와 구분되게 10 px (자리 폭은 ● 와 같게) */
 .dv-s.s-emp{background:transparent;border:1.4px dashed var(--muted);box-sizing:border-box}.dv-s.s-none{visibility:hidden}
 .dv-leg .dv-dash{margin-right:4px;color:var(--muted)}
@@ -3092,3 +3092,10 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .ts-ov{position:fixed;inset:0;z-index:31;pointer-events:none}   /* 목차 ㄱ자(거울) 판 (layout.js tocSnake) */
 #wb [data-wbdreset].sure{color:var(--verify-fg);background:var(--verify-bg);border-color:var(--verify-fg)}   /* 한 번 더 누르면 실행 */
 .dvi-t .dvi-rev{text-align:center}.dvi-t td .dv-s{margin-left:6px;vertical-align:middle}
+.dv-re{display:inline-block;margin-left:3px;color:#d9480f;font-weight:700;font-size:12.5px;line-height:1;cursor:help}   /* ↻ 다시 계산 필요 · 대시보드가 바뀜 */
+.wb-st.wb-chg{width:auto;height:auto;border-radius:0;background:none;color:#d9480f;font-style:normal;font-weight:700;font-size:12px;line-height:1;margin-right:4px;cursor:pointer}
+.wb-chgnote{margin:0 0 10px;padding:6px 8px;border-radius:6px;background:#fff4e6;color:#8a3b07;font-size:12.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wb-chgnote .btn{margin-left:auto}
+.dvi-t .dvi-note{margin-left:6px}
+.dv-s.dv-re{width:auto;height:auto;border-radius:0;background:none;margin-left:0}
+.dvi-body .wb-chgnote{display:block;margin:0 0 10px}.dvi-body .wb-chgnote .dv-re{margin:0 4px 0 0}

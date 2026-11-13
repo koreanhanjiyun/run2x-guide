@@ -45,23 +45,21 @@ async function dvSave(k, patch){
 { const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
     db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = r; dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
 /* 설계 탭 항목에 붙는 팀 설계값(읽기 전용) */
-/* 대시보드 값 상태 (2026-11-13 관리자 결정): ● 확정(초록) · ● 검토 중(주황) · — 비어 있음. 계산값은 따로 표시 안 함.
-   검토 중은 도구 [대시보드에 반영] 때 파트장이 고름. 종속: 계산값(kind 'calc' · 옛 st 'calc')은 그 값을 낸 도구(src)가 쓰는 대시보드 입력 중 하나라도
-   검토 중이면 따라서 검토 중으로 보임 (저장값은 그대로 — 위 값이 확정되면 저절로 확정으로 돌아옴, 담당 파트 권한과 무관) */
-function dvToolByName(n){ if(typeof WB_TOOLS==='undefined' || !n) return null; for(const id in WB_TOOLS){ const T = WB_TOOLS[id]; if(T && (T.name===n || `도구 ${T.no || id} ${T.name || ''}`.trim()===n)) return T; } return null; }
-function dvState(k, se, seen){ const e = dvEntry(k, se); if(!e || typeof e.v!=='number') return {c:'none', l:'비어 있음', why:[]};
-  if(e.st==='rev' || e.st==='asm') return {c:'rev', l:'검토 중', why:[]};
-  if(e.kind==='calc' || e.st==='calc'){ seen = seen || new Set([k]); const T = dvToolByName(e.src), why = [];
-    if(T) (T.inputs || []).forEach(d => { if(!d.dk || d.ui==='none' || seen.has(d.dk)) return; seen.add(d.dk); if(dvState(d.dk, se, seen).c==='rev') why.push(d.dk); });
-    if(why.length) return {c:'rev', l:'검토 중', why}; }
-  return {c:'ok', l:'확정', why:[]}; }
-function dvStateTip(k, st, e){ return `${st.l}${st.why.length ? ` (따라서: ${st.why.map(x => DK[x] ? DK[x].n.replace(/<[^>]+>/g, '') : x).join(', ')} 검토 중)` : ''}${e && e.src ? ' · ' + esc(e.src) : ''}${e && e.at ? ' · ' + String(e.at).slice(0, 10) : ''}`; }
-/* 대시보드가 스스로 계산하는 칸(무게중심 위치 · 최고속): 쓰는 값 중 하나라도 검토 중이면 검토 중 */
-function dvNeedState(need){ const why = (need || []).filter(k => dvState(k).c==='rev'); return why.length ? {c:'rev', l:'검토 중', why} : {c:'ok', l:'확정', why:[]}; }
+/* 대시보드 값 표시 (2026-11-13 관리자 결정, 검토 중 없앰): ● 대시보드 값 · ↻ 다시 계산 필요 · — 비어 있음.
+   ↻ = 계산값(kind 'calc')인데, 반영할 때 쓴 대시보드 입력(deps, [대시보드에 반영] 때 저장 — 대시보드와 같던 칸은 값, 다르던 칸은 null)이
+   지금 대시보드 값과 다르거나 null 이 있을 때. 그 도구에서 지금 대시보드 값으로 다시 계산해 반영하면 사라짐. deps 가 없는 옛 값은 ↻ 없음 */
+function dvState(k, se){ const e = dvEntry(k, se); if(!e || typeof e.v!=='number') return {c:'none', l:'비어 있음', re:[]};
+  const re = [];
+  if(e.kind==='calc' && e.deps && typeof e.deps==='object') Object.entries(e.deps).forEach(([d, v]) => { const c = dvEntry(d, se), now = c && typeof c.v==='number' ? c.v : null;
+    if(v==='e'){ if(now!=null) re.push({k:d, from:null, to:now}); } else if(v==null) re.push({k:d, diff:true}); else if(now==null || Math.abs(now - v) > 1e-9*Math.max(1, Math.abs(v))) re.push({k:d, from:v, to:now}); });
+  return {c:'in', l:'대시보드 값', re}; }
+const dvKN = k => DK[k] ? String(DK[k].n).replace(/<[^>]+>/g, '') : k;
+function dvStateTip(k, st, e){ return `${st.re.length ? '다시 계산 필요: ' + st.re.map(r => r.diff ? `${dvKN(r.k)} (대시보드와 다른 값으로 계산함)` : `${dvKN(r.k)} ${r.from==null ? '비어 있음' : r.from} → ${r.to==null ? '비어 있음' : r.to}`).join(', ') + ' · ' : ''}${e && e.src ? esc(e.src) : ''}${e && e.by ? '' : ''}${e && e.at ? ' · ' + String(e.at).slice(0, 10) : ''}`; }
+const dvMark = (k, se, e) => { const q = dvState(k, se); return q.c==='none' ? '<span class="dv-s s-none"></span>' : (q.re.length ? `<span class="dv-s dv-re" title="${dvStateTip(k, q, e)}">↻</span>` : `<span class="dv-s s-in" title="${dvStateTip(k, q, e)}"></span>`); };
 const DK_BY_ITEM = DKEYS.reduce((o, d) => { if(d.it) (o[d.it] = o[d.it] || []).push(d.k); return o; }, {});
 function dvLinkedHTML(id, se){ const ks = DK_BY_ITEM[id]; if(!ks || !ks.length) return '';
   const row = k => { const e = dvEntry(k, se), has = e && typeof e.v==='number', st = has ? (e.st||'rev') : '';
-    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} ${(() => { const q = dvState(k, se); return `<span class="dv-s s-${q.c}" title="${dvStateTip(k, q, e)}"></span>`; })()}` : '<span class="muted">—</span>'}</td></tr>`; };
+    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} ${dvMark(k, se, e)}` : '<span class="muted">—</span>'}</td></tr>`; };
   return `<div class="tv-dv"><div class="tv-dvh"><span class="sec-label">팀 설계값</span><button type="button" class="lnk" data-gotools>도구 탭에서 보기</button></div><table class="kvt tv-t">${ks.map(row).join('')}</table></div>`; }
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-gotools]')){ e.preventDefault(); showTab('tools'); smoothScrollTo(() => 0); } });
 /* 그림·계산에 쓰는 값: 이번 시즌 저장값, 없으면 예시값 */
@@ -106,13 +104,13 @@ const dashNoFig = what => `<p class="dp-note dv-nofig">대시보드 설계값 ${
 function dashValuesHTML(){ const P = DASH.P;
   const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
   const calc = (k, v, u, inv, need) => (need || []).some(dashEx) ? `<div class="dv-r calc ex"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>—</b></span><span class="dv-s s-none"></span></dd></div>` : calc0(k, v, u, inv, need);
-  const calc0 = (k, v, u, inv, need) => { const q = dvNeedState(need); return `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-${q.c}" title="${dvStateTip(k, q)} · 대시보드가 계산"></span></dd></div>`; };
+  const calc0 = (k, v, u, inv, need) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-in" title="대시보드가 계산"></span></dd></div>`;
   const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr', ['L', 'fr']);
   return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
-      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd><span class="dv-v ro"${e&&e.src ? ` title="${esc(e.src)}에서 반영"` : ''}>${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}</span>${(() => { const q = dvState(k); return `<span class="dv-s s-${q.c}" title="${dvStateTip(k, q, e)}"></span>`; })()}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
+      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd><span class="dv-v ro"${e&&e.src ? ` title="${esc(e.src)}에서 반영"` : ''}>${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}</span>${dvMark(k, undefined, e)}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
       ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h', null, ['nmax', 'gr', 'r_eff']) : ''}
       </dl></section>`).join('')}</div>
-    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><b class="dv-dash">—</b>비어 있음</span>${SH.on ? '' : '<span class="dv-legn">팀에 로그인하지 않아 이 브라우저에만 저장됩니다.</span>'}</p>`;
+    <p class="dv-leg"><span><i class="dv-s s-in"></i>대시보드 값</span><span><b class="dv-re">↻</b>다시 계산 필요</span><span><b class="dv-dash">—</b>비어 있음</span>${SH.on ? '' : '<span class="dv-legn">팀에 로그인하지 않아 이 브라우저에만 저장됩니다.</span>'}</p>`;
 }
 function dashReadHTML(){ const K = dashCalc(), f = (v,d) => v.toFixed(d);
   const row = (l, v, cls) => `<div class="dr-r"><dt>${l}</dt><dd class="${cls||''}">${v}</dd></div>`;

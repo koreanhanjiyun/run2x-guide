@@ -36,9 +36,17 @@ async (opt) => {
   DKEYS.forEach((d, i) => { const b = BASE[d.k]; if(!isFinite(b)) return; const s = {};
     SEASONS.forEach((se, j) => { if(se === NOW && rnd() < 0.3 && !d.calc && !SHOWN.has(d.k)) return;   /* 이번 시즌은 70 % 쯤만 (대시보드 화면 칸은 다 채움 → 그림이 그려짐) */
       const v = d.u === '예/아니오' ? b : rd(se === NOW ? b : b*(1 + (rnd() - 0.5)*0.08), b);
-      const st = se === NOW && !d.calc && rnd() < 0.2 ? 'rev' : 'ok';   /* 확정 · 검토 중 (2026 만 20 % 검토 중). 계산값은 kind 'calc' — 쓰는 값이 검토 중이면 따라서 검토 중으로 보임 */
+      const st = 'ok';   /* 확정 · 검토 중 (2026 만 20 % 검토 중). 계산값은 kind 'calc' — 쓰는 값이 검토 중이면 따라서 검토 중으로 보임 */
       s[se] = {v, st, kind: d.calc ? 'calc' : 'in', src: SRC[d.k] || '', by: leadOf(d.p), at: iso(se === NOW ? 3 + i % 25 : 230 + i % 60)}; });
     if(Object.keys(s).length) dv[`${PCODE_OF[d.p] || 'all'}__${d.k}`] = {s}; });
+  /* 계산값 deps (반영 때 쓴 대시보드 입력) = 그 시즌 대시보드 값 → ↻ 없음. 시연용: 2026 계산값 몇 개는 총질량을 예전 값(−6 kg)으로 계산한 것처럼 → ↻ 다시 계산 필요 */
+  const toolOf = n => Object.values(WB_TOOLS).find(T => T && (T.name===n || `도구 ${T.no || ''} ${T.name || ''}`.trim()===n));
+  const dvv = (k, se) => { const x = dv[`${PCODE_OF[(DK[k] || {}).p] || 'all'}__${k}`]; return x && x.s[se] ? x.s[se].v : null; };
+  const STALE = ['xcop', 'h_s', 'ixx'];
+  Object.entries(dv).forEach(([id, doc]) => SEASONS.forEach(se => { const e = doc.s[se]; if(!e || e.kind!=='calc') return; const T = toolOf(e.src); if(!T) return; const deps = {};
+    (T.inputs || []).forEach(d => { if(d.dk && d.ui!=='none' && !(d.dk in deps)) { const x = dvv(d.dk, se); deps[d.dk] = x==null ? 'e' : x; } });
+    if(se===NOW && STALE.includes(id.split('__').pop()) && typeof deps.m==='number'){ deps.m = +(deps.m - 6).toFixed(1); }
+    e.deps = deps; }));
   /* ---------- 진행 상태: 2025 거의 끝 · 2026 앞 단계 위주 ---------- */
   const status = {}, its = ITEMS.slice().sort((a, b) => (SIDX[a.s] || 0) - (SIDX[b.s] || 0));
   its.forEach((it, i) => { const f = i/its.length, by = leadOf(it.p);

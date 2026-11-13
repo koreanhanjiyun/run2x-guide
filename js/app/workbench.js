@@ -254,23 +254,34 @@ function wbShellHTML(){ const T = wbT();
         ${T.noSig ? '' : `<section class="wb-sec" aria-label="신호 선택 그래프"><div class="wb-h"><h3>신호 선택 그래프</h3><span class="wb-meta">신호마다 자기 눈금 · 이름을 누르면 그 신호의 눈금 · 그래프를 누르거나 끌면 프로브</span></div>
           <div class="wb-sig"><div class="wb-sl" id="wbsl"></div><div id="wbsig" class="wb-plotbox wb-panes" tabindex="0" data-zm="cur"></div></div></section>`}
       </div></div>`; }
+/* 대시보드 기준값 (2026-11-13): 칸마다 도구가 마지막으로 맞춘 대시보드 값. 브라우저에만 · 모드별 (예제는 안 씀).
+   맞추는 때 = [대시보드 값으로 초기화] · [도구 연결] 대시보드에서 가져오기 · [대시보드에 반영]으로 그 칸을 보냄 · ↻ 를 눌러 '확인함' · 처음 본 때.
+   대시보드 값이 기준값과 다르면 ↻ (대시보드가 바뀜 → 따라 바꿔야 함). ◎ (내가 고침)와 다름 */
+const WBB = {};
+function wbBaseMap(){ const K = 'run2x.wb.base@' + (wbEx() ? 'ex' : 'nf'); if(!WBB[K]){ try{ WBB[K] = JSON.parse(localStorage.getItem(K) || '{}'); }catch(e){ WBB[K] = {}; } } return [K, WBB[K]]; }
+function wbBaseSet(k, v){ if(wbEx() || !WB.id) return; const [K, A] = wbBaseMap(), t = A[WB.id] = A[WB.id] || {}; if(v==null) delete t[k]; else t[k] = v; try{ localStorage.setItem(K, JSON.stringify(A)); }catch(e){} }
+function wbChg(d){ if(wbEx() || !d.dk || !WB.id) return null; const db = wbDash(d.dk); if(!db) return null; const b = (wbBaseMap()[1][WB.id] || {})[d.k];
+  if(b==null){ wbBaseSet(d.k, db.v); return null; } return Math.abs(b - db.v) <= 1e-9*Math.max(1, Math.abs(db.v)) ? null : {from:b, db}; }
+function wbChgList(){ const T = wbT(); return T ? T.inputs.filter(d => d.dk && d.ui!=='none' && !(T.inLock && T.inLock(d.k)) && wbChg(d)) : []; }
+function wbChgNote(){ const n = wbChgList().length; return n ? `<p class="wb-chgnote"><b class="dv-re">↻</b>대시보드 값 ${n}개가 바뀌었습니다<button type="button" class="btn small" data-wbdreset>대시보드 값으로 초기화</button></p>` : ''; }
 /* 입력 칸 앞 표시 (2026-11-13, 범례 개편): 확정도가 아니라 '대시보드와의 관계'. 대시보드는 보기 전용이라 상태(확정 · 검토 중 · 가정)를 정할 곳이 없어짐.
    ● 대시보드 값 그대로 · ◎ 대시보드와 다름(직접 고침 · 다른 도구에서 가져옴) · ◌ 대시보드와 이어진 칸인데 대시보드가 비어 있음 · ■ 이 도구에서만 쓰는 값.
    마우스를 올리면 담당 파트 · 대시보드 값 · 출처 · 반영한 사람 */
-function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2;
+function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2, chg = K ? wbChg(d) : null;
+  if(chg) return `<i class="wb-st wb-chg" data-wbbase="${d.k}" role="button" tabindex="0" title="${wbEsc(`${K.n.replace(/<[^>]+>/g, '')} · 대시보드가 바뀜 ${wbFmt(chg.from, dd)} → ${wbFmt(chg.db.v, dd)} ${K.u || ''}${chg.db.src ? ` (${chg.db.src}${chg.db.at ? ' · ' + String(chg.db.at).slice(0, 10) : ''})` : ''} · 눌러서 확인함 (내 값 그대로)`)}">↻</i>`;
   if(!K) return `<i class="wb-st sq" title="이 도구에서만 쓰는 값 (대시보드와 공유 안 함)"></i>`;
   const part = K.p + (K.p2 ? ' · ' + K.p2 : '');
   if(!db) return `<i class="wb-st dv-s s-emp" title="${wbEsc(K.n)} · 담당 ${wbEsc(part)} · 대시보드 비어 있음"></i>`;
   const who = [db.src, db.by, db.at ? String(db.at).slice(0, 10) : ''].filter(Boolean).join(' · ');
-  const q = typeof dvState==='function' ? dvState(d.dk) : null, tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''}${q ? ` ${q.l}` : ''}${who ? ` (${who})` : ''}${own ? ` → 지금 ${isFinite(v) ? wbFmt(v, dd) : '빈칸'} (대시보드와 다름)` : ''}`;
+  const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''}${who ? ` (${who})` : ''}${own ? ` → 지금 ${isFinite(v) ? wbFmt(v, dd) : '빈칸'} (대시보드와 다름)` : ''}`;
   return `<i class="wb-st dv-s ${own ? 's-dif' : 's-in'}" title="${wbEsc(tip)}"></i>`; }
-const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 앞 표시의 뜻"><span><i class="wb-st dv-s s-in"></i>대시보드 값</span><span><i class="wb-st dv-s s-dif"></i>대시보드와 다름</span><span><i class="wb-st dv-s s-emp"></i>대시보드 비어 있음</span><span><i class="wb-st sq"></i>이 도구 전용</span></p>`;
+const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 앞 표시의 뜻"><span><i class="wb-st dv-s s-in"></i>대시보드 값</span><span><i class="wb-st dv-s s-dif"></i>대시보드와 다름</span><span><i class="wb-st dv-s s-emp"></i>대시보드 비어 있음</span><span><i class="wb-st sq"></i>이 도구 전용</span><span><i class="wb-st wb-chg">↻</i>대시보드가 바뀜</span></p>`;
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
    도구가 입력을 자기 화면(도구 2P 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
 function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2P) · 탭 도구 = 핵심 입력(key:true)만 */
-  if(!list.length) return WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
-  if(!list.length && T.inEmpty) return WB_INLEG + T.inEmpty;
-  return WB_INLEG + wbInRows(list); }
+  if(!list.length) return wbChgNote() + WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
+  if(!list.length && T.inEmpty) return wbChgNote() + WB_INLEG + T.inEmpty;
+  return wbChgNote() + WB_INLEG + wbInRows(list); }
 /* 편집 탭 본문: 입력 묶음(d.g)마다 카드 (묶음 이름이 '앞 · ' · '뒤 · ' 로 시작하면 [차 · 공통 | 앞 | 뒤] 로 나눔) */
 function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') return '';
   const list = T.inputs.filter(d => !d.ui), sides = list.some(d => /^(앞|뒤) · /.test(d.g || ''));
@@ -542,45 +553,44 @@ function wbCodeOpen(){ wbModal(wbMHead('코드 · 검증') + wbCTabs('code') + `
     <div class="dvi-body"><textarea class="wb-ta" spellcheck="false" aria-label="계산 코드">${wbEsc(wbCode())}</textarea></div>
     <div class="dvi-foot"><span class="wb-cmsg muted" id="wbcmsg"></span><span class="dvi-btns"><button type="button" class="btn small" data-wbcreset>원래 코드로</button><button type="button" class="btn small" data-wbmx>닫기</button><button type="button" class="btn small pri" data-wbcrun>이 코드로 계산</button></span></div>`, 'wb-wide wb-codebox'); }
 /* 대시보드에 반영: 대시보드 키가 있는 결과만. 담당이 아닌 값은 고를 수 없음. 반영한 값은 '계산값', 출처 = 도구 이름 */
-/* [대시보드에 반영] (2026-11-12, 검토 중 2026-11-13): 계산값(출력) + 이 도구 입력 중 대시보드 칸인 것. 권한은 칸의 담당 파트 → 담당인 입력 칸만 보임.
+/* [대시보드에 반영] (2026-11-12, 2026-11-13 검토 중 없앰 · deps): 계산값(출력) + 이 도구 입력 중 대시보드 칸인 것. 권한은 칸의 담당 파트 → 담당인 입력 칸만 보임.
    같은 칸에 입력이 둘 이상(예: 댐퍼 앞 · 뒤)이면 값이 같을 때만 보냄. 처음 체크 = 계산값은 대시보드와 다를 때, 입력값은 대시보드가 비었을 때만.
-   [검토 중] = 확정 전 중간 값. 계산값은 이 도구 입력에 따르므로, 보내는 입력 중 검토 중이 있거나 · 안 보내는 입력이 대시보드의 검토 중 값 그대로이면 같이 검토 중 (고를 수 없음) */
+   계산값에는 deps (이 도구의 대시보드 입력: 대시보드와 같으면 그 값, 다르거나 비었으면 null — 개인 시험값은 남기지 않음)를 같이 저장 → 대시보드 ↻ 다시 계산 필요 */
 function wbPutRows(){ const T = wbT(), R = WB.R, rows = [], seen = new Set();
   (T.outputs || []).filter(d => d.dk && R && R.out && isFinite(R.out[d.k])).forEach(d => { seen.add(d.dk); rows.push({dk:d.dk, d:d.d||0, v:+R.out[d.k].toFixed(d.d||0), kind:'계산값', calc:true}); });
   const by = {}; T.inputs.filter(d => d.dk && d.ui!=='none' && !seen.has(d.dk) && isFinite(WB.I[d.k]) && !(T.inLock && T.inLock(d.k))).forEach(d => { (by[d.dk] = by[d.dk] || []).push(d); });
   Object.entries(by).forEach(([dk, L]) => { if(!canEditDv(dk)) return; const dd = L[0].d != null ? L[0].d : 2, vs = [...new Set(L.map(d => +(+WB.I[d.k]).toFixed(dd)))];
     rows.push({dk, d:dd, v:vs[0], kind:'입력값', bad:vs.length > 1 ? `값이 다름 (${vs.map(v => wbFmt(v, dd)).join(' · ')})` : ''}); });
   return rows; }
-/* 계산값이 따라서 검토 중이 되는 까닭 (없으면 빈 배열) */
-function wbPutDep(){ const T = wbT(), m = $('#wbm'), rows = WB.put || [], why = [];
-  const sendRev = new Set(rows.map((r, i) => (!r.calc && m.querySelector(`[data-wbpk="${i}"]`)?.checked && m.querySelector(`[data-wbprev="${i}"]`)?.checked) ? r.dk : null).filter(Boolean));
-  const sending = new Set(rows.map((r, i) => (!r.calc && m.querySelector(`[data-wbpk="${i}"]`)?.checked) ? r.dk : null).filter(Boolean));
-  T.inputs.forEach(d => { if(!d.dk || d.ui==='none' || why.includes(d.dk)) return;
-    if(sendRev.has(d.dk)) why.push(d.dk);
-    else if(!sending.has(d.dk) && typeof dvState==='function' && dvState(d.dk).c==='rev'){ const db = wbDash(d.dk); if(db && isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) why.push(d.dk); } });
-  return why; }
-function wbPutSync(){ const m = $('#wbm'); if(!m) return; const why = wbPutDep(), nm = why.map(x => String(DK[x].n).replace(/<[^>]+>/g, '')).join(', ');
-  (WB.put || []).forEach((r, i) => { if(!r.calc) return; const c = m.querySelector(`[data-wbprev="${i}"]`); if(!c) return;
-    if(why.length){ if(!c.disabled) c.dataset.was = c.checked ? '1' : ''; c.checked = true; c.disabled = true; c.title = `${nm} 검토 중이라 따라서 검토 중`; }
-    else if(c.disabled){ c.disabled = false; c.checked = c.dataset.was==='1'; c.title = ''; } }); }
+/* 계산값이 쓴 대시보드 입력. sendIn = 이번에 같이 보내는 입력 {dk: 값} (보낸 뒤 대시보드 값이 되므로 같은 것으로 봄) */
+function wbPutDeps(sendIn){ const T = wbT(), deps = {};
+  T.inputs.forEach(d => { if(!d.dk || d.ui==='none' || (T.inLock && T.inLock(d.k)) || d.dk in deps) return; const v = WB.I[d.k];
+    if(d.dk in sendIn){ deps[d.dk] = sendIn[d.dk]; return; } const db = wbDash(d.dk);
+    deps[d.dk] = !db ? 'e' : isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v)) ? db.v : null; });
+  return deps; }
+function wbPutSync(){ const m = $('#wbm'); if(!m) return; const rows = WB.put || [], sendIn = {};
+  rows.forEach((r, i) => { if(!r.calc && !r.bad && m.querySelector(`[data-wbpk="${i}"]`)?.checked) sendIn[r.dk] = r.v; });
+  const deps = wbPutDeps(sendIn), off = Object.keys(deps).filter(k => deps[k]==null), nm = off.map(k => String(DK[k].n).replace(/<[^>]+>/g, '')).join(', ');
+  rows.forEach((r, i) => { if(!r.calc) return; const c = m.querySelector(`[data-wbpnote="${i}"]`); if(c){ c.hidden = !off.length; c.title = off.length ? `대시보드와 다른 입력으로 계산: ${nm}` : ''; } });
+  const all = m.querySelector('[data-wbpnall]'); if(all){ all.hidden = !off.length || !rows.some(r => r.calc); all.innerHTML = `<b class="dv-re">↻</b>계산값은 대시보드와 다른 입력(${wbEsc(nm)})으로 계산해, 반영해도 대시보드에 ↻ 다시 계산 필요로 표시됩니다.`; } }
 function wbPutOpen(){ const T = wbT(); const rows = wbPutRows(); WB.put = rows;
   if(!rows.length){ wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><p class="muted">보낼 값이 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-wbmx>닫기</button></div>`); return; }
-  wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>종류</th><th>대시보드 지금</th><th>보낼 값</th><th>검토 중</th></tr></thead><tbody>${rows.map((r, i) => { const db = wbDash(r.dk), ok = canEditDv(r.dk) && !r.bad, same = db && db.st!=='ex' && Math.abs(db.v - r.v) <= 1e-9*Math.max(1, Math.abs(r.v)), u = DK[r.dk].u ? ' ' + DK[r.dk].u : '';
-      const q = typeof dvState==='function' && db ? dvState(r.dk) : null, now = db && db.st!=='ex' ? `${wbFmt(db.v, r.d)}${u}${q ? ` <i class="dv-s s-${q.c}" title="${q.l}"></i>` : ''}` : '—';
+  wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><p class="wb-chgnote" data-wbpnall hidden></p><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>종류</th><th>대시보드 지금</th><th>보낼 값</th></tr></thead><tbody>${rows.map((r, i) => { const db = wbDash(r.dk), ok = canEditDv(r.dk) && !r.bad, same = db && db.st!=='ex' && Math.abs(db.v - r.v) <= 1e-9*Math.max(1, Math.abs(r.v)), u = DK[r.dk].u ? ' ' + DK[r.dk].u : '';
       const nm = wbEsc(String(DK[r.dk].n).replace(/<[^>]+>/g, ''));
-      return `<tr${ok ? '' : ' class="off"'}><td><input type="checkbox" data-wbpk="${i}"${ok && !same && (r.calc || !db || db.st==='ex') ? ' checked' : ''}${ok ? '' : ' disabled'} aria-label="${nm} 보내기"></td><td>${DK[r.dk].n}${canEditDv(r.dk) ? '' : ' <span class="muted">(담당 아님)</span>'}</td><td class="muted">${r.kind}</td><td>${now}</td><td>${r.bad ? `<span class="muted">${r.bad}</span>` : `<b>${wbFmt(r.v, r.d)}</b>${u}`}</td><td class="dvi-rev"><input type="checkbox" data-wbprev="${i}"${ok ? '' : ' disabled'}${q && q.c==='rev' && !q.why.length && same ? ' checked' : ''} aria-label="${nm} 검토 중"></td></tr>`; }).join('')}</tbody></table></div>
+      return `<tr${ok ? '' : ' class="off"'}><td><input type="checkbox" data-wbpk="${i}"${ok && !same && (r.calc || !db || db.st==='ex') ? ' checked' : ''}${ok ? '' : ' disabled'} aria-label="${nm} 보내기"></td><td>${DK[r.dk].n}${canEditDv(r.dk) ? '' : ' <span class="muted">(담당 아님)</span>'}</td><td class="muted">${r.kind}</td><td>${db && db.st!=='ex' ? wbFmt(db.v, r.d) + u : '—'}</td><td>${r.bad ? `<span class="muted">${r.bad}</span>` : `<b>${wbFmt(r.v, r.d)}</b>${u}`}${r.calc ? ` <b class="dv-re dvi-note" data-wbpnote="${i}" hidden>↻</b>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
     <div class="dvi-foot"><span class="muted">출처 '${wbEsc(T.name)}'</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>취소</button><button type="button" class="btn small pri" data-wbpgo>체크한 것 반영</button></span></div>`);
-  wbPutSync(); $('#wbm').addEventListener('change', e => { if(e.target.matches('[data-wbpk],[data-wbprev]')) wbPutSync(); }); }
-async function wbPutGo(){ const T = wbT(), m = $('#wbm'); let n = 0;
-  for(const cb of m.querySelectorAll('[data-wbpk]:checked')){ const i = +cb.dataset.wbpk, r = (WB.put || [])[i]; if(!r) continue; const rev = !!m.querySelector(`[data-wbprev="${i}"]`)?.checked;
-    if(await dvSave(r.dk, {v: r.v, st: rev ? 'rev' : 'ok', kind: r.calc ? 'calc' : 'in', src: T.name})) n++; }
+  wbPutSync(); $('#wbm').addEventListener('change', e => { if(e.target.matches('[data-wbpk]')) wbPutSync(); }); }
+async function wbPutGo(){ const T = wbT(), m = $('#wbm'), rows = WB.put || [], pick = [...m.querySelectorAll('[data-wbpk]:checked')].map(cb => rows[+cb.dataset.wbpk]).filter(Boolean); let n = 0;
+  const sendIn = {}; pick.forEach(r => { if(!r.calc && !r.bad) sendIn[r.dk] = r.v; }); const deps = wbPutDeps(sendIn);
+  for(const r of pick){ if(await dvSave(r.dk, r.calc ? {v: r.v, st: 'ok', kind: 'calc', src: T.name, deps} : {v: r.v, st: 'ok', kind: 'in', src: T.name, deps: null})) n++;
+    if(!r.calc) T.inputs.forEach(d => { if(d.dk===r.dk) wbBaseSet(d.k, r.v); }); }
   wbModalClose(); toast(`${n}개 값을 대시보드에 반영했습니다.`); wbPaint(['in','out']); }
 /* ---------- 도구 연결 (2026-11-11): 다른 도구와 주고받는 것을 한 창에 (체크해서 가져오기 · 보내기)
    도구가 T.links() → {get:[행], send:[행], info:[글]}, 행 = {tool 상대 도구, n 무엇, to 덮어쓸 곳, now 지금, val 가져올 · 보낼 값, ok, why 못 하는 까닭, run()}.
    run() 은 그 행을 실제로 복사하고 짧은 글을 돌려줌. 가져온 칸 · 표에는 출처 표시 (wbSrcSet), 사용자가 그 칸을 고치면 지움 */
 /* 대시보드에서 가져오기 (예전 [대시보드 값으로 채우기], 2026-11-11): 대시보드 키가 있는 입력마다 한 줄 */
 function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
-  return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; return ''; }}; }); }
+  return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; wbBaseSet(d.k, db.v); return ''; }}; }); }
 /* [도구 연결]: 가져오기만 (다른 도구로 보내기는 없음 — 한 도구가 다른 도구 값을 멋대로 바꾸는 일, 2026-11-12).
    거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에. 그리고 [가져올 값 없는 줄 제외] 하나. 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
    대시보드는 묶음끼리 모으고 묶음마다 줄 띄움 */
@@ -631,7 +641,7 @@ function wbDashReset(b){ if(wbExBlock()) return;
   if(!b.dataset.sure){ b.dataset.sure = '1'; b.classList.add('sure'); b.textContent = '한 번 더 누르면 초기화'; setTimeout(() => { if(b.isConnected){ delete b.dataset.sure; b.classList.remove('sure'); b.textContent = '대시보드 값으로 초기화'; } }, 3000); return; }
   const T = wbT(); let n = 0, same = 0;
   T.inputs.filter(d => d.dk && !d.ui && !(T.inLock && T.inLock(d.k))).forEach(d => { const db = wbDash(d.dk); if(!db) return;
-    if(isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) same++; else { WB.I[d.k] = db.v; n++; } wbSrcDel(WB.id, d.k); });
+    if(isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) same++; else { WB.I[d.k] = db.v; n++; } wbSrcDel(WB.id, d.k); wbBaseSet(d.k, db.v); });
   wbSave(); wbPaint(); wbCalcSoon(); toast(n ? `${n}칸을 대시보드 값으로 바꿨습니다.` : same ? '이미 모두 대시보드 값입니다.' : '대시보드에 값이 있는 칸이 없습니다.'); }
 /* 출처 표시: 모드별 {도구: {키: '도구 X'}} */
 const WBSRC_KEY = 'run2x.wb.src';
@@ -752,6 +762,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(t.closest('[data-wblink]')){ if(!wbExBlock()) wbLinkOpen(); return; }
   { const lg = t.closest('[data-wblgo]'); if(lg){ wbLinkGo(lg.dataset.wblgo); return; } }
   { const dr = t.closest('[data-wbdreset]'); if(dr){ wbDashReset(dr); return; } }
+  { const bb = t.closest('[data-wbbase]'); if(bb){ const d = wbT().inputs.find(x => x.k===bb.dataset.wbbase), db = d && wbDash(d.dk); if(db){ wbBaseSet(d.k, db.v); wbPaint(['in']); toast('확인함: 내 값은 그대로 둡니다.'); } return; } }
   { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { if(!c.closest('tr').hidden) c.checked = la.checked; }); } }
   if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
