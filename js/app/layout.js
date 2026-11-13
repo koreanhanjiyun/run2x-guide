@@ -135,22 +135,25 @@ function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof T
 /* ---------- 목차 펼침 · 접힘 애니메이션 (2026-11-12, 파트 패널의 거울판): 목차는 왼쪽에 붙고 접힌 막대(왼쪽 0)와 펼친 창(왼쪽 14 px)의 자리가 달라
    목차 자체를 자르지 않고 그 위에 머리 색 판(.ts-ov, 화면 좌표 clip-path)을 띄워 ㄱ자(거울) 모양을 그림. 펼친 뒤 단계 목록이 위에서부터 차례로 · 접을 때 아래에서부터 거둠.
    apply(open) = 클래스 · 저장 · 본문 여백(tocFx). 도중에 다시 누르면 애니메이션을 끝내고 바로 그 상태로 ---------- */
-function tocSnake(t, open, apply){ const hd = t.querySelector('.toc-h'), sp = hd && hd.querySelector('span');
-  if(t._ts) t._ts.kill(); const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
+function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp = hd && hd.querySelector('span');
+  /* 118차: O = {host, k, ox, oy} — 사용법 복제본(배율 k 로 줄인 무대) 안의 목차에 그릴 때. 화면 좌표 → 무대 안 좌표, 판 · 글자는 무대에 붙임 */
+  const host = (O && O.host) || document.body, k = (O && O.k) || 1, ox = (O && O.ox) || 0, oy = (O && O.oy) || 0;
+  const G = r => O ? {left: (r.left - ox)/k, top: (r.top - oy)/k, right: (r.right - ox)/k, bottom: (r.bottom - oy)/k, width: r.width/k, height: r.height/k} : r;
+  if(t._ts) t._ts.kill(); const tourOn = !O && (((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture);
   if(tourOn || !sp || !t.animate || getComputedStyle(t).display === 'none'){ apply(open); return; }
   const S = {anims: [], els: []}; t._ts = S;
   S.kill = () => { S.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); S.els.forEach(e => e.remove()); t.classList.remove('ts-hide'); t.style.height = ''; sp.style.color = ''; if(t.classList.contains('coll') === open) apply(open); t._ts = null; };
   const chars = () => { const x = sp.firstChild, R = []; if(!x || x.nodeType !== 3) return R; const r = document.createRange();
-    for(let i = 0; i < x.length; i++){ const ch = x.data[i]; if(!ch.trim()) continue; r.setStart(x, i); r.setEnd(x, i + 1); const b = r.getBoundingClientRect(); R.push({ch, x: b.left + b.width/2, y: b.top + b.height/2}); } return R; };
-  const D = 360, ease = 'cubic-bezier(.45,0,.25,1)', vis = () => { const tb = t.getBoundingClientRect(); return [...t.querySelectorAll('.toc-ph, .toc-s')].filter(e => { const b = e.getBoundingClientRect(); return b.bottom > tb.top && b.top < tb.bottom; }); };
+    for(let i = 0; i < x.length; i++){ const ch = x.data[i]; if(!ch.trim()) continue; r.setStart(x, i); r.setEnd(x, i + 1); const b = G(r.getBoundingClientRect()); R.push({ch, x: b.left + b.width/2, y: b.top + b.height/2}); } return R; };
+  const D = 360, ease = 'cubic-bezier(.45,0,.25,1)', vis = () => { const tb = G(t.getBoundingClientRect()); return [...t.querySelectorAll('.toc-ph, .toc-s')].filter(e => { const b = G(e.getBoundingClientRect()); return b.bottom > tb.top && b.top < tb.bottom; }); };
   const snake = (toOpen, done) => {   /* toOpen = 세로 막대 → 가로 머리 */
-    const c0 = chars(), r0 = t.getBoundingClientRect(), h0 = hd.getBoundingClientRect(); apply(toOpen); t.classList.add('ts-hide'); const c1 = chars(), r1 = t.getBoundingClientRect(), h1 = hd.getBoundingClientRect();
+    const c0 = chars(), r0 = G(t.getBoundingClientRect()), h0 = G(hd.getBoundingClientRect()); apply(toOpen); t.classList.add('ts-hide'); const c1 = chars(), r1 = G(t.getBoundingClientRect()), h1 = G(hd.getBoundingClientRect());
     const Rc = toOpen ? r0 : r1, Ro = toOpen ? r1 : r0, Rh = toOpen ? h1 : h0, hh = Rh.bottom - Ro.top + 1, v = Rc.width, col = getComputedStyle(hd).color, font = getComputedStyle(sp).font;
     const n = Math.min(c0.length, c1.length), paths = [];
     for(let i = 0; i < n; i++){ const V = toOpen ? c0[i] : c1[i], Hz = toOpen ? c1[i] : c0[i], P = [V, {x: V.x, y: Hz.y}, Hz]; if(!toOpen) P.reverse();
       const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y); paths.push({V, Hz, P, k: L1 + L2 ? L1/(L1 + L2) : .5});
       const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`;
-      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(P[0]); document.body.appendChild(d); S.els.push(d);
+      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(P[0]); host.appendChild(d); S.els.push(d);
       S.anims.push(d.animate([{transform: tf(P[0]), offset: 0}, {transform: tf(P[1]), offset: paths[i].k}, {transform: tf(P[2]), offset: 1}], {duration: D, easing: ease, fill: 'both'})); }
     const at = (q, p) => { const P = q.P, k = q.k, f = p < k ? p/k : (p - k)/(1 - k), a = p < k ? P[0] : P[1], b = p < k ? P[1] : P[2]; return {x: a.x + (b.x - a.x)*f, y: a.y + (b.y - a.y)*f}; };
     const lead = paths.reduce((m, q) => !m || Math.abs(q.Hz.x - q.V.x) > Math.abs(m.Hz.x - m.V.x) ? q : m, null), trail = paths.reduce((m, q) => !m || Math.abs(q.Hz.y - q.V.y) > Math.abs(m.Hz.y - m.V.y) ? q : m, null);
@@ -160,14 +163,14 @@ function tocSnake(t, open, apply){ const hd = t.querySelector('.toc-h'), sp = hd
       const xl = L(Rc.left, Ro.left, m), yt = L(Rc.top, Ro.top, m), xr = xl + v + (Ro.width - v)*fl, B = Rc.height - (Rc.height - hh)*fb, rl = 10*m, rr = 10, rh = Math.min(10, xr - xl - v), rb = Math.min(10, B - hh);
       return `path("M ${xl + rl} ${yt} H ${xr - rr} A ${rr} ${rr} 0 0 1 ${xr} ${yt + rr} V ${yt + hh - rh} A ${rh} ${rh} 0 0 1 ${xr - rh} ${yt + hh} H ${xl + v} V ${yt + B - rb} A ${rb} ${rb} 0 0 1 ${xl + v - rb} ${yt + B} H ${xl + rl} A ${rl} ${rl} 0 0 1 ${xl} ${yt + B - rl} V ${yt + rl} A ${rl} ${rl} 0 0 1 ${xl + rl} ${yt} Z")`; };
     const ov = document.createElement('div'); ov.className = 'ts-ov'; ov.style.background = getComputedStyle(hd).backgroundColor; const KF = []; for(let k = 0; k <= 24; k++) KF.push({clipPath: shape(k/24), offset: k/24});
-    ov.style.clipPath = KF[0].clipPath; document.body.appendChild(ov); S.els.push(ov);
+    ov.style.clipPath = KF[0].clipPath; host.appendChild(ov); S.els.push(ov);
     const A = ov.animate(KF, {duration: D, easing: ease, fill: 'both'}); S.anims.push(A);
     A.onfinish = () => { S.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); S.anims = []; S.els.forEach(e => e.remove()); S.els = []; t.classList.remove('ts-hide'); done(hh); }; };
-  if(open) snake(true, hh => { const full = t.getBoundingClientRect().height, ks = vis(), T = 180 + 12*ks.length;
+  if(open) snake(true, hh => { const full = G(t.getBoundingClientRect()).height, ks = vis(), T = 180 + 12*ks.length;
       S.anims = [t.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,0,.2,1)'}),
         ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-8px)'}, {opacity: 1, transform: 'none'}], {duration: 180, delay: 12*i, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards'}))];
       Promise.all(S.anims.map(a => a.finished)).then(() => { if(t._ts === S) t._ts = null; }, () => {}); });
-  else { const full = t.getBoundingClientRect().height, ks = vis(), hh = hd.getBoundingClientRect().bottom - t.getBoundingClientRect().top + 1, T = 130 + 8*ks.length;
+  else { const full = G(t.getBoundingClientRect()).height, ks = vis(), hh = G(hd.getBoundingClientRect()).bottom - G(t.getBoundingClientRect()).top + 1, T = 130 + 8*ks.length;
     S.anims = [t.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: T, easing: 'cubic-bezier(.5,0,.7,.4)', fill: 'forwards'}),
       ...ks.map((k, i) => k.animate([{opacity: 1, transform: 'none'}, {opacity: 0, transform: 'translateY(-8px)'}], {duration: 130, delay: 8*(ks.length - 1 - i), easing: 'ease-in', fill: 'both'}))];
     Promise.all(S.anims.map(a => a.finished)).then(() => { if(t._ts !== S) return; const keep = S.anims; S.anims = []; keep.forEach(a => a.cancel()); snake(false, () => { if(t._ts === S) t._ts = null; }); }, () => {}); } }

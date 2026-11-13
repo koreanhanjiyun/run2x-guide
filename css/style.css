@@ -1348,7 +1348,7 @@ header.top.slim .legend{font-size:var(--fs-xs);gap:4px 16px}
 body.toc-ready #v-steps.wrap{transition:padding-left .36s cubic-bezier(.45,0,.25,1)}
 body.toc-ready #crumb{transition:left .36s cubic-bezier(.45,0,.25,1)}
 body.toc-ready #crumb .cr-in{transition:margin-left .36s cubic-bezier(.45,0,.25,1)}
-body.toc-drag #v-steps.wrap,body.toc-drag #crumb,body.toc-drag #crumb .cr-in,body:has(#tour) #v-steps.wrap,body:has(#tour) #crumb,body:has(#tour) #crumb .cr-in{transition:none}
+body.toc-drag #v-steps.wrap,body.toc-drag #crumb,body.toc-drag #crumb .cr-in,body:has(#tour):not(.tg-live) #v-steps.wrap,body:has(#tour):not(.tg-live) #crumb,body:has(#tour):not(.tg-live) #crumb .cr-in{transition:none}
 body.rail-coll #v-steps.wrap{padding-right:64px}
 body.toc-narrow #v-steps.wrap{padding-left:72px}
 #v-ref.wrap{max-width:1120px}
@@ -3104,3 +3104,15 @@ body.wb-dragging,body.wb-dragging *{user-select:none!important;-webkit-user-sele
 .dvi-t .dvi-note{margin-left:6px}
 .dv-s.dv-re{width:auto;height:auto;border-radius:0;background:none;margin-left:0}
 .dvi-body .wb-chgnote{display:block;margin:0 0 10px}.dvi-body .wb-chgnote .dv-re{margin:0 4px 0 0}
+
+/* ---------- 118차: 펼침(details) ----------
+   1) 열어도 제목 글자가 제자리: 열린 카드의 위 테두리를 앞 줄의 구분선 위에 겹치고(margin-top −1), 왼쪽 테두리 두께만큼 제목 안쪽 여백을 줄임
+   2) 부드럽게 펼치고 접기: ::details-content 높이 전환 (Chrome 131+; 못 하는 브라우저는 지금처럼 바로). 사용법 중에는 바로 (복제 · 위치 재기가 도중 모습을 잡지 않게) */
+#v-steps details.step[open],#v-steps details.item[open]{margin-top:-1px!important}
+#step-list details.step[open]>summary{padding-left:15px}
+#v-steps details.item[open]>summary{padding-left:11px}
+#ref-list details.step[open]>summary{padding-left:19px}   /* 참고 탭: 열면 왼쪽 테두리가 없어짐 → 그만큼 */
+:root{interpolate-size:allow-keywords}
+details::details-content{block-size:0;overflow-y:clip;transition:block-size .3s cubic-bezier(.45,0,.25,1),content-visibility .3s allow-discrete}
+details[open]::details-content{block-size:auto}
+body:has(#tour) details::details-content{transition:none}

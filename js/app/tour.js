@@ -69,7 +69,7 @@ const TOUR = {
   ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
  ],
  steps: [
-  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:()=>{ const t=$('#toc'); if(t){ t.classList.remove('coll'); try{ tocFx(); }catch(e){} } window.scrollTo({top:0,behavior:'instant'}); }}],
+  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:async()=>{ await tgTocSet(false); window.scrollTo({top:0,behavior:'instant'}); }}],
   ['#v-steps header .legend','표시 배지',`항목 줄과 본문에 붙는 표시입니다. ${B('b-card','상세')} 상세 카드(그림·표가 많은 긴 설명)가 있는 항목, ${B('b-assume','가정값')} 설명용 숫자라 팀 실측값으로 바꿀 것입니다.`,{tab:'steps',vm:'full',union:'span:nth-child(-n+2)'}],
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
   ['#flow-list','흐름만 보기','단계마다 핵심 한 줄만 이어 보여 줍니다. 전체 순서를 빠르게 훑을 때 씁니다. 줄의 [열기 ›]를 누르면 전체 보기의 그 항목으로 갑니다.',{tab:'steps',vm:'flow'}],
@@ -317,7 +317,7 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
       /* 좁은 화면(1400 px 미만)에서는 목차가 본문 위에 떠서 가림: 목차 단계가 아니면 접어 둠 (2026-11-13) */
       { const t=$('#toc'); if(t && !/#toc/.test(st[0])){   /* 114차: 목차 단계 밖에서는 좁은 창 = 접힘, 넓은 창 = 사용법 시작 때 상태 (목차 단계가 펼친 채로 남아 본문을 가리던 것) */
         const want = document.body.classList.contains('toc-narrow') || /(^|\s)coll(\s|$)/.test((TR.snap && TR.snap.toc) || '');
-        if(t.classList.contains('coll') !== want){ t.classList.toggle('coll', want); try{ tocFx(); }catch(e){} await tgFrame(); if(TR!==tk) return; TR.sig=null; } else if(want && TR.tocOpen) TR.sig=null; } }   /* 복제본에 목차가 펼쳐져 있으면 다시 복제 (진짜 목차는 바깥 누르기로 이미 접혔을 수 있음) */
+        if(await tgTocSet(want)){ if(TR!==tk) return; TR.sig=null; } else if(want && TR.tocOpen) TR.sig=null; } }   /* 복제본에 목차가 펼쳐져 있으면 다시 복제 (진짜 목차는 바깥 누르기로 이미 접혔을 수 있음) */
       /* 4: 화면을 바꾸는 버튼(탭·하위 화면·보기 방식·항목)을 누르는 모습 → 바뀐 화면으로 서서히 */
       for(const c of tgClicks(o)){
         if(TR.inited && dir>0){ const be=o.inner && tourVis(c.sel); if(be){ await tgInner(o.inner, be); if(TR!==tk) return; } await tgPress(c.sel); } if(TR!==tk) return;
@@ -343,7 +343,19 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     if(dir>0) tourStop();
   } finally { if(TR===tk){ TR.busy=false; TR.el.classList.remove('tg-busy'); const q=TR.queue; TR.queue=null; TR.fast=false; if(q && q.n){ const n=TR.i+q.n; if(n<0) return tourGo(0,-1); if(n>=TR.steps.length) return tourStop(); tourGo(n, q.n>0?1:-1); } } } }
 async function tgRefresh(){ if(!TR || TR.busy) return; const st=TR.steps[TR.i]; if(!st) return; const o=st[3]||{}; await tgRebuild(o.fx); const el=tourVis(st[0]); if(!el) return; const g=tgGeom(el,o); TR.off=g.off; tgApply(); const gg=tgGeom(el,o); tgHole(gg); tgCard(gg); }
-function tourStop(){ if(!TR) return; const s=TR.snap; (TR.inert||[]).forEach(n=>n.inert=false); TR.el.remove(); TR=null; removeEventListener('resize', tgOnResize); tgRestore(s); }
+/* 118차 (B'): 사용법 중 목차를 접거나 펼 때, 무대(복제본) 안의 목차에 진짜와 같은 애니메이션(tocSnake)을 그리고 본문 여백도 같이 미끄러짐 → 끝나면 다시 복제.
+   진짜 목차 · 본문은 바로 바꿔 두고(복제본은 :root 의 --tocx 를 같이 씀), 처음 단계(아직 무대가 안 뜸) · 빨리 넘기기 중에는 바로. 바뀌면 true */
+async function tgTocSet(want){ const t=$('#toc'); if(!t || t.classList.contains('coll')===want) return false; const tk=TR;
+  const sc=TR && TR.el.querySelector('.tg-scale'), tc=sc && [...sc.querySelectorAll('#toc')].pop();
+  if(!TR || !TR.inited || TR.fast || !tc || typeof tocSnake!=='function' || getComputedStyle(t).display==='none'){ t.classList.toggle('coll', want); try{ tocFx(); }catch(e){} await tgFrame(); return true; }
+  const R=sc.getBoundingClientRect(), k=R.width/(sc.offsetWidth||R.width) || 1;
+  document.body.classList.add('tg-live');   /* 본문 여백 전환을 켬 (복제본 #v-steps 도 같은 규칙) */
+  tocSnake(tc, !want, o=>{ tc.classList.toggle('coll', !o); t.classList.toggle('coll', !o); try{ tocFx(); }catch(e){}
+    const r=t.getBoundingClientRect(); Object.assign(tc.style, {left: r.left+'px', top: r.top+'px', width: r.width+'px', height: r.height+'px'}); },   /* 복제본 목차는 크기가 글자로 박혀 있어(tgClone) 진짜 목차의 새 크기를 옮겨 줌 */
+    {host: sc, k, ox: R.left, oy: R.top});
+  await tgSleep(60); for(let n=0; n<80 && tc._ts && TR===tk; n++) await tgSleep(30);
+  await tgSleep(60); document.body.classList.remove('tg-live'); return true; }
+function tourStop(){ if(!TR) return; document.body.classList.remove('tg-live'); const s=TR.snap; (TR.inert||[]).forEach(n=>n.inert=false); TR.el.remove(); TR=null; removeEventListener('resize', tgOnResize); tgRestore(s); }
 let tgRT=0; function tgOnResize(){ clearTimeout(tgRT); tgRT=setTimeout(tgRefresh, 200); }
 function tourStart(name){ tourStop(); const steps=courseOf(name); if(!steps.length) return;
   const el=document.createElement('div'); el.id='tour'; el.className='tg tg-wait'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label','사용법 안내');
