@@ -82,10 +82,10 @@ function initFigRail(){ if($('#figRail')) return;
   const outStop=()=>{ (md._out||[]).forEach(a=>{ try{ a.cancel(); }catch(e){} }); md._out=null; };
   const hideMd=()=>{ if(md.hidden) return; const pn=md.querySelector('.fm-panel'), end=()=>{ outStop(); if(want) return; md.hidden=true; try{ window.__modeAnim.stop(); }catch(e){} };
     if(!pn || !pn.animate || tourOn()){ end(); return; } outStop();
-    md._out=[md.animate([{opacity:1},{opacity:0}],{duration:260, easing:'ease-in', fill:'forwards'})]; popFrom(pn, $('#figToggle'), false);   /* 그림 창은 단추로 빨려 들어감 (layout.js popFrom) */
+    md._out=[md.animate([{backgroundColor:'rgba(20,16,32,.38)'},{backgroundColor:'rgba(20,16,32,0)'}],{duration:260, easing:'ease-in', fill:'forwards'})]; popFrom(pn, $('#figToggle'), false);   /* 그림 창은 단추로 빨려 들어감 (layout.js popFrom) */
     Promise.all(md._out.map(a=>a.finished)).then(end,()=>{}); };
   const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); const back=!md.hidden && md._out; outStop(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
-    fit(); if(pn && pn.animate && !tourOn()){ if(!back) md.animate([{opacity:0},{opacity:1}],{duration:300}); popFrom(pn, $('#figToggle'), true); }   /* 크기 맞춘 뒤 단추에서 꺼냄 */
+    fit(); if(pn && pn.animate && !tourOn()){ if(!back) md.animate([{backgroundColor:'rgba(20,16,32,0)'},{backgroundColor:'rgba(20,16,32,.38)'}],{duration:300});   /* 112차: 배경만 흐려짐 (창 전체 opacity 를 쓰면 날아오는 창까지 안 보였음) */ popFrom(pn, $('#figToggle'), true); }   /* 크기 맞춘 뒤 단추에서 꺼냄 */
     requestAnimationFrame(()=>{ fit(); setTimeout(fit,360); }); }); };
   const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
   const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; fr.classList.toggle('on',on); on?showMd():hideMd(); };

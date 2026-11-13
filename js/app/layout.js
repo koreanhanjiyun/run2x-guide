@@ -128,7 +128,7 @@ function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof T
   const z = parseFloat(getComputedStyle(el).zoom) || 1;   /* 그림 창은 화면 높이에 맞춰 zoom 으로 줄어 있을 수 있음: 옮길 거리는 zoom 전 단위로 */
   const dx = ((B.left + B.width/2) - (P.left + P.width/2))/z, dy = ((B.top + B.height/2) - (P.top + P.height/2))/z, s = Math.max(.04, Math.min(B.width/P.width, B.height/P.height));
   const K = [{transform: `translate(${dx}px,${dy}px) scale(${s})`, opacity: 0}, {transform: `translate(${dx*.15}px,${dy*.15}px) scale(${.6 + s*.4})`, opacity: 1, offset: .55}, {transform: 'none', opacity: 1}];
-  const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 340 : 260, easing: open ? 'cubic-bezier(.2,.8,.25,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
+  const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 340 : 260, easing: open ? 'cubic-bezier(.25,.7,.5,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
   el._pop = a; a.onfinish = () => { if(el._pop !== a) return; el._pop = null; if(done) done(); a.cancel(); }; }
 
 /* ---------- 목차 펼침 · 접힘 애니메이션 (2026-11-12, 파트 패널의 거울판): 목차는 왼쪽에 붙고 접힌 막대(왼쪽 0)와 펼친 창(왼쪽 14 px)의 자리가 달라
