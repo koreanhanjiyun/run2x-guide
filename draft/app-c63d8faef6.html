@@ -30368,7 +30368,7 @@ function tgRestore(s){
   document.querySelectorAll('details[open]').forEach(d=>{ if(!s.open.has(d) && !d.closest('#tour')) d.open=false; }); s.open.forEach(d=>{ if(d.isConnected && !d.open) d.open=true; });
   try{ if(s.sel!==undefined && SEL!==s.sel){ s.sel ? selectItem(s.sel,false) : clearSel(); } }catch(e){}
   const r=$('#partRail'); if(r && s.rail!=null) r.className=s.rail; try{ applyPart(); }catch(e){}
-  const t=$('#toc'); if(t && s.toc!=null) t.className=s.toc;
+  const t=$('#toc'); if(t && s.toc!=null){ t.className=s.toc; try{ tocFx(); }catch(e){} }   /* 116차: 본문 여백도 같이 (목차 단계에서 펼친 뒤 바로 그만 보기 하면 본문만 밀린 채 남던 것) */
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ window.scrollTo({top:s.y, behavior:'instant'}); try{ dispatchEvent(new Event('scroll')); }catch(e){} })); }
 
 /* 지금 화면을 복제 (스크립트·겹친 층 제외). 화면에 붙은 것은 따로 고정 층에 */
