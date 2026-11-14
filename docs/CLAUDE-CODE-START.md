@@ -49,7 +49,7 @@
 6. `redesign-v1` 에 커밋 · 푸시 (묻지 않음). 커밋 메시지 = "N차: 한 줄 요약" + 필요하면 본문
 7. 공개 시안 갱신: `main` 작업 트리의 `draft/` 만 (3절). **그 밖의 `main` 반영(배포 · 버전 올림)은 지시가 있을 때만.**
 8. 보고: 표 하나(항목 · 내용 · 확인) + 주의사항 + 체크리스트. 단계 나열 · 자기 칭찬 없이.
-- 차수 번호는 이어서 (다음 = **119차**).
+- 차수 번호는 이어서 (다음 = **120차**).
 - force push 금지.
 
 ### 1-4. 금지 · 보안
@@ -99,7 +99,7 @@
 | Node | 18+ . `npm i -g playwright` → `npx playwright install chromium`. node 가 playwright 를 못 찾으면 `NODE_PATH=$(npm root -g)` (Git Bash) / `set NODE_PATH=...` (cmd) |
 | 셸 | 문서의 명령은 bash 기준 (Git Bash 또는 WSL 권장). PowerShell 이면 `&`(백그라운드) · `$(...)` 를 바꿔 쓸 것 |
 | main 작업 트리 | 공개 시안 갱신용: `git fetch origin main && git worktree add --detach ../run2x-main origin/main` (한 번 만들고 계속 씀) |
-| 줄바꿈 | 저장소 파일은 LF. Windows git 의 `core.autocrlf` 때문에 CRLF 로 바뀌지 않게 `git config core.autocrlf false` 권장 (스크립트들이 `\n` 기준으로 읽고 씀) |
+| 줄바꿈 | 저장소 파일은 LF. Windows git 의 `core.autocrlf` 때문에 CRLF 로 바뀌지 않게 `git config core.autocrlf false` 권장 (스크립트들이 `\n` 기준으로 읽고 씀). `tools/*.py` 는 119차부터 `newline='\n'` 으로 씀 |
 
 ### 3-1. 시안 빌드 · 검사 · 공개 (한 바퀴 명령)
 

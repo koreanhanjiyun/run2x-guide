@@ -1,6 +1,6 @@
 import re,glob
-exec(open(__import__('os').path.join(__import__('os').path.dirname(__file__),'deadcss.py')).read().split('# 규칙 단위')[0])
-css=open('css/style.css').read()
+exec(open(__import__('os').path.join(__import__('os').path.dirname(__file__),'deadcss.py'),encoding='utf-8').read().split('# 규칙 단위')[0])
+css=open('css/style.css',encoding='utf-8').read()
 # 주석 자리를 같은 길이 공백으로 가린 사본으로 위치 계산
 mask=re.sub(r'/\*.*?\*/',lambda m:' '*len(m.group(0)),css,flags=re.S)
 edits=[]  # (start,end,replacement)
@@ -50,4 +50,4 @@ for s,e,r in sorted(edits,reverse=True): css=css[:s]+r+css[e:]
 # 빈 @media 블록 지움
 for _ in range(3): css=re.sub(r'@media[^{]*\{\s*\}','',css)
 css=re.sub(r'\n[ \t]*\n(\s*\n)+','\n\n',css)
-open('css/style.css','w').write(css); print('rules',nall,'partial',npart)
+open('css/style.css','w',encoding='utf-8',newline='\n').write(css); print('rules',nall,'partial',npart)

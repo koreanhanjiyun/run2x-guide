@@ -7,7 +7,7 @@
 | 구분 | 위치 | 내용 |
 |---|---|---|
 | 실제 사이트 | `main` → https://koreanhanjiyun.github.io/run2x-guide/ | v2.1.0 (2026-11-08, 도구 2 경량 · 2P 정밀 · 3 ~ 9 · T, 작업창 [결과 · 편집] 탭까지). 바꾸려면 관리자 지시 필요 |
-| 시안 브랜치 | `redesign-v1` | 개편 작업 전부 (118차까지). v2.1.0(~45차)까지만 `main` 에 병합됨 — 46 ~ 118차는 배포 지시 대기 |
+| 시안 브랜치 | `redesign-v1` | 개편 작업 전부 (119차까지). v2.1.0(~45차)까지만 `main` 에 병합됨 — 46 ~ 118차는 배포 지시 대기 |
 | 공개 시안 | `main` 의 `draft/` → https://koreanhanjiyun.github.io/run2x-guide/draft/ | 관리자는 이 주소로 시안을 확인함. 예시 데이터 · 가짜 저장소(실제 Firebase 연결 안 함), 검색 제외 |
 | Claude 아티팩트 | https://claude.ai/artifact/4iS9LPPNesPsXZfEUTk2jr | 예전 시안 확인 경로. 이제는 공개 시안 주소를 씀 |
 
@@ -19,18 +19,21 @@ python3 tools/draft/build.py              # → dist/draft/run2x_redesign.html, 
 node tools/dummy/make.js                  # 더미 팀 JSON 다시 만들기 (항목 · 대시보드 키 · 도구 예제가 바뀌었을 때만) → 그 뒤 build.py 한 번 더
 
 # 검사 (Playwright, 콘솔 오류 없어야 함)
-python3 -m http.server 8801 &             # 저장소 맨 위에서
-node tools/draft/qa/site_check.js 8801    # 기대: uniq 125, 오류 []
+python3 -m http.server 8799 &             # 저장소 맨 위에서
+node tools/draft/qa/site_check.js 8799    # 기대: { items: 250, steps: 60, uniq: 125 } []
 node tools/draft/qa/tools_tour.js         # 기대: 1 / 7 … 7 / 7, errs []
 node tools/draft/qa/tool1_check.js       # 기대: 끼워 넣기 · 드라이버 선택 · verify 32/32 · 사용법 1~15, errs []
 node tools/draft/qa/tool2_check.js [폴더] [트랙.xlsx] [트랙.csv]   # 기대: 검증 30/30 · 두 모드 즉시 전환 · 줄 맞춤 · 수치 오른쪽 · 선도 표시 전용 · 그래프 칸 추가 · 고르기 · 높이 · 지도 확대 · 누르기 · 맵 편집 같은 높이 · 그림 → 표 · 빈 내 코스 · 입력 칸 막힘 · 훑기 41 · 사용법 1~18 · 파트별 2개, errs []
 # (node 가 playwright 를 못 찾으면 NODE_PATH=$(npm root -g) 를 앞에 붙임)
 
 # 공개 시안 갱신: main 작업 트리에 draft/ 만 넣어 커밋 · 푸시
-git fetch origin main && git worktree add --detach ../mainwt origin/main
-python3 tools/draft/publish.py ../mainwt
-cd ../mainwt && git add draft && git commit -m "시안 갱신: draft/ (redesign-v1 <커밋>)" && git push origin HEAD:main
+git fetch origin main && git worktree add --detach ../run2x-main origin/main   # 처음 한 번
+cd ../run2x-main && git fetch -q origin main && git checkout -q --detach origin/main
+python3 ../run2x-guide/tools/draft/publish.py "$(pwd)"
+git add -A draft && git commit -qm "draft: N차" && git push origin HEAD:main
 ```
+
+- Windows: 명령의 `python3` 는 `python` 으로 (python.org 설치본에는 `python3` 가 없음). `tools/*.py` 는 119차부터 파일을 LF 로 씀 (그 전에는 Windows 에서 CRLF 로 바뀜).
 
 - `tools/draft/demo-mock.js`: 가짜 저장소 + 역할 전환 막대(비로그인 · 팀원 · 팀장 · 파트장 · 회장) + 도구 1 예시 데이터(어셈블리 18개, 드라이버 3명). 예시 데이터를 바꾸면 `demo-mock.js` 의 키(`__run2xdemoNN`, `run2x.mass.vN`)와 `qa/h2.js` 의 KEY 를 같이 올려야 이미 본 브라우저에도 새 데이터가 들어감.
 - `publish.py` 는 브라우저 저장 키 앞에 `run2x-draft:` 를 붙여 실제 사이트 저장값과 섞이지 않게 하고, 사진은 사이트의 `img/` 를, 3D 라이브러리는 `draft/vendor/three/` 를 쓴다.
@@ -187,6 +190,12 @@ cd ../mainwt && git add draft && git commit -m "시안 갱신: draft/ (redesign-
   - 2P 부품별 독립 (cw_mode 0): 예전 '열용량 · UA 정지 · UA 60 km/h 직선' 을 없애고 수랭 부품마다 [라디 → 펌프 → 부품] 회로를 만들어 냉각 회로와 같은 계산 (`coolIndep`). 입력: 부품마다 냉각수 양 · 펌프 유량 · 라디 면적 · 주행풍 비율 · 팬 · 팬 켜는 온도 · UA · ITD · 금속 열용량 (`cw_*` · `i_w*` · `b_w*`), 라디 표 3개 (`rqM` · `rqI` · `rqB`, 냉각 탭). 대시보드 `cool_c` · `cool_ua0` · `cool_ua60` 은 2P 가 더 받지 않음 (도구 9 는 그대로 냄).
   - 도구 9 · 2P 회로 라디 블럭에도 팬 켜는 온도 · 금속 열용량 · ITD · 방열 표 (블럭 칸에 Ctrl+V, [표 | UA], [표 지우기]).
   - 검증표: 도구 9 38 (표 점 · 팬 켬 · 팬 꺼짐 · 금속 열용량 시간 해석해 +4), 2P 171 (독립 회로 경우 3개 새 꼴로 다시 손계산, 독립 + 라디 표 +1). QA `tool2_check` 처음 계산을 기다리게 바꿈.
+- 2026-11-14 119차 (관리자 '전부 다 제안으로 ㄱㄱ', Claude Code 첫 작업): 저장소 정리 · Windows 줄바꿈
+  - 지움: `.github/workflows/firestore-cleanup-legacy.yml` (예전 단일 팀 데이터 정리용 일회 작업. 실행하면 지금의 `teams` · `meta` · `status` · `qa` · `users` 컬렉션을 통째로 지우는 작업이라 남기지 않음, `main` 에서도 지움), `8765/` (11-08 커밋에 실수로 들어간 QA 스크린샷 png 7장, 참조 0), `ttm3.js` (10-23 부터 있던 0 바이트 빈 파일, 참조 0). ADMIN.md 자동 작업 표에서도 뺌.
+  - Windows 줄바꿈: `stamp.py` 가 Windows 에서 `index.html` 을 CRLF 로 다시 써 157줄 전부 바뀌던 것 (Python 텍스트 모드 쓰기). 파일을 쓰는 `tools/*.py` 에 `newline='\n'` (stamp · gen_dash_keys · build_single · draft/build · draft/publish · dev/rmdef · dev/rmcss), 인코딩이 없던 dev 도구 읽기 · 쓰기에 `encoding='utf-8'` (한국어 Windows 기본 cp949 로 읽어 깨질 수 있던 것). 확인: stamp 실행 뒤 `index.html` 바뀐 줄 = ?v= 꼬리표 63줄만, asm.py 조립 결과 바이트 같음.
+  - 알아 둘 것: `js/store/dash-keys.js` 는 92차에 결과 파일만 고침 (`eta_dt` · `j_eq` · `crr` 의 `it` = `p_ratio`). `docs/DASH-VARS.md` 에는 없어 `gen_dash_keys.py` 를 돌리면 그 3줄이 `""` 로 되돌아감. 이번에는 돌려 본 뒤 원래대로 둠. 다음에 대시보드 키를 고칠 때 DASH-VARS.md 쪽을 먼저 맞출 것.
+  - 문서 맞춤: HANDOFF 2절 공개 시안 절차를 START 문서와 같게 (`../run2x-main`, 포트 8799), Windows 는 `python` (python.org 설치본에 `python3` 없음) — CLAUDE.md · START 3절에도 한 줄.
+  - 확인만: 설계 탭에서 항목을 펼친 뒤 목차 강조가 엉뚱한 단계(P3-2)로 보였던 것은 확인 스크립트가 스크롤 없이 `open` 만 바꾼 탓. 실제로 눌러 펼치고 스크롤하면 P0 로 맞음 (`spyToc`).
 - 2026-11-13 118차 (관리자 지시):
   - 사용법 목차 전환 B': 목차가 바뀌는 단계에서 무대(복제본) 안 목차에 진짜와 같은 tocSnake 를 그림 (`tgTocSet`, tour.js). tocSnake 에 4번째 인자 O = {host, k, ox, oy} 추가 (무대 배율 · 원점으로 좌표 변환, 판 · 글자를 무대에 붙임). 복제본 목차는 크기가 인라인으로 박혀 있어 진짜 목차의 새 크기를 옮김. 본문 여백은 body.tg-live 동안만 전환. 처음 단계 · 빨리 넘기기는 바로. 1905 · 1280 장면 끊어 확인.
   - 펼침 제목 위치 고정: 열린 카드 margin-top −1 (앞 줄 구분선 위에 겹침) + 왼쪽 테두리만큼 제목 여백 줄임 (#step-list 단계 15 px, #v-steps 항목 11 px, #ref-list 19 px). 설계 · 참고 탭의 모든 details(단계 · 항목 · q · tk-d · bgbox · symbox · calc) 열기 전후 글자 위치 0.0 px 확인 (1905 · 1440).

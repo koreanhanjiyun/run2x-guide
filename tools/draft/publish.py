@@ -16,9 +16,10 @@ import hashlib, glob
 page = head + body + '\n</body>\n</html>\n'; hv = hashlib.sha1(page.encode('utf-8')).hexdigest()[:10]; name = f'app-{hv}.html'
 for old in glob.glob(os.path.join(d, 'app-*.html')):
     if os.path.basename(old) != name: os.remove(old)                   # 예전 본문은 지움 (최신 하나만)
-open(os.path.join(d, name), 'w', encoding='utf-8').write(page)
-open(os.path.join(d, 'ver.txt'), 'w', encoding='utf-8').write(name + '\n')
-open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(
+W = lambda p: open(p, 'w', encoding='utf-8', newline='\n')           # Windows 에서도 LF 그대로
+W(os.path.join(d, name)).write(page)
+W(os.path.join(d, 'ver.txt')).write(name + '\n')
+W(os.path.join(d, 'index.html')).write(
     '<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="robots" content="noindex,nofollow">\n<title>Run2X 시안</title>\n'
     '<script>fetch("ver.txt?t=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(v => location.replace(v.trim() + location.search + location.hash))'
     '.catch(() => { document.body.textContent = "시안을 불러오지 못했습니다. 새로고침해 주십시오."; });</script>\n'

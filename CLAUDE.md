@@ -7,6 +7,8 @@
 - 변경 이력 (`js/data/refs.js`): 모든 버전을 적는다 (Keep a Changelog). 설계 내용 변경·정정은 자세히(정정은 `cl-fix`), 화면·기능만 바뀐 버전은 `sec-label cl-ui` + "화면·기능" 표시로 짧게 한두 줄. 자세한 화면·기능 변경은 커밋 메시지에. 업데이트 알림은 cl-ui가 아닌 버전에만 뜬다.
 - 하단 버전·갱신일: `index.html` 의 `#verline`.
 - 커밋 전에 항상 `python3 tools/stamp.py` 실행 (css·js 주소에 ?v= 꼬리표 → 방문자 캐시 무효화).
+- Windows(관리자 PC)에서는 `python3` 대신 `python`. 파이썬 도구가 파일을 쓸 때는 `newline='\n'` 을 붙여 LF 를 지킨다 (안 붙이면 Windows 에서 CRLF 로 바뀜).
+- `js/store/dash-keys.js` 는 `docs/DASH-VARS.md` 에서 `tools/gen_dash_keys.py` 로 만든 결과다. 92차에 결과 파일만 고친 곳(`eta_dt` · `j_eq` · `crr` 의 `it`)이 있어, 지금 생성기를 돌리면 그 3줄이 되돌아간다.
 - 계산 도구의 검증표(`WB_TOOLS[번호].verify`): 새 물리 항이나 식을 넣으면, 그 항이 0이 아닌 해석해(손계산) 경우를 검증표에 같이 추가한다. 기존 경우만 통과해서는 새 항이 맞는지 알 수 없다 (관리자 결정 2026-11-05).
 - 검증: `python3 -m http.server` 로 띄워 Playwright로 콘솔 오류 없이 로드되는지, 항목 수(details.item)·단계 수가 그대로인지 확인.
 - 화면 확인 (2026-11-13 관리자 결정): 화면이 바뀐 작업은 끝낸 뒤 Playwright 로 찍어 Claude 가 직접 보고, 문제를 고친 다음 보고한다. 크기는 관리자 실제 화면 기준.
@@ -16,7 +18,7 @@
   - 애니메이션은 시간을 늘려 장면을 끊어 보고 모양 · 순서만 판단한다. 속도감 · 부드러움은 관리자 확인으로 남긴다.
 - Claude 아티팩트 게시용 한 파일: `python3 tools/build_single.py`.
 - 사용자(관리자)의 작업 규칙: 명확한 실행 지시("ㄱㄱ", "진행", "반영" 등) 없이는 파일을 고치지 않고 논의만 한다. 답변은 한국어 존댓말.
-- 이어서 작업할 때: 먼저 `docs/CLAUDE-CODE-START.md` (관리자와 일하는 법 · 환경 · 작업 한 바퀴 · 최근 결정 · 남은 일, 2026-11-14 클라우드 채팅에서 이전) → `docs/HANDOFF.md` (차수별 결정 전부)를 읽는다. 다음 차수 = 119차.
+- 이어서 작업할 때: 먼저 `docs/CLAUDE-CODE-START.md` (관리자와 일하는 법 · 환경 · 작업 한 바퀴 · 최근 결정 · 남은 일, 2026-11-14 클라우드 채팅에서 이전) → `docs/HANDOFF.md` (차수별 결정 전부)를 읽는다. 다음 차수 = 120차.
 - 커밋 범위(2026-11-04 결정): 지시받아 끝낸 작업은 묻지 않고 `redesign-v1` 에 커밋 · 푸시하고, 공개 시안 `main` 의 `draft/` 도 같이 갱신한다(`tools/draft/build.py` → `tools/draft/publish.py`). 그 밖의 `main` 반영(배포 · 버전 올림)은 지시가 있을 때만.
 - 시안 확인 주소: https://koreanhanjiyun.github.io/run2x-guide/draft/ (더미 팀 · 가짜 저장소, 실제 Firebase 연결 안 함). 역할별 화면 시험은 시안의 '시안' 버블에서 (디버깅 모드는 2026-11-13 없앰).
 - 더미 팀: `tools/dummy/gen.js` (만드는 규칙) → `node tools/dummy/make.js` (build.py 뒤에) → `tools/dummy/run2x-dummy-team.json`. 시안 가짜 저장소 기본 데이터이자 실제 팀 [가져오기]용 시험 파일. 항목 · 대시보드 키 · 도구 예제가 바뀌면 다시 만든다.

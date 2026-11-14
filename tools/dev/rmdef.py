@@ -33,7 +33,7 @@ def end_of(s,i):
         j+=1
     raise SystemExit('no end')
 def rmdef(path,name):
-    s=open(path).read()
+    s=open(path,encoding='utf-8').read()
     m=re.search(r'^[ \t]*(?:async\s+)?function\s+'+re.escape(name)+r'\b|^[ \t]*(?:const|let)\s+'+re.escape(name)+r'\s*=',s,re.M)
     assert m,(path,name)
     i=m.start(); e=end_of(s,i)
@@ -41,7 +41,7 @@ def rmdef(path,name):
     rest=s[e+1:k].strip()
     if rest and not rest.startswith('/*') and not rest.startswith('//'):
         raise SystemExit(f'trailing code after {name} in {path}: {rest[:80]!r}')
-    open(path,'w').write(s[:i]+s[k+1:])
+    open(path,'w',encoding='utf-8',newline='\n').write(s[:i]+s[k+1:])
 if __name__=='__main__':
     for a in sys.argv[1:]:
         p,n=a.split(':'); rmdef(p,n); print('rm',p,n)

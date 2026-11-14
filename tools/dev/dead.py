@@ -1,6 +1,6 @@
 import re,glob,collections
 files=glob.glob('js/**/*.js',recursive=True)+['index.html','tools/draft/demo-mock.js']
-src={f:open(f).read() for f in files}
+src={f:open(f,encoding='utf-8').read() for f in files}
 cnt=collections.Counter()
 for s in src.values(): cnt.update(re.findall(r'[A-Za-z_$][\w$]*',s))
 for f,s in src.items():

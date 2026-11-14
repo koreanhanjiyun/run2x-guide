@@ -1,7 +1,7 @@
 import re,glob,sys
 files=glob.glob('js/**/*.js',recursive=True)+['index.html','tools/draft/demo-mock.js']+glob.glob('tools/draft/*.py')
-txt='\n'.join(open(f).read() for f in files)
-css=open('css/style.css').read()
+txt='\n'.join(open(f,encoding='utf-8').read() for f in files)
+css=open('css/style.css',encoding='utf-8').read()
 words=set(re.findall(r'[A-Za-z_][\w-]*',txt))
 def alive(tok):
     if tok in words: return True
