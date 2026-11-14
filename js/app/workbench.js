@@ -451,7 +451,7 @@ function wbTourTabs(T){ if(!T || !T.tour || T.__tt || !wbTabs(T)) return; T.__tt
   T.tour = T.tour.map(st => { const sel = String(st[0] || ''); if(/wb-bar|wb-tabsec/.test(sel)) return st;
     const res = /wbout|wbmain|wb-sig|wbsig|wbmid|wb-two|wbstat|t4-pw/.test(sel), tab = res ? 'res' : 'edit';
     const sel2 = /\.wb-in\b/.test(sel) ? '#wb #wbedit' : sel;
-    return [sel2, st[1], st[2], {...(st[3] || {}), wbtab:tab}, ...st.slice(4)]; }); }
+    return [sel2, st[1], st[2], {...(st[3] || {}), wbtab:(st[3] && st[3].wbtab) || tab}, ...st.slice(4)]; }); }   /* 단계에 적은 탭이 있으면 그것 우선 (121차) */
 /* ---------- 열기 · 닫기 · 입력 기억 ---------- */
 /* ---------- 도구끼리 같이 쓰는 입력 (share): 같은 브라우저 안에서 한 벌. 고른 도구 어디서 고쳐도 다른 도구가 열 때 그 값을 씀
    hp = 서스 하드포인트 (도구 5 · 6 · 7 · 8, 키 '앞 f / 뒤 r _ 점 _ x · y · z'). 상세 제원이라 팀 저장소에는 두지 않고, 파일(.xlsx · .csv · .json)로 주고받음 */

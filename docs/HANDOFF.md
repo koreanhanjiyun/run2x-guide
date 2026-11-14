@@ -7,7 +7,7 @@
 | 구분 | 위치 | 내용 |
 |---|---|---|
 | 실제 사이트 | `main` → https://koreanhanjiyun.github.io/run2x-guide/ | v2.1.0 (2026-11-08, 도구 2 경량 · 2P 정밀 · 3 ~ 9 · T, 작업창 [결과 · 편집] 탭까지). 바꾸려면 관리자 지시 필요 |
-| 시안 브랜치 | `redesign-v1` | 개편 작업 전부 (120차까지). v2.1.0(~45차)까지만 `main` 에 병합됨 — 46 ~ 118차는 배포 지시 대기 |
+| 시안 브랜치 | `redesign-v1` | 개편 작업 전부 (121차까지). v2.1.0(~45차)까지만 `main` 에 병합됨 — 46 ~ 118차는 배포 지시 대기 |
 | 공개 시안 | `main` 의 `draft/` → https://koreanhanjiyun.github.io/run2x-guide/draft/ | 관리자는 이 주소로 시안을 확인함. 예시 데이터 · 가짜 저장소(실제 Firebase 연결 안 함), 검색 제외 |
 | Claude 아티팩트 | https://claude.ai/artifact/4iS9LPPNesPsXZfEUTk2jr | 예전 시안 확인 경로. 이제는 공개 시안 주소를 씀 |
 
@@ -190,10 +190,14 @@ git add -A draft && git commit -qm "draft: N차" && git push origin HEAD:main
   - 2P 부품별 독립 (cw_mode 0): 예전 '열용량 · UA 정지 · UA 60 km/h 직선' 을 없애고 수랭 부품마다 [라디 → 펌프 → 부품] 회로를 만들어 냉각 회로와 같은 계산 (`coolIndep`). 입력: 부품마다 냉각수 양 · 펌프 유량 · 라디 면적 · 주행풍 비율 · 팬 · 팬 켜는 온도 · UA · ITD · 금속 열용량 (`cw_*` · `i_w*` · `b_w*`), 라디 표 3개 (`rqM` · `rqI` · `rqB`, 냉각 탭). 대시보드 `cool_c` · `cool_ua0` · `cool_ua60` 은 2P 가 더 받지 않음 (도구 9 는 그대로 냄).
   - 도구 9 · 2P 회로 라디 블럭에도 팬 켜는 온도 · 금속 열용량 · ITD · 방열 표 (블럭 칸에 Ctrl+V, [표 | UA], [표 지우기]).
   - 검증표: 도구 9 38 (표 점 · 팬 켬 · 팬 꺼짐 · 금속 열용량 시간 해석해 +4), 2P 171 (독립 회로 경우 3개 새 꼴로 다시 손계산, 독립 + 라디 표 +1). QA `tool2_check` 처음 계산을 기다리게 바꿈.
+- 2026-11-14 121차 (관리자 '권장으로'): 도구 1 사용법 4 · 14단계가 건너뛰어지던 것 고침
+  - 4단계: 대상 `.wb-in`(→ `#wbedit`) 가 도구 1 편집 탭에서 숨어 있었음. 이름 '입력' → '차 치수', [차 치수] 탭을 누르는 모습(`m1TT('dim')`)으로 `#wbedit` (휠베이스 · 앞뒤 트레드 · 하중 반경) 를 보여 줌.
+  - 14단계: 결과 칸에 `wbtab:'res'`. `wbTourTabs`(workbench.js) 가 단계에 적은 `wbtab` 을 자동 판정보다 우선하게 고침. 지금 다른 도구 단계에는 `wbtab` 을 적은 곳이 없어 영향 없음 (검색 확인).
+  - 확인: [다음] 1 → 15 빠짐 없이, 끝나면 원래 탭(결과 · 부품 질량 표)으로 돌아옴. 4 · 14 · 15단계 1905 × 940 화면 확인. tool1_check 사용법 1 ~ 15, tools_tour 7/7, 검증표 11개 도구 전부 통과.
 - 2026-11-14 120차 (관리자 지시): 생성기 · 결과 맞춤, QA 스크립트 안전장치, 도구 1 사용법 건너뜀 원인
   - `docs/DASH-VARS.md` 의 `eta_dt` · `j_eq` · `crr` 항목 칸 `—` → `p_ratio` (92차에 결과 파일 `dash-keys.js` 만 고쳤던 것). `gen_dash_keys.py` 결과가 지금 `dash-keys.js` 와 바이트까지 같음 확인.
   - `tools/draft/qa/tools_check.js`: 첫 인자(스크린샷 폴더)가 숫자면 멈춤 (포트를 넣어 `8765/` 가 생겼던 원인). 스크린샷 없이 도구만 고르려면 첫 인자 `-`. `require` 보다 먼저 검사. 같은 꼴(첫 인자 = 폴더)인 `cool_check` · `lock_check` · `tool4_check` 는 그대로.
-  - 확인만 (안 고침): 도구 1 사용법 15단계 중 4단계 '입력'(`#wb #wbedit`)과 14단계 '결과'(`.wb-sec[aria-label="결과"]`)가 건너뛰어짐. 4단계: 도구 1 은 편집 탭에서 `#wbedit` 가 display:none (휠베이스 · 트레드는 표 입력의 [차 치수] 탭으로 옮겨짐). 14단계: `wbTourTabs` 가 선택자에 wbout 등이 없으면 탭을 '편집'으로 정하는데, 결과 칸은 결과 탭에만 보임. 둘 다 `tourGo` 가 보이는 대상이 없으면 다음 단계로 넘김 (tour.js). 재현: [다음] 3 → 5, 13 → 15.
+  - 확인만 (121차에 고침): 도구 1 사용법 15단계 중 4단계 '입력'(`#wb #wbedit`)과 14단계 '결과'(`.wb-sec[aria-label="결과"]`)가 건너뛰어짐. 4단계: 도구 1 은 편집 탭에서 `#wbedit` 가 display:none (휠베이스 · 트레드는 표 입력의 [차 치수] 탭으로 옮겨짐). 14단계: `wbTourTabs` 가 선택자에 wbout 등이 없으면 탭을 '편집'으로 정하는데, 결과 칸은 결과 탭에만 보임. 둘 다 `tourGo` 가 보이는 대상이 없으면 다음 단계로 넘김 (tour.js). 재현: [다음] 3 → 5, 13 → 15.
 - 2026-11-14 119차 (관리자 '전부 다 제안으로 ㄱㄱ', Claude Code 첫 작업): 저장소 정리 · Windows 줄바꿈
   - 지움: `.github/workflows/firestore-cleanup-legacy.yml` (예전 단일 팀 데이터 정리용 일회 작업. 실행하면 지금의 `teams` · `meta` · `status` · `qa` · `users` 컬렉션을 통째로 지우는 작업이라 남기지 않음, `main` 에서도 지움), `8765/` (11-08 커밋에 실수로 들어간 QA 스크린샷 png 7장, 참조 0), `ttm3.js` (10-23 부터 있던 0 바이트 빈 파일, 참조 0). ADMIN.md 자동 작업 표에서도 뺌.
   - Windows 줄바꿈: `stamp.py` 가 Windows 에서 `index.html` 을 CRLF 로 다시 써 157줄 전부 바뀌던 것 (Python 텍스트 모드 쓰기). 파일을 쓰는 `tools/*.py` 에 `newline='\n'` (stamp · gen_dash_keys · build_single · draft/build · draft/publish · dev/rmdef · dev/rmcss), 인코딩이 없던 dev 도구 읽기 · 쓰기에 `encoding='utf-8'` (한국어 Windows 기본 cp949 로 읽어 깨질 수 있던 것). 확인: stamp 실행 뒤 `index.html` 바뀐 줄 = ?v= 꼬리표 63줄만, asm.py 조립 결과 바이트 같음.
