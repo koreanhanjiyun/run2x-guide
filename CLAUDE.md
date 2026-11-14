@@ -18,7 +18,7 @@
   - 애니메이션은 시간을 늘려 장면을 끊어 보고 모양 · 순서만 판단한다. 속도감 · 부드러움은 관리자 확인으로 남긴다.
 - Claude 아티팩트 게시용 한 파일: `python3 tools/build_single.py`.
 - 사용자(관리자)의 작업 규칙: 명확한 실행 지시("ㄱㄱ", "진행", "반영" 등) 없이는 파일을 고치지 않고 논의만 한다. 답변은 한국어 존댓말.
-- 이어서 작업할 때: 먼저 `docs/CLAUDE-CODE-START.md` (관리자와 일하는 법 · 환경 · 작업 한 바퀴 · 최근 결정 · 남은 일, 2026-11-14 클라우드 채팅에서 이전) → `docs/HANDOFF.md` (차수별 결정 전부)를 읽는다. 다음 차수 = 123차.
+- 이어서 작업할 때: 먼저 `docs/CLAUDE-CODE-START.md` (관리자와 일하는 법 · 환경 · 작업 한 바퀴 · 최근 결정 · 남은 일, 2026-11-14 클라우드 채팅에서 이전) → `docs/HANDOFF.md` (차수별 결정 전부)를 읽는다. 다음 차수 = 124차.
 - 커밋 범위(2026-11-04 결정): 지시받아 끝낸 작업은 묻지 않고 `redesign-v1` 에 커밋 · 푸시하고, 공개 시안 `main` 의 `draft/` 도 같이 갱신한다(`tools/draft/build.py` → `tools/draft/publish.py`). 그 밖의 `main` 반영(배포 · 버전 올림)은 지시가 있을 때만.
 - 시안 확인 주소: https://koreanhanjiyun.github.io/run2x-guide/draft/ (더미 팀 · 가짜 저장소, 실제 Firebase 연결 안 함). 역할별 화면 시험은 시안의 '시안' 버블에서 (디버깅 모드는 2026-11-13 없앰).
 - 더미 팀: `tools/dummy/gen.js` (만드는 규칙) → `node tools/dummy/make.js` (build.py 뒤에) → `tools/dummy/run2x-dummy-team.json`. 시안 가짜 저장소 기본 데이터이자 실제 팀 [가져오기]용 시험 파일. 항목 · 대시보드 키 · 도구 예제가 바뀌면 다시 만든다.
