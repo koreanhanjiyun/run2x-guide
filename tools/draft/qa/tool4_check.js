@@ -1,4 +1,6 @@
 // 도구 4 축전지 팩 계산기 점검: 열기 · 결과 · 규정 막대 · 자동 구성 · 출력 표 전류 · 셀 프리셋 · 검증표 · 대시보드 반영 목록 · 도구 2 받기.  node tool4_check.js [스크린샷 폴더]
+/* 첫 인자가 숫자(포트 등)면 폴더로 쓰지 않고 멈춤 (122차, tools_check.js 와 같음) */
+if(/^\d+$/.test(process.argv[2]||'')){ console.error('첫 인자는 스크린샷 폴더입니다 (숫자 "'+process.argv[2]+'" 는 받지 않음).'); process.exit(1); }
 const H=require('./h.js');
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead'); const W=H.sleep, d=process.argv[2];
   await p.evaluate(()=>{ wbModeSet('ex'); localStorage.removeItem(wbStoreKey('4')); localStorage.removeItem('run2x.t4.presets@ex'); showTab('tools'); }); await W(600);

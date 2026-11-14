@@ -1,5 +1,7 @@
 // 냉각 편집기 점검 (시뮬링크식, 2026-11-09): 기본 회로 · 휠 확대 · 휠 버튼 이동 · 블럭 끌기 · 영역 고르기 · Delete · 합쳐진 호스 하나만 고르기 · 토막 옮기기 · 호스 잇기 · 손잡이 없이 호스 토막 끌기 · 휠은 누른 뒤에만 확대 ·
 //   호스 유량 (안지름 · 길이) · 공랭 갈라짐 비율 · 지우기 단추 없음 · 도구 2P 쪽 같은 편집기.  node cool_check.js [스크린샷 폴더]
+/* 첫 인자가 숫자(포트 등)면 폴더로 쓰지 않고 멈춤 (122차, tools_check.js 와 같음) */
+if(/^\d+$/.test(process.argv[2]||'')){ console.error('첫 인자는 스크린샷 폴더입니다 (숫자 "'+process.argv[2]+'" 는 받지 않음).'); process.exit(1); }
 const H=require('./h.js');
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead'); const W=H.sleep, d=process.argv[2];
   await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>{ localStorage.removeItem('run2x.t9@ex'); T9.cool=T9COOL_DEF(); wbOpen('9',null,'ex'); wbTabSet('edit'); }); await W(1500);

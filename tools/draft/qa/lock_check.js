@@ -1,4 +1,6 @@
 // 잠긴 칸 값 점검: 잠기면 실제로 쓰는 값 · —, 풀리면 입력해 둔 값.  node lock_check.js [스크린샷 폴더]
+/* 첫 인자가 숫자(포트 등)면 폴더로 쓰지 않고 멈춤 (122차, tools_check.js 와 같음) */
+if(/^\d+$/.test(process.argv[2]||'')){ console.error('첫 인자는 스크린샷 폴더입니다 (숫자 "'+process.argv[2]+'" 는 받지 않음).'); process.exit(1); }
 const H=require('./h.js');
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead'); const W=H.sleep, d=process.argv[2];
   const V=k=>p.evaluate(k=>{ const i=document.querySelector(`#wb input[data-wbi="${k}"]`); return i ? [i.disabled?'잠김':'열림', i.value===''?i.placeholder:i.value].join(':') : '없음'; }, k);
