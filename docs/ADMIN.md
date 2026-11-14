@@ -22,10 +22,8 @@
 - 팀 백업: 관리자 모드 → 관리 창 "팀 관리" [내보내기](모든 시즌)·[불러오기](고른 시즌만 덮어쓰기, 논의는 없는 글만 되살림). 무료 요금제에는 자동 백업이 없음.
 - 보안 규칙: `firestore.rules` 를 main 에 올리면 깃허브 액션(`.github/workflows/firestore-rules.yml`)이 자동 게시합니다. 저장소 Secrets 의 `FIREBASE_SA`(서비스 계정 JSON, 역할: Firebase 규칙 관리자 + Cloud Datastore 사용자)가 필요합니다. 결과는 저장소 Actions 탭에서 확인.
 
-## 디버깅 모드
-- 주소 끝에 `#debug` (예: `https://koreanhanjiyun.github.io/run2x-guide/#debug`). **개발자 계정으로 로그인한 상태**에서만 켜집니다.
-- 공유 저장소에 쓰지 않고 이 브라우저에만 따로 저장(`run2x.dbg.*`). 화면 테두리 빨간 선, 상단 칩 "디버깅".
-- 오른쪽 아래 **DBG** 버블: 상태·최근 오류, 디버깅 데이터 지우기, 끄기.
+## 디버깅 모드 (2026-11-13 없앰)
+- 역할별 화면 시험은 공개 시안(https://koreanhanjiyun.github.io/run2x-guide/draft/, 더미 팀 + 왼쪽 아래 '시안' 버블)에서 합니다. 실제 팀 시험은 시험용 팀을 새로 만들어 `tools/dummy/run2x-dummy-team.json` 을 [가져오기].
 
 ## 변경 이력 쓰는 법
 - 사이트(참고 탭) 변경 이력에는 **설계 내용의 추가·변경·정정만** (`js/data/refs.js`). 정정은 `<b class="cl-fix">정정</b>`.
