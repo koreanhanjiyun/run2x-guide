@@ -92,7 +92,7 @@ for i, h in enumerate(SP.get('hl', [])):
             for a, b in zip(P[:-1], P[1:]):
                 ab = b - a; L2 = max(ab @ ab, 1e-9); t = np.clip(((C - a) @ ab) / L2, 0, 1)
                 dd = np.linalg.norm(C - (a + t[:, None] * ab), axis=1)
-                near |= (dd > 10.5) & (dd < 13.6) if band else dd < r
+                near |= (dd > 9.0) & (dd < 16.0) if band else dd < r   # 굽힘(원환)은 축을 꺾은선으로 잡아 바깥 면이 2 ~ 3 mm 더 멀어짐 → 여유를 둠
         if not near.any(): bm.free(); continue
         b2 = bm.copy(); b2.faces.ensure_lookup_table()
         bmesh.ops.delete(b2, geom=[f for f, k in zip(b2.faces, near) if not k], context='FACES')
@@ -127,37 +127,33 @@ def ik(a, c, l1, l2, hint):   # 두 마디(허벅지-정강이, 위팔-아래팔
     h = Vector(hint) - (Vector(hint) @ u) * u
     return a + u * x + h.normalized() * y
 if SP.get('driver'):
-    # 자세는 시트에서 정함 (헬멧 위치를 먼저 정하면 몸통이 시트 · 방화벽을 뚫음):
-    #  · 시트 가운데 단면(사이트 x, 높이) = driver.seat 점 목록 [등 위, 등 꺾임, 바닥 꺾임(엉덩이), 바닥 앞] (REF4 를 slice 로 잼)
-    #  · 엉덩이 관절(H 점) = 등받이 면에서 125 mm, 바닥 면에서 95 mm (몸 두께)
-    #  · 몸 길이 = 키(헬멧 없이, 기본 1750 mm) × 신체 비율 (Drillis · Contini): 엉덩이~어깨 0.288, 어깨~머리 중심 0.12,
-    #    위팔 0.186, 아래팔 + 손잡이까지 0.19, 허벅지 0.245, 정강이 0.246
-    #  · 몸통은 시트 면에서 몸통 반두께 + 6 mm 떨어지는 범위에서 가장 많이 눕힘 (등받이를 뚫지 않게)
+    # 자세 = FSK 2024 차량기술규정 제15조 ① 그림8 '95 % 드라이버 모델'의 배치법을 키에 맞춰 줄여 씀 (근거 있는 자세, 눈대중 아님):
+    #  · 엉덩이 원 Ø200 은 시트 바닥에, 어깨 원 Ø200 은 등받이에 닿음, 두 원 중심 거리 490, 머리 원 Ø300 중심 = 어깨 원 중심 + 연직 280,
+    #    머리 원 ~ 헤드레스트 25.4 mm 이하
+    #  · 줄임 비율 k = 키 ÷ 95 % 남성 키(p95, 기본 1880 mm — 추측값, spec 로 바꿈). 팔다리는 키 × 신체 비율 (Drillis · Contini)
+    #  · 시트 가운데 단면(사이트 x, 높이) = driver.seat [등 위, 등 꺾임, 엉덩이, 바닥 앞] (REF4 를 slice 로 잼)
+    #  · 등 각: 어깨 원이 시트를 뚫지 않는 한에서 가장 눕히되, 헬멧(머리 원)이 헤드레스트를 파고들면 그만큼 세움
     DV = SP['driver'] if isinstance(SP['driver'], dict) else {}
     Hs = DV.get('stature', 1750); seatP = [Vector((p[0], 0, p[1])) for p in DV.get('seat', [[617, 569], [661, 425], [990, 118], [1338, 173]])]
     hr = bbox(find(r'^Head_Restraint\|'))
     wheels = find(r'^24_Steering_Wheel\|'); wheel = ctr(wheels[0]); pads = sorted(find(r'^Pedal_Pad\|'), key=lambda o: ctr(o).y)
+    kk = Hs / DV.get('p95', 1880); rC, Lsh, Hh, Rh = 100 * kk, 490 * kk, 280 * kk, DV.get('helmet_r', 150 * kk)
     def nrm2(a, b, toward):   # 선분 ab 의 (X, Z) 평면 법선 중 toward 쪽
         d = (b - a).normalized(); n = Vector((-d.z, 0, d.x)); return n if n.dot(toward - a) > 0 else -n
     C = seatP[2]; nb = nrm2(seatP[1], C, C + Vector((300, 0, 300))); npn = nrm2(C, seatP[3], C + Vector((0, 0, 300)))
-    # H 점: nb·(H−C) = 125, npn·(H−C) = 95
-    M2 = Matrix(((nb.x, nb.z), (npn.x, npn.z))); dx, dz = M2.inverted() @ Vector((DV.get('back_gap', 125), DV.get('pan_gap', 95)))
+    M2 = Matrix(((nb.x, nb.z), (npn.x, npn.z))); dx, dz = M2.inverted() @ Vector((rC, rC))   # 엉덩이 원: 바닥 · 등받이에 닿음
     hip = C + Vector((dx, 0, dz))
-    TR, TS = DV.get('torso_r', 108), 1.55
     def seg_dist(p, a, b):
         ab = b - a; t = max(0, min(1, (p - a).dot(ab) / ab.length_squared)); return (p - (a + ab * t)).length
-    def clear(a, b):   # 몸통 축 a→b 에서 시트 단면까지 가장 가까운 거리
+    def clear(a, b):   # 선분 a→b 에서 시트 단면까지 가장 가까운 거리
         return min(min(seg_dist(a.lerp(b, k / 20), s0, s1) for s0, s1 in zip(seatP[:-1], seatP[1:])) for k in range(21))
-    Ls = 0.288 * Hs; flex = math.radians(DV.get('neck_flex', 15)); Rh = DV.get('helmet_r', 135)
     def pose(th):
-        t = math.radians(th); u = Vector((-math.sin(t), 0, math.cos(t))); hd = Vector((-math.sin(t - flex), 0, math.cos(t - flex)))
-        return u, hd, hip + u * Ls + hd * (0.12 * Hs)
-    # 가장 많이 눕힐 수 있는 각 (등이 시트를 뚫지 않는 한계) — 그리고 헬멧 뒤가 헤드레스트 앞면에서 head_gap(규정 25 mm 이하)인 각
-    th_max = next(th for th in range(70, -1, -1) if clear(hip + pose(th)[0] * 30, hip + pose(th)[0] * (Ls - 40)) >= TR + 6)
-    th_hr = min(range(0, 71), key=lambda th: abs(pose(th)[2].x - Rh - hr[1].x - DV.get('head_gap', 25)))
-    th = min(th_max, th_hr) if DV.get('fit_hr', True) else th_max   # 헤드레스트에 맞추되 시트는 못 뚫음 (등과 시트 사이 = 폼 인서트 자리)
-    u, hd, head = pose(th); TA, TB = hip + u * 30, hip + u * (Ls - 40)
-    sc_ = hip + u * Ls; neck = sc_ + u * 35   # 두 어깨 가운데, 목 밑
+        t = math.radians(th); u = Vector((-math.sin(t), 0, math.cos(t))); S = hip + u * Lsh; return u, S, S + Vector((0, 0, Hh))
+    th_seat = next(th for th in range(80, -1, -1) if clear(hip + pose(th)[0] * 1, pose(th)[1]) >= rC - 1)
+    gap = lambda th: pose(th)[2].x - Rh - hr[1].x   # 머리 원 뒤 ~ 헤드레스트 앞면
+    th = next((t for t in range(th_seat, -1, -1) if gap(t) >= DV.get('hr_gap', 12)), 0)   # 헬멧이 패드에 눌리지 않게 (규정: 25.4 이하, 눌리면 안 됨)
+    u, sc_, head = pose(th); hd = (head - sc_).normalized(); flex = 0
+    TR, TS = rC, 1.75; TA, TB = hip, sc_; neck = sc_ + u * 20
     parts = []
     hm = bpy.data.meshes.new('helmet'); bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=64, v_segments=32, radius=Rh); bm.to_mesh(hm); bm.free()
     for p in hm.polygons: p.use_smooth = True
@@ -183,22 +179,33 @@ if SP.get('driver'):
     for s, g in zip(sh, grips):
         el = ik(s, g, 0.186 * Hs, 0.19 * Hs, (0, (s.y > 0) * 2 - 1, -1.2)); parts += [capsule('drv_arm', s, el, 44), capsule('drv_farm', el, g, 38)]
         parts.append(capsule('drv_hand', g, g + Vector((5, 0, 0)), 40))
+    thighs = {}
     for k, s in enumerate((-1, 1)):   # 오른발(−Y) = 가속 페달 쪽 · 왼발 = 브레이크 쪽 (패드 y 순서)
         hj = hip + Vector((0, s * 90, 0)); p = pads[0 if s < 0 else -1] if pads else None
         ank = (ctr(p) if p else hip + Vector((850, s * 90, 0))) + Vector((-110, 0, -50))   # 발목 = 페달 면 뒤 · 아래 (발볼이 페달에)
-        kn = ik(hj, ank, 0.245 * Hs, 0.246 * Hs, (0, 0, 1)); parts += [capsule('drv_thigh', hj, kn, 66), capsule('drv_shin', kn, ank, 46)]
+        kn = ik(hj, ank, 0.245 * Hs, 0.246 * Hs, (0, 0, 1)); parts += [capsule('drv_thigh', hj, kn, 66), capsule('drv_shin', kn, ank, 46)]; thighs[s] = (hj, kn, 66)
         parts.append(capsule('drv_foot', ank, (ctr(p) if p else ank) + Vector((-10, 0, 0)), 38))
     hand_top = max(grips, key=lambda g: g.z) + Vector((0, 0, 40))
-    drv = {'helmet': [ho], 'visor': [vo], 'body': parts, 'hip': hip, 'neck': neck, 'sh': sh, 'head': head, 'Rh': Rh, 'torso': (TA, TB, TR, TS), 'hand_top': hand_top}
+    drv = {'helmet': [ho], 'visor': [vo], 'body': parts, 'hip': hip, 'neck': neck, 'sh': sh, 'head': head, 'Rh': Rh, 'torso': (TA, TB, TR, TS), 'hand_top': hand_top, 'thighs': thighs}
     site = lambda v: [round(v.x), round(v.z), round(v.y)]
-    print('DRIVER 키', Hs, '등 각', th, '° (시트 한계', th_max, '°) 시트까지', round(clear(TA, TB) - TR), 'mm  H점', site(hip), '헬멧 중심', site(head), '꼭대기', round(head.z + Rh),
-          '헤드레스트 앞면까지', round(head.x - Rh - hr[1].x), 'mm  위 손 꼭대기', site(hand_top))
+    # 헤드레스트 높이: 규정은 헬멧 뒤 중앙 = 패드 중앙. 헤드레스트는 드라이버마다 조절하는 부품이라 그림에서는 이 드라이버에 맞춰 올리고 내린 양을 찍음
+    hr_dz = head.z - (hr[0].z + hr[1].z) / 2
+    if DV.get('hr_to_helmet', True):
+        for o in find('Head_Restraint'): o.matrix_world = Matrix.Translation((0, 0, hr_dz)) @ o.matrix_world
+        print('DRIVER 헤드레스트를 헬멧 중심 높이로', round(hr_dz), 'mm 옮김 (REF4 위치 대비)')
+    print('DRIVER 키', Hs, '등 각', th, '° (시트 한계', th_seat, '°)  엉덩이 원', site(hip), '어깨 원', site(sc_), '머리 원', site(head), '꼭대기', round(head.z + Rh),
+          '헤드레스트까지', round(gap(th)), 'mm (규정 25.4 이하)  위 손 꼭대기', site(hand_top), ' 엉덩이~페달', round(min(((ctr(p) - hip).length for p in pads), default=0)), 'mm (95 % 템플릿 915 이상 ×', round(kk, 3), ')')
     meshes += parts + [vo]
 # 1-3. 안전벨트 (띠 = 폭 50 mm 판): 어깨띠는 숄더 하니스 바에서 어깨를 넘어 버클로, 랩벨트는 양옆 고정점에서 골반을 감아 버클로,
 #      안티서브는 버클에서 다리 사이로 내려감. 고정점은 spec 의 사이트 좌표(프레임 관 위 점)
 belts = []
-def ribbon(name, pts, out_c, w=50):
+def ribbon(name, pts, out_c, w=50, proj=None):
     P = [Vector(p) for p in pts]; V = []
+    if proj:   # 점 사이를 촘촘히 나눠 하나하나 몸 겉면으로 (직선 구간이 가슴 · 허벅지 곡면 속으로 묻히지 않게). 양 끝(고정점 · 버클)은 그대로
+        Q = [P[0]]
+        for a, b in zip(P[:-1], P[1:]):
+            n = max(2, int((b - a).length / 15)); Q += [a.lerp(b, k / n) for k in range(1, n + 1)]
+        P = [Q[0]] + [proj(q) for q in Q[1:-1]] + [Q[-1]]
     for i, p in enumerate(P):
         t = (P[min(i + 1, len(P) - 1)] - P[max(i - 1, 0)]).normalized(); n = (p - Vector(out_c)); n = (n - (n @ t) * t).normalized()
         s = t.cross(n).normalized() * w / 2; V += [p - s + n * 2, p + s + n * 2]
@@ -218,14 +225,22 @@ if SP.get('belts') and drv:
         bar = B(BL['shoulder'][0 if s > 0 else 1])
         over = shp + Vector((-20, -s * 55, 95))   # 어깨 위
         chest = [onbody(TA + (TB - TA) * k + fwd * 200 + Vector((0, s * (40 + 70 * k), 0))) for k in (0.75, 0.5, 0.25)]
-        belts.append(ribbon('belt_sh', [bar, bar.lerp(over, 0.5) + Vector((0, 0, 15)), over] + chest + [buckle + Vector((0, s * 25, 10))], tc))
+        oc = lambda q: onbody(q, 9) if (q - TB).dot(TB - TA) < 0 else q   # 어깨 너머 구간은 그대로, 몸통 앞은 겉면에
+        belts.append(ribbon('belt_sh', [bar, bar.lerp(over, 0.5) + Vector((0, 0, 15)), over] + chest + [buckle + Vector((0, s * 25, 10))], tc, proj=oc))
     for s in (1, -1):
         an = B(BL['lap'][0 if s > 0 else 1])
         side = onbody(TA + Vector((0, s * 400, 0)) + fwd * 40)
-        belts.append(ribbon('belt_lap', [an, an.lerp(side, 0.6), side, onbody(TA + fwd * 200 + Vector((0, s * 120, 0))), buckle + Vector((0, s * 25, 0))], tc))
+        belts.append(ribbon('belt_lap', [an, an.lerp(side, 0.6), side, onbody(TA + fwd * 200 + Vector((0, s * 120, 0))), buckle + Vector((0, s * 25, 0))], tc,
+                            proj=lambda q: onbody(q, 9) if (q - TA).length < TR * TS * 1.2 else q))
+    def onthigh(q, s, gap=7):   # 허벅지(캡슐) 겉면으로 밀어냄
+        a, b, r = drv['thighs'][s]; ab = b - a; t = max(0, min(1, (q - a).dot(ab) / ab.length_squared)); c = a + ab * t; d = q - c
+        return c + d.normalized() * (r + gap) if d.length < r + gap else q
     for sp_ in (BL['sub'] if isinstance(BL['sub'][0], list) else [BL['sub']]):   # 6점식 = 안티서브 두 줄 (다리마다)
-        sub = B(sp_)
-        belts.append(ribbon('belt_sub', [buckle, buckle + (sub - buckle) * 0.3 + fwd * 30, sub], tc))
+        sub = B(sp_); sg = 1 if sub.y > 0 else -1
+        # 규정 제23조 ⑤: 버클에서 다리 사이로 내려가 허벅지 밑을 감고, 허벅지 바깥쪽(측면 아래 부재)의 고정점으로
+        a, b, r = drv['thighs'][sg]; c = a.lerp(b, 0.28)
+        path = [buckle, c + Vector((0, -sg * (r + 12), 0)), c + Vector((0, -sg * r * 0.7, -r - 8)), c + Vector((0, 0, -r - 12)), c + Vector((0, sg * r * 0.7, -r - 8)), c + Vector((0, sg * (r + 14), -10)), sub]
+        belts.append(ribbon('belt_sub', path, c, w=44, proj=lambda q, sg=sg: onthigh(q, sg)))
     bk = capsule('belt_buckle', buckle - fwd * 6, buckle + fwd * 6, 34)
     belts.append(bk); meshes += belts
 
@@ -258,49 +273,93 @@ if SP.get('flow'):
         sp = cu.splines.new('POLY'); P = pts[::3]; sp.points.add(len(P) - 1)
         for i, q in enumerate(P): sp.points[i].co = (*q, 1)
         o = bpy.data.objects.new('flow', cu); sc.collection.objects.link(o); flows.append(o)
-# 1-5. 모노코크 (mono): REF4 에는 없음. 프레임 관 범위(pool)에서 단면 크기를 뽑아 둥근 사각 단면을 이어 만든 통.
-#      벽 = 외피(탄소) + 허니콤 코어 + 내피 세 겹. 콕핏은 위를 터서 열고, 앞 끝은 잘라 세 겹이 보이게
+# 1-5. 모노코크 (mono): REF4 에는 없음. 단면 몇 개(sections: [x, 바닥 높이, 윗면 높이, 반폭], 사이트 mm)를 매끈하게 이은 통.
+#      벽 = 외피(탄소) · 허니콤 코어 · 내피 세 겹을 따로 만들어 앞 끝을 계단처럼 벗김(peel: 외피가 가장 짧고 내피가 가장 긺)
+#      → 코어 겉면이 드러난 띠에 벌집 무늬가 보임 (확대 원은 단면이라 기둥으로만 보이므로). 콕핏은 불리언으로 매끈하게 잘라 엶
 mono = []
 if SP.get('mono'):
-    MO = SP['mono']; pool = np.array([p for s in MO['pool'] for p in s], float)   # 사이트 좌표 점들
-    xs = np.linspace(MO['x0'], MO['x1'], 60); prof = []
-    for x in xs:
-        m = np.abs(pool[:, 0] - x) < 60; q = pool[m] if m.sum() > 2 else pool[np.argsort(np.abs(pool[:, 0] - x))[:6]]
-        prof.append([q[:, 1].min(), q[:, 1].max(), np.abs(q[:, 2]).max()])
-    prof = np.array(prof)
-    for k in range(MO.get('smooth', 12)): prof = np.vstack([prof[:1], (prof[:-2] + prof[1:-1] * 2 + prof[2:]) / 4, prof[-1:]])   # 매끈하게 (앞 상자 → 콕핏 폭이 서서히 바뀌게)
-    def shell(name, off, mt):
-        nv = 72; V, F = [], []
-        for i, x in enumerate(xs):
-            lo, hi, hw = prof[i]; lo -= MO.get('pad', 22) - off; hi += MO.get('pad', 22) - off; hw += MO.get('pad', 22) - off
-            yc, a, b = (lo + hi) / 2, hw, (hi - lo) / 2
-            for j in range(nv):
+    MO = SP['mono']; S_ = np.array(MO['sections'], float)
+    xs = np.linspace(S_[0, 0], S_[-1, 0], 110)
+    prof = np.stack([np.interp(xs, S_[:, 0], S_[:, k]) for k in (1, 2, 3)], 1)
+    for k in range(MO.get('smooth', 10)): prof = np.vstack([prof[:1], (prof[:-2] + prof[1:-1] * 2 + prof[2:]) / 4, prof[-1:]])
+    nv = 96; ex = 2 / MO.get('n', 3.2)
+    def hex_image(name):   # 벌집 무늬 (육각 셀) 이미지 — 가로로 이어지게 4칸, 세로 2칸
+        W_, s_ = 512, 512 / (math.sqrt(3) * 4); H_ = int(round(6 * s_))
+        yy, xx = np.mgrid[0:H_, 0:W_].astype(float)
+        q = (math.sqrt(3) / 3 * xx - yy / 3) / s_; r = (2 / 3 * yy) / s_; cx, cz = q, r; cy = -cx - cz
+        rx, ry, rz = np.round(cx), np.round(cy), np.round(cz); dx, dy, dz = np.abs(rx - cx), np.abs(ry - cy), np.abs(rz - cz)
+        m1 = (dx > dy) & (dx > dz); m2 = ~m1 & (dy > dz); rx = np.where(m1, -ry - rz, rx); rz = np.where(~m1 & ~m2, -rx - ry, rz)
+        hx = s_ * math.sqrt(3) * (rx + rz / 2); hy = s_ * 1.5 * rz; px_, py_ = xx - hx, yy - hy
+        mtr = np.max([np.abs(px_ * math.cos(a) + py_ * math.sin(a)) for a in (0, math.pi / 3, 2 * math.pi / 3)], axis=0)
+        wall = mtr > s_ * math.sqrt(3) / 2 * 0.86; shade = 1 - 0.18 * (mtr / (s_ * math.sqrt(3) / 2))
+        col = np.zeros((H_, W_, 4)); base = np.array([0.95, 0.80, 0.42]); dark = np.array([0.55, 0.38, 0.12])
+        col[..., :3] = np.where(wall[..., None], dark, base * shade[..., None]); col[..., 3] = 1
+        im = bpy.data.images.new(name, W_, H_, alpha=False, float_buffer=True); im.pixels.foreach_set(col[::-1].astype(np.float32).reshape(-1)); im.update(); im.pack()   # 렌더러가 읽도록 파일 없이 묶어 둠
+        return im
+    def shell(name, off, mt, xend, uv=False):
+        idx = [i for i, x in enumerate(xs) if x <= xend + 1e-6]; V, F, U = [], [], []
+        for i in idx:
+            lo, hi, hw = prof[i]; pad = -off; lo, hi, hw = lo - pad, hi + pad, hw + pad
+            yc, a_, b_ = (lo + hi) / 2, hw, (hi - lo) / 2
+            for j in range(nv + 1):   # 마지막 열 = 첫 열 (UV 이음매)
                 t = 2 * math.pi * j / nv; c, s = math.cos(t), math.sin(t)
-                ex = 2 / MO.get('n', 3.2)
-                V.append(B([x, yc + b * math.copysign(abs(s) ** ex, s), a * math.copysign(abs(c) ** ex, c)])[:])
-        for i in range(len(xs) - 1):
+                V.append(B([xs[i], yc + b_ * math.copysign(abs(s) ** ex, s), a_ * math.copysign(abs(c) ** ex, c)])[:]); U.append((j / nv * 9, xs[i] / 210))   # 벌집 칸이 그림에서 보일 만큼 크게 (실제 칸보다 과장)
+        for ii in range(len(idx) - 1):
             for j in range(nv):
-                a0, a1 = i * nv + j, i * nv + (j + 1) % nv; F.append((a0, a1, a1 + nv, a0 + nv))
+                a0 = ii * (nv + 1) + j; F.append((a0, a0 + 1, a0 + nv + 2, a0 + nv + 1))
         me = bpy.data.meshes.new(name); me.from_pydata(V, [], F)
+        if uv:
+            ul = me.uv_layers.new(name='uv')
+            for poly in me.polygons:
+                for li in poly.loop_indices: ul.data[li].uv = U[me.loops[li].vertex_index]
         bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
-        for f in bm.faces:   # 면 방향을 바깥으로 (단면 중심에서 멀어지는 쪽) → SOLIDIFY 가 안쪽으로 두께를 냄
-            c = f.calc_center_median(); i = min(range(len(xs)), key=lambda k: abs(xs[k] - c.x)); yc = (prof[i][0] + prof[i][1]) / 2
+        for f in bm.faces:   # 면 방향을 바깥으로 → SOLIDIFY 가 안쪽으로 두께를 냄
+            c = f.calc_center_median(); k = min(range(len(xs)), key=lambda k: abs(xs[k] - c.x)); yc = (prof[k][0] + prof[k][1]) / 2
             if f.normal.dot(Vector((0, c.y, c.z - yc))) < 0: f.normal_flip()
         bm.to_mesh(me); bm.free()
-        for p in me.polygons: p.use_smooth = True
+        for pg in me.polygons: pg.use_smooth = True
         o = bpy.data.objects.new(name, me); sc.collection.objects.link(o)
-        # 벽 하나 (외피 + 코어 + 내피 두께). 잘린 테두리(rim)는 코어 색 → 단면에서 샌드위치가 보임, 겹 구조는 확대 원 그림으로
         so = o.modifiers.new('t', 'SOLIDIFY'); so.thickness = mt; so.offset = -1; so.use_rim = True; so.material_offset_rim = 1
-        # 콕핏: 위를 상자로 잘라 엶 (면을 지우면 계단처럼 깨져서 불리언으로 매끈하게). 잘린 면도 코어 색
-        ck = MO['cockpit']   # [x 시작, x 끝, 이 높이(사이트 y)보다 위를 엶]
-        bpy.ops.mesh.primitive_cube_add(size=1); cut = bpy.context.active_object; cut.name = 'mono_cut'
-        cut.scale = (ck[1] - ck[0], 3000, 3000); cut.location = ((ck[0] + ck[1]) / 2, 0, ck[2] + 1500); cut.hide_render = True; cut.display_type = 'WIRE'
         bo = o.modifiers.new('c', 'BOOLEAN'); bo.operation = 'DIFFERENCE'; bo.object = cut; bo.solver = MO.get('solver', 'FLOAT')
-        return o, cut
-    T = MO.get('core', 16)
-    o, cut = shell('mono', 0, T + 4.4); mono = [o]
-    cut.data.materials.append(bpy.data.materials.new('cutm'))   # 불리언 잘린 면 재질 자리 (아래에서 코어 색으로 바꿈)
+        return o
+    ck = MO['cockpit']   # [x 시작, x 끝, 이 높이(사이트 y)보다 위를 엶]
+    bpy.ops.mesh.primitive_cube_add(size=1); cut = bpy.context.active_object; cut.name = 'mono_cut'
+    cut.scale = (ck[1] - ck[0], 3000, 3000); cut.location = ((ck[0] + ck[1]) / 2, 0, ck[2] + 1500); cut.hide_render = True; cut.display_type = 'WIRE'
+    T = MO.get('core', 16); xe = S_[-1, 0]; pe = MO.get('peel', 70)
+    mono = [shell('mono_outer', 0, 2.4, xe - 2 * pe), shell('mono_core', 2.4, T, xe - pe, uv=True), shell('mono_inner', 2.4 + T, 2.4, xe)]
+    MO['hex'] = hex_image('honeycomb')
     meshes += mono; focus += mono
+# 1-6. 방화벽 두 층 개념도 (scene: fwlayers) — CAD 없이 기본 도형으로. 고전압 쪽(−X) = 알루미늄판(차체 접지), 드라이버 쪽(+X) = 불연 절연층,
+#      배선은 두 층을 뚫고 양쪽으로 길게(관통 느낌), 관통부는 그로밋, 접지선은 판 → 프레임 관 (불과 떨어진 쪽)
+glows = []
+if SP.get('scene') == 'fwlayers':
+    def box(name, c, sz):
+        bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1); bmesh.ops.scale(bm, vec=sz, verts=bm.verts); bmesh.ops.translate(bm, vec=c, verts=bm.verts)
+        me = bpy.data.meshes.new('x|' + name); bm.to_mesh(me); bm.free(); o = bpy.data.objects.new(name, me); sc.collection.objects.link(o); return o
+    def tube(name, a, b, r, seg=48):
+        o = capsule(name, a, b, r); o.data.name = 'x|' + name; return o
+    al = box('fw_al', (0, 0, 260), (2, 520, 420)); ins = box('fw_ins', (70, 0, 255), (4, 500, 400))   # 두 층을 조금 떼어 둘 다 보이게
+    ft = tube('fw_tube', Vector((-45, 330, 28)), Vector((-45, -330, 28)), 12.7)
+    cab = tube('fw_cable', Vector((-230, -60, 300)), Vector((260, -60, 300)), 7)
+    # 그로밋: 원환
+    for gx in (0, 70):
+        bpy.ops.mesh.primitive_torus_add(major_radius=13, minor_radius=5, location=(gx, -60, 300), rotation=(0, math.pi / 2, 0)); gr = bpy.context.active_object; gr.name = 'fw_grommet'; gr.data.name = 'x|fw_grommet'; meshes.append(gr); focus.append(gr)
+    # 접지선: 판 고전압 면 오른쪽 아래(−Y) → 관 위. 굵은 땋은 줄 느낌으로 원통 몇 마디
+    gp = [Vector((-3, -205, 95)), Vector((-20, -215, 70)), Vector((-38, -225, 48)), Vector((-45, -232, 41))]
+    gw = [tube('fw_gnd', a, b, 4.5) for a, b in zip(gp[:-1], gp[1:])]
+    lug = box('fw_lug', (-3, -205, 98), (4, 22, 16))
+    for i, (y, z, h) in enumerate(((210, 70, 230), (150, 60, 170), (260, 65, 150))):   # 불꽃: 고전압 쪽 왼편(+Y)
+        bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=24, radius=1)
+        for v in bm.verts:
+            t = (v.co.z + 1) / 2; k = (1 - t) ** 0.6 * (1 + 0.15 * math.sin(6 * t + i)); v.co.x *= 34 * k; v.co.y *= 46 * k; v.co.z = v.co.z * h / 2 + h / 2
+        me = bpy.data.meshes.new('x|fw_flame'); bm.to_mesh(me); bm.free()
+        for pg in me.polygons: pg.use_smooth = True
+        fo = bpy.data.objects.new('fw_flame', me); sc.collection.objects.link(fo); fo.location = (-70 - 15 * i, y, z); glows.append(fo)
+    fwobj = [al, ins, ft, cab, gr, lug] + gw
+    for o in fwobj:
+        if o.type == 'MESH':
+            for pg in o.data.polygons: pg.use_smooth = o.name not in ('fw_al', 'fw_ins', 'fw_lug')
+    meshes += fwobj; focus += fwobj
 if SP.get('slice'):   # 조사: 부품의 가운데 단면(좌우 |Y| < 25) 점을 옆에서 본 (x, 높이) 로 찍고 끝
     for o in find(SP['slice']):
         bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world)
@@ -349,12 +408,19 @@ for o in drv.get('helmet', []): put(o, cf, MW)
 for o in drv.get('visor', []): put(o, cf, MV)
 for o in belts: put(o, cf, MBL)
 MC = mat('carbon', (0.035, 0.04, 0.05), 1.0, 0.35, 0.1); MHC = mat('core', hexc('#e3c16f'), 1.0, 0.7, 0.0)
-for o in mono:
-    put(o, cf, MC); o.data.materials.append(MHC)   # 0 = 외피 · 내피(탄소), 1 = 잘린 테두리(코어)
-    for m in o.modifiers:
-        if m.type == 'BOOLEAN': m.object.data.materials.clear(); m.object.data.materials.append(MHC); m.material_mode = 'TRANSFER'
+if mono:   # 외피 · 내피 = 탄소(검정), 코어 = 벌집 무늬(겉면) + 노란 단면(테두리). 불리언 잘린 면은 그 겹의 0번 재질
+    MHX = mat('hexcore', (1, 1, 1), 1.0, 0.7, 0.0); nt_ = MHX.node_tree; tx = nt_.nodes.new('ShaderNodeTexImage'); tx.image = SP['mono']['hex']
+    uvn = nt_.nodes.new('ShaderNodeUVMap'); uvn.uv_map = 'uv'; nt_.links.new(uvn.outputs[0], tx.inputs[0]); nt_.links.new(tx.outputs['Color'], nt_.nodes['Principled BSDF'].inputs['Base Color'])
+    for o in mono:
+        put(o, cf, MHX if o.name == 'mono_core' else MC); o.data.materials.append(MHC if o.name == 'mono_core' else MC)
+        for m in o.modifiers:
+            if m.type == 'BOOLEAN': m.material_mode = 'INDEX'
 cfl = bpy.data.collections.new('flow'); sc.collection.children.link(cfl)   # 흐름선: 외곽선 없음
 MFL = mat('flow', hexc(SP.get('flow', {}).get('color', '#4dabf7')), 1.0, 0.5, 0.0)
+for o in glows:   # 불꽃: 스스로 빛나는 주황 (외곽선 없음)
+    gm = mat('flame', (1.0, 0.45, 0.08), 1.0, 0.5, 0.0); gb = gm.node_tree.nodes['Principled BSDF']
+    gb.inputs['Emission Color'].default_value = (1.0, 0.28, 0.03, 1); gb.inputs['Emission Strength'].default_value = 0.9
+    cfl.objects.link(o) if o.name not in cfl.objects else None; o.data.materials.append(gm)
 for o in flows:
     for c in list(o.users_collection): c.objects.unlink(o)
     cfl.objects.link(o); o.data.materials.append(MFL)
@@ -473,7 +539,7 @@ def shot(path):
 r.use_freestyle = False; r.film_transparent = (A.bg == 'none')
 base = shot(OUT + '.base.png')
 # 5-2. 선 (초점 부품만, 면은 투명) — 주변 반투명 부품에 가려지지 않게 따로
-for o in ghost + flows: o.hide_render = True
+for o in ghost + flows + glows: o.hide_render = True
 for o in cf.objects: o.data.materials.clear(); o.data.materials.append(MH)
 r.use_freestyle = True; r.film_transparent = True; cy.samples = 1; cy.use_denoising = False
 line = shot(OUT + '.line.png')
