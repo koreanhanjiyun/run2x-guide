@@ -176,7 +176,7 @@ for fid in (A.ids or list(SPEC['figs'])):
     r = subprocess.run([BLENDER, '-b', '-P', os.path.join(ROOT, 'tools', 'cad', 'render_part.py'), '--', '--glb', A.glb, '--spec', sp, '--out', png, '--anchors', an], capture_output=True, text=True, encoding='utf-8', errors='replace')
     if not os.path.exists(png): print(r.stdout[-3000:], r.stderr[-3000:]); sys.exit('렌더 실패: ' + fid)
     for ln in r.stdout.splitlines():
-        if ln.startswith(('DRIVER', 'RENDER')): print(' ', ln)
+        if ln.startswith(('DRIVER', 'RENDER', 'FOCUS', 'WARN')): print(' ', ln)
     AN = json.load(open(an, encoding='utf-8')) if os.path.exists(an) else {}
     svg = svg_of(fid, f, AN, mask_of(png))
     if A.check:

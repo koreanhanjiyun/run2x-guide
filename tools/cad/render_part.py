@@ -60,7 +60,7 @@ ctr = lambda o: sum(bbox([o]), Vector()) / 2
 find = lambda rx: [o for o in meshes if re.search(rx, pname(o))]
 
 def apply_tf(o):   # 위치를 메시에 굳힘 (삼각형 좌표를 월드 기준으로 다루려고)
-    o.data = o.data.copy(); o.data.transform(o.matrix_world); o.matrix_world = Matrix.Identity(4)
+    o.data = o.data.copy(); o.data.transform(o.matrix_world); o.matrix_world = Matrix.Identity(4); o.data.update(); bpy.context.view_layer.update()
 
 # 1-1. hl: 부품 안의 관 일부를 떼어 초점으로 (관 축 선분에서 반경 r 안의 삼각형)
 hl_objs = []
@@ -102,9 +102,23 @@ for i, h in enumerate(SP.get('hl', [])):
         n = bpy.data.objects.new(f'hl{i}', me); sc.collection.objects.link(n); got.append(n)
     hl_objs.append(got); meshes += got
 
+# 1-0. 단면 (cut): 부품을 평면으로 잘라 한쪽을 지움 → 잘린 안쪽(뒷면)을 단면 색으로 칠함 (메시가 닫혀 있지 않아도 됨)
+#      [{"obj": 정규식, "p": [사이트 점], "n": [지울 쪽 방향], "c": 단면 색}]
+cut_objs = {}
+for ci, cc in enumerate(SP.get('cut', [])):
+    pp, nn = B(cc['p']), B(cc['n']).normalized()
+    for o in find(cc['obj']):
+        apply_tf(o); bm = bmesh.new(); bm.from_mesh(o.data)
+        bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=pp, plane_no=nn, clear_outer=True)
+        bm.to_mesh(o.data); bm.free(); cut_objs[o.name] = cc.get('c', '#e9b949')
+        o.data.update()
+bpy.context.view_layer.update()   # 자른 뒤 bound_box 를 새로 (안 하면 좌우 판정이 틀림)
 focus = find(A.focus) if A.focus else []
 if A.corner:   # 같은 조립품이 네 바퀴에 다 있을 때 한 곳만. 앞 = 휠베이스 절반보다 앞(x > 800 mm), 왼쪽 = Blender +Y
     focus = [o for o in focus if (ctr(o).x > 800) == (A.corner[0] == 'F') and (ctr(o).y > 0) == (A.corner[1] == 'L')]
+for rx_, pt_ in SP.get('pick', []):   # 같은 이름 부품 여럿 중 이 점에 가장 가까운 하나만 초점으로
+    cand = find(rx_)
+    if cand: focus.append(min(cand, key=lambda o: (ctr(o) - B(pt_)).length))
 for g, h in zip(hl_objs, SP.get('hl', [])):
     if h.get('as', 'focus') == 'focus': focus += g
 
@@ -429,6 +443,14 @@ for key, col in SP.get('color', {}).items():
     objs = hl_objs[int(key[3:])] if key.startswith('hl:') else [o for o in focus if re.search(key, pname(o))]
     m = mat('c' + col, hexc(col), 1.0, 0.45, 0.2)
     for o in objs: o.data.materials.clear(); o.data.materials.append(m)
+# 단면 색: 잘린 부품의 재질마다 '뒷면이면 단면 색' 을 섞음 (잘린 틈으로 보이는 안쪽 = 단면)
+for o in [o for o in focus if o.name in cut_objs]:
+    for si, m0 in enumerate(list(o.data.materials)):
+        m = m0.copy(); nt_ = m.node_tree; out = nt_.nodes['Material Output']; src = out.inputs['Surface'].links[0].from_socket
+        cb = nt_.nodes.new('ShaderNodeBsdfPrincipled'); cb.inputs['Base Color'].default_value = (*hexc(cut_objs[o.name]), 1); cb.inputs['Roughness'].default_value = 0.8
+        gm = nt_.nodes.new('ShaderNodeNewGeometry'); mx_ = nt_.nodes.new('ShaderNodeMixShader')
+        nt_.links.new(gm.outputs['Backfacing'], mx_.inputs[0]); nt_.links.new(src, mx_.inputs[1]); nt_.links.new(cb.outputs[0], mx_.inputs[2]); nt_.links.new(mx_.outputs[0], out.inputs['Surface'])
+        o.data.materials[si] = m
 
 # 3. 빛 · 배경: 카메라에는 흰 배경(또는 투명), 조명으로는 은은한 회색 → 그림자 · 틈의 음영으로 앞뒤가 보임
 w = bpy.data.worlds.new('w'); sc.world = w; w.use_nodes = True; wn = w.node_tree.nodes; wl = w.node_tree.links
@@ -450,6 +472,8 @@ if SP.get('fit_objs'):   # 화면에 맞출 부품 (정규식 | hl:번호 를 | 
     fobj = []
     for k in SP['fit_objs'].split('|'):
         fobj += hl_objs[int(k[3:])] if k.startswith('hl:') else [o for o in focus + ghost if re.search(k, pname(o))]
+if SP.get('fit') and len(SP['fit']) == 2:   # 두 점 = 상자의 두 꼭짓점 → 여덟 꼭짓점 (대각선만 쓰면 보는 방향에 따라 폭이 사라짐)
+    (x0_, y0_, z0_), (x1_, y1_, z1_) = SP['fit']; SP['fit'] = [[x, y, z] for x in (x0_, x1_) for y in (y0_, y1_) for z in (z0_, z1_)]
 fitp = [B(p) for p in SP['fit']] if SP.get('fit') else [o.matrix_world @ Vector(c) for o in fobj for c in o.bound_box]
 if SP.get('fit') or SP.get('fit_objs'): fc = sum(fitp, Vector()) / len(fitp); fr = max((p - fc).length for p in fitp)
 cam = bpy.data.cameras.new('cam'); co = bpy.data.objects.new('cam', cam); sc.collection.objects.link(co); sc.camera = co
@@ -476,7 +500,7 @@ if A.anchors and SP.get('anchors'):
     cdir = (co.matrix_world.to_3x3() @ Vector((0, 0, -1))).normalized()
     def px(p):
         u = world_to_camera_view(sc, co, p); return [u.x * A.w, (1 - u.y) * A.h]
-    def visible_pt(objs):
+    def visible_pt(objs, near=None):
         V = []
         for o in objs:
             vs = o.data.vertices; step = max(1, len(vs) // 1500)
@@ -487,11 +511,16 @@ if A.anchors and SP.get('anchors'):
             dd = (p - org).normalized(); hit, loc, _, _, ob, _ = sc.ray_cast(dg, org, dd)
             if hit and ob is not None and ob.name in {o.name for o in objs} and (loc - p).length < 3: ok.append(p)
         if not ok: ok = V
+        if near is not None: return px(min(ok, key=lambda q: (q - near).length))   # 그 부품의 보이는 점 중 주어진 점에 가장 가까운 것
         P2 = np.array([px(p) for p in ok]); m = np.median(P2, axis=0)
         return P2[np.argmin(np.linalg.norm(P2 - m, axis=1))].tolist()
     AN = {}
     for k, v in SP['anchors'].items():
         if isinstance(v, list): AN[k] = px(B(v)); continue
+        if isinstance(v, dict):   # {"obj": 정규식, "near": [사이트 점]} → 그 부품 위의 보이는 점
+            objs = [o for o in focus + list(extra) + ghost if re.search(v['obj'], pname(o))]
+            if v.get('corner'): objs = [o for o in objs if (ctr(o).x > 800) == (v['corner'][0] == 'F') and (ctr(o).y > 0) == (v['corner'][1] == 'L')]
+            AN[k] = visible_pt(objs, B(v['near']) if 'near' in v else None) if objs else None; continue
         if v.startswith('drvpt:'):   # 드라이버 기준점: top = 헬멧 꼭대기, head = 헬멧 중심, hip = 엉덩이
             p = {'top': drv['head'] + Vector((0, 0, drv['Rh'])), 'head': drv['head'], 'hip': drv['hip'], 'hand_top': drv['hand_top']}[v[6:]]; AN[k] = px(p); continue
         if v.startswith('beltpt:'):   # 띠 중심선 위 비율 점: beltpt:sh:0.5 (첫 번째 띠)
@@ -550,4 +579,4 @@ oc = np.where(oa > 0, (line[..., :3] * la + base[..., :3] * ba * (1 - la)) / np.
 out = np.concatenate([oc, oa], axis=2)
 img = bpy.data.images.new('out', A.w, A.h, alpha=True); img.pixels[:] = out.reshape(-1); img.filepath_raw = OUT; img.file_format = 'PNG'; img.save()
 for p in (OUT + '.base.png', OUT + '.line.png'): os.remove(p)
-print('RENDER', OUT, 'focus', len(focus), 'ghost', len(ghost))
+print('RENDER', OUT, 'focus', len(focus), 'ghost', len(ghost)); print('FOCUS', sorted({pname(o)[:40] for o in focus})[:14])
