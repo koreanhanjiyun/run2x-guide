@@ -4,6 +4,16 @@ import os, re, sys, shutil
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, '..', '..')); WT = sys.argv[1]
 body = open(os.path.join(ROOT, 'dist', 'draft', 'run2x_redesign.html'), encoding='utf-8').read()
 body = re.sub(r'(["\'(])img/(?!3d/)', r'\1../img/', body)          # 사진 · 아이콘은 사이트(main)의 img/ 를 씀
+# 부품 그림 중 main 과 달라진 것(새 렌더)은 draft/img/comp/ 에 따로 두고 그것을 씀 → 실제 사이트(main 의 img/comp)는 그대로
+import filecmp
+dc = os.path.join(WT, 'draft', 'img', 'comp'); os.makedirs(dc, exist_ok=True); changed = []
+for f in sorted(os.listdir(os.path.join(ROOT, 'img', 'comp'))):
+    src, live = os.path.join(ROOT, 'img', 'comp', f), os.path.join(WT, 'img', 'comp', f)
+    if not os.path.exists(live) or not filecmp.cmp(src, live, shallow=False):
+        shutil.copy(src, os.path.join(dc, f)); changed.append(f); body = body.replace('../img/comp/' + f, 'img/comp/' + f)
+for f in os.listdir(dc):
+    if f not in changed: os.remove(os.path.join(dc, f))               # main 과 같아진 그림은 지움
+print('draft 전용 부품 그림', len(changed))
 head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '<meta name="robots" content="noindex,nofollow">\n'
         # 같은 주소(github.io)를 쓰는 실제 사이트의 브라우저 저장값과 섞이지 않게 저장 키에 머리말

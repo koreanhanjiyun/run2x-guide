@@ -1,7 +1,7 @@
 """STEP 조립품 → GLB (부품 이름 · 색 · 위치 유지). OpenCASCADE(OCP) 로 읽고 메시로 바꿈.
 
 사용: python tools/cad/step2glb.py <입력.STEP> <출력.glb> [--defl 0.5] [--ang 0.35] [--frame ref4] [--only 정규식] [--skip 정규식]
-      [--fine 정규식 --fine-defl 0.02 --fine-ang 0.1]
+      [--fine 정규식 --fine-defl 0.02 --fine-ang 0.1] [--tubes 정규식 --tube-r 12.7]
 필요: pip install cadquery-ocp trimesh numpy
 - --only · --skip · --fine 은 "부품 이름|상위 조립품들" 에서 찾음 (예: --fine "Front_Hub|Caliper" = 그 조립품 부품 전부 곱게)
 - --fine: 렌더할 부품만 곱게 (나사산 · 작은 모깎기가 깨지지 않게). 나머지는 --defl 로 거칠게 (주변 반투명용)
@@ -42,6 +42,8 @@ ap.add_argument('--defl', type=float, default=0.5); ap.add_argument('--ang', typ
 ap.add_argument('--frame', default='', choices=['', 'ref4'])
 ap.add_argument('--only', default=''); ap.add_argument('--skip', default='')
 ap.add_argument('--fine', default=''); ap.add_argument('--fine-defl', type=float, default=0.02); ap.add_argument('--fine-ang', type=float, default=0.1)
+ap.add_argument('--tubes', default='', help='이 부품(정규식)의 관(원통 · 원환 면)을 뽑아 <출력>.tubes.json 으로 (프레임 관 하나하나를 강조할 때)')
+ap.add_argument('--tube-r', type=float, default=12.7, help='관 바깥 반경 [mm] (REF4 프레임 = 12.7)')
 A = ap.parse_args()
 t0 = time.time(); say = lambda *a: print(f'[{time.time()-t0:7.1f}s]', *a, flush=True)
 
@@ -99,8 +101,14 @@ def weld(P, N, F):
     inv = inv.reshape(-1); F2 = inv[F]
     F2 = F2[(F2[:, 0] != F2[:, 1]) & (F2[:, 1] != F2[:, 2]) & (F2[:, 0] != F2[:, 2])]   # 붙이다 뭉개진 삼각형 제거
     return P[first], N[first], F2
-def mesh_of(lab, fine):
-    k = (lab.Tag(), fine)
+def is_tube_face(fc):   # 관 면 = 반경이 관 바깥 · 안쪽 반경인 원통 · 원환 (--tubes 부품을 관 / 판(브래킷)으로 나눌 때)
+    from OCP.BRepAdaptor import BRepAdaptor_Surface
+    from OCP.GeomAbs import GeomAbs_Cylinder, GeomAbs_Torus
+    s = BRepAdaptor_Surface(fc); t = s.GetType()
+    r = s.Cylinder().Radius() if t == GeomAbs_Cylinder else s.Torus().MinorRadius() if t == GeomAbs_Torus else 0
+    return A.tube_r * 0.75 < r < A.tube_r + 0.05
+def mesh_of(lab, fine, split=False):
+    k = (lab.Tag(), fine, split)
     if k in cache: return cache[k]
     shp = ST.GetShape_s(lab)
     if fine: BRepTools.Clean_s(shp)   # 거친 메시가 이미 붙어 있으면 지우고 다시
@@ -109,6 +117,7 @@ def mesh_of(lab, fine):
     ex = TopExp_Explorer(shp, TopAbs_FACE)
     while ex.More():
         fc = TopoDS.Face(ex.Current()); loc = TopLoc_Location()
+        if split is not None and split is not False and is_tube_face(fc) != (split == 'tube'): ex.Next(); continue
         tri = BRep_Tool.Triangulation_s(fc, loc)
         if tri is not None and tri.NbTriangles() > 0:
             tr = loc.Transformation(); nn = tri.NbNodes(); rev = fc.Orientation() == TopAbs_REVERSED
@@ -130,11 +139,14 @@ def mesh_of(lab, fine):
 parts = []
 for n, x in enumerate(inst):
     lab, M, col, nm, path = x
-    g = mesh_of(lab, bool(A.fine and re.search(A.fine, full(x))))
-    if g is None: continue
-    R3 = M[:3, :3]; v = g[0] @ R3.T + M[:3, 3]; nv = g[1] @ R3.T
-    f = g[2][:, [0, 2, 1]] if np.linalg.det(R3) < 0 else g[2]   # 거울 배치(좌우 대칭 부품)면 감는 순서 뒤집음 — 안 하면 안팎이 바뀌어 투명하게 보임
-    parts.append((nm, v, f, col, path, nv))
+    fine = bool(A.fine and re.search(A.fine, full(x)))
+    # --tubes 부품은 관 / 판(브래킷 · 탭)을 따로 (이름 뒤 '~관' · '~판') → 렌더에서 브래킷만 강조할 수 있게
+    for split, sfx in ((('tube', '~관'), ('plate', '~판')) if A.tubes and re.search(A.tubes, full(x)) else ((False, ''),)):
+        g = mesh_of(lab, fine, split)
+        if g is None: continue
+        R3 = M[:3, :3]; v = g[0] @ R3.T + M[:3, 3]; nv = g[1] @ R3.T
+        f = g[2][:, [0, 2, 1]] if np.linalg.det(R3) < 0 else g[2]   # 거울 배치(좌우 대칭 부품)면 감는 순서 뒤집음 — 안 하면 안팎이 바뀌어 투명하게 보임
+        parts.append((nm + sfx, v, f, col, path, nv))
     if n % 500 == 0: say(f'메시 {n}/{len(inst)}  (부품 정의 {len(cache)})')
 say('메시 끝, 삼각형', sum(len(p[2]) for p in parts))
 
@@ -168,6 +180,83 @@ if A.frame == 'ref4':
     org = np.zeros(3); org[ia] = rear_x; org[iu] = ground; org[il] = ctrs[:, il].mean()
     R[:3, :3] = Rm; R[:3, 3] = -Rm @ org
     say(f'좌표계: 앞뒤 축 {"XYZ"[ia]}({"+" if sa>0 else "-"}), 위 {"XYZ"[iu]}({"+" if su>0 else "-"}), 뒤 차축 {rear_x:.2f}, 지면 {ground:.2f}, 가운데 {org[il]:.2f}')
+
+# 4-1. 관 뽑기 (--tubes): 바깥 반경이 --tube-r 인 원통 · 원환 면 → 관 축 선분 · 호. 같은 직선 위 원통은 한 관으로,
+#      끝이 맞닿는 관 · 굽힘(원환)은 한 사슬로 (구부린 롤후프 = 사슬 하나). 안쪽 원통(같은 축)의 반경으로 벽 두께
+def tubes_of(shp, T):
+    from OCP.BRepAdaptor import BRepAdaptor_Surface
+    from OCP.GeomAbs import GeomAbs_Cylinder, GeomAbs_Torus
+    P = lambda p: (T[:3, :3] @ np.array([p.X(), p.Y(), p.Z()]) + T[:3, 3])
+    D = lambda d: T[:3, :3] @ np.array([d.X(), d.Y(), d.Z()])
+    segs, inner = [], []   # segs: (점 목록) , inner: (축 위 점, 방향, 반경)
+    ex = TopExp_Explorer(shp, TopAbs_FACE)
+    while ex.More():
+        s = BRepAdaptor_Surface(TopoDS.Face(ex.Current())); t = s.GetType()
+        if t == GeomAbs_Cylinder:
+            c = s.Cylinder(); ax = c.Axis(); o = P(ax.Location()); d = D(ax.Direction()); r = c.Radius()
+            v0, v1 = s.FirstVParameter(), s.LastVParameter()
+            if abs(r - A.tube_r) < 0.05: segs.append([o + d * v0, o + d * v1])
+            elif A.tube_r * 0.6 < r < A.tube_r: inner.append((o, d, r, v0, v1))
+        elif t == GeomAbs_Torus:
+            c = s.Torus()
+            if abs(c.MinorRadius() - A.tube_r) < 0.05:
+                ax = c.Position(); o = P(ax.Location()); X = D(ax.XDirection()); Y = D(ax.YDirection()); R0 = c.MajorRadius()
+                u = np.linspace(s.FirstUParameter(), s.LastUParameter(), 9)
+                segs.append([o + R0 * (np.cos(a) * X + np.sin(a) * Y) for a in u])
+        ex.Next()
+    # 같은 직선 위 선분 합치기
+    segs = [np.array(s) for s in segs]
+    def line_key(s):
+        d = s[-1] - s[0]; L = np.linalg.norm(d); return d / L if L > 1e-6 else None
+    merged = True
+    while merged:
+        merged = False
+        for i in range(len(segs)):
+            for j in range(i + 1, len(segs)):
+                a, b = segs[i], segs[j]
+                if len(a) != 2 or len(b) != 2: continue
+                da, db = line_key(a), line_key(b)
+                if da is None or db is None or abs(abs(da @ db) - 1) > 1e-4: continue
+                off = b[0] - a[0]; off = off - (off @ da) * da
+                if np.linalg.norm(off) > 0.2: continue
+                ta = sorted([0, (a[1] - a[0]) @ da]); tb = sorted([(b[0] - a[0]) @ da, (b[1] - a[0]) @ da])
+                if tb[0] > ta[1] + 1.0 or ta[0] > tb[1] + 1.0: continue   # 떨어져 있으면 다른 관
+                lo, hi = min(ta[0], tb[0]), max(ta[1], tb[1]); segs[i] = np.array([a[0] + lo * da, a[0] + hi * da]); segs.pop(j); merged = True; break
+            if merged: break
+    # 끝점이 맞닿는 것끼리 사슬 (굽힘 원환 · 이어진 직관)
+    parent = list(range(len(segs)))
+    def f(i):
+        while parent[i] != i: parent[i] = parent[parent[i]]; i = parent[i]
+        return i
+    def ends(s):   # (끝점, 끝 접선) 둘
+        u0 = s[1] - s[0]; u1 = s[-1] - s[-2]
+        return [(s[0], u0 / np.linalg.norm(u0)), (s[-1], u1 / np.linalg.norm(u1))]
+    for i in range(len(segs)):
+        for j in range(i + 1, len(segs)):
+            if len(segs[i]) == 2 and len(segs[j]) == 2: continue   # 직관끼리는 위에서 합침 (노드에서 만나는 다른 관과 섞이지 않게)
+            # 굽힘(원환)과 이어진 관: 끝이 맞닿고 접선이 같은 방향 (노드에 모인 다른 관은 방향이 달라 안 붙음)
+            if any(np.linalg.norm(p - q) < 0.5 and abs(a @ b) > 0.999 for p, a in ends(segs[i]) for q, b in ends(segs[j])):
+                parent[f(i)] = f(j)
+    groups = {}
+    for i in range(len(segs)): groups.setdefault(f(i), []).append(segs[i])
+    out = []
+    for g in groups.values():
+        pts = np.vstack(g); wall = None
+        for o, d, r, v0, v1 in inner:   # 안쪽 원통 축이 이 관 위에 있으면 벽 두께
+            for s in g:
+                if len(s) != 2: continue
+                u = (s[1] - s[0]) / max(np.linalg.norm(s[1] - s[0]), 1e-9)
+                if abs(abs(u @ d) - 1) < 1e-3 and np.linalg.norm((o - s[0]) - ((o - s[0]) @ u) * u) < 0.2: wall = round(A.tube_r - r, 2)
+        out.append({'segs': [np.round(s, 2).tolist() for s in g], 'wall': wall, 'len': round(sum(np.linalg.norm(np.diff(s, axis=0), axis=1).sum() for s in g), 1)})
+    return out
+if A.tubes:
+    import json
+    TB = []
+    for x in inst:
+        if re.search(A.tubes, full(x)): TB += tubes_of(ST.GetShape_s(x[0]), R @ x[1])
+    tj = re.sub(r'\.glb$', '', A.out) + '.tubes.json'
+    json.dump(TB, open(tj, 'w', encoding='utf-8', newline='\n'), ensure_ascii=False)
+    say(f'관 {len(TB)}개 → {tj}')
 
 # 5. 내보내기 (mm, 메시 이름 = 순번|부품 이름)
 sc = trimesh.Scene()
