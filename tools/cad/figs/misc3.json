@@ -1,0 +1,470 @@
+{
+ "_note": "129차 남은 카드: 셀(모델링 절단) · 캠버 심(REF4 업라이트에 심 추가) · 대시(REF4) · 브레이크 등(REF4) · 사이드윙(단순화 재시도) · shim · sidewing 은 시험했으나 알아보기 어려워 기존 유지",
+ "tube_groups": {},
+ "figs": {
+  "cell": {
+   "aria": "셀",
+   "add": [
+    {
+     "type": "cyl",
+     "name": "cell_can",
+     "a": [
+      3000,
+      0,
+      0
+     ],
+     "b": [
+      3000,
+      70,
+      0
+     ],
+     "r": 10.5,
+     "seg": 64
+    },
+    {
+     "type": "cyl",
+     "name": "cell_l1",
+     "a": [
+      3000,
+      3,
+      0
+     ],
+     "b": [
+      3000,
+      66,
+      0
+     ],
+     "r": 9.6,
+     "seg": 64
+    },
+    {
+     "type": "cyl",
+     "name": "cell_l2",
+     "a": [
+      3000,
+      3,
+      0
+     ],
+     "b": [
+      3000,
+      66,
+      0
+     ],
+     "r": 7.6,
+     "seg": 64
+    },
+    {
+     "type": "cyl",
+     "name": "cell_l3",
+     "a": [
+      3000,
+      3,
+      0
+     ],
+     "b": [
+      3000,
+      66,
+      0
+     ],
+     "r": 5.6,
+     "seg": 64
+    },
+    {
+     "type": "cyl",
+     "name": "cell_l4",
+     "a": [
+      3000,
+      3,
+      0
+     ],
+     "b": [
+      3000,
+      66,
+      0
+     ],
+     "r": 3.6,
+     "seg": 64
+    },
+    {
+     "type": "cyl",
+     "name": "cell_core",
+     "a": [
+      3000,
+      3,
+      0
+     ],
+     "b": [
+      3000,
+      66,
+      0
+     ],
+     "r": 1.4,
+     "seg": 32
+    },
+    {
+     "type": "cyl",
+     "name": "cell_cap",
+     "a": [
+      3000,
+      70,
+      0
+     ],
+     "b": [
+      3000,
+      72.5,
+      0
+     ],
+     "r": 6,
+     "seg": 48
+    }
+   ],
+   "cut": [
+    {
+     "obj": "^cell_can",
+     "p": [
+      3000,
+      0,
+      0
+     ],
+     "n": [
+      0,
+      0,
+      1
+     ],
+     "c": "#9aa3ad"
+    },
+    {
+     "obj": "^cell_l1",
+     "p": [
+      3000,
+      0,
+      0
+     ],
+     "n": [
+      0,
+      0,
+      1
+     ],
+     "c": "#c8892e"
+    },
+    {
+     "obj": "^cell_l2",
+     "p": [
+      3000,
+      0,
+      0
+     ],
+     "n": [
+      0,
+      0,
+      1
+     ],
+     "c": "#3d4450"
+    },
+    {
+     "obj": "^cell_l3",
+     "p": [
+      3000,
+      0,
+      0
+     ],
+     "n": [
+      0,
+      0,
+      1
+     ],
+     "c": "#c8892e"
+    },
+    {
+     "obj": "^cell_l4",
+     "p": [
+      3000,
+      0,
+      0
+     ],
+     "n": [
+      0,
+      0,
+      1
+     ],
+     "c": "#3d4450"
+    },
+    {
+     "obj": "^cell_core",
+     "p": [
+      3000,
+      0,
+      0
+     ],
+     "n": [
+      0,
+      0,
+      1
+     ],
+     "c": "#e9ecef"
+    }
+   ],
+   "focus": "^cell_",
+   "ghost": "zzz",
+   "hide": "zzz",
+   "color": {
+    "^cell_can": "#2f6fb5",
+    "^cell_cap": "#adb5bd",
+    "^cell_l": "#e9ecef",
+    "^cell_core": "#e9ecef"
+   },
+   "az": 35,
+   "el": 22,
+   "pad": 1.15,
+   "fit": [
+    [
+     2988,
+     0,
+     -11
+    ],
+    [
+     3012,
+     73,
+     11
+    ]
+   ],
+   "anchors": {
+    "can": {
+     "obj": "^cell_can",
+     "near": [
+      3010,
+      30,
+      -4
+     ]
+    },
+    "cap": {
+     "obj": "^cell_cap"
+    },
+    "l1": {
+     "obj": "^cell_l1",
+     "near": [
+      2991,
+      35,
+      0
+     ]
+    },
+    "l2": {
+     "obj": "^cell_l2",
+     "near": [
+      2993,
+      40,
+      0
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "캔 = 음극(−) 단자",
+     "a": "can"
+    },
+    {
+     "t": "양극(+) 단자 · 안전 벤트",
+     "a": "cap"
+    },
+    {
+     "t": "양극판 (알루미늄박 + 금속 산화물)",
+     "a": "l1"
+    },
+    {
+     "t": "음극판 (구리박 + 흑연) · 사이에 분리막",
+     "a": "l2"
+    }
+   ],
+   "notes": [
+    {
+     "t": "전극 · 분리막 띠를 돌돌 말아 캔에 넣음 (반을 잘라 봄)",
+     "x": 20,
+     "y": 290,
+     "c": "#495057"
+    }
+   ]
+  },
+  "dash": {
+   "aria": "대시보드·RTD 버튼·표시등",
+   "focus": "^Dashboard_Box_기본|^Nextion|^LED_Light|^Push_Button|^Push_Lock|^Toggle_Switch",
+   "ghost": "^24_Steering_Wheel\\|.*Dashboard|^Cowl_Body",
+   "hide": "Rodend",
+   "color": {
+    "^Dashboard_Box": "#2b2f36",
+    "^Nextion": "#1c7ed6",
+    "^LED_Light": "#e03131",
+    "^Push_Lock": "#c92a2a",
+    "^Push_Button": "#2b8a3e"
+   },
+   "az": 180,
+   "el": 12,
+   "pad": 1.15,
+   "fit": [
+    [
+     1400,
+     495,
+     -215
+    ],
+    [
+     1470,
+     620,
+     215
+    ]
+   ],
+   "anchors": {
+    "disp": {
+     "obj": "^Nextion"
+    },
+    "led": {
+     "obj": "^LED_Light",
+     "near": [
+      1420,
+      588,
+      130
+     ]
+    },
+    "btn": {
+     "obj": "^Push_Button",
+     "near": [
+      1423,
+      528,
+      -114
+     ]
+    },
+    "es": {
+     "obj": "^Push_Lock"
+    },
+    "tg": {
+     "obj": "^Toggle_Switch_Cover\\|"
+    }
+   },
+   "labels": [
+    {
+     "t": "경고등 (BMS · IMD · BSPD 등)",
+     "a": "led",
+     "x": 20,
+     "y": 40
+    },
+    {
+     "t": "디스플레이 (RPM · 속도 · SOC · 온도)",
+     "a": "disp",
+     "x": 300,
+     "y": 22,
+     "anchor": "middle"
+    },
+    {
+     "t": "콕핏 비상 정지 버튼",
+     "a": "es",
+     "x": 20,
+     "y": 262
+    },
+    {
+     "t": "RTD · 기능 버튼",
+     "a": "btn",
+     "x": 470,
+     "y": 60,
+     "anchor": "end"
+    },
+    {
+     "t": "주행 모드 스위치 (덮개)",
+     "a": "tg",
+     "x": 470,
+     "y": 262,
+     "anchor": "end"
+    }
+   ],
+   "notes": [
+    {
+     "t": "드라이버 쪽에서 본 모습",
+     "x": 20,
+     "y": 290,
+     "c": "#495057"
+    }
+   ],
+   "manual_labels": true
+  },
+  "brakelight": {
+   "aria": "브레이크 등",
+   "focus": "^New_Brake_Light|^Brake_Light_LED_PCB",
+   "ghost": "2024_frame|OZ racing|^Rear_wing_Endplate|^Rear_Wing_Main|^Head_Restraint|^24_Seat",
+   "hide": "Rodend",
+   "color": {
+    "^New_Brake_Light_Cover": "#ff8787",
+    "^Brake_Light_LED_PCB": "#c92a2a"
+   },
+   "az": 180,
+   "el": 8,
+   "pad": 1.05,
+   "fit": [
+    [
+     -300,
+     0,
+     -720
+    ],
+    [
+     200,
+     1220,
+     720
+    ]
+   ],
+   "anchors": {
+    "bl": {
+     "obj": "^New_Brake_Light_Cover",
+     "near": [
+      -30,
+      400,
+      0
+     ]
+    },
+    "c0": [
+     -30,
+     397,
+     -760
+    ],
+    "c1": [
+     -30,
+     397,
+     760
+    ],
+    "v0": [
+     -30,
+     0,
+     0
+    ],
+    "v1": [
+     -30,
+     1220,
+     0
+    ]
+   },
+   "lines": [
+    {
+     "a": "c0",
+     "b": "c1",
+     "c": "#7048e8",
+     "dash": true
+    },
+    {
+     "a": "v0",
+     "b": "v1",
+     "c": "#7048e8",
+     "dash": true
+    }
+   ],
+   "labels": [
+    {
+     "t": "브레이크 등 (빨간 LED 면)",
+     "a": "bl"
+    }
+   ],
+   "notes": [
+    {
+     "t": "차 중심선 위 · 정해진 높이 범위 안 (뒤에서 본 모습)",
+     "x": 20,
+     "y": 290,
+     "c": "#7048e8"
+    }
+   ]
+  }
+ }
+}
