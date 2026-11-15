@@ -1,5 +1,5 @@
 {
- "_note": "REF4 부품을 다시 조립하거나 시점을 바꿔 만든 그림 (129차). heave = REF4 앞 댐퍼를 복제해 두 벨크랭크 사이에 가로로 단 서드 댐퍼 (REF4 에는 없는 배치)",
+ "_note": "REF4 부품을 다시 조립하거나 시점을 바꿔 만든 그림 (129차). heave = REF4 앞 댐퍼를 복제해 두 벨크랭크 사이에 가로로 단 서드 댐퍼 (REF4 에는 없는 배치) · apps 는 독립 검토에서 카드 글(센서 2개 · 스프링 2개)과 안 맞아 기존 유지",
  "tube_groups": {},
  "figs": {
   "heave": {
@@ -8,11 +8,11 @@
     {
      "type": "copy",
      "name": "heave_damper",
-     "obj": "^Upper_Shock_Assy|^Lower_Shock_Assy",
+     "obj": "^Lower_Shock_Assy",
      "near": [
       1600,
       620,
-      150
+      180
      ],
      "from": [
       [
@@ -29,13 +29,48 @@
      "to": [
       [
        1600,
-       720,
-       -125
+       722,
+       -150
       ],
       [
        1600,
-       720,
-       125
+       722,
+       150
+      ]
+     ],
+     "scale": true
+    },
+    {
+     "type": "copy",
+     "name": "heave_damper",
+     "obj": "^Upper_Shock_Assy",
+     "near": [
+      1600,
+      640,
+      110
+     ],
+     "from": [
+      [
+       1600,
+       640,
+       45
+      ],
+      [
+       1600,
+       615,
+       255
+      ]
+     ],
+     "to": [
+      [
+       1600,
+       722,
+       -150
+      ],
+      [
+       1600,
+       722,
+       150
       ]
      ],
      "scale": true
@@ -50,8 +85,8 @@
      ],
      "b": [
       1600,
-      718,
-      128
+      722,
+      150
      ],
      "r": 6
     },
@@ -65,10 +100,30 @@
      ],
      "b": [
       1600,
-      718,
-      -128
+      698,
+      -142
      ],
      "r": 6
+    },
+    {
+     "type": "sphere",
+     "name": "heave_link",
+     "c": [
+      1600,
+      722,
+      150
+     ],
+     "r": 9
+    },
+    {
+     "type": "sphere",
+     "name": "heave_link",
+     "c": [
+      1600,
+      698,
+      -142
+     ],
+     "r": 9
     }
    ],
    "focus": "^heave_|^Front_Bell_Crank|^Upper_Shock_Assy|^Lower_Shock_Assy|^Front_Shock_Rod",
@@ -160,7 +215,7 @@
    ],
    "notes": [
     {
-     "t": "양쪽이 같이 눌리면(히브) 서드 댐퍼가 줄어듦 · 반대로 움직이면(롤) 길이 거의 그대로",
+     "t": "같이 눌리면(히브) 서드 댐퍼가 줄어듦 · 반대로(롤)면 거의 그대로",
      "x": 20,
      "y": 24,
      "c": "#495057"
@@ -244,21 +299,28 @@
    ],
    "labels": [
     {
+     "t": "킹핀축 (위에서 본 점)",
+     "a": "kp",
+     "x": 470,
+     "y": 100,
+     "anchor": "end"
+    },
+    {
      "t": "조향 암",
-     "a": "sa"
+     "a": "sa",
+     "x": 470,
+     "y": 255,
+     "anchor": "end"
     },
     {
      "t": "타이로드",
-     "a": "tr"
+     "a": "tr",
+     "x": 20,
+     "y": 255,
+     "anchor": "start"
     }
    ],
    "notes": [
-    {
-     "t": "● 킹핀축 (위에서 본 점)",
-     "x": 20,
-     "y": 24,
-     "c": "#c0392b"
-    },
     {
      "t": "빨간 화살표 = 지렛대 거리 (킹핀축 ~ 타이로드 선)",
      "x": 20,
@@ -266,63 +328,8 @@
      "c": "#c0392b"
     }
    ],
-   "raw": ""
-  },
-  "apps": {
-   "aria": "가속 페달 센서 APPS·BSE",
-   "focus": "^Throttle_Pedal\\||^Pedal_Link|^Potentiometer|^Pedal_Pad\\|Throttle|^Throttle_Pedal_Mount|^Return_Spring|^Torsion|^스토퍼|^Bushing\\|Throttle",
-   "ghost": "2024_frame|^24_Brake_Pedal\\||^Pedal_Pad\\|Brake",
-   "hide": "Rodend",
-   "color": {
-    "^Potentiometer": "#2f6fb5",
-    "^Pedal_Link": "#e8590c",
-    "^Pedal_Pad": "#2b2f36"
-   },
-   "az": -120,
-   "el": 20,
-   "pad": 1.15,
-   "anchors": {
-    "ped": {
-     "obj": "^Pedal_Pad\\|Throttle",
-     "near": [
-      1945,
-      400,
-      -95
-     ]
-    },
-    "pot": {
-     "obj": "^Potentiometer",
-     "near": [
-      2030,
-      210,
-      -111
-     ]
-    },
-    "lk": {
-     "obj": "^Pedal_Link"
-    },
-    "sp": {
-     "obj": "^Torsion|^Return_Spring"
-    }
-   },
-   "labels": [
-    {
-     "t": "가속 페달",
-     "a": "ped"
-    },
-    {
-     "t": "APPS 센서 (포텐쇼미터)",
-     "a": "pot"
-    },
-    {
-     "t": "링크",
-     "a": "lk"
-    },
-    {
-     "t": "리턴 스프링",
-     "a": "sp"
-    }
-   ]
+   "raw": "",
+   "manual_labels": true
   },
   "tsal": {
    "aria": "TSAL·RTDS",
