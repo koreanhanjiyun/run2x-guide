@@ -1,0 +1,103 @@
+{
+ "_note": "조향 · 제동. brakeline(차 전체 배관도) · bpsensor(REF4 에 압력 센서 없음)와 각 카드의 둘째 그림(단면 · 원리)은 기존 유지 (129차)",
+ "tube_groups": {},
+ "figs": {
+  "wheel": {
+   "aria": "스티어링 휠·퀵 릴리스",
+   "focus": "^24_Steering_Wheel\\|REF4|^Quick_Releaze\\|REF4|^24_Quick_Release_Sleeve.*\\|REF4|^24_Steering_Column_Top\\|REF4",
+   "ghost": "^Dashboard_Box_기본|^Cowl_Body", "hide": "Rodend",
+   "color": {"^24_Steering_Wheel": "#2b2f36", "^Quick_Releaze": "#2f6fb5"},
+   "az": 150, "el": 18, "pad": 1.15, "fit": [[1200, 420, -130], [1420, 570, 130]],
+   "anchors": {"grip": {"obj": "^24_Steering_Wheel\\|REF4", "near": [1237, 500, 115]}, "plate": {"obj": "^24_Steering_Wheel\\|REF4", "near": [1215, 470, 30]},
+               "qr": {"obj": "^Quick_Releaze\\|REF4", "near": [1270, 490, 40]}, "col": {"obj": "^24_Steering_Column_Top\\|REF4", "near": [1360, 480, 12]}},
+   "labels": [{"t": "그립", "a": "grip"}, {"t": "휠 판 (탄소섬유)", "a": "plate"}, {"t": "퀵 릴리스 (당기면 빠짐)", "a": "qr"}, {"t": "칼럼 위 토막", "a": "col"}]
+  },
+  "column": {
+   "aria": "스티어링 칼럼·유니버설 조인트",
+   "focus": "^24_Steering_Column_(Top|Mid|Low)\\|REF4|^UV_Joint_.*\\|REF4|^조향 아래 파이프|^24_Steering_Wheel\\|REF4|^Quick_Releaze\\|REF4|^Pinion\\|",
+   "ghost": "^RP_Body|^Rack\\||^Dashboard_Box_기본", "hide": "Rodend",
+   "color": {"^UV_Joint": "#2f6fb5", "^24_Steering_Wheel": "#2b2f36"},
+   "az": 90, "el": 12, "pad": 1.08,
+   "anchors": {"uj1": {"obj": "^UV_Joint_Journal.*\\|REF4", "near": [1418, 464, 22]}, "uj2": {"obj": "^UV_Joint_Journal.*\\|REF4", "near": [1556, 326, 22]},
+               "top": {"obj": "^24_Steering_Column_Top\\|REF4", "near": [1350, 476, 12]}, "mid": {"obj": "^24_Steering_Column_Mid\\|REF4", "near": [1490, 395, 12]},
+               "low": {"obj": "^24_Steering_Column_Low\\|REF4", "near": [1573, 260, 12]}},
+   "labels": [{"t": "유니버설 조인트 ①", "a": "uj1"}, {"t": "유니버설 조인트 ②", "a": "uj2"}, {"t": "위 토막", "a": "top"}, {"t": "가운데 토막", "a": "mid"}, {"t": "아래 토막 → 피니언", "a": "low"}]
+  },
+  "rack": {
+   "aria": "랙 앤 피니언",
+   "focus": "^RP_Body|^Rack\\||^RP_Bracket|^Bracket_Ring|^Pinion|^조향 아래 파이프|^24_Front_Tie_Rod",
+   "ghost": "2024_frame|^24_Steering_Column_Low", "hide": "Rodend",
+   "color": {"^Rack\\|": "#e8590c", "^24_Front_Tie_Rod": "#9aa3ad"},
+   "az": 25, "el": 35, "pad": 1.05, "fit": [[1560, 120, -560], [1690, 260, 560]],
+   "anchors": {"body": {"obj": "^RP_Body", "near": [1600, 190, -100]}, "rack": {"obj": "^Rack\\|", "near": [1617, 171, -195]}, "pin": {"obj": "^Pinion\\|", "near": [1600, 205, 0]},
+               "br": {"obj": "^RP_Bracket", "near": [1616, 180, 213]}, "tr": {"obj": "^24_Front_Tie_Rod", "near": [1640, 190, 390]}},
+   "labels": [{"t": "랙 하우징", "a": "body"}, {"t": "랙 (좌우로 움직임)", "a": "rack"}, {"t": "피니언 (칼럼 아래 끝)", "a": "pin"}, {"t": "하우징 브래킷", "a": "br"}, {"t": "타이로드", "a": "tr"}]
+  },
+  "tierod": {
+   "aria": "타이로드",
+   "focus": "^24_Front_Tie_Rod|^Rack\\||^RP_Body|^24_Front_Knuckle_(Left|Right)_Topology",
+   "ghost": "OZ racing|^Front_(Upper|Lower)_Arm", "hide": "Rodend|Caliper|Hub|디스크",
+   "color": {"^24_Front_Tie_Rod": "#e8590c", "^24_Front_Knuckle": "#c3c8d0"},
+   "az": 0, "el": 55, "pad": 1.04, "fit": [[1450, 100, -720], [1760, 380, 720]],
+   "anchors": {"tr": {"obj": "^24_Front_Tie_Rod", "near": [1640, 190, 390]}, "rk": {"obj": "^Rack\\|", "near": [1617, 171, 190]}, "body": {"obj": "^RP_Body", "near": [1600, 193, 0]},
+               "sa": {"obj": "^24_Front_Knuckle_Left_Topology", "near": [1661, 201, 550]}},
+   "labels": [{"t": "타이로드", "a": "tr"}, {"t": "랙 끝 (좌우로 움직임)", "a": "rk"}, {"t": "랙 하우징", "a": "body"}, {"t": "조향 암 (너클)", "a": "sa"}]
+  },
+  "steerarm": {
+   "aria": "조향 암·너클암",
+   "focus": "^24_Front_Knuckle_Left_Topology|^24_Front_Tie_Rod", "corner": "FL",
+   "ghost": "^24_Front_Hub\\||OZ racing|^Brake Caliper", "hide": "Rodend|디스크",
+   "color": {"^24_Front_Tie_Rod": "#e8590c"},
+   "az": 25, "el": 50, "pad": 1.15, "fit": [[1480, 140, 380], [1720, 380, 600]],
+   "anchors": {"sa": {"obj": "^24_Front_Knuckle_Left_Topology", "near": [1661, 201, 550]}, "tr": {"obj": "^24_Front_Tie_Rod", "near": [1650, 190, 470]},
+               "kp": [1600, 380, 540], "k1": [1606, 152, 561], "k0": [1593, 348, 516], "ext0": [1661, 201, 550], "ext1": [1600, 200, 300]},
+   "lines": [{"a": "ext0", "b": "ext1", "c": "#7048e8", "dash": true}],
+   "labels": [{"t": "조향 암", "a": "sa"}, {"t": "타이로드", "a": "tr"}],
+   "notes": [{"t": "타이로드 연장선 · 조향 암 길이가 바퀴를 돌리는 지렛대", "x": 20, "y": 290, "c": "#7048e8"}]
+  },
+  "pedalbox": {
+   "aria": "페달박스",
+   "focus": "^24_Brake_Pedal\\||^Pedal_Pad|^Throttle_Pedal\\||^Pedal_Link|^Potentiometer\\||^Master_Cylinder|^Balance_Bar|^Brake_Fluid|^Reservoir_Mount|^BOTS|^24_Pedal_Mount|^Throttle_Pedal_Mount|^Footrest",
+   "ghost": "2024_frame", "hide": "Rodend",
+   "color": {"^Pedal_Pad": "#2b2f36", "^Master_Cylinder": "#c3c8d0"},
+   "az": 140, "el": 25, "pad": 1.1,
+   "anchors": {"bp": {"obj": "^Pedal_Pad\\|Brake", "near": [1950, 400, 75]}, "ap": {"obj": "^Pedal_Pad\\|Throttle", "near": [1945, 400, -95]},
+               "pot": {"obj": "^Potentiometer\\|", "near": [2030, 210, -90]}, "bb": {"obj": "^Balance_Bar_Thread", "near": [1975, 288, 120]},
+               "mc": {"obj": "^Master_Cylinder", "near": [2060, 235, 110]}, "res": {"obj": "^Brake_Fluid", "near": [2100, 410, 110]},
+               "bots": {"obj": "^BOTS_Switch ", "near": [2010, 200, 74]}, "fr": {"obj": "^Footrest", "near": [1910, 205, 75]}},
+   "labels": [{"t": "브레이크 페달 (BP)", "a": "bp"}, {"t": "가속 페달 (AP)", "a": "ap"}, {"t": "가속 페달 위치 센서", "a": "pot"}, {"t": "밸런스 바", "a": "bb"},
+              {"t": "마스터실린더 2개 (앞 · 뒤 회로)", "a": "mc"}, {"t": "리저버 2개", "a": "res"}, {"t": "BOTS", "a": "bots"}, {"t": "발받침", "a": "fr"}]
+  },
+  "mc": {
+   "aria": "마스터실린더·밸런스바",
+   "focus": "^Master_Cylinder|^Balance_Bar|^Brake_Fluid|^Reservoir_Mount|^24_Brake_Pedal\\|",
+   "ghost": "^Pedal_Pad|^24_Pedal_Mount|2024_frame", "hide": "Rodend|Throttle",
+   "color": {"^Balance_Bar": "#e8590c"},
+   "az": 120, "el": 30, "pad": 1.12,
+   "anchors": {"mcf": {"obj": "^Master_Cylinder", "near": [2060, 235, 110]}, "mcr": {"obj": "^Master_Cylinder", "near": [2060, 235, 40]},
+               "bb": {"obj": "^Balance_Bar_Thread", "near": [1975, 288, 125]}, "piv": {"obj": "^Balance_Bar_Pivot", "near": [1976, 300, 75]},
+               "res": {"obj": "^Brake_Fluid", "near": [2100, 417, 105]}, "ped": {"obj": "^24_Brake_Pedal\\|", "near": [1970, 400, 75]}},
+   "labels": [{"t": "마스터실린더 (회로마다 하나)", "a": "mcf"}, {"t": "마스터실린더", "a": "mcr"}, {"t": "밸런스 바 (나사 막대)", "a": "bb"},
+              {"t": "페달의 피벗 슬리브", "a": "piv"}, {"t": "리저버 (회로마다 따로)", "a": "res"}, {"t": "브레이크 페달", "a": "ped"}]
+  },
+  "caliper": {
+   "aria": "캘리퍼",
+   "focus": "Caliper Assembly/24_Front_Knuckle_Left|^디스크", "corner": "FL",
+   "ghost": "^24_Front_Knuckle_Left_Topology|^24_Front_Hub\\|", "hide": "Rodend|OZ racing",
+   "color": {"^Brake Caliper": "#b02a2a", "^Pads": "#6b4f2a", "^Piston": "#c3c8d0", "^디스크": "#9aa3ad"},
+   "az": 140, "el": 20, "pad": 1.2, "fit": [[1460, 190, 540], [1540, 330, 640]],
+   "anchors": {"cal": {"obj": "^Brake Caliper_", "near": [1500, 290, 560], "corner": "FL"}, "disc": {"obj": "^디스크", "near": [1560, 340, 597], "corner": "FL"},
+               "bl": {"obj": "^Bleed Screw", "near": [1505, 300, 615], "corner": "FL"}, "bolt": {"obj": "^Bolt\\|Caliper", "near": [1487, 304, 568], "corner": "FL"}},
+   "labels": [{"t": "캘리퍼 (두 쪽 몸체)", "a": "cal"}, {"t": "디스크", "a": "disc"}, {"t": "블리드 니플", "a": "bl"}, {"t": "몸체 결합 볼트", "a": "bolt"}]
+  },
+  "disc": {
+   "aria": "브레이크 디스크",
+   "focus": "^디스크|^Bobbin", "corner": "FL",
+   "ghost": "^24_Front_Hub\\||^Brake Caliper", "hide": "Rodend|OZ racing",
+   "az": 90, "el": 5, "pad": 1.15,
+   "anchors": {"ring": {"obj": "^디스크", "near": [1600, 160, 597], "corner": "FL"}, "bob": {"obj": "^Bobbin", "near": [1600, 330, 600], "corner": "FL"},
+               "hub": {"obj": "^24_Front_Hub\\|", "near": [1600, 300, 620], "corner": "FL"}},
+   "labels": [{"t": "디스크 (마찰면)", "a": "ring"}, {"t": "보빈", "a": "bob"}, {"t": "허브", "a": "hub"}]
+  }
+ }
+}
