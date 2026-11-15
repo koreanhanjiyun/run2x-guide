@@ -119,7 +119,7 @@ def capsule(name, a, b, r, sy=1.0):
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     for p in me.polygons: p.use_smooth = True
     o = bpy.data.objects.new(name, me); sc.collection.objects.link(o)
-    q = d.to_track_quat('Z', 'Y'); o.matrix_world = Matrix.Translation((a + b) / 2) @ q.to_matrix().to_4x4() @ Matrix.Diagonal((1, sy, 1, 1))   # 지역 Y ≈ 좌우 → 몸통을 옆으로 넓게
+    q = d.to_track_quat('Z', 'Y'); o.matrix_world = Matrix.Translation((a + b) / 2) @ q.to_matrix().to_4x4() @ Matrix.Diagonal((sy, 1, 1, 1))   # to_track_quat('Z', 'Y'): 지역 Y 가 세계 위쪽에 가깝게 → 지역 X = 좌우. 몸통을 옆으로 넓게
     return o
 def ik(a, c, l1, l2, hint):   # 두 마디(허벅지-정강이, 위팔-아래팔): 가운데 관절을 hint 쪽으로 굽힘
     a, c = Vector(a), Vector(c); d = c - a; L = min(d.length, l1 + l2 - 1e-3); u = d.normalized()
@@ -127,14 +127,37 @@ def ik(a, c, l1, l2, hint):   # 두 마디(허벅지-정강이, 위팔-아래팔
     h = Vector(hint) - (Vector(hint) @ u) * u
     return a + u * x + h.normalized() * y
 if SP.get('driver'):
+    # 자세는 시트에서 정함 (헬멧 위치를 먼저 정하면 몸통이 시트 · 방화벽을 뚫음):
+    #  · 시트 가운데 단면(사이트 x, 높이) = driver.seat 점 목록 [등 위, 등 꺾임, 바닥 꺾임(엉덩이), 바닥 앞] (REF4 를 slice 로 잼)
+    #  · 엉덩이 관절(H 점) = 등받이 면에서 125 mm, 바닥 면에서 95 mm (몸 두께)
+    #  · 몸 길이 = 키(헬멧 없이, 기본 1750 mm) × 신체 비율 (Drillis · Contini): 엉덩이~어깨 0.288, 어깨~머리 중심 0.12,
+    #    위팔 0.186, 아래팔 + 손잡이까지 0.19, 허벅지 0.245, 정강이 0.246
+    #  · 몸통은 시트 면에서 몸통 반두께 + 6 mm 떨어지는 범위에서 가장 많이 눕힘 (등받이를 뚫지 않게)
     DV = SP['driver'] if isinstance(SP['driver'], dict) else {}
-    hr = bbox(find(r'^Head_Restraint\|')); seat = bbox(find(r'^24_Seat\|'))
-    wheel = ctr(find(r'^24_Steering_Wheel\|')[0]); pads = sorted(find(r'^Pedal_Pad\|'), key=lambda o: ctr(o).y)
-    Rh = DV.get('helmet_r', 140)
-    head = Vector((hr[1].x + Rh + DV.get('head_gap', 25), 0, (hr[0].z + hr[1].z) / 2))
-    neck = head + Vector((-25, 0, -Rh - 55))
-    hipz = seat[0].z + DV.get('hip_h', 110); torso = DV.get('torso', 520)
-    hip = Vector((neck.x + math.sqrt(max(torso ** 2 - (neck.z - hipz) ** 2, 0)), 0, hipz))
+    Hs = DV.get('stature', 1750); seatP = [Vector((p[0], 0, p[1])) for p in DV.get('seat', [[617, 569], [661, 425], [990, 118], [1338, 173]])]
+    hr = bbox(find(r'^Head_Restraint\|'))
+    wheels = find(r'^24_Steering_Wheel\|'); wheel = ctr(wheels[0]); pads = sorted(find(r'^Pedal_Pad\|'), key=lambda o: ctr(o).y)
+    def nrm2(a, b, toward):   # 선분 ab 의 (X, Z) 평면 법선 중 toward 쪽
+        d = (b - a).normalized(); n = Vector((-d.z, 0, d.x)); return n if n.dot(toward - a) > 0 else -n
+    C = seatP[2]; nb = nrm2(seatP[1], C, C + Vector((300, 0, 300))); npn = nrm2(C, seatP[3], C + Vector((0, 0, 300)))
+    # H 점: nb·(H−C) = 125, npn·(H−C) = 95
+    M2 = Matrix(((nb.x, nb.z), (npn.x, npn.z))); dx, dz = M2.inverted() @ Vector((DV.get('back_gap', 125), DV.get('pan_gap', 95)))
+    hip = C + Vector((dx, 0, dz))
+    TR, TS = DV.get('torso_r', 108), 1.55
+    def seg_dist(p, a, b):
+        ab = b - a; t = max(0, min(1, (p - a).dot(ab) / ab.length_squared)); return (p - (a + ab * t)).length
+    def clear(a, b):   # 몸통 축 a→b 에서 시트 단면까지 가장 가까운 거리
+        return min(min(seg_dist(a.lerp(b, k / 20), s0, s1) for s0, s1 in zip(seatP[:-1], seatP[1:])) for k in range(21))
+    Ls = 0.288 * Hs; flex = math.radians(DV.get('neck_flex', 15)); Rh = DV.get('helmet_r', 135)
+    def pose(th):
+        t = math.radians(th); u = Vector((-math.sin(t), 0, math.cos(t))); hd = Vector((-math.sin(t - flex), 0, math.cos(t - flex)))
+        return u, hd, hip + u * Ls + hd * (0.12 * Hs)
+    # 가장 많이 눕힐 수 있는 각 (등이 시트를 뚫지 않는 한계) — 그리고 헬멧 뒤가 헤드레스트 앞면에서 head_gap(규정 25 mm 이하)인 각
+    th_max = next(th for th in range(70, -1, -1) if clear(hip + pose(th)[0] * 30, hip + pose(th)[0] * (Ls - 40)) >= TR + 6)
+    th_hr = min(range(0, 71), key=lambda th: abs(pose(th)[2].x - Rh - hr[1].x - DV.get('head_gap', 25)))
+    th = min(th_max, th_hr) if DV.get('fit_hr', True) else th_max   # 헤드레스트에 맞추되 시트는 못 뚫음 (등과 시트 사이 = 폼 인서트 자리)
+    u, hd, head = pose(th); TA, TB = hip + u * 30, hip + u * (Ls - 40)
+    sc_ = hip + u * Ls; neck = sc_ + u * 35   # 두 어깨 가운데, 목 밑
     parts = []
     hm = bpy.data.meshes.new('helmet'); bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=64, v_segments=32, radius=Rh); bm.to_mesh(hm); bm.free()
     for p in hm.polygons: p.use_smooth = True
@@ -147,22 +170,29 @@ if SP.get('driver'):
     vo = bpy.data.objects.new('drv_visor', vm); sc.collection.objects.link(vo); vo.location = head
     for s in (1, -1):   # 바이저 회전축 캡
         cp = capsule('drv_cap', head + Vector((Rh * 0.1, s * Rh * 0.98, Rh * 0.05)), head + Vector((Rh * 0.1, s * Rh * 1.04, Rh * 0.05)), 20); parts.append(cp)
-    parts.append(capsule('drv_neck', neck, head + Vector((0, 0, -Rh * 0.6)), 48))
-    sh = [neck + Vector((10, s * 175, -35)) for s in (1, -1)]
-    TA, TB, TR, TS = hip + Vector((0, 0, 40)), neck + Vector((5, 0, -90)), 115, 1.5
+    parts.append(capsule('drv_neck', neck, head - hd * Rh * 0.6, 46))
+    sh = [sc_ + Vector((0, s * 180, 0)) for s in (1, -1)]
     parts.append(capsule('drv_torso', TA, TB, TR, sy=TS))
-    grips = [wheel + Vector((-15, s * DV.get('grip', 125), 0)) for s in (1, -1)]
+    # 핸들: wheel_turn 만큼 칼럼 축으로 돌림 (90° = 손이 위 · 아래). 손잡이 = 핸들 중심에서 좌우 grip mm 를 같이 돌린 점
+    ang = math.radians(DV.get('wheel_turn', 0)); col = find(r'^24_Steering_Column_Top\|')
+    ax = (wheel - ctr(col[0])).normalized() if col else Vector((1, 0, 0))
+    Rw = Matrix.Translation(wheel) @ Matrix.Rotation(ang, 4, ax) @ Matrix.Translation(-wheel)
+    if ang:
+        for o in wheels: o.matrix_world = Rw @ o.matrix_world
+    grips = [Rw @ (wheel + Vector((-15, s * DV.get('grip', 110), 0))) for s in (1, -1)]
     for s, g in zip(sh, grips):
-        el = ik(s, g, 300, 290, (0, (s.y > 0) * 2 - 1, -1.2)); parts += [capsule('drv_arm', s, el, 46), capsule('drv_farm', el, g, 40)]
-        parts.append(capsule('drv_hand', g, g + Vector((5, 0, 0)), 42))
+        el = ik(s, g, 0.186 * Hs, 0.19 * Hs, (0, (s.y > 0) * 2 - 1, -1.2)); parts += [capsule('drv_arm', s, el, 44), capsule('drv_farm', el, g, 38)]
+        parts.append(capsule('drv_hand', g, g + Vector((5, 0, 0)), 40))
     for k, s in enumerate((-1, 1)):   # 오른발(−Y) = 가속 페달 쪽 · 왼발 = 브레이크 쪽 (패드 y 순서)
-        hj = hip + Vector((0, s * 95, 0)); p = pads[0 if s < 0 else -1] if pads else hip + Vector((900, s * 95, 0))
-        ft = (ctr(p) if pads else p) + Vector((-60, 0, 10))
-        kn = ik(hj, ft, 450, 460, (0, 0, 1)); parts += [capsule('drv_thigh', hj, kn, 68), capsule('drv_shin', kn, ft, 48)]
-        parts.append(capsule('drv_foot', ft, ft + Vector((90, 0, 40)), 40))
-    drv = {'helmet': [ho], 'visor': [vo], 'body': parts, 'hip': hip, 'neck': neck, 'sh': sh, 'head': head, 'Rh': Rh, 'torso': (TA, TB, TR, TS)}
+        hj = hip + Vector((0, s * 90, 0)); p = pads[0 if s < 0 else -1] if pads else None
+        ank = (ctr(p) if p else hip + Vector((850, s * 90, 0))) + Vector((-110, 0, -50))   # 발목 = 페달 면 뒤 · 아래 (발볼이 페달에)
+        kn = ik(hj, ank, 0.245 * Hs, 0.246 * Hs, (0, 0, 1)); parts += [capsule('drv_thigh', hj, kn, 66), capsule('drv_shin', kn, ank, 46)]
+        parts.append(capsule('drv_foot', ank, (ctr(p) if p else ank) + Vector((-10, 0, 0)), 38))
+    hand_top = max(grips, key=lambda g: g.z) + Vector((0, 0, 40))
+    drv = {'helmet': [ho], 'visor': [vo], 'body': parts, 'hip': hip, 'neck': neck, 'sh': sh, 'head': head, 'Rh': Rh, 'torso': (TA, TB, TR, TS), 'hand_top': hand_top}
     site = lambda v: [round(v.x), round(v.z), round(v.y)]
-    print('DRIVER head', site(head), 'hip', site(hip), 'neck', site(neck), 'wheel', site(wheel), 'seat', site(seat[0]), site(seat[1]), 'hr', site(hr[0]), site(hr[1]))
+    print('DRIVER 키', Hs, '등 각', th, '° (시트 한계', th_max, '°) 시트까지', round(clear(TA, TB) - TR), 'mm  H점', site(hip), '헬멧 중심', site(head), '꼭대기', round(head.z + Rh),
+          '헤드레스트 앞면까지', round(head.x - Rh - hr[1].x), 'mm  위 손 꼭대기', site(hand_top))
     meshes += parts + [vo]
 # 1-3. 안전벨트 (띠 = 폭 50 mm 판): 어깨띠는 숄더 하니스 바에서 어깨를 넘어 버클로, 랩벨트는 양옆 고정점에서 골반을 감아 버클로,
 #      안티서브는 버클에서 다리 사이로 내려감. 고정점은 spec 의 사이트 좌표(프레임 관 위 점)
@@ -173,7 +203,7 @@ def ribbon(name, pts, out_c, w=50):
         t = (P[min(i + 1, len(P) - 1)] - P[max(i - 1, 0)]).normalized(); n = (p - Vector(out_c)); n = (n - (n @ t) * t).normalized()
         s = t.cross(n).normalized() * w / 2; V += [p - s + n * 2, p + s + n * 2]
     me = bpy.data.meshes.new(name); me.from_pydata([v[:] for v in V], [], [(2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2) for i in range(len(P) - 1)])
-    o = bpy.data.objects.new(name, me); sc.collection.objects.link(o)
+    o = bpy.data.objects.new(name, me); sc.collection.objects.link(o); o['pts'] = [list(p) for p in P]   # 띠 중심선 (라벨 점용)
     m = o.modifiers.new('t', 'SOLIDIFY'); m.thickness = 3; return o
 if SP.get('belts') and drv:
     BL = SP['belts']; hip, sh, neck = drv['hip'], drv['sh'], drv['neck']; TA, TB, TR, TS = drv['torso']
@@ -271,6 +301,13 @@ if SP.get('mono'):
     o, cut = shell('mono', 0, T + 4.4); mono = [o]
     cut.data.materials.append(bpy.data.materials.new('cutm'))   # 불리언 잘린 면 재질 자리 (아래에서 코어 색으로 바꿈)
     meshes += mono; focus += mono
+if SP.get('slice'):   # 조사: 부품의 가운데 단면(좌우 |Y| < 25) 점을 옆에서 본 (x, 높이) 로 찍고 끝
+    for o in find(SP['slice']):
+        bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world)
+        r = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, SP.get('slice_y', 0), 0), plane_no=(0, 1, 0))
+        P = sorted({(round(v.co.x), round(v.co.z)) for v in r['geom_cut'] if isinstance(v, bmesh.types.BMVert)})
+        print('SLICE', pname(o)[:30], P)
+    sys.exit(0)
 if SP.get('probe'):   # 조사: 맞는 부품의 범위를 사이트 좌표로 찍고 끝
     site = lambda v: [round(v.x), round(v.z), round(v.y)]
     for o in [o for o in meshes if re.search(SP['probe'], pname(o))]:
@@ -390,7 +427,22 @@ if A.anchors and SP.get('anchors'):
     for k, v in SP['anchors'].items():
         if isinstance(v, list): AN[k] = px(B(v)); continue
         if v.startswith('drvpt:'):   # 드라이버 기준점: top = 헬멧 꼭대기, head = 헬멧 중심, hip = 엉덩이
-            p = {'top': drv['head'] + Vector((0, 0, drv['Rh'])), 'head': drv['head'], 'hip': drv['hip']}[v[6:]]; AN[k] = px(p); continue
+            p = {'top': drv['head'] + Vector((0, 0, drv['Rh'])), 'head': drv['head'], 'hip': drv['hip'], 'hand_top': drv['hand_top']}[v[6:]]; AN[k] = px(p); continue
+        if v.startswith('beltpt:'):   # 띠 중심선 위 비율 점: beltpt:sh:0.5 (첫 번째 띠)
+            nm_, fr_ = v[7:].split(':'); bo_ = [o for o in belts if o.name.startswith('belt_' + nm_)][0]; Pp = [Vector(q) for q in bo_['pts']]
+            L_ = [0]; [L_.append(L_[-1] + (b_ - a_).length) for a_, b_ in zip(Pp[:-1], Pp[1:])]; t_ = float(fr_) * L_[-1]
+            i_ = max(i for i in range(len(L_) - 1) if L_[i] <= t_); w_ = (t_ - L_[i_]) / max(L_[i_ + 1] - L_[i_], 1e-6)
+            AN[k] = px(Pp[i_].lerp(Pp[i_ + 1], w_)); continue
+        if v.startswith('tan:'):   # 두 부품의 윗면에 함께 접하는 선 (그림 평면에서): k_a · k_b
+            S2 = []
+            for key in v[4:].split(','):
+                objs = hl_objs[int(key[3:])] if key.startswith('hl:') else [o for o in focus + ghost if re.search(key, pname(o))]
+                S2.append(np.array([px(o.matrix_world @ vv.co) for o in objs for vv in o.data.vertices]))
+            a, b = S2[0][np.argmin(S2[0][:, 1])], S2[1][np.argmin(S2[1][:, 1])]
+            for _ in range(8):
+                d = (b - a) / np.linalg.norm(b - a); n = np.array([d[1], -d[0]]); n = n if n[1] < 0 else -n
+                a, b = S2[0][np.argmax(S2[0] @ n)], S2[1][np.argmax(S2[1] @ n)]
+            AN[k + '_a'], AN[k + '_b'] = a.tolist(), b.tolist(); continue
         if v.startswith('hl:'): objs = hl_objs[int(v[3:])]
         elif v.startswith('driver:'): objs = drv.get(v[7:], [])
         elif v.startswith('belt:'): objs = [o for o in belts if o.name.startswith('belt_' + v[5:])]

@@ -59,16 +59,17 @@
   },
   "hoops": {
    "aria": "메인 롤후프·프론트 롤후프",
+   "focus": "^24_Steering_Wheel\\|",
    "hl": [{"obj": "2024_frame.*~관", "tubes": ["MH"]}, {"obj": "2024_frame.*~관", "tubes": ["FH"]},
           {"obj": "2024_frame.*~관", "tubes": ["MHB"]}, {"obj": "2024_frame.*~관", "tubes": ["FHB"]},
           {"obj": "2024_frame.*~관", "tubes": ["BH"]}],
-   "ghost": "2024_frame|24_Seat|24_Steering_Wheel|OZ racing", "hide": "Rodend",
-   "driver": true,
+   "ghost": "2024_frame|24_Seat|OZ racing", "hide": "Rodend",
+   "driver": {"wheel_turn": 90},
    "az": 90, "el": 2, "pad": 1.03, "fit": [[-450, 0, 0], [2530, 0, 0], [700, 1140, 0]],
    "anchors": {"mh": [675, 900, 165], "fh": [1425, 430, 210], "mhb": [402, 688, 185], "fhb": [1800, 546, 195], "bh": [2175, 300, 175],
-               "mh_top": [675, 1139, 0], "fh_top": [1425, 634, 0], "top": "drvpt:top"},
-   "lines": [{"a": "mh_top", "b": "fh_top", "c": "#c0392b", "dash": true}],
-   "perp": [{"p": "top", "l": ["mh_top", "fh_top"]}],
+               "rl": "tan:hl:0,hl:1", "top": "drvpt:top", "hand": "drvpt:hand_top"},
+   "lines": [{"a": "rl_a", "b": "rl_b", "c": "#c0392b", "dash": true, "ext": 0.22}],
+   "perp": [{"p": "top", "l": ["rl_a", "rl_b"]}, {"p": "hand", "l": ["rl_a", "rl_b"]}],
    "labels": [
     {"t": "메인 롤후프", "a": "mh", "x": 360, "y": 40},
     {"t": "메인 롤후프 브레이스 (뒤로)", "a": "mhb", "x": 470, "y": 235, "anchor": "end"},
@@ -76,7 +77,8 @@
     {"t": "프론트 롤후프 브레이스 (앞으로)", "a": "fhb", "x": 20, "y": 110},
     {"t": "프론트 벌크헤드", "a": "bh", "x": 20, "y": 290}
    ],
-   "notes": [{"t": "뒤집히면 땅이 닿는 선 (헬멧은 이 선 아래)", "x": 20, "y": 40, "c": "#c0392b"}]
+   "notes": [{"t": "뒤집히면 땅이 닿는 선", "x": 20, "y": 60, "c": "#c0392b"},
+             {"t": "헬멧 · 손(핸들 90° 돌림)은 선 아래", "x": 20, "y": 78, "c": "#c0392b"}]
   },
   "sis": {
    "aria": "측면 충격 구조",
@@ -100,9 +102,9 @@
    "az": 70, "el": 45, "pad": 2.0, "fit_objs": "^Front_Bell_Crank|hl:0",
    "anchors": {"br": "hl:0", "bc": "^Front_Bell_Crank", "tube": [1600, 564, 120]},
    "labels": [
-    {"t": "브래킷 (두 장, 관에 용접)", "a": "br", "x": 20, "y": 30},
+    {"t": "브래킷 (두 장, 관에 용접)", "a": "br", "x": 20, "y": 290},
     {"t": "벨크랭크 (두 장 사이에 끼움)", "a": "bc", "x": 470, "y": 290, "anchor": "end"},
-    {"t": "프레임 관", "a": "tube", "x": 20, "y": 290}
+    {"t": "프레임 관", "a": "tube", "x": 20, "y": 30}
    ]
   },
   "ia": {
@@ -144,16 +146,16 @@
    "hl": [{"obj": "2024_frame.*~관", "tubes": ["SHB"]}],
    "ghost": "2024_frame|24_Steering_Wheel|Fire_Wall", "hide": "Rodend",
    "driver": true, "belts": {"shoulder": [[605, 566, 85], [605, 566, -85]], "lap": [[1025, 102, 228], [1025, 102, -228]], "sub": [[1175, 112, 75], [1175, 112, -75]]},
-   "az": 40, "el": 24, "pad": 1.08, "fit": [[560, 60, 300], [1500, 60, 300], [560, 900, -300], [1500, 900, -300]],
-   "anchors": {"seat": [1300, 150, 190], "bar": [605, 566, 240], "sh": "belt:sh", "lap": "belt:lap", "sub": "belt:sub", "buckle": "belt:buckle", "lapA": [1025, 102, 228]},
+   "az": 28, "el": 30, "pad": 1.08, "fit": [[560, 60, 300], [1500, 60, 300], [560, 950, -300], [1500, 950, -300]],
+   "anchors": {"seat": "^24_Seat\\|", "bar": [605, 566, 240], "sh": "beltpt:sh:0.25", "lap": "beltpt:lap:0.45", "sub": "beltpt:sub:0.7", "buckle": "belt:buckle", "lapA": [1025, 102, 228]},
    "labels": [
-    {"t": "숄더 하니스 바 (어깨 높이 관)", "a": "bar", "x": 470, "y": 30, "anchor": "end"},
-    {"t": "어깨띠", "a": "sh", "x": 470, "y": 90, "anchor": "end"},
-    {"t": "시트 (몸 모양 성형 셸)", "a": "seat", "x": 470, "y": 150, "anchor": "end"},
-    {"t": "버클", "a": "buckle", "x": 20, "y": 30},
-    {"t": "랩벨트 (골반)", "a": "lap", "x": 20, "y": 230},
-    {"t": "안티서브 벨트 (다리 사이, 두 줄)", "a": "sub", "x": 20, "y": 290},
-    {"t": "벨트 고정점 (프레임 관)", "a": "lapA", "x": 300, "y": 290, "anchor": "middle"}
+    {"t": "숄더 하니스 바 (어깨 높이 관)", "a": "bar", "x": 470, "y": 150, "anchor": "end"},
+    {"t": "어깨띠", "a": "sh", "x": 470, "y": 30, "anchor": "end"},
+    {"t": "시트 (몸 모양 성형 셸)", "a": "seat", "x": 470, "y": 290, "anchor": "end"},
+    {"t": "버클", "a": "buckle", "x": 20, "y": 120},
+    {"t": "랩벨트 (골반)", "a": "lap", "x": 20, "y": 190},
+    {"t": "안티서브 벨트 (다리 사이, 두 줄)", "a": "sub", "x": 470, "y": 250, "anchor": "end"},
+    {"t": "벨트 고정점 (프레임 관)", "a": "lapA", "x": 20, "y": 290}
    ]
   },
   "headrest": {
