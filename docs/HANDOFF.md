@@ -7,7 +7,7 @@
 | 구분 | 위치 | 내용 |
 |---|---|---|
 | 실제 사이트 | `main` → https://koreanhanjiyun.github.io/run2x-guide/ | v2.1.0 (2026-11-08, 도구 2 경량 · 2P 정밀 · 3 ~ 9 · T, 작업창 [결과 · 편집] 탭까지). 바꾸려면 관리자 지시 필요 |
-| 시안 브랜치 | `redesign-v1` | 개편 작업 전부 (125차까지). v2.1.0(~45차)까지만 `main` 에 병합됨 — 46 ~ 118차는 배포 지시 대기 |
+| 시안 브랜치 | `redesign-v1` | 개편 작업 전부 (126차까지). v2.1.0(~45차)까지만 `main` 에 병합됨 — 46 ~ 118차는 배포 지시 대기 |
 | 공개 시안 | `main` 의 `draft/` → https://koreanhanjiyun.github.io/run2x-guide/draft/ | 관리자는 이 주소로 시안을 확인함. 예시 데이터 · 가짜 저장소(실제 Firebase 연결 안 함), 검색 제외 |
 | Claude 아티팩트 | https://claude.ai/artifact/4iS9LPPNesPsXZfEUTk2jr | 예전 시안 확인 경로. 이제는 공개 시안 주소를 씀 |
 
@@ -190,6 +190,13 @@ git add -A draft && git commit -qm "draft: N차" && git push origin HEAD:main
   - 2P 부품별 독립 (cw_mode 0): 예전 '열용량 · UA 정지 · UA 60 km/h 직선' 을 없애고 수랭 부품마다 [라디 → 펌프 → 부품] 회로를 만들어 냉각 회로와 같은 계산 (`coolIndep`). 입력: 부품마다 냉각수 양 · 펌프 유량 · 라디 면적 · 주행풍 비율 · 팬 · 팬 켜는 온도 · UA · ITD · 금속 열용량 (`cw_*` · `i_w*` · `b_w*`), 라디 표 3개 (`rqM` · `rqI` · `rqB`, 냉각 탭). 대시보드 `cool_c` · `cool_ua0` · `cool_ua60` 은 2P 가 더 받지 않음 (도구 9 는 그대로 냄).
   - 도구 9 · 2P 회로 라디 블럭에도 팬 켜는 온도 · 금속 열용량 · ITD · 방열 표 (블럭 칸에 Ctrl+V, [표 | UA], [표 지우기]).
   - 검증표: 도구 9 38 (표 점 · 팬 켬 · 팬 꺼짐 · 금속 열용량 시간 해석해 +4), 2P 171 (독립 회로 경우 3개 새 꼴로 다시 손계산, 독립 + 라디 표 +1). QA `tool2_check` 처음 계산을 기다리게 바꿈.
+- 2026-11-15 126차 (관리자 '렌더 작업 해봐'): 부품 렌더 결함 고침 (관리자 PC, 사이트 화면 · 그림은 안 바뀜)
+  - 관리자가 짚은 결함: 자글자글함 · 평면이 갈라져 보임 · 나사산 깨짐 · 복잡한 곳이 투명 · 앞뒤 가림이 뒤바뀜.
+  - `tools/cad/step2glb.py`: 법선을 CAD 곡면에서 계산해 glb 에 넣음 (전엔 삼각형 법선 → 곡면 자글자글). 같은 위치 · 같은 법선(약 1°) 점을 붙임 → 평면 분할선 · 모깎기 접선에는 선이 안 생기고 진짜 모서리에만. 거울 배치 부품(det < 0)은 감는 순서를 뒤집음 (안 하면 안팎이 바뀌어 투명). `--fine 정규식 --fine-defl 0.02 --fine-ang 0.1` = 렌더할 부품만 곱게 (나사산 · 스프링). `--only` · `--skip` · `--fine` 은 상위 조립품 이름에서도 찾음.
+  - 시험 변환: `--defl 1.0 --frame ref4 --fine "Front_Hub_ASSY|Front_Knuckle_Left|Caliper|^디스크|Brake_Pedal|Throttle_Assy|Pedal_Mount|Master_Cylinder|LSD|Sprocket|Upper_Shock|Lower_Shock|Bell_Crank"` → 4분 30초, 곱게 160 · 삼각형 2104만, 387 MB (임시 폴더, 저장소 밖).
+  - `tools/cad/render_part.py`: EEVEE → Cycles (반투명 겹침 · 앞뒤 가림 정확, 128 샘플 + 잡음 제거). 외곽선은 초점 부품만 따로 렌더(면 = holdout)해 위에 얹음 → 반투명 주변 부품에 선이 가려지지 않음. 조명은 카메라에는 흰 배경, 조명으로는 회색 환경광 + 해 2개(부드러운 그림자). `--bg none`(기본, 사이트 그림처럼 투명) · `--corner FL|FR|RL|RR` (네 바퀴에 같은 조립품이 있을 때 한 곳만).
+  - **좌우 거울**: 사이트 좌표(왼손)로 만든 glb 를 오른손 좌표계(Blender · glTF)에서 보면 거울상 — 페달 박스 'DKU Run2X' 글자가 뒤집혀 보여 잡음. render_part.py 가 불러온 뒤 좌우를 다시 뒤집어 실제 CAD 와 같게 함 (Blender X 앞 · Y 왼쪽 · Z 위). 사이트 작업창 3D(three.js 도 오른손)에도 같은 일이 있을 수 있음 — 확인 안 함 (추측).
+  - 시험 렌더 4장 (업라이트 · 페달 박스 · 디퍼렌셜 · 댐퍼): `C:\Users\admin\dev\run2x-cad\r_*.png`, 모음 `render_sample_126.png`. 사이트 `img/comp` 교체는 관리자 결정 대기.
 - 2026-11-14 125차 (관리자 '권장으로'): CAD → 3D · 렌더 경로 (관리자 PC, 사이트 화면은 안 바뀜)
   - `tools/cad/step2glb.py`: STEP 조립품 → glb (OCP = `pip install cadquery-ocp`). 부품 이름 · 색 · 위치 유지, 같은 부품 정의는 한 번만 메시. 메시 이름 = `순번|부품|상위 조립품(가까운 것부터 /)`. `--frame ref4` = 바퀴 4개 · 프론트 윙 · 프레임 위치로 축을 자동으로 찾아 사이트 3D 좌표(x 앞 · y 위 · z 왼쪽, 뒤 차축 x = 0, 지면 y = 0, mm). **사이트 좌표는 왼손 좌표계** (앞 × 위 = 오른쪽, ISO 8855 앞 × 왼쪽 = 위 에서) → z = −(앞 × 위), 거울 변환이라 면 감는 순서도 뒤집음. 처음에 오른손으로 만들어 모터 · 페달이 좌우 반대였던 것을 비교로 잡음.
   - REF4 원본: `Desktop\한지윤\Run2X\2024_Run2X\설계\REF4 Assy\REF4_Assy_07.22.STEP` (694.6 MB, SolidWorks 2025 AP214). `--defl 1.0 --ang 0.5` 로 3분 30초, 부품 707 · 삼각형 573만. 원본 · 변환본은 저장소에 넣지 않음.
