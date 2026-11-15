@@ -168,6 +168,35 @@ for fid in (A.ids or list(SPEC['figs'])):
     if A.preview: rs['samples'] = 16
     sp = os.path.join(tmp, fid + '.json'); json.dump(rs, open(sp, 'w', encoding='utf-8'), ensure_ascii=False)
     png = os.path.join(tmp, fid + '.png'); an = os.path.join(A.cache or tmp, fid + '.an.json')
+    if 'anim' in f:
+        # 애니메이션: anim.states = [{move: {정규식: [dx,dy,dz]}}, …] 장면마다 렌더 → img/comp/<id>_f<k>.webp,
+        # anim.seq = 보여 줄 장면 번호 순서 (되돌아오기 · 멈춤 포함), anim.dur = 한 바퀴 초.
+        # 라벨 점은 장면마다 다시 구해 부품을 따라가고, follow: true 인 라벨은 글자도 점과 같이 움직임 (기준 = 마지막 장면)
+        AM = f['anim']; outd = A.check or os.path.join(ROOT, 'img', 'comp'); ANs = []
+        for k, st in enumerate(AM['states']):
+            ank = os.path.join(A.cache or tmp, f'{fid}_f{k}.an.json'); pk = os.path.join(tmp, f'{fid}_f{k}.png')
+            if not (A.svg_only and os.path.exists(ank)):
+                rk = dict(rs, move=st.get('move', {})); spk = os.path.join(tmp, f'{fid}_f{k}.json'); json.dump(rk, open(spk, 'w', encoding='utf-8'), ensure_ascii=False)
+                r = subprocess.run([BLENDER, '-b', '-P', os.path.join(ROOT, 'tools', 'cad', 'render_part.py'), '--', '--glb', A.glb, '--spec', spk, '--out', pk, '--anchors', ank], capture_output=True, text=True, encoding='utf-8', errors='replace')
+                if not os.path.exists(pk): print(r.stdout[-2000:], r.stderr[-2000:]); sys.exit('렌더 실패: ' + fid + f' 장면 {k}')
+                Image.open(pk).save(os.path.join(outd, f'{fid}_f{k}.webp'), 'WEBP', quality=72); print('  장면', k)
+            ANs.append(json.load(open(ank, encoding='utf-8')))
+        ref = ANs[-1]; seq = AM['seq']; N = len(seq); groups = []
+        for k in range(len(AM['states'])):
+            fk = dict(f, manual_labels=True, labels=[])
+            for lb in f.get('labels', []):
+                lb2 = dict(lb)
+                if lb.get('follow') and ANs[k].get(lb['a']) and ref.get(lb['a']):
+                    lb2['x'] = lb['x'] + (ANs[k][lb['a']][0] - ref[lb['a']][0]) * K; lb2['y'] = lb['y'] + (ANs[k][lb['a']][1] - ref[lb['a']][1]) * K
+                fk['labels'].append(lb2)
+            sv = svg_of(fid, fk, ANs[k]).replace(f'img/comp/{fid}.webp', f'img/comp/{fid}_f{k}.webp')
+            inner = sv[sv.index('>') + 1: sv.rindex('</svg>')]
+            slots = [i for i, s_ in enumerate(seq) if s_ == k]
+            vals = ';'.join('1' if i in slots else '0' for i in range(N)); kt = ';'.join(f'{i / N:.4f}' for i in range(N))
+            groups.append(f'<g opacity="{1 if 0 in slots else 0}"><animate attributeName="opacity" values="{vals}" keyTimes="{kt}" calcMode="discrete" dur="{AM.get("dur", 6)}s" repeatCount="indefinite"/>{inner}</g>')
+        svg = f'<svg viewBox="0 0 480 300" role="img" class="cfig3" aria-label="{f["aria"]}">' + ''.join(groups) + '</svg>'
+        if A.check: open(os.path.join(A.check, fid + '.html'), 'w', encoding='utf-8').write(svg.replace('img/comp/', '')); print('애니 확인용', fid); continue
+        put_svg(fid, svg); print('애니 반영', fid); continue
     if A.svg_only:
         mp = os.path.join(A.check, fid + '.webp') if A.check and os.path.exists(os.path.join(A.check, fid + '.webp')) else os.path.join(ROOT, 'img', 'comp', fid + '.webp')
         AN = json.load(open(an, encoding='utf-8')); svg = svg_of(fid, f, AN, mask_of(mp))

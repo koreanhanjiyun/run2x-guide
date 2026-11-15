@@ -533,6 +533,12 @@ for rot, en, ang in (((math.radians(45), 0, math.radians(35)), 2.6, 8), ((math.r
     l = bpy.data.lights.new('sun', 'SUN'); l.energy = en; l.angle = math.radians(ang)
     lo = bpy.data.objects.new('sun', l); lo.rotation_euler = rot; sc.collection.objects.link(lo)
 
+# 3-1. 움직이기 (move): 애니메이션 한 장면 — {정규식: [dx, dy, dz] (사이트 mm)} 만큼 옮김. 카메라는 spec 의 fit 으로 고정해 장면마다 같게
+for rx_, off_ in SP.get('move', {}).items():
+    for o in [o for o in focus + ghost + list(extra) if re.search(rx_, pname(o))]:
+        o.matrix_world = Matrix.Translation(B(off_)) @ o.matrix_world
+bpy.context.view_layer.update()
+
 # 4. 카메라: 방향 (az, el) 에서 초점 부품(또는 spec 의 fit 점)을 화면에 맞춤
 az, el = math.radians(A.az), math.radians(A.el)
 d = Vector((math.cos(el) * math.cos(az), math.cos(el) * math.sin(az), math.sin(el)))
