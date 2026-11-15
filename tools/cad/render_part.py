@@ -510,6 +510,22 @@ if A.anchors and SP.get('anchors'):
             org = (p - cdir * 50000) if not A.persp else co.location
             dd = (p - org).normalized(); hit, loc, _, _, ob, _ = sc.ray_cast(dg, org, dd)
             if hit and ob is not None and ob.name in {o.name for o in objs} and (loc - p).length < 3: ok.append(p)
+        # 안쪽 점만: 화면에서 6 px 둘레 네 방향도 같은 부품에 맞아야 함 (윤곽 위 점은 그림에서 부품 밖에 찍힘)
+        if ok and not A.persp:
+            names = {o.name for o in objs}; pxw = cam.ortho_scale / A.w
+            rgt = (co.matrix_world.to_3x3() @ Vector((1, 0, 0))).normalized(); upv = (co.matrix_world.to_3x3() @ Vector((0, 1, 0))).normalized()
+            step_ = max(1, len(ok) // 500); inner = []
+            for rad_ in (6, 2):   # 얇은 부품(링크 · 관)은 2 px 로 다시
+              if inner: break
+              for p in ok[::step_]:
+                good = True
+                for dx_, dy_ in ((rad_, 0), (-rad_, 0), (0, rad_), (0, -rad_)):
+                    q = p + (rgt * dx_ + upv * dy_) * pxw
+                    hit, loc, _, _, ob, _ = sc.ray_cast(dg, q - cdir * 50000, cdir)
+                    if not (hit and ob is not None and ob.name in names): good = False; break
+                if good: inner.append(p)
+            if inner: ok = inner
+            else: print('WARN 안쪽 점 없음', [o.name[:20] for o in objs][:2])
         if not ok: ok = V
         if near is not None: return px(min(ok, key=lambda q: (q - near).length))   # 그 부품의 보이는 점 중 주어진 점에 가장 가까운 것
         P2 = np.array([px(p) for p in ok]); m = np.median(P2, axis=0)

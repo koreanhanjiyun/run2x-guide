@@ -357,7 +357,7 @@
    "ghost": "Rear_Upper_Arm_Left|Rear_Lower_Arm_Left|24_Rear_Knuckle_Left|OZ racing|24_Rear_Hub|2024_frame",
    "hide": "Rodend_female",
    "color": {
-    "24_Rear_Toe_Bar": "#e8590c"
+    "^24_Rear_Toe_Bar": "#2f6fb5"
    },
    "az": 150,
    "el": 45,
@@ -411,10 +411,6 @@
     {
      "t": "안쪽 끝 (프레임 브래킷)",
      "a": "in"
-    },
-    {
-     "t": "아래 A암",
-     "a": "la"
     }
    ]
   },
@@ -425,7 +421,7 @@
    "ghost": "2024_frame|Front_Upper_Arm_Left|Front_Lower_Arm_Left|24_Front_Knuckle_Left|OZ racing",
    "hide": "Rodend_female|Caliper",
    "color": {
-    "Front_Shock_Rod": "#e8590c"
+    "^Front_Shock_Rod": "#2f6fb5"
    },
    "az": 8,
    "el": 12,
