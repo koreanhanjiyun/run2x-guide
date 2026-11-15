@@ -102,6 +102,75 @@ for i, h in enumerate(SP.get('hl', [])):
         n = bpy.data.objects.new(f'hl{i}', me); sc.collection.objects.link(n); got.append(n)
     hl_objs.append(got); meshes += got
 
+# 0-9. 새로 만드는 부품 (add): REF4 에 없는 부품을 기본 도형으로, 또는 REF4 부품을 복제해 다른 자리에 다시 조립.
+#      좌표는 사이트 mm. 이름 = name → 정규식 '^name' 으로 focus · ghost · color · anchors 에서 씀
+#      box {c, size[앞뒤, 위아래, 좌우], rot[deg, Blender X·Y·Z]} · cyl {a, b, r, r2?, seg?} · tube {pts, r} · sphere {c, r}
+#      plate {pts (평면 다각형), t} · airfoil {naca, le, chord, span(좌우 +z 방향 길이), aoa(뒷전이 올라가는 각), invert, z0?}
+#      copy {obj, near?, from[p0,p1], to[q0,q1], scale?} (두 점 → 두 점으로 옮김 · 돌림 · 크기) · torus {c, R, r, axis}
+def _mk(name, bm):
+    me = bpy.data.meshes.new('x|' + name + '|'); bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new(name, me); sc.collection.objects.link(o); meshes.append(o); return o
+def _naca(code, n=60):
+    m, p, t = int(code[0]) / 100, int(code[1]) / 10, int(code[2:]) / 100
+    xs = (1 - np.cos(np.linspace(0, math.pi, n))) / 2
+    yt = 5 * t * (0.2969 * np.sqrt(xs) - 0.126 * xs - 0.3516 * xs ** 2 + 0.2843 * xs ** 3 - 0.1036 * xs ** 4)
+    yc = np.where(xs < p, m / max(p, 1e-9) ** 2 * (2 * p * xs - xs ** 2), m / max(1 - p, 1e-9) ** 2 * ((1 - 2 * p) + 2 * p * xs - xs ** 2)) if p > 0 else 0 * xs
+    up = list(zip(xs, yc + yt)); lo = list(zip(xs, yc - yt))
+    return [(float(a), float(b)) for a, b in up[::-1] + lo[1:-1]]   # 뒷전 → 위면 → 앞전 → 아랫면 (닫힌 다각형)
+for ad in SP.get('add', []):
+    k, nm_ = ad['type'], ad['name']; bm = bmesh.new()
+    if k == 'box':
+        bmesh.ops.create_cube(bm, size=1); sz = ad['size']; bmesh.ops.scale(bm, vec=(sz[0], sz[2], sz[1]), verts=bm.verts)
+        Rxyz = lambda r: Matrix.Rotation(math.radians(r[2]), 3, 'Z') @ Matrix.Rotation(math.radians(r[1]), 3, 'Y') @ Matrix.Rotation(math.radians(r[0]), 3, 'X')   # X → Y → Z 순서
+        for key_ in ('rot', 'rot2'):   # rot 다음 rot2 (예: 날개 비틀기 → 팬 축으로 돌리기 → 라디 기울기)
+            if ad.get(key_): bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Rxyz(ad[key_]))
+        bmesh.ops.translate(bm, vec=B(ad['c']), verts=bm.verts); o = _mk(nm_, bm)
+    elif k in ('cyl', 'tube'):
+        P_ = [B(p) for p in (ad['pts'] if k == 'tube' else [ad['a'], ad['b']])]
+        for a_, b_ in zip(P_[:-1], P_[1:]):
+            d_ = b_ - a_; r1 = ad['r']; r2 = ad.get('r2', r1)
+            res = bmesh.ops.create_cone(bm, cap_ends=True, segments=ad.get('seg', 32), radius1=r1, radius2=r2, depth=d_.length)
+            M_ = Matrix.Translation((a_ + b_) / 2) @ d_.to_track_quat('Z', 'Y').to_matrix().to_4x4()
+            bmesh.ops.transform(bm, matrix=M_, verts=res['verts'])
+        if k == 'tube':
+            for p_ in P_[1:-1]:
+                s_ = bmesh.ops.create_uvsphere(bm, u_segments=24, v_segments=12, radius=ad['r']); bmesh.ops.translate(bm, vec=p_, verts=s_['verts'])
+        o = _mk(nm_, bm)
+    elif k == 'sphere':
+        bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, radius=ad['r']); bmesh.ops.translate(bm, vec=B(ad['c']), verts=bm.verts); o = _mk(nm_, bm)
+    elif k == 'torus':
+        bm.free(); bpy.ops.mesh.primitive_torus_add(major_radius=ad['R'], minor_radius=ad['r'], location=B(ad['c']))
+        o = bpy.context.active_object; ax_ = B(ad.get('axis', [1, 0, 0])).normalized(); o.rotation_euler = ax_.to_track_quat('Z', 'Y').to_euler()
+        o.name = nm_; o.data.name = 'x|' + nm_ + '|'; meshes.append(o)
+    elif k == 'plate':
+        V_ = [bm.verts.new(B(p)) for p in ad['pts']]; bm.faces.new(V_); o = _mk(nm_, bm)
+        so_ = o.modifiers.new('t', 'SOLIDIFY'); so_.thickness = ad.get('t', 3); so_.offset = 0
+    elif k == 'airfoil':
+        sec = _naca(ad.get('naca', '4412')); c_ = ad['chord']; a_ = math.radians(ad.get('aoa', 0)); le = B(ad['le'])
+        dch = Vector((-math.cos(a_), 0, math.sin(a_))); nrm_ = Vector((math.sin(a_), 0, math.cos(a_))); sg_ = -1 if ad.get('invert', True) else 1
+        y0, y1 = le.y, le.y + ad['span']
+        ring = lambda y: [bm.verts.new(Vector((le.x, y, le.z)) + c_ * (u * dch + sg_ * v * nrm_)) for u, v in sec]
+        r0, r1 = ring(y0), ring(y1); n_ = len(r0)
+        for i_ in range(n_): bm.faces.new((r0[i_], r0[(i_ + 1) % n_], r1[(i_ + 1) % n_], r1[i_]))
+        bm.faces.new(r0[::-1]); bm.faces.new(r1)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces); o = _mk(nm_, bm)
+        for pg in o.data.polygons: pg.use_smooth = True
+    elif k == 'copy':
+        bm.free(); cand = find(ad['obj'])
+        if ad.get('near'): cand = [min(cand, key=lambda o: (ctr(o) - B(ad['near'])).length)]
+        p0, p1, q0, q1 = [B(v) for v in (ad['from'][0], ad['from'][1], ad['to'][0], ad['to'][1])]
+        Rq = (p1 - p0).rotation_difference(q1 - q0).to_matrix().to_4x4(); s_ = (q1 - q0).length / max((p1 - p0).length, 1e-6) if ad.get('scale') else 1
+        M_ = Matrix.Translation(q0) @ Rq @ Matrix.Scale(s_, 4) @ Matrix.Translation(-p0)
+        for j_, c0 in enumerate(cand):
+            o = c0.copy(); o.data = c0.data.copy(); o.data.name = 'x|' + nm_ + '|'; o.name = nm_ + str(j_); sc.collection.objects.link(o)
+            o.matrix_world = M_ @ c0.matrix_world; meshes.append(o)
+        continue
+    if k in ('cyl', 'tube', 'sphere', 'torus'):   # 둥근 면은 매끈하게, 원통 마개(n각형)는 평평하게
+        for pg in o.data.polygons: pg.use_smooth = len(pg.vertices) <= 4
+    if ad.get('smooth') is False:
+        for pg in o.data.polygons: pg.use_smooth = False
+bpy.context.view_layer.update()
+
 # 1-0. 단면 (cut): 부품을 평면으로 잘라 한쪽을 지움 → 잘린 안쪽(뒷면)을 단면 색으로 칠함 (메시가 닫혀 있지 않아도 됨)
 #      [{"obj": 정규식, "p": [사이트 점], "n": [지울 쪽 방향], "c": 단면 색}]
 cut_objs = {}
@@ -505,6 +574,10 @@ if A.anchors and SP.get('anchors'):
         for o in objs:
             vs = o.data.vertices; step = max(1, len(vs) // 1500)
             V += [o.matrix_world @ vs[i].co for i in range(0, len(vs), step)]
+            if len(vs) < 400:   # 꼭짓점이 적은 부품(상자 · 판)은 면 위 점도 (꼭짓점만 쓰면 점이 모서리에만 찍힘)
+                for pg in o.data.polygons:
+                    cc_ = pg.center; V.append(o.matrix_world @ cc_)
+                    V += [o.matrix_world @ cc_.lerp(vs[vi].co, f_) for vi in pg.vertices for f_ in (0.35, 0.7)]
         ok = []
         for p in V:
             org = (p - cdir * 50000) if not A.persp else co.location

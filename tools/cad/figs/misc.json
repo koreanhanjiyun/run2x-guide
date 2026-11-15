@@ -1,0 +1,408 @@
+{
+ "_note": "REF4 부품을 다시 조립하거나 시점을 바꿔 만든 그림 (129차). heave = REF4 앞 댐퍼를 복제해 두 벨크랭크 사이에 가로로 단 서드 댐퍼 (REF4 에는 없는 배치)",
+ "tube_groups": {},
+ "figs": {
+  "heave": {
+   "aria": "서드 스프링·히브 댐퍼",
+   "add": [
+    {
+     "type": "copy",
+     "name": "heave_damper",
+     "obj": "^Upper_Shock_Assy|^Lower_Shock_Assy",
+     "near": [
+      1600,
+      620,
+      150
+     ],
+     "from": [
+      [
+       1600,
+       640,
+       45
+      ],
+      [
+       1600,
+       615,
+       255
+      ]
+     ],
+     "to": [
+      [
+       1600,
+       720,
+       -125
+      ],
+      [
+       1600,
+       720,
+       125
+      ]
+     ],
+     "scale": true
+    },
+    {
+     "type": "cyl",
+     "name": "heave_link",
+     "a": [
+      1600,
+      622,
+      300
+     ],
+     "b": [
+      1600,
+      718,
+      128
+     ],
+     "r": 6
+    },
+    {
+     "type": "cyl",
+     "name": "heave_link",
+     "a": [
+      1600,
+      622,
+      -300
+     ],
+     "b": [
+      1600,
+      718,
+      -128
+     ],
+     "r": 6
+    }
+   ],
+   "focus": "^heave_|^Front_Bell_Crank|^Upper_Shock_Assy|^Lower_Shock_Assy|^Front_Shock_Rod",
+   "ghost": "2024_frame",
+   "hide": "Rodend|Anti",
+   "color": {
+    "^heave_damper": "#2f6fb5",
+    "^heave_link": "#e8590c",
+    "^Front_Bell_Crank": "#9aa3ad"
+   },
+   "az": 15,
+   "el": 28,
+   "pad": 1.06,
+   "fit": [
+    [
+     1600,
+     330,
+     -420
+    ],
+    [
+     1600,
+     780,
+     420
+    ]
+   ],
+   "anchors": {
+    "hd": {
+     "obj": "^heave_damper",
+     "near": [
+      1600,
+      730,
+      0
+     ]
+    },
+    "lk": {
+     "obj": "^heave_link",
+     "near": [
+      1600,
+      680,
+      210
+     ]
+    },
+    "cd": {
+     "obj": "^Lower_Shock_Assy",
+     "near": [
+      1600,
+      615,
+      170
+     ]
+    },
+    "bc": {
+     "obj": "^Front_Bell_Crank",
+     "near": [
+      1600,
+      580,
+      -300
+     ]
+    },
+    "pr": {
+     "obj": "^Front_Shock_Rod",
+     "near": [
+      1600,
+      450,
+      -390
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "서드 (히브) 댐퍼",
+     "a": "hd"
+    },
+    {
+     "t": "링크",
+     "a": "lk"
+    },
+    {
+     "t": "코너 댐퍼 (양쪽에 하나씩)",
+     "a": "cd"
+    },
+    {
+     "t": "벨크랭크",
+     "a": "bc"
+    },
+    {
+     "t": "푸시로드",
+     "a": "pr"
+    }
+   ],
+   "notes": [
+    {
+     "t": "양쪽이 같이 눌리면(히브) 서드 댐퍼가 줄어듦 · 반대로 움직이면(롤) 길이 거의 그대로",
+     "x": 20,
+     "y": 24,
+     "c": "#495057"
+    }
+   ]
+  },
+  "steerarm": {
+   "aria": "조향 암·너클암",
+   "focus": "^24_Front_Knuckle_Left_Topology|^24_Front_Tie_Rod",
+   "corner": "FL",
+   "ghost": "^24_Front_Hub\\||OZ racing|^Brake Caliper",
+   "hide": "Rodend|디스크",
+   "color": {
+    "^24_Front_Tie_Rod": "#2f6fb5"
+   },
+   "az": 0,
+   "el": 89,
+   "pad": 1.15,
+   "fit": [
+    [
+     1450,
+     200,
+     380
+    ],
+    [
+     1760,
+     200,
+     650
+    ]
+   ],
+   "anchors": {
+    "sa": {
+     "obj": "^24_Front_Knuckle_Left_Topology",
+     "near": [
+      1661,
+      230,
+      550
+     ]
+    },
+    "tr": {
+     "obj": "^24_Front_Tie_Rod",
+     "near": [
+      1650,
+      210,
+      470
+     ]
+    },
+    "kp": [
+     1600,
+     250,
+     539
+    ],
+    "tro": [
+     1661,
+     201,
+     550
+    ],
+    "tri": [
+     1617,
+     171,
+     203
+    ]
+   },
+   "lines": [
+    {
+     "a": "tro",
+     "b": "tri",
+     "c": "#7048e8",
+     "dash": true
+    }
+   ],
+   "perp": [
+    {
+     "p": "kp",
+     "l": [
+      "tro",
+      "tri"
+     ],
+     "c": "#c0392b"
+    }
+   ],
+   "labels": [
+    {
+     "t": "조향 암",
+     "a": "sa"
+    },
+    {
+     "t": "타이로드",
+     "a": "tr"
+    }
+   ],
+   "notes": [
+    {
+     "t": "● 킹핀축 (위에서 본 점)",
+     "x": 20,
+     "y": 24,
+     "c": "#c0392b"
+    },
+    {
+     "t": "빨간 화살표 = 지렛대 거리 (킹핀축 ~ 타이로드 선)",
+     "x": 20,
+     "y": 290,
+     "c": "#c0392b"
+    }
+   ],
+   "raw": ""
+  },
+  "apps": {
+   "aria": "가속 페달 센서 APPS·BSE",
+   "focus": "^Throttle_Pedal\\||^Pedal_Link|^Potentiometer|^Pedal_Pad\\|Throttle|^Throttle_Pedal_Mount|^Return_Spring|^Torsion|^스토퍼|^Bushing\\|Throttle",
+   "ghost": "2024_frame|^24_Brake_Pedal\\||^Pedal_Pad\\|Brake",
+   "hide": "Rodend",
+   "color": {
+    "^Potentiometer": "#2f6fb5",
+    "^Pedal_Link": "#e8590c",
+    "^Pedal_Pad": "#2b2f36"
+   },
+   "az": -120,
+   "el": 20,
+   "pad": 1.15,
+   "anchors": {
+    "ped": {
+     "obj": "^Pedal_Pad\\|Throttle",
+     "near": [
+      1945,
+      400,
+      -95
+     ]
+    },
+    "pot": {
+     "obj": "^Potentiometer",
+     "near": [
+      2030,
+      210,
+      -111
+     ]
+    },
+    "lk": {
+     "obj": "^Pedal_Link"
+    },
+    "sp": {
+     "obj": "^Torsion|^Return_Spring"
+    }
+   },
+   "labels": [
+    {
+     "t": "가속 페달",
+     "a": "ped"
+    },
+    {
+     "t": "APPS 센서 (포텐쇼미터)",
+     "a": "pot"
+    },
+    {
+     "t": "링크",
+     "a": "lk"
+    },
+    {
+     "t": "리턴 스프링",
+     "a": "sp"
+    }
+   ]
+  },
+  "tsal": {
+   "aria": "TSAL·RTDS",
+   "focus": "^TSAL_|^510670400",
+   "hl": [
+    {
+     "obj": "2024_frame.*~관",
+     "tubes": [],
+     "segs": [
+      [
+       [
+        675,
+        1139,
+        -140
+       ],
+       [
+        675,
+        1139,
+        140
+       ]
+      ]
+     ],
+     "r": 160,
+     "as": "ghost"
+    }
+   ],
+   "ghost": "2024_frame|Head_Restraint|^24_Seat",
+   "hide": "Rodend",
+   "color": {
+    "^TSAL_Case": "#ffc9c9",
+    "^TSAL_PCB": "#e03131"
+   },
+   "az": 140,
+   "el": 25,
+   "pad": 1.1,
+   "fit": [
+    [
+     560,
+     900,
+     -330
+    ],
+    [
+     800,
+     1180,
+     330
+    ]
+   ],
+   "anchors": {
+    "t": {
+     "obj": "^TSAL_Case",
+     "near": [
+      675,
+      1115,
+      0
+     ]
+    },
+    "mh": [
+     675,
+     1000,
+     150
+    ]
+   },
+   "labels": [
+    {
+     "t": "TSAL (투명 케이스 안 LED)",
+     "a": "t"
+    },
+    {
+     "t": "메인 롤후프 꼭대기",
+     "a": "mh"
+    }
+   ],
+   "notes": [
+    {
+     "t": "고전압 있음: 빨강 2 ~ 5 Hz 깜빡임 · 없음: 초록",
+     "x": 20,
+     "y": 290,
+     "c": "#c0392b"
+    }
+   ]
+  }
+ }
+}
