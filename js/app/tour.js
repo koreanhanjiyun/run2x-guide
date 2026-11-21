@@ -270,7 +270,7 @@ async function tgPress(sel){ if(!TR) return; const el=tourVis(sel); if(!el) retu
   if(!g.fixed && Math.abs(g.off-TR.off)>2){ tgHole(null); await tgScrollTo(g.off); if(!TR) return; g=tgGeom(el,{}); }
   const p=TR.el.querySelector('.tg-ptr'), cx=g.x+g.w/2, cy=g.y+g.h/2; tgHole(g); tgDim(false);
   if(tgReduced() || TR.fast){ Object.assign(p.style,{left:cx+'px',top:cy+'px'}); return; }
-  const tk=TR; p.classList.add('on'); p.style.left=cx+'px'; p.style.top=cy+'px'; await tgSleep(620); if(TR!==tk) return; p.classList.add('down'); await tgSleep(240); p.classList.remove('down'); await tgSleep(200); if(TR!==tk) return;
+  const tk=TR; p.classList.add('on'); p.style.left=cx+'px'; p.style.top=cy+'px'; await tgSleep(340); if(TR!==tk) return; p.classList.add('down'); await tgSleep(240); p.classList.remove('down'); await tgSleep(200); if(TR!==tk) return;
   p.classList.remove('on'); tgDim(true); tgHole(null); await tgSleep(200); }
 async function tgFind(sel){ for(let k=0;k<20;k++){ const el=tourVis(sel); if(el) return el; await tgSleep(60); } return null; }
 function tgText(i){ const st=TR.steps[i], o=st[3]||{}, card=TR.el.querySelector('.tour-card');

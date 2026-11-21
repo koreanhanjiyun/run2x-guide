@@ -1688,7 +1688,7 @@ details.tp-fbsec[open]>summary{margin-bottom:4px}
 #tour .tg-old{transition:opacity var(--t-fade) var(--ease-out);opacity:0}
 #tour .tg-hole{position:absolute;z-index:5;border-radius:8px;box-shadow:0 0 0 9999px rgba(14,10,24,.55);outline:3px solid #ffb454;outline-offset:0;opacity:0;transition:opacity var(--t-fade) var(--ease-out)}
 #tour .tg-hole.on{opacity:1}
-#tour .tg-ptr{position:absolute;z-index:6;width:26px;height:26px;margin:-4px 0 0 -4px;opacity:0;transition:left .5s cubic-bezier(.3,.7,.3,1),top .5s cubic-bezier(.3,.7,.3,1),opacity .2s,transform .12s;transform:scale(1.6);transform-origin:4px 4px}
+#tour .tg-ptr{position:absolute;z-index:6;width:26px;height:26px;margin:-4px 0 0 -4px;opacity:0;transition:left .28s cubic-bezier(.3,.7,.3,1),top .28s cubic-bezier(.3,.7,.3,1),opacity .2s,transform .12s;transform:scale(1.6);transform-origin:4px 4px}
 #tour .tg-ptr.on{opacity:1}
 #tour .tg-ptr.down{transform:scale(1.35)}
 #tour .tg-ptr i{position:absolute;left:-14px;top:-14px;width:36px;height:36px;border-radius:50%;border:3px solid #ffb454;opacity:0}
