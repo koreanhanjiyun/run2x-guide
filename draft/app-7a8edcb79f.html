@@ -3196,6 +3196,16 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 .toc-it:hover{background:var(--panel-2);color:var(--ink)}
 .toc-it.on{color:var(--accent);font-weight:700;box-shadow:inset 2px 0 0 var(--accent)}
 .ptchip{color:var(--ink-2);background:transparent;border-color:var(--line)}   /* 확정되는 것: 보라 대신 회색 (강조색 정리) */
+/* 본문 폭 통일 (docs/DESIGN.md 4절, 2026-11-21): 시작 · 도구 · 참고 · 팀 탭은 같은 폭 · 같은 시작 위치 */
+#v-start.wrap,#v-tools.wrap,#v-ref.wrap,#v-team.wrap{max-width:1280px}
+/* 시작 탭 첫 화면 (DESIGN.md 6절 '눈이 먼저 갈 곳은 하나'): 첫 문장을 가장 크게, 연표는 보조로 */
+.st-hero h1{font-size:var(--fs-3xl);line-height:1.2;letter-spacing:-.01em}
+.st-hero .lede{font-size:var(--fs-m);color:var(--ink-2)}
+.st-story li{padding-top:24px;gap:4px}
+.st-story b{font-size:var(--fs-m)}
+.st-story p{font-size:var(--fs-s);line-height:1.6;color:var(--muted)}
+.st-story .ss-y{font-size:var(--fs-s)}
+.st-gcard .st-cw{font-size:var(--fs-s)}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
