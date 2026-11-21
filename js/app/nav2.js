@@ -32,7 +32,7 @@
   const first = PREF('visited','') !== '1';
   const local = local0;
   if(!hasHash){
-    if(first){ SETP('visited','1'); showTab('start'); setTimeout(()=>{ try{ if(PREF('tourdone','')!=='1') tourStart('all'); }catch(e){} }, 1200); }
+    if(first){ SETP('visited','1'); showTab('start'); }   /* 첫 방문 = 시작 탭 히어로. 사용법 자동 시작은 뺌 (2026-11-22, 머리띠 [이 탭 사용법]으로 엶) */
     else if(local) restore(local);
     else showTab('steps');
   }

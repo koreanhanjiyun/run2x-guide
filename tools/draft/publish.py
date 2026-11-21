@@ -14,6 +14,16 @@ for f in sorted(os.listdir(os.path.join(ROOT, 'img', 'comp'))):
 for f in os.listdir(dc):
     if f not in changed: os.remove(os.path.join(dc, f))               # main 과 같아진 그림은 지움
 print('draft 전용 부품 그림', len(changed))
+# img/ 바로 아래 파일(히어로 그림 등) 중 main 에 없거나 다른 것도 draft/img/ 에 두고 그것을 씀
+dt = os.path.join(WT, 'draft', 'img'); top = []
+for f in sorted(os.listdir(os.path.join(ROOT, 'img'))):
+    src, live = os.path.join(ROOT, 'img', f), os.path.join(WT, 'img', f)
+    if not os.path.isfile(src): continue
+    if not os.path.exists(live) or not filecmp.cmp(src, live, shallow=False):
+        shutil.copy(src, os.path.join(dt, f)); top.append(f); body = body.replace('../img/' + f, 'img/' + f)
+for f in os.listdir(dt):
+    if os.path.isfile(os.path.join(dt, f)) and f not in top: os.remove(os.path.join(dt, f))
+print('draft 전용 그림', len(top))
 head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '<meta name="robots" content="noindex,nofollow">\n'
         # 같은 주소(github.io)를 쓰는 실제 사이트의 브라우저 저장값과 섞이지 않게 저장 키에 머리말

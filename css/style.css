@@ -3278,3 +3278,24 @@ html[data-vt="prev"]::view-transition-new(root){animation-name:vt-in-l}
 @keyframes vt-in-r{from{opacity:0;transform:translateX(32px)}}
 @keyframes vt-out-r{to{opacity:0;transform:translateX(32px)}}
 @keyframes vt-in-l{from{opacity:0;transform:translateX(-32px)}}
+
+/* ============================================================
+   시작 탭 히어로 (2026-11-22, start.js homePage · docs/DESIGN.md 6절)
+   - 첫 화면 높이를 다 씀: 왼쪽 글(작은 제목 · 첫 문장 32 · 소개 · 주 버튼 하나), 오른쪽 REF4 차 그림
+   - 아래 가운데 '자동차에서 FS까지 ↓' 로 바로 아래 흐름으로 내려감
+   ============================================================ */
+#v-start .st-hero{position:relative;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:center;gap:var(--sp-6);
+  min-height:calc(100vh - var(--tabh) - 48px);margin-bottom:var(--sp-7);padding-bottom:var(--sp-7)}
+#v-start .st-hero .sh-txt{display:flex;flex-direction:column;gap:var(--sp-4)}
+#v-start .st-hero h1{font-size:var(--fs-3xl);font-weight:800;line-height:1.2;margin:0}
+#v-start .st-hero .lede{font-size:var(--fs-m);line-height:1.7;color:var(--ink-2);margin:0;max-width:none}
+#v-start .st-hero .sh-act{margin-top:var(--sp-3)}
+#v-start .st-hero .sh-go{font-size:var(--fs-m);padding:12px 24px;border-radius:var(--r-m)}
+#v-start .st-hero .sh-car{margin:0;position:relative}
+#v-start .st-hero .sh-car img{display:block;width:100%;height:auto}
+#v-start .st-hero .sh-car::after{content:"";position:absolute;left:12%;right:8%;bottom:4%;height:10%;border-radius:50%;background:radial-gradient(closest-side,rgba(30,20,50,.16),rgba(30,20,50,0));z-index:-1}
+#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:var(--sp-1);
+  background:none;border:0;padding:var(--sp-2);font:inherit;font-size:var(--fs-s);color:var(--muted);cursor:pointer}
+#v-start .st-hero .sh-down span{font-size:var(--fs-m);animation:sh-bob 1.6s var(--ease-io) infinite}
+#v-start .st-hero .sh-down:hover{color:var(--ink)}
+@keyframes sh-bob{50%{transform:translateY(4px)}}
