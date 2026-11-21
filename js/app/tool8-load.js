@@ -14,7 +14,7 @@ function t8Fig(I, R){ if(!R || !R.tab) return ''; const T = R.tab, f = v => isFi
       const mx = Math.max(...vals.map(Math.abs));
       return `<tr><th>${lab(q)}${sgn ? '' : ' <span class="muted">(크기)</span>'}</th>${vals.map(v => `<td class="${sgn ? (v >= 0 ? 't8-t' : 't8-c') : ''}${Math.abs(v) === mx ? ' t8-mx' : ''}">${f(v)}</td>`).join('')}</tr>`; }).join('');
     return `<section class="t8-sec"><h4>${nm} <span class="muted">(푸시로드 = ${up ? '위' : '아래'} 팔)</span></h4><div class="t4-tw"><table class="dvi-t t8-tab"><thead><tr><th>부재 [N]</th>${T.cases.map(k => `<th>${T8C[k]}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></section>`; };
-  return `<style>.t8-tab td{text-align:right;font-variant-numeric:tabular-nums}.t8-t{color:#1d5f9a}.t8-c{color:#c2410c}.t8-mx{font-weight:700;text-decoration:underline}.t8-sec h4{margin:4px 0 6px;font-size:13px}</style>
+  return `<style>.t8-tab td{text-align:right;font-variant-numeric:tabular-nums}.t8-t{color:#1d5f9a}.t8-c{color:#c2410c}.t8-mx{font-weight:700;text-decoration:underline}.t8-sec h4{margin:4px 0 6px;font-size:var(--fs-s)}</style>
     ${one('f', '앞 바깥 바퀴', T.upF)}${one('r', '뒤 바깥 바퀴', T.upR)}
     <p class="muted t5-note">파랑 = 인장 (+), 주황 = 압축 (−), 굵은 밑줄 = 그 부재의 경우 중 최대. 푸시로드가 붙은 팔은 굽힘을 받아 안쪽 두 점 힘을 크기로 보입니다 (회전축 방향 몫은 반씩 나눈 가정).</p>`; }
 const M8TOUR = [

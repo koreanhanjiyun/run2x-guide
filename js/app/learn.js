@@ -186,8 +186,8 @@ function applyModes(){
   document.querySelectorAll('.vtabs [data-vm]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.vm===VMODE)));
   refreshVals(); updateToc(); }
 function renderOnboard(){ const el=$('#onboard'); if(!el) return;
-  if(PREF('onboard','1')==='0'){ el.innerHTML=`<button class="lnk" id="ob-show" style="font-size:13.5px">처음 왔다면: 읽는 순서 보기</button>`; return; }
-  el.innerHTML=`<div class="onb"><div class="onb-h"><b>처음 왔다면 이 순서로 읽으십시오</b><button class="lnk" id="ob-hide" style="font-size:13px">접기</button></div><ol class="onb-steps">
+  if(PREF('onboard','1')==='0'){ el.innerHTML=`<button class="lnk" id="ob-show" style="font-size:var(--fs-s)">처음 왔다면: 읽는 순서 보기</button>`; return; }
+  el.innerHTML=`<div class="onb"><div class="onb-h"><b>처음 왔다면 이 순서로 읽으십시오</b><button class="lnk" id="ob-hide" style="font-size:var(--fs-s)">접기</button></div><ol class="onb-steps">
     <li><span class="onb-n">1</span><div><b>왜 만드나</b><p>시작 탭에서 '더 빠른 차'가 어떤 다섯 가지 목표로 나뉘고, 각 목표를 어떤 설계 항목이 맡는지 봅니다.</p><button class="btn" data-ob="goals">목표 열기</button></div></li>
     <li><span class="onb-n">2</span><div><b>전체 흐름 한 바퀴</b><p>"흐름만" 보기로 단계 ${STEPS.length}개, 항목 ${ITEMS.length}개를 핵심 한 줄씩 읽습니다. 점선 밑줄 용어에 마우스를 올리면 뜻이 나옵니다.</p><button class="btn" data-ob="flow">흐름만 보기</button></div></li>
     <li><span class="onb-n">3</span><div><b>단계별로 깊게</b><p>"전체" 보기로 P0부터 펼쳐 결론 → 질문 → 유도 순으로 읽습니다. 단계 끝 확인 질문으로 스스로 점검합니다.</p><button class="btn" data-ob="full">P0부터 시작</button></div></li></ol></div>`; }
