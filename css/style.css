@@ -3157,11 +3157,6 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 .ip-side .tval,.ip-side .stbox{margin:0}
 .ip-rel .ip-rl{margin:var(--sp-2) 0 0;font-size:var(--fs-s);line-height:1.7}
 .ip-rel .ip-rl b{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:600}
-.ip-pn{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);padding-top:var(--sp-5);border-top:1px solid var(--line)}
-.ip-pn button{display:grid;gap:4px;text-align:left;padding:var(--sp-3) var(--sp-4);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);font:inherit;font-size:var(--fs-m);font-weight:600;color:var(--ink);cursor:pointer;transition:border-color var(--t-quick) var(--ease-out),transform var(--t-quick) var(--ease-out)}
-.ip-pn .ip-nx{text-align:right}
-.ip-pn button small{font-size:var(--fs-xs);font-weight:500;color:var(--muted)}
-.ip-pn button:hover{border-color:var(--accent)}
 @media (max-width:1500px){.ip-cols{grid-template-columns:minmax(0,1fr) 320px}}
 /* 개요 항목 줄: 이름 아래 핵심 한 줄 */
 #step-list details.item>summary{flex-wrap:wrap;cursor:pointer}
@@ -3186,3 +3181,63 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 .st-story p{font-size:var(--fs-s);line-height:1.6;color:var(--muted)}
 .st-story .ss-y{font-size:var(--fs-s)}
 .st-gcard .st-cw{font-size:var(--fs-s)}
+
+/* ===== 항목 화면 글자 · 판 (2026-11-22, docs/DESIGN.md 3절 '한 화면 글자 크기')
+   글자는 네 가지만: 24 항목 제목 / 15 칸 제목(굵게) / 13 본문 · 표 · 목록 · 버튼 · 링크 / 11 보조(칩 · 캡션 · 작은 표시).
+   수식(MathJax) · 아래 · 위첨자만 예외. 예전 규칙들이 !important 로 15 px 를 주고 있어 #ipage 안에서 덮어씀 ===== */
+#ipage{font-size:var(--fs-s)}
+#ipage :is(p,li,td,th,dd,dt,span,b,strong,em,i,a,button,label,input,select,textarea,div,code,summary,small,figcaption,h3,h4,section,nav,aside){font-size:var(--fs-s)!important;line-height:1.7}
+#ipage .ip-h{font-size:var(--fs-2xl)!important;line-height:1.3}
+#ipage :is(.qsec-h,.qmore-h,.qmore>.stack>details.q>summary,details.calc>summary,details.symbox>summary,.sec-label,.tk>.tk-d>summary,.actbox),
+#ipage :is(.qsec-h,.qmore-h,.qmore>.stack>details.q>summary,details.calc>summary,details.symbox>summary,.sec-label,.tk>.tk-d>summary,.actbox) :not(sub):not(sup){font-size:var(--fs-m)!important;font-weight:700;letter-spacing:0;color:var(--ink)}
+#ipage :is(.chip,.badge,.vchip,.vlab,.ptag,figcaption,.ip-rl>b,.symh th,.symh td,.gpath-l,.tag,.an-note),
+#ipage :is(.chip,.badge,.vchip,.vlab,figcaption) *{font-size:var(--fs-xs)!important}
+#ipage :is(sub,sup){font-size:80%!important}
+
+/* 본문 칸: 접지 않고 제목 + 내용 */
+#ipage .qmain{display:grid;gap:var(--sp-6)}
+#ipage .qsec{display:grid;gap:var(--sp-3)}
+#ipage .qsec-h{margin:0;padding-bottom:var(--sp-2);border-bottom:1px solid var(--line)}
+#ipage .qsec>.qb{display:flex;flex-direction:column;gap:var(--sp-3);padding:0}
+
+/* 더 알아보기: 판 하나 안에 줄로 나눈 펼침 목록 (판 = 흰 바탕 · 1 px 테두리 · 모서리 8 px) */
+#ipage .qmore{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+#ipage .qmore-h{padding:var(--sp-3) var(--sp-4);background:var(--panel-2);border-bottom:1px solid var(--line)}
+#ipage .qmore>.stack{gap:0}
+#ipage .qmore>.stack>details.q{border:0!important;border-radius:0!important;background:transparent!important}
+#ipage .qmore>.stack>details.q+details.q{border-top:1px solid var(--line)!important}
+#ipage .qmore>.stack>details.q>summary{padding:var(--sp-3) var(--sp-4)!important;background:transparent!important;border:0!important}
+#ipage .qmore>.stack>details.q[open]>summary{background:var(--panel-2)!important}
+#ipage .qmore>.stack>details.q>.qb{padding:var(--sp-3) var(--sp-4) var(--sp-4) var(--sp-6)!important;gap:var(--sp-3)}
+/* 칸 안의 하위 질문: 작은 판, 제목은 13 px 굵게 */
+#ipage .qb details.q{border:1px solid var(--line)!important;border-radius:var(--r-m)!important;background:var(--panel-2)!important}
+#ipage .qb details.q>summary{padding:var(--sp-2) var(--sp-4)!important;font-weight:700;background:transparent!important;border:0!important}
+#ipage .qb details.q>.qb{padding:var(--sp-2) var(--sp-4) var(--sp-4)!important;gap:var(--sp-3)}
+#ipage .qb details.q+details.q{margin-top:0}
+
+/* 그림: 테두리 판 안, 캡션 11 px */
+#ipage .fig figcaption{color:var(--muted)}
+
+/* 오른쪽 칸: 연결된 항목 · 이전 다음 · 기호 표 (자체 스크롤은 .ip-side 의 max-height) */
+#ipage .ip-side .sec-label{margin:0 0 var(--sp-2)}
+#ipage .ip-pn{display:grid;gap:var(--sp-1);justify-items:start}
+#ipage .ip-pn .lnk{text-align:left}
+#ipage .ip-side details.symbox{border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;margin:0}
+#ipage .ip-side details.symbox>summary{padding:var(--sp-3) 0 0!important}
+#ipage .ip-side details.symbox>summary .muted{font-weight:400;color:var(--muted)}
+#ipage .ip-side details.symbox>table{margin:var(--sp-2) 0 0;width:100%}
+#ipage .ip-side details.symbox td.symv{white-space:normal}
+/* 오른쪽 칸 기호 표: 380 px 에 4열 표는 뜻 칸이 한 글자씩 꺾이므로, 줄마다 [기호 | 뜻 / 값 · 출처] 두 줄 배치 */
+#ipage .ip-side .symbox table,#ipage .ip-side .symbox tbody{display:block;width:100%}
+#ipage .ip-side .symbox tr{display:grid;grid-template-columns:64px minmax(0,1fr) auto;column-gap:var(--sp-2);row-gap:2px;padding:var(--sp-2) 0;border-top:1px solid var(--line)}
+#ipage .ip-side .symbox tr.symh{display:none}
+#ipage .ip-side .symbox tr>*{padding:0;border:0;width:auto;white-space:normal;background:transparent}
+#ipage .ip-side .symbox tr>th{grid-column:1;grid-row:1 / span 2}
+#ipage .ip-side .symbox tr>td:nth-child(2){grid-column:2 / span 2}
+#ipage .ip-side .symbox tr>td.symv{grid-column:2;color:var(--ink-2)}
+#ipage .ip-side .symbox tr>td.syms{grid-column:3;justify-self:end}
+/* 칸 제목 줄의 덧붙임 글(· 예시값은 가정값… · (8개))은 13 px 보통 굵기 */
+#ipage :is(details.calc>summary,details.symbox>summary,.qmore>.stack>details.q>summary) :is(.muted,.muted *){font-size:var(--fs-s)!important;font-weight:400!important;color:var(--muted)!important}
+/* 칸 안에 이어지는 하위 질문들은 한 묶음 목록으로 붙임 (판 사이 틈 없음) */
+#ipage .qb>details.q:has(+details.q){border-bottom-left-radius:0!important;border-bottom-right-radius:0!important}
+#ipage .qb>details.q+details.q{margin-top:calc(-1 * var(--sp-3) - 1px)!important;border-top-left-radius:0!important;border-top-right-radius:0!important}

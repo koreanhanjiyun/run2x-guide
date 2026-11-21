@@ -48,10 +48,14 @@ function subifySvg(root){
 /* ============================================================
    렌더: 카드
    ============================================================ */
-function renderQ(q){ return `<details class="q"><summary>${q.h}</summary><div class="qb">${q.b}${q.s.map(renderQ).join('')}</div></details>`; }
+function renderQ(q, k){ return `<details class="q"${k!=null?` data-qi="${k}"`:''}><summary>${q.h}</summary><div class="qb">${q.b}${q.s.map(s=>renderQ(s)).join('')}</div></details>`; }
+/* 카드: 참고 → 본문 칸(접지 않음, CARD_MAIN) → 직접 계산해 보기 → 더 알아보기(접힘). 기호 표는 항목 화면에서 오른쪽 칸으로 옮김 (item-page.js) */
 function renderCard(key){ const c = CARD[key]; if(!c) return '';
   const sym = SYM[key] ? `<details class="symbox"><summary>이 카드의 기호 <span class="muted">(${SYM[key].length}개)</span></summary><table class="kvt">${symRows(SYM[key])}</table></details>` : '';
-  return `<div class="concl"><b class="tag">참고</b>${c.c}</div>${sym}${calcHTML(key)}<div class="stack">${c.L.map(renderQ).join('')}</div>`; }
+  const M = (typeof CARD_MAIN!=='undefined' && CARD_MAIN[key]) || [];
+  const main = c.L.map((q,k)=>M.includes(k+1) ? `<section class="qsec" data-qi="${k}"><h3 class="qsec-h">${q.h}</h3><div class="qb">${q.b}${q.s.map(s=>renderQ(s)).join('')}</div></section>` : '').join('');
+  const more = c.L.map((q,k)=>M.includes(k+1) ? '' : renderQ(q,k)).join('');
+  return `<div class="concl"><b class="tag">참고</b>${c.c}</div>${sym}${main?`<div class="qmain">${main}</div>`:''}${calcHTML(key)}${more?`<div class="qmore"><div class="qmore-h">더 알아보기</div><div class="stack">${more}</div></div>`:''}`; }
 const chip = p => `<span class="chip"><span class="dot" style="background:${pc(p)}"></span>${p}</span>`;
 
 /* ============================================================

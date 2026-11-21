@@ -77,7 +77,7 @@ function runCalc(box){ const c=CALC[box.dataset.calc]; const v={};
 
 /* ---------- 확인 질문 ---------- */
 function openQ(id,k){ openItem(id);   /* 항목 화면 (item-page.js) 의 k 번째 질문 */
-  const q=document.querySelectorAll('#ipage .ip-main > .stack > details.q')[k]; if(!q) return; q.open=true;
+  const q=document.querySelector(`#ipage .ip-main [data-qi="${k}"]`); if(!q) return; if(q.tagName==='DETAILS') q.open=true;
   requestAnimationFrame(()=>smoothScrollTo(()=>q.getBoundingClientRect().top+window.scrollY-stickyOffset()-50, ()=>markHere(q))); }
 
 /* ---------- 용어 미리보기 ---------- */

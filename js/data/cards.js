@@ -466,3 +466,7 @@ const SYM = {
  aero_balance:[["x_{cp}","뒤축 ~ 압력 중심 거리"],["L","휠베이스"]],
  balance:[["K","언더스티어 구배 (양 = 언더)"],["v_{crit}","오버 차량의 임계 속도"]]
 };
+
+/* 항목 화면에서 접지 않고 바로 보여 줄 카드 칸 (L 의 1부터 센 번호, 2026-11-22 관리자 확인)
+   기준: 무엇이고 · 왜 그 값이고 · 어떻게 정하나 + 주의. 나머지(계산 예 · 유도 · 세부 질문 · 다음 단계)는 '더 알아보기'에 접힘 */
+const CARD_MAIN = {specs:[1,2,5],balance:[1,2,3,4],ay:[1,2,3],sim:[1,3],bjzone:[1,2,3],scrub:[1,4,7],kpi:[1,2],caster:[1,2,3],trail:[1,2,3],fvsa:[1,2,4],rc:[1,2,3],rollgrad:[1,2,3],frame_zone:[1,2,3],anti:[1,2,3],ack:[1,2,3],maxsteer:[1,2],verify3d:[1,2],freeze:[1,2,3],rolldist:[1,2,5],spring_arb:[1,3],mr:[1,3],lsd:[1,3,4],heave:[1,2],launch:[1,2,3],lapsim:[1,2],apps:[1,2],derate:[1,2,3],effic:[1,2,4],harness:[1,2],daq:[1,2],setup:[1,3],precheck:[1,2],endur:[1,2],cost:[1,2,3],judge:[1,2],light:[1,3],inv:[1,2],stwheel:[1,2,3],batelec:[1,2,3],batcool:[1,2,3],bms:[1,2,3],compl:[1,2,3],driver:[1,2],tune:[1,2],disc:[1,2],brakesel:[1,2,3,4],drvpkg:[1,2],bdist:[1,2],tc:[1,3],aero:[1,3],aero_balance:[1,2]};
