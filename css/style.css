@@ -3241,3 +3241,40 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 /* 칸 안에 이어지는 하위 질문들은 한 묶음 목록으로 붙임 (판 사이 틈 없음) */
 #ipage .qb>details.q:has(+details.q){border-bottom-left-radius:0!important;border-bottom-right-radius:0!important}
 #ipage .qb>details.q+details.q{margin-top:calc(-1 * var(--sp-3) - 1px)!important;border-top-left-radius:0!important;border-top-right-radius:0!important}
+
+/* ============================================================
+   화면 전환 (View Transitions, 2026-11-22, tabs-nav.js vtGo · docs/DESIGN.md 5절)
+   - 머리띠 · 목차 · 파트 패널: 전환 동안만 이름을 붙여 제자리 (예전 모습은 숨기고 새 모습을 그대로)
+   - 나머지 화면(root): 개요 → 항목은 살짝 떠오르며, 항목 → 개요는 반대로, 이전 · 다음은 옆으로 밀림, 탭은 겹쳐 바뀜
+   - 항목 이름 → 항목 제목 (vt-title): 자리와 크기가 이어짐
+   - 사라짐은 나타남 시간의 0.7배
+   ============================================================ */
+html[data-vt] .tabs{view-transition-name:vt-tabs}
+html[data-vt] #toc{view-transition-name:vt-toc}
+html[data-vt] #partRail{view-transition-name:vt-rail}
+::view-transition-group(vt-tabs),::view-transition-group(vt-toc),::view-transition-group(vt-rail),
+::view-transition-new(vt-tabs),::view-transition-new(vt-toc),::view-transition-new(vt-rail){animation:none}
+::view-transition-old(vt-tabs),::view-transition-old(vt-toc),::view-transition-old(vt-rail){display:none}
+::view-transition-group(root),::view-transition-new(root){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-out)}
+::view-transition-old(root){animation-duration:calc(var(--vt-ms,265ms) * .7);animation-timing-function:var(--ease-out)}
+::view-transition-group(vt-title){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-io)}
+::view-transition-old(vt-title),::view-transition-new(vt-title){animation:none;height:100%;width:auto}
+/* 이름 → 제목은 같은 글자라 겹쳐 보이지 않게 큰 쪽 하나만 보임 (작은 글자를 키우면 흐려짐): 열 때는 새 제목, 닫을 때는 예전 제목 */
+html[data-vt="open"]::view-transition-old(vt-title),html[data-vt="close"]::view-transition-new(vt-title){display:none}
+#ipage .ip-h{width:fit-content}
+html[data-vt="open"]::view-transition-old(root){animation-name:vt-out}
+html[data-vt="open"]::view-transition-new(root){animation-name:vt-in-up}
+html[data-vt="close"]::view-transition-old(root){animation-name:vt-out-down}
+html[data-vt="close"]::view-transition-new(root){animation-name:vt-in}
+html[data-vt="next"]::view-transition-old(root){animation-name:vt-out-l}
+html[data-vt="next"]::view-transition-new(root){animation-name:vt-in-r}
+html[data-vt="prev"]::view-transition-old(root){animation-name:vt-out-r}
+html[data-vt="prev"]::view-transition-new(root){animation-name:vt-in-l}
+@keyframes vt-out{to{opacity:0}}
+@keyframes vt-in{from{opacity:0}}
+@keyframes vt-in-up{from{opacity:0;transform:translateY(16px)}}
+@keyframes vt-out-down{to{opacity:0;transform:translateY(16px)}}
+@keyframes vt-out-l{to{opacity:0;transform:translateX(-32px)}}
+@keyframes vt-in-r{from{opacity:0;transform:translateX(32px)}}
+@keyframes vt-out-r{to{opacity:0;transform:translateX(32px)}}
+@keyframes vt-in-l{from{opacity:0;transform:translateX(-32px)}}

@@ -17,6 +17,41 @@ function showTab(t, keep){
 /* 이동 기록: 브라우저 뒤로·앞으로 버튼으로 이동 (A9). 지금 위치를 현재 기록에 저장하고 새 기록을 하나 쌓음 */
 const navState = () => ({tab:TAB, sys:(typeof START!=='undefined'?START.sys:''), y:window.scrollY, sel:(typeof SEL!=='undefined'?SEL:null), v:(typeof view!=='undefined'?{...view}:null), ip:(typeof IPAGE!=='undefined'?IPAGE:null)});   /* ip = 설계 탭 항목 화면 (item-page.js) */
 function pushHist(){ try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
+/* 화면 전환 (View Transitions, 2026-11-22, docs/DESIGN.md 5절)
+   - 머리띠 · 목차 · 파트 패널은 전환 동안 따로 이름을 붙여 제자리에 둠 (style.css html[data-vt]). 나머지 화면(root)만 움직임
+   - kind: open 개요 → 항목 / close 항목 → 개요 / next · prev 이전 · 다음 항목 / fade 탭 바꿈
+   - from · to: 이어 줄 요소 (누른 항목 이름 → 항목 제목). 둘 다 화면 안에 보일 때만 이음
+   - 시간 = motionMs(이은 요소의 이동 거리, 없으면 40 px)
+   - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
+const VT={busy:false};
+const vtSeen = el => { if(!el) return null; const r=el.getBoundingClientRect(); return (r.width && r.bottom>0 && r.top<innerHeight) ? r : null; };
+function vtGo(kind, fn, from, to){
+  const R=document.documentElement;
+  if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
+  VT.busy=true; R.dataset.vt=kind;
+  const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-title';
+  let t2=null; R.style.setProperty('--vt-ms', motionMs(40)+'ms');
+  const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
+    try{ fn(); } finally{ VT.busy=false; }
+    /* 도착 요소는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
+    const e2=fr&&to&&to(), r2=vtSeen(e2);
+    if(r2){ t2=e2; t2.style.viewTransitionName='vt-title'; R.style.setProperty('--vt-ms', Math.min(700, motionMs(Math.hypot(r2.left-fr.left, r2.top-fr.top)))+'ms'); } });
+  t.finished.catch(()=>{}).then(()=>{ if(t2) t2.style.viewTransitionName=''; if(R.dataset.vt===kind) delete R.dataset.vt; });
+}
+/* 뒤로 · 앞으로 가기: 다른 처리보다 먼저 받아, 같은 이벤트를 전환 안에서 다시 보냄 */
+window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
+  if(!h || !h.tab || !document.startViewTransition || (typeof TR!=='undefined' && TR) || (typeof WB!=='undefined' && WB.id)) return;
+  const cur=(typeof IPAGE!=='undefined')?IPAGE:null; let kind='fade', from=null, to=null;
+  if(h.tab===TAB && TAB==='steps'){
+    if(cur && h.ip && cur!==h.ip){ const o=ipOrder(); kind = o.indexOf(h.ip)<o.indexOf(cur) ? 'prev' : 'next'; }
+    else if(!cur && h.ip){ kind='open'; from=()=>$(`#it-${h.ip}>summary .iname`); to=()=>$('#ipage .ip-h'); }
+    else if(cur && !h.ip){ kind='close'; from=()=>$('#ipage .ip-h'); to=()=>$(`#it-${cur}>summary .iname`); }
+    else kind=null; }
+  else if(h.tab===TAB) kind=null;
+  if(!kind) return;
+  e.stopImmediatePropagation();
+  vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); }, from, to);
+});
 window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true); try{ history.replaceState(h, '', location.hash); }catch(_){}   /* showTab 이 지운 이 칸의 상태를 되살림 (앞으로가기에 필요) */
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
   requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
@@ -54,10 +89,12 @@ function openItem(id){
     smoothScrollTo(()=>el.getBoundingClientRect().top + window.scrollY - stickyOffset(), ()=>markHere(el)); });
 }
 document.addEventListener('click',ev=>{
-  const tb=ev.target.closest('.tab'); if(tb){ if(tb.dataset.tab!==TAB) pushHist(); showTab(tb.dataset.tab); return; }
-  const g=ev.target.closest('[data-goto]'); if(g){ ev.preventDefault(); openItem(g.dataset.goto); return; }
+  const tb=ev.target.closest('.tab'); if(tb){ const t=tb.dataset.tab, ip=(typeof IPAGE!=='undefined')&&IPAGE;
+    const kind = t!==TAB ? 'fade' : (t==='steps' && ip ? 'close' : null);
+    vtGo(kind, ()=>{ if(t!==TAB) pushHist(); showTab(t); }, kind==='close'?()=>$('#ipage .ip-h'):null, kind==='close'?()=>$(`#it-${ip}>summary .iname`):null); return; }
+  const g=ev.target.closest('[data-goto]'); if(g){ ev.preventDefault(); vtItem(g.dataset.goto, g); return; }
   const gr=ev.target.closest('[data-graph]'); if(gr){ ev.preventDefault(); ev.stopPropagation(); pushHist(); showTab('graph'); requestAnimationFrame(()=>selectItem(gr.dataset.graph,true)); return; }
-  const op=ev.target.closest('[data-open]'); if(op){ openItem(op.dataset.open); return; }
+  const op=ev.target.closest('[data-open]'); if(op){ vtItem(op.dataset.open, op); return; }
   const sl=ev.target.closest('[data-sel]'); if(sl){ selectItem(sl.dataset.sel,true); return; }
   if(ev.target.closest('.tabs .logo-mark, .tabs .wordmark')){ ev.preventDefault(); goHome(); }
 });
@@ -148,7 +185,7 @@ function initSearch(){
     r=>{ if(r.k==='step'){ openStep(r.id); return; }
       if(r.k==='comp'){ openSys(r.sys, r.id); return; }
       if(r.k==='term'){ pushHist(); showTab('ref'); const tr=document.getElementById(r.id); const d=tr&&tr.closest('details'); if(d) d.open=true; requestAnimationFrame(()=>{ if(tr){ smoothScrollTo(()=>tr.getBoundingClientRect().top+scrollY-innerHeight/3, ()=>markHere(tr)); } }); return; }
-      if(TAB==='graph'){ pushHist(); selectItem(r.id,true); } else openItem(r.id); });
+      if(TAB==='graph'){ pushHist(); selectItem(r.id,true); } else vtItem(r.id); });
   document.addEventListener('keydown',e=>{ if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey) return; const a=document.activeElement;
     if(a && (a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable)) return; e.preventDefault(); inp.focus(); inp.select(); });
 }

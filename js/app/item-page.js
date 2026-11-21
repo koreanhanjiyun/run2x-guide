@@ -70,12 +70,22 @@ window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) retur
 
 /* 개요 줄 · 목차 단계 · 경로 누름 */
 document.addEventListener('click', e=>{
-  const sm=e.target.closest('#step-list details.item>summary'); if(sm && !e.target.closest('button,a,input,.tk-cnt')){ e.preventDefault(); openItem(sm.parentElement.dataset.item); return; }
-  if(e.target.closest('[data-ipback]')){ e.preventDefault(); const sid=IPAGE&&IT[IPAGE].s; pushHist(); ipClose(); if(sid) requestAnimationFrame(()=>{ const st=$('#st-'+sid); if(st){ st.open=true; window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } }); return; }
-  const ps=e.target.closest('[data-ipstep]'); if(ps){ e.preventDefault(); pushHist(); ipClose(); const st=$('#st-'+ps.dataset.ipstep); if(st){ st.open=true; requestAnimationFrame(()=>{ window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); }); } return; }
+  const sm=e.target.closest('#step-list details.item>summary'); if(sm && !e.target.closest('button,a,input,.tk-cnt')){ e.preventDefault(); vtItem(sm.parentElement.dataset.item, sm.querySelector('.iname')); return; }
+  if(e.target.closest('[data-ipback]')){ e.preventDefault(); if(IPAGE) ipBackTo(IT[IPAGE].s); return; }
+  const ps=e.target.closest('[data-ipstep]'); if(ps){ e.preventDefault(); ipBackTo(ps.dataset.ipstep); return; }
 }, true);
+/* 항목 화면 → 개요의 그 단계 (경로 · 목차 단계 누름). 보던 항목 줄이 화면에 보이면 제목이 그 줄로 돌아감 */
+function ipBackTo(sid){ const cur=IPAGE;
+  vtGo('close', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(st){ st.open=true; window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } },
+    ()=>$('#ipage .ip-h'), ()=>cur && $(`#it-${cur}>summary .iname`)); }
+/* 항목 열기 + 화면 전환: 항목 화면끼리는 순서대로 밀고(이전 · 다음), 그 밖에서는 누른 이름이 제목으로 이어짐.
+   다른 코드가 부르는 openItem 은 그대로 즉시 (부른 뒤 바로 그 화면을 찾는 곳이 있음: learn.js openQ 등) */
+function vtItem(id, src){ if(!IT[id]) return; const cur=(TAB==='steps')&&IPAGE;
+  if(cur===id){ openItem(id); return; }
+  if(cur){ const o=ipOrder(); vtGo(o.indexOf(id)<o.indexOf(cur)?'prev':'next', ()=>openItem(id)); return; }
+  vtGo('open', ()=>openItem(id), src?()=>src:null, ()=>$('#ipage .ip-h')); }
 /* 목차 단계 누름: 항목 화면이면 개요로 돌아가 그 단계로 */
-{ const _gs=gotoStep; gotoStep=function(sid){ if(IPAGE){ pushHist(); ipClose(); const st=$('#st-'+sid); if(st){ st.open=true; requestAnimationFrame(()=>{ window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); }); } return; } return _gs.apply(this, arguments); }; }
+{ const _gs=gotoStep; gotoStep=function(sid){ if(IPAGE){ ipBackTo(sid); return; } return _gs.apply(this, arguments); }; }
 /* 스크롤에 따른 목차 강조는 개요에서만 */
 { const _sp=spyToc; spyToc=function(){ if(IPAGE) return; return _sp.apply(this, arguments); }; }
 /* 브라우저 탭 제목 · 경로 띠: 항목 화면이면 항목 이름 */
