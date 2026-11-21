@@ -16,13 +16,12 @@ function showTab(t, keep){
 }
 /* 이동 기록: 브라우저 뒤로·앞으로 버튼으로 이동 (A9). 지금 위치를 현재 기록에 저장하고 새 기록을 하나 쌓음 */
 const navState = () => ({tab:TAB, sys:(typeof START!=='undefined'?START.sys:''), y:window.scrollY, sel:(typeof SEL!=='undefined'?SEL:null), v:(typeof view!=='undefined'?{...view}:null)});
-function pushHist(){ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
-function goBack(){ try{ history.back(); }catch(e){} }
-window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true);
+function pushHist(){ try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
+window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true); try{ history.replaceState(h, '', location.hash); }catch(_){}   /* showTab 이 지운 이 칸의 상태를 되살림 (앞으로가기에 필요) */
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
   requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
 /* 스크롤이 멈추면 지금 위치를 현재 기록에 덮어써 둠 (앞으로 가기에도 위치 유지) */
-{ let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(window.DEBUG) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
+{ let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(typeof WB!=='undefined' && WB.id) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
 let SCR=null;
 function smoothScrollTo(getY, done){
   if(SCR) cancelAnimationFrame(SCR);
@@ -45,7 +44,7 @@ function markHere(el){
 function stickyOffset(){ const cs=getComputedStyle(document.documentElement); return parseFloat(cs.getPropertyValue('--tabh'))+parseFloat(cs.getPropertyValue('--sth'))+14; }
 function openItem(id){
   pushHist(); setVM('full');
-  const fromOther = TAB!=='steps'; showTab('steps', true);
+  showTab('steps', true);
   const it=IT[id]; const st=$('#st-'+it.s); if(!st) return; st.open=true;
   const el=$('#it-'+id); if(!el) return; fillItem(el); el.open=true;
   requestAnimationFrame(()=>{ const y = el.getBoundingClientRect().top + window.scrollY - stickyOffset();
@@ -63,7 +62,7 @@ document.addEventListener('click',ev=>{
 function goHome(){ const inSub = typeof START!=='undefined' && !!START.sys; if(TAB!=='start' || window.scrollY>10 || inSub) pushHist(); showTab('start', true);
   /* 시작 탭 안의 세부 목표·시스템 화면을 보고 있었으면 시작 탭 첫 화면으로 */
   if(inSub){ try{ renderStart(''); window.scrollTo({top:0, behavior:'instant'}); }catch(e){} }
-  if(!window.DEBUG){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
   requestAnimationFrame(()=>smoothScrollTo(()=>0)); }
 document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='처음 화면으로'; el.setAttribute('aria-label', el.classList.contains('wordmark') ? 'RUN2X 처음 화면으로' : '처음 화면으로');
   el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goHome(); } }); });
@@ -184,7 +183,9 @@ function graphAlign(){ const st=document.querySelector('#v-steps'), gv=document.
 /* 목차를 접거나 펴서 너비(--tocx)가 바뀌면 연결도 머리·그림 자리도 다시 맞춤 */
 { const re = () => { if(TAB==='graph') try{ graphAlign(); }catch(e){} };
   try{ new MutationObserver(re).observe(document.documentElement, {attributes:true, attributeFilter:['style','class']}); new MutationObserver(re).observe(document.body, {attributes:true, attributeFilter:['class']}); }catch(e){}
-  const t = document.getElementById('toc'); if(t && 'ResizeObserver' in window) try{ new ResizeObserver(re).observe(t); }catch(e){} }
+  const t = document.getElementById('toc'); if(t && 'ResizeObserver' in window) try{ new ResizeObserver(re).observe(t); }catch(e){}
+  document.addEventListener('transitionend', e => { if(e.propertyName==='padding-left' && e.target.id==='v-steps') re(); });   /* 116차: 본문이 부드럽게 밀린 뒤 다시 맞춤 */
+  setTimeout(() => document.body.classList.add('toc-ready'), 800); }   /* 처음 그릴 때(저장된 목차 너비 적용)는 애니메이션 없이 */
 /* 맨 위로 버튼: 화면 한 높이 이상 내려가면 오른쪽 아래에 뜸 (모든 탭) */
 { const b = document.createElement('button'); b.type='button'; b.id='toTop'; b.hidden=true; b.setAttribute('aria-label','맨 위로'); b.title='맨 위로';
   b.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';

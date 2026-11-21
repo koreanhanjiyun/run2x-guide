@@ -16,13 +16,33 @@ const WB = { id:null, I:{}, R:null, err:'', ms:0, xi:0, sel:new Set(), act:'', c
 const wbT = () => WB_TOOLS[WB.id];
 const wbEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wbFmt = (x, d) => (typeof x==='number' && isFinite(x)) ? x.toLocaleString('ko-KR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
-const wbStoreKey = id => 'run2x.wb.' + id;
+/* ---------- 예제 · 내 파일 (2026-11-10 관리자 결정) ----------
+   예제 = 튜토리얼용 임의 데이터 (도구 기본값 · 예시 표). 설계에 쓰지 않음 → 내보내기 · 가져오기 · 대시보드(가져오기 · 반영) · 다른 도구로 보내기 막음.
+   내 파일 = 모두 빈칸 (고정 종목 코스 · 모델 선택 · 고정 상수만). 사이트는 차량 데이터를 주지 않음. 빈칸이 있으면 계산하지 않고 필요한 칸을 빨갛게.
+   두 모드는 저장을 따로 (키 끝 @ex · @nf). 도구 목록 줄에 커서를 올리면 [예제 | 내 파일] 로 바뀌어 고른 쪽으로 엶. 도구 안에서 다른 도구로 넘어가면 지금 모드 그대로.
+   검증표는 모드와 상관없이 늘 입력 정의의 기본값(d.v) 위에서 돎. 예전 저장본(모드 없는 키)은 버림. */
+let WBMODE = 'nf', WBMODE_ON = true;   /* 처음 = 내 파일 (도구마다 wbModeReg 로 바로 읽음) */
+const wbEx = () => WBMODE==='ex';
+const wbMK = k => k + (WBMODE==='ex' ? '@ex' : '@nf');
+const WB_MODE_LOAD = [], wbModeReg = f => { WB_MODE_LOAD.push(f); try{ f(WBMODE); }catch(e){ console.error('mode load', e); } };   /* 도구마다 (mode) => 그 모드 저장본을 읽음 (없으면 예제 = 예시값 · 내 파일 = 빈칸) */
+function wbModeSet(m){ m = m==='ex' ? 'ex' : 'nf'; if(WBMODE_ON && m===WBMODE) return; WBMODE = m; WBMODE_ON = true;
+  WB_MODE_LOAD.forEach(f => { try{ f(m); }catch(e){ console.error('mode load', e); } }); }
+/* [예제 | 내 파일] 두 단추 (도구 목록 줄 · 파트 페이지 단추 안). 부모 .wb-mpick 에 커서 · 포커스가 오면 보임 */
+const wbModeBtns = (id, t) => `<span class="wb-mp-b" role="group" aria-label="${wbEsc(String(t).replace(/<[^>]+>/g, ''))} 열기"><button type="button" class="wb-mp-ex" data-wbo="${id}" data-wbm="ex"><b>예제</b><span>튜토리얼 · 임의 데이터</span></button><button type="button" class="wb-mp-nf" data-wbo="${id}" data-wbm="nf"><b>내 파일</b><span>내 설계 이어서</span></button></span>`;
+/* 예제에서 막는 것: 이유를 알림 */
+function wbExBlock(){ if(!wbEx()) return false; toast('예제는 튜토리얼용 임의 데이터라 내보내기 · 가져오기 · 대시보드 연결을 쓰지 않습니다. 도구 목록에서 [내 파일]로 여세요.'); return true; }
+/* 예전 저장본 (모드 나누기 전 키) 버림 — 한 번만 */
+try{ if(!localStorage.getItem('run2x.mode.v1')){ ['1', '2', 'G', '4', '9', 'T', '5', '6', '7', '3', '8'].forEach(id => localStorage.removeItem('run2x.wb.' + id));
+    ['run2x.wb.2.ext.v2', 'run2x.t9', 'run2x.wb.share.hp', 'run2x.t4.presets', 'run2x.t4.cell'].forEach(k => localStorage.removeItem(k));
+    if(!(typeof SH!=='undefined' && SH.on)) ['run2x.mass.v2', 'run2x.drv.v2'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('run2x.mode.v1', '1'); } }catch(e){}
+const wbStoreKey = id => wbMK('run2x.wb.' + id);
 /* [결과 | 편집] 탭 (도구 2P 는 자체 [시뮬레이션 | 편집]). 입력은 모두 편집 탭에 묶음 카드로, 왼쪽 입력 칸은 key:true 인 핵심 입력만 (없으면 안내).
    ext (도구가 그리는 큰 입력 화면: 도구 1 표 · 도구 4 셀 · 도구 9 회로) 는 편집 탭, mid · 그림 · 신호 그래프 · 결과 카드는 결과 탭. 그림을 편집에도 두려면 editFig:true */
 const wbTabs = T => !!T && T.inPanel !== false;
 const WBTAB_KEY = 'run2x.wb.tab';
 function wbTabGet(id){ try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; return m[id]==='edit' ? 'edit' : 'res'; }catch(e){ return 'res'; } }
-function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res';
+function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res'; if(WB.tab==='res' && (WB.need || []).length){ WB.needShow = true; setTimeout(wbNeedMark, 0); }
   try{ const m = JSON.parse(localStorage.getItem(WBTAB_KEY) || '{}') || {}; m[WB.id] = WB.tab; localStorage.setItem(WBTAB_KEY, JSON.stringify(m)); }catch(e){}
   const w = $('#wb'); if(w){ w.classList.toggle('wb-edit', WB.tab==='edit'); w.classList.toggle('wb-res', WB.tab!=='edit'); }
   wbPaint(['tabs']); if(WB.tab==='res'){ wbPaint(['out', 'main', 'sig', 'mid']); wb3dUpdate && wb3dUpdate(); } }
@@ -31,8 +51,7 @@ function wbTabSet(tab){ if(!WB.id) return; WB.tab = tab==='edit' ? 'edit' : 'res
 function wbDash(dk){ if(!dk) return null;
   const e = typeof dvEntry==='function' ? dvEntry(dk) : null;
   if(e && typeof e.v==='number' && isFinite(e.v)) return {v:e.v, st:e.st || 'rev', by:e.by || '', at:e.at || '', src:e.src || ''};
-  if(typeof DASH!=='undefined' && typeof DASH.P[dk]==='number') return {v:DASH.P[dk], st:'ex'};   /* 아직 아무도 안 넣은 값 = 예시값 */
-  return null; }
+  return null; }   /* 아직 아무도 안 넣은 값 = 없음 (사이트는 예시값을 주지 않음, 2026-11-11) */
 const wbInName = d => d.n || (d.dk && DK[d.dk] ? DK[d.dk].n : d.k);
 const wbInUnit = d => d.u != null ? d.u : (d.dk && DK[d.dk] ? DK[d.dk].u : '');
 
@@ -63,6 +82,9 @@ const wbInputs = () => ({...WB.I, ...(wbT().extraI ? wbT().extraI() : {})});
 /* 도구 모듈이 표 등을 고친 뒤 부름: 다시 계산 */
 const wbRefresh = () => { if(WB.id) wbCalcSoon(); };
 const wbCode = () => WB.code[WB.id] != null ? WB.code[WB.id] : wbT().code;
+/* 계산 전 자리 표시 (스켈레톤): cards = 결과 카드 줄, plot = 그래프 상자 */
+function wbSkel(kind){ return kind==='plot' ? '<div class="wb-skel" aria-label="계산 중"><i class="s"></i><i class="b"></i></div>'
+  : '<div class="wb-skel" aria-label="계산 중"><i class="s"></i><div class="r"><i></i><i></i><i></i><i></i><i></i><i></i></div><i class="s"></i><div class="r"><i></i><i></i><i></i></div></div>'; }
 /* 계산 중 표시: 0.3초 넘게 걸리면 결과 칸 위에 진행 막대 + 이전 결과 흐리게. 새 계산이 오면 하던 계산은 버림 */
 function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = false; p.classList.toggle('ind', f == null);
   const b = p.querySelector('i'); if(b && f != null){ const w = Math.round(Math.max(0, Math.min(1, f))*100), w0 = parseFloat(b.style.width) || 0;
@@ -70,8 +92,8 @@ function wbProgShow(f, msg){ const p = $('#wbprog'); if(!p) return; p.hidden = f
   const t = p.querySelector('span'); if(t) t.textContent = (msg || '계산 중') + (f != null ? ` · ${Math.round(f*100)} %` : ' …'); }
 /* 계산 중: 화면 위에 고정한 진행 막대(스크롤과 상관없이 보임) + 오른쪽 화면 전체를 살짝 회색. 끝나면 바뀐 결과 칸 · 그래프가 한 번 깜빡임 */
 function wbBusy(on){ clearTimeout(WB.busyT); const m = $('#wb'), p = $('#wbprog');
-  if(on){ if(m) m.classList.add('wb-busy'); WB.progD = false; WB.busyT = setTimeout(() => { if(!WB.progD) wbProgShow(null, '계산 중'); }, 150); return; }   // 진행 신호가 이미 왔으면 흐르는 막대로 바꾸지 않음
-  if(m){ m.classList.remove('wb-busy'); m.classList.remove('wb-flash'); void m.offsetWidth; m.classList.add('wb-flash'); clearTimeout(WB.flashT); WB.flashT = setTimeout(() => m.classList.remove('wb-flash'), 800); }
+  if(on){ if(m) m.classList.add('wb-busy'); WB.progD = false; WB.busyT = setTimeout(() => { if(m) m.classList.add('wb-skelnow'); if(!WB.progD) wbProgShow(null, '계산 중'); }, 150); return; }   // 0.15 s 넘는 계산만 자리 표시 (짧은 계산은 깜빡이지 않게)   // 진행 신호가 이미 왔으면 흐르는 막대로 바꾸지 않음
+  if(m){ m.classList.remove('wb-busy', 'wb-skelnow'); m.classList.remove('wb-flash'); void m.offsetWidth; m.classList.add('wb-flash'); clearTimeout(WB.flashT); WB.flashT = setTimeout(() => m.classList.remove('wb-flash'), 800); }
   if(p){ p.hidden = true; const b = p.querySelector('i'); if(b){ b.style.transition = 'none'; b.style.width = '0%'; void b.offsetWidth; b.style.transition = ''; } } }
 /* 휠 확대는 박스를 눌러 켠 뒤에만 (data-zoombox). 다른 곳을 누르거나 Esc = 끔 → 휠 = 페이지 스크롤 */
 /*   상자는 다시 그려질 수 있어 이름(data-zoombox 값)으로 기억하고, 다시 그린 뒤에도 강조를 다시 붙임 (wbZoomMark) */
@@ -85,7 +107,26 @@ new MutationObserver(() => { if(WBZ.key) wbZoomMark(); }).observe(document.docum
 document.addEventListener('keydown', e => { if(e.key==='Escape' && WBZ.key){ wbZoomSet(null); } });
 function wbKill(){ if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
   Object.keys(WB.wait).forEach(id => { const f = WB.wait[id]; delete WB.wait[id]; f({ok:false, cancelled:true}); }); }
+/* 내 파일: 계산에 필요한데 빈 칸 = 화면에 있고(ui:'none' 아님) 잠기지 않은 칸 + 도구가 알리는 표 (T.needExt → [{n, go}]) */
+function wbNeed(){ const T = wbT(); if(!T) return []; const L = [];
+  T.inputs.forEach(d => { if(d.ui==='none' || d.opt || (T.inLock && T.inLock(d.k)) || (T.inNeed && T.inNeed(d.k)===false)) return; if(!isFinite(WB.I[d.k])) L.push({k:d.k, n:wbInName(d).replace(/<[^>]+>/g, ''), g:d.g || ''}); });
+  if(T.needExt) (T.needExt() || []).forEach(x => L.push(x)); return L; }
+const wbNeedK = k => (WB.need || []).some(x => x.k===k);
+/* 빈 필수 칸 빨강: 다시 그리지 않고 그 자리에서 (입력 중인 칸의 포커스 유지). 도구 화면의 표 · 블럭은 [data-wbneed="키"] 로 */
+function wbNeedMark(){ const w = $('#wb'); if(w) w.classList.toggle('wb-needon', !!WB.needShow && !!(WB.need || []).length);
+  document.querySelectorAll('#wb [data-wbtab="edit"]').forEach(b => b.classList.toggle('need', !!(WB.need || []).length));   /* [편집] 탭 단추에도 빨간 점 (2026-11-11) */
+  document.querySelectorAll('#wb input[data-wbi]').forEach(i => { const l = i.closest('.wb-ir'); if(l) l.classList.toggle('need', !i.disabled && wbNeedK(i.dataset.wbi)); });
+  document.querySelectorAll('#wb [data-wbneed]').forEach(el => el.classList.toggle('need', wbNeedK(el.dataset.wbneed))); const T = wbT(); if(T && T.needMark) T.needMark(WB.need || []); }
+/* 결과 자리: 채울 칸 목록 (누르면 그 칸으로) */
+function wbNeedHTML(){ const n = (WB.need || []).length;
+  return `<p class="wb-needline" role="status"><b>필수 입력 ${n}칸이 비어 있어 계산하지 않았습니다.</b> <span>[편집] 탭의 빨간 칸을 채우면 계산합니다.</span> <button type="button" class="btn small" data-wbgo="${wbEsc((WB.need[0] || {}).k || '')}"${WB.need[0] && WB.need[0].tab ? ` data-wbgotab="${wbEsc(WB.need[0].tab)}"` : ''}>첫 빈칸으로</button></p>`; }
+/* 목록에서 고른 칸으로: 도구가 T.needGo(k) 로 자기 화면을 엶 (도구 2P 편집 탭 묶음), 아니면 편집 탭 */
+function wbNeedGo(k, tab){ const T = wbT(); if(T.needGo && T.needGo(k, tab)===true){} else if(wbTabs(T) && WB.tab!=='edit') wbTabSet('edit');
+  setTimeout(() => { const el = document.querySelector(`#wb input[data-wbi="${k}"]`) || document.querySelector(`#wb [data-wbneed="${k}"]`); if(el){ el.scrollIntoView({block:'center', behavior:'smooth'}); if(el.focus) el.focus({preventScroll:true}); el.classList.add('wb-need-flash'); setTimeout(() => el.classList.remove('wb-need-flash'), 1200); } }, 80); }
 async function wbCalc(){ const T = wbT(); if(!T) return;
+  WB.need = wbNeed(); if(WB.need.length){ if(WB.busy) wbKill(); if(wbTabs(T) ? WB.tab!=='edit' : !(T.deferCalc && T.deferCalc())) WB.needShow = true;   /* 결과를 보려 할 때 비어 있으면 그때 빨강 (처음부터 빨갛게 하지 않음) */ WB.cseq = (WB.cseq || 0) + 1; WB.busy = false; wbBusy(false); WB.R = null; WB.err = '';
+    if(T.onResult) T.onResult(null); wbPaint(['out', 'main', 'sig', 'stat']); wbNeedMark(); return; }
+  wbNeedMark();
   if(WB.busy) wbKill();                                   /* 입력이 또 바뀜: 하던 계산은 버리고 새로 */
   const my = WB.cseq = (WB.cseq || 0) + 1; WB.busy = true; wbBusy(true);
   const r = await wbRun(wbInputs(), wbCode());
@@ -128,7 +169,12 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
      축 폭 = 눈금 숫자 폭 + 세로 제목 폭 (겹치지 않게). 색: 신호 하나면 축 · 눈금 · 제목 모두 그 선 색, 여럿이면 제목만 신호마다 제 색 */
   const dg = r => Math.abs(r.t[1] - r.t[0]) < 1 ? (Math.abs(r.t[1] - r.t[0]) < 0.1 ? 2 : 1) : 0;
   groups.forEach(G => { let lo = Infinity, hi = -Infinity; G.ys.forEach(y => y.d.forEach(v => { if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
-    if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5);
+    if(!isFinite(lo)){ lo = 0; hi = 1; } if(lo > 0 && lo < hi*0.35) lo = 0; if(hi - lo < 1e-9){ hi = lo + Math.max(1, Math.abs(lo)*.1); } G.r = wbTicks(lo, hi, 5); });
+  /* y = 0 맞춤: 0 을 지나는 축이 여럿이면 0 높이를 같게 (아래 몫 : 위 몫 비를 기하 평균으로 맞추고 모자란 쪽을 늘림) → 0 선 하나 */
+  const ZG = groups.filter(G => G.r.lo < 0 && G.r.hi > 0);
+  if(ZG.length > 1){ const ks = ZG.map(G => -G.r.lo/G.r.hi), k = Math.sqrt(Math.min(...ks)*Math.max(...ks));
+    ZG.forEach(G => { let lo = G.r.lo, hi = G.r.hi; if(-lo/hi < k) lo = -k*hi; else hi = -lo/k; G.r = wbTicksIn(lo, hi, 5); if(!G.r.t.some(t => Math.abs(t) < (hi - lo)*1e-9)) G.r.t.push(0); }); }
+  groups.forEach(G => {
     if(o.zy){ const a = G.r.lo + o.zy.a*(G.r.hi - G.r.lo), b = G.r.lo + o.zy.b*(G.r.hi - G.r.lo); G.r = wbTicksIn(a, b, 5); }
     G.lw = Math.max(...G.r.t.map(t => wbFmt(t, dg(G.r)).length))*6.6; G.aw = Math.round(7 + G.lw + 8 + 13 + 8); });
   const LG = groups.filter((_, i) => i % 2 === 0), RG = groups.filter((_, i) => i % 2 === 1);
@@ -151,8 +197,12 @@ function wbPlot(o){ const xd = o.x.d, ys = o.ys || [];
     const body = !G.ys.length ? '<tspan style="fill:var(--muted)">-</tspan>' : one ? `<tspan style="fill:${col}">${wbEsc(G.ys[0].n)}</tspan>` : short ? `<tspan style="fill:var(--ink-2)">${wbEsc(short)}</tspan>`
       : G.ys.map((y, i) => `${i ? '<tspan style="fill:var(--muted)"> · </tspan>' : ''}<tspan style="fill:${y.c}">${wbEsc(y.n)}</tspan>`).join('');
     s += `<text x="${tx}" y="${ty}" class="wb-tl" text-anchor="middle" transform="rotate(${left ? -90 : 90} ${tx} ${ty})"><title>${wbEsc(all)}${u}</title>${body}<tspan style="fill:${col}">${u}</tspan></text>`; });
+  { const Z = groups.find(G => G.r.lo < 0 && G.r.hi > 0); if(Z){ const zy = Y(0, Z.r); s += `<line x1="${L}" y1="${zy}" x2="${L+pw}" y2="${zy}" class="wb-zero"/>`; } }   /* y = 0 선 (가속 · 감속 구분) */
   s += `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" class="wb-frame"/>`;
-  ys.forEach(y => { const r = gOf(y).r; s += `<polyline${clip} fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
+  /* o.dots: 가로축이 시간 · 거리가 아닌 신호면 선으로 잇지 않고 점 (회전수 – 토크 운전점처럼). 점 수천 개라 원 대신 길이 0 토막 하나의 path (둥근 끝 = 점) */
+  if(o.dots) ys.forEach(y => { const r = gOf(y).r; let p = ''; y.d.forEach((v, i) => { if(isFinite(v) && isFinite(xd[i])) p += `M${X(xd[i]).toFixed(1)} ${Y(v, r).toFixed(1)}h0`; });
+    s += `<path${clip} d="${p}" fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?4:3.2}" stroke-linecap="round" stroke-opacity=".55" vector-effect="non-scaling-stroke"/>`; });
+  else ys.forEach(y => { const r = gOf(y).r; s += `<polyline${clip} fill="none" stroke="${y.c}" stroke-width="${o.act===y.k?2.4:1.8}" vector-effect="non-scaling-stroke" points="${y.d.map((v, i) => isFinite(v) && isFinite(xd[i]) ? `${X(xd[i]).toFixed(1)},${Y(v, r).toFixed(1)}` : '').join(' ')}"/>`; });
   if(o.xi != null && isFinite(xd[o.xi]) && xd[o.xi] >= xr.lo && xd[o.xi] <= xr.hi){ const cx = X(xd[o.xi]), right = cx < L + pw*0.72, lab = [];
     s += `<line x1="${cx}" y1="${T}" x2="${cx}" y2="${T+ph}" class="wb-cur"/>`;
     ys.forEach(y => { const v = y.d[o.xi], r = gOf(y).r; if(!isFinite(v) || v < r.lo || v > r.hi) return; const cy = Y(v, r); s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="${y.c}" stroke="#fff" stroke-width="1"/>`;
@@ -180,13 +230,16 @@ function wbShellHTML(){ const T = wbT();
         ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}<i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
         <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
-        <button type="button" class="btn small" data-wbimp>가져오기 .json</button><i class="wb-sep" aria-hidden="true"></i>
+        <button type="button" class="btn small" data-wbimp>가져오기 .json</button><button type="button" class="btn small" data-wbpre>프리셋 ▾</button><i class="wb-sep" aria-hidden="true"></i>
+        ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구 · 대시보드에서 값 · 표를 가져옴 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button>` : ''}${T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wbdreset title="대시보드 칸과 이어진 입력을 모두 지금 대시보드 값으로 되돌림 (대시보드에 값이 없는 칸은 그대로)">대시보드 값으로 초기화</button>` : ''}${T.links || T.inputs.some(d => d.dk && !d.ui) ? '<i class="wb-sep" aria-hidden="true"></i>' : ''}
+        ${T.share==='hp' ? `<details class="wb-hpdd"><summary class="btn small" title="도구 5 · 6 · 7 · 8 이 같은 하드포인트 한 벌을 씁니다 (이 브라우저 안). 어느 도구에서 고쳐도 다른 도구가 열 때 그 값을 씁니다.">하드포인트 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbhp="xlsx">내보내기 .xlsx</button><button type="button" class="btn small" data-wbhp="json">내보내기 .json</button><button type="button" class="btn small" data-wbhp="imp">가져오기 (.xlsx · .csv · .json)</button></span></details><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
         <button type="button" class="wb-close" data-wbx aria-label="작업창 닫기">×</button>
-      </span><input type="file" accept=".json,application/json" id="wbfile" hidden></div>
+      </span><input type="file" accept=".json,application/json" id="wbfile" hidden><input type="file" accept=".xlsx,.csv,.txt,.json" id="wbhpfile" hidden></div>
+    ${wbEx() ? '<div class="wb-exband" role="note"><b>예제</b><span>튜토리얼용 임의 데이터입니다. 설계에 쓸 수 없고, 내보내기 · 가져오기 · 대시보드 연결이 꺼져 있습니다.</span><button type="button" class="btn small" data-wbexreset title="이 도구의 예제 값을 처음 상태로">예제 처음으로</button></div>' : ''}
     <div class="wb-prog" id="wbprog" hidden role="status" aria-live="polite"><i></i><span></span></div>
     <div class="wb-main">
-      <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button></div><div id="wbin"></div></aside>
+      <aside class="wb-in" aria-label="입력"><div class="wb-h"><h3>입력</h3></div><div id="wbin"></div></aside>
       <div class="wb-right">
         ${wbTabs(T) ? `<section class="wb-sec wb-tabsec" aria-label="결과 · 편집"><div class="wb-h"><div class="m1-tabs" role="tablist" id="wbtabs"></div><span class="wb-meta" id="wbtabm"></span></div></section>` : ''}
         ${T.extHTML ? '<div id="wbext"></div>' : ''}
@@ -201,23 +254,34 @@ function wbShellHTML(){ const T = wbT();
         ${T.noSig ? '' : `<section class="wb-sec" aria-label="신호 선택 그래프"><div class="wb-h"><h3>신호 선택 그래프</h3><span class="wb-meta">신호마다 자기 눈금 · 이름을 누르면 그 신호의 눈금 · 그래프를 누르거나 끌면 프로브</span></div>
           <div class="wb-sig"><div class="wb-sl" id="wbsl"></div><div id="wbsig" class="wb-plotbox wb-panes" tabindex="0" data-zm="cur"></div></div></section>`}
       </div></div>`; }
-/* 입력 칸 상태 점 (대시보드와 같은 색): 확정 · 검토 중 · 가정 · 계산값 · 예시값. 대시보드 값과 다르게 고치면 점 둘레에 고리(직접 고침).
-   대시보드에 없는 값(도구 기본값 · 도구 전용)은 회색 네모. 마우스를 올리면 담당 파트 · 대시보드 값 · 상태 · 고친 사람 */
-const WB_STL = {ok:'확정', rev:'검토 중', asm:'가정', calc:'계산값', ex:'예시값'};
-function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2;
-  if(!K) return `<i class="wb-st sq" title="이 도구에서만 쓰는 값 (대시보드에 없음) · 도구 기본값 ${wbFmt(d.v, dd)}"></i>`;
+/* 대시보드 기준값 (2026-11-13): 칸마다 도구가 마지막으로 맞춘 대시보드 값. 브라우저에만 · 모드별 (예제는 안 씀).
+   맞추는 때 = [대시보드 값으로 초기화] · [도구 연결] 대시보드에서 가져오기 · [대시보드에 반영]으로 그 칸을 보냄 · ↻ 를 눌러 '확인함' · 처음 본 때.
+   대시보드 값이 기준값과 다르면 ↻ (대시보드가 바뀜 → 따라 바꿔야 함). ◎ (내가 고침)와 다름 */
+const WBB = {};
+function wbBaseMap(){ const K = 'run2x.wb.base@' + (wbEx() ? 'ex' : 'nf'); if(!WBB[K]){ try{ WBB[K] = JSON.parse(localStorage.getItem(K) || '{}'); }catch(e){ WBB[K] = {}; } } return [K, WBB[K]]; }
+function wbBaseSet(k, v){ if(wbEx() || !WB.id) return; const [K, A] = wbBaseMap(), t = A[WB.id] = A[WB.id] || {}; if(v==null) delete t[k]; else t[k] = v; try{ localStorage.setItem(K, JSON.stringify(A)); }catch(e){} }
+function wbChg(d){ if(wbEx() || !d.dk || !WB.id) return null; const db = wbDash(d.dk); if(!db) return null; const b = (wbBaseMap()[1][WB.id] || {})[d.k];
+  if(b==null){ wbBaseSet(d.k, db.v); return null; } return Math.abs(b - db.v) <= 1e-9*Math.max(1, Math.abs(db.v)) ? null : {from:b, db}; }
+function wbChgList(){ const T = wbT(); return T ? T.inputs.filter(d => d.dk && d.ui!=='none' && !(T.inLock && T.inLock(d.k)) && wbChg(d)) : []; }
+function wbChgNote(){ const n = wbChgList().length; return n ? `<p class="wb-chgnote"><b class="dv-re">↻</b>대시보드 값 ${n}개가 바뀌었습니다<button type="button" class="btn small" data-wbdreset>대시보드 값으로 초기화</button></p>` : ''; }
+/* 입력 칸 앞 표시 (2026-11-13, 범례 개편): 확정도가 아니라 '대시보드와의 관계'. 대시보드는 보기 전용이라 상태(확정 · 검토 중 · 가정)를 정할 곳이 없어짐.
+   ● 대시보드 값 그대로 · ◎ 대시보드와 다름(직접 고침 · 다른 도구에서 가져옴) · ◌ 대시보드와 이어진 칸인데 대시보드가 비어 있음 · ■ 이 도구에서만 쓰는 값.
+   마우스를 올리면 담당 파트 · 대시보드 값 · 출처 · 반영한 사람 */
+function wbInDot(d, db, v, own){ const K = d.dk && typeof DK!=='undefined' ? DK[d.dk] : null, dd = d.d != null ? d.d : 2, chg = K ? wbChg(d) : null;
+  if(chg) return `<i class="wb-st wb-chg" data-wbbase="${d.k}" role="button" tabindex="0" title="${wbEsc(`${K.n.replace(/<[^>]+>/g, '')} · 대시보드가 바뀜 ${wbFmt(chg.from, dd)} → ${wbFmt(chg.db.v, dd)} ${K.u || ''}${chg.db.src ? ` (${chg.db.src}${chg.db.at ? ' · ' + String(chg.db.at).slice(0, 10) : ''})` : ''} · 눌러서 확인함 (내 값 그대로)`)}">↻</i>`;
+  if(!K) return `<i class="wb-st sq" title="이 도구에서만 쓰는 값 (대시보드와 공유 안 함)"></i>`;
   const part = K.p + (K.p2 ? ' · ' + K.p2 : '');
-  if(!db) return `<i class="wb-st sq" title="${wbEsc(K.n)} · 담당 ${wbEsc(part)} · 대시보드 값 없음 → 도구 기본값 ${wbFmt(d.v, dd)}"></i>`;
-  const who = db.by ? ` · ${db.by}${db.at ? ' ' + String(db.at).slice(0, 10) : ''}` : '';
-  const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''} (${WB_STL[db.st] || db.st})${who}${own ? ` → 지금 ${wbFmt(v, dd)} (직접 고침, 대시보드는 그대로)` : ''}`;
-  return `<i class="wb-st dv-s s-${db.st}${own ? ' own' : ''}" title="${wbEsc(tip)}"></i>`; }
-const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 점의 뜻"><span><i class="wb-st dv-s s-ok"></i>확정</span><span><i class="wb-st dv-s s-rev"></i>검토 중</span><span><i class="wb-st dv-s s-asm"></i>가정</span><span><i class="wb-st dv-s s-calc"></i>계산값</span><span><i class="wb-st dv-s s-ex"></i>예시값</span><span><i class="wb-st dv-s s-ok own"></i>직접 고침</span><span><i class="wb-st sq"></i>도구 기본값</span></p>`;
+  if(!db) return `<i class="wb-st dv-s s-emp" title="${wbEsc(K.n)} · 담당 ${wbEsc(part)} · 대시보드 비어 있음"></i>`;
+  const who = [db.src, db.by, db.at ? String(db.at).slice(0, 10) : ''].filter(Boolean).join(' · ');
+  const tip = `${K.n} · 담당 ${part} · 대시보드 ${wbFmt(db.v, dd)} ${K.u || ''}${who ? ` (${who})` : ''}${own ? ` → 지금 ${isFinite(v) ? wbFmt(v, dd) : '빈칸'} (대시보드와 다름)` : ''}`;
+  return `<i class="wb-st dv-s ${own ? 's-dif' : 's-in'}" title="${wbEsc(tip)}"></i>`; }
+const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 앞 표시의 뜻"><span><i class="wb-st dv-s s-in"></i>대시보드 값</span><span><i class="wb-st dv-s s-dif"></i>대시보드와 다름</span><span><i class="wb-st dv-s s-emp"></i>대시보드 비어 있음</span><span><i class="wb-st sq"></i>이 도구 전용</span><span><i class="wb-st wb-chg">↻</i>대시보드가 바뀜</span></p>`;
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
    도구가 입력을 자기 화면(도구 2P 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
 function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2P) · 탭 도구 = 핵심 입력(key:true)만 */
-  if(!list.length) return WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
-  if(!list.length && T.inEmpty) return WB_INLEG + T.inEmpty;
-  return WB_INLEG + wbInRows(list); }
+  if(!list.length) return wbChgNote() + WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
+  if(!list.length && T.inEmpty) return wbChgNote() + WB_INLEG + T.inEmpty;
+  return wbChgNote() + WB_INLEG + wbInRows(list); }
 /* 편집 탭 본문: 입력 묶음(d.g)마다 카드 (묶음 이름이 '앞 · ' · '뒤 · ' 로 시작하면 [차 · 공통 | 앞 | 뒤] 로 나눔) */
 function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') return '';
   const list = T.inputs.filter(d => !d.ui), sides = list.some(d => /^(앞|뒤) · /.test(d.g || ''));
@@ -227,9 +291,18 @@ function wbEditHTML(){ const T = wbT(); if(!T || !wbTabs(T) || WB.tab!=='edit') 
   const groups = []; show.forEach(d => { let G = groups.find(x => x.g===(d.g || '')); if(!G){ G = {g:d.g || '', ds:[]}; groups.push(G); } G.ds.push(d); });
   const nav = sides ? `<div class="wb-esec"><span class="muted">보기</span><span class="dc-seg" role="group">${[['c', '차 · 공통'], ['f', '앞'], ['r', '뒤']].map(([k, t]) => `<button type="button" data-wbesec="${k}" aria-pressed="${WB.esec===k}">${t}</button>`).join('')}</span></div>` : '';
   const cut = g => sides ? g.replace(/^(앞|뒤) · /, '') : g;
-  return `<div class="wb-ebar"><button type="button" class="btn small" data-wbfill>대시보드 값으로 채우기</button>${nav}</div>
-    ${groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
-    ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }
+  return `<div class="wb-ebar">${nav}</div>
+    ${!sides && T.edLay ? wbEditLay(T.edLay(), groups) : groups.length ? `<div class="wb-ecards">${groups.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(cut(G.g))}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''}
+    ${T.editTail ? T.editTail() : ''}
+    ${T.editFig && WB.R && T.figure ? `<div class="wb-efig">${T.figure(WB.I, WB.R)}</div>` : ''}`; }   /* editTail: 도구가 편집 탭 맨 아래에 붙이는 것 (도구 4 셀 표) */
+/* 편집 배치 (도구가 T.edLay 를 줄 때, 2026-11-11): 구역 [{h 머리, n 열 수, cards:[{g 묶음, span 칸, k 카드 안 열 수}]}]. 항목이 적으면 한 행 여러 카드,
+   많으면 카드를 넓혀 안에서 열을 나눔 (세로 순서대로 채움). 배치에 없는 묶음은 맨 아래 카드로 */
+function wbEditLay(L, groups){ const used = new Set();
+  const card = c => { const G = groups.find(x => x.g===c.g); if(!G) return ''; used.add(G); const k = c.k || 1;
+    return `<div class="wb-ecard" style="grid-column:span ${c.span || 1}">${G.g ? `<div class="wb-ech">${wbEsc(G.g)}</div>` : ''}${k > 1 ? `<div class="wb-ebin" style="--k:${k};--r:${Math.ceil(G.ds.length / k)}">${wbInRows(G.ds, false)}</div>` : wbInRows(G.ds, false)}</div>`; };
+  const secs = L.map(S => { const cs = S.cards.map(card).join(''); return cs ? `<div class="wb-ig wb-elh">${wbEsc(S.h)}</div><div class="wb-elay" style="--n:${S.n}">${cs}</div>` : ''; }).join('');
+  const rest = groups.filter(G => !used.has(G));
+  return secs + (rest.length ? `<div class="wb-ecards">${rest.map(G => `<div class="wb-ecard">${G.g ? `<div class="wb-ech">${wbEsc(G.g)}</div>` : ''}${wbInRows(G.ds, false)}</div>`).join('')}</div>` : ''); }
 function wbTabsHTML(){ const T = wbT(); if(!wbTabs(T)) return '';
   return [['res', '결과'], ['edit', '편집']].map(([k, t]) => `<button type="button" role="tab" data-wbtab="${k}" aria-selected="${(WB.tab || 'res')===k}">${t}</button>`).join(''); }
 /* 잠긴 칸 값: 도구의 inEff(k) 가 undefined = 저장값 그대로, null = 계산에 안 씀 (—), 숫자 = 실제로 쓰는 값, '…' = 결과가 나오면 정해짐 */
@@ -243,22 +316,32 @@ function wbEffVal(T, d){ const e = T.inEff ? T.inEff(d.k) : undefined, v = WB.I[
 function wbEffRefresh(){ const T = wbT(); if(!T || !T.inLock) return;
   document.querySelectorAll('#wb input[data-wbi]:disabled').forEach(i => { const d = T.inputs.find(q => q.k===i.dataset.wbi); if(!d) return; const ev = wbEffVal(T, d);
     i.value = ev.v; i.placeholder = ev.ph; i.className = ev.cls; i.title = ev.t; }); }
-function wbInRows(list, head = true){ const T = wbT(); let g0 = '';
+/* 입력 줄 모양 (2026-11-11): [이름 | 칸 | 단위] 한 줄, 잠김 사유는 칸 아래. 단위 열 폭 = 이 목록에서 가장 긴 단위 (오른쪽 빈 여백 줄임).
+   이름 뒤 긴 괄호 설명(12자 넘음)은 이름에 마우스를 올리면 보임 (점선 밑줄) */
+let WBUW = null; const wbUW = s => { try{ if(!WBUW){ WBUW = document.createElement('canvas').getContext('2d'); WBUW.font = `12px ${getComputedStyle(document.body).fontFamily}`; } return Math.ceil(WBUW.measureText(s).width); }catch(e){ return s.length*7; } };
+function wbInSplit(nm){ if(/<[^>]+>/.test(nm)) return null; const i = nm.indexOf(' ('); if(i < 1 || !nm.endsWith(')')) return null; const tail = nm.slice(i + 2, -1); return tail.length > 12 ? [nm.slice(0, i), tail] : null; }
+function wbInRows(list, head = true){ const T = wbT(); let g0 = ''; const uw = Math.max(18, ...list.map(d => wbUW(wbInUnit(d) || ''))) + 4;
   return list.map(d => { const db = wbDash(d.dk), v = WB.I[d.k], diff = WB.cmp && db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v));
     const grp = head && d.g && d.g!==g0 ? `<div class="wb-ig">${wbEsc(d.g)}</div>` : ''; g0 = d.g || g0;
-    const nm = d.dk ? `<span class="term" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${wbInName(d)}</span>` : wbInName(d);
+    const sp = wbInSplit(String(wbInName(d))), tip = sp ? sp[1] : '';   /* 긴 괄호 설명 → 툴팁 (대시보드 연결 칸도, 2026-11-12) */
+    const nm = d.dk ? `<span class="term${sp ? ' wb-inmore' : ''}" data-dk="${d.dk}" tabindex="0" role="button" aria-haspopup="dialog">${sp ? sp[0] : wbInName(d)}</span>` : sp ? `<span class="wb-inmore">${sp[0]}</span>` : wbInName(d);
     const viz = d.viz ? `<button type="button" class="wb-viz" data-wbviz="${d.k}" title="이 값의 모양을 그래프로 보기" aria-label="${wbInName(d).replace(/<[^>]+>/g, '')} 그래프로 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 L6 8 L9 10 L14 3"/></svg></button>` : '';
-    const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own);
+    const own = db && isFinite(v) && Math.abs(v - db.v) > 1e-9*Math.max(1, Math.abs(db.v)), dot = wbInDot(d, db, v, own || (!!db && !isFinite(v)));   /* 칸이 비어 있어도 대시보드 값과 다름 (◎) */
     const lk = T.inLock ? T.inLock(d.k) : '';   /* 도구가 맵으로 대신 쓰는 입력: 칸을 막고 까닭을 적음 */
     const ev = lk ? wbEffVal(T, d) : null;      /* 잠긴 칸에 보일 값: 실제로 계산에 쓰는 값 · 안 쓰면 — (저장값은 그대로 → 풀리면 되돌아옴) */
     const opt = T.inOpt ? T.inOpt(d.k) : '';   /* 도구가 이 칸 줄에 넣는 옵션 단추 (이름과 값 사이) */
-    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}"><span class="wb-in-n"><span class="wb-in-t">${dot}${nm}${viz}</span>${opt}${lk ? `<span class="wb-lk">${lk}</span>` : ''}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>
+    return grp + `<label class="wb-ir${diff?' diff':''}${own?' own':''}${lk?' lock':''}${!lk && wbNeedK(d.k) ? ' need' : ''}" style="--uw:${uw}px"><span class="wb-in-n"><span class="wb-in-t"${d.nFull || tip ? ` title="${wbEsc(String(d.nFull || wbInName(d)).replace(/<[^>]+>/g, ''))}"` : ''}>${dot}${nm}${viz}</span>${wbSrcTag(WB.id, d.k)}${opt}</span><input type="number" step="any" data-wbi="${d.k}" value="${lk ? ev.v : isFinite(v)?v:''}"${lk ? ` disabled placeholder="${ev.ph}"${ev.cls ? ` class="${ev.cls}"` : ''} title="${ev.t}"` : ''}><span class="wb-u">${wbEsc(wbInUnit(d))}</span>${lk ? `<span class="wb-lk">${lk}</span>` : ''}
       ${!WB.cmp ? '' : d.dk ? `<span class="wb-db">${db ? `대시보드 ${wbFmt(db.v, d.d != null ? d.d : 2)}${db.st==='ex'?' (예시값)':''}` : '대시보드 값 없음'}</span>` : '<span class="wb-db">이 도구에서만 쓰는 값</span>'}</label>`; }).join(''); }
 /* 결과: 도구가 정한 묶음(outputs[].g)마다 카드. 값과 단위는 붙여 쓰고, 대시보드 키가 있으면 대시보드 값을 아래 작게(다르면 노랑).
    묶음에 grid:2 를 주면 두 칸 배치(코너웨이트처럼) */
 function wbOutHTML(){ const T = wbT(), R = WB.R;
   if(WB.err) return `<p class="wb-err" role="alert">${wbEsc(WB.err)}</p>`;
-  if(!R) return '<p class="wb-empty">계산 중…</p>';
+  if(!R && WB.need && WB.need.length) return wbNeedHTML();
+  if(!R){   /* 계산 중: 실제 카드 모양 그대로 (이전 결과 · 없으면 빈 결과로 그린 뒤 숫자 자리만 반짝이는 막대) */
+    let h = ''; const D = WB.Rlast && WB.Rlast.id===WB.id ? WB.Rlast.R : {out:{}};
+    try{ h = T.outHTML ? T.outHTML(D) : wbOutCards(T, D, false); }catch(e){ try{ h = wbOutCards(T, {out:{}}, false); }catch(e2){ h = ''; } }
+    return h ? `<div class="wb-skelmode" aria-busy="true" aria-label="계산 중">${h}</div>` : wbSkel('cards'); }
+  WB.Rlast = {id:WB.id, R};
   if(T.outHTML) return T.outHTML(R);   /* 도구가 결과 칸을 직접 그림 (도구 2P) */
   return wbOutCards(T, R, WB.cmp); }
 /* 결과 카드: 도구가 정한 묶음마다. d.hide = 화면에 안 보임(검증 · 반영용), d.fmt(v, out) = 값 칸 HTML(단위 포함),
@@ -275,10 +358,6 @@ function wbOutCards(T, R, cmp){ const out = R.out || {};
 function wbXDef(){ const T = wbT(); return {n: (T.x && T.x.n) || 'x', u: (T.x && T.x.u) || ''}; }
 function wbMainHTML(){ const R = WB.R; if(!R) return '';
   return wbT().figure ? wbT().figure(wbInputs(), R) : ''; }
-function wbMainLineHTML(){ const R = WB.R; if(!R || !R.x) return '';   /* 예전 '결과 그래프'(선). 지금은 쓰지 않음 */
-  const ys = (R.main || []).filter(k => R.sig[k]).map(k => ({k, d:R.sig[k], c:wbColor(k), n:wbSigDef(k).n, u:wbSigDef(k).u, dd:wbSigDef(k).d}));
-  return wbPlot({id:'main', w:640, h:300, x:{d:R.x.d, ...wbXDef()}, ys, xi:WB.xi, label:'결과 그래프'})
-    + `<div class="wb-leg"><span class="wb-legx">${wbEsc(wbXDef().n)} <b>${wbFmt(R.x.d[WB.xi], 1)}</b> ${wbEsc(wbXDef().u)}</span>${ys.map(y => `<span><i style="background:${y.c}"></i>${wbEsc(y.n)} <b>${wbFmt(y.d[WB.xi], wbSigDef(y.k).d||0)}</b> ${wbEsc(y.u)}</span>`).join('')}</div>`; }
 /* 신호 선택 그래프: 가로축 고르기 → 기본 축 · 신호(XY) · 입력 훑기 */
 const wbOutDef = k => wbT().outputs.find(o => o.k===k);
 const wbOutName = d => d.n || (d.dk && DK[d.dk] ? DK[d.dk].n : d.k);
@@ -333,7 +412,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest || !
   const g = t.closest('[data-wbsgh]'); if(g){ const k = g.dataset.wbsgh, cz = WB.slc || (WB.slc = new Set()); cz.has(k) ? cz.delete(k) : cz.add(k); wbSlPaint(); return; }
   if(t.closest('[data-wbslall]')){ WB.slall = !WB.slall; wbSlPaint(); } });
 function wbSigHTML(){ const R = WB.R; if(!R) return '';
-  if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return '<p class="wb-empty">계산 중…</p>';
+  if(WB.xa.startsWith('in:')){ const S = WB.sw; if(!S || !S.X) return wbSkel('plot');
     const d = wbT().inputs.find(o => o.k===S.k), x = {d:S.X, n:wbInName(d).replace(/<[^>]+>/g, ''), u:wbInUnit(d)};
     return wbPanes(WB.panesO, WB.piO, P => [...P].map(k => wbOutDef(k)).filter(Boolean).map(o => ({k:o.k, d:S.O[o.k], c:wbOutColor(o.k), n:wbOutName(o).replace(/<[^>]+>/g, ''), u:wbOutUnit(o), dd:o.d})), x, WB.si, WB.actO, '입력 훑기 그래프', '결과'); }
   const xs = WB.xa.startsWith('sig:') ? wbSigDef(WB.xa.slice(4)) : null, x = xs ? {d:R.sig[xs.k], n:xs.n, u:xs.u} : {d:R.x.d, ...wbXDef()};
@@ -349,7 +428,7 @@ function wbPanes(P, pi, mk, x, xi, act, label, what){ const zm = WB.zm || 'cur';
   return P.map((S, i) => { const ys = mk(S), h = wbPh(i, P.length), zy = WB.zy && WB.zy[i];
     const tb = `<div class="wb-ptb" role="toolbar" aria-label="${i+1}번 그래프 칸 보기">${WB_ZM.map(([k, t, ti]) => `<button type="button" data-wbzm="${k}" aria-pressed="${zm===k}" title="${ti}">${t}</button>`).join('')}`
       + (P.length > 1 ? `<i></i><button type="button" class="wb-ppx" data-wbpdel="${i}" aria-label="${i+1}번 칸 지우기" title="이 칸 지우기">×</button>` : '') + '</div>';
-    const body = wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`, zx:wbZx(), zy, clip:`p${i}`});
+    const body = wbPlot({id:'sig', w:1100, h, x, ys, act, xi, label:`${label} ${i+1}`, zx:wbZx(), zy, clip:`p${i}`, dots:WB.xa.startsWith('sig:')});
     const hint = ys.length ? '' : `<p class="wb-pempty">왼쪽에서 ${P.length > 1 ? `${i+1}번 칸에 ` : ''}그릴 ${what}를 고르십시오.</p>`;
     return `<div class="wb-pp${P.length > 1 && i===pi ? ' on' : ''}" data-wbpi="${i}" data-zoombox="pane${i}">${tb}${body}${hint}<div class="wb-ph" data-wbph="${i}" title="끌어서 높이 조절" aria-hidden="true"></div></div>`; }).join('')
     + (P.length < 3 ? '<div class="wb-padd"><button type="button" class="btn small" data-wbpadd>+ 그래프 칸</button></div>' : ''); }
@@ -365,29 +444,89 @@ function wbPaint(which){ const all = !which, m = $('#wb'); if(!m || m.hidden) re
   if((all || which.includes('sig')) && $('#wbsl')){ wbSlPaint(); $('#wbsig').innerHTML = wbSigHTML(); }
   if(all || which.includes('stat')){ $('#wbstat').textContent = WB.err ? '' : (WB.R ? `계산 ${WB.ms < 1 ? '1 ms 미만' : Math.round(WB.ms) + ' ms'} · Web Worker` : ''); const c = $('#wbcodeon'); if(c) c.hidden = WB.code[WB.id] == null; } }
 
+/* 다시 그린 뒤에도 빈 필수 칸 표시 유지 (도구 화면을 새로 그려도) */
+{ const _wbPaint = wbPaint; wbPaint = function(which){ _wbPaint(which); if((WB.need || []).length) wbNeedMark(); }; }
 /* ---------- 사용법 단계의 탭: 결과 쪽 선택자면 결과, 입력 · 도구 입력 화면이면 편집 ---------- */
 function wbTourTabs(T){ if(!T || !T.tour || T.__tt || !wbTabs(T)) return; T.__tt = true;
   T.tour = T.tour.map(st => { const sel = String(st[0] || ''); if(/wb-bar|wb-tabsec/.test(sel)) return st;
     const res = /wbout|wbmain|wb-sig|wbsig|wbmid|wb-two|wbstat|t4-pw/.test(sel), tab = res ? 'res' : 'edit';
     const sel2 = /\.wb-in\b/.test(sel) ? '#wb #wbedit' : sel;
-    return [sel2, st[1], st[2], {...(st[3] || {}), wbtab:tab}, ...st.slice(4)]; }); }
+    return [sel2, st[1], st[2], {...(st[3] || {}), wbtab:(st[3] && st[3].wbtab) || tab}, ...st.slice(4)]; }); }   /* 단계에 적은 탭이 있으면 그것 우선 (121차) */
 /* ---------- 열기 · 닫기 · 입력 기억 ---------- */
+/* ---------- 도구끼리 같이 쓰는 입력 (share): 같은 브라우저 안에서 한 벌. 고른 도구 어디서 고쳐도 다른 도구가 열 때 그 값을 씀
+   hp = 서스 하드포인트 (도구 5 · 6 · 7 · 8, 키 '앞 f / 뒤 r _ 점 _ x · y · z'). 상세 제원이라 팀 저장소에는 두지 않고, 파일(.xlsx · .csv · .json)로 주고받음 */
+const WB_SHARE = {hp:{re:/^[fr]_[a-z]{2}_[xyz]$/, key0:'run2x.wb.share.hp', n:'하드포인트', get key(){ return wbMK(this.key0); }}};
+function wbShareGet(sh){ try{ const o = JSON.parse(localStorage.getItem(WB_SHARE[sh].key) || '{}'); return o && typeof o==='object' ? o : {}; }catch(e){ return {}; } }
+function wbShareSet(sh, I){ const S = WB_SHARE[sh]; if(!S) return; const o = wbShareGet(sh); let ch = false;
+  Object.keys(I).forEach(k => { if(S.re.test(k) && typeof I[k]==='number' && isFinite(I[k]) && o[k]!==I[k]){ o[k] = I[k]; ch = true; } });
+  if(ch) try{ localStorage.setItem(S.key, JSON.stringify(o)); }catch(e){} }
 function wbLoad(id){ const T = WB_TOOLS[id], I = {}; let saved = {};
   try{ saved = JSON.parse(localStorage.getItem(wbStoreKey(id)) || '{}') || {}; }catch(e){ saved = {}; }
-  T.inputs.forEach(d => { const s = saved[d.k], db = wbDash(d.dk); I[d.k] = typeof s==='number' && isFinite(s) ? s : (db ? db.v : d.v); });
+  const sh = T.share && WB_SHARE[T.share] ? wbShareGet(T.share) : null, re = sh ? WB_SHARE[T.share].re : null;
+  T.inputs.forEach(d => { const c = sh && re.test(d.k) ? sh[d.k] : undefined, s = saved[d.k];
+    I[d.k] = typeof c==='number' && isFinite(c) ? c : typeof s==='number' && isFinite(s) ? s : (wbEx() || d.ui==='none' || d.keep ? d.v : NaN); });   /* 같이 쓰는 값 > 이 도구 저장값 > (예제 = 기본값 · 내 파일 = 빈칸, 모델 선택 · 고정 상수(ui:'none') · 운전자 계수(keep)는 늘 기본) */
   return I; }
-function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(WB.I)); }catch(e){} }
-function wbOpen(id, ret){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id];
-  WB.id = id; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
+function wbSave(){ try{ localStorage.setItem(wbStoreKey(WB.id), JSON.stringify(WB.I)); }catch(e){} const T = WB_TOOLS[WB.id]; if(T && T.share) wbShareSet(T.share, WB.I); }
+/* 하드포인트 파일: 행 = 축 · 점 · 이름 · x · y · z [mm] (차량 좌표: x 앞 · y 바깥 · z 위, 왼쪽 바퀴). 도구 5 · 6 · 7 · 8 의 점을 모두 담음 */
+function wbHpRows(){ const o = wbShareGet('hp'), cur = WB.I || {}, val = (k, d) => typeof cur[k]==='number' && WB_SHARE.hp.re.test(k) ? cur[k] : typeof o[k]==='number' ? o[k] : d;
+  const rows = [['# Run2X 하드포인트 (도구 5 · 6 · 7 · 8 공통) · 단위 mm · 차량 좌표 x 앞 · y 바깥 · z 위 (왼쪽 바퀴, x 0 = 그 축 바퀴 중심)'], ['축', '점', '이름', 'x', 'y', 'z']];
+  if(typeof K3D_HP==='undefined') return rows;
+  ['f', 'r'].forEach(s => Object.keys(K3D_HP[s]).forEach(p => { const nm = (s === 'r' && typeof K3D_PNR!=='undefined' && K3D_PNR[p]) || (typeof K3D_PN!=='undefined' && K3D_PN[p]) || p;
+    rows.push([s === 'f' ? '앞' : '뒤', p, nm, ...['x', 'y', 'z'].map((c, j) => val(`${s}_${p}_${c}`, K3D_HP[s][p][j]))]); }));
+  return rows; }
+function wbHpExport(kind){ const rows = wbHpRows(), day = new Date().toISOString().slice(0,10); let blob, name;
+  if(kind==='xlsx' && typeof t2XlsxBlob==='function'){ blob = t2XlsxBlob(rows); name = `run2x_hardpoints_${day}.xlsx`; }
+  else { const pts = {}; rows.slice(2).forEach(r => ['x', 'y', 'z'].forEach((c, j) => { pts[`${r[0]==='앞' ? 'f' : 'r'}_${r[1]}_${c}`] = r[3 + j]; }));
+    blob = new Blob([JSON.stringify({format:'run2x-hp', ver:1, at:new Date().toISOString(), unit:'mm', pts}, null, 2)], {type:'application/json'}); name = `run2x_hardpoints_${day}.json`; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0); }
+async function wbHpImport(file){ const ext = (file.name.split('.').pop() || '').toLowerCase(), got = {};
+  try{
+    if(ext==='json'){ const d = JSON.parse(await file.text()); const P = d && (d.format==='run2x-hp' ? d.pts : d.format==='run2x-tool' ? d.inputs : null);
+      if(!P) throw new Error('하드포인트 파일(.json)이 아닙니다.'); Object.keys(P).forEach(k => { if(WB_SHARE.hp.re.test(k) && typeof P[k]==='number' && isFinite(P[k])) got[k] = P[k]; }); }
+    else { if(typeof t2ReadCells!=='function') throw new Error('파일 읽기 기능을 찾지 못했습니다.');
+      const cells = await t2ReadCells(file), ax = v => { v = String(v || '').trim(); return /^(앞|f|front)$/i.test(v) ? 'f' : /^(뒤|r|rear)$/i.test(v) ? 'r' : ''; };
+      cells.forEach(r => { if(!r || String(r[0] || '').trim().startsWith('#')) return; const s = ax(r[0]), p = String(r[1] || '').trim().toLowerCase();
+        if(!s || typeof K3D_HP==='undefined' || !K3D_HP[s][p]) return; ['x', 'y', 'z'].forEach((c, j) => { const v = parseFloat(String(r[3 + j]).replace(/,/g, '')); if(isFinite(v)) got[`${s}_${p}_${c}`] = v; }); }); }
+    const n = Object.keys(got).length; if(!n) throw new Error('점 값을 찾지 못했습니다. 열 = 축(앞 · 뒤) · 점 · 이름 · x · y · z.');
+    wbShareSet('hp', got); Object.keys(got).forEach(k => { if(WB.I && k in WB.I) WB.I[k] = got[k]; });
+    wbSave(); wbPaint(['in']); wbCalc(); toast(`${file.name}: 하드포인트 값 ${n}개를 넣었습니다 (도구 5 · 6 · 7 · 8 공통).`); }
+  catch(err){ toast((err && err.message) || '파일을 읽지 못했습니다.'); } }
+function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id], was = !!WB.id;
+  wbModeSet(mode || (WB.id ? WBMODE : 'nf'));   /* 목록에서 고른 모드 · 도구 안에서 넘어가면 지금 모드 그대로 */
+  WB.id = id; WB.need = []; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
+  WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 내 파일 빈칸: 편집 탭에서 시작 */
   const m = wbEl(); m.innerHTML = wbShellHTML(); m.hidden = false; document.documentElement.classList.add('wb-lock');
-  m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
+  m.classList.remove('t2-edit', 'm1-on', 'm1-tabdim');   /* 도구 2P 편집 탭 표시가 다른 도구로 남아 결과를 가리던 것 (2026-11-11). 2P 는 그릴 때 다시 붙임 */
+  m.classList.toggle('wb-exmode', wbEx()); m.classList.toggle('wb-tabbed', wbTabs(T)); m.classList.toggle('wb-edit', wbTabs(T) && WB.tab==='edit'); m.classList.toggle('wb-res', wbTabs(T) && WB.tab!=='edit');
   wbPaint(); wbCalc().then(() => { if(WB.R && WB.R.x && (T.xiStart === 'end' || T.xiStart === 'mid')) { WB.xi = T.xiStart === 'mid' ? Math.floor((WB.R.x.d.length - 1) / 2) : WB.R.x.d.length - 1; wbPaint(['main','sig']); wb3dUpdate(); } });
-  wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); }
+  wb3dOpen(); const f = m.querySelector('[data-wbx]'); if(f) f.focus(); wbNavPush(!was); }
+/* 예제 처음으로: 이 도구의 예제 저장본을 지우고 다시 읽음 (도구 바깥 표 · 회로는 도구가 T.exReset 으로) */
+function wbExReset(){ if(!wbEx() || !WB.id) return; const id = WB.id, T = wbT();
+  try{ localStorage.removeItem(wbStoreKey(id)); if(T.share && WB_SHARE[T.share]) localStorage.removeItem(WB_SHARE[T.share].key); }catch(e){}
+  if(T.exReset) T.exReset(); WB.I = wbLoad(id); WB.R = null; wbPaint(); wbCalc(); toast('예제를 처음 상태로 되돌렸습니다.'); }
 function wbClose(){ const m = $('#wb'); if(!m || m.hidden) return; wb3dClose(); m.hidden = true; m.innerHTML = ''; m.classList.remove('wb-tabbed', 'wb-edit', 'wb-res');
   document.documentElement.classList.remove('wb-lock'); if(WB.worker){ WB.worker.terminate(); WB.worker = null; WB.wsrc = ''; }
-  if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null; }
+  m.classList.remove('wb-exmode', 't2-edit', 'm1-on', 'm1-tabdim'); if(WB.ret && WB.ret.isConnected) WB.ret.focus(); WB.id = null;
+  wbModeSet('nf'); WBNAV.last = '';
+  if(!WBNAV.pop && typeof navState==='function'){ try{ history.pushState(navState(), '', location.hash); }catch(e){} } }   /* 단추로 닫으면 사이트 기록을 한 칸 (뒤로가기 = 닫기 전 도구 화면) */
+
+/* ---------- 도구 안 뒤로가기 · 앞으로가기 (2026-11-11) ----------
+   도구를 열 때 기록을 한 칸 쌓고, 도구 안에서 화면이 바뀔 때마다(결과 · 편집 탭, 도구 하위 탭 T.navGet, 다른 도구로 건너가기) 한 칸씩.
+   도구를 연 첫 화면에서 뒤로가기 = 도구를 닫고 도구 목록. 기록 칸 = {wb:{id, m 모드, t 탭, s 도구 하위 탭}} */
+const WBNAV = {last:'', pop:false};
+const wbNavSnap = () => { const T = wbT(); return {id:WB.id, m:WBMODE, t:wbTabs(T) ? (WB.tab || 'res') : '', s:T && T.navGet ? T.navGet() : null, bg:typeof TAB!=='undefined' ? TAB : ''}; };
+function wbNavPush(first){ if(WBNAV.pop || !WB.id) return; const s = wbNavSnap(), k = JSON.stringify(s); if(!first && k===WBNAV.last) return; WBNAV.last = k;
+  try{ if(first && typeof navState==='function') history.replaceState(navState(), '', location.hash); history.pushState({wb:s}, '', location.hash); }catch(e){} }
+document.addEventListener('click', e => { if(WB.id && e.target.closest && e.target.closest('#wb')) setTimeout(() => wbNavPush(false), 0); });
+window.addEventListener('popstate', e => { const s = e.state && e.state.wb;
+  WBNAV.pop = true;
+  try{ if(!s){ if(WB.id){ wbModalClose(); wbClose(); } return; }
+    if(s.bg && typeof TAB!=='undefined' && TAB!==s.bg){ showTab(s.bg, true); try{ history.replaceState(e.state, '', location.hash); }catch(_){} }   /* 도구 뒤 사이트 탭 */
+    if(WB.id!==s.id || WBMODE!==s.m) wbOpen(s.id, null, s.m);
+    const T = wbT(); if(!T) return; if(s.t && wbTabs(T) && (WB.tab || 'res')!==s.t) wbTabSet(s.t); if(s.s && T.navSet) T.navSet(s.s); }
+  finally{ WBNAV.pop = false; if(WB.id) WBNAV.last = JSON.stringify(wbNavSnap()); } });   /* 작업창 밖(파트 페이지 등)은 늘 내 파일(실제 설계) 쪽 상태 */
 
 /* ---------- 작은 창 (검증표 · 코드 보기 · 대시보드에 반영) ---------- */
 function wbModal(html, cls){ let m = $('#wbm'); if(!m){ m = document.createElement('div'); m.id = 'wbm'; m.className = 'dv-modal wb-modal'; document.body.appendChild(m); }
@@ -402,38 +541,138 @@ async function wbVerify(){ const T = wbT(), code = wbCode(); wbModal(wbMHead('�
   const rows = []; let pass = 0, n = 0;
   for(const c of (T.verify || [])){ const I = {...T.inputs.reduce((o, d) => (o[d.k] = d.v, o), {}), ...(T.verifyBase || {}), ...c.I}, r = await wbRun(I, code);
     Object.entries(c.expect).forEach(([k, ex]) => { const d = T.outputs.find(o => o.k===k) || {n:k, u:'', d:3}, got = r.ok && r.r.out ? r.r.out[k] : NaN;
-      const tol = c.tol != null ? c.tol : 0.001, ok = isFinite(got) && Math.abs(got - ex) <= tol*Math.max(1, Math.abs(ex)); n++; if(ok) pass++;
+      /* 허용 오차: 상대 0.1 % (값이 1 보다 작으면 절대 0.001). 온도 [°C] 는 절대 ±0.001 °C (°C 는 0 점이 임의라 상대 오차가 뜻이 없음 — 30 °C 의 0.1 % = 0.03 K 지만 300 K 로 보면 0.3 K) */
+      const uu = d.u || (d.dk && DK[d.dk] ? DK[d.dk].u : ''), tC = uu==='°C', tol = c.tol != null ? c.tol : 0.001, ok = isFinite(got) && (tC && c.tol == null ? Math.abs(got - ex) <= 0.001 : Math.abs(got - ex) <= tol*Math.max(1, Math.abs(ex))); n++; if(ok) pass++;
       rows.push(`<tr class="${ok?'ok':'ng'}"><td>${wbEsc(c.n)}</td><td>${d.dk && DK[d.dk] ? DK[d.dk].n : wbEsc(d.n)}</td><td>${wbFmt(ex, (d.d||0)+1)}</td><td>${r.ok ? wbFmt(got, (d.d||0)+1) : '<span class="wb-err">' + wbEsc(r.err) + '</span>'}</td><td>${wbEsc(d.u || (d.dk && DK[d.dk] ? DK[d.dk].u : ''))}</td><td>${ok?'통과':'<b>다름</b>'}</td><td class="muted">${wbEsc(c.src||'')}</td></tr>`); }); }
   const m = $('#wbm'); if(!m || m.hidden) return;
   if(!m.querySelector('[data-wbver][aria-selected="true"]')) return;
   m.querySelector('.dvm-box').innerHTML = wbMHead('코드 · 검증') + wbCTabs('ver') + `<p class="wb-cnote muted">답을 이미 아는 단순한 경우(해석해 · 손계산)에서 지금 코드의 결과가 같은지 봅니다. 코드를 고친 뒤 기존 식이 깨지지 않았는지 확인하는 용도입니다.</p><div class="dvi-body"><table class="dvi-t wb-vt"><thead><tr><th>경우</th><th>항목</th><th>기대값</th><th>계산값</th><th>단위</th><th>판정</th><th>기대값 근거</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
-    <div class="dvi-foot"><span class="muted">${pass} / ${n} 통과 · 허용 오차 상대 0.1 %${WB.code[WB.id]!=null ? ' · 고친 코드로 계산' : ''}</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`; }
+    <div class="dvi-foot"><span class="muted">${pass} / ${n} 통과 · 허용 오차 상대 0.1 % (온도 °C 는 ±0.001 °C)${WB.code[WB.id]!=null ? ' · 고친 코드로 계산' : ''}</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`; }
 /* 코드 보기: 고친 코드는 이 창을 닫아도 작업창이 열려 있는 동안만 쓰이고, 다시 열면 원래 코드 */
 function wbCodeOpen(){ wbModal(wbMHead('코드 · 검증') + wbCTabs('code') + `<p class="wb-cnote muted">입력 <code>I</code>(왼쪽 입력 칸의 키)를 받아 <code>out</code>(결과 숫자) · <code>x</code>(가로축) · <code>sig</code>(신호) · <code>main</code>(결과 그래프에 그릴 신호)를 돌려주는 <code>calc(I)</code> 함수입니다. 고친 코드는 저장되지 않으며, 작업창을 다시 열면 원래 코드로 돌아갑니다. 계산은 페이지와 떨어진 Web Worker에서 돌아갑니다.</p>
     <div class="dvi-body"><textarea class="wb-ta" spellcheck="false" aria-label="계산 코드">${wbEsc(wbCode())}</textarea></div>
     <div class="dvi-foot"><span class="wb-cmsg muted" id="wbcmsg"></span><span class="dvi-btns"><button type="button" class="btn small" data-wbcreset>원래 코드로</button><button type="button" class="btn small" data-wbmx>닫기</button><button type="button" class="btn small pri" data-wbcrun>이 코드로 계산</button></span></div>`, 'wb-wide wb-codebox'); }
 /* 대시보드에 반영: 대시보드 키가 있는 결과만. 담당이 아닌 값은 고를 수 없음. 반영한 값은 '계산값', 출처 = 도구 이름 */
-function wbPutOpen(){ const T = wbT(), R = WB.R; if(!R){ toast('계산 결과가 없습니다.'); return; }
-  const ks = T.outputs.filter(d => d.dk && R.out && isFinite(R.out[d.k]));
-  wbModal(wbMHead('대시보드에 반영') + (ks.length ? `<div class="dvi-body"><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>대시보드 지금</th><th>계산값</th></tr></thead><tbody>${ks.map(d => { const db = wbDash(d.dk), ok = canEditDv(d.dk), v = +R.out[d.k].toFixed(d.d||0);
-      return `<tr><td><input type="checkbox" data-wbpk="${d.k}"${ok?' checked':' disabled'} aria-label="${DK[d.dk].n}"></td><td>${DK[d.dk].n}${ok?'':' <span class="muted">(담당 아님)</span>'}</td><td>${db ? wbFmt(db.v, d.d||0) + (db.st==='ex'?' <span class="muted">예시값</span>':'') : '—'}</td><td><b>${wbFmt(v, d.d||0)}</b> ${wbEsc(DK[d.dk].u)}</td></tr>`; }).join('')}</tbody></table></div>
-    <div class="dvi-foot"><span class="muted">반영한 값은 ${typeof dvSeason==='function' ? dvSeason() : ''} 시즌에 '계산값', 출처 '${wbEsc(T.name)}'로 들어갑니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>취소</button><button type="button" class="btn small pri" data-wbpgo>반영</button></span></div>`
-    : `<div class="dvi-body"><p class="muted">이 도구에는 대시보드로 보낼 결과가 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-wbmx>닫기</button></div>`)); }
-async function wbPutGo(){ const T = wbT(), R = WB.R, m = $('#wbm'); let n = 0;
-  for(const cb of m.querySelectorAll('[data-wbpk]:checked')){ const d = T.outputs.find(o => o.k===cb.dataset.wbpk);
-    if(await dvSave(d.dk, {v: +R.out[d.k].toFixed(d.d||0), st:'calc', src:T.name})) n++; }
+/* [대시보드에 반영] (2026-11-12, 2026-11-13 검토 중 없앰 · deps): 계산값(출력) + 이 도구 입력 중 대시보드 칸인 것. 권한은 칸의 담당 파트 → 담당인 입력 칸만 보임.
+   같은 칸에 입력이 둘 이상(예: 댐퍼 앞 · 뒤)이면 값이 같을 때만 보냄. 처음 체크 = 계산값은 대시보드와 다를 때, 입력값은 대시보드가 비었을 때만.
+   계산값에는 deps (이 도구의 대시보드 입력: 대시보드와 같으면 그 값, 다르거나 비었으면 null — 개인 시험값은 남기지 않음)를 같이 저장 → 대시보드 ↻ 다시 계산 필요 */
+function wbPutRows(){ const T = wbT(), R = WB.R, rows = [], seen = new Set();
+  (T.outputs || []).filter(d => d.dk && R && R.out && isFinite(R.out[d.k])).forEach(d => { seen.add(d.dk); rows.push({dk:d.dk, d:d.d||0, v:+R.out[d.k].toFixed(d.d||0), kind:'계산값', calc:true}); });
+  const by = {}; T.inputs.filter(d => d.dk && d.ui!=='none' && !seen.has(d.dk) && isFinite(WB.I[d.k]) && !(T.inLock && T.inLock(d.k))).forEach(d => { (by[d.dk] = by[d.dk] || []).push(d); });
+  Object.entries(by).forEach(([dk, L]) => { if(!canEditDv(dk)) return; const dd = L[0].d != null ? L[0].d : 2, vs = [...new Set(L.map(d => +(+WB.I[d.k]).toFixed(dd)))];
+    rows.push({dk, d:dd, v:vs[0], kind:'입력값', bad:vs.length > 1 ? `값이 다름 (${vs.map(v => wbFmt(v, dd)).join(' · ')})` : ''}); });
+  return rows; }
+/* 계산값이 쓴 대시보드 입력. sendIn = 이번에 같이 보내는 입력 {dk: 값} (보낸 뒤 대시보드 값이 되므로 같은 것으로 봄) */
+function wbPutDeps(sendIn){ const T = wbT(), deps = {};
+  T.inputs.forEach(d => { if(!d.dk || d.ui==='none' || (T.inLock && T.inLock(d.k)) || d.dk in deps) return; const v = WB.I[d.k];
+    if(d.dk in sendIn){ deps[d.dk] = sendIn[d.dk]; return; } const db = wbDash(d.dk);
+    deps[d.dk] = !db ? 'e' : isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v)) ? db.v : null; });
+  return deps; }
+function wbPutSync(){ const m = $('#wbm'); if(!m) return; const rows = WB.put || [], sendIn = {};
+  rows.forEach((r, i) => { if(!r.calc && !r.bad && m.querySelector(`[data-wbpk="${i}"]`)?.checked) sendIn[r.dk] = r.v; });
+  const deps = wbPutDeps(sendIn), off = Object.keys(deps).filter(k => deps[k]==null), nm = off.map(k => String(DK[k].n).replace(/<[^>]+>/g, '')).join(', ');
+  rows.forEach((r, i) => { if(!r.calc) return; const c = m.querySelector(`[data-wbpnote="${i}"]`); if(c){ c.hidden = !off.length; c.title = off.length ? `대시보드와 다른 입력으로 계산: ${nm}` : ''; } });
+  const all = m.querySelector('[data-wbpnall]'); if(all){ all.hidden = !off.length || !rows.some(r => r.calc); all.innerHTML = `<b class="dv-re">↻</b>계산값은 대시보드와 다른 입력(${wbEsc(nm)})으로 계산해, 반영해도 대시보드에 ↻ 다시 계산 필요로 표시됩니다.`; } }
+function wbPutOpen(){ const T = wbT(); const rows = wbPutRows(); WB.put = rows;
+  if(!rows.length){ wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><p class="muted">보낼 값이 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-wbmx>닫기</button></div>`); return; }
+  wbModal(wbMHead('대시보드에 반영') + `<div class="dvi-body"><p class="wb-chgnote" data-wbpnall hidden></p><table class="dvi-t"><thead><tr><th></th><th>항목</th><th>종류</th><th>대시보드 지금</th><th>보낼 값</th></tr></thead><tbody>${rows.map((r, i) => { const db = wbDash(r.dk), ok = canEditDv(r.dk) && !r.bad, same = db && db.st!=='ex' && Math.abs(db.v - r.v) <= 1e-9*Math.max(1, Math.abs(r.v)), u = DK[r.dk].u ? ' ' + DK[r.dk].u : '';
+      const nm = wbEsc(String(DK[r.dk].n).replace(/<[^>]+>/g, ''));
+      return `<tr${ok ? '' : ' class="off"'}><td><input type="checkbox" data-wbpk="${i}"${ok && !same && (r.calc || !db || db.st==='ex') ? ' checked' : ''}${ok ? '' : ' disabled'} aria-label="${nm} 보내기"></td><td>${DK[r.dk].n}${canEditDv(r.dk) ? '' : ' <span class="muted">(담당 아님)</span>'}</td><td class="muted">${r.kind}</td><td>${db && db.st!=='ex' ? wbFmt(db.v, r.d) + u : '—'}</td><td>${r.bad ? `<span class="muted">${r.bad}</span>` : `<b>${wbFmt(r.v, r.d)}</b>${u}`}${r.calc ? ` <b class="dv-re dvi-note" data-wbpnote="${i}" hidden>↻</b>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
+    <div class="dvi-foot"><span class="muted">출처 '${wbEsc(T.name)}'</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>취소</button><button type="button" class="btn small pri" data-wbpgo>체크한 것 반영</button></span></div>`);
+  wbPutSync(); $('#wbm').addEventListener('change', e => { if(e.target.matches('[data-wbpk]')) wbPutSync(); }); }
+async function wbPutGo(){ const T = wbT(), m = $('#wbm'), rows = WB.put || [], pick = [...m.querySelectorAll('[data-wbpk]:checked')].map(cb => rows[+cb.dataset.wbpk]).filter(Boolean); let n = 0;
+  const sendIn = {}; pick.forEach(r => { if(!r.calc && !r.bad) sendIn[r.dk] = r.v; }); const deps = wbPutDeps(sendIn);
+  for(const r of pick){ if(await dvSave(r.dk, r.calc ? {v: r.v, st: 'ok', kind: 'calc', src: T.name, deps} : {v: r.v, st: 'ok', kind: 'in', src: T.name, deps: null})) n++;
+    if(!r.calc) T.inputs.forEach(d => { if(d.dk===r.dk) wbBaseSet(d.k, r.v); }); }
   wbModalClose(); toast(`${n}개 값을 대시보드에 반영했습니다.`); wbPaint(['in','out']); }
+/* ---------- 도구 연결 (2026-11-11): 다른 도구와 주고받는 것을 한 창에 (체크해서 가져오기 · 보내기)
+   도구가 T.links() → {get:[행], send:[행], info:[글]}, 행 = {tool 상대 도구, n 무엇, to 덮어쓸 곳, now 지금, val 가져올 · 보낼 값, ok, why 못 하는 까닭, run()}.
+   run() 은 그 행을 실제로 복사하고 짧은 글을 돌려줌. 가져온 칸 · 표에는 출처 표시 (wbSrcSet), 사용자가 그 칸을 고치면 지움 */
+/* 대시보드에서 가져오기 (예전 [대시보드 값으로 채우기], 2026-11-11): 대시보드 키가 있는 입력마다 한 줄 */
+function wbDashRows(){ const T = wbT(); return T.inputs.filter(d => d.dk && !d.ui).map(d => { const db = wbDash(d.dk), v = WB.I[d.k], u = wbInUnit(d), dd = d.d != null ? d.d : 2, same = db && isFinite(v) && Math.abs(v - db.v) <= 1e-9*Math.max(1, Math.abs(db.v));
+  return {tool:'대시보드', n:String(wbInName(d)).replace(/<[^>]+>/g, ''), to:`입력 › ${wbEsc(d.g || '')}`, now:isFinite(v) ? `${wbFmt(v, dd)} ${wbEsc(u)}` : '—', val:db ? `${wbFmt(db.v, dd)} ${wbEsc(u)}` : '', ok:!!db && !same, why:db ? '같은 값' : '대시보드 값 없음', dash:true, run(){ WB.I[d.k] = db.v; wbBaseSet(d.k, db.v); return ''; }}; }); }
+/* [도구 연결]: 가져오기만 (다른 도구로 보내기는 없음 — 한 도구가 다른 도구 값을 멋대로 바꾸는 일, 2026-11-12).
+   거르기는 엑셀처럼 열 머리 ▾ (2026-11-12): 무엇을 (다른 도구 = 도구) · 어디에. 그리고 [가져올 값 없는 줄 제외] 하나. 숨긴 줄은 모두 고르기 · 가져오기에서 빠짐.
+   대시보드는 묶음끼리 모으고 묶음마다 줄 띄움 */
+const wbLinkCat = r => r.cat || String(r.to || '').replace(/<[^>]+>/g, '').replace(/^(입력|편집) › /, '').split(' › ')[0].replace(/ \(.*$/, '');
+const wbLinkEmpty = v => { const t = String(v == null ? '' : v).replace(/<[^>]+>/g, '').trim(); return !t || t==='—' || t==='비어 있음' || /^—( ·|$)/.test(t) && !/[0-9]/.test(t); };
+const WBLCOL = {tool:'wblt', cat:'wblc', ne:'wblne', ve:'wblve'};
+function wbLinkOpen(){ const T = wbT(); if(!T) return; const L = (T.links ? T.links() : null) || {}; L.dash = wbDashRows(); delete L.send; WB.lk = L; WB.lkf = {get:{}, dash:{}};
+  const fb = (dir, col, nm) => `<span class="wbl-th">${nm}<button type="button" class="wbl-fb" data-wblfb="${dir}:${col}" aria-label="${nm} 거르기" title="거르기">▾</button></span>`;
+  const sec = (dir, title, btn) => { const G = L[dir] || []; if(!G.length) return ''; let last = null;
+    const first = {}; G.forEach((r, i) => { const c = wbLinkCat(r); if(!(c in first)) first[c] = i; });
+    const ord = G.map((r, i) => i).sort((x, y) => dir==='dash' ? first[wbLinkCat(G[x])] - first[wbLinkCat(G[y])] || x - y : x - y);   /* 대시보드는 묶음끼리 모음 */
+    const rows = ord.map(i => { const r = G[i], c = wbLinkCat(r), gap = dir==='dash' && c!==last ? `<tr class="wbl-grp"><td colspan="5">${wbEsc(c)}</td></tr>` : ''; last = c;
+      return gap + `<tr${r.ok ? '' : ' class="off"'} data-wblr data-wblt="${wbEsc(r.tool)}" data-wblc="${wbEsc(c)}" data-wblne="${wbLinkEmpty(r.now) ? '비어 있음' : '값 있음'}" data-wblve="${r.val ? '값 있음' : '없음'}"><td><input type="checkbox" data-wblk="${dir}:${i}"${r.ok ? ' checked' : ' disabled'} aria-label="${wbEsc(r.tool + ' ' + r.n)}"></td><td>${dir==='get' ? `<span class="wbl-tool">${wbEsc(r.tool)}</span> ` : ''}${r.n}</td><td>${r.to}</td><td>${r.now || '—'}</td><td>${r.ok ? r.val : `<span class="muted">${r.why || '없음'}</span>`}</td></tr>`; }).join('');
+    return `<section class="wbl-sec" data-wbls="${dir}"><div class="wbl-h"><h4>${title}</h4><label class="wbl-ve"><input type="checkbox" data-wblvx> 가져올 값 없는 줄 제외</label></div><table class="dvi-t wbl-t"><thead><tr><th><input type="checkbox" data-wblkall="${dir}"${G.some(r => r.ok) ? ' checked' : ' disabled'} aria-label="모두 고르기"></th>
+      <th>${dir==='get' ? fb(dir, 'tool', '무엇을') : '무엇을'}</th><th>${fb(dir, 'cat', '이 도구의 어디에 (덮어씀)')}</th><th>이 도구의 지금 값</th><th>가져올 값</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      <div class="wbl-act"><button type="button" class="btn small pri" data-wblgo="${dir}"${G.some(r => r.ok) ? '' : ' disabled'}>${btn}</button></div></section>`; };
+  wbModal(wbMHead(`도구 연결 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${sec('get', '다른 도구에서 가져오기', '체크한 것 가져오기')}${sec('dash', '대시보드에서 가져오기', '체크한 것 가져오기')}${(L.info || []).length ? `<ul class="wbl-info muted">${L.info.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}</div>
+    <div class="dvi-foot"><span class="muted">복사입니다. 가져온 뒤 한쪽을 고쳐도 다른 쪽은 그대로입니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbl-box'); }
+/* 거르기 적용: WB.lkf[dir][열] = 뺀 값들. 묶음 머리 줄도 그 묶음 줄이 다 숨으면 숨김 */
+function wbLinkFilt(sec){ const F = (WB.lkf || {})[sec.dataset.wbls] || {};
+  const vx = !!(sec.querySelector('[data-wblvx]') || {}).checked;
+  sec.querySelectorAll('tr[data-wblr]').forEach(tr => { tr.hidden = (vx && tr.dataset.wblve==='없음') || Object.entries(F).some(([c, X]) => X.size && X.has(tr.dataset[WBLCOL[c]])); });
+  sec.querySelectorAll('tr.wbl-grp').forEach(g => { let n = g.nextElementSibling, any = false; while(n && !n.classList.contains('wbl-grp')){ if(!n.hidden) any = true; n = n.nextElementSibling; } g.hidden = !any; });
+  sec.querySelectorAll('[data-wblfb]').forEach(b => { const c = b.dataset.wblfb.split(':')[1]; b.classList.toggle('on', !!(F[c] && F[c].size)); }); }
+/* 열 머리 ▾ 누르면 값 목록 (체크 = 보임). (모두) 로 한 번에 */
+function wbLinkMenu(btn){ const old = document.querySelector('.wbl-fm'); const same = old && old.dataset.for===btn.dataset.wblfb; if(old) old.remove(); if(same) return;
+  const [dir, col] = btn.dataset.wblfb.split(':'), sec = btn.closest('.wbl-sec'), X = ((WB.lkf[dir] = WB.lkf[dir] || {})[col] = WB.lkf[dir][col] || new Set());
+  const vals = [...new Set([...sec.querySelectorAll('tr[data-wblr]')].map(tr => tr.dataset[WBLCOL[col]]))];
+  const m = document.createElement('div'); m.className = 'wbl-fm'; m.dataset.for = btn.dataset.wblfb;
+  m.innerHTML = `<label class="all"><input type="checkbox" data-wblfa${X.size ? '' : ' checked'}> (모두)</label>${vals.map(v => `<label><input type="checkbox" data-wblfv="${wbEsc(v)}"${X.has(v) ? '' : ' checked'}> ${wbEsc(v)}</label>`).join('')}`;
+  btn.closest('th').appendChild(m); }
+document.addEventListener('change', e => { if(e.target.matches && e.target.matches('[data-wblvx]')) wbLinkFilt(e.target.closest('.wbl-sec')); });
+document.addEventListener('click', e => { if(!e.target.closest) return; const b = e.target.closest('[data-wblfb]'); if(b){ e.preventDefault(); wbLinkMenu(b); return; }
+  const m = document.querySelector('.wbl-fm'); if(m && !e.target.closest('.wbl-fm')) m.remove(); });
+document.addEventListener('change', e => { const m = e.target.closest && e.target.closest('.wbl-fm'); if(!m) return; const [dir, col] = m.dataset.for.split(':'), X = WB.lkf[dir][col];
+  if(e.target.matches('[data-wblfa]')){ m.querySelectorAll('[data-wblfv]').forEach(c => { c.checked = e.target.checked; c.checked ? X.delete(c.dataset.wblfv) : X.add(c.dataset.wblfv); }); }
+  else { const v = e.target.dataset.wblfv; e.target.checked ? X.delete(v) : X.add(v); m.querySelector('[data-wblfa]').checked = !X.size; }
+  wbLinkFilt(m.closest('.wbl-sec')); });
+function wbLinkGo(dir){ const m = $('#wbm'), G = (WB.lk || {})[dir] || []; if(!m) return;
+  const sel = [...m.querySelectorAll(`[data-wblk^="${dir}:"]:checked`)].filter(c => !c.closest('tr').hidden).map(c => G[+c.dataset.wblk.split(':')[1]]).filter(r => r && r.ok);
+  if(!sel.length){ toast('체크한 항목이 없습니다.'); return; }
+  const msg = sel.map(r => { try{ return r.run(); }catch(e){ return `${r.n}: 실패`; } }).filter(Boolean);
+  wbModalClose(); wbSave(); wbPaint(); wbCalcSoon(); toast(dir==='dash' ? `대시보드 값 ${sel.length}개를 가져왔습니다.` : '가져왔습니다 — ' + msg.join(' · ')); }
+/* [대시보드 값으로 초기화] (2026-11-13, 모든 도구 같은 자리 · 같은 동작): 다른 도구에서 가져와 시험해 본 값을 팀 확정값(대시보드)으로 되돌림.
+   대시보드 칸과 이어진 입력(dk, 숨김 · 잠긴 칸 제외) 중 대시보드에 값이 있는 것만. 한 번 더 눌러야 실행 (3 s) */
+function wbDashReset(b){ if(wbExBlock()) return;
+  if(!b.dataset.sure){ b.dataset.sure = '1'; b.classList.add('sure'); b.textContent = '한 번 더 누르면 초기화'; setTimeout(() => { if(b.isConnected){ delete b.dataset.sure; b.classList.remove('sure'); b.textContent = '대시보드 값으로 초기화'; } }, 3000); return; }
+  const T = wbT(); let n = 0, same = 0;
+  T.inputs.filter(d => d.dk && !d.ui && !(T.inLock && T.inLock(d.k))).forEach(d => { const db = wbDash(d.dk); if(!db) return;
+    if(isFinite(WB.I[d.k]) && Math.abs(WB.I[d.k] - db.v) <= 1e-9*Math.max(1, Math.abs(db.v))) same++; else { WB.I[d.k] = db.v; n++; } wbSrcDel(WB.id, d.k); wbBaseSet(d.k, db.v); });
+  wbSave(); wbPaint(); wbCalcSoon(); toast(n ? `${n}칸을 대시보드 값으로 바꿨습니다.` : same ? '이미 모두 대시보드 값입니다.' : '대시보드에 값이 있는 칸이 없습니다.'); }
+/* 출처 표시: 모드별 {도구: {키: '도구 X'}} */
+const WBSRC_KEY = 'run2x.wb.src';
+const wbSrcAll = () => { try{ return JSON.parse(localStorage.getItem(wbMK(WBSRC_KEY)) || '{}') || {}; }catch(e){ return {}; } };
+function wbSrcSet(id, keys, from){ const a = wbSrcAll(); a[id] = a[id] || {}; keys.forEach(k => { a[id][k] = from; }); try{ localStorage.setItem(wbMK(WBSRC_KEY), JSON.stringify(a)); }catch(e){} }
+function wbSrcDel(id, k){ const a = wbSrcAll(); if(!a[id] || !(k in a[id])) return; delete a[id][k]; try{ localStorage.setItem(wbMK(WBSRC_KEY), JSON.stringify(a)); }catch(e){} }
+const wbSrcGet = (id, k) => (wbSrcAll()[id] || {})[k] || '';
+const wbSrcTag = (id, k) => { const s = id ? wbSrcGet(id, k) : ''; return s ? `<span class="wb-src" title="[도구 연결]로 ${wbEsc(s)}에서 복사한 값 (고치면 이 표시는 사라짐)">${wbEsc(s)}에서</span>` : ''; };
+
 /* .json 내보내기 · 가져오기 (사이트 양식) */
-function wbExport(){ const T = wbT(), doc = {format:'run2x-tool', tool:WB.id, name:T.name, ver:1, season:typeof dvSeason==='function' ? dvSeason() : '', at:new Date().toISOString(), inputs:{...WB.I}, ...(T.extGet ? {ext:T.extGet()} : {})};   /* ext: 도구가 따로 가진 표(트랙 · 모터 곡선 등) */
+/* 도구 파일 내용 (내보내기 · 프리셋 같은 형식). ext: 도구가 따로 가진 표(트랙 · 모터 곡선 등) */
+const wbDoc = () => { const T = wbT(); return {format:'run2x-tool', tool:WB.id, name:T.name, ver:1, season:typeof dvSeason==='function' ? dvSeason() : '', at:new Date().toISOString(), inputs:{...WB.I}, ...(T.extGet ? {ext:T.extGet()} : {})}; };
+/* 도구 파일 내용을 지금 도구에 넣음 → 넣은 입력 수 (다른 도구 파일이면 -1) */
+function wbApplyDoc(d){ if(!d || d.format!=='run2x-tool' || !d.inputs || d.tool!==WB.id) return -1;
+  let n = 0; wbT().inputs.forEach(x => { const v = d.inputs[x.k]; if(typeof v==='number' && isFinite(v)){ WB.I[x.k] = v; n++; } });
+  if(d.ext && wbT().extSet) wbT().extSet(d.ext);
+  wbSave(); wbPaint(['in', 'tabs', 'ext']); wbCalc(); return n; }
+function wbExport(){ const doc = wbDoc();
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(doc, null, 2)], {type:'application/json'}));
   a.download = `run2x_${WB.id}_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0); }
 function wbImport(file){ const fr = new FileReader(); fr.onload = () => { let d;
     try{ d = JSON.parse(fr.result); }catch(e){ toast('.json 파일을 읽지 못했습니다.'); return; }
+    /* 팀 백업(시즌 내보내기) 파일이면 그 안의 이 도구 팀 프리셋 (가장 최근 시즌) */
+    if(d && d.format==='run2x-team-backup' && d.data){ const E = Object.entries(d.data.tp || {}).find(([id]) => id.split('__')[1]===WB.id), s = E && E[1] && E[1].s ? E[1].s : {}, se = Object.keys(s).sort().pop();
+      if(!se){ toast('이 파일에 이 도구의 팀 프리셋이 없습니다.'); return; }
+      let doc = null; try{ doc = JSON.parse(s[se].json); }catch(e){}
+      const n = wbApplyDoc(doc); if(n < 0){ toast('팀 프리셋을 읽지 못했습니다.'); return; }
+      toast(`${se} 시즌 팀 프리셋 "${wbEsc(s[se].name || '')}"을 가져왔습니다.`); return; }
     if(!d || d.format!=='run2x-tool' || !d.inputs){ toast('이 사이트에서 내보낸 도구 파일이 아닙니다.'); return; }
     if(d.tool!==WB.id){ toast(`다른 도구(${wbEsc(d.name || d.tool)})의 파일입니다.`); return; }
-    let n = 0; wbT().inputs.forEach(x => { const v = d.inputs[x.k]; if(typeof v==='number' && isFinite(v)){ WB.I[x.k] = v; n++; } });
-    if(d.ext && wbT().extSet) wbT().extSet(d.ext);
-    wbSave(); wbPaint(['in']); wbCalc(); toast(`입력 ${n}개를 가져왔습니다${d.at ? ' (' + d.at.slice(0,10) + ' 저장본)' : ''}.`); };
+    const n = wbApplyDoc(d); toast(`입력 ${n}개를 가져왔습니다${d.at ? ' (' + d.at.slice(0,10) + ' 저장본)' : ''}.`); };
   fr.readAsText(file); }
 
 /* ---------- 3D 화면 (three.js, 처음 열 때 불러옴) ---------- */
@@ -502,22 +741,30 @@ function wb3dClose(){ const S = WB.t3; if(!S) return; S.ro.disconnect(); if(S.of
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click', e => { const t = e.target; if(!t.closest) return;
-  const row = t.closest('[data-wb]'); if(row){ wbOpen(row.dataset.wb, row); return; }
+  { const dd = document.querySelector('#wb .wb-hpdd[open]'); if(dd && (!t.closest('.wb-hpdd') || t.closest('[data-wbhp]'))) dd.open = false; }
+  { const mb = t.closest('[data-wbo]'); if(mb){ wbOpen(mb.dataset.wbo, mb.closest('.wb-mpick') || mb, mb.dataset.wbm); return; } }
   if(!WB.id) return;
   if(t.closest('[data-wbmx]') || t.matches('#wbm')){ wbModalClose(); return; }
   if(t.closest('[data-wbx]')){ wbClose(); return; }
-  if(t.closest('[data-wbfill]')){ let n = 0, ch = 0, no = 0; wbT().inputs.forEach(d => { const db = wbDash(d.dk); if(db){ if(Math.abs((WB.I[d.k] ?? NaN) - db.v) > 1e-12 || !isFinite(WB.I[d.k])) ch++; WB.I[d.k] = db.v; n++; } else no++; }); wbSave(); wbPaint(['in']); wbCalc(); toast(`대시보드 값 ${n}개로 채웠습니다 (그중 바뀐 값 ${ch}개)${no ? ` · ${no}개는 대시보드에 없어 지금 값 그대로` : ''}. 칸 옆 점 색이 대시보드 상태입니다.`); return; }
   if(t.closest('[data-wbcmp]')){ WB.cmp = !WB.cmp; t.closest('[data-wbcmp]').setAttribute('aria-pressed', String(WB.cmp)); wbPaint(['in','out']); return; }
   if(t.closest('[data-wbver]')){ wbVerify(); return; }
   if(t.closest('[data-wbcode]')){ wbCodeOpen(); return; }
   if(t.closest('[data-wbcreset]')){ delete WB.code[WB.id]; $('#wbm textarea').value = wbT().code; $('#wbcmsg').textContent = '원래 코드로 돌렸습니다.'; wbCalc(); return; }
   if(t.closest('[data-wbcrun]')){ const src = $('#wbm textarea').value; WB.code[WB.id] = src === wbT().code ? undefined : src; if(WB.code[WB.id]===undefined) delete WB.code[WB.id];
     wbCalc().then(() => { const mm = $('#wbcmsg'); if(mm) mm.textContent = WB.err ? WB.err : '계산했습니다. 결과는 작업창에 보입니다.'; }); return; }
-  if(t.closest('[data-wbexp]')){ wbExport(); return; }
-  if(t.closest('[data-wbimp]')){ $('#wbfile').click(); return; }
+  if(t.closest('[data-wbexp]')){ if(!wbExBlock()) wbExport(); return; }
+  if(t.closest('[data-wbimp]')){ if(!wbExBlock()) $('#wbfile').click(); return; }
+  { const g = t.closest('[data-wbgo]'); if(g){ wbNeedGo(g.dataset.wbgo, g.dataset.wbgotab); return; } }
+  { const h = t.closest('[data-wbhp]'); if(h){ if(wbExBlock()) return; if(h.dataset.wbhp==='imp') $('#wbhpfile').click(); else wbHpExport(h.dataset.wbhp); return; } }
   { const tb = t.closest('[data-wbtab]'); if(tb){ wbTabSet(tb.dataset.wbtab); return; } }
   { const es = t.closest('[data-wbesec]'); if(es){ WB.esec = es.dataset.wbesec; wbPaint(['tabs']); return; } }
-  if(t.closest('[data-wbput]')){ wbPutOpen(); return; }
+  if(t.closest('[data-wbput]')){ if(!wbExBlock()) wbPutOpen(); return; }
+  if(t.closest('[data-wblink]')){ if(!wbExBlock()) wbLinkOpen(); return; }
+  { const lg = t.closest('[data-wblgo]'); if(lg){ wbLinkGo(lg.dataset.wblgo); return; } }
+  { const dr = t.closest('[data-wbdreset]'); if(dr){ wbDashReset(dr); return; } }
+  { const bb = t.closest('[data-wbbase]'); if(bb){ const d = wbT().inputs.find(x => x.k===bb.dataset.wbbase), db = d && wbDash(d.dk); if(db){ wbBaseSet(d.k, db.v); wbPaint(['in']); toast('확인함: 내 값은 그대로 둡니다.'); } return; } }
+  { const la = t.closest('[data-wblkall]'); if(la){ document.querySelectorAll(`#wbm [data-wblk^="${la.dataset.wblkall}:"]:not(:disabled)`).forEach(c => { if(!c.closest('tr').hidden) c.checked = la.checked; }); } }
+  if(t.closest('[data-wbexreset]')){ wbExReset(); return; }
   if(t.closest('[data-wbpgo]')){ wbPutGo(); return; }
   const pn = t.closest('[data-wbpane]'); if(pn){ const sw = WB.xa.startsWith('in:'), i = +pn.dataset.wbpane; if(sw){ WB.piO = i; WB.selO = WB.panesO[i]; } else { WB.pi = i; WB.sel = WB.panes[i]; } wbPaint(['sig']); return; }
   const zmb = t.closest('[data-wbzm]'); if(zmb){ WB.zm = zmb.dataset.wbzm; $('#wbsig').dataset.zm = WB.zm; wbPaint(['sig']); return; }
@@ -529,7 +776,7 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   const vv = t.closest('#wb [data-v3v]'); if(vv && WB.t3){ WB.t3.orb.set(vv.dataset.v3v); wb3dViews(); WB.t3.render(); return; }
 });
 document.addEventListener('keydown', e => {
-  const row = e.target.closest && e.target.closest('[data-wb]'); if(row && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); wbOpen(row.dataset.wb, row); return; }
+
   if(!WB.id) return;
   if(e.key==='Escape'){ e.preventDefault(); if(!wbModalClose()) wbClose(); return; }
   if(e.target.matches && e.target.matches('textarea.wb-ta') && e.key==='Tab'){ e.preventDefault(); const ta = e.target, a = ta.selectionStart; ta.setRangeText('  ', a, ta.selectionEnd, 'end'); return; }
@@ -538,11 +785,13 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => { const sw = e.target.closest && e.target.closest('[data-wbsw]'); if(sw && WB.sw){ const x = parseFloat(sw.value); if(isFinite(x)){ WB.sw[sw.dataset.wbsw] = x; clearTimeout(WB.timer); WB.timer = setTimeout(() => wbSweep().then(() => wbPaint(['sig'])), 250); } return; }
   const i = e.target.closest && e.target.closest('[data-wbi]'); if(!i || !WB.id) return;
-  const x = parseFloat(i.value); if(!isFinite(x)) return; WB.I[i.dataset.wbi] = x; wbSave();
+  const x = parseFloat(i.value); if(!isFinite(x)){ if(String(i.value).trim()==='' && !wbEx()){ WB.I[i.dataset.wbi] = NaN; wbSave(); WB.need = wbNeed(); wbNeedMark(); wbCalcSoon(); } return; }
+  WB.I[i.dataset.wbi] = x; wbSrcDel(WB.id, i.dataset.wbi); wbSave(); if(!wbEx() && (WB.need || []).length){ WB.need = wbNeed(); wbNeedMark(); }   /* 채우면 그 칸 빨강이 바로 사라짐 */
   const r = i.closest('.wb-ir'), d = wbT().inputs.find(o => o.k===i.dataset.wbi), db = wbDash(d.dk); if(r) r.classList.toggle('diff', !!(db && Math.abs(x - db.v) > 1e-9*Math.max(1, Math.abs(db.v))));
   wbCalcSoon(); });
 document.addEventListener('change', e => { const t = e.target; if(!WB.id || !t.matches) return;
   if(t.matches('#wbfile')){ if(t.files && t.files[0]) wbImport(t.files[0]); t.value = ''; return; }
+  if(t.matches('#wbhpfile')){ if(t.files && t.files[0]) wbHpImport(t.files[0]); t.value = ''; return; }
   if(t.matches('[data-wbxa]')){ WB.xa = t.value; if(WB.xa.startsWith('in:')){ WB.si = 0; if(!WB.sw || WB.sw.k!==WB.xa.slice(3)) WB.sw = null; wbSweep().then(() => { WB.si = WB.sw && WB.sw.X ? Math.floor(WB.sw.X.length/2) : 0; wbPaint(['sig']); }); } wbPaint(['sig']); return; }
   if(t.matches('[data-wbso]')){ t.checked ? WB.selO.add(t.dataset.wbso) : WB.selO.delete(t.dataset.wbso); if(t.checked) WB.actO = t.dataset.wbso; wbPaint(['sig']); return; }
   if(t.matches('[data-wbsg]')){ t.checked ? WB.sel.add(t.dataset.wbsg) : WB.sel.delete(t.dataset.wbsg); if(t.checked) WB.act = t.dataset.wbsg; wbPaint(['sig']); } });
@@ -627,3 +876,48 @@ document.addEventListener('click', e => { const t = e.target; if(!t.closest) ret
   if(WBV.k && !t.closest('#wbvz')) wbVizClose(); });
 document.addEventListener('input', e => { if(!WBV.k || !e.target.closest || !e.target.closest('[data-wbi]')) return; setTimeout(() => { const p = $('#wbvz'); if(p){ p.innerHTML = wbVizHTML(); wbVizPlace(); } }, 0); });
 document.addEventListener('keydown', e => { if(e.key==='Escape' && WBV.k){ e.preventDefault(); e.stopPropagation(); wbVizClose(); } }, true);
+
+/* ---------- 프리셋 (2026-11-12 관리자 결정) ----------
+   - 내 프리셋: 로그인한 계정에 도구마다 3개까지 (지금 도구 상태 전체 = 내보내기 파일과 같은 내용). 넘으면 알림
+   - 팀 프리셋: 팀에 도구마다 1개, 내 프리셋 하나를 그 도구 담당 파트장 · 회장이 이번 시즌 팀 프리셋으로 내보냄 (새로 내보내면 바뀜)
+   - 팀 백업(시즌 내보내기) 파일에 팀 프리셋이 함께 들어가고, 도구의 [가져오기 .json]이 그 파일에서 이 도구 팀 프리셋을 꺼내 옴 */
+const WBTPART = {'1':'프레임', '2':'공통', 'G':'공통', '3':'제동', '4':'배터리', '5':'서스', '6':'조향', '7':'서스', '8':'서스', '9':'냉각', 'T':'서스'};
+const wbTpId = id => `${(typeof PCODE_OF!=='undefined' && PCODE_OF[WBTPART[id]]) || 'all'}__${id}`;
+const wbTpCan = id => typeof SH!=='undefined' && SH.on && !pastLock() && (SH.canAdmin || (isLeadRole(SH.role) && partOK(SH.parts, SH.role, WBTPART[id])));
+const WBP = {list:[], tp:null, arm:''};
+const wbPreDate = a => a ? String(a).slice(0, 10) : '';
+async function wbPresetOpen(){ if(wbExBlock()) return;
+  const ok = window.Backend && Backend.kind()==='firebase' ? await Backend.Team.ctx().then(c => !!c.uid).catch(() => false) : false;
+  if(!ok){ toast('프리셋은 로그인하면 쓸 수 있습니다.'); return; }
+  WBP.arm = ''; try{ WBP.list = await Backend.Team.presetList(WB.id) || []; }catch(e){ WBP.list = []; }
+  try{ const d = typeof SH!=='undefined' && SH.on ? await Backend.Team.teamPresetGet(wbTpId(WB.id)) : null; WBP.tp = d && d.s ? d.s[dvSeason()] || null : null; }catch(e){ WBP.tp = null; }
+  wbPresetPaint(); }
+function wbPresetPaint(){ const T = wbT(), can = wbTpCan(WB.id), arm = (k, txt, lab) => WBP.arm===k ? `확인 — ${txt}` : lab;
+  const tp = SH && SH.on ? `<section class="wbp-sec"><h4>팀 프리셋 <span class="muted">${wbEsc(dvSeason())} 시즌</span></h4>${WBP.tp ? `<div class="wbp-r"><b>${wbEsc(WBP.tp.name || '')}</b><span class="muted">${wbEsc(WBP.tp.byName || '')} · ${wbPreDate(WBP.tp.at)}</span><button type="button" class="btn small" data-wbpl="tp">${arm('l:tp', '덮어쓰기', '불러오기')}</button></div>` : '<p class="muted">없음</p>'}</section>` : '';
+  const mine = WBP.list.map(p => `<div class="wbp-r"><b>${wbEsc(p.name || '')}</b><span class="muted">${wbPreDate(p.at)}</span>
+      <button type="button" class="btn small" data-wbpl="${p.slot}">${arm('l:' + p.slot, '덮어쓰기', '불러오기')}</button>${can ? `<button type="button" class="btn small" data-wbpt="${p.slot}">${arm('t:' + p.slot, '팀 프리셋 바꾸기', '팀 프리셋으로')}</button>` : ''}<button type="button" class="btn small" data-wbpd="${p.slot}">${arm('d:' + p.slot, '지우기', '지우기')}</button></div>`).join('');
+  wbModal(wbMHead(`프리셋 — ${wbEsc(T.no)} ${wbEsc(T.name)}`) + `<div class="dvi-body">${tp}<section class="wbp-sec"><h4>내 프리셋</h4>${mine || '<p class="muted">없음</p>'}
+      <div class="wbp-new"><input type="text" maxlength="40" placeholder="프리셋 이름" data-wbpn aria-label="프리셋 이름"><button type="button" class="btn small pri" data-wbps>지금 상태 저장</button></div></section></div>
+    <div class="dvi-foot"><span></span><span class="dvi-btns"><button type="button" class="btn small" data-wbmx>닫기</button></span></div>`, 'wbp-box'); }
+async function wbPresetSave(){ const inp = document.querySelector('#wbm [data-wbpn]'), nm = (inp && inp.value || '').trim(); if(!nm){ if(inp) inp.focus(); return; }
+  const same = WBP.list.find(p => p.name===nm);
+  if(same && WBP.arm!=='s'){ WBP.arm = 's'; const b = document.querySelector('#wbm [data-wbps]'); if(b) b.textContent = `확인 — "${nm}" 덮어쓰기`; return; }
+  const used = new Set(WBP.list.map(p => p.slot)), slot = same ? same.slot : [0, 1, 2].find(i => !used.has(i));
+  if(slot == null){ toast('프리셋은 도구마다 3개까지입니다. 기존 프리셋을 지운 뒤 저장하세요.'); return; }
+  const o = {name:nm, at:new Date().toISOString(), json:JSON.stringify(wbDoc())};
+  try{ await Backend.Team.presetSave(WB.id, slot, o); toast(`"${nm}" 저장`); await wbPresetOpen(); }catch(e){ toast('저장하지 못했습니다.'); } }
+document.addEventListener('click', async e => { const t = e.target; if(!t.closest) return;
+  if(t.closest('[data-wbpre]')){ wbPresetOpen(); return; }
+  if(!t.closest('#wbm .wbp-box, #wbm') || !document.querySelector('#wbm [data-wbps]')) return;
+  if(t.closest('[data-wbps]')){ wbPresetSave(); return; }
+  const l = t.closest('[data-wbpl]'), d = t.closest('[data-wbpd]'), tp = t.closest('[data-wbpt]'); if(!l && !d && !tp) return;
+  const key = l ? 'l:' + l.dataset.wbpl : d ? 'd:' + d.dataset.wbpd : 't:' + tp.dataset.wbpt;
+  if(WBP.arm!==key){ WBP.arm = key; wbPresetPaint(); return; }   /* 두 번 눌러 확인 */
+  WBP.arm = '';
+  if(l){ const p = l.dataset.wbpl==='tp' ? WBP.tp : WBP.list.find(x => String(x.slot)===l.dataset.wbpl); let doc = null; try{ doc = JSON.parse(p.json); }catch(err){}
+    const n = wbApplyDoc(doc); if(n < 0){ toast('프리셋을 읽지 못했습니다.'); return; } wbModalClose(); toast(`"${p.name}" 불러옴`); return; }
+  if(d){ try{ await Backend.Team.presetDel(WB.id, +d.dataset.wbpd); }catch(err){} await wbPresetOpen(); return; }
+  if(tp){ const p = WBP.list.find(x => String(x.slot)===tp.dataset.wbpt);
+    try{ await Backend.Team.teamPresetPut(wbTpId(WB.id), dvSeason(), {name:p.name, at:new Date().toISOString(), json:p.json}); toast(`"${p.name}"을 팀 프리셋으로 내보냈습니다.`); if(WB.id==='1' && typeof M1TP!=='undefined') M1TP.done = false; await wbPresetOpen(); }
+    catch(err){ toast(Backend.denied && Backend.denied(err) ? '이 도구 담당 파트장 · 회장만 팀 프리셋을 내보낼 수 있습니다.' : '내보내지 못했습니다.'); } } });
+document.addEventListener('input', e => { if(e.target.matches && e.target.matches('#wbm [data-wbpn]') && WBP.arm==='s'){ WBP.arm = ''; const b = document.querySelector('#wbm [data-wbps]'); if(b) b.textContent = '지금 상태 저장'; } });

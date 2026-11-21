@@ -72,5 +72,5 @@ for d in keys:
 out += ['];', 'const DK = Object.fromEntries(DKEYS.map(d=>[d.k,d]));',
         '/* 저장 문서 id: 파트코드__키 (규칙이 id 앞부분으로 담당 파트를 판정) */',
         'const dvId = k => PCODE_OF[DK[k].p] + \'__\' + k;', '']
-open(os.path.join(ROOT, 'js/store/dash-keys.js'), 'w', encoding='utf-8').write('\n'.join(out))
+open(os.path.join(ROOT, 'js/store/dash-keys.js'), 'w', encoding='utf-8', newline='\n').write('\n'.join(out))
 print(len(keys), 'keys,', len(figs), 'fig keys')

@@ -1,0 +1,194 @@
+{
+ "tube_groups": {
+  "MH": "x0 > 660 and x1 < 690 and y1 > 300",
+  "FH": "x0 > 1410 and x1 < 1440 and y1 > 500",
+  "MHB": "x0 < 200 and x1 > 600 and y1 > 900",
+  "FHB": "x0 > 1400 and x0 < 1500 and x1 > 2100 and y0 > 450",
+  "BH": "x0 > 2160",
+  "SIS_U": "x0 < 700 and x1 > 1400 and z0 > 0 and y0 > 340 and y1 < 360",
+  "SIS_L": "x0 < 700 and x1 > 1400 and z0 > 0 and y1 < 140",
+  "SIS_D": "x0 < 700 and x1 > 1400 and z0 > 0 and y0 < 100 and y1 > 340 and y1 < 360",
+  "SHB": "abs(x0 - 605) < 5 and abs(x1 - 605) < 5 and y0 > 500",
+  "TUB": "x0 > 590 and x1 < 2200 and not (x0 > 660 and x1 < 690 and y1 > 300) and not (x0 > 1410 and x1 < 1440 and y1 > 500)"
+ },
+ "figs": {
+  "spaceframe": {
+   "aria": "강관 스페이스 프레임",
+   "focus": "2024_frame", "ghost": "OZ racing", "hide": "Rodend",
+   "az": -125, "el": 28, "pad": 1.15,
+   "anchors": {"node": [1425, 131, 175], "diag": [1600, 250, 200]},
+   "labels": [
+    {"t": "노드 (관 여러 개가 만나는 점)", "a": "node", "x": 20, "y": 290},
+    {"t": "대각 부재 (칸을 삼각형으로)", "a": "diag", "x": 20, "y": 25}
+   ]
+  },
+  "bodywork": {
+   "aria": "카울 (노즈·사이드·언더 카울)",
+   "focus": "Cowl_", "ghost": "2024_frame|OZ racing|24_Steering_Wheel|Impact_Attenuator", "hide": "Rodend|Front_Wing|Fr Wng",
+   "color": {"Cowl_Body": "#34405a", "Cowl_Side": "#4a5a78", "Cowl_Under": "#6b7a96"},
+   "flow": {"obj": "Cowl_", "x_end": 1150, "clear": 16, "reach": 110, "step": 6, "ret": 0.002,
+            "seeds": [[2900, 610, 0], [2900, 520, 60], [2900, 440, -30], [2900, 360, 20], [2900, 300, 0], [2900, 230, 30], [2900, 150, 0],
+                      [2900, 400, 150], [2900, 330, 210], [2900, 480, 250]]},
+   "az": 32, "el": 16, "pad": 1.05, "fit": [[1150, 0, 380], [2950, 0, 380], [1150, 720, -380], [2950, 720, -380]],
+   "anchors": {"nose": "Cowl_Body", "side": [1150, 330, 341]},
+   "labels": [
+    {"t": "노즈 카울", "a": "nose", "x": 20, "y": 30},
+    {"t": "사이드 카울", "a": "side", "x": 470, "y": 30, "anchor": "end"}
+   ],
+   "notes": [{"t": "공기가 노즈를 따라 위 · 옆 · 아래로 갈라짐", "x": 20, "y": 290, "c": "#1f62a8"}]
+  },
+  "monocoque": {
+   "aria": "모노코크",
+   "mono": {"sections": [[600, 45, 640, 320], [760, 45, 600, 325], [1100, 50, 560, 315], [1400, 60, 600, 290], [1750, 85, 560, 235], [2190, 125, 510, 185]],
+            "cockpit": [690, 1400, 345], "core": 16, "n": 3.2, "peel": 160},
+   "hl": [{"obj": "2024_frame.*~관", "tubes": ["MH"]}, {"obj": "2024_frame.*~관", "tubes": ["MHB"]}, {"obj": "2024_frame.*~관", "tubes": ["FH"]}],
+   "ghost": "OZ racing", "hide": "Rodend",
+   "color": {"hl:0": "#9aa3ad", "hl:1": "#9aa3ad", "hl:2": "#9aa3ad"},
+   "az": 32, "el": 22, "pad": 1.0, "fit": [[300, 0, 360], [2250, 0, 360], [300, 1140, -360], [2250, 1140, -360]],
+   "anchors": {"mh": [675, 1000, 150], "fh": [1425, 620, 120], "so": [1790, 330, 232], "sc": [1950, 330, 215], "si": [2110, 330, 175], "cut": [2190, 250, 150]},
+   "lines": [{"a": [338, 100], "b": "cut", "c": "#495057", "dash": true}],
+   "labels": [
+    {"t": "메인 롤후프 (강관, 볼트 고정)", "a": "mh"},
+    {"t": "프론트 롤후프 (강관)", "a": "fh"},
+    {"t": "외피 (탄소섬유)", "a": "so"},
+    {"t": "허니콤 코어 (벌집)", "a": "sc"},
+    {"t": "내피 (탄소섬유)", "a": "si"}
+   ],
+   "notes": [{"t": "단면 확대", "x": 390, "y": 168, "c": "#495057", "anchor": "middle"}],
+   "keepout": [[334, 44, 446, 172]],
+   "raw": "<g><circle cx=\"390\" cy=\"100\" r=\"52\" fill=\"#fff\" stroke=\"#495057\" stroke-width=\"1.4\"/><clipPath id=\"mzc\"><circle cx=\"390\" cy=\"100\" r=\"51\"/></clipPath><g clip-path=\"url(#mzc)\"><rect x=\"330\" y=\"66\" width=\"120\" height=\"7\" fill=\"#22262e\"/><rect x=\"330\" y=\"125\" width=\"120\" height=\"7\" fill=\"#22262e\"/><rect x=\"330\" y=\"73\" width=\"120\" height=\"52\" fill=\"#f3dc9a\"/><path d=\"M340 73V125M356 73V125M372 73V125M388 73V125M404 73V125M420 73V125M436 73V125\" stroke=\"#b8913a\" stroke-width=\"2\"/><path d=\"M348 73V125M364 73V125M380 73V125M396 73V125M412 73V125M428 73V125M444 73V125\" stroke=\"#d6b25e\" stroke-width=\"1\"/></g><text x=\"392\" y=\"62\" font-size=\"9\" text-anchor=\"middle\" fill=\"#495057\">바깥</text><text x=\"392\" y=\"143\" font-size=\"9\" text-anchor=\"middle\" fill=\"#495057\">안쪽</text></g>"
+  },
+  "hoops": {
+   "aria": "메인 롤후프·프론트 롤후프",
+   "focus": "^24_Steering_Wheel\\|",
+   "hl": [{"obj": "2024_frame.*~관", "tubes": ["MH"]}, {"obj": "2024_frame.*~관", "tubes": ["FH"]},
+          {"obj": "2024_frame.*~관", "tubes": ["MHB"]}, {"obj": "2024_frame.*~관", "tubes": ["FHB"]},
+          {"obj": "2024_frame.*~관", "tubes": ["BH"]}],
+   "ghost": "2024_frame|24_Seat|OZ racing", "hide": "Rodend",
+   "driver": {"wheel_turn": 90},
+   "az": 90, "el": 2, "pad": 1.03, "fit": [[-450, 0, 0], [2530, 0, 0], [700, 1140, 0]],
+   "anchors": {"mh": [675, 900, 165], "fh": [1425, 430, 210], "mhb": [250, 500, 200], "fhb": [1800, 546, 195], "bh": [2175, 300, 175],
+               "rl": "tan:hl:0,hl:1", "top": "drvpt:top", "hand": "drvpt:hand_top"},
+   "lines": [{"a": "rl_a", "b": "rl_b", "c": "#c0392b", "dash": true, "ext": 0.22}],
+   "perp": [{"p": "top", "l": ["rl_a", "rl_b"]}, {"p": "hand", "l": ["rl_a", "rl_b"]}],
+   "labels": [
+    {"t": "메인 롤후프", "a": "mh", "x": 360, "y": 40},
+    {"t": "메인 롤후프 브레이스 (뒤로)", "a": "mhb", "x": 470, "y": 235, "anchor": "end"},
+    {"t": "프론트 롤후프", "a": "fh", "x": 230, "y": 290, "anchor": "middle"},
+    {"t": "프론트 롤후프 브레이스 (앞으로)", "a": "fhb", "x": 20, "y": 110},
+    {"t": "프론트 벌크헤드", "a": "bh", "x": 20, "y": 290}
+   ],
+   "notes": [{"t": "뒤집히면 땅이 닿는 선", "x": 20, "y": 24, "c": "#c0392b"},
+             {"t": "헬멧 · 손(핸들 90° 돌림)과 선 사이 최소 거리", "x": 20, "y": 42, "c": "#c0392b"}]
+  },
+  "sis": {
+   "aria": "측면 충격 구조",
+   "hl": [{"obj": "2024_frame.*~관", "tubes": ["SIS_U"]}, {"obj": "2024_frame.*~관", "tubes": ["SIS_L"]}, {"obj": "2024_frame.*~관", "tubes": ["SIS_D"]}],
+   "ghost": "2024_frame|24_Seat|OZ racing", "hide": "Rodend",
+   "az": 145, "el": 22, "pad": 1.05, "fit": [[560, 40, 330], [1520, 40, 330], [560, 1100, 0], [1520, 650, 0], [1050, 340, 800]],
+   "anchors": {"u": [1100, 356, 268], "l": [1150, 111, 212], "d": [1150, 253, 243], "imp0": [1050, 345, 800], "imp1": [1050, 345, 345]},
+   "arrows": [{"a": "imp0", "b": "imp1", "c": "#e03131", "w": 4}],
+   "labels": [
+    {"t": "위 부재 (드라이버 몸통 높이)", "a": "u", "x": 20, "y": 30},
+    {"t": "대각 부재", "a": "d", "x": 470, "y": 30, "anchor": "end"},
+    {"t": "아래 부재", "a": "l", "x": 470, "y": 290, "anchor": "end"}
+   ],
+   "notes": [{"t": "옆에서 오는 충격", "x": 20, "y": 290, "c": "#c0392b"}]
+  },
+  "bracket": {
+   "aria": "브래킷",
+   "hl": [{"obj": "2024_frame.*~판", "near": "^Front_Bell_Crank", "side": "L", "r": 95}],
+   "focus": "^Front_Bell_Crank", "corner": "FL", "ghost": "2024_frame|Front_Shock_Rod|Upper_Shock|Lower_Shock|Front_Anti_Rod", "hide": "Rodend_Ball",
+   "color": {"^Front_Bell_Crank": "#9db4cc"}, "ghost_alpha": 0.5,
+   "az": 70, "el": 45, "pad": 2.0, "fit_objs": "^Front_Bell_Crank|hl:0",
+   "anchors": {"br": "hl:0", "bc": [1600, 590, 280]},
+   "labels": [
+    {"t": "브래킷 (두 장, 관에 용접)", "a": "br", "x": 20, "y": 290},
+    {"t": "벨크랭크 (두 장 사이에 끼움)", "a": "bc", "x": 470, "y": 290, "anchor": "end"}
+   ]
+  },
+  "ia": {
+   "aria": "충격 흡수 장치·안티 인트루전 플레이트",
+   "focus": "Impact_Attenuator|24_IA_Plate",
+   "hl": [{"obj": "2024_frame.*~관", "tubes": ["BH"]}],
+   "ghost": "2024_frame|Cowl_Body|Front_Wing", "hide": "Rodend",
+   "color": {"Impact_Attenuator": "#e8a33c"},
+   "az": 60, "el": 18, "pad": 1.15, "fit": [[1950, 60, 280], [2700, 560, -280]],
+   "anchors": {"ia": [2300, 400, 125], "aip": [2189, 200, -165], "bh": [2175, 511, -120], "imp0": [2700, 380, 0], "imp1": [2415, 380, 0]},
+   "arrows": [{"a": "imp0", "b": "imp1", "c": "#e03131", "w": 4}],
+   "labels": [
+    {"t": "충격 흡수 장치 (찌그러지며 에너지 흡수)", "a": "ia", "x": 20, "y": 30},
+    {"t": "안티 인트루전 판", "a": "aip", "x": 470, "y": 290, "anchor": "end"},
+    {"t": "프론트 벌크헤드", "a": "bh", "x": 470, "y": 30, "anchor": "end"}
+   ],
+   "notes": [{"t": "충돌", "x": 20, "y": 140, "c": "#c0392b"},
+             {"t": "힘 (거의 일정)", "x": 36, "y": 182, "c": "#1f62a8"},
+             {"t": "찌그러진 거리", "x": 196, "y": 294, "c": "#1f62a8", "anchor": "end"},
+             {"t": "넓이 = 흡수한 에너지", "x": 98, "y": 262, "c": "#1f62a8", "anchor": "middle"}],
+   "keepout": [[14, 168, 205, 300]],
+   "raw": "<g transform=\"translate(0 162)\"><path d=\"M30 117L30 58Q33 34 37 34Q41 34 44 56Q52 52 60 57Q70 62 80 56Q90 51 100 57Q110 62 120 56Q130 51 140 57Q150 61 162 56L162 117Z\" fill=\"#b7e4c7\" opacity=\".85\"/><path d=\"M30 117L30 58Q33 34 37 34Q41 34 44 56Q52 52 60 57Q70 62 80 56Q90 51 100 57Q110 62 120 56Q130 51 140 57Q150 61 162 56Q170 52 176 26\" stroke=\"#1d4f80\" stroke-width=\"1.8\" fill=\"none\"/><path d=\"M30 117L30 26M30 117L194 117\" stroke=\"#495057\" stroke-width=\"1.2\" fill=\"none\"/><path d=\"M30 22L27 29L33 29Z M198 117L191 114L191 120Z\" fill=\"#495057\"/></g>"
+  },
+  "firewall": {
+   "aria": "방화벽",
+   "focus": "Fire_Wall", "ghost": "2024_frame|REF4_Battery_Assy|24_Seat|OZ racing", "hide": "Rodend", "ghost_alpha": 0.32,
+   "color": {"Shoulder_Fire_Wall": "#6d7f95", "Back_Fire_Wall": "#8c7a5b", "Flank_Fire_Wall": "#5f8a74"},
+   "driver": "ghost",
+   "az": 140, "el": 32, "pad": 1.1, "fit": [[300, 60, 340], [1100, 60, 340], [300, 760, -340], [1100, 760, -340]],
+   "anchors": {"sh": [595, 600, 150], "bk": [811, 292, -120], "fl": [842, 245, 325], "bat": [450, 300, 150]},
+   "labels": [
+    {"t": "어깨 높이 방화벽", "a": "sh", "x": 20, "y": 30},
+    {"t": "등 뒤 방화벽 (시트 뒤)", "a": "bk", "x": 470, "y": 30, "anchor": "end"},
+    {"t": "옆 방화벽", "a": "fl", "x": 20, "y": 290},
+    {"t": "배터리 (고전압, 방화벽 뒤)", "a": "bat", "x": 470, "y": 290, "anchor": "end"}
+   ]
+  },
+  "firewall__2": {
+   "aria": "방화벽 두 층",
+   "scene": "fwlayers", "focus": "", "ghost": "zzz",
+   "color": {"fw_ins": "#d8c99c", "fw_cable": "#e8702a", "fw_gnd": "#c99a2e", "fw_lug": "#c99a2e", "fw_grommet": "#22262e", "fw_tube": "#8d949e"},
+   "az": 118, "el": 24, "pad": 1.05, "fit": [[-260, 0, -330], [320, 0, -330], [-260, 500, 330], [320, 500, 330]],
+   "anchors": {"al": "fw_al", "ins": "fw_ins", "gr": "fw_grommet", "gnd": "fw_gnd"},
+   "labels": [
+    {"t": "고전압 쪽: 알루미늄판 (차체에 접지)", "a": "al"},
+    {"t": "드라이버 쪽: 불연 절연층", "a": "ins"},
+    {"t": "관통부: 그로밋으로 밀봉", "a": "gr"},
+    {"t": "접지선", "a": "gnd"}
+   ],
+   "notes": [{"t": "불 · 열 (배터리 쪽)", "x": 20, "y": 210, "c": "#c0392b"},
+             {"t": "누설 전류 → 접지선 → 프레임", "x": 470, "y": 290, "c": "#b7791f", "anchor": "end"}]
+  },
+  "seat": {
+   "aria": "시트·안전벨트",
+   "focus": "^24_Seat\\|",
+   "hl": [{"obj": "2024_frame.*~관", "tubes": ["SHB"]}],
+   "ghost": "2024_frame|24_Steering_Wheel|Fire_Wall", "hide": "Rodend",
+   "driver": true, "belts": {"shoulder": [[605, 566, 85], [605, 566, -85]], "lap": [[1025, 102, 228], [1025, 102, -228]], "sub": [[1150, 111, 212], [1150, 111, -212]]},
+   "az": 28, "el": 30, "pad": 1.02, "fit": [[640, 60, 260], [1400, 60, 260], [640, 1000, -260], [1400, 1000, -260]],
+   "anchors": {"seat": [1150, 200, 205], "bar": [605, 566, 240], "sh": "beltpt:sh:0.25", "lap": "beltpt:lap:0.5", "sub": "beltpt:sub:0.75", "buckle": "belt:buckle", "lapA": "beltpt:lap:0.03"},
+   "labels": [
+    {"t": "숄더 하니스 바 (어깨 높이 관)", "a": "bar", "x": 470, "y": 150, "anchor": "end"},
+    {"t": "어깨띠", "a": "sh", "x": 470, "y": 30, "anchor": "end"},
+    {"t": "시트 (몸 모양 성형 셸)", "a": "seat", "x": 470, "y": 290, "anchor": "end"},
+    {"t": "랩벨트 (골반)", "a": "lap", "x": 20, "y": 190},
+    {"t": "안티서브 벨트 (다리 사이, 두 줄)", "a": "sub", "x": 470, "y": 250, "anchor": "end"},
+    {"t": "벨트 고정점 (프레임 관)", "a": "lapA", "x": 20, "y": 290}
+   ]
+  },
+  "headrest": {
+   "aria": "헤드레스트",
+   "focus": "Head_Restraint", "ghost": "2024_frame|24_Seat", "hide": "Rodend", "ghost_alpha": 0.4,
+   "color": {"^Head_Restraint\\|": "#2f3640"},
+   "driver": true,
+   "az": 78, "el": 8, "pad": 1.15, "fit": [[440, 560, 200], [960, 560, 200], [440, 1000, -200], [960, 1000, -200]],
+   "anchors": {"pad": "^Head_Restraint\\|", "plate": "Head_Restraint_Plate|Head_Restraint_Mount", "helmet": "drvpt:head", "mh": [675, 1010, 140], "dir0": [690, 830, 0], "dir1": [610, 830, 0]},
+   "arrows": [{"a": "dir0", "b": "dir1", "c": "#495057", "w": 3}],
+   "labels": [
+    {"t": "헤드레스트 패드 (에너지 흡수 폼)", "a": "pad", "x": 470, "y": 30, "anchor": "end"},
+    {"t": "받침판 (볼트 고정)", "a": "plate", "x": 470, "y": 290, "anchor": "end"},
+    {"t": "헬멧", "a": "helmet", "x": 20, "y": 290},
+    {"t": "메인 롤후프 (헬멧은 두 다리 사이)", "a": "mh", "x": 20, "y": 30}
+   ],
+   "notes": [{"t": "머리가 뒤로 젖혀지는 방향", "x": 250, "y": 250, "c": "#495057", "anchor": "middle"}]
+  }
+ }
+}

@@ -11,8 +11,7 @@ const PIC = {
     <tr><td>${chipPic('tc-green','Run2X · 2026','연결됨')}</td><td>정상. 팀과 공유 중</td></tr>
     <tr><td>${chipPic('tc-orange','Run2X · 2025','지난 시즌 보는 중')}</td><td>주의. 내 화면만 지난 시즌</td></tr>
     <tr><td>${chipPic('tc-orange','Run2X · 2026','저장 안 한 변경 2')}</td><td>주의. 아래 막대에서 저장</td></tr>
-    <tr><td>${chipPic('tc-orange','','연결 끊김')}</td><td>주의. 새로고침</td></tr>
-    <tr><td>${chipPic('tc-red','2026 시즌','디버깅')}</td><td>개발자 시험 중(공유 안 됨)</td></tr></table>`,
+    <tr><td>${chipPic('tc-orange','','연결 끊김')}</td><td>주의. 새로고침</td></tr></table>`,
   depth: `<div class="tc-depth"><div><b>단계</b> P3-1 휠 패키징 <span>펼치면 ↓</span></div><div class="d2"><b>항목</b> 스크럽 반경 <span>펼치면 ↓</span></div><div class="d3">배경 · 왜 하나 · <b>핵심</b> · 우리 팀 값 · 참고 · 질문 · 계산기 · 💬 논의</div></div>`,
   card: `<div class="tc-card"><div class="k">핵심 <span>이 항목에서 정할 것 (설계 결론)</span></div><div class="r">참고 <span>배경 설명</span></div><div class="t">우리 팀 값 <span>시즌마다 팀이 기록한 값</span></div><div class="q">질문 ▸ <span>펼쳐서 근거·유도·그림</span></div><div class="c">💬 논의 <span>팀원끼리 댓글</span></div></div>`,
   edit: `<div class="tc-flow"><span>[편집]</span>→<span>값 입력</span>→<span>[적용]</span>→<span class="pri">아래 막대 [모두 저장]</span></div><p class="tc-n">[적용]은 입력칸을 닫기만 하고, 팀원에게는 [모두 저장]을 눌러야 보입니다.</p>`,
@@ -70,7 +69,7 @@ const TOUR = {
   ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
  ],
  steps: [
-  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:()=>{ const t=$('#toc'); if(t) t.classList.remove('coll'); window.scrollTo({top:0,behavior:'instant'}); }}],
+  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:async()=>{ await tgTocSet(false); window.scrollTo({top:0,behavior:'instant'}); }}],
   ['#v-steps header .legend','표시 배지',`항목 줄과 본문에 붙는 표시입니다. ${B('b-card','상세')} 상세 카드(그림·표가 많은 긴 설명)가 있는 항목, ${B('b-assume','가정값')} 설명용 숫자라 팀 실측값으로 바꿀 것입니다.`,{tab:'steps',vm:'full',union:'span:nth-child(-n+2)'}],
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
   ['#flow-list','흐름만 보기','단계마다 핵심 한 줄만 이어 보여 줍니다. 전체 순서를 빠르게 훑을 때 씁니다. 줄의 [열기 ›]를 누르면 전체 보기의 그 항목으로 갑니다.',{tab:'steps',vm:'flow'}],
@@ -91,13 +90,13 @@ const TOUR = {
   ['#it-s_scrub .tk>.tk-d','논의','팀원끼리 이 항목에 대해 이야기하는 곳입니다. 답글을 달 수 있고, 내 글은 고치거나 지울 수 있습니다. 새 글이 있으면 항목 줄에 글 수가 뜹니다.',{...SC}],
   ['#crumb','지금 위치','내려 읽는 동안 지금 단계 › 항목을 위에 한 줄로 보여 줍니다. 눌러서 그 머리로 가거나 [이 항목 접기]·[모두 접기]로 닫습니다.',{...SC,sync:true,prep:()=>{ openScrub(); const it=$('#it-s_scrub'); if(it) window.scrollTo({top:it.getBoundingClientRect().top+scrollY+260,behavior:'instant'}); }}],
   ['#partRail','파트 강조','평소에는 접혀 있고 마우스를 올리면 펼쳐집니다(빼면 다시 접힘). 파트를 고르면 그 파트 항목만 진하게 보이고 나머지는 흐려지며, 여러 개 고를 수 있습니다. 머리를 누르면 펼친 채 고정(📌)됩니다.',{...SC,sync:true,prep:()=>{ const r=$('#partRail'); if(r) r.classList.remove('coll'); }}],
-  ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너를 누르면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다. 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
+  ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너에 마우스를 올리면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다(빼면 닫힘). 배너를 누르면 펼친 채 고정(📌)되고, 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
  ],
  graph: GRAPH_TOUR,
  tools: [
   ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
-  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. 점 색은 확정·검토 중·가정·계산값입니다. 값을 누르면 고칩니다.',{tab:'tools'}],
-  ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]을 누르면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
+  ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. ↻ 는 계산에 쓴 값이 그 뒤 바뀌어 그 도구에서 다시 계산해야 하는 값입니다. 여기서는 고치지 않고, 각 도구의 [대시보드에 반영]으로만 바뀝니다.',{tab:'tools'}],
+  ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]에 마우스를 올리면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
   ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
   ['#dcond','주행 조건','차속·코너 반경·종가속·에어로 포함 여부를 바꾸거나 예시 상황을 누르면 그림과 아래 숫자가 같이 바뀝니다.',{tab:'tools'}],
   ['#dpart','파트별','파트별 선도입니다. 전체 범위의 그래프에 지금 조건을 세로 점선으로 표시합니다. 회색 탭은 그 계산 도구를 만들 때 열립니다.',{tab:'tools'}],
@@ -186,14 +185,14 @@ function tgRestore(s){
   document.querySelectorAll('details[open]').forEach(d=>{ if(!s.open.has(d) && !d.closest('#tour')) d.open=false; }); s.open.forEach(d=>{ if(d.isConnected && !d.open) d.open=true; });
   try{ if(s.sel!==undefined && SEL!==s.sel){ s.sel ? selectItem(s.sel,false) : clearSel(); } }catch(e){}
   const r=$('#partRail'); if(r && s.rail!=null) r.className=s.rail; try{ applyPart(); }catch(e){}
-  const t=$('#toc'); if(t && s.toc!=null) t.className=s.toc;
+  const t=$('#toc'); if(t && s.toc!=null){ t.className=s.toc; try{ tocFx(); }catch(e){} }   /* 116차: 본문 여백도 같이 (목차 단계에서 펼친 뒤 바로 그만 보기 하면 본문만 밀린 채 남던 것) */
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ window.scrollTo({top:s.y, behavior:'instant'}); try{ dispatchEvent(new Event('scroll')); }catch(e){} })); }
 
 /* 지금 화면을 복제 (스크립트·겹친 층 제외). 화면에 붙은 것은 따로 고정 층에 */
 const TG_SKIPID = new Set(['tour','demoBar','demoDiag','tip','busyBar','mobileNote']);
 /* 본문이 실제로 놓이는 폭. 시안 뷰어에서는 짧은 페이지일 때 clientWidth(1920)가 스크롤바 자리를 빼지 않아 body(1905)와 달라져 복제 화면이 오른쪽으로 밀렸음 */
 const tgW = () => { const b=document.body, cs=getComputedStyle(b); return Math.round(b.getBoundingClientRect().width + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight)); };
-function tgClone(fx){ const W=tgW(), H=innerHeight;
+function tgClone(fx){ const W=tgW(), H=innerHeight; if(TR){ const t=$('#toc'); TR.tocOpen = !!t && !t.classList.contains('coll'); }
   const page=document.createElement('div'); page.className='tg-page'; page.style.width=W+'px'; page.style.height=document.documentElement.scrollHeight+'px';
   const fix=document.createElement('div'); fix.className='tg-fix'; fix.style.width=W+'px'; fix.style.height=H+'px';
   for(const el of [...document.body.children]){ if(/^(SCRIPT|STYLE|LINK|NOSCRIPT|TEMPLATE)$/.test(el.tagName) || TG_SKIPID.has(el.id) || el.classList.contains('toast')) continue;
@@ -315,6 +314,10 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     /* 1·2: 설명 카드 → 하이라이트를 지우고 화면 전체를 어둑하게 */
     if(TR.inited){ await tgSleep(200); if(TR!==tk) return; tgDim(true); tgHole(null); await tgSleep(220); if(TR!==tk) return; }
     while(i>=0 && i<TR.steps.length){ const st=TR.steps[i], o=st[3]||{}; TR.keepCrumb=!!o.sync;
+      /* 좁은 화면(1400 px 미만)에서는 목차가 본문 위에 떠서 가림: 목차 단계가 아니면 접어 둠 (2026-11-13) */
+      { const t=$('#toc'); if(t && !/#toc/.test(st[0])){   /* 114차: 목차 단계 밖에서는 좁은 창 = 접힘, 넓은 창 = 사용법 시작 때 상태 (목차 단계가 펼친 채로 남아 본문을 가리던 것) */
+        const want = document.body.classList.contains('toc-narrow') || /(^|\s)coll(\s|$)/.test((TR.snap && TR.snap.toc) || '');
+        if(await tgTocSet(want)){ if(TR!==tk) return; TR.sig=null; } else if(want && TR.tocOpen) TR.sig=null; } }   /* 복제본에 목차가 펼쳐져 있으면 다시 복제 (진짜 목차는 바깥 누르기로 이미 접혔을 수 있음) */
       /* 4: 화면을 바꾸는 버튼(탭·하위 화면·보기 방식·항목)을 누르는 모습 → 바뀐 화면으로 서서히 */
       for(const c of tgClicks(o)){
         if(TR.inited && dir>0){ const be=o.inner && tourVis(c.sel); if(be){ await tgInner(o.inner, be); if(TR!==tk) return; } await tgPress(c.sel); } if(TR!==tk) return;
@@ -340,7 +343,19 @@ async function tourGo(i, dir){ if(!TR) return; if(TR.busy){ tgQueue(dir||1); ret
     if(dir>0) tourStop();
   } finally { if(TR===tk){ TR.busy=false; TR.el.classList.remove('tg-busy'); const q=TR.queue; TR.queue=null; TR.fast=false; if(q && q.n){ const n=TR.i+q.n; if(n<0) return tourGo(0,-1); if(n>=TR.steps.length) return tourStop(); tourGo(n, q.n>0?1:-1); } } } }
 async function tgRefresh(){ if(!TR || TR.busy) return; const st=TR.steps[TR.i]; if(!st) return; const o=st[3]||{}; await tgRebuild(o.fx); const el=tourVis(st[0]); if(!el) return; const g=tgGeom(el,o); TR.off=g.off; tgApply(); const gg=tgGeom(el,o); tgHole(gg); tgCard(gg); }
-function tourStop(){ if(!TR) return; const s=TR.snap; (TR.inert||[]).forEach(n=>n.inert=false); TR.el.remove(); TR=null; removeEventListener('resize', tgOnResize); tgRestore(s); }
+/* 118차 (B'): 사용법 중 목차를 접거나 펼 때, 무대(복제본) 안의 목차에 진짜와 같은 애니메이션(tocSnake)을 그리고 본문 여백도 같이 미끄러짐 → 끝나면 다시 복제.
+   진짜 목차 · 본문은 바로 바꿔 두고(복제본은 :root 의 --tocx 를 같이 씀), 처음 단계(아직 무대가 안 뜸) · 빨리 넘기기 중에는 바로. 바뀌면 true */
+async function tgTocSet(want){ const t=$('#toc'); if(!t || t.classList.contains('coll')===want) return false; const tk=TR;
+  const sc=TR && TR.el.querySelector('.tg-scale'), tc=sc && [...sc.querySelectorAll('#toc')].pop();
+  if(!TR || !TR.inited || TR.fast || !tc || typeof tocSnake!=='function' || getComputedStyle(t).display==='none'){ t.classList.toggle('coll', want); try{ tocFx(); }catch(e){} await tgFrame(); return true; }
+  const R=sc.getBoundingClientRect(), k=R.width/(sc.offsetWidth||R.width) || 1;
+  document.body.classList.add('tg-live');   /* 본문 여백 전환을 켬 (복제본 #v-steps 도 같은 규칙) */
+  tocSnake(tc, !want, o=>{ tc.classList.toggle('coll', !o); t.classList.toggle('coll', !o); try{ tocFx(); }catch(e){}
+    const r=t.getBoundingClientRect(); Object.assign(tc.style, {left: r.left+'px', top: r.top+'px', width: r.width+'px', height: r.height+'px'}); },   /* 복제본 목차는 크기가 글자로 박혀 있어(tgClone) 진짜 목차의 새 크기를 옮겨 줌 */
+    {host: sc, k, ox: R.left, oy: R.top});
+  await tgSleep(60); for(let n=0; n<80 && tc._ts && TR===tk; n++) await tgSleep(30);
+  await tgSleep(60); document.body.classList.remove('tg-live'); return true; }
+function tourStop(){ if(!TR) return; document.body.classList.remove('tg-live'); const s=TR.snap; (TR.inert||[]).forEach(n=>n.inert=false); TR.el.remove(); TR=null; removeEventListener('resize', tgOnResize); tgRestore(s); }
 let tgRT=0; function tgOnResize(){ clearTimeout(tgRT); tgRT=setTimeout(tgRefresh, 200); }
 function tourStart(name){ tourStop(); const steps=courseOf(name); if(!steps.length) return;
   const el=document.createElement('div'); el.id='tour'; el.className='tg tg-wait'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label','사용법 안내');

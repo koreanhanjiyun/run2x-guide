@@ -3,10 +3,10 @@
 //   node tool2_check.js [스크린샷 폴더] [xlsx] [csv]
 const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
 (async()=>{ await H.start(); const b=await H.chromium.launch(); const p=await H.page(b,'lead');
-  const R=()=>p.evaluate(()=>WB.R&&WB.R.out); const f=(v,d=2)=>typeof v==='number'?v.toFixed(d):v; const W=ms=>H.sleep(ms); const et=async k=>{ if(k==='tire'){ await p.click('[data-t2eg="tire"]'); } else { await p.click('[data-t2eg="mot"]'); await W(300); await p.click(`[data-t2et="${k}"]`); } }; const idle=async()=>{ await W(800); for(let i=0;i<150 && await p.evaluate(()=>WB.busy);i++) await W(200); };
+  const R=()=>p.evaluate(()=>WB.R&&WB.R.out); const f=(v,d=2)=>typeof v==='number'?v.toFixed(d):v; const W=ms=>H.sleep(ms); const et=async k=>{ if(k==='tire'){ await p.click('[data-t2eg="tire"]'); } else { await p.click('[data-t2eg="mot"]'); await W(300); await p.click(`[data-t2et="${k}"]`); } await W(200); if(await p.$('.t2-mfold.off')){ await p.click(`[data-t2uk="${k}"] [data-t2use="tab"]`); await W(400); } };   /* [위 상수]면 표를 아예 안 그림 (70차) → [아래 표]로 */ const idle=async()=>{ await W(800); for(let i=0;i<150 && await p.evaluate(()=>WB.busy);i++) await W(200); };
   const rows=()=>p.evaluate(()=>t2Track(T2.free.text).rows.map(r=>[+r.l.toFixed(2),+r.R.toFixed(2)]).join(' | '));
   const cell=async(i,k,v)=>{ await p.click(`#t2tt [data-t2e="${i},${k}"]`); await W(150); const e=await p.$(`#t2tt [data-t2e="${i},${k}"] .t2-ci`); if(e.tagName && false); if(await e.evaluate(x=>x.tagName)==='SELECT') await e.selectOption(v); else { await e.fill(String(v)); await e.press('Enter'); } await W(400); };
-  await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>wbOpen('2')); await W(7000);
+  await p.evaluate(()=>showTab('tools')); await W(600); await p.evaluate(()=>wbOpen('2',null,'ex')); await W(3000); for(let i=0;i<40 && !(await p.evaluate(()=>!!(WB.R&&WB.R.out))); i++) await W(500);   // 처음 계산 기다림 (기기 · 설정에 따라 다름)
   let o=await R(); console.log('open', 'gr_use', o.gr_use, 'acc', f(o.t_acc_s,3), 'skid', f(o.t_skid_s,3), 'ax', f(o.t_ax_s), 'end', f(o.t_end_s,1), 'gr', o.gr_opt, o.gr_acc, o.gr_ax, o.gr_end, 'd', f(o.d_acc,3), f(o.d_end,2), 'ms', await p.evaluate(()=>Math.round(WB.ms)), 'err', await p.evaluate(()=>WB.err));
   console.log('layout', 'cards', await p.locator('#wbout .t2-oc').count(), 'rows g/rec', await p.locator('#wbout .t2-oc.g .t2-r').count(), await p.locator('#wbout .t2-orow:first-child .t2-oc:nth-child(2) .t2-r').count(),
     'align', await p.evaluate(()=>{ const a=[...document.querySelectorAll('#wbout .t2-oc.g .t2-r')].map(r=>Math.round(r.getBoundingClientRect().top)), b=[...document.querySelectorAll('#wbout .t2-orow:first-child .t2-oc:nth-child(2) .t2-r')].map(r=>Math.round(r.getBoundingClientRect().top)); return a.length===b.length && a.every((v,i)=>v===b[i]); }),
@@ -15,7 +15,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   const t0=Date.now(); await p.click('[data-t2gm="opt"]'); await W(300); o=await R(); console.log('opt instant', Date.now()-t0 < 1500, 'gr_use', o.gr_use, 'c_gr', o.c_gr, (await p.textContent('#wbout .t2-orow:first-child .t2-oc:nth-child(2) h4')).trim().slice(0,40));
   if(out) await p.screenshot({path:out+'/t2_opt.png'});
   await p.click('[data-t2gm="my"]'); await W(300); console.log('my back', (await R()).gr_use);
-  await p.click('.wb-bar [data-wbcode]'); await W(300); await p.click('#wbm [data-wbver]'); await W(45000); console.log('verify', (await p.textContent('#wbm .dvi-foot')).trim().slice(0,40)); await p.click('#wbm [data-wbmx]');
+  await p.click('.wb-bar [data-wbcode]'); await W(300); await p.click('#wbm [data-wbver]'); await W(90000); console.log('verify', (await p.textContent('#wbm .dvi-foot')).trim().slice(0,40)); await p.click('#wbm [data-wbmx]');
   // 구동력 선도 프로브
   await p.evaluate(()=>document.querySelector('#wbsig').scrollIntoView({block:'center'})); await W(300); await p.locator('#wbsig svg .wb-hit').click({position:{x:300,y:100}}); await W(150); console.log('pf moving', await p.evaluate(()=>{ const o=document.querySelector('#t2ftov'); return o && !o.hidden ? o.textContent : 'hidden'; }));
   await W(2500); console.log('pf plot no hit', await p.evaluate(()=>!document.querySelector('#t2ft .wb-hit')), 'pf lines', await p.locator('#t2ft polyline').count());
@@ -27,7 +27,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   for(const l of ['1','14','all']){ await p.selectOption('[data-t2lap]', l); await W(7000); o=await R(); console.log('lap', l, 'c_lap', o.c_lap, f(o.c_t), 'cap', (await p.textContent('#t2mcap')).slice(0,40)); }
   await p.selectOption('[data-t2lap]', '2'); await W(7000);
   await p.evaluate(()=>document.querySelector('#t2map').scrollIntoView({block:'center'})); await W(300); const box=await (await p.$('#t2map svg')).boundingBox(); await p.mouse.move(box.x+box.width*0.5, box.y+box.height*0.5); await p.mouse.wheel(0,-300); await W(300); console.log('zoom', await p.evaluate(()=>T2.zoom.k.toFixed(2)));
-  await p.mouse.move(box.x+box.width*0.3, box.y+box.height*0.5); await p.mouse.down(); await p.mouse.move(box.x+box.width*0.4, box.y+box.height*0.55, {steps:5}); await p.mouse.up(); await W(200); console.log('pan', await p.evaluate(()=>T2.zoom.cx.toFixed(3)));
+  await p.mouse.move(box.x+box.width*0.3, box.y+box.height*0.5); await p.mouse.down({button:'middle'}); await p.mouse.move(box.x+box.width*0.4, box.y+box.height*0.55, {steps:5}); await p.mouse.up({button:'middle'}); await W(200); console.log('pan (middle)', await p.evaluate(()=>T2.zoom.cx.toFixed(3)));
   await p.click('[data-t2z="fit"]'); await W(200); await p.evaluate(()=>document.querySelector('#t2map').scrollIntoView({block:'center'})); await W(300); const xi0=await p.evaluate(()=>WB.xi); const pt=await p.evaluate(()=>{ const s=document.querySelector('#t2map svg'), q=T2.mp.pts[Math.floor(T2.mp.pts.length/3)], m=s.getScreenCTM(); return [q[0]*m.a+m.e, q[1]*m.d+m.f]; });
   await p.mouse.click(pt[0], pt[1]); await W(300); console.log('map probe', xi0, '->', await p.evaluate(()=>WB.xi), 'n', await p.evaluate(()=>WB.R.x.d.length));
   // 그래프 칸: 추가 · 고르기 · 높이
@@ -63,6 +63,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   await p.click('[data-t2tab="sim"]'); await W(500); await p.click('.t2-hr [data-t2course="free"]'); await W(7000); console.log('free empty sim err', JSON.stringify(await p.evaluate(()=>WB.err)), 'errs', p.errs.length);
   await p.click('[data-t2tab="edit"]'); await W(400); await p.click('[data-t2add]'); await W(400); console.log('add to empty', await rows());
   await p.click('[data-t2menu="track"]'); await W(200); await p.click('[data-t2act="ex"]'); await W(500);
+  await p.click('[data-t2tab="sim"]'); await W(500); for(let i=0;i<40 && !(await p.evaluate(()=>!!WB.R));i++) await W(500); await p.click('[data-t2tab="edit"]'); await W(400);   // 빈 코스(채울 칸)였다가 되돌림 → 다시 계산한 뒤 편집
   for(const k of ['mt','eM','eI','tire']){ await et(k); await W(500); console.log('edit', k, 'same h', await p.evaluate(()=>{ const a=document.querySelector('#t2tt').getBoundingClientRect(), b=document.querySelector('#t2mc').getBoundingClientRect(); return Math.round(a.top-b.top)+'/'+Math.round(a.height-b.height); }), 'const', await p.evaluate(()=>(document.querySelector('.t2-const')||{}).textContent||''), (await p.textContent('#t2msum')).trim().slice(0,60), 'cells', await p.locator('#t2tt [data-t2e]').count(), 'svg', await p.locator('#t2mc svg').count()); if(out) await p.screenshot({path:`${out}/t2_e_${k}.png`}); }
   await et('eM'); await W(400); await p.click('#t2mc rect[data-ij="10,5"]'); await W(300); console.log('heat → cell', await p.evaluate(()=>{ const c=document.querySelector('#t2tt .t2-hl'); return c ? c.dataset.t2e : 'none'; }));
   await et('eI'); await W(300); await p.click('[data-t2gadd="row"]'); await W(300); await p.click('[data-t2gadd="col"]'); await W(300); console.log('eI grid', JSON.stringify(await p.evaluate(()=>t2Grid(T2.eI))));
@@ -71,11 +72,13 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   { await et('eI'); await W(300); await p.click('[data-t2gadd="row"]'); await W(300); await p.click('[data-t2gadd="col"]'); await W(300);
     console.log('empty grid cells', await p.evaluate(()=>{ const td=[...document.querySelectorAll('#t2tt .t2-gtab tbody td')]; return td.map(x=>Math.round(x.getBoundingClientRect().width)+'x'+Math.round(x.getBoundingClientRect().height)).join(' '); }));
     await p.click('[data-t2menu="eI"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(400); }
-  await et('tire'); await W(300); await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="paste"]'); await W(200); await p.fill('#t2pta','하중 N, μ\n0, 1.8\n1000, 1.6\n2000, 1.45'); await p.click('[data-t2pok]'); await W(500);
+  await et('tire'); await W(300); console.log('tire menu no paste', await (async()=>{ await p.click('[data-t2menu="tire"]'); await W(200); const n=await p.locator('[data-t2act="paste"]').count(); await p.click('[data-t2menu="tire"]'); await W(200); return n===0; })()); await p.evaluate(()=>{ const dt=new DataTransfer(); dt.setData('text/plain','하중 N\tμ\n0\t1.8\n1000\t1.6\n2000\t1.45\n'); const t=document.querySelector('[data-t2gk="tire"]'); (t.querySelector('td,th')||t).dispatchEvent(new ClipboardEvent('paste',{clipboardData:dt,bubbles:true,cancelable:true})); }); await W(500);
   console.log('tire', (await p.textContent('#t2msum')).trim(), 'lock mu', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled), 'lock eta_mot', await p.evaluate(()=>!!t2InLock('eta_mot')));
-  const toSim=async()=>{ await p.click('[data-t2tab="sim"]'); await idle(); }, toEdit=async g=>{ await p.click('[data-t2tab="edit"]'); await W(300); await et(g); await W(300); };
+  const toSim=async()=>{ await p.evaluate(()=>{ Object.keys(T2.use).forEach(k=>{ if(k!=='mt' && !t2HasMap(k)) T2.use[k]='const'; }); t2Save(); });   /* 검사가 [아래 표]로 연 빈 표는 [위 상수]로 되돌림 (빈 표 + [아래 표] = 필수) */
+    await p.click('[data-t2tab="sim"]'); await idle(); }, toEdit=async g=>{ await p.click('[data-t2tab="edit"]'); await W(300); await et(g); await W(300); };
   await toSim(); console.log('tire acc', f((await R()).t_skid_s,3)); await toEdit('tire');
-  await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(500); console.log('tire cleared lock', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled));
+  await p.click('[data-t2menu="tire"]'); await W(200); await p.click('[data-t2act="clear"]'); await W(500); console.log('tire cleared lock', await p.evaluate(()=>document.querySelector('[data-wbi="mu"]').disabled), 'need tire', await p.evaluate(()=>wbNeed().some(x=>x.k==='t2:tire')));
+  await p.click('[data-t2uk="tire"] [data-t2use="const"]'); await W(400);   /* 빈 표 + [아래 표] = 필수 (69차) → [위 상수]로 */
   await et('mt'); await W(300); await p.click('#t2tt [data-t2e="1,1"]'); await W(150); await p.fill('#t2tt .t2-ci','100'); await p.press('#t2tt .t2-ci','Enter'); await toSim(); console.log('torque edit acc', f((await R()).t_acc_s,3)); await toEdit('mt');
   await p.click('[data-t2menu="mt"]'); await W(200); await p.click('[data-t2act="ex"][data-t2k="mt"]'); await toSim(); console.log('torque reset acc', f((await R()).t_acc_s,3)); await toEdit('mt');
   // 디레이팅 켜기
@@ -96,13 +99,13 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
     console.log('th toggles', s1, s2, s3, 'lock dr_t0', await p.evaluate(()=>t2InLock('dr_t0')||'-'));
     await p.click('[data-t2th="cw_on"]'); await W(150); await p.click('[data-t2th="bt_on"]'); await W(150); console.log('th all', await th(), 'lock b_c', await p.evaluate(()=>t2InLock('b_c')||'-'));
     await p.click('[data-t2tab="sim"]'); await idle(); o=await R();
-    console.log('rmin row', await p.evaluate(()=>[WB.I.rmin, WB.R.out.c_rmn, WB.R.out.c_rbad, /가장 작은 반경/.test(document.querySelector('#wbout').textContent)]));
+    console.log('rmin row', await p.evaluate(()=>[WB.R.out.c_rkin, WB.R.out.c_rmn, WB.R.out.c_rbad, /가장 작은 반경/.test(document.querySelector('#wbout').textContent)]));
     console.log('sim badge', (await p.textContent('.t2-mdl')).trim(), 'tw', f(o.c_twmax,1), 'tb', f(o.c_tbmax,1), 'card', await p.evaluate(()=>/냉각수 최고 온도/.test(document.querySelector('#wb').textContent)));
     await p.click('[data-t2tab="edit"]'); await W(300); await p.click('[data-t2eg="model"]'); await W(200); await p.click('[data-t2th="cw_on"]'); await W(150); await p.click('[data-t2th="bt_on"]'); await W(150); console.log('th back', await p.evaluate(()=>[WB.I.th_on,WB.I.cw_on,WB.I.bt_on].join('')));
     await p.click('[data-t2eg="bat"]'); await W(300); console.log('e_lim in row', await p.evaluate(()=>document.querySelector('[data-wbi="e_target"]').closest('.wb-ir').querySelectorAll('[data-t2el]').length), 'lock', await p.evaluate(()=>document.querySelector('[data-wbi="e_target"]').disabled));
     await p.click('[data-t2el="2"]'); await W(200); console.log('e_lim 2', await p.evaluate(()=>[WB.I.e_lim, WB.I.e_target, document.querySelector('[data-wbi="e_target"]').disabled]));
     await p.click('[data-t2el="1"]'); await W(200);
-    await p.click('[data-t2eg="course"]'); await W(300); await p.click('[data-t2eg="sus"]'); await W(300); await p.click('[data-t2rm="0"]'); await W(150); console.log('rm off', await p.evaluate(()=>[WB.I.rm_on, document.querySelector('[data-wbi="rmin"]').disabled])); await p.click('[data-t2rm="1"]'); await W(150); await p.click('[data-t2eg="course"]'); await W(300);
+    await p.click('[data-t2eg="course"]'); await W(300); await p.click('[data-t2eg="sus"]'); await W(300); console.log('no rmin input', await p.evaluate(()=>!document.querySelector('[data-wbi="rmin"]') && !!document.querySelector('[data-wbi="delta_max"]') && !document.querySelector('[data-wbi="delta_max"]').disabled)); await p.click('[data-t2eg="course"]'); await W(300);
     await p.click('[data-t2eg="course"]'); await W(300); console.log('rl in box', await p.evaluate(()=>!!document.querySelector('.t2-sb .t2-optrow [data-t2rl]')));
     await et('eM'); await W(300); const nc0 = await p.evaluate(()=>t2Grid(T2.eM)[0].length);
     console.log('heat ticks', await p.locator('#t2mc .t2-hg').count(), 'addc', await p.locator('#t2tt .t2-addc').count(), 'addr', await p.locator('#t2tt .t2-addr').count());
@@ -110,7 +113,7 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
     await p.click('[data-t2menu="eM"]'); await W(200); await p.click('[data-t2act="ex"][data-t2k="eM"]'); await W(300);
     await et('tire'); await W(300); console.log('tire x max', await p.evaluate(()=>{ const t=[...document.querySelectorAll('#t2mc .wb-tx')].map(x=>+x.textContent.replace(/,/g,'')).filter(isFinite); return Math.max(...t); }));
     if(out){ await et('eM'); await W(300); await p.screenshot({path:out+'/t2_eM.png'}); await p.click('[data-t2eg="model"]'); await W(300); await p.screenshot({path:out+'/t2_model.png'}); }
-    await p.click('[data-t2tab="sim"]'); await idle(); }
+    await toSim(); }
   console.log('viz removed', await p.locator('[data-wbviz="mu_s"]').count()===0);
   await p.selectOption('[data-wbxa]','in:gr'); await W(30000); console.log('sweep', await p.evaluate(()=>WB.sw&&WB.sw.X?WB.sw.X.length:'none'), await p.evaluate(()=>WB.err)); await p.selectOption('[data-wbxa]',''); await W(7000);
   console.log('axis colors', await p.evaluate(()=>[...document.querySelectorAll('#wbsig .wb-tl tspan')].map(t=>t.style.fill).filter(Boolean).slice(0,4).join(' ')), 'probe color', await p.evaluate(()=>{ const t=document.querySelector('#wbsig .wb-pv'); return t ? t.style.fill : 'none'; }));
@@ -120,5 +123,5 @@ const H=require('./h.js'); const [out, xlsx, csv]=process.argv.slice(2);
   console.log('tour', seen.join(','));
   await p.evaluate(()=>{ try{ tourStop(); }catch(e){} }); await W(4000); console.log('after tour', await p.evaluate(()=>T2.course+' '+T2.tab));
   await p.evaluate(()=>wbClose()); await W(300);
-  for(const k of ['goal','pt']){ await p.evaluate(k=>{ DASH.part=k; dashPaint(['part']); }, k); await W(9000); console.log('part', k, (await p.textContent('#t2part')).replace(/\s+/g,' ').slice(0,120)); }
+  for(const k of ['goal','pt']){ await p.evaluate(k=>{ DASH.part=k; dashPaint(['part']); }, k); await W(9000); const nf=await p.$('.dp-body .dv-nofig'); console.log('part', k, nf ? 'no fig (대시보드 빈 값): '+(await nf.textContent()).slice(0,40) : (await p.textContent('#t2part')).replace(/\s+/g,' ').slice(0,120)); }
   console.log('errs', JSON.stringify(p.errs), JSON.stringify(p.cons)); await b.close(); await H.end(); })();

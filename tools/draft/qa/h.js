@@ -2,7 +2,7 @@
 const {chromium}=require('playwright');const {spawn}=require('child_process');
 const path=require('path'); const S=path.resolve(__dirname,'..','..','..','dist','draft');   /* tools/draft/build.py 결과 */
 let srv=null; const PORT=8840+Math.floor(Math.random()*100);
-async function start(){ srv=spawn('python3',['-m','http.server',String(PORT)],{cwd:S,stdio:'ignore'}); await new Promise(r=>setTimeout(r,800)); }
+async function start(){ srv=spawn(process.env.PY || (process.platform==='win32' ? 'python' : 'python3'),['-m','http.server',String(PORT)],{cwd:S,stdio:'ignore'}); await new Promise(r=>setTimeout(r,800)); }
 async function page(b, role, opt={}){ const ctx=await b.newContext({viewport:{width:opt.W||1600,height:opt.H||900}}); const p=await ctx.newPage();
   p.errs=[]; p.cons=[]; p.dialogs=[];
   p.on('pageerror',e=>p.errs.push(String(e).slice(0,240)));

@@ -1,0 +1,67 @@
+{
+ "_note": "에어로 중 REF4 날개가 주인공인 그림만 (fwing · endplate). 2D 유선 원리 그림과 카나드 · 사이드윙 · 디퓨저 · VG(REF4 에 없음)는 기존 유지 (129차) · fwing 은 단면 + 3D 유선을 시험했으나 속 빈 날개 셸 때문에 유선이 날개를 뚫는 것처럼 보여 기존 그림 유지",
+ "tube_groups": {},
+ "figs": {
+  "endplate": {
+   "aria": "엔드플레이트",
+   "focus": "^Rear_wing_Endplate|^Rear_Wing_Main_Flap_(Upper|Lower)_Shell|^Rear_2nd_Flap_(Upper|Lower)|^Rear_3rd_Flap_(Upper|lower)",
+   "ghost": "OZ racing|2024_frame|^Rr Wing Rod|^Rear_Wing_Swan_Neck",
+   "hide": "Rodend|^Front",
+   "color": {
+    "^Rear_wing_Endplate": "#3d4450",
+    "^Rear_Wing_Main|^Rear_2nd|^Rear_3rd": "#8c96a3"
+   },
+   "az": -140,
+   "el": 18,
+   "pad": 1.06,
+   "fit": [
+    [
+     -460,
+     640,
+     -460
+    ],
+    [
+     360,
+     1210,
+     460
+    ]
+   ],
+   "anchors": {
+    "ep": {
+     "obj": "^Rear_wing_Endplate",
+     "near": [
+      0,
+      900,
+      -432
+     ]
+    },
+    "w": {
+     "obj": "^Rear_Wing_Main_Flap_Upper",
+     "near": [
+      0,
+      960,
+      -300
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "엔드플레이트",
+     "a": "ep"
+    },
+    {
+     "t": "날개 세 장 (끝을 판이 잡음)",
+     "a": "w"
+    }
+   ],
+   "notes": [
+    {
+     "t": "판이 날개 끝에서 아래 · 위 압력 차가 새는 것을 막음 (날개 끝 소용돌이 줄임)",
+     "x": 20,
+     "y": 290,
+     "c": "#1f62a8"
+    }
+   ]
+  }
+ }
+}

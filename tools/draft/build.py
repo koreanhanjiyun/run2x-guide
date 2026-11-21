@@ -17,7 +17,9 @@ def css_inline(path):
     return re.sub(r'url\(\.\./(img/[^)]+\.png)\)', lambda m: 'url(data:image/png;base64,' + base64.b64encode(open(os.path.join(ROOT, m.group(1)),'rb').read()).decode() + ')', c)
 # 시안 데모: 역할(비로그인·팀원·파트장·관리자)을 바꿔 보는 가짜 저장소 + 전환 막대 (사이트 저장소에는 넣지 않음)
 MOCK = open(os.path.join(HERE, 'demo-mock.js'), encoding='utf-8').read()
-html = html.replace('<script src="js/core/debug-pre.js', '<script>\n' + MOCK + '</script>\n<script src="js/core/debug-pre.js', 1)
+# 더미 팀 (tools/dummy/run2x-dummy-team.json, node tools/dummy/make.js 로 만듦) → 가짜 저장소 기본 데이터
+MOCK = 'window.__RUN2X_DUMMY = ' + open(os.path.join(ROOT, 'tools', 'dummy', 'run2x-dummy-team.json'), encoding='utf-8').read().replace('</', '<\\/') + ';\n' + MOCK
+html = html.replace('<script src="js/core/boot.js', '<script>\n' + MOCK + '</script>\n<script src="js/core/boot.js', 1)
 html = re.sub(r'<link rel="stylesheet" href="(css/[^"?]+)(?:\?v=[^"]*)?">', lambda m: '<style>\n' + css_inline(m.group(1)) + '</style>', html)
 def js_inline(path):
     c = rd(path)
@@ -35,6 +37,6 @@ body = body.replace('</head>\n<body>\n', '\n').replace('</body>\n</html>\n', '')
 body = body.replace('<meta name="robots" content="noindex,nofollow">\n', '')
 body = '<meta name="claude:viewport-fit-sides" content="cover">\n' + body if '<title>' not in body[:300] else body.replace('</title>', '</title>\n<meta name="claude:viewport-fit-sides" content="cover">', 1)
 os.makedirs(os.path.dirname(out), exist_ok=True)
-open(out, 'w', encoding='utf-8').write(body)
-open(os.path.join(os.path.dirname(out), '_t.html'), 'w', encoding='utf-8').write('<!doctype html><meta charset="utf-8">' + body)
+open(out, 'w', encoding='utf-8', newline='\n').write(body)
+open(os.path.join(os.path.dirname(out), '_t.html'), 'w', encoding='utf-8', newline='\n').write('<!doctype html><meta charset="utf-8">' + body)
 print(out, len(body))

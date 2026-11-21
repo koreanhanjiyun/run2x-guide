@@ -29,7 +29,7 @@ document.addEventListener('click', e => { if(WB.id!=='8' || !e.target.closest) r
   const a = e.target.closest('[data-t8pa]'); if(a){ const [s, v] = a.dataset.t8pa.split(':'); WB.I['pa_arm_' + s] = +v; wbSave(); wbPaint(['in']); wbCalcSoon(); } });
 const t8Case = [['s', '정지'], ['c', '최대 선회 (a_y = μ g)'], ['b', '최대 제동 (a_x = μ g)'], ['a', '가속 (뒤 구동 접지 한계)'], ['x', '조합 (제동 + 선회, 마찰원 45°)']];
 WB_TOOLS['8'] = {
-  no:'8', stage:'P4-1', name:'하중 산출 (3D)',
+  share:'hp', no:'8', stage:'P4-1', name:'하중 산출 (3D)',
   noSig:true, mainTitle:'부재력 표', mainMeta:'바깥 바퀴 · 경우별',
   inOpt(k){ const pm = /^([fr])_pa_x$/.exec(k); if(!pm) return ''; const s = pm[1], cur = s + ':' + (WB.I['pa_arm_' + s] === 1 ? 1 : 0);
     return `<span class="t2-inopt"><span class="dc-seg" role="group">${[[s + ':0', '아래 팔'], [s + ':1', '위 팔']].map(([v, t]) => `<button type="button" data-t8pa="${v}" aria-pressed="${cur===v}">${t}</button>`).join('')}</span></span>`; },

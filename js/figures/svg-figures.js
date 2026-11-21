@@ -546,7 +546,8 @@ const ACTG = (() => { const A=[330,292], B0=[508,282], Q0=[470,284], PV=[273.2,1
       <rect class="dampb" x="4" y="-8" width="80" height="16" rx="3"/></g>
     ${rodEnd(F[0],F[1])}${rodEnd(f(PD[0]),f(PD[1]))}
     <line class="rlen" x1="${PV[0]}" y1="${PV[1]}" x2="${f(PP[0])}" y2="${f(PP[1])}"/><line class="rlen" x1="${PV[0]}" y1="${PV[1]}" x2="${f(PD[0])}" y2="${f(PD[1])}"/>
-    ${Math.abs(dz)<0.5 ? sq(PP,ur,wp,9)+sq(PD,ud,wd,9) : ''}`; }
+    ${Math.abs(dz)<0.5 ? sq(PP,ur,wp,9)+sq(PD,ud,wd,9) : ''}
+    <text x="${f((PP[0]+Q[0])/2+14)}" y="${f((PP[1]+Q[1])/2+8)}" class="tb" transform="rotate(${(Math.atan2(Q[1]-PP[1],Q[0]-PP[0])*180/Math.PI).toFixed(1)} ${f((PP[0]+Q[0])/2+14)} ${f((PP[1]+Q[1])/2+8)})">푸시로드</text>`; }   /* 라벨이 로드를 따라 움직임 (129차) */
   return {dyn, PV, F}; })();
 FIG.act = () => { const m = markers(); const G = ACTG;
   return `<svg viewBox="0 0 580 330" aria-label="푸시로드 로커 댐퍼">${m.defs}
@@ -558,7 +559,6 @@ FIG.act = () => { const m = markers(); const G = ACTG;
   ${lead(G.PV[0],G.PV[1],330,178,'로커 피벗 (브래킷)')}
   <text x="312" y="122" class="tm" style="font-size:11px">로드·댐퍼가 팔과 직각 (사점 회피)</text>
   ${M(String.raw`\Delta l_{\text{댐퍼}}`,92,84,'start','tb',15)}<text x="148" y="84">댐퍼·스프링</text>
-  <text x="392" y="200" class="tb" transform="rotate(42 392 200)">푸시로드</text>
   <path d="M${(G.PV[0]-33).toFixed(1)} ${(G.PV[1]-8).toFixed(1)} A34 34 0 0 0 ${(G.PV[0]-20).toFixed(1)} ${(G.PV[1]+27).toFixed(1)}" style="fill:none;stroke:var(--in);stroke-width:2.2" marker-end="url(#${m.id}i)"/>
   <text x="${(G.PV[0]-40).toFixed(1)}" y="${(G.PV[1]+30).toFixed(1)}" text-anchor="end" class="ti" style="font-size:11.5px">범프 시 로커 회전</text>
   <text x="360" y="320">하부 위시본</text><text x="96" y="318" class="tm">프레임 튜브</text>
@@ -591,6 +591,8 @@ const ACKG = (() => { const D=Math.PI/180, FL=[130,90], FR=[270,90], ka=26, H=20
     <line class="arm" x1="${FL[0]}" y1="${FL[1]}" x2="${f(kL[0])}" y2="${f(kL[1])}" style="stroke-width:4"/><line class="arm" x1="${FR[0]}" y1="${FR[1]}" x2="${f(kR[0])}" y2="${f(kR[1])}" style="stroke-width:4"/>
     ${[kL,kR,rL,rR].map(p=>`<circle cx="${f(p[0])}" cy="${f(p[1])}" r="3" class="pi"/>`).join('')}
     ${arc(FL,aL,'out')}${arc(FR,aR,'in')}
+    ${lead(f((FL[0]+kL[0])/2),f((FL[1]+kL[1])/2),58,128,'너클암','end')}${lead(f((rL[0]+kL[0])/2),f((ry+kL[1])/2),58,152,'타이로드','end')}`   /* 지시선 끝이 움직이는 너클암 · 타이로드를 따라감 (129차) */
+    + `
     ${show ? `<circle cx="${f(cm)}" cy="250" r="6" class="pa"/><text x="${f(cm+8)}" y="240" class="ta">회전 중심</text>
       <line class="ext" x1="200" y1="264" x2="200" y2="278"/><line class="ext" x1="${f(cm)}" y1="264" x2="${f(cm)}" y2="278"/><line class="dim" x1="200" y1="272" x2="${f(cm)}" y2="272" marker-start="url(#MKt)" marker-end="url(#MKt)"/><text x="${f((200+cm)/2)}" y="292" text-anchor="middle" class="ti" style="font-style:italic">R</text>`
       : `<text x="590" y="240" text-anchor="end" class="ta">회전 중심 → 오른쪽 멀리</text>`}`; }
@@ -604,8 +606,6 @@ FIG.ack = () => { const m = markers(); const G = ACKG;
   <g class="an-dyn" data-an="ack" data-mk="${m.id}">${G.dyn(1).replace(/MKt/g,m.id+'t')}</g>
   <text x="200" y="${(G.ry+26).toFixed(0)}" text-anchor="middle" class="tm">랙 하우징 (차체 고정)</text>
   <path d="M222 ${(G.ry-16).toFixed(1)} H186" class="force" style="stroke-width:2.4" marker-end="url(#${m.id}i)"/><text x="204" y="${(G.ry-24).toFixed(1)}" text-anchor="middle" class="ti" style="font-size:12px">랙 이동</text>
-  ${lead(140,104,58,128,'너클암','end')}
-  ${lead(160,114,58,152,'타이로드','end')}
   ${dimV(m.id,70,90,250,'$L',60,'end')}
   ${dimH(m.id,130,270,316,'$t',334)}
   ${M(String.raw`\delta_{\mathrm{in}}-\delta_{\mathrm{out}} \approx \dfrac{L\,t}{R^2}`,330,60,'start','tb',14)}
@@ -707,7 +707,7 @@ const LSDDYN = (u, mk) => { const d=7*u, e=d*26/22, f=v=>v.toFixed(1);
   const ringL=x=>`<polygon class="ring" points="${f(254-x)},96 ${f(322-x)},96 ${f(322-x)},134.8 ${f(304-x)},150 ${f(322-x)},165.2 ${f(322-x)},204 ${f(254-x)},204"/>`;
   const ringR=x=>`<polygon class="ring" points="${f(406+x)},96 ${f(338+x)},96 ${f(338+x)},134.8 ${f(356+x)},150 ${f(338+x)},165.2 ${f(338+x)},204 ${f(406+x)},204"/>`;
   const pack=(x0,x1)=>{ const w=x1-x0; return `<rect x="${f(x0)}" y="80" width="${f(w)}" height="140" class="clutch"/>`+[1,2,3,4].map(i=>`<line x1="${f(x0+w*i/5)}" y1="84" x2="${f(x0+w*i/5)}" y2="216" class="plate"/>`).join(''); };
-  return `${pack(222,254-e)}${pack(406+e,438)}${ringL(e)}${ringR(e)}
+  return `${pack(222,254-e)}${pack(406+e,438)}${ringL(e)}${ringR(e)}<text x="${f(288-e)}" y="232" text-anchor="middle" class="tm">압력 링</text>
   <polygon points="304,${f(150+d)} 330,${f(128+d)} 356,${f(150+d)} 330,${f(172+d)}" class="pin2"/>
   <path d="M${f(290-e)} 150 H${f(258-e)}" class="force" style="stroke-width:${f(2+2*u)}" marker-end="url(#${mk}i)"/><path d="M${f(370+e)} 150 H${f(402+e)}" class="force" style="stroke-width:${f(2+2*u)}" marker-end="url(#${mk}i)"/>
   <line x1="${f(356+e)}" y1="150" x2="${f(356+e)}" y2="186" style="stroke:var(--accent);stroke-width:1.2;stroke-dasharray:3 3"/>
@@ -720,7 +720,6 @@ FIG.lsd = () => { const m = markers();
   <g class="an-dyn" data-an="lsd" data-mk="${m.id}">${LSDDYN(1,m.id)}</g>
   <text x="330" y="40" text-anchor="middle" class="tb">입력 토크 → 하우징 → 크로스 핀</text>
   <text x="238" y="270" text-anchor="middle">클러치 팩</text><text x="422" y="270" text-anchor="middle">클러치 팩</text>
-  <text x="288" y="232" text-anchor="middle" class="tm">압력 링</text>
   <text x="60" y="140">왼쪽 출력축</text><text x="600" y="140" text-anchor="end">오른쪽 출력축</text>
   ${M(String.raw`F_{\mathrm{ax}} \propto \dfrac{T}{r_{\mathrm{ramp}}}\cot\theta`,478,96,'start','tb',14)}
   <text x="20" y="292" class="tm">토크가 걸리면 핀이 원주 방향으로 밀려 V홈 면을 타고 올라 → 압력 링이 벌어져 클러치를 눌러 좌우가 묶임</text>

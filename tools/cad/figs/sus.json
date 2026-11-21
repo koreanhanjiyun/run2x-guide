@@ -1,0 +1,720 @@
+{
+ "tube_groups": {},
+ "figs": {
+  "tire": {
+   "aria": "타이어·휠",
+   "focus": "OZ racing|Wheel_Bolt_M12\\|24_Front_Hub",
+   "corner": "FL",
+   "ghost": "24_Front_Hub\\||디스크|24_Front_Knuckle_Left",
+   "hide": "Rodend",
+   "color": {
+    "OZ racing": "#3a3f47"
+   },
+   "az": 58,
+   "el": 14,
+   "pad": 1.25,
+   "anchors": {
+    "tread": {
+     "obj": "OZ racing",
+     "near": [
+      1650,
+      500,
+      600
+     ],
+     "corner": "FL"
+    },
+    "rim": {
+     "obj": "OZ racing",
+     "near": [
+      1600,
+      380,
+      690
+     ],
+     "corner": "FL"
+    },
+    "bolt": {
+     "obj": "^Wheel_Bolt",
+     "corner": "FL"
+    },
+    "side": {
+     "obj": "OZ racing",
+     "near": [
+      1480,
+      130,
+      703
+     ],
+     "corner": "FL"
+    }
+   },
+   "labels": [
+    {
+     "t": "슬릭 트레드 (홈 없음)",
+     "a": "tread"
+    },
+    {
+     "t": "휠 (마그네슘)",
+     "a": "rim"
+    },
+    {
+     "t": "휠 볼트",
+     "a": "bolt"
+    },
+    {
+     "t": "사이드월",
+     "a": "side"
+    }
+   ]
+  },
+  "upright": {
+   "aria": "업라이트",
+   "focus": "24_Front_Knuckle_Left_Topology|24_Front_Knuckle_bracket\\|24_Front_Knuckle_Left|8mm_Rodend_Ball\\|24_Front_Knuckle_Left",
+   "corner": "FL",
+   "ghost": "OZ racing|24_Front_Hub\\||디스크|Caliper Assembly/24_Front_Knuckle_Left|Front_Upper_Arm_Left|Front_Lower_Arm_Left|24_Front_Tie_Rod",
+   "hide": "Rodend_female",
+   "az": -125,
+   "el": 12,
+   "pad": 1.5,
+   "fit_objs": "24_Front_Knuckle_Left_Topology",
+   "anchors": {
+    "kn": "24_Front_Knuckle_Left_Topology",
+    "br": "24_Front_Knuckle_bracket",
+    "ub": [
+     1593,
+     348,
+     516
+    ],
+    "lb": [
+     1606,
+     152,
+     561
+    ],
+    "sa": [
+     1661,
+     201,
+     550
+    ],
+    "k0": [
+     1606,
+     152,
+     561
+    ],
+    "k1": [
+     1593,
+     348,
+     516
+    ]
+   },
+   "lines": [
+    {
+     "a": "k0",
+     "b": "k1",
+     "c": "#c0392b",
+     "dash": true,
+     "ext": 0.45
+    }
+   ],
+   "labels": [
+    {
+     "t": "너클 (위상 최적화 알루미늄)",
+     "a": "kn"
+    },
+    {
+     "t": "위 볼조인트 브래킷 (캠버 심 자리)",
+     "a": "br"
+    },
+    {
+     "t": "위 볼조인트 (A암 끝)",
+     "a": "ub"
+    },
+    {
+     "t": "아래 볼조인트",
+     "a": "lb"
+    },
+    {
+     "t": "조향 암 (타이로드 볼)",
+     "a": "sa"
+    }
+   ],
+   "notes": [
+    {
+     "t": "킹핀축 (두 볼조인트를 잇는 선)",
+     "x": 20,
+     "y": 290,
+     "c": "#c0392b"
+    }
+   ]
+  },
+  "hub": {
+   "aria": "허브·휠 베어링",
+   "focus": "^24_Front_Hub\\||^bearing\\(6008\\)|^24_Front_Knuckle_Left_Topology|^Lock_Nut- AN08|^Lock_Washer - AW08|^Wheel_Bolt_M12\\|24_Front_Hub",
+   "corner": "FL",
+   "ghost": "^디스크",
+   "hide": "Rodend|Caliper|OZ racing",
+   "cut": [
+    {
+     "obj": "^24_Front_Hub\\||^bearing\\(6008\\)|^24_Front_Knuckle_Left_Topology|^Lock_Nut- AN08|^Lock_Washer - AW08",
+     "p": [
+      1600,
+      264,
+      560
+     ],
+     "n": [
+      1,
+      0,
+      0
+     ],
+     "c": "#e9b949"
+    }
+   ],
+   "color": {
+    "^bearing": "#7f8fa6",
+    "^Lock_Nut|^Lock_Washer": "#b8892f"
+   },
+   "az": 30,
+   "el": 12,
+   "pad": 1.2,
+   "anchors": {
+    "hub": {
+     "obj": "^24_Front_Hub\\|",
+     "near": [
+      1600,
+      320,
+      620
+     ],
+     "corner": "FL"
+    },
+    "bolt": {
+     "obj": "^Wheel_Bolt",
+     "near": [
+      1600,
+      315,
+      650
+     ],
+     "corner": "FL"
+    },
+    "br": {
+     "obj": "^bearing",
+     "near": [
+      1600,
+      230,
+      550
+     ],
+     "corner": "FL"
+    },
+    "nut": {
+     "obj": "^Lock_Nut",
+     "near": [
+      1600,
+      290,
+      500
+     ],
+     "corner": "FL"
+    },
+    "kn": {
+     "obj": "^24_Front_Knuckle_Left_Topology",
+     "near": [
+      1600,
+      170,
+      555
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "허브 (휠과 함께 돎)",
+     "a": "hub"
+    },
+    {
+     "t": "휠 볼트",
+     "a": "bolt"
+    },
+    {
+     "t": "베어링 2개 (축 방향으로 띄움)",
+     "a": "br"
+    },
+    {
+     "t": "락너트 + 락와셔",
+     "a": "nut"
+    },
+    {
+     "t": "너클 (잘라 봄)",
+     "a": "kn"
+    }
+   ]
+  },
+  "wishbone": {
+   "aria": "위시본(A암)·더블 위시본",
+   "focus": "^Front_Upper_Arm_Left|^Front_Lower_Arm_Left|^8mm_Rodend_Ball|^24_Front_Knuckle_Left_Topology",
+   "corner": "FL",
+   "ghost": "2024_frame|OZ racing",
+   "hide": "Rodend_female|Caliper|Hub|디스크",
+   "color": {
+    "^24_Front_Knuckle": "#c3c8d0"
+   },
+   "az": 0,
+   "el": 3,
+   "pad": 1.04,
+   "fit": [
+    [
+     1600,
+     0,
+     -760
+    ],
+    [
+     1600,
+     560,
+     720
+    ]
+   ],
+   "anchors": {
+    "ua": {
+     "obj": "^Front_Upper_Arm_Left",
+     "near": [
+      1600,
+      330,
+      400
+     ]
+    },
+    "la": {
+     "obj": "^Front_Lower_Arm_Left",
+     "near": [
+      1600,
+      145,
+      420
+     ]
+    },
+    "ob": [
+     1606,
+     152,
+     561
+    ],
+    "ib": [
+     1600,
+     133,
+     213
+    ],
+    "ic": [
+     1600,
+     82,
+     -717
+    ],
+    "u0": [
+     1593,
+     348,
+     516
+    ],
+    "l0": [
+     1606,
+     152,
+     561
+    ]
+   },
+   "lines": [
+    {
+     "a": "u0",
+     "b": "ic",
+     "c": "#7048e8",
+     "dash": true
+    },
+    {
+     "a": "l0",
+     "b": "ic",
+     "c": "#7048e8",
+     "dash": true
+    }
+   ],
+   "labels": [
+    {
+     "t": "위 A암 (짧음)",
+     "a": "ua"
+    },
+    {
+     "t": "아래 A암 (김)",
+     "a": "la"
+    },
+    {
+     "t": "바깥 볼조인트",
+     "a": "ob"
+    },
+    {
+     "t": "안쪽 로드엔드 (프레임 브래킷)",
+     "a": "ib"
+    }
+   ],
+   "notes": [
+    {
+     "t": "순간 중심 (두 A암 연장선의 교점)",
+     "x": 20,
+     "y": 290,
+     "c": "#7048e8"
+    }
+   ]
+  },
+  "toelink": {
+   "aria": "토 링크 (뒤 타이로드)",
+   "focus": "24_Rear_Toe_Bar",
+   "corner": "RL",
+   "ghost": "Rear_Upper_Arm_Left|Rear_Lower_Arm_Left|24_Rear_Knuckle_Left|OZ racing|24_Rear_Hub|2024_frame",
+   "hide": "Rodend_female",
+   "color": {
+    "^24_Rear_Toe_Bar": "#2f6fb5"
+   },
+   "az": 150,
+   "el": 45,
+   "pad": 1.25,
+   "anchors": {
+    "tl": {
+     "obj": "^24_Rear_Toe_Bar",
+     "near": [
+      135,
+      163,
+      380
+     ],
+     "corner": "RL"
+    },
+    "out": {
+     "obj": "^24_Rear_Toe_Bar",
+     "near": [
+      196,
+      163,
+      550
+     ],
+     "corner": "RL"
+    },
+    "in": {
+     "obj": "^24_Rear_Toe_Bar",
+     "near": [
+      73,
+      163,
+      207
+     ],
+     "corner": "RL"
+    },
+    "la": {
+     "obj": "^Rear_Lower_Arm_Left",
+     "near": [
+      60,
+      175,
+      400
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "토 링크",
+     "a": "tl"
+    },
+    {
+     "t": "바깥 끝 (업라이트)",
+     "a": "out"
+    },
+    {
+     "t": "안쪽 끝 (프레임 브래킷)",
+     "a": "in"
+    }
+   ]
+  },
+  "pushrod": {
+   "aria": "푸시로드·풀로드",
+   "focus": "Front_Shock_Rod|Front_Bell_Crank|Upper_Shock_Assy|Lower_Shock_Assy",
+   "corner": "FL",
+   "ghost": "2024_frame|Front_Upper_Arm_Left|Front_Lower_Arm_Left|24_Front_Knuckle_Left|OZ racing",
+   "hide": "Rodend_female|Caliper",
+   "color": {
+    "^Front_Shock_Rod": "#2f6fb5"
+   },
+   "az": 8,
+   "el": 12,
+   "pad": 1.15,
+   "anchors": {
+    "pr": {
+     "obj": "^Front_Shock_Rod",
+     "near": [
+      1600,
+      465,
+      390
+     ],
+     "corner": "FL"
+    },
+    "lo": {
+     "obj": "^Front_Shock_Rod",
+     "near": [
+      1600,
+      352,
+      473
+     ],
+     "corner": "FL"
+    },
+    "hi": {
+     "obj": "^Front_Shock_Rod",
+     "near": [
+      1600,
+      579,
+      303
+     ],
+     "corner": "FL"
+    },
+    "bc": {
+     "obj": "^Front_Bell_Crank",
+     "corner": "FL"
+    },
+    "dm": {
+     "obj": "^Upper_Shock_Assy",
+     "corner": "FL"
+    }
+   },
+   "labels": [
+    {
+     "t": "푸시로드",
+     "a": "pr"
+    },
+    {
+     "t": "아래 끝: 위 A암에 붙음",
+     "a": "lo"
+    },
+    {
+     "t": "위 끝: 벨크랭크",
+     "a": "hi"
+    },
+    {
+     "t": "벨크랭크",
+     "a": "bc"
+    },
+    {
+     "t": "댐퍼 (차체 안쪽 가로)",
+     "a": "dm"
+    }
+   ]
+  },
+  "bellcrank": {
+   "aria": "벨크랭크(로커)",
+   "focus": "Front_Bell_Crank|Front_Shock_Rod|Front_Anti_Rod|Lower_Shock_Assy|Upper_Shock_Assy",
+   "corner": "FL",
+   "ghost": "2024_frame",
+   "hide": "Rodend_female",
+   "color": {
+    "Front_Bell_Crank": "#9db4cc"
+   },
+   "az": 72,
+   "el": 25,
+   "pad": 1.05,
+   "fit": [
+    [
+     1550,
+     480,
+     190
+    ],
+    [
+     1650,
+     720,
+     345
+    ]
+   ],
+   "anchors": {
+    "bc": {
+     "obj": "^Front_Bell_Crank",
+     "near": [
+      1600,
+      600,
+      280
+     ],
+     "corner": "FL"
+    },
+    "pr": {
+     "obj": "^Front_Shock_Rod",
+     "near": [
+      1600,
+      579,
+      303
+     ],
+     "corner": "FL"
+    },
+    "dm": {
+     "obj": "^Lower_Shock_Assy",
+     "near": [
+      1600,
+      615,
+      262
+     ],
+     "corner": "FL"
+    },
+    "ar": {
+     "obj": "^Front_Anti_Rod",
+     "near": [
+      1600,
+      545,
+      280
+     ],
+     "corner": "FL"
+    }
+   },
+   "labels": [
+    {
+     "t": "벨크랭크",
+     "a": "bc"
+    },
+    {
+     "t": "푸시로드 연결",
+     "a": "pr"
+    },
+    {
+     "t": "댐퍼 연결",
+     "a": "dm"
+    },
+    {
+     "t": "안티롤바 링크 연결",
+     "a": "ar"
+    }
+   ],
+   "notes": [
+    {
+     "t": "모션비 = 댐퍼 이동 ÷ 바퀴 이동",
+     "x": 20,
+     "y": 290,
+     "c": "#1f62a8"
+    }
+   ]
+  },
+  "damper": {
+   "aria": "쇼크 업소버 (스프링+댐퍼)",
+   "focus": "Upper_Shock_Assy|Lower_Shock_Assy",
+   "corner": "FL",
+   "ghost": "2024_frame|Front_Bell_Crank",
+   "hide": "Rodend_female",
+   "az": 35,
+   "el": 30,
+   "pad": 1.3,
+   "fit_objs": "Upper_Shock_Assy|Lower_Shock_Assy",
+   "anchors": {
+    "up": {
+     "obj": "^Upper_Shock_Assy",
+     "corner": "FL"
+    },
+    "lo": {
+     "obj": "^Lower_Shock_Assy",
+     "near": [
+      1600,
+      620,
+      170
+     ],
+     "corner": "FL"
+    },
+    "ch": {
+     "obj": "^Upper_Shock_Assy",
+     "near": [
+      1600,
+      640,
+      40
+     ],
+     "corner": "FL"
+    },
+    "bc": {
+     "obj": "^Lower_Shock_Assy",
+     "near": [
+      1600,
+      615,
+      262
+     ],
+     "corner": "FL"
+    }
+   },
+   "labels": [
+    {
+     "t": "댐퍼 몸통 · 리저버",
+     "a": "up"
+    },
+    {
+     "t": "코일 스프링",
+     "a": "lo"
+    },
+    {
+     "t": "차체 쪽 끝",
+     "a": "ch"
+    },
+    {
+     "t": "벨크랭크 쪽 끝",
+     "a": "bc"
+    }
+   ]
+  },
+  "arb": {
+   "aria": "안티롤바 (ARB)",
+   "focus": "Front_Anti_Roll_Bar|24_Anti_Roll_Bar_HBR12|24_Fr_ARB_HBR12_Braket|Front_Anti_Rod|Front_Bell_Crank",
+   "ghost": "2024_frame|Upper_Shock_Assy|Lower_Shock_Assy",
+   "hide": "Rodend_female|Rear_",
+   "color": {
+    "Front_Anti_Roll_Bar": "#e8590c"
+   },
+   "az": 20,
+   "el": 22,
+   "pad": 1.08,
+   "anchors": {
+    "bar": {
+     "obj": "^Front_Anti_Roll_Bar",
+     "near": [
+      1550,
+      98,
+      0
+     ]
+    },
+    "blade": {
+     "obj": "^24_Anti_Roll_Bar_HBR12",
+     "near": [
+      1500,
+      98,
+      172
+     ],
+     "corner": "FL"
+    },
+    "br": {
+     "obj": "^24_Fr_ARB",
+     "corner": "FR"
+    },
+    "link": {
+     "obj": "^Front_Anti_Rod",
+     "near": [
+      1600,
+      300,
+      278
+     ],
+     "corner": "FL"
+    },
+    "bc": {
+     "obj": "^Front_Bell_Crank",
+     "corner": "FR"
+    }
+   },
+   "labels": [
+    {
+     "t": "안티롤바 막대 (비틀림)",
+     "a": "bar"
+    },
+    {
+     "t": "팔 (블레이드)",
+     "a": "blade"
+    },
+    {
+     "t": "베어링 블록 (차체)",
+     "a": "br"
+    },
+    {
+     "t": "수직 링크",
+     "a": "link"
+    },
+    {
+     "t": "벨크랭크",
+     "a": "bc"
+    }
+   ],
+   "notes": [
+    {
+     "t": "양쪽 같이 오르면(히브) 막대가 그냥 돎 · 반대로 움직이면(롤) 막대가 비틀림",
+     "x": 20,
+     "y": 22,
+     "c": "#495057"
+    }
+   ]
+  }
+ },
+ "_note": "rodend · shim · heave 는 REF4 에 원리를 보일 형상이 없어(브래킷 따로 없음, 심 · 서드 스프링 없음) 기존 그림 유지 (129차)"
+}

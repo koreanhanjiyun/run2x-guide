@@ -7,17 +7,17 @@ SRC = sys.argv[1]; OUT = sys.argv[2]
 sc = trimesh.load(SRC)
 LREF = 1599.65
 C = [  # (정규식, 묶음, 색, 목표 삼각형 비율)
- (r'2024_frame', 'frame', '#7a7f8c', .25),
+ (r'2024_frame', 'frame', '#7a7f8c', .12),   # 비율: step2glb.py (--defl 1.0) 결과 기준으로 기존 glb 와 비슷한 삼각형 수가 되게 (2026-11-14)
  (r'Cowl_', 'body', '#e7e5ee', 1),
  (r'Front_Wing|Fr Wng rod|^80mm_|Impact_Attenuator', 'fwing', '#c9ccd6', .3),
- (r'Rear_wing|Rear_Wing|Rear_2nd|Rr Wing Rod', 'rwing', '#c9ccd6', .3),
+ (r'Rear_wing|Rear_Wing|Rear_2nd|Rr Wing Rod', 'rwing', '#c9ccd6', .1),
  (r'OZ racing', 'wheel', None, .1),
  (r'_Hub$|Knuckle|^디스크|Caliper Assembly', 'hub', '#9fb0bf', .05),
  (r'_Arm_|Tie_Rod|Toe_Bar|Shock_Rod|Anti_Rod|Bell_Crank|Upper_Shock_Assy|Lower_Shock_Assy', 'susp', '#8b93a3', .06),
  (r'^24_Seat$|Head_Restraint$|Fire_Wall', 'cockpit', '#b9bcc6', .5),
  (r'24_Steering_Wheel|Steering_Column|Dashboard_Box', 'steer', '#4a4f5c', .1),
  (r'24_Brake_Pedal|Pedal_Mount|Throttle_Pedal|Master_Cylinder', 'pedal', '#8b93a3', .06),
- (r'^Battery_Drawing$', 'acc', '#d8d5e2', .3),
+ (r'^Battery_Drawing$', 'acc', '#d8d5e2', .03),   # 하위 조립품 전체(세그먼트 · 벽 …)가 들어오므로 낮게
  (r'^228_A01$|^228_dodatki$', 'motor', '#b9bcc6', .05),
  (r'^LSD_Drexler$|24_Big_Sprocket|LSD_Mount', 'diff', '#9aa0ad', .06),
  (r'^Gen5 SIZE 9 CONTROLLER', 'mc', '#a7abb8', .04),
@@ -25,9 +25,11 @@ C = [  # (정규식, 묶음, 색, 목표 삼각형 비율)
 HULL = {'hub', 'susp', 'pedal', 'motor', 'diff', 'mc', 'steer'}
 out = {}
 for nm in sc.graph.nodes_geometry:
-    T, gk = sc.graph[nm]; leaf = gk.split('|')[1] if '|' in gk else gk
-    for rx, cl, col, red in C:
-        if not re.search(rx, leaf): continue
+    T, gk = sc.graph[nm]; seg = gk.split('|'); leaf = seg[1] if len(seg) > 1 else gk
+    # 부품 이름으로 먼저, 안 맞으면 상위 조립품 이름으로 (tools/cad/step2glb.py 출력: 순번|부품|상위1/상위2/…)
+    names = [leaf] + (seg[2].split('/') if len(seg) > 2 and seg[2] else [])
+    hit = next(((rx, cl, col, red) for nmx in names for rx, cl, col, red in C if re.search(rx, nmx)), None)
+    for rx, cl, col, red in ([hit] if hit else []):
         m = sc.geometry[gk].copy(); m.apply_transform(T)
         if cl in HULL and len(m.vertices) > 8: m = m.convex_hull
         cx, cz = m.centroid[0], m.centroid[2]

@@ -53,12 +53,6 @@ function renderCard(key){ const c = CARD[key]; if(!c) return '';
   const sym = SYM[key] ? `<details class="symbox"><summary>이 카드의 기호 <span class="muted">(${SYM[key].length}개)</span></summary><table class="kvt">${symRows(SYM[key])}</table></details>` : '';
   return `<div class="concl"><b class="tag">참고</b>${c.c}</div>${sym}${calcHTML(key)}<div class="stack">${c.L.map(renderQ).join('')}</div>`; }
 const chip = p => `<span class="chip"><span class="dot" style="background:${pc(p)}"></span>${p}</span>`;
-function ioHTML(id){
-  const ins = (IN[id]||[]).map(i=>EDGES[i]), outs = (OUT[id]||[]).map(i=>EDGES[i]);
-  const li = (oid,lbl) => `<li><button class="lnk" data-goto="${oid}">${IT[oid].n}</button> <span class="muted">· ${IT[oid].s} ${IT[oid].p} — ${lbl}</span></li>`;
-  return `<div class="io"><div><h4 class="ih">받는 정보</h4>${ins.length?`<ul>${ins.map(e=>li(e[0],e[2])).join('')}</ul>`:'<span class="muted" style="font-size:14px">없음</span>'}</div>
-  <div><h4 class="oh">넘기는 결과</h4>${outs.length?`<ul>${outs.map(e=>li(e[1],e[2])).join('')}</ul>`:'<span class="muted" style="font-size:14px">없음</span>'}</div></div>`;
-}
 
 /* ============================================================
    단계 구간

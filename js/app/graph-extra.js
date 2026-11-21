@@ -1,36 +1,3 @@
-/* ---------- 0.28.0 연결도 내용 카드: 머리 = 누르면 접기·펼치기, 끌면 이동 · 위치 기억 ---------- */
-(function(){
-  const _sp=setPanel;
-  const getPos=()=>{ try{ return JSON.parse(PREF('gppos','null')); }catch(e){ return null; } };
-  const canvasBox=p=>{ const c=document.querySelector('#v-graph .gcanvas'), w=p.parentElement; if(!c||!w) return null; const cr=c.getBoundingClientRect(), wr=w.getBoundingClientRect();
-    return {minX:cr.left-wr.left+8, minY:cr.top-wr.top+8, maxR:cr.right-wr.left-8, maxB:cr.bottom-wr.top-8}; };
-  const clampPos=(p,x,y)=>{ const b=canvasBox(p); if(!b) return [x,y]; p.style.maxHeight=(b.maxB-b.minY)+'px';
-    const pw=p.offsetWidth, ph=p.offsetHeight; return [Math.max(b.minX,Math.min(b.maxR-pw,x)), Math.max(b.minY,Math.min(b.maxB-ph,y))]; };
-  const place=p=>{ const b=canvasBox(p); if(b) p.style.maxHeight=(b.maxB-b.minY)+'px'; let pos=getPos();
-    if(!pos){ p.style.left=''; p.style.right=''; p.style.top=''; const r=p.getBoundingClientRect(), w=p.parentElement.getBoundingClientRect(); pos={x:r.left-w.left,y:r.top-w.top}; }
-    const [x,y]=clampPos(p,pos.x,pos.y); p.style.right='auto'; p.style.left=x+'px'; p.style.top=y+'px'; };
-  window.setPanel=setPanel=function(html){ _sp(html); const p=$('#gpanel'); if(!p) return; if(!SEL){ p.classList.remove('gp-coll'); return; }
-    const chips=p.querySelector(':scope>.chips'), h3=p.querySelector(':scope>h3'), x=p.querySelector(':scope>.gp-x'), op=p.querySelector(':scope [data-open]');
-    if(chips && h3){ const hd=document.createElement('div'); hd.className='gp-head'; hd.title='누르면 접기·펼치기, 끌면 이동';
-      chips.before(hd); hd.appendChild(chips); hd.appendChild(h3);
-      const tools=document.createElement('div'); tools.className='gp-tools';
-      if(op){ const ob=op.cloneNode(true); ob.className='btn pri small gp-open'; tools.appendChild(ob); }
-      const ch=document.createElement('span'); ch.className='gp-chev'; ch.setAttribute('aria-hidden','true'); tools.appendChild(ch);
-      if(x){ x.className='gp-x2'; tools.appendChild(x); }
-      chips.appendChild(tools); }
-    p.classList.toggle('gp-coll', PREF('gpcoll','0')==='1'); place(p); };
-  document.addEventListener('pointerdown',e=>{ const hd=e.target.closest('#gpanel .gp-head'); if(!hd || e.target.closest('button,a,input')) return;
-    const p=$('#gpanel'); e.preventDefault(); const pr=p.getBoundingClientRect(), wr=p.parentElement.getBoundingClientRect(); const ox=e.clientX-pr.left, oy=e.clientY-pr.top, sx=e.clientX, sy=e.clientY;
-    hd.setPointerCapture(e.pointerId); let moved=false, last=null;
-    const mv=ev=>{ if(!moved && Math.hypot(ev.clientX-sx, ev.clientY-sy)<5) return; moved=true; document.body.classList.add('gp-drag');
-      const [x,y]=clampPos(p, ev.clientX-wr.left-ox, ev.clientY-wr.top-oy); p.style.right='auto'; p.style.left=x+'px'; p.style.top=y+'px'; last={x,y}; };
-    const up=()=>{ hd.removeEventListener('pointermove',mv); hd.removeEventListener('pointerup',up); document.body.classList.remove('gp-drag');
-      if(moved){ if(last) SETP('gppos',JSON.stringify(last)); return; }
-      const c=!p.classList.contains('gp-coll'); p.classList.toggle('gp-coll',c); SETP('gpcoll',c?'1':'0'); place(p); };
-    hd.addEventListener('pointermove',mv); hd.addEventListener('pointerup',up); });
-  window.addEventListener('resize',()=>{ const p=$('#gpanel'); if(p && !p.hidden && SEL) place(p); });
-})();
-
 /* ---------- 0.28.0 연결도 미니맵: 끌기·확대 중에만 표시, 손 떼면 1초 뒤 사라짐 (위에 마우스 있으면 유지) ---------- */
 (function(){
   let mm=null, hideT=0, hover=false, sc=1;

@@ -8,12 +8,12 @@
 const K3D_PN = {lf:'아래 팔 안쪽 앞', lr:'아래 팔 안쪽 뒤', lo:'아래 볼조인트', uf:'위 팔 안쪽 앞', ur:'위 팔 안쪽 뒤', uo:'위 볼조인트', ti:'타이로드 안쪽', to:'타이로드 바깥',
   pa:'푸시로드 팔 쪽', pr:'푸시로드 로커 쪽', rp:'로커 회전 중심', rq:'로커 회전축 위 다른 점', dr:'댐퍼 로커 쪽', db:'댐퍼 차체 쪽'};
 const K3D_PNR = {ti:'토 링크 안쪽', to:'토 링크 바깥'};
-/* 2024 REF4 STEP 왼쪽 바퀴 (STEP 좌표 X 바깥 · Y 위 (지면 −74) · Z 앞 → 차 좌표 x = Z − 바퀴 중심 Z (앞 929.8 · 뒤 −650), y = X, z = Y + 74) */
+/* 2024 REF4 STEP 왼쪽 바퀴 (STEP 좌표 X 바깥 · Y 위 (지면 −74) · Z 앞 → 차 좌표 x = Z − 바퀴 중심 Z (앞 929.8 · 뒤 −650), y = X, z = Y + 74). 댐퍼 차체 쪽 눈 db = 몸통 끝 눈 고리의 원 맞춤 중심 (62차, 64차에 실측으로 되돌림). 정지 눈 사이 앞 202.4 · 뒤 185.0 mm. 쇽 = Fox DHX (2023 신품, 관리자) → 규격(다 늘어난 길이) 앞 210 · 뒤 190 mm 로 추정, CAD = 차 무게가 실린 정지 상태로 봄 (앞 7.6 · 뒤 5.0 mm 눌림), 스트로크 미확인 */
 const K3D_HP = {
   f:{lf:[170.2, 212.7, 131.3], lr:[-179.8, 212.7, 131.3], lo:[2.0, 561.6, 151.2], uf:[170.2, 246.7, 288.0], ur:[-179.8, 246.7, 288.0], uo:[-11.6, 516.6, 346.0],
-     ti:[12.2, 220.7, 169.5], to:[56.3, 550.1, 199.9], pa:[-4.8, 462.2, 361.4], pr:[-4.8, 314.0, 566.2], rp:[-4.8, 253.0, 551.0], rq:[95.2, 253.0, 551.0], dr:[-4.8, 250.8, 619.9], db:[-4.8, 51.0, 610.5]},
+     ti:[12.2, 220.7, 169.5], to:[56.3, 550.1, 199.9], pa:[-4.8, 462.2, 361.4], pr:[-4.8, 314.0, 566.2], rp:[-4.8, 253.0, 551.0], rq:[95.2, 253.0, 551.0], dr:[-4.8, 250.8, 619.9], db:[-4.8, 48.6, 610.3]},
   r:{lf:[100, 218.1, 154.1], lr:[-25, 218.1, 154.1], lo:[-1, 539.6, 169.2], uf:[100, 251.6, 309.6], ur:[-25, 251.6, 309.6], uo:[-25, 501.5, 365.5],
-     ti:[160, 218.1, 154.1], to:[59, 539.2, 169.1], pa:[5, 488.4, 193.3], pr:[5, 260.4, 401.0], rp:[5, 218.0, 362.0], rq:[105, 218.0, 362.0], dr:[5, 201.6, 439.1], db:[5, 7.4, 391.3]}};
+     ti:[160, 218.1, 154.1], to:[59, 539.2, 169.1], pa:[5, 488.4, 193.3], pr:[5, 260.4, 401.0], rp:[5, 218.0, 362.0], rq:[105, 218.0, 362.0], dr:[5, 201.6, 439.1], db:[5, 21.9, 395.2]}};
 /* 입력 칸: 축 s 의 점 목록 pts → 점마다 x · y · z (묶음 이름 = '앞 · 점 이름') */
 function k3dIn(s, pts){ const ax = s === 'f' ? '앞' : '뒤';
   return pts.flatMap(p => { const nm = (s === 'r' && K3D_PNR[p]) || K3D_PN[p], g = `${ax} · ${nm} (x 앞 · y 바깥 · z 위)`;
@@ -55,7 +55,7 @@ const M5TOUR = [
 const T5G = {car:'차 · 바퀴'};
 const t5Cv = ['lf', 'lr', 'lo', 'uf', 'ur', 'uo', 'ti', 'to'];
 WB_TOOLS['5'] = {
-  no:'5', stage:'P3-1~3', name:'서스 기하 (3D 기구학)',
+  share:'hp', no:'5', stage:'P3-1~3', name:'서스 기하 (3D 기구학)',
   mainTitle:'정면 · 측면 기하', mainMeta:'왼쪽 바퀴 · 같은 축척',
   x:{n:'휠 트래블', u:'mm'}, xiStart:'mid',
   inputs:[
@@ -63,6 +63,7 @@ WB_TOOLS['5'] = {
     {k:'camber_f', dk:'camber_f', v:-3, d:2, g:T5G.car}, {k:'camber_r', dk:'camber_r', v:-2, d:2, g:T5G.car}, {k:'toe_f', dk:'toe_f', v:0, d:2, g:T5G.car}, {k:'toe_r', dk:'toe_r', v:0, d:2, g:T5G.car},
     {k:'h', dk:'h', v:290, d:0, g:T5G.car}, {k:'L', dk:'L', v:1550, d:0, g:T5G.car}, {k:'brake_bias', dk:'brake_bias', v:73.6, d:1, g:T5G.car},
     {k:'s_max', n:'그래프 트래블 범위 (±)', u:'mm', v:40, d:0, g:T5G.car},
+    {k:'margin_camber', dk:'margin_camber', u:'°', d:2, g:'공유 기록 (대시보드)', opt:true}, {k:'margin_toe', dk:'margin_toe', u:'°', d:2, g:'공유 기록 (대시보드)', opt:true},   /* 공유 기록 (계산에 안 씀, 2026-11-12) */
     ...k3dIn('f', t5Cv), ...k3dIn('r', t5Cv),
   ],
   outputs:[
@@ -223,7 +224,7 @@ function calc(I) {
   };
   // 트래블 곡선
   const sm = Math.max(5, I.s_max || 40), n = 40, xs = [], sig = { cf: [], cr: [], tf_: [], tr_: [], rcf: [], rcr: [], yf: [], yr: [], kf: [], cs: [] };
-  let qF = null, qR = null; const XF0 = K3D.plain(mF.X), XR0 = K3D.plain(mR.X);
+  const XF0 = K3D.plain(mF.X), XR0 = K3D.plain(mR.X);
   for (let i = 0; i <= n; i++) { const s = -sm + 2 * sm * i / n; xs.push(+s.toFixed(3));
     const a = K3D.metrics(F, s), b = K3D.metrics(R, s);
     sig.cf.push(a.X.cam); sig.cr.push(b.X.cam); sig.tf_.push(-(a.X.head - XF0.head) + (I.toe_f || 0)); sig.tr_.push(-(b.X.head - XR0.head) + (I.toe_r || 0));

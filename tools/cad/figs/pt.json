@@ -1,0 +1,891 @@
+{
+ "_note": "구동계 · 모터 · 배터리 · 냉각 · 회로 중 REF4 부품이 주인공인 그림만. lsd(차 위 원리) · vcu · regen · cell · 라디 · 팬 · 덕트 · 배관 · 메인 스위치 · sdc · dash · 브레이크 등 · 하네스 · daq 와 둘째 그림(단면 · 원리)은 기존 유지 (129차) · motormount · bspd · tsal 은 새 렌더가 주변(판 위치 · 인클로저 · 롤후프)을 덜 보여 기존 유지",
+ "tube_groups": {},
+ "figs": {
+  "reduction": {
+   "aria": "체인·스프로킷",
+   "focus": "^24_Big_Sprocket|^24_Small_Sprocket|^Chain_520",
+   "ghost": "^LSD_Drexler|^228_A01|^LSD_Mount_L",
+   "hide": "Guard|Rodend",
+   "color": {
+    "^Chain_520": "#5a606b",
+    "^24_Big_Sprocket|^24_Small_Sprocket": "#9aa3ad"
+   },
+   "az": 90,
+   "el": 8,
+   "pad": 1.1,
+   "anchors": {
+    "big": {
+     "obj": "^24_Big_Sprocket",
+     "near": [
+      -60,
+      300,
+      48
+     ]
+    },
+    "small": {
+     "obj": "^24_Small_Sprocket",
+     "near": [
+      140,
+      245,
+      51
+     ]
+    },
+    "chain": {
+     "obj": "^Chain_520_Roller",
+     "near": [
+      60,
+      290,
+      50
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "큰 스프로킷 (디퍼렌셜)",
+     "a": "big"
+    },
+    {
+     "t": "작은 스프로킷 (모터 축)",
+     "a": "small"
+    },
+    {
+     "t": "롤러 체인",
+     "a": "chain"
+    }
+   ],
+   "notes": [
+    {
+     "t": "작은 쪽이 3.5바퀴 돌 때 큰 쪽 1바퀴 (힘은 그만큼 커짐)",
+     "x": 20,
+     "y": 290,
+     "c": "#1f62a8"
+    }
+   ]
+  },
+  "diffmount": {
+   "aria": "디퍼렌셜 마운트·베어링 캐리어",
+   "focus": "^LSD_Mount_L|^LSD_Mount_R|^bearing\\(601[01]\\)|^LSD_Drexler",
+   "ghost": "2024_frame|^228_A01|^24_Big_Sprocket",
+   "hide": "Rodend|Guard",
+   "color": {
+    "^LSD_Mount": "#8c96a3",
+    "^LSD_Drexler": "#c3c8d0",
+    "^bearing": "#2f6fb5"
+   },
+   "az": 130,
+   "el": 30,
+   "pad": 1.1,
+   "anchors": {
+    "ml": {
+     "obj": "^LSD_Mount_L",
+     "near": [
+      100,
+      300,
+      82
+     ]
+    },
+    "mr": {
+     "obj": "^LSD_Mount_R",
+     "near": [
+      -140,
+      120,
+      -120
+     ]
+    },
+    "lsd": {
+     "obj": "^LSD_Drexler",
+     "near": [
+      -60,
+      285,
+      0
+     ]
+    },
+    "br": {
+     "obj": "^bearing",
+     "near": [
+      -60,
+      284,
+      78
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "마운트 판 (체인 쪽, 모터도 이 판에)",
+     "a": "ml"
+    },
+    {
+     "t": "마운트 판 (반대쪽)",
+     "a": "mr"
+    },
+    {
+     "t": "디퍼렌셜",
+     "a": "lsd"
+    },
+    {
+     "t": "베어링 (편심 링 안)",
+     "a": "br"
+    }
+   ]
+  },
+  "tensioner": {
+   "aria": "체인 텐셔너·장력 조절",
+   "focus": "^Tensioner_L|^Tensioner_Tool_L|^24_Big_Sprocket|^Chain_520|^24_Small_Sprocket",
+   "ghost": "^LSD_Mount_L|^LSD_Drexler",
+   "hide": "Guard|Rodend",
+   "color": {
+    "^Tensioner": "#2f6fb5",
+    "^Chain_520": "#5a606b"
+   },
+   "az": 90,
+   "el": 6,
+   "pad": 1.05,
+   "anchors": {
+    "ecc": {
+     "obj": "^Tensioner_L",
+     "near": [
+      -60,
+      160,
+      80
+     ]
+    },
+    "tool": {
+     "obj": "^Tensioner_Tool_L",
+     "near": [
+      -250,
+      300,
+      76
+     ]
+    },
+    "big": {
+     "obj": "^24_Big_Sprocket",
+     "near": [
+      -140,
+      320,
+      48
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "편심 링 (돌리면 디퍼렌셜 축이 이동)",
+     "a": "ecc"
+    },
+    {
+     "t": "공구 (링을 돌림)",
+     "a": "tool"
+    },
+    {
+     "t": "큰 스프로킷 (디퍼렌셜 축과 함께 이동)",
+     "a": "big"
+    }
+   ]
+  },
+  "chainguard": {
+   "aria": "체인 가드",
+   "focus": "^Big_Sprocket_Guard|^Small_Sprocket_Guard",
+   "ghost": "^24_Big_Sprocket|^24_Small_Sprocket|^Chain_520|^LSD_Mount_L|^228_A01",
+   "hide": "Rodend",
+   "color": {
+    "Guard": "#7d8794"
+   },
+   "az": 120,
+   "el": 25,
+   "pad": 1.1,
+   "anchors": {
+    "bg": {
+     "obj": "^Big_Sprocket_Guard",
+     "near": [
+      -150,
+      340,
+      87
+     ]
+    },
+    "sg": {
+     "obj": "^Small_Sprocket_Guard",
+     "near": [
+      150,
+      320,
+      85
+     ]
+    },
+    "ch": {
+     "obj": "^Chain_520_Roller",
+     "near": [
+      60,
+      290,
+      50
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "큰 스프로킷 보호판",
+     "a": "bg"
+    },
+    {
+     "t": "작은 스프로킷 보호판",
+     "a": "sg"
+    }
+   ]
+  },
+  "halfshaft": {
+   "aria": "드라이브샤프트·CV 조인트",
+   "focus": "^Tripod_Axle|^Tripod_Housing|^LSD_Drexler",
+   "corner": "",
+   "ghost": "^24_Rear_Hub\\||^24_Rear_Knuckle_Left\\||OZ racing|^LSD_Mount",
+   "hide": "Rodend|Caliper|디스크",
+   "color": {
+    "^Tripod_Housing": "#8c96a3",
+    "^Tripod_Axle": "#c3c8d0"
+   },
+   "az": 155,
+   "el": 22,
+   "pad": 1.05,
+   "fit": [
+    [
+     -150,
+     150,
+     -40
+    ],
+    [
+     80,
+     330,
+     620
+    ]
+   ],
+   "anchors": {
+    "ax": {
+     "obj": "^Tripod_Axle",
+     "near": [
+      -30,
+      250,
+      340
+     ]
+    },
+    "ho": {
+     "obj": "^Tripod_Housing",
+     "near": [
+      -60,
+      240,
+      120
+     ]
+    },
+    "lsd": {
+     "obj": "^LSD_Drexler",
+     "near": [
+      -60,
+      285,
+      0
+     ]
+    },
+    "hub": {
+     "obj": "^24_Rear_Hub\\|",
+     "near": [
+      0,
+      320,
+      540
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "하프 샤프트",
+     "a": "ax"
+    },
+    {
+     "t": "안쪽 트라이포드 조인트",
+     "a": "ho"
+    },
+    {
+     "t": "디퍼렌셜",
+     "a": "lsd"
+    },
+    {
+     "t": "바깥 조인트 (허브 안)",
+     "a": "hub"
+    }
+   ]
+  },
+  "motor": {
+   "aria": "구동 모터",
+   "focus": "^228_A01|^228_dodatki|^Motor_Shaft|^3Phase_",
+   "ghost": "^LSD_Mount|^24_Small_Sprocket|^Gen5",
+   "hide": "Rodend|Guard",
+   "color": {
+    "^3Phase_Red": "#c92a2a",
+    "^3Phase_Blue": "#1c7ed6",
+    "^3Phase_Black": "#212529"
+   },
+   "az": -120,
+   "el": 25,
+   "pad": 1.15,
+   "anchors": {
+    "mot": {
+     "obj": "^228_A01",
+     "near": [
+      140,
+      330,
+      -135
+     ]
+    },
+    "ph": {
+     "obj": "^3Phase_Red",
+     "near": [
+      206,
+      300,
+      -141
+     ]
+    },
+    "fix": {
+     "obj": "^228_A01",
+     "near": [
+      140,
+      300,
+      -14
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "모터 (축방향 자속형)",
+     "a": "mot"
+    },
+    {
+     "t": "3상 케이블 (고정 쪽에 연결)",
+     "a": "ph"
+    }
+   ]
+  },
+  "inverter": {
+   "aria": "인버터",
+   "focus": "^Gen5",
+   "ghost": "2024_frame|^228_A01|^3Phase_|Battery_Drawing|^Cover_",
+   "hide": "Rodend",
+   "az": 140,
+   "el": 32,
+   "pad": 1.35,
+   "anchors": {
+    "inv": {
+     "obj": "^Gen5",
+     "near": [
+      400,
+      504,
+      0
+     ]
+    },
+    "mot": {
+     "obj": "^228_A01",
+     "near": [
+      140,
+      330,
+      -100
+     ]
+    },
+    "bat": {
+     "obj": "^Cover_Pannel",
+     "near": [
+      500,
+      404,
+      100
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "인버터 (모터 제어기)",
+     "a": "inv"
+    },
+    {
+     "t": "모터",
+     "a": "mot"
+    }
+   ]
+  },
+  "pack": {
+   "aria": "모듈·팩 구성",
+   "focus": "^Segment_Bottom_Base|^14s7p|^Segment_Connector|^Segment_PCB|^Segment_Handle|^Battery_Bracket_Wall\\|Battery_Bracket/REF4",
+   "ghost": "^Bottom_Wall|^Bottom_Front|^Bottom_Back|^Bottom_Left|^Bottom_Right",
+   "hide": "^Cover|Top_Battery|Rodend",
+   "color": {
+    "^Segment_PCB": "#2b8a3e",
+    "^Segment_Connector": "#b8892f"
+   },
+   "az": 135,
+   "el": 40,
+   "pad": 1.08,
+   "anchors": {
+    "seg": {
+     "obj": "^Segment_Bottom_Base",
+     "near": [
+      500,
+      250,
+      0
+     ]
+    },
+    "con": {
+     "obj": "^Segment_Connector",
+     "near": [
+      356,
+      337,
+      40
+     ]
+    },
+    "pcb": {
+     "obj": "^Segment_PCB",
+     "near": [
+      520,
+      285,
+      90
+     ]
+    },
+    "wall": {
+     "obj": "^Battery_Bracket_Wall",
+     "near": [
+      500,
+      280,
+      120
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "세그먼트 (셀 묶음)",
+     "a": "seg"
+    },
+    {
+     "t": "세그먼트 커넥터 · 버스바",
+     "a": "con"
+    },
+    {
+     "t": "세그먼트 감지 기판",
+     "a": "pcb"
+    },
+    {
+     "t": "내벽 (세그먼트 칸)",
+     "a": "wall"
+    }
+   ]
+  },
+  "bms": {
+   "aria": "BMS",
+   "focus": "^72_Cell_BMS2|^Segment_Master_PCB|^Segment_PCB|^Thermistor|^Battery_Pack_PCB",
+   "ghost": "^Segment_Bottom_Base|^Bottom_Wall|^Battery_Bracket_Wall\\|Battery_Bracket/REF4",
+   "hide": "^Cover|Top_Battery|Rodend",
+   "color": {
+    "^72_Cell_BMS2|^Segment_Master_PCB|^Segment_PCB|^Thermistor|^Battery_Pack_PCB": "#2b8a3e"
+   },
+   "az": 135,
+   "el": 45,
+   "pad": 1.1,
+   "anchors": {
+    "bms": {
+     "obj": "^72_Cell_BMS2",
+     "near": [
+      480,
+      384,
+      -130
+     ]
+    },
+    "sp": {
+     "obj": "^Segment_PCB",
+     "near": [
+      520,
+      285,
+      180
+     ]
+    },
+    "mp": {
+     "obj": "^Segment_Master_PCB",
+     "near": [
+      510,
+      310,
+      0
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "BMS 본체 (Orion BMS2)",
+     "a": "bms"
+    },
+    {
+     "t": "세그먼트 감지 기판",
+     "a": "sp"
+    },
+    {
+     "t": "마스터 기판 (세그먼트 신호 모음)",
+     "a": "mp"
+    }
+   ]
+  },
+  "hvsw": {
+   "aria": "AIR·프리차지·퓨즈·HVD",
+   "focus": "^Accumulator_Isolation|^400A_Fuse|^Fuse_Holder|^HVC2P12|^HVH-280.*\\|REF4_Battery|^CoPPEr|^Copper_Bar4|^Hall_Sensor",
+   "ghost": "^Segment_Bottom_Base|^Bottom_Wall|^72_Cell",
+   "hide": "^Cover|Top_Battery|Rodend",
+   "color": {
+    "^Accumulator_Isolation": "#495057",
+    "^400A_Fuse": "#c92a2a",
+    "^HVC2P12": "#f59f00",
+    "^CoPPEr|^Copper_Bar4": "#a0673a"
+   },
+   "az": 150,
+   "el": 40,
+   "pad": 1.15,
+   "anchors": {
+    "air": {
+     "obj": "^Accumulator_Isolation",
+     "near": [
+      615,
+      389,
+      180
+     ]
+    },
+    "fuse": {
+     "obj": "^400A_Fuse",
+     "near": [
+      465,
+      365,
+      120
+     ]
+    },
+    "con": {
+     "obj": "^HVC2P12FS150\\|",
+     "near": [
+      250,
+      366,
+      145
+     ]
+    },
+    "bus": {
+     "obj": "^CoPPEr|^Copper_Bar4",
+     "near": [
+      500,
+      370,
+      0
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "AIR (상시 개방 릴레이)",
+     "a": "air"
+    },
+    {
+     "t": "메인 퓨즈",
+     "a": "fuse"
+    },
+    {
+     "t": "고전압 커넥터 (상자 밖으로)",
+     "a": "con"
+    },
+    {
+     "t": "구리 버스바",
+     "a": "bus"
+    }
+   ]
+  },
+  "container": {
+   "aria": "배터리 컨테이너",
+   "focus": "Battery_Drawing|^SanAce",
+   "ghost": "2024_frame|^Battery_Box_Inlet",
+   "hide": "Rodend",
+   "color": {
+    "Battery_Drawing": "#3d4450",
+    "^SanAce": "#212529"
+   },
+   "az": 140,
+   "el": 30,
+   "pad": 1.25,
+   "anchors": {
+    "box": {
+     "obj": "^Cover_Pannel",
+     "near": [
+      500,
+      404,
+      0
+     ]
+    },
+    "rail": {
+     "obj": "^Battery_Bracket_Plate",
+     "near": [
+      500,
+      210,
+      255
+     ]
+    },
+    "fan": {
+     "obj": "^SanAce",
+     "near": [
+      295,
+      180,
+      180
+     ]
+    },
+    "duct": {
+     "obj": "^Battery_Box_Inlet",
+     "near": [
+      900,
+      400,
+      300
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "배터리 컨테이너 (알루미늄 판 상자)",
+     "a": "box"
+    },
+    {
+     "t": "레일 (프레임 위로 밀어 넣어 고정)",
+     "a": "rail"
+    },
+    {
+     "t": "냉각 팬",
+     "a": "fan"
+    }
+   ]
+  },
+  "pump": {
+   "aria": "펌프",
+   "focus": "^TL-B10-B|^Pump_fitting|^pump_clamp",
+   "pick": [],
+   "ghost": "2024_frame|^Reservoir\\|",
+   "hide": "Rodend",
+   "corner": "",
+   "color": {
+    "^TL-B10-B": "#3d4450",
+    "^pump_clamp": "#9aa3ad"
+   },
+   "az": 70,
+   "el": 25,
+   "pad": 1.2,
+   "fit": [
+    [
+     270,
+     95,
+     270
+    ],
+    [
+     430,
+     230,
+     400
+    ]
+   ],
+   "anchors": {
+    "p": {
+     "obj": "^TL-B10-B",
+     "near": [
+      350,
+      209,
+      330
+     ]
+    },
+    "in": {
+     "obj": "^Pump_fitting",
+     "near": [
+      300,
+      130,
+      345
+     ]
+    },
+    "out": {
+     "obj": "^Pump_fitting",
+     "near": [
+      390,
+      220,
+      345
+     ]
+    },
+    "cl": {
+     "obj": "^pump_clamp",
+     "near": [
+      370,
+      177,
+      375
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "전동 펌프",
+     "a": "p"
+    },
+    {
+     "t": "입구",
+     "a": "in"
+    },
+    {
+     "t": "출구",
+     "a": "out"
+    },
+    {
+     "t": "고정 클램프",
+     "a": "cl"
+    }
+   ]
+  },
+  "reservoir": {
+   "aria": "리저버·압력 캡·캐치 캔",
+   "focus": "^Reservoir\\||^Catch Can",
+   "ghost": "2024_frame|^TL-B10-B",
+   "hide": "Rodend",
+   "color": {
+    "^Reservoir\\|": "#e9ecef",
+    "^Catch Can": "#ced4da"
+   },
+   "az": 60,
+   "el": 20,
+   "pad": 1.25,
+   "anchors": {
+    "res": {
+     "obj": "^Reservoir\\|",
+     "near": [
+      420,
+      400,
+      358
+     ]
+    },
+    "cap": {
+     "obj": "^Reservoir\\|",
+     "near": [
+      420,
+      471,
+      318
+     ]
+    },
+    "cc": {
+     "obj": "^Catch Can",
+     "near": [
+      580,
+      150,
+      397
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "압력 캡",
+     "a": "cap",
+     "x": 470,
+     "y": 40,
+     "anchor": "end"
+    },
+    {
+     "t": "리저버",
+     "a": "res",
+     "x": 470,
+     "y": 95,
+     "anchor": "end"
+    },
+    {
+     "t": "캐치 캔 (넘친 냉각수 받음)",
+     "a": "cc",
+     "x": 470,
+     "y": 235,
+     "anchor": "end"
+    }
+   ],
+   "manual_labels": true
+  },
+  "lvbat": {
+   "aria": "저전압 배터리 (LV)",
+   "focus": "^21700|^LV_Battery",
+   "ghost": "Integrated_Enclosure|2024_frame",
+   "hide": "Rodend|^Enclosure_PCB",
+   "color": {
+    "^21700": "#1c7ed6",
+    "^LV_Battery_BMS": "#2b8a3e"
+   },
+   "az": 140,
+   "el": 35,
+   "pad": 1.5,
+   "anchors": {
+    "cells": {
+     "obj": "^21700",
+     "near": [
+      500,
+      579,
+      -40
+     ]
+    },
+    "bms": {
+     "obj": "^LV_Battery_BMS",
+     "near": [
+      459,
+      540,
+      -20
+     ]
+    },
+    "disp": {
+     "obj": "^LV_Battery_Display",
+     "near": [
+      480,
+      621,
+      -180
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "21700 셀 (LV 배터리)",
+     "a": "cells"
+    },
+    {
+     "t": "LV 배터리 BMS",
+     "a": "bms"
+    },
+    {
+     "t": "전압 표시기",
+     "a": "disp"
+    }
+   ]
+  },
+  "imd": {
+   "aria": "절연 감시 장치 (IMD)",
+   "focus": "^Bender|^IMD_And",
+   "ghost": "^Segment_Bottom_Base|^Bottom_Wall|^72_Cell|^Accumulator_Isolation",
+   "hide": "^Cover|Top_Battery|Rodend",
+   "color": {
+    "^Bender": "#2b8a3e"
+   },
+   "az": 140,
+   "el": 45,
+   "pad": 2.2,
+   "anchors": {
+    "imd": {
+     "obj": "^Bender",
+     "near": [
+      600,
+      364,
+      -130
+     ]
+    },
+    "air": {
+     "obj": "^Accumulator_Isolation",
+     "near": [
+      615,
+      389,
+      140
+     ]
+    },
+    "seg": {
+     "obj": "^Segment_Bottom_Base",
+     "near": [
+      500,
+      250,
+      -150
+     ]
+    }
+   },
+   "labels": [
+    {
+     "t": "IMD (배터리 상자 안)",
+     "a": "imd"
+    }
+   ]
+  }
+ }
+}

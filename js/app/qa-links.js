@@ -40,9 +40,7 @@ const tkKey=()=>'run2x.tkSeen.'+(window.__teamId||'');
 function tkSeenSave(o){ try{ localStorage.setItem(tkKey(), JSON.stringify(o)); }catch(e){} }
 function tkSeen(){ let o=null; try{ o=JSON.parse(localStorage.getItem(tkKey())||'null'); }catch(e){} if(!o || !o.base){ o={base:new Date().toISOString(), items:{}}; tkSeenSave(o); } o.items=o.items||{}; return o; }
 function tkMark(id){ const o=tkSeen(); o.items[id]=new Date().toISOString(); tkSeenSave(o); }
-function tkSeenAll(){ tkSeenSave({base:new Date().toISOString(), items:{}}); renderQA(); }
 function tkNew(id, o){ o=o||tkSeen(); const s=o.items[id]||o.base; return Object.values(QA).filter(q=>isTalk(q) && q.item===id && !q.removed && notMe(q) && String(q.at)>s).length; }
-function tkNewTotal(){ const o=tkSeen(); const ids=new Set(Object.values(QA).filter(isTalk).map(q=>q.item)); let n=0; ids.forEach(id=>{ n+=tkNew(id,o); }); return n; }
 
 /* 원글 + 답글 묶기 (원글이 지워진 답글은 원글처럼) */
 function tkThreads(id){ const all=Object.entries(QA).filter(([k,q])=>isTalk(q) && q.item===id), by=(a,b)=>String(a[1].at).localeCompare(String(b[1].at));
@@ -71,7 +69,6 @@ async function renderQA(){ const ps=await qaNames(); const nm=id=>(id && ps[id] 
       t.textContent = q.removed ? (q.removed==='admin' ? '회장이 삭제한 댓글입니다.' : '작성자가 삭제한 댓글입니다.') : (q.text||'');
       requestAnimationFrame(()=>{ const mb=r.querySelector('.qa-more'); if(mb && t.scrollHeight>t.clientHeight+2) mb.hidden=false; }); });
   });
-  try{ renderAdm(); }catch(e){}
 }
 async function qaSave(id,data){ if(SH.on && SH.db){ try{ if(id) await SH.db.doc('qa/'+id).update(data); else await SH.db.collection('qa').add(data); }catch(e){ if(Backend.denied(e)) toast('지금 권한으로는 할 수 없습니다.'); else toast('저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); } return; }
   if(id) QA[id]={...QA[id],...data}; else QA['l'+Date.now()]=data; try{ localStorage.setItem(QAKEY,JSON.stringify(QA)); }catch(e){} renderQA(); }

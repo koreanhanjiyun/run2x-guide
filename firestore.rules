@@ -118,6 +118,11 @@ service cloud.firestore {
         allow update: if validDv(t, request.resource.data) && (isTAdmin(t)
                       || (canDvPart(t, d) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {}))));
         allow delete: if isTAdmin(t); }
+      // 도구별 팀 프리셋 (2026-11-12): 문서 id = 파트 코드 + '__' + 도구. 회장 전부, 팀장 · 파트장은 담당 파트 도구의 이번 시즌만
+      match /tp/{d} { allow read: if isMember(t);
+        allow create: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {})));
+        allow update: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
+        allow delete: if isTAdmin(t); }
       match /dtab/{d} { allow read: if isMember(t);
         allow create: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && onlyCurKey(t, request.resource.data.get('s', {})));
         allow update: if isTAdmin(t) || (canEditPart(t, partOfCode(codeOf(d))) && curKeyChange(t, request.resource.data.get('s', {}), resource.data.get('s', {})));
@@ -163,6 +168,10 @@ service cloud.firestore {
     match /profiles/{u} { allow read: if signedIn(); allow write: if signedIn() && u == uid(); }
     // 마지막으로 고른 팀
     match /users/{u}    { allow read, write: if signedIn() && u == uid(); }
+    // 내 프리셋 (2026-11-12): 도구마다 칸 0 · 1 · 2 세 개만 (문서 id = 도구 + '__' + 칸)
+    match /users/{u}/presets/{p} { allow read, delete: if signedIn() && u == uid();
+      allow create, update: if signedIn() && u == uid() && p.matches('^[0-9A-Z]{1,2}__[0-2]$') && request.resource.data.keys().hasOnly(['name','at','json'])
+                            && str(request.resource.data.name, 40) && request.resource.data.json is string; }
     // 플랫폼 문의: 로그인 사용자 누구나 작성(차단된 계정 제외), 개발자만 읽기·처리 상태 변경·삭제
     match /feedback/{id} {
       allow create: if signedIn() && request.resource.data.by == uid() && str(request.resource.data.text, 4000)

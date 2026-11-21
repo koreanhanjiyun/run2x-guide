@@ -21,7 +21,7 @@
     const go = () => window.scrollTo({top: o.y||0, behavior:'instant'});
     requestAnimationFrame(go); setTimeout(go, 350); setTimeout(go, 1200); }
   let lastJson = '', acctAt = 0;
-  function save(force){ if(window.DEBUG || restoring) return; const j = JSON.stringify(snap()); SETP('lastpos', j);
+  function save(force){ if(restoring) return; const j = JSON.stringify(snap()); SETP('lastpos', j);
     if(j===lastJson) return; lastJson = j;
     const now = Date.now(); if(!force && now - acctAt < 20000) return; acctAt = now;
     if(window.Backend && Backend.kind()==='firebase') Backend.Team.ctx().then(c=>{ if(c.uid) Backend.Team.saveLast(j).catch(()=>{}); }).catch(()=>{}); }
@@ -31,7 +31,7 @@
   const hasHash = /^it-/.test(h) || (TABS.includes(h) && !(local0 && local0.tab===h));
   const first = PREF('visited','') !== '1';
   const local = local0;
-  if(!hasHash && !window.DEBUG){
+  if(!hasHash){
     if(first){ SETP('visited','1'); showTab('start'); setTimeout(()=>{ try{ if(PREF('tourdone','')!=='1') tourStart('all'); }catch(e){} }, 1200); }
     else if(local) restore(local);
     else showTab('steps');

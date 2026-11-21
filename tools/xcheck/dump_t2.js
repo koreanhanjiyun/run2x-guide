@@ -10,11 +10,9 @@ const COMMON = { md: 0, rl_on: 0, wc_on: 0, rg_on: 0, drv: 0, course: 'end', lap
 const CASES = [
   { id: 'base', n: '기본 차 (열 끔, 에너지 상한 없음, 효율 맵)', o: { th_on: 0, in_on: 0, bt_on: 0, cw_on: 0, e_lim: 0 } },
   { id: 'const_eff', n: '효율 상수 (모터 95 % · 인버터 97 %)', o: { th_on: 0, in_on: 0, bt_on: 0, cw_on: 0, e_lim: 0, effM: null, effI: null, eta_mot: 95, eta_inv: 97 } },
-  { id: 'thermal', n: '모터 · 인버터 · 냉각수 (한 덩어리) · 축전지 열 + 디레이팅 (낮은 디레이팅 온도로 일부러 걸리게)',
-    o: { th_on: 1, in_on: 1, bt_on: 1, cw_on: 1, m_cool: 1, i_cool: 1, b_cool: 0, e_lim: 0, dr_t0: 45, dr_t1: 70, di_t0: 42, di_t1: 60, th_c: 3000, i_c: 800, cw_c: 3000, b_alpha: 0.01 } },
-  { id: 'serial', n: '위 + 직렬 냉각 회로 (라디 → 인버터 → 모터)',
-    o: { th_on: 1, in_on: 1, bt_on: 1, cw_on: 1, m_cool: 1, i_cool: 1, b_cool: 0, e_lim: 0, dr_t0: 45, dr_t1: 70, di_t0: 42, di_t1: 60, th_c: 3000, i_c: 800, cw_c: 3000, b_alpha: 0.01,
-         cw_ser: 1, cw_cc: 557.3, cw_g0: 63.2, cw_g60: 174.3, cw_oi: 1, cw_om: 2, cw_ob: 0 } },
+  { id: 'thermal', n: '모터 · 인버터 · 축전지 열 + 디레이팅, 수랭 부품별 독립 회로 (낮은 디레이팅 온도로 일부러 걸리게)',
+    o: { th_on: 1, in_on: 1, bt_on: 1, cw_on: 1, m_cool: 1, i_cool: 1, b_cool: 0, e_lim: 0, dr_t0: 45, dr_t1: 70, di_t0: 42, di_t1: 60, th_c: 3000, i_c: 800, b_alpha: 0.01, cw_mode: 0, cw_c: 3000, ua0: 60, ua60: 180, i_wc: 2000, i_ua0: 30, i_ua60: 90 } },
+  { id: 'tool9', n: '위 + 도구 9 회로 (도구 9 기본 배치: 라디 → 펌프 → 인버터 → 모터 직렬)', o: { th_on: 1, in_on: 1, bt_on: 1, cw_on: 1, m_cool: 1, i_cool: 1, b_cool: 0, e_lim: 0, dr_t0: 45, dr_t1: 70, di_t0: 42, di_t1: 60, th_c: 3000, i_c: 800, b_alpha: 0.01, cw_mode: 1 } },
   { id: 'elim', n: '에너지 상한 (내구 1.6 kWh, 최대 운전자 = 출력 상한 배율)', o: { th_on: 0, in_on: 0, bt_on: 0, cw_on: 0, e_lim: 2, e_target: 1.6 } },
   { id: 'real', n: '현실 운전자 (k_s 0.9 · k_e 0.7)', o: { th_on: 0, in_on: 0, bt_on: 0, cw_on: 0, e_lim: 0, dr_real: 1, dr_ks: 0.9, dr_ke: 0.7 } },
 ];

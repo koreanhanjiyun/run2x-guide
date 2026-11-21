@@ -1,6 +1,6 @@
 # 도구 2P 교차 비교 — 사이트 계산 코드(JavaScript)를 쓰지 않고, 도구 2P 머리말 · HANDOFF 에 적힌 모델 식만으로 Python 으로 다시 짠 계산.
 #   범위 (관리자 결정 2026-11-08, 안 (나)): 차량 모델 0 · 축전지 (개방 전압 SOC 직선 · 내부저항 · 전류 · 출력 한계) · 모터 토크 표 (전압 환산) ·
-#   효율 (상수 또는 맵) · 모터 · 인버터 · 축전지 · 냉각수 열 (한 덩어리 / 직렬 회로) · 디레이팅 · 내구 에너지 상한 (출력 상한 배율) · 현실 운전자 배율
+#   효율 (상수 또는 맵) · 모터 · 인버터 · 축전지 · 냉각수 열 (부품별 독립 회로 / 도구 9 회로 점 모델) · 디레이팅 · 내구 에너지 상한 (출력 상한 배율) · 현실 운전자 배율
 #   주행선은 넣은 구간 곡률 그대로 (dump_t2.js 에서 주행선 끔), 회생 · 타력 운전자 · 모델 1 ~ 3 은 범위 밖.
 #   같은 것: 준정적(QSS) 앞 → 뒤 두 번 훑기 · 칸 크기 (가속 0.5 m, 오토크로스 · 내구 1 m) · 칸 안 차속 평균으로 시간 적분 (문서에 적힌 수치 방법)
 #   다른 것: 고정점 되풀이는 수렴할 때까지 (사이트는 3 ~ 4 번), 구동력 · 코너 속도를 기억표 없이 매번, 에너지 상한 배율은 다 셈 이분법 (사이트는 줄여 셈 할선 + 보정 1 번)
@@ -54,20 +54,34 @@ class Car:
         s.kt = I['kt']; s.ipk = I['i_pk']
         s.ict = max(0, min(I['i_ct'], s.ipk)) if I.get('ict_m', 1) != 0 else s.ipk * clamp01(I.get('i_cpct', 100) / 100)
         # 열
-        s.mW = I.get('m_cool', 1) != 0; s.iW = I.get('i_cool', 1) != 0; s.bW = I.get('b_cool', 0) == 1
+        net = I.get('cw9') if I.get('cw_mode', 0) == 1 and isinstance(I.get('cw9'), dict) and isinstance(I['cw9'].get('water'), list) else None
+        s.net = net; s.where = {}
+        if net:
+            for w, Cn in enumerate(net['water']):
+                for k, nd in enumerate(Cn['nodes']):
+                    if nd.get('part'): s.where[nd['part']] = ('w', w, k)
+            for a, D in enumerate(net.get('air') or []):
+                for j, p in enumerate(D['parts']):
+                    if p not in s.where: s.where[p] = ('a', a, j)
+        inW = lambda p: p in s.where and s.where[p][0] == 'w'
+        s.mW = inW('m') if net else I.get('m_cool', 1) != 0
+        s.iW = inW('i') if net else I.get('i_cool', 1) != 0
+        s.bW = inW('b') if net else I.get('b_cool', 0) == 1
         s.thOn = I.get('th_on', 1) != 0; s.inOn = I.get('in_on', 0) == 1; s.btOn = I.get('bt_on', 0) == 1
         s.cwOn = I.get('cw_on', 0) == 1 and ((s.thOn and s.mW) or s.iW or (s.btOn and s.bW))
         s.dr0, s.dr1 = I['dr_t0'], I['dr_t1']; s.drM = s.thOn and s.dr1 > s.dr0
         s.di0, s.di1 = I['di_t0'], I['di_t1']
         s.drOn = s.drM or (s.inOn and s.di1 > s.di0 and s.ict < s.ipk)
         s.thC = max(1, I['th_c']); s.thR = max(1e-9, I['th_r']); s.thCo = I['th_cool']
-        s.Tamb = I.get('t_amb', 25); s.Cw = max(1, I.get('cw_c') or 1); s.ua0 = max(0, I.get('ua0') or 0); s.ua60 = max(0, I.get('ua60') or 0)
+        s.Tamb = I.get('t_amb', 25)
         s.Cb = max(1, I.get('b_c') or 1); s.alp = I.get('b_alpha') or 0; s.Rbt = max(1e-9, I.get('b_r') or 0.05)
         s.Ci = max(1, I.get('i_c') or 1); s.Ri = max(1e-9, I.get('i_r') or 0.05)
-        s.ser = s.cwOn and I.get('cw_ser', 0) == 1 and I.get('cw_cc', 0) > 0; s.Cc = I.get('cw_cc', 0)
-        order = sorted([(p, (o if o > 0 else 99 + j)) for j, (p, o) in enumerate([('m', I.get('cw_om', 0)), ('i', I.get('cw_oi', 0)), ('b', I.get('cw_ob', 0))])], key=lambda x: x[1])
-        s.order = [p for p, _ in order]
-        s.TH0 = {'m': I['th_init'], 'i': I.get('i_init', I['th_init']), 'w': I['th_cool'], 'b': I.get('b_t0', 25)}
+        g = lambda k: I.get(k) or 0
+        s.CWI = {'m': (max(1, g('cw_c') or 1), max(0, g('ua0')), max(0, g('ua60'))), 'i': (max(1, g('i_wc') or 1), max(0, g('i_ua0')), max(0, g('i_ua60'))),
+                 'b': (max(1, g('b_wc') or 1), max(0, g('b_ua0')), max(0, g('b_ua60')))}
+        s.PR = {'m': s.thR, 'i': s.Ri, 'b': s.Rbt}; s.PC = {'m': s.thC, 'i': s.Ci, 'b': s.Cb}; s.PON = {'m': s.thOn, 'i': s.inOn, 'b': s.btOn}
+        X0 = [[I['th_cool']] * len(Cn['nodes']) for Cn in net['water']] if net else [I['th_cool']] * 3
+        s.TH0 = {'m': I['th_init'], 'i': I.get('i_init', I['th_init']), 'w': I['th_cool'], 'b': I.get('b_t0', 25), 'x': X0}
         s.vtop = s.nmax / gr * 2 * math.pi / 60 * s.r * (1 - 1e-9)
         s.vc = {}
 
@@ -184,32 +198,67 @@ class Car:
     @staticmethod
     def tow(T, Teq, k, dt): return Teq + (T - Teq) * math.exp(-k * dt)
     def air(s, T, Q, h, C, dt): return s.tow(T, s.Tamb + Q / h, h / C, dt) if h > 0 else T + Q * dt / C
+    def PH(s, p, v):
+        I = s.I
+        return s.hV(I.get('m_ha0'), I.get('m_ha60'), v) if p == 'm' else s.hV(I.get('i_ha0'), I.get('i_ha60'), v) if p == 'i' else s.hV(I.get('b_ha'), I.get('b_ha60'), v)
+
+    @staticmethod
+    def epsX(N, Cr):
+        if N <= 0: return 0.0
+        if Cr < 1e-9: return 1 - math.exp(-N)
+        return 1 - math.exp(N ** 0.22 / Cr * (math.exp(-Cr * N ** 0.78) - 1))
+
+    def radA(s, Cn, nd, v):   # 라디 점이 섞인 냉각수 열 중 외기로 버리는 몫 a = ε C_min ÷ F (교차류 양쪽 안 섞임)
+        F = (nd.get('q') or 1) * Cn['Cc']; qa = max(0, nd['A'] * nd['kd'] * v + nd['fan']); Ca = 1.2 * 1005 * qa; Vf = qa / nd['A'] if nd['A'] > 0 else 0
+        UA = nd['UA'] * (Vf / 5) ** 0.6 if Vf > 0 else 0; Cm, Cx = min(Ca, F), max(Ca, F)
+        e = s.epsX(UA / Cm, Cm / Cx) if Cm > 0 and F > 0 else 0
+        return e * Cm / F if F > 0 else 0
+
     def thStep(s, st, Lm, Li, Ib, v, dt):
-        I = s.I; Tw = st['w'] if s.cwOn else s.thCo; Qb = Ib * Ib * s.Rb * s.rS(st['b'])
-        m = st['m'] if not s.thOn else (s.tow(st['m'], Tw + Lm * s.thR, 1 / (s.thR * s.thC), dt) if s.mW else s.air(st['m'], Lm, s.hV(I.get('m_ha0'), I.get('m_ha60'), v), s.thC, dt))
-        i = st['i'] if not s.inOn else (s.tow(st['i'], Tw + Li * s.Ri, 1 / (s.Ri * s.Ci), dt) if s.iW else s.air(st['i'], Li, s.hV(I.get('i_ha0'), I.get('i_ha60'), v), s.Ci, dt))
-        b = st['b'] if not s.btOn else (s.tow(st['b'], Tw + Qb * s.Rbt, 1 / (s.Rbt * s.Cb), dt) if s.bW else s.air(st['b'], Qb, s.hV(I.get('b_ha'), I.get('b_ha60'), v), s.Cb, dt))
-        w = s.thCo
-        if s.ser:   # 직렬 회로: 라디 출구에서 부품 순서대로 (부품 점 = 잘 섞인 덩어리, 그 점 출구 온도)
-            Gr = min(s.Cc, max(1e-6, s.hV(I.get('cw_g0'), I.get('cw_g60'), v)))
-            base = st['w'] - Gr * (st['w'] - s.Tamb) / s.Cc; Qs = 0.0; nx = {'m': m, 'i': i, 'b': b}
-            for p in s.order:
-                if p == 'm' and s.thOn and s.mW:
-                    Re = s.thR + 1 / s.Cc; Q = (st['m'] - base) / Re; nx['m'] = s.tow(st['m'], base + Lm * Re, 1 / (Re * s.thC), dt)
-                elif p == 'i' and s.iW:
-                    if s.inOn: Re = s.Ri + 1 / s.Cc; Q = (st['i'] - base) / Re; nx['i'] = s.tow(st['i'], base + Li * Re, 1 / (Re * s.Ci), dt)
-                    else: Q = Li
-                elif p == 'b' and s.btOn and s.bW:
-                    Re = s.Rbt + 1 / s.Cc; Q = (st['b'] - base) / Re; nx['b'] = s.tow(st['b'], base + Qb * Re, 1 / (Re * s.Cb), dt)
-                else: continue
-                Qs += Q; base += Q / s.Cc
-            w = s.tow(st['w'], s.Tamb + Qs / Gr, Gr / s.Cw, dt)
-            return {'m': nx['m'], 'i': nx['i'], 'w': w, 'b': nx['b']}
-        if s.cwOn:
-            UA = max(1e-6, s.hV(s.ua0, s.ua60, v))
-            Q = ((st['m'] - st['w']) / s.thR if s.thOn and s.mW else 0) + (((st['i'] - st['w']) / s.Ri if s.inOn else Li) if s.iW else 0) + ((st['b'] - st['w']) / s.Rbt if s.btOn and s.bW else 0)
-            w = s.tow(st['w'], s.Tamb + Q / UA, UA / s.Cw, dt)
-        return {'m': m, 'i': i, 'w': w, 'b': b}
+        Qb = Ib * Ib * s.Rb * s.rS(st['b']); L = {'m': Lm, 'i': Li, 'b': Qb}; x = st['x']
+        if not s.net:   # 부품별 독립 회로: 수랭 부품마다 자기 냉각수 · 라디
+            Tw = lambda j: x[j] if s.cwOn else s.thCo
+            m = st['m'] if not s.thOn else (s.tow(st['m'], Tw(0) + Lm * s.thR, 1 / (s.thR * s.thC), dt) if s.mW else s.air(st['m'], Lm, s.PH('m', v), s.thC, dt))
+            i = st['i'] if not s.inOn else (s.tow(st['i'], Tw(1) + Li * s.Ri, 1 / (s.Ri * s.Ci), dt) if s.iW else s.air(st['i'], Li, s.PH('i', v), s.Ci, dt))
+            b = st['b'] if not s.btOn else (s.tow(st['b'], Tw(2) + Qb * s.Rbt, 1 / (s.Rbt * s.Cb), dt) if s.bW else s.air(st['b'], Qb, s.PH('b', v), s.Cb, dt))
+            nx = list(x); w = s.thCo
+            if s.cwOn:
+                w = -math.inf
+                for j, p in enumerate('mib'):
+                    wat = (s.thOn and s.mW) if p == 'm' else s.iW if p == 'i' else (s.btOn and s.bW)
+                    if not wat: continue
+                    Cw, u0, u60 = s.CWI[p]; UA = max(1e-6, s.hV(u0, u60, v))
+                    Q = Li if (p == 'i' and not s.inOn) else (st[p] - x[j]) / s.PR[p]
+                    nx[j] = s.tow(x[j], s.Tamb + Q / UA, UA / Cw, dt); w = max(w, nx[j])
+            return {'m': m, 'i': i, 'w': w, 'b': b, 'x': nx}
+        # 도구 9 회로: 점 모델 (흐름 순서대로, 0.25 s 이하 칸)
+        T = {'m': st['m'], 'i': st['i'], 'b': st['b']}; c = [list(a) for a in x]; n = max(1, math.ceil(dt / 0.25)); h = dt / n
+        aK = [[s.radA(Cn, nd, v) if nd['t'] == 'rad' else 0 for nd in Cn['nodes']] for Cn in s.net['water']]
+        for _ in range(n):
+            if s.cwOn:
+                for w, Cn in enumerate(s.net['water']):
+                    N = len(Cn['nodes'])
+                    for k, nd in enumerate(Cn['nodes']):
+                        ins = nd.get('ins') or [[(k - 1) % N, 1]]; fs = sum(f for _, f in ins); mix = sum(f * c[w][j] for j, f in ins) / fs if fs > 0 else c[w][k]
+                        F = (nd.get('q') or 1) * Cn['Cc']; Cnd = max(1, nd.get('C') or 1); p = nd.get('part')
+                        if nd['t'] == 'rad': c[w][k] = s.tow(c[w][k], mix - aK[w][k] * (mix - s.Tamb), F / Cnd, h)
+                        elif p and s.PON[p]: G_ = 1 / s.PR[p]; c[w][k] = s.tow(c[w][k], (F * mix + G_ * T[p]) / (F + G_), (F + G_) / Cnd, h)
+                        elif p == 'i' and F > 0: c[w][k] = s.tow(c[w][k], mix + Li / F, F / Cnd, h)
+                        elif F > 0: c[w][k] = s.tow(c[w][k], mix, F / Cnd, h)
+            for p in 'mib':
+                if not s.PON[p]: continue
+                wh = s.where.get(p)
+                if wh and wh[0] == 'w': T[p] = s.tow(T[p], (c[wh[1]][wh[2]] if s.cwOn else s.thCo) + L[p] * s.PR[p], 1 / (s.PR[p] * s.PC[p]), h)
+                elif not wh: T[p] = s.air(T[p], L[p], s.PH(p, v), s.PC[p], h)
+            for D in s.net.get('air') or []:
+                Ca = 1.2 * 1005 * max(0, D['A'] * D['kd'] * v + D['fan']); Ta = s.Tamb
+                for p in D['parts']:
+                    if not s.PON[p]: continue
+                    G_ = Ca * (1 - math.exp(-s.PH(p, v) / Ca)) if Ca > 0 else 0
+                    T[p] = s.tow(T[p], Ta + L[p] / G_, G_ / s.PC[p], h) if G_ > 0 else T[p] + L[p] * h / s.PC[p]
+                    if Ca > 0: Ta += G_ * (T[p] - Ta) / Ca
+        w = max(max(a) for a in c) if (s.cwOn and c) else s.thCo
+        return {'m': T['m'], 'i': T['i'], 'w': w, 'b': T['b'], 'x': c}
 
 
 # ---- 칸 · 차속 · 적분

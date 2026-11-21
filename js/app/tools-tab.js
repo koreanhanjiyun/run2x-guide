@@ -26,7 +26,17 @@ const DASH = (() => {
 /* ---------- 팀 설계값 저장소 (dv) ---------- */
 const DVKEY = 'run2x.dv.v1';
 let DVS = {};   /* 문서 id → {s:{시즌:{v, st, src, by, at}}} */
-try{ DVS = JSON.parse(localStorage.getItem(DVKEY)||'{}') || {}; }catch(e){ DVS = {}; }
+/* CoP 위치 기준 변경 (v2.1.0, 2026-11-08 21:50 KST 배포): v2.0.0 에서는 xcop · xcop_drs = 앞축부터, v2.1.0 부터 = 뒤축부터.
+   그 전에 저장된 값은 읽을 때 L − 값으로 바꿔 씀 (팀 저장소 문서는 건드리지 않음, 다음에 저장할 때 바뀐 값으로 저장됨).
+   같은 시즌 휠베이스 L 이 없으면 바꿀 수 없어 copOld 로 표시만 함 (dvState 에서 ↻) */
+const COP_CUT = '2026-11-08T12:50:53Z';
+function copFix(r){ const se = s => { const L = Object.keys(r).find(id => id.endsWith('__L')); const e = L && r[L].s && r[L].s[s]; return e && typeof e.v==='number' ? e.v : null; };
+  Object.keys(r).forEach(id => { if(!/__xcop(_drs)?$/.test(id) || !r[id] || !r[id].s) return;
+    Object.entries(r[id].s).forEach(([s, e]) => { if(!e || typeof e.v!=='number' || e.copV || !e.at || e.at >= COP_CUT) return;
+      const L = se(s); if(L==null){ e.copOld = true; return; }
+      e.v = Math.round((L - e.v) * 1000) / 1000; e.copV = 2; }); });
+  return r; }
+try{ DVS = copFix(JSON.parse(localStorage.getItem(DVKEY)||'{}') || {}); }catch(e){ DVS = {}; }
 const dvSeason = () => (typeof SEASON!=='undefined' ? String(SEASON) : String(new Date().getFullYear()));
 const dvEntry = (k, se) => { const d = DVS[dvId(k)]; return (d && d.s && d.s[se || dvSeason()]) || null; };
 /* 이 키를 고칠 수 있나: 회장 전부, 팀장·파트장은 담당 파트(또는 묶음)만. 저장소가 없으면 이 브라우저에서 자유롭게 */
@@ -43,13 +53,25 @@ async function dvSave(k, patch){
 }
 /* 팀 저장소 연결: 다른 저장소 구독(onSharedReady) 뒤에 이어 붙임 */
 { const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
-    db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = r; dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
-/* 설계 탭 항목에 붙는 팀 설계값(읽기 전용). 고치기는 도구 탭에서 (값 한곳 원칙) */
+    db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = copFix(r); dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
+/* 설계 탭 항목에 붙는 팀 설계값(읽기 전용) */
+/* 대시보드 값 표시 (2026-11-13 관리자 결정, 검토 중 없앰): ● 대시보드 값 · ↻ 다시 계산 필요 · — 비어 있음.
+   ↻ = 계산값(kind 'calc')인데, 반영할 때 쓴 대시보드 입력(deps, [대시보드에 반영] 때 저장 — 대시보드와 같던 칸은 값, 다르던 칸은 null)이
+   지금 대시보드 값과 다르거나 null 이 있을 때. 그 도구에서 지금 대시보드 값으로 다시 계산해 반영하면 사라짐. deps 가 없는 옛 값은 ↻ 없음 */
+function dvState(k, se){ const e = dvEntry(k, se); if(!e || typeof e.v!=='number') return {c:'none', l:'비어 있음', re:[]};
+  const re = [];
+  if(e.copOld) re.push({k:'L', cop:true});
+  if(e.kind==='calc' && e.deps && typeof e.deps==='object') Object.entries(e.deps).forEach(([d, v]) => { const c = dvEntry(d, se), now = c && typeof c.v==='number' ? c.v : null;
+    if(v==='e'){ if(now!=null) re.push({k:d, from:null, to:now}); } else if(v==null) re.push({k:d, diff:true}); else if(now==null || Math.abs(now - v) > 1e-9*Math.max(1, Math.abs(v))) re.push({k:d, from:v, to:now}); });
+  return {c:'in', l:'대시보드 값', re}; }
+const dvKN = k => DK[k] ? String(DK[k].n).replace(/<[^>]+>/g, '') : k;
+function dvStateTip(k, st, e){ return `${st.re.length ? '다시 계산 필요: ' + st.re.map(r => r.cop ? '예전 기준(앞축부터)으로 저장된 값인데 이번 시즌 휠베이스가 없어 뒤축 기준으로 바꾸지 못함 · 휠베이스를 넣거나 값을 다시 입력' : r.diff ? `${dvKN(r.k)} (대시보드와 다른 값으로 계산함)` : `${dvKN(r.k)} ${r.from==null ? '비어 있음' : r.from} → ${r.to==null ? '비어 있음' : r.to}`).join(', ') + ' · ' : ''}${e && e.src ? esc(e.src) : ''}${e && e.by ? '' : ''}${e && e.at ? ' · ' + String(e.at).slice(0, 10) : ''}`; }
+const dvMark = (k, se, e) => { const q = dvState(k, se); return q.c==='none' ? '<span class="dv-s s-none"></span>' : (q.re.length ? `<span class="dv-s dv-re" title="${dvStateTip(k, q, e)}">↻</span>` : `<span class="dv-s s-in" title="${dvStateTip(k, q, e)}"></span>`); };
 const DK_BY_ITEM = DKEYS.reduce((o, d) => { if(d.it) (o[d.it] = o[d.it] || []).push(d.k); return o; }, {});
 function dvLinkedHTML(id, se){ const ks = DK_BY_ITEM[id]; if(!ks || !ks.length) return '';
   const row = k => { const e = dvEntry(k, se), has = e && typeof e.v==='number', st = has ? (e.st||'rev') : '';
-    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} <span class="dv-s s-${st}" title="${DASH.STL[st]||''}"></span>` : '<span class="muted">—</span>'}</td></tr>`; };
-  return `<div class="tv-dv"><div class="tv-dvh"><span class="sec-label">팀 설계값</span><button type="button" class="lnk" data-gotools>도구 탭에서 보기 · 고치기</button></div><table class="kvt tv-t">${ks.map(row).join('')}</table></div>`; }
+    return `<tr><th><span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span></th><td>${has ? `<b>${e.v}</b>${DK[k].u?` <span class="dv-u">${DK[k].u}</span>`:''} ${dvMark(k, se, e)}` : '<span class="muted">—</span>'}</td></tr>`; };
+  return `<div class="tv-dv"><div class="tv-dvh"><span class="sec-label">팀 설계값</span><button type="button" class="lnk" data-gotools>도구 탭에서 보기</button></div><table class="kvt tv-t">${ks.map(row).join('')}</table></div>`; }
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-gotools]')){ e.preventDefault(); showTab('tools'); smoothScrollTo(() => 0); } });
 /* 그림·계산에 쓰는 값: 이번 시즌 저장값, 없으면 예시값 */
 function dashSync(){ DASH.GROUPS.forEach(g => g[1].forEach(([k, , ex]) => { const e = dvEntry(k), has = e && typeof e.v==='number' && isFinite(e.v);
@@ -73,7 +95,8 @@ const TOOL_LIST = [
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
   /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
   const rows = TOOL_LIST.map(r => [W[r[0]] && W[r[0]].no ? W[r[0]].no : r[0], ...r.slice(1), W[r[0]] ? r[0] : '']);
-  return rows.map(([n,t,s,i,o,id]) => id ? `<li class="tt-on" data-wb="${id}" tabindex="0" role="button" aria-label="${t} 작업창 열기"><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">열기 →</span></li>`
+  /* 커서를 올리면 (또는 Tab 으로 오면) 줄이 [예제 | 내 파일] 두 단추로 바뀜 → 고른 모드로 엶 */
+  return rows.map(([n,t,s,i,o,id]) => id ? `<li class="tt-on wb-mpick" data-wbrow="${id}"><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">열기 →</span>${wbModeBtns(id, t)}</li>`
     : `<li><span class="tt-n">${n}</span><span class="tt-s">${s}</span><b>${t}</b><span class="tt-io">${i} <i>→</i> ${o}</span><span class="tt-st">준비 중</span></li>`).join(''); }
 const dashVmax = P => P.nmax/P.gr*2*Math.PI*(P.rt/1000)*60/1000;   /* 모터 회전수 한계 최고속 [km/h] */
 /* 코너 반경 조절기: 곡률(1/R)을 고르게 나눠, 오른쪽으로 갈수록 반경이 줄고 조향이 커진다. 60 m → 설계 최소 회전 반경 */
@@ -85,15 +108,20 @@ const dashFmt = (k, v) => { if(DV_RATIO[k]){ const a = Number(v); return `${a.to
 const dashP = () => DASH.C.aero ? DASH.P : {...DASH.P, cla:0, cda:0};
 function dashCalc(){ const C = DASH.C; return DASHCALC(dashP(), {v:C.v, R: C.straight ? Infinity : C.R, ax:C.ax, dir:C.dir}); }
 
+/* 대시보드 예시값 빼기 (2026-11-11): 아무도 안 넣은 값은 — 로. 그림 · 조건 · 파트 그림은 필요한 값이 다 있을 때만 그림 */
+const dashEx = k => DASH.ST[k]==='ex';
+const dashMissing = () => DASH.GROUPS.flatMap(g => g[1].map(r => r[0])).filter(dashEx);
+const dashNoFig = what => `<p class="dp-note dv-nofig">대시보드 설계값 ${dashMissing().length}개가 비어 있어 ${what}을 그리지 않습니다.</p>`;
 function dashValuesHTML(){ const P = DASH.P;
   const vmax = dashVmax(P), nm = k => `<span class="term" data-dk="${k}" tabindex="0" role="button" aria-haspopup="dialog">${DK[k].n}</span>`;
-  const calc = (k, v, u, inv) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd>${inv && canEditDv(inv) ? `<button type="button" class="dv-v" data-dk="${k}" data-dinv="${inv}" title="계산값 · 고치면 ${DK[inv].n}이 역으로 바뀜">` : '<span class="dv-v ro">'}<b>${v}</b> <span class="dv-u">${u}</span>${inv && canEditDv(inv) ? '</button>' : '</span>'}<span class="dv-s s-calc" title="계산값"></span></dd></div>`;
-  const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr');
-  return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const can = canEditDv(k), st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
-      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd>${can ? `<button type="button" class="dv-v" data-dk="${k}" title="눌러서 고치기">` : `<span class="dv-v ro" title="${DK[k].p} 담당만 고칠 수 있습니다">`}<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}${can ? '</button>' : '</span>'}${can && st!=='ex' ? `<button type="button" class="dv-s s-${st}" data-dst="${k}" title="${DASH.STL[st]} · 눌러서 상태 바꾸기" aria-label="상태 ${DASH.STL[st]}"></button>` : `<span class="dv-s s-${st}" title="${DASH.STL[st]}${e&&e.src?' · '+esc(e.src):''}"></span>`}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
-      ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h') : ''}
+  const calc = (k, v, u, inv, need) => (need || []).some(dashEx) ? `<div class="dv-r calc ex"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>—</b></span><span class="dv-s s-none"></span></dd></div>` : calc0(k, v, u, inv, need);
+  const calc0 = (k, v, u, inv, need) => `<div class="dv-r calc"><dt>${nm(k)}</dt><dd><span class="dv-v ro"><b>${v}</b> <span class="dv-u">${u}</span></span><span class="dv-s s-in" title="대시보드가 계산"></span></dd></div>`;
+  const acg = () => calc('a_cg', (P.L*P.fr/100).toFixed(0), 'mm', 'fr', ['L', 'fr']);
+  return `<div class="dv-grid">${DASH.GROUPS.map(([g, rows]) => `<section class="dv-col"><h3 class="dv-h">${g}</h3><dl>${rows.map(([k]) => { const st = DASH.ST[k], u = DK[k].u, e = dvEntry(k);
+      return `<div class="dv-r${st==='ex'?' ex':''}"><dt>${nm(k)}</dt><dd><span class="dv-v ro"${e&&e.src ? ` title="${esc(e.src)}에서 반영"` : ''}>${st==='ex' ? '<b>—</b>' : `<b>${dashFmt(k, P[k])}</b>${u?` <span class="dv-u">${u}</span>`:''}`}</span>${dvMark(k, undefined, e)}</dd></div>` + (k==='left' ? acg() : ''); }).join('')}
+      ${g==='파워트레인' ? calc('vmax', vmax.toFixed(0), 'km/h', null, ['nmax', 'gr', 'r_eff']) : ''}
       </dl></section>`).join('')}</div>
-    <p class="dv-leg"><span><i class="dv-s s-ok"></i>확정</span><span><i class="dv-s s-rev"></i>검토 중</span><span><i class="dv-s s-asm"></i>가정</span><span><i class="dv-s s-calc"></i>계산값</span><span><i class="dv-s s-ex"></i>예시값</span><span class="dv-legn">${SH.on ? '값을 누르면 고칩니다(담당 파트만). 상태 점을 누르면 확정 · 검토 중 · 가정이 바뀝니다.' : '팀에 로그인하지 않아 이 브라우저에만 저장됩니다.'}</span></p>`;
+    <p class="dv-leg"><span><i class="dv-s s-in"></i>대시보드 값</span><span><b class="dv-re">↻</b>다시 계산 필요</span><span><b class="dv-dash">—</b>비어 있음</span>${SH.on ? '' : '<span class="dv-legn">팀에 로그인하지 않아 이 브라우저에만 저장됩니다.</span>'}</p>`;
 }
 function dashReadHTML(){ const K = dashCalc(), f = (v,d) => v.toFixed(d);
   const row = (l, v, cls) => `<div class="dr-r"><dt>${l}</dt><dd class="${cls||''}">${v}</dd></div>`;
@@ -120,7 +148,7 @@ function dashBipolar(){ const sl = document.querySelector('#dcond input[data-dc=
 function dashPartHTML(){ const P = DASH.P, C = DASH.C;
   const tabs = [['frame','질량 · 무게중심',''],['aero','에어로',''],['goal','차량 목표',''],['pt','파워트레인',''],['brake','제동','도구 3'],['susp','서스 기하','도구 5'],['steer','조향','도구 6'],['spring','스프링·ARB','도구 7']];
   return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+'을 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
-    <div class="dp-body">${DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : (DASH.part==='goal' || DASH.part==='pt') && typeof t2PartHTML==='function' ? t2PartHTML(DASH.part) : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
+    <div class="dp-body">${DASH.part==='frame' && ['L', 'tf', 'tr', 'r_load'].some(dashEx) ? dashNoFig('질량 분포 그림') : DASH.part==='frame' && typeof m1TpPart==='function' ? m1TpPart() : (DASH.part==='goal' || DASH.part==='pt') && dashMissing().length ? dashNoFig('이 파트 그림') : DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : (DASH.part==='goal' || DASH.part==='pt') && typeof t2PartHTML==='function' ? t2PartHTML(DASH.part) : DASH.part==='aero' && dashMissing().length ? dashNoFig('에어로 그림') : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
 }
 function dashFigsHTML(){ const K = dashCalc(), P = DASH.P, C = DASH.C;
   return `<figure class="df-f"><figcaption><b>옆에서</b><span>축하중 · 무게중심 · 압력 중심</span></figcaption>${CARFIG.side(P, C, K)}</figure>
@@ -133,7 +161,7 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
   if(!v.dataset.built){ v.dataset.built = '1';
     v.innerHTML = `<header class="top tl-hero"><span class="eyebrow">우리 팀 설계값</span><h1>팀 대시보드</h1>
 </header>
-      <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span><button type="button" class="btn small" data-dvimp>지난 시즌 값 가져오기</button></div><div id="dvals"></div></section>
+      <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span></div><div id="dvals"></div></section>
       <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
       <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
       <section class="tl-sec" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
@@ -142,77 +170,11 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
 function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
   dashSync(); dashClamp(); const ss = $('#dvseason'); if(ss) ss.textContent = dvSeason() + ' 시즌';
   if(all || which.includes('vals')) $('#dvals').innerHTML = dashValuesHTML();
-  if(all || which.includes('cond')){ $('#dcond').innerHTML = dashCondHTML(); dashBipolar(); }
-  if(all || which.includes('figs')) $('#dfigs').innerHTML = dashFigsHTML();
+  const nf = dashMissing().length > 0;   /* 비어 있는 값이 있으면 그림 · 조건 대신 안내 */
+  if(all || which.includes('cond')){ $('#dcond').innerHTML = nf ? '<h3 class="dc-h">주행 조건</h3><p class="dp-note dv-nofig">비어 있는 설계값이 있어 고를 수 없습니다.</p>' : dashCondHTML(); if(!nf) dashBipolar(); }
+  if(all || which.includes('figs')) $('#dfigs').innerHTML = nf ? dashNoFig('그림') : dashFigsHTML();
   if(all || which.includes('part')) $('#dpart').innerHTML = dashPartHTML(); }
-/* 값 고치기: 누르면 입력칸 → Enter·바깥 누르기로 저장, Esc 취소. 처음 넣는 값은 '검토 중'
-   - 배분(앞 : 뒤, 왼 : 오른): 두 칸, 한쪽을 고치면 다른 쪽이 100 − 값으로 따라 바뀜(둘 다 고칠 수 있음). 저장은 앞 · 왼 값
-   - 무게중심 위치(계산값): 고치면 앞 배분 = 위치 ÷ 휠베이스로 역계산해 저장 */
-document.addEventListener('click', e => {
-  const b = e.target.closest && e.target.closest('.dv-v[data-dk]'); if(!b) return;
-  const k = b.dataset.dk, inv = b.dataset.dinv, sk = inv || k; if(!canEditDv(sk)) return;
-  const P = DASH.P, ex = DASH.ST[sk]==='ex', box = document.createElement('span'); box.className = 'dv-ed';
-  const mk = (v, lab) => { const i = document.createElement('input'); i.type = 'number'; i.step = 'any'; i.className = 'dv-in'; i.value = ex ? '' : v; i.placeholder = String(v); i.setAttribute('aria-label', lab); return i; };
-  let ins;
-  if(DV_RATIO[k]){ const [l1, l2] = DV_RATIO[k], a = mk(+(+P[k]).toFixed(2), l1), c = mk(+(100 - P[k]).toFixed(2), l2), sep = document.createElement('span'); sep.className = 'dv-sep'; sep.textContent = ':';
-    a.addEventListener('input', () => { const x = parseFloat(a.value); c.value = isFinite(x) ? +(100 - x).toFixed(2) : ''; });
-    c.addEventListener('input', () => { const x = parseFloat(c.value); a.value = isFinite(x) ? +(100 - x).toFixed(2) : ''; });
-    box.append(a, sep, c); ins = [a, c]; }
-  else { const v = k==='a_cg' ? +(P.L*P.fr/100).toFixed(0) : P[k], i = mk(v, DK[k].n.replace(/<[^>]+>/g, '') + ' 값 입력'); if(k==='a_cg') i.value = v; box.append(i); ins = [i]; }
-  b.replaceWith(box); ins[0].focus(); ins[0].select();
-  let fin = false; const done = ok => { if(fin || !box.isConnected) return; fin = true; const t = ins[0].value.trim(); let x = parseFloat(t);
-    if(k==='a_cg' && isFinite(x) && P.L > 0) x = +(x/P.L*100).toFixed(3);
-    if(ok && t!=='' && isFinite(x) && !(DASH.ST[sk]!=='ex' && x === P[sk])) dvSave(sk, {v: x}); else dashPaint(['vals']); };
-  ins.forEach(i => i.addEventListener('keydown', ev => { if(ev.key==='Enter'){ ev.preventDefault(); done(true); } else if(ev.key==='Escape'){ done(false); } }));
-  box.addEventListener('focusout', ev => { if(!box.contains(ev.relatedTarget)) done(true); });
-});
-/* 상태 점: 확정 → 검토 중 → 가정 → 확정 */
-document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-dst]'); if(!b) return;
-  const k = b.dataset.dst, nx = {ok:'rev', rev:'asm', asm:'ok', calc:'ok'}[DASH.ST[k]] || 'rev'; dvSave(k, {st: nx}); });
-/* 지난 시즌 값 가져오기: 시즌 → 파트 → 항목(여러 개). 가져온 값은 이번 시즌에 '검토 중', 출처 'OOOO 시즌 값' */
-const DVIMP = {se:'', part:'', sel:new Set()};
-function dvSeasons(){ const se = new Set(); Object.values(DVS).forEach(d => Object.keys((d&&d.s)||{}).forEach(x => se.add(x))); se.delete(dvSeason()); return [...se].sort().reverse(); }
-/* 파트 '전체'는 고칠 수 있는 모든 파트를 파트 배너 순서로 묶어 보여 줌 (시즌 전체 가져오기) */
-const DVI_ALL = '__all';
-const dvImpKeys = () => DKEYS.filter(d => (DVIMP.part===DVI_ALL || d.p===DVIMP.part) && dvEntry(d.k, DVIMP.se) && canEditDv(d.k))
-  .sort((a, b) => PARTS.findIndex(p => p[0]===a.p) - PARTS.findIndex(p => p[0]===b.p));
-function dvImpHTML(){ const ses = dvSeasons(), now = dvSeason();
-  const head = `<div class="dvi-h"><b id="dvi-t">지난 시즌 값 가져오기</b><button type="button" class="dvi-x" data-dvimpx aria-label="닫기">×</button></div>`;
-  if(!ses.length) return head + `<div class="dvi-body"><p class="muted">가져올 지난 시즌 값이 없습니다.</p></div><div class="dvi-foot"><span></span><button type="button" class="btn small" data-dvimpx>닫기</button></div>`;
-  if(!ses.includes(DVIMP.se)) DVIMP.se = ses[0];
-  const parts = PARTS.map(p => p[0]).filter(p => DKEYS.some(d => d.p===p && canEditDv(d.k) && dvEntry(d.k, DVIMP.se)));   /* 파트 순서는 파트 배너와 같게 */
-  if(DVIMP.part!==DVI_ALL && !parts.includes(DVIMP.part)) DVIMP.part = DVI_ALL;
-  const ks = dvImpKeys(), fv = e => e && typeof e.v==='number' ? String(e.v) : '—';
-  let lastP = '';
-  const rows = ks.map(d => { const grp = DVIMP.part===DVI_ALL && d.p!==lastP ? `<tr class="dvi-g"><td></td><td colspan="3">${d.p}</td></tr>` : ''; lastP = d.p;
-    return grp + `<tr><td><input type="checkbox" data-dvik="${d.k}"${DVIMP.sel.has(d.k)?' checked':''} aria-label="${d.n.replace(/<[^>]+>/g,'')}"></td><td>${d.n}${d.u?` <span class="dv-u">${d.u}</span>`:''}</td><td>${fv(dvEntry(d.k))}</td><td><b>${fv(dvEntry(d.k, DVIMP.se))}</b></td></tr>`; }).join('');
-  return head + `<div class="dvi-f"><label>시즌 <select data-dvise>${ses.map(x=>`<option${x===DVIMP.se?' selected':''}>${x}</option>`).join('')}</select></label>
-      <label>파트 <select data-dvipt><option value="${DVI_ALL}"${DVIMP.part===DVI_ALL?' selected':''}>전체 (${parts.length}개 파트)</option>${parts.map(p=>`<option${p===DVIMP.part?' selected':''}>${p}</option>`).join('')}</select></label>
-      <span class="muted dvi-n">${SH.on && !SH.canAdmin ? '담당 파트만 보입니다' : ''}</span></div>
-    <div class="dvi-body">${ks.length ? `<table class="dvi-t"><thead><tr><th><input type="checkbox" data-dviall aria-label="모두 고르기"${ks.every(d=>DVIMP.sel.has(d.k))?' checked':''}></th><th>항목</th><th>지금 (${now})</th><th>${DVIMP.se}</th></tr></thead><tbody>${rows}</tbody></table>`
-      : '<p class="muted">이 파트에 가져올 값이 없습니다.</p>'}</div>
-    <div class="dvi-foot"><span class="muted">가져온 값은 ${now} 시즌에 '검토 중'으로 들어갑니다. ${DVIMP.se} 시즌 기록은 그대로 남습니다.</span><span class="dvi-btns"><button type="button" class="btn small" data-dvimpx>취소</button><button type="button" class="btn small pri" data-dvigo${DVIMP.sel.size?'':' disabled'}>고른 ${DVIMP.sel.size}개 가져오기</button></span></div>`; }
-/* 창: 화면 가운데 떠서, 가져오기·취소·Esc·바깥 누르기로 닫힘 */
-function dvImpEl(){ let m = $('#dvimp'); if(!m){ m = document.createElement('div'); m.id = 'dvimp'; m.className = 'dv-modal'; m.hidden = true;
-    m.innerHTML = '<div class="dvm-box" role="dialog" aria-modal="true" aria-labelledby="dvi-t"></div>'; document.body.appendChild(m); } return m; }
-function dvImpPaint(){ const m = dvImpEl(), b = m.querySelector('.dvi-body'), y = b ? b.scrollTop : 0; m.querySelector('.dvm-box').innerHTML = dvImpHTML(); const b2 = m.querySelector('.dvi-body'); if(b2) b2.scrollTop = y; }
-let DVIMP_RET = null;
-function dvImpOpen(btn){ DVIMP.sel.clear(); DVIMP.part = DVI_ALL; DVIMP_RET = btn || null; const m = dvImpEl(); dvImpPaint(); m.hidden = false; const f = m.querySelector('select, button'); if(f) f.focus(); }
-function dvImpClose(){ const m = $('#dvimp'); if(m) m.hidden = true; if(DVIMP_RET && DVIMP_RET.isConnected) DVIMP_RET.focus(); }
-document.addEventListener('keydown', e => { if(e.key==='Escape'){ const m = $('#dvimp'); if(m && !m.hidden){ e.preventDefault(); dvImpClose(); } } });
-document.addEventListener('click', async e => { const t = e.target.closest && e.target;
-  if(!t) return;
-  if(t.closest('[data-dvimp]')){ dvImpOpen(t.closest('[data-dvimp]')); return; }
-  if(t.closest('[data-dvimpx]') || t.matches('#dvimp')){ dvImpClose(); return; }
-  if(t.closest('[data-dvigo]')){ const se = DVIMP.se, ks = [...DVIMP.sel]; let n = 0;
-    for(const k of ks){ const old = dvEntry(k, se); if(old && typeof old.v==='number' && await dvSave(k, {v: old.v, st:'rev', src: se + ' 시즌 값'})) n++; }
-    DVIMP.sel.clear(); dvImpClose(); toast(`${n}개 값을 ${se} 시즌에서 가져왔습니다.`); return; } });
-document.addEventListener('change', e => { const t = e.target; if(!t.closest || !t.closest('#dvimp')) return;
-  if(t.matches('[data-dvise]')){ DVIMP.se = t.value; DVIMP.sel.clear(); }
-  else if(t.matches('[data-dvipt]')){ DVIMP.part = t.value; DVIMP.sel.clear(); }
-  else if(t.matches('[data-dvik]')){ t.checked ? DVIMP.sel.add(t.dataset.dvik) : DVIMP.sel.delete(t.dataset.dvik); }
-  else if(t.matches('[data-dviall]')){ dvImpKeys().forEach(d => t.checked ? DVIMP.sel.add(d.k) : DVIMP.sel.delete(d.k)); }
-  dvImpPaint(); });
+/* 대시보드는 보기 전용 (2026-11-13 관리자 결정): 값은 도구 [대시보드에 반영]으로만 들어옴. 예전 값 고치기 · 상태 점 바꾸기 · 지난 시즌 값 가져오기는 지움 */
 document.addEventListener('input', e => { const r = e.target.closest && e.target.closest('input[data-dc]'); if(!r) return;
   const k = r.dataset.dc, x = parseFloat(r.value), C = DASH.C;
   if(k==='R') C.R = Math.round(uToR(x, DASH.P.rmin)*10)/10; else C[k] = x;
