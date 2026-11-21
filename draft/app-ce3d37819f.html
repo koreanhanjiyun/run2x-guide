@@ -3281,19 +3281,29 @@ html[data-vt] #partRail{view-transition-name:vt-rail}
 ::view-transition-group(root),::view-transition-new(root){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-out)}
 ::view-transition-old(root){animation-duration:calc(var(--vt-ms,265ms) * .7);animation-timing-function:var(--ease-out)}
 ::view-transition-group(vt-card){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-io);border-radius:var(--r-m);overflow:hidden}
-/* 판 겉면: 칸(옅음) → 가운데에서 흰 판 + 그림자로 짙어짐 → 도착하면 다시 바탕에 녹아듦 (끝에 테두리 · 그림자가 툭 사라지지 않게) */
+/* 판 겉면: 칸(흰색)에서 출발해 화면 바탕색으로 바뀌며 그림자가 생겼다 빠짐. 테두리는 그리지 않음 (도착 화면의 판들과 겹쳐 보이지 않게).
+   도착하면 판 색 = 화면 바탕색이라 끝에 색이 툭 바뀌지 않음 */
 ::view-transition-image-pair(vt-card){isolation:auto;border-radius:var(--r-m);animation:vt-surface var(--vt-ms,265ms) var(--ease-io) both}
-@keyframes vt-surface{0%{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 1px var(--line);}
-  45%,75%{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line-2),0 8px 24px rgba(30,20,50,.18)}
-  100%{background:rgba(255,255,255,0);box-shadow:inset 0 0 0 1px rgba(0,0,0,0),0 8px 24px rgba(30,20,50,0)}}
+@keyframes vt-surface{0%{background:var(--panel);box-shadow:0 0 0 rgba(30,20,50,0)}
+  45%{background:var(--bg);box-shadow:0 12px 32px rgba(30,20,50,.18)}
+  100%{background:var(--bg);box-shadow:0 12px 32px rgba(30,20,50,0)}}
 ::view-transition-old(vt-card),::view-transition-new(vt-card){width:auto;height:auto;mix-blend-mode:normal}   /* 늘이지 않고 원래 크기로 왼쪽 위에 둠 (글자가 찌그러지지 않게) */
-::view-transition-old(vt-card){animation:vt-out calc(var(--vt-ms,265ms) * .25) var(--ease-out) both}
-::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,265ms) * .45) var(--ease-out) calc(var(--vt-ms,265ms) * .55) both}
-html[data-vt="open"]::view-transition-old(root){animation-name:vt-dim}
-html[data-vt="close"]::view-transition-new(root){animation-name:vt-undim}
-@keyframes vt-dim{to{opacity:0;filter:blur(3px)}}
-@keyframes vt-undim{from{opacity:0;filter:blur(3px)}}
-html[data-vt="close"]::view-transition-old(root){animation-name:vt-out}
+::view-transition-old(vt-card){animation:vt-out calc(var(--vt-ms,265ms) * .2) var(--ease-out) both}
+::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,265ms) * .4) var(--ease-out) calc(var(--vt-ms,265ms) * .6) both}
+/* 화면 전체는 겹쳐 더하지 않음 (기본 plus-lighter 는 두 화면이 반씩 겹칠 때 밝게 번쩍임) */
+::view-transition-old(root),::view-transition-new(root){mix-blend-mode:normal}
+/* 열 때: 목록은 판이 덮을 때까지 그대로(살짝 흐리고 어둡게), 새 화면 바탕은 끝에 나타남 → 빈 바탕 깜빡임 없음 */
+html[data-vt="open"]::view-transition-old(root){animation:vt-hold var(--vt-ms,265ms) var(--ease-io) both}
+html[data-vt="open"]::view-transition-new(root){animation:vt-in calc(var(--vt-ms,265ms) * .35) var(--ease-out) calc(var(--vt-ms,265ms) * .65) both}
+@keyframes vt-hold{0%{opacity:1;filter:none}70%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:0;filter:blur(2px) brightness(.9)}}
+/* 목록으로: 화면이 살짝 내려가며 사라지고 목록이 나타남 */
+html[data-vt="back"]::view-transition-old(root){animation:vt-out-down calc(var(--vt-ms,265ms) * .7) var(--ease-out) both;z-index:2}
+html[data-vt="back"]::view-transition-new(root){animation:vt-in var(--vt-ms,265ms) var(--ease-out) both}
+@keyframes vt-out-down{to{opacity:0;transform:translateY(24px)}}
+/* 돌아온 칸 강조 (tabs-nav.js vtMark): 보라 테두리가 잠깐 보였다가 빠짐 */
+.vt-was{position:relative;z-index:1}
+.vt-was::after{content:"";position:absolute;inset:-2px;border-radius:var(--r-m);pointer-events:none;animation:vt-was 1.6s var(--ease-out) both}   /* 칸 자체 그림자는 예전 규칙(!important)이 막아서 겹친 고리로 그림 */
+@keyframes vt-was{0%,40%{box-shadow:0 0 0 2px var(--accent),0 0 0 6px var(--accent-soft)}100%{box-shadow:0 0 0 2px transparent,0 0 0 6px transparent}}
 html[data-vt="next"]::view-transition-old(root){animation-name:vt-out-l}
 html[data-vt="next"]::view-transition-new(root){animation-name:vt-in-r}
 html[data-vt="prev"]::view-transition-old(root){animation-name:vt-out-r}
@@ -3336,10 +3346,10 @@ body{overflow-x:clip}   /* 히어로 바탕이 화면 폭 전체(100vw)라 세�
 #v-start .st-body{position:relative;z-index:1;isolation:isolate;display:flex;flex-direction:column;gap:var(--sp-5);padding-top:var(--sp-7);margin-top:calc(-1 * var(--sp-5))}
 #v-start .st-body::before{content:"";position:absolute;z-index:-1;top:0;bottom:-80px;left:calc(50% - 50vw);width:100vw;background:var(--bg);border-radius:var(--r-m) var(--r-m) 0 0;box-shadow:0 -16px 40px rgba(13,10,20,.35)}
 
-/* 항목 화면 닫기 버튼 (2026-11-22): 오른쪽 위, 내려 읽어도 머리띠 아래에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 닫힘 */
-#ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-end}
-#ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 1px 0 var(--line)}
-#ipage .ip-side{top:calc(var(--tabh) + 60px);max-height:calc(100vh - var(--tabh) - 76px)}   /* 닫기 버튼 아래에서 멈춤 */
+/* 항목 화면 [‹ 목록으로] (2026-11-22): 제목 위 경로 줄 왼쪽 (시선이 머무는 제목 쪽). 내려 읽으면 머리띠 밑 왼쪽에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 돌아감 */
+#ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-start}
+#ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 2px 8px rgba(30,20,50,.12);transform:translateY(-6px)}
+#ipage .ip-top .ip-path{padding-left:112px}
 /* ============================================================
    탭별 글자 네 가지 (2026-11-22, docs/DESIGN.md 3절 '한 화면 안 글자 크기')
    화면 제목 24 · 칸 제목 15 (굵게) · 본문 · 표 · 버튼 · 링크 · 그림 글자 13 · 보조 11.
@@ -18016,9 +18026,10 @@ const navState = () => ({tab:TAB, sys:(typeof START!=='undefined'?START.sys:''),
 function pushHist(){ try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
 /* 화면 전환 (View Transitions, 2026-11-22, docs/DESIGN.md 5절)
    - 머리띠 · 목차 · 파트 패널은 전환 동안 따로 이름을 붙여 제자리에 둠 (style.css html[data-vt]). 나머지 화면(root)만 움직임
-   - kind: open 개요 → 항목 / close 항목 → 개요 / next · prev 이전 · 다음 항목 / fade 탭 바꿈
-   - from · to: 이어 줄 상자 (vt-card). 열 때 = 누른 항목 칸 → 항목 화면 판, 닫을 때 = 그 반대. 둘 다 화면 안에 보일 때만 이음
-     칸이 커지며 흰 판이 되고(테두리 · 그림자), 옛 글은 먼저 사라지고 새 내용은 판이 거의 다 커진 뒤 나타남 (컨테이너 변형)
+   - kind: open 칸 → 화면 (설계 탭 항목 칸 · 시작 탭 카드) / back 화면 → 목록 / next · prev 이전 · 다음 / fade 탭 바꿈
+   - open 의 from · to: 누른 칸 → 새 화면 (vt-card). 칸이 커지며 화면 바탕색 판이 되고 그림자가 생겼다 빠짐. 옛 글이 다 사라진 뒤 새 내용이 나타남.
+     목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
+   - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 700 ms
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
@@ -18030,7 +18041,7 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', motionMs(40)+'ms');
+  let t2=null; R.style.setProperty('--vt-ms', motionMs(kind==='back'?160:40)+'ms');
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
@@ -18040,6 +18051,11 @@ function vtGo(kind, fn, from, to){
       R.style.setProperty('--vt-ms', Math.min(700, motionMs(d))+'ms'); } });
   t.finished.catch(()=>{}).then(()=>{ if(t2) t2.style.viewTransitionName=''; if(R.dataset.vt===kind) delete R.dataset.vt; });
 }
+/* 돌아온 칸 강조: 화면 가운데로 옮기고 보라 테두리를 잠깐 (style.css .vt-was) */
+function vtMark(el, center){ if(!el) return; if(center){ const r=el.getBoundingClientRect(); window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); }
+  el.classList.remove('vt-was'); void el.offsetWidth; el.classList.add('vt-was'); setTimeout(()=>el.classList.remove('vt-was'), 1600); }
+/* 시작 탭 하위 화면 열쇠 → 그 화면을 여는 카드 */
+const stCard = k => !k ? null : /^goal:/.test(k) ? $(`#v-start .st-body [data-goalgo="${k.slice(5)}"]`) : $(`#v-start .st-body [data-sysgo="${k}"]`);
 /* 뒤로 · 앞으로 가기: 다른 처리보다 먼저 받아, 같은 이벤트를 전환 안에서 다시 보냄. 스크롤 위치도 그 안에서 바로 되살려 도착 칸을 잴 수 있게 함 */
 window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   if(!h || !h.tab || !document.startViewTransition || (typeof TR!=='undefined' && TR) || (typeof WB!=='undefined' && WB.id)) return;
@@ -18047,14 +18063,17 @@ window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   if(h.tab===TAB && TAB==='steps'){
     if(cur && h.ip && cur!==h.ip){ const o=ipOrder(); kind = o.indexOf(h.ip)<o.indexOf(cur) ? 'prev' : 'next'; }
     else if(!cur && h.ip){ kind='open'; from=()=>$('#it-'+h.ip); to=()=>$('#ipage'); }
-    else if(cur && !h.ip){ kind='close'; from=()=>$('#ipage'); to=()=>$('#it-'+cur); }
+    else if(cur && !h.ip) kind='back';
     else kind=null; }
+  else if(h.tab===TAB && TAB==='start' && (h.sys||'')!==(START.sys||'')){ const a=START.sys||'', z=h.sys||'';
+    if(!a){ kind='open'; from=()=>stCard(z); to=()=>$('#v-start'); } else if(!z) kind='back'; else kind='fade'; }
   else if(h.tab===TAB) kind=null;
+  const was = kind==='back' ? (TAB==='steps' ? ()=>$('#it-'+cur) : (k=>()=>stCard(k))(START.sys)) : null;
   if(!kind) return;
   e.stopImmediatePropagation();
   vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); window.scrollTo({top:h.y||0, behavior:'instant'});
-    /* 닫을 때 되살린 위치에서 그 항목 칸이 머리 띠 밑이나 화면 끝에 걸리면 가운데로 (판이 줄어들 자리가 보이게) */
-    const row=kind==='close' && $('#it-'+cur); if(row){ const r=row.getBoundingClientRect(); if(r.top<tabH()+80 || r.bottom>innerHeight-40) window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); } }, from, to);
+    /* 목록으로 돌아오면 보던 칸을 가운데에 두고 잠깐 강조 */
+    if(was) vtMark(was(), true); }, from, to);
 });
 window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true); try{ history.replaceState(h, '', location.hash); }catch(_){}   /* showTab 이 지운 이 칸의 상태를 되살림 (앞으로가기에 필요) */
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
@@ -19451,16 +19470,16 @@ function renderStart(sys){ const v=$('#v-start'); if(!v) return;
   try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy').forEach(x=>annotate(x)); }catch(e){}
   if(key==='_home') heroIntro(v);
 }
-/* 히어로 등장 연출 (2026-11-22, 시작 탭 첫 화면을 열 때마다 · 약 3.4 초)
+/* 히어로 등장 연출 (2026-11-22, 페이지를 열고 시작 탭 첫 화면을 처음 볼 때 한 번 · 약 3.4 초)
    0 ~ 0.9 s 사진 초점이 맞음 → 0.5 s · 0.9 s 왼쪽 어두운 쪽 가운데에 큰 제목이 두 덩이로 올라옴 → 1.6 ~ 2.6 s 제목이 작아지며 제자리(왼쪽)로
    → 2.5 s 작은 제목 · 밑줄이 그어짐 → 2.9 s 소개 문장. [둘러보기 ↓] 는 처음부터 보임.
    누르기 · 휠 · 키 · 스크롤이 있으면 바로 마지막 모습으로 건너뜀. 사용법 진행 중에는 연출하지 않음.
    fill 은 backwards 만: 끝나면 CSS 상태로 돌아가 스크롤에 따른 어두워짐(--hp)이 그대로 적용됨 */
-let HERO_AN=[];
+let HERO_AN=[], HERO_DONE=false;   /* 연출은 페이지를 열 때(접속 · 새로고침) 한 번만. 같은 접속 안에서 다시 오면 끝난 모습 */
 function heroSkip(){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HERO_AN=[]; }
-function heroIntro(v){ heroSkip(); const h=v.querySelector('.st-hero'); if(!h || (typeof TR!=='undefined' && TR)) return;
+function heroIntro(v){ heroSkip(); const h=v.querySelector('.st-hero'); if(!h || HERO_DONE || (typeof TR!=='undefined' && TR)) return;
   const t1=h.querySelector('h1'), ws=[...t1.querySelectorAll('.sh-w')], main=h.querySelector('.sh-main');
-  const hr=h.getBoundingClientRect(), r=t1.getBoundingClientRect(); if(!hr.width || !r.width) return;
+  const hr=h.getBoundingClientRect(), r=t1.getBoundingClientRect(); if(!hr.width || !r.width) return; HERO_DONE=true;
   const S=1.6, dx=(hr.left+hr.width*.3)-(r.left+r.width/2)   /* 큰 제목은 차(오른쪽)와 겹치지 않게 왼쪽 어두운 쪽 가운데(폭의 30 %) */, dy=(hr.top+Math.min(hr.height,innerHeight-hr.top)/2)-(r.top+r.height/2);
   const OUT='cubic-bezier(.16,1,.3,1)', IO='cubic-bezier(.45,0,.25,1)', big=`translate(${dx}px,${dy}px) scale(${S})`;
   const A=(el,k,o)=>{ if(el) HERO_AN.push(el.animate(k,{fill:'backwards',easing:OUT,...o})); };
@@ -19529,6 +19548,13 @@ function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s)
     ${tech.length?`<section class="sp-tech"><h2>F1이 시도한 ${s.t} 기술 <span class="muted">${tech.length}가지 · 옆으로 넘겨 보십시오</span></h2>${techRail(tech)}</section>`:''}
     <nav class="sp-nav sp-foot"><button type="button" class="btn small" data-sysgo="">← 모든 시스템</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-sysgo="${prev.p}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-sysgo="${next.p}">${next.t} ›</button>`:''}</span></nav>`;
 }
+/* 시작 탭 화면 바꾸기 + 전환 (2026-11-22): 첫 화면 카드 → 그 화면은 카드가 커지며(open), 하위 화면 → 첫 화면은 내려가며 사라지고 보던 카드 강조(back),
+   하위 화면끼리(‹ ›)는 옆으로 밂. 다른 탭에서 바로 여는 경우(openSys · openGoalPage 직접 호출)는 전환 없이 그대로 */
+function stGo(key, src, fn){ const a=(TAB==='start' && START.sys) || '';
+  if(TAB!=='start'){ fn(); return; }
+  if(!a && key){ vtGo('open', fn, ()=>src, ()=>$('#v-start')); return; }
+  if(a && !key){ const was=a; vtGo('back', ()=>{ fn(); vtMark(stCard(was), true); }); return; }
+  vtGo(src && /^\s*‹/.test(src.textContent) ? 'prev' : 'next', fn); }
 function openSys(p, part){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart(p||''); window.scrollTo({top:0, behavior:'instant'});
   if(part) requestAnimationFrame(()=>{ const el=document.getElementById('cp-'+part); if(el){ const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:el.getBoundingClientRect().top+scrollY-tabh-12, behavior:'instant'}); markHere(el); } }); }
 
@@ -19541,9 +19567,9 @@ ITEM_HOOKS.push((d,b)=>{ const txt=BG_ITEM[d.dataset.item]; if(!txt || b.querySe
 document.addEventListener('click', e=>{
   if(e.target.closest('[data-shdown]')){ e.preventDefault(); heroSkip(); const n=$('#v-start .st-body'); if(n) smoothScrollTo(()=>n.getBoundingClientRect().top+scrollY-tabH()); return; }   /* 연출 기다리지 않고 바로 내려감: 판이 히어로를 덮으며 올라옴 */
   const t=e.target.closest('[data-tabgo]'); if(t){ e.preventDefault(); pushHist(); showTab(t.dataset.tabgo); return; }
-  const gg=e.target.closest('[data-goalgo]'); if(gg){ e.preventDefault(); openGoalPage(+gg.dataset.goalgo); return; }
+  const gg=e.target.closest('[data-goalgo]'); if(gg){ e.preventDefault(); stGo('goal:'+gg.dataset.goalgo, gg, ()=>openGoalPage(+gg.dataset.goalgo)); return; }
   const fr=e.target.closest('.f1r-b'); if(fr){ e.preventDefault(); const l=fr.parentElement.querySelector('.f1t-row'); const xs=[...l.querySelectorAll('.f1t')].map(c=>c.offsetLeft-l.firstElementChild.offsetLeft); const x=l.scrollLeft, nx=fr.classList.contains('f1r-next'); let t=nx ? xs.find(v=>v>x+4) : [...xs].reverse().find(v=>v<x-4); if(t==null) t = nx ? l.scrollWidth : 0; animScrollLeft(l, t); return; }   // 버튼을 누를 때만 카드 왼쪽에 맞춤 (끌기는 놓은 자리 그대로)
-  const y=e.target.closest('[data-sysgo]'); if(y){ e.preventDefault(); const p=y.dataset.sysgo; if(p==='공통' && !compOf('공통').length){ openSys('공통'); return; } openSys(p); return; }
+  const y=e.target.closest('[data-sysgo]'); if(y){ e.preventDefault(); const p=y.dataset.sysgo; stGo(p, y, ()=>openSys(p)); return; }
   const c=e.target.closest('[data-cpgo]'); if(c){ e.preventDefault(); const el=document.getElementById('cp-'+c.dataset.cpgo); if(el){ const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; smoothScrollTo(()=>el.getBoundingClientRect().top+scrollY-tabh-12, ()=>markHere(el)); } return; }
   const s=e.target.closest('[data-stepgo]'); if(s){ e.preventDefault(); openStep(s.dataset.stepgo); return; }
 });
@@ -30621,7 +30647,7 @@ const TOUR = {
   ['#st-P3-1>summary','단계 줄','단계를 펼치면 항목 줄이 나오고, 항목 줄을 누르면 항목 화면이 열립니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
   ['#it-s_scrub>summary','항목 줄',`항목 이름 아래에 핵심 한 줄이 있어, 단계를 펼쳐 내려 읽기만 해도 전체 흐름이 보입니다. 오른쪽에 ${B('b-card','상세')} · 확정되는 것 · 팀 진행 상태(<span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span>) · [연결도] 버튼이 있습니다. 줄을 누르면 본문이 그 항목 화면으로 바뀝니다.`,{tab:'steps',vm:'full',fx:'doing',reveal:'#it-s_scrub>summary',prep:()=>{ if(typeof IPAGE!=='undefined' && IPAGE) ipClose(); const st=$('#st-P3-1'); if(st) st.open=true; }}],
   ['#ipage','항목 화면','항목을 누르면 머리띠 · 목차 · 오른쪽 패널은 그대로 두고 본문만 이 화면으로 바뀝니다. 위에 핵심, 왼쪽에 읽을 설명, 오른쪽에 우리 팀 숫자와 이동이 있습니다. 브라우저 뒤로 가기로 목록에 돌아갑니다.',{...SC,pic:PIC.card}],
-  ['#ipage .ip-path','경로','설계 › 단계 › 항목입니다. 오른쪽 위 [✕ 닫기]나 Esc 키로 닫으면 보던 항목 칸으로 돌아가고, [설계]나 단계를 누르면 목록의 그 위치로 갑니다. 왼쪽 목차에는 지금 단계의 항목들이 펼쳐져 있어 바로 옮겨 갈 수 있습니다.',{...SC,also:'#toc .toc-its'}],
+  ['#ipage .ip-path','경로','설계 › 단계 › 항목입니다. 왼쪽 [‹ 목록으로]나 Esc 키로 보던 항목 칸으로 돌아가고, [설계]나 단계를 누르면 목록의 그 위치로 갑니다. 왼쪽 목차에는 지금 단계의 항목들이 펼쳐져 있어 바로 옮겨 갈 수 있습니다.',{...SC,also:'#toc .toc-its'}],
   ['#ipage .stbox','진행 상태','담당 팀장·파트장과 회장에게만 보이는 칸입니다. 예정·진행 중·완료·제외를 바로 누르면 "저장 전"으로 표시되고, 아래 막대의 [모두 저장]을 눌러야 팀에 저장됩니다. 저장한 상태는 목록의 항목 줄 오른쪽에 표시됩니다.',{...SC}],
   ['#ipage .gpath','왜 하나','이 항목이 어떤 목표로 이어지는지 보여 줍니다. 누르면 시작 탭의 그 목표 화면으로 갑니다.',{...SC}],
   ['#ipage .actbox','핵심','이 항목에서 정할 것, 즉 설계 결론입니다. 항목을 열면 이것부터 읽으십시오.',{...SC}],
@@ -30955,7 +30981,7 @@ function ipRender(id){ const it=IT[id], st=STEPS[SIDX[it.s]], host=ipHost();
   const ord=ipOrder(), k=ord.indexOf(id), prev=ord[k-1], next=ord[k+1];
   const ins=EDGES.filter(e=>e[1]===id), outs=EDGES.filter(e=>e[0]===id);
   const link = x => `<button type="button" class="lnk" data-goto="${x}">${IT[x].n}</button>`;
-  host.innerHTML = `<div class="ip-closebar"><button type="button" class="btn small ip-close" data-ipclose="1" title="항목 화면 닫기 (Esc)">✕ 닫기</button></div><div class="ip-top"><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav>
+  host.innerHTML = `<div class="ip-closebar"><button type="button" class="btn small ip-close" data-ipclose="1" title="목록으로 돌아가기 (Esc)">‹ 목록으로</button></div><div class="ip-top"><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav>
       <h1 class="ip-h">${it.n}</h1><div class="ip-meta">${chip(it.p)}${it.c?'<span class="badge b-card">상세</span>':''}<button class="btn small gbtn" data-graph="${id}">연결도에서 보기</button></div></div>
     <div class="ipage" data-item="${id}"><div class="dbody" data-lazy="1"></div></div>
     <div class="ip-cols"><div class="ip-main"></div><aside class="ip-side"></aside></div>`;
@@ -31009,14 +31035,13 @@ document.addEventListener('click', e=>{
   if(e.target.closest('[data-ipback],[data-ipclose]')){ e.preventDefault(); if(IPAGE) ipBackTo(IT[IPAGE].s); return; }
   const ps=e.target.closest('[data-ipstep]'); if(ps){ e.preventDefault(); ipBackTo(ps.dataset.ipstep); return; }
 }, true);
-/* 항목 화면 → 개요 (닫기 · Esc · 경로 · 목차 단계 · 설계 탭 다시 누름).
-   같은 단계로 돌아가면 보던 항목 칸을 화면 가운데에 두고, 판이 그 칸으로 줄어듦. 다른 단계면 그 단계 머리로 */
+/* 항목 화면 → 개요 ([‹ 목록으로] · Esc · 경로 · 목차 단계 · 설계 탭 다시 누름).
+   항목 화면이 살짝 내려가며 사라지고 개요가 나타남. 같은 단계로 돌아가면 보던 항목 칸을 화면 가운데에 두고 잠깐 강조 (vtMark). 다른 단계면 그 단계 머리로 */
 function ipBackTo(sid){ const cur=IPAGE, same=cur && IT[cur].s===sid;
-  vtGo('close', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(!st) return; st.open=true;
+  vtGo('back', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(!st) return; st.open=true;
       const row=same && $('#it-'+cur);
-      if(row){ const r=row.getBoundingClientRect(); window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); markHere(row); }
-      else { window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } },
-    ()=>$('#ipage'), ()=>same && $('#it-'+cur)); }
+      if(row) vtMark(row, true);
+      else { window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } }); }
 document.addEventListener('keydown', e=>{ if(e.key!=='Escape' || !IPAGE || TAB!=='steps' || e.defaultPrevented) return;
   if((typeof TR!=='undefined' && TR) || document.querySelector('dialog[open]')) return;
   const a=document.activeElement; if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA' || a.isContentEditable)) return;
