@@ -29,22 +29,33 @@ function renderStart(sys){ const v=$('#v-start'); if(!v) return;
   const gm = /^goal:(\d+)$/.exec(START.sys||''); const gi = gm && GOALS[+gm[1]] ? +gm[1] : -1;
   const s = gi<0 && START.sys && BG_SYS.find(x=>x.p===START.sys);
   const key = gi>=0 ? 'goal:'+gi : (s?s.p:'_home');
-  if(v.dataset.done===key){ if(key==='_home') heroIntro(v); return; } v.dataset.done = key;
+  if(v.dataset.done===key){ heroSync(); if(key==='_home') heroIntro(v); return; } v.dataset.done = key;
   v.innerHTML = gi>=0 ? goalPage(gi) : s ? sysPage(s) : homePage();
   if(gi>=0) v.querySelectorAll('.gp-subs > details.item').forEach((d,di)=>{ d.id='g-'+gi+'-'+di; });
   if(s && typeof loadCompFigs==='function' && COMP_FIG_STATE!==2) loadCompFigs(()=>{ if(START.sys===s.p){ const y=scrollY; delete v.dataset.done; renderStart(); window.scrollTo({top:y,behavior:'instant'}); } });
   try{ renderMath(v); }catch(e){}
   try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy').forEach(x=>annotate(x)); }catch(e){}
-  if(key==='_home') heroIntro(v);
+  heroSync(); if(key==='_home') heroIntro(v);
 }
 /* 히어로 등장 연출 (2026-11-22, 페이지를 열고 시작 탭 첫 화면을 처음 볼 때 한 번 · 약 3.4 초)
    0 ~ 0.9 s 사진 초점이 맞음 → 0.5 s · 0.9 s 왼쪽 어두운 쪽 가운데에 큰 제목이 두 덩이로 올라옴 → 1.6 ~ 2.6 s 제목이 작아지며 제자리(왼쪽)로
    → 2.5 s 작은 제목 · 밑줄이 그어짐 → 2.9 s 소개 문장. [둘러보기 ↓] 는 처음부터 보임.
    누르기 · 휠 · 키 · 스크롤이 있으면 바로 마지막 모습으로 건너뜀. 사용법 진행 중에는 연출하지 않음.
-   fill 은 backwards 만: 끝나면 CSS 상태로 돌아가 스크롤에 따른 어두워짐(--hp)이 그대로 적용됨 */
-let HERO_AN=[], HERO_DONE=false;   /* 연출은 페이지를 열 때(접속 · 새로고침) 한 번만. 같은 접속 안에서 다시 오면 끝난 모습 */
-function heroSkip(){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HERO_AN=[]; }
-function heroIntro(v){ heroSkip(); const h=v.querySelector('.st-hero'); if(!h || HERO_DONE || (typeof TR!=='undefined' && TR)) return;
+   fill 은 backwards 만: 끝나면 CSS 상태로 돌아감. [둘러보기]는 연출 끝에 튀어나오며 나타나고 그 전에는 누를 수 없음 */
+let HERO_AN=[], HERO_DONE=false, HERO_PASSED=false;   /* 연출 · 히어로는 페이지를 열 때(접속 · 새로고침) 한 번만. [둘러보기]를 누른 뒤 같은 접속 안에서는 본문만 */
+function heroSkip(){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HERO_AN=[]; heroReady(); }
+/* [둘러보기]는 연출이 끝나야 누를 수 있음 (끝에 튀어나오며 나타남) */
+function heroReady(){ const d=document.querySelector('#v-start .sh-down'); if(d) d.disabled=false; }
+/* 히어로 화면과 본문은 따로: 히어로가 보이는 동안 페이지 스크롤을 막고, 넘어간 뒤에는 히어로를 빼서 위로 올려도 다시 나오지 않음 */
+function heroSync(){ const v=document.querySelector('#v-start'); if(!v) return; v.classList.toggle('hero-passed', HERO_PASSED);
+  const on = TAB==='start' && !START.sys && !HERO_PASSED && !!v.querySelector('.st-hero');
+  document.documentElement.classList.toggle('hero-lock', on); if(on && scrollY) window.scrollTo({top:0, behavior:'instant'}); }
+/* 히어로 → 본문: 히어로가 위로 밀려 올라가고 본문이 아래에서 올라옴 (vtGo 'hero'). 사용법 · 다른 코드에서는 바로 */
+function heroPass(animate){ if(HERO_PASSED){ heroSync(); return; } heroSkip();
+  const go=()=>{ HERO_PASSED=true; heroSync(); window.scrollTo({top:0, behavior:'instant'}); };
+  if(animate) vtGo('hero', go); else go(); }
+function heroIntro(v){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HERO_AN=[]; const h=v.querySelector('.st-hero');
+  if(!h || HERO_PASSED) return; if(HERO_DONE || (typeof TR!=='undefined' && TR)){ heroReady(); return; }
   const t1=h.querySelector('h1'), ws=[...t1.querySelectorAll('.sh-w')], main=h.querySelector('.sh-main');
   const hr=h.getBoundingClientRect(), r=t1.getBoundingClientRect(); if(!hr.width || !r.width) return; HERO_DONE=true;
   const S=1.6, dx=(hr.left+hr.width*.3)-(r.left+r.width/2)   /* 큰 제목은 차(오른쪽)와 겹치지 않게 왼쪽 어두운 쪽 가운데(폭의 30 %) */, dy=(hr.top+Math.min(hr.height,innerHeight-hr.top)/2)-(r.top+r.height/2);
@@ -56,12 +67,14 @@ function heroIntro(v){ heroSkip(); const h=v.querySelector('.st-hero'); if(!h ||
   A(h.querySelector('.eyebrow'),[{opacity:0},{opacity:1}],{duration:400,delay:2500});
   A(h.querySelector('.sh-line'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:600,delay:2500,easing:IO});
   A(h.querySelector('.lede'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:500,delay:2900});
-  Promise.all(HERO_AN.map(a=>a.finished)).then(()=>{ HERO_AN=[]; }).catch(()=>{}); }
-['pointerdown','wheel','keydown','touchstart'].forEach(ev=>window.addEventListener(ev, ()=>{ if(HERO_AN.length) heroSkip(); }, {passive:true, capture:true}));
-/* 스크롤하면 내용 판이 히어로를 덮으며 올라오고, 그만큼 히어로가 어두워짐 (--hp: 0 → 1) */
-{ let q=0; window.addEventListener('scroll', ()=>{ if(q) return; q=requestAnimationFrame(()=>{ q=0; if(typeof TAB==='undefined' || TAB!=='start') return;
-    const h=document.querySelector('#v-start .st-hero'); if(!h) return; if(HERO_AN.length && scrollY>4) heroSkip();
-    h.style.setProperty('--hp', Math.min(1, Math.max(0, scrollY/(h.offsetHeight||1))).toFixed(3)); }); }, {passive:true}); }
+  /* [둘러보기]: 연출 끝에 작게 나타나 한 번 튀었다가 제자리 (관리자 요청 2026-11-22: 바운스는 이 버튼만 예외) */
+  const dn=h.querySelector('.sh-down'); if(dn){ dn.disabled=true;
+    HERO_AN.push(dn.animate([{opacity:0,transform:'translateX(-50%) scale(.6)'},{opacity:1,transform:'translateX(-50%) scale(1.12)',offset:.6},{opacity:1,transform:'translateX(-50%) scale(.96)',offset:.8},{opacity:1,transform:'translateX(-50%) scale(1)'}],{duration:520,delay:3400,easing:'ease-out',fill:'backwards'})); }
+  Promise.all(HERO_AN.map(a=>a.finished)).then(()=>{ HERO_AN=[]; heroReady(); }).catch(()=>{}); }
+/* 연출 중 누르기 · 키는 바로 끝 모습으로 (휠은 건너뛰지 않음: 히어로에서는 스크롤이 없으므로 실수로 넘기지 않게) */
+['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev, e=>{ if(HERO_AN.length && !(e.target.closest && e.target.closest('.sh-down'))) heroSkip(); }, {passive:true, capture:true}));
+/* 탭을 바꿀 때마다 스크롤 잠금 맞춤 */
+{ const _st=showTab; showTab=function(){ const r=_st.apply(this, arguments); try{ heroSync(); }catch(e){} return r; }; }
 function sysCard(s){ const n=compOf(s.p).length;
   return `<button type="button" class="st-card" data-sysgo="${s.p}"><span class="st-ch"><span class="dot" style="background:${pc(s.p)}"></span><b>${s.t}</b></span>
     <span class="st-cw">${esc(firstSent(s.why))}</span><span class="st-cm">${n?`부품 ${n}개`:'목표와 연결'} ›</span></button>`; }
@@ -71,14 +84,14 @@ function goalCards(){ if(typeof GOALS==='undefined') return '';
       <span class="st-cw">${esc(m.s)}</span><span class="st-cm">세부 목표 ${m.subs.length}개 ›</span></button>`).join('')}</div></section>`; }
 function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
   /* 히어로 (2026-11-22, docs/DESIGN.md 6절): 첫 화면 높이 · 화면 폭 전체에 REF4 주행 사진(차만 선명, 주변 · 운전자 바이저는 흐리게).
-     히어로는 제자리에 붙어 있고(sticky) 아래 내용 판(.st-body)이 덮으며 올라옴. 주 버튼은 [둘러보기 ↓] 하나(처음부터 보임, 누르면 바로 내려감). 등장 연출은 heroIntro */
+     히어로와 본문(.st-body)은 따로 보임(스크롤로 이어지지 않음). 주 버튼 [둘러보기 ↓] 하나: 연출이 끝나면 나타나고, 누르면 본문으로 넘어감(heroPass). 등장 연출은 heroIntro */
   return `<header class="top st-hero">
       <div class="sh-bg" aria-hidden="true"><img class="sh-blur" src="img/hero-ref4.webp" alt=""><img class="sh-main" src="img/hero-ref4.webp" alt="" width="2400" height="1600" decoding="async" fetchpriority="high"></div>
       <div class="sh-txt"><span class="eyebrow">처음 왔다면 여기부터</span>
         <h1><span class="sh-w">더 빠른 차를</span> <span class="sh-w">만드는 일</span></h1>
         <i class="sh-line" aria-hidden="true"></i>
         <p class="lede">${BG_INTRO}</p></div>
-      <button type="button" class="btn pri sh-down" data-shdown="1">둘러보기<span aria-hidden="true">↓</span></button>
+      <button type="button" class="btn pri sh-down" data-shdown="1"${HERO_DONE?"":" disabled"}>둘러보기<span aria-hidden="true">↓</span></button>
     </header>
     <div class="st-body">
     ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
@@ -132,7 +145,7 @@ ITEM_HOOKS.push((d,b)=>{ const txt=BG_ITEM[d.dataset.item]; if(!txt || b.querySe
 { document.addEventListener('toggle', e=>{ if(e.target.classList && e.target.classList.contains('bgbox')){ SETP('bgopen', e.target.open?'1':'0'); document.querySelectorAll('.bgbox').forEach(o=>{ if(o!==e.target && o.open!==e.target.open) o.open=e.target.open; }); } }, true); }
 
 document.addEventListener('click', e=>{
-  if(e.target.closest('[data-shdown]')){ e.preventDefault(); heroSkip(); const n=$('#v-start .st-body'); if(n) smoothScrollTo(()=>n.getBoundingClientRect().top+scrollY-tabH()); return; }   /* 연출 기다리지 않고 바로 내려감: 판이 히어로를 덮으며 올라옴 */
+  if(e.target.closest('[data-shdown]')){ e.preventDefault(); heroPass(true); return; }
   const t=e.target.closest('[data-tabgo]'); if(t){ e.preventDefault(); pushHist(); showTab(t.dataset.tabgo); return; }
   const gg=e.target.closest('[data-goalgo]'); if(gg){ e.preventDefault(); stGo('goal:'+gg.dataset.goalgo, gg, ()=>openGoalPage(+gg.dataset.goalgo)); return; }
   const fr=e.target.closest('.f1r-b'); if(fr){ e.preventDefault(); const l=fr.parentElement.querySelector('.f1t-row'); const xs=[...l.querySelectorAll('.f1t')].map(c=>c.offsetLeft-l.firstElementChild.offsetLeft); const x=l.scrollLeft, nx=fr.classList.contains('f1r-next'); let t=nx ? xs.find(v=>v>x+4) : [...xs].reverse().find(v=>v<x-4); if(t==null) t = nx ? l.scrollWidth : 0; animScrollLeft(l, t); return; }   // 버튼을 누를 때만 카드 왼쪽에 맞춤 (끌기는 놓은 자리 그대로)

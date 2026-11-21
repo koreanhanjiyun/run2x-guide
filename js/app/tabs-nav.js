@@ -34,7 +34,7 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', motionMs(kind==='back'?160:40)+'ms');
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 700 : motionMs(kind==='back'?160:40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */

@@ -3296,11 +3296,11 @@ html[data-vt="prev"]::view-transition-new(root){animation-name:vt-in-l}
    시작 탭 히어로 (2026-11-22, start.js homePage · heroIntro · docs/DESIGN.md 6절)
    - 화면 폭 전체(본문 폭 밖까지), 첫 화면 높이. 사진 img/hero-ref4.webp = REF4 주행 사진에서 차만 선명하게, 주변 · 운전자 바이저는 흐리게 처리
    - 바탕: 같은 사진을 크게 흐리고 어둡게(.sh-blur, 유리 느낌) → 그 위 오른쪽에 높이에 맞춘 사진(.sh-main), 왼쪽 끝은 바탕으로 흐려 이음
-   - 히어로는 머리띠 밑에 붙어 있고(sticky), 아래 내용 판(.st-body)이 둥근 윗모서리로 덮으며 올라옴. 덮이는 만큼(--hp) 히어로가 어두워지고 글이 흐려짐
+   - 히어로와 본문(.st-body)은 따로 보임. 히어로 동안 스크롤 잠금, [둘러보기]로 넘어감
    - 글은 왼쪽(흰색): 작은 제목 · 첫 문장 32 · 보라 밑줄 · 소개 15. 주 버튼 [둘러보기 ↓] 는 아래 가운데
    ============================================================ */
 body{overflow-x:clip}   /* 히어로 바탕이 화면 폭 전체(100vw)라 세로 스크롤 막대 폭만큼 넘치는 것을 자름 (clip 은 sticky 를 깨지 않음) */
-#v-start .st-hero{--hp:0;position:sticky;top:var(--tabh);z-index:0;isolation:isolate;display:grid;grid-template-columns:520px minmax(0,1fr);align-items:center;
+#v-start .st-hero{position:relative;z-index:0;isolation:isolate;display:grid;grid-template-columns:520px minmax(0,1fr);align-items:center;
   min-height:calc(100vh - var(--tabh));margin:-24px 0 0;padding:var(--sp-7) 0;color:#fff}
 #v-start .st-hero .sh-bg{position:absolute;z-index:-1;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;overflow:hidden;background:#15121c}
 #v-start .st-hero .sh-blur{position:absolute;inset:-48px;width:calc(100% + 96px);height:calc(100% + 96px);object-fit:cover;filter:blur(28px) brightness(.5) saturate(1.2)}
@@ -3308,20 +3308,27 @@ body{overflow-x:clip}   /* 히어로 바탕이 화면 폭 전체(100vw)라 세�
   -webkit-mask-image:linear-gradient(to right,transparent 0,#000 28%);mask-image:linear-gradient(to right,transparent 0,#000 28%)}   /* 높이에 맞춰 오른쪽에 둠 → 차가 글과 겹치지 않음. 왼쪽 끝은 흐린 바탕으로 이음 */
 #v-start .st-hero .sh-bg::after{content:"";position:absolute;inset:0;
   background:linear-gradient(to right,rgba(18,12,28,.55) 0,rgba(18,12,28,.35) 35%,rgba(18,12,28,0) 55%),linear-gradient(to top,rgba(18,12,28,.55) 0,rgba(18,12,28,0) 22%)}
-#v-start .st-hero .sh-bg::before{content:"";position:absolute;inset:0;z-index:1;background:#0d0a14;opacity:calc(var(--hp) * .8);pointer-events:none}   /* 덮일수록 어두워짐 */
-#v-start .st-hero .sh-txt{grid-column:1;display:flex;flex-direction:column;gap:var(--sp-4);opacity:calc(1 - var(--hp) * 1.4);transform:translateY(calc(var(--hp) * -48px))}
+#v-start .st-hero .sh-txt{grid-column:1;display:flex;flex-direction:column;gap:var(--sp-4)}
 #v-start .st-hero .eyebrow{color:#cdb8ec}
 #v-start .st-hero h1{font-size:var(--fs-3xl);font-weight:800;line-height:1.2;margin:0;color:#fff;transform-origin:center;width:fit-content}
 #v-start .st-hero h1 .sh-w{display:inline-block}
 #v-start .st-hero .sh-line{display:block;height:3px;width:96px;background:var(--accent);border-radius:var(--r-pill);transform-origin:left center}
 #v-start .st-hero .lede{font-size:var(--fs-m);line-height:1.7;color:rgba(255,255,255,.86);margin:0;max-width:none}
-#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:var(--sp-6);transform:translateX(-50%);opacity:calc(1 - var(--hp) * 2);
+#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:var(--sp-6);transform:translateX(-50%);
   display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-m);padding:12px 24px;border-radius:var(--r-pill);box-shadow:0 8px 24px rgba(30,20,50,.18)}
 #v-start .st-hero .sh-down span{display:inline-block;animation:sh-bob 1.6s var(--ease-io) infinite}
 @keyframes sh-bob{50%{transform:translateY(4px)}}
-/* 히어로를 덮으며 올라오는 내용 판: 화면 폭 전체 바탕 + 둥근 윗모서리 + 위로 드리운 그림자 */
-#v-start .st-body{position:relative;z-index:1;isolation:isolate;display:flex;flex-direction:column;gap:var(--sp-5);padding-top:var(--sp-7);margin-top:calc(-1 * var(--sp-5))}
-#v-start .st-body::before{content:"";position:absolute;z-index:-1;top:0;bottom:-80px;left:calc(50% - 50vw);width:100vw;background:var(--bg);border-radius:var(--r-m) var(--r-m) 0 0;box-shadow:0 -16px 40px rgba(13,10,20,.35)}
+/* 히어로와 본문은 따로 (2026-11-22): 히어로가 보이는 동안 페이지 스크롤 잠금, [둘러보기]로 넘어가면 히어로를 빼고 본문만 */
+html.hero-lock,html.hero-lock body{overflow:hidden}
+#v-start:not(.hero-passed) .st-body{display:none}
+#v-start.hero-passed .st-hero{display:none}
+#v-start .st-body{display:flex;flex-direction:column;gap:var(--sp-5)}
+#v-start .st-hero .sh-down:disabled{opacity:0;pointer-events:none}
+/* 히어로 → 본문 전환: 히어로가 위로 밀려 나가고 본문이 바로 아래에 붙어 올라옴 (한 장을 위로 넘기듯) */
+html[data-vt="hero"]::view-transition-old(root){animation:vt-hero-out var(--vt-ms,265ms) var(--ease-io) both}
+html[data-vt="hero"]::view-transition-new(root){animation:vt-hero-in var(--vt-ms,265ms) var(--ease-io) both}
+@keyframes vt-hero-out{to{transform:translateY(-100%)}}   /* 겹쳐 보이지 않게 투명도 없이 위아래로 밀기만 */
+@keyframes vt-hero-in{from{transform:translateY(100%)}}
 
 /* 항목 화면 [‹ 목록으로] (2026-11-22): 제목 위 경로 줄 왼쪽 (시선이 머무는 제목 쪽). 내려 읽으면 머리띠 밑 왼쪽에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 돌아감 */
 #ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-start}
