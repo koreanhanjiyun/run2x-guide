@@ -694,7 +694,7 @@ function wbCar(T, sc){ const g = new T.Group(); sc.add(g); const parts = []; let
   ready = V3D.gltf().then(() => new Promise((ok, no) => wbGltf(V3D.asset('img/3d/ref4s.glb'), gl => {
     gl.scene.updateMatrixWorld(true);
     gl.scene.traverse(o => { if(!o.isMesh) return; const nm = (o.name || '').replace(/_\d+$/, '');
-      o.material = mat(o.material.color ? o.material.color.getHex() : 0x999999);
+      o.material = mat(wbLivery(nm, o.material.color ? o.material.color.getHex() : 0x999999));
       if(/^body/.test(nm)){ o.material.transparent = true; o.material.opacity = .32; o.material.depthWrite = false; o.material.side = T.DoubleSide; o.renderOrder = 2; }
       if(/^(fwing|rwing|cockpit)/.test(nm)) o.material.side = T.DoubleSide;
       o.geometry.applyMatrix4(o.matrixWorld); o.position.set(0, 0, 0); o.rotation.set(0, 0, 0); o.scale.set(1, 1, 1); o.updateMatrix();
@@ -709,6 +709,16 @@ function wbCar(T, sc){ const g = new T.Group(); sc.add(g); const parts = []; let
       else parts.push({o, cx:(bb.min.x + bb.max.x)/2}); });
     const ms = []; gl.scene.traverse(o => { if(o.isMesh) ms.push(o); }); ms.forEach(m => g.add(m)); place(); ok(); }, undefined, no)));
   return { g, ready, helmet:helm, setL(v){ if(Math.abs(v - L) < 1e-6) return; L = v; place(); }, get L(){ return L; } }; }
+/* 실차 색 (REF4 사진 기준, 2026-11-22): 프레임 · 서스펜션 = 보라, 카울 · 날개 · 콕핏 = 카본 검정, 타이어 = 검정, 휠 = 짙은 회색, 그 밖의 기계 부품 = 금속 회색.
+   흰 줄무늬 · 글자 · 로고는 모델에 무늬 좌표가 없어 넣지 않음 */
+function wbLivery(nm, c0){
+  if(/^wheel_.*tire/.test(nm)) return 0x1d1d21;
+  if(/^wheel/.test(nm)) return 0x3c3e45;
+  if(/^(frame|susp)/.test(nm)) return 0x4a2f86;
+  if(/^(body|fwing|rwing|cockpit)/.test(nm)) return 0x1f1e25;
+  if(/^acc/.test(nm)) return 0xb7b9c0;
+  if(/^(motor|diff|hub|mc|pedal|steer)/.test(nm)) return 0x8b8e97;
+  return c0; }
 /* GLB 읽기: 파일 주소는 load, 페이지 안에 넣은 data: 주소는 직접 풀어서 parse (아티팩트 화면은 data: 내려받기를 막음) */
 function wbGltf(url, ok, _p, no){ const ld = new THREE.GLTFLoader();
   if(!url.startsWith('data:')){ ld.load(url, ok, undefined, no); return; }

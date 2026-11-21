@@ -44,13 +44,13 @@ function goalCards(){ if(typeof GOALS==='undefined') return '';
     <div class="st-gcards">${GOALS.map((m,mi)=>`<button type="button" class="st-card st-gcard" data-goalgo="${mi}"><span class="st-ch"><span class="st-gn">${mi+1}</span><b>${m.t}</b></span>
       <span class="st-cw">${esc(m.s)}</span><span class="st-cm">세부 목표 ${m.subs.length}개 ›</span></button>`).join('')}</div></section>`; }
 function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
-  /* 히어로 (2026-11-22, docs/DESIGN.md 6절): 첫 화면 높이를 다 씀. 글(왼쪽) + REF4 차 그림(오른쪽) + 주 버튼 하나. 아래로 내리면 지금 시작 탭이 이어짐 */
+  /* 히어로 (2026-11-22, docs/DESIGN.md 6절): 첫 화면 높이 · 화면 폭 전체에 REF4 주행 사진(차만 선명, 주변은 흐리게, 운전자 바이저도 흐리게). 왼쪽 어두운 쪽에 흰 글 + 주 버튼 하나. 아래로 내리면 지금 시작 탭이 이어짐 */
   return `<header class="top st-hero">
+      <div class="sh-bg" aria-hidden="true"><img class="sh-blur" src="img/hero-ref4.webp" alt=""><img class="sh-main" src="img/hero-ref4.webp" alt="" width="2400" height="1600" decoding="async" fetchpriority="high"></div>
       <div class="sh-txt"><span class="eyebrow">처음 왔다면 여기부터</span>
         <h1>더 빠른 차를 만드는 일</h1>
         <p class="lede">${BG_INTRO}</p>
         <div class="sh-act"><button type="button" class="btn pri sh-go" data-tabgo="steps">설계 시작</button></div></div>
-      <figure class="sh-car"><img src="img/hero-ref4.webp" alt="Run2X REF4 차량 3D 모델" width="1400" height="968" decoding="async"></figure>
       <button type="button" class="sh-down" data-shdown="1">자동차에서 FS까지<span aria-hidden="true">↓</span></button>
     </header>
     ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}

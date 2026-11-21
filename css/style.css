@@ -3281,21 +3281,27 @@ html[data-vt="prev"]::view-transition-new(root){animation-name:vt-in-l}
 
 /* ============================================================
    시작 탭 히어로 (2026-11-22, start.js homePage · docs/DESIGN.md 6절)
-   - 첫 화면 높이를 다 씀: 왼쪽 글(작은 제목 · 첫 문장 32 · 소개 · 주 버튼 하나), 오른쪽 REF4 차 그림
-   - 아래 가운데 '자동차에서 FS까지 ↓' 로 바로 아래 흐름으로 내려감
+   - 화면 폭 전체(본문 폭 밖까지), 첫 화면 높이. 사진 img/hero-ref4.webp = REF4 주행 사진에서 차만 선명하게 두고 주변 · 운전자 바이저를 흐리게 처리한 것
+   - 바탕: 같은 사진을 크게 흐리고 어둡게(.sh-blur, 유리 느낌) → 그 위 오른쪽에 높이에 맞춘 사진(.sh-main), 왼쪽 끝은 바탕으로 흐려 이음
+   - 글은 왼쪽(흰색): 작은 제목 · 첫 문장 32 · 소개 15 · 주 버튼 하나. 아래 가운데 '자동차에서 FS까지 ↓'
    ============================================================ */
-#v-start .st-hero{position:relative;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:center;gap:var(--sp-6);
-  min-height:calc(100vh - var(--tabh) - 48px);margin-bottom:var(--sp-7);padding-bottom:var(--sp-7)}
-#v-start .st-hero .sh-txt{display:flex;flex-direction:column;gap:var(--sp-4)}
-#v-start .st-hero h1{font-size:var(--fs-3xl);font-weight:800;line-height:1.2;margin:0}
-#v-start .st-hero .lede{font-size:var(--fs-m);line-height:1.7;color:var(--ink-2);margin:0;max-width:none}
+body{overflow-x:clip}   /* 히어로 바탕이 화면 폭 전체(100vw)라 세로 스크롤 막대 폭만큼 넘치는 것을 자름 (clip 은 sticky 를 깨지 않음) */
+#v-start .st-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:520px minmax(0,1fr);align-items:center;
+  min-height:calc(100vh - var(--tabh));margin:-24px 0 var(--sp-6);padding:var(--sp-7) 0;color:#fff}
+#v-start .st-hero .sh-bg{position:absolute;z-index:-1;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;overflow:hidden;background:#15121c}
+#v-start .st-hero .sh-blur{position:absolute;inset:-48px;width:calc(100% + 96px);height:calc(100% + 96px);object-fit:cover;filter:blur(28px) brightness(.5) saturate(1.2)}
+#v-start .st-hero .sh-main{position:absolute;right:0;top:0;height:100%;width:auto;max-width:none;display:block;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 28%);mask-image:linear-gradient(to right,transparent 0,#000 28%)}   /* 높이에 맞춰 오른쪽에 둠 → 차가 글과 겹치지 않음. 왼쪽 끝은 흐린 바탕으로 이음 */
+#v-start .st-hero .sh-bg::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(18,12,28,.55) 0,rgba(18,12,28,.35) 35%,rgba(18,12,28,0) 55%),linear-gradient(to top,rgba(18,12,28,.55) 0,rgba(18,12,28,0) 22%)}
+#v-start .st-hero .sh-txt{grid-column:1;display:flex;flex-direction:column;gap:var(--sp-4)}
+#v-start .st-hero .eyebrow{color:#cdb8ec}
+#v-start .st-hero h1{font-size:var(--fs-3xl);font-weight:800;line-height:1.2;margin:0;color:#fff}
+#v-start .st-hero .lede{font-size:var(--fs-m);line-height:1.7;color:rgba(255,255,255,.86);margin:0;max-width:none}
 #v-start .st-hero .sh-act{margin-top:var(--sp-3)}
 #v-start .st-hero .sh-go{font-size:var(--fs-m);padding:12px 24px;border-radius:var(--r-m)}
-#v-start .st-hero .sh-car{margin:0;position:relative}
-#v-start .st-hero .sh-car img{display:block;width:100%;height:auto}
-#v-start .st-hero .sh-car::after{content:"";position:absolute;left:12%;right:8%;bottom:4%;height:10%;border-radius:50%;background:radial-gradient(closest-side,rgba(30,20,50,.16),rgba(30,20,50,0));z-index:-1}
-#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:var(--sp-1);
-  background:none;border:0;padding:var(--sp-2);font:inherit;font-size:var(--fs-s);color:var(--muted);cursor:pointer}
+#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:var(--sp-4);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:var(--sp-1);
+  background:none;border:0;padding:var(--sp-2);font:inherit;font-size:var(--fs-s);color:rgba(255,255,255,.8);cursor:pointer}
 #v-start .st-hero .sh-down span{font-size:var(--fs-m);animation:sh-bob 1.6s var(--ease-io) infinite}
-#v-start .st-hero .sh-down:hover{color:var(--ink)}
+#v-start .st-hero .sh-down:hover{color:#fff}
 @keyframes sh-bob{50%{transform:translateY(4px)}}
