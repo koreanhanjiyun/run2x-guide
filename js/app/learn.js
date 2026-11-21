@@ -76,9 +76,8 @@ function runCalc(box){ const c=CALC[box.dataset.calc]; const v={};
   const o=box.querySelector('.calc-out'); subify(o); if(box.dataset.ran){ o.classList.remove('co-flash'); void o.offsetWidth; o.classList.add('co-flash'); } box.dataset.ran='1'; }
 
 /* ---------- 확인 질문 ---------- */
-function openQ(id,k){ pushHist(); setVM('full'); showTab('steps', true);
-  const it=IT[id], st=$('#st-'+it.s), el=$('#it-'+id); if(!st||!el) return; st.open=true; fillItem(el); el.open=true;
-  const q=el.querySelectorAll(':scope > .dbody > .stack > details.q')[k]; if(!q) return; q.open=true;
+function openQ(id,k){ openItem(id);   /* 항목 화면 (item-page.js) 의 k 번째 질문 */
+  const q=document.querySelectorAll('#ipage .ip-main > .stack > details.q')[k]; if(!q) return; q.open=true;
   requestAnimationFrame(()=>smoothScrollTo(()=>q.getBoundingClientRect().top+window.scrollY-stickyOffset()-50, ()=>markHere(q))); }
 
 /* ---------- 용어 미리보기 ---------- */
@@ -189,8 +188,8 @@ function renderOnboard(){ const el=$('#onboard'); if(!el) return;
   if(PREF('onboard','1')==='0'){ el.innerHTML=`<button class="lnk" id="ob-show" style="font-size:var(--fs-s)">처음 왔다면: 읽는 순서 보기</button>`; return; }
   el.innerHTML=`<div class="onb"><div class="onb-h"><b>처음 왔다면 이 순서로 읽으십시오</b><button class="lnk" id="ob-hide" style="font-size:var(--fs-s)">접기</button></div><ol class="onb-steps">
     <li><span class="onb-n">1</span><div><b>왜 만드나</b><p>시작 탭에서 '더 빠른 차'가 어떤 다섯 가지 목표로 나뉘고, 각 목표를 어떤 설계 항목이 맡는지 봅니다.</p><button class="btn" data-ob="goals">목표 열기</button></div></li>
-    <li><span class="onb-n">2</span><div><b>전체 흐름 한 바퀴</b><p>"흐름만" 보기로 단계 ${STEPS.length}개, 항목 ${ITEMS.length}개를 핵심 한 줄씩 읽습니다. 점선 밑줄 용어에 마우스를 올리면 뜻이 나옵니다.</p><button class="btn" data-ob="flow">흐름만 보기</button></div></li>
-    <li><span class="onb-n">3</span><div><b>단계별로 깊게</b><p>"전체" 보기로 P0부터 펼쳐 결론 → 질문 → 유도 순으로 읽습니다. 단계 끝 확인 질문으로 스스로 점검합니다.</p><button class="btn" data-ob="full">P0부터 시작</button></div></li></ol></div>`; }
+    <li><span class="onb-n">2</span><div><b>전체 흐름 한 바퀴</b><p>설계 탭에서 단계를 펼쳐 단계 ${STEPS.length}개, 항목 ${ITEMS.length}개를 핵심 한 줄씩 읽습니다. 점선 밑줄 용어에 마우스를 올리면 뜻이 나옵니다.</p><button class="btn" data-ob="flow">설계 탭 열기</button></div></li>
+    <li><span class="onb-n">3</span><div><b>항목별로 깊게</b><p>P0의 첫 항목부터 눌러 결론 → 설명 → 유도 순으로 읽고, 아래 [다음 항목]으로 넘어갑니다.</p><button class="btn" data-ob="full">P0부터 시작</button></div></li></ol></div>`; }
 function renderToc(){ const t=$('#toc');
   t.innerHTML=`<div class="toc-h"><span>목차</span><button class="toc-fold" title="목차 접기/펼치기" aria-label="목차 접기/펼치기"></button></div><div class="toc-in">`+
   PHASES.map(ph=>`<div class="toc-p"><div class="toc-ph">${ph.k} ${ph.n.replace(/\s*\(P\d\)\s*/,' ').replace(/→.*/,'').trim()}</div>${ph.s.map(sid=>{ const s=STEPS[SIDX[sid]];
@@ -223,7 +222,7 @@ function gotoStep(sid){
 document.addEventListener('click',e=>{
   const vm=e.target.closest('[data-vm]'); if(vm){ setVM(vm.dataset.vm); return; }
   const ob=e.target.closest('[data-ob]'); if(ob){ const k=ob.dataset.ob;
-    if(k==='goals'){ pushHist(); showTab('start'); if(typeof renderStart==='function') renderStart(''); requestAnimationFrame(()=>{ const g=document.querySelector('#v-start .st-goals'); if(g) window.scrollTo({top:g.getBoundingClientRect().top+scrollY-80, behavior:'instant'}); }); } else if(k==='flow'){ setVM('flow'); smoothScrollTo(()=>document.querySelector('.vtabs').getBoundingClientRect().top+window.scrollY-70); } else { setVM('full'); openStep('P0'); } return; }
+    if(k==='goals'){ pushHist(); showTab('start'); if(typeof renderStart==='function') renderStart(''); requestAnimationFrame(()=>{ const g=document.querySelector('#v-start .st-goals'); if(g) window.scrollTo({top:g.getBoundingClientRect().top+scrollY-80, behavior:'instant'}); }); } else if(k==='flow'){ pushHist(); setVM('full'); showTab('steps'); } else { setVM('full'); openStep('P0'); } return; }
   if(e.target.closest('#ob-hide')){ SETP('onboard','0'); renderOnboard(); return; }
   if(e.target.closest('#ob-show')){ SETP('onboard','1'); renderOnboard(); return; }
   const tc=e.target.closest('[data-toc]'); if(tc){ gotoStep(tc.dataset.toc); return; }

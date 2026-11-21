@@ -23,3 +23,4 @@ $('#collapse-all').addEventListener('click', ()=>{ const v=$('#v-'+TAB); v.query
   const s=document.querySelector('details.step>summary'); r.style.setProperty('--sth', (s?s.offsetHeight:58)+'px'); })();
 (()=>{ const h=(location.hash||'').slice(1); if(['start','steps','tools','graph','goals','ref','team'].includes(h)) showTab(h); else if(h==='parts') showTab('start'); })();
 
+try{ ipBoot(); }catch(e){ console.error(e); }

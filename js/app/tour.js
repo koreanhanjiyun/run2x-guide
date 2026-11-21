@@ -24,7 +24,7 @@ const B = (c,t) => `<span class="badge ${c}">${t}</span>`;
 /* 사용법 중에만 실제 화면을 잠깐 바꾸고, 끝나면 되돌릴 동작을 등록 */
 const tgUndo = f => { if(TR && TR.snap) TR.snap.undo.push(f); };
 /* 숨겨진 '진행 상태' 칸(팀원·비로그인)을 사용법 중에만 보이게 */
-const showStatus = () => { const sb=$('#it-s_scrub .stbox'); if(!sb || (!sb.hidden && sb.querySelector('.stctl'))) return; const h=sb.innerHTML; sb.hidden=false;
+const showStatus = () => { const sb=$('#ipage .stbox'); if(!sb || (!sb.hidden && sb.querySelector('.stctl'))) return; const h=sb.innerHTML; sb.hidden=false;
   sb.innerHTML=`<span class="sec-label">진행 상태</span><span class="stctl">${['todo','doing','done','skip'].map(k=>`<button type="button" class="stbtn st-${k}" aria-pressed="${k==='doing'}">${ST_LABEL[k]}</button>`).join('')}</span>`;
   const wasH=sb.hidden; tgUndo(()=>{ sb.innerHTML=h; sb.hidden=wasH; }); };
 const openFig = () => { const fr=$('#figRail'), md=$('#figModal'); if(!fr || !md || !md.hidden) return; const b=$('#figToggle'); if(b){ b.click(); tgUndo(()=>{ if(!md.hidden) b.click(); }); } };
@@ -32,9 +32,9 @@ const showSearch = () => { const i=$('#gsearch'); if(!i || i.value) return; i.va
 const hideSearch = () => { const i=$('#gsearch'); if(i && i.value==='ㅅㅋㄹ'){ i.value=''; i.dispatchEvent(new Event('input',{bubbles:true})); } };
 const showAsk = () => { const f=$('#fbPanel'); if(f && !f.hidden) return; const a=document.querySelector('.topask'); if(!a) return; a.click(); tgUndo(()=>{ const g=$('#fbPanel'); if(g && !g.hidden){ const x=g.querySelector('.fbp-x'); if(x) x.click(); else g.hidden=true; } }); };
 const hideAsk = () => { const g=$('#fbPanel'); if(g && !g.hidden){ const x=g.querySelector('.fbp-x'); if(x) x.click(); } };
-const openScrub = () => { const st=$('#st-P3-1'); if(st) st.open=true; const it=$('#it-s_scrub'); if(it){ try{ fillItem(it); }catch(e){} it.open=true; } showBits(); };
+const openScrub = () => { if(typeof IPAGE!=='undefined' && IPAGE!=='s_scrub'){ const was=IPAGE; ipShow('s_scrub'); tgUndo(()=>{ if(was) ipShow(was); else ipClose(); }); } window.scrollTo({top:0,behavior:'instant'}); showBits(); };   /* 항목 화면 (2026-11-21) */
 /* 로그인 전·팀원에게 숨겨진 '진행 상태'·'우리 팀 값' 칸을 사용법 중에만 보이게 (끝나면 되돌림) */
-function showBits(){ const it=$('#it-s_scrub'); if(!it || !TR) return; it.querySelectorAll('.stbox,.tval').forEach(x=>{ if(x.classList.contains('tg-show')) return; x.classList.add('tg-show'); tgUndo(()=>x.classList.remove('tg-show')); }); showStatus(); }
+function showBits(){ const it=$('#ipage'); if(!it || !TR) return; it.querySelectorAll('.stbox,.tval').forEach(x=>{ if(x.classList.contains('tg-show')) return; x.classList.add('tg-show'); tgUndo(()=>x.classList.remove('tg-show')); }); showStatus(); }
 const SC = { tab:'steps', vm:'full', prep:openScrub, fx:'doing' };
 const GRAPH_TOUR = [
   ['#v-graph .gcanvas','연결도','설계 탭의 [연결도] 보기입니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다.',{tab:'graph'}],
@@ -72,23 +72,23 @@ const TOUR = {
   ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:async()=>{ await tgTocSet(false); window.scrollTo({top:0,behavior:'instant'}); }}],
   ['#v-steps header .legend','표시 배지',`항목 줄과 본문에 붙는 표시입니다. ${B('b-card','상세')} 상세 카드(그림·표가 많은 긴 설명)가 있는 항목, ${B('b-assume','가정값')} 설명용 숫자라 팀 실측값으로 바꿀 것입니다.`,{tab:'steps',vm:'full',union:'span:nth-child(-n+2)'}],
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
-  ['#flow-list','흐름만 보기','단계마다 핵심 한 줄만 이어 보여 줍니다. 전체 순서를 빠르게 훑을 때 씁니다. 줄의 [열기 ›]를 누르면 전체 보기의 그 항목으로 갑니다.',{tab:'steps',vm:'flow'}],
   ['#v-graph .gcanvas','연결도 보기','[연결도]를 누르면 같은 설계 항목을 한 장의 그림으로 봅니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다. 왼쪽 목차는 숨고, 오른쪽 파트 강조·좌표계 배너는 그대로 씁니다.',{tab:'graph'}],
   ...GRAPH_TOUR.slice(1),
   ['#collapse-all','모두 접기','펼친 단계·항목을 한 번에 닫습니다. 내려 읽는 중에는 위에 뜨는 경로 줄에도 같은 버튼이 있습니다.',{tab:'steps',vm:'full'}],
   ['#st-P3-1>summary','단계 줄','단계 → 항목 → 질문 순서로 세 번 펼칩니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
-  ['#it-s_scrub>summary','항목 줄',`항목 이름 · 파트 칩 · ${B('b-card','상세')} · 보라 칩(이 항목을 마치면 확정되는 것) · 오른쪽에 팀 진행 상태(<span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span>, 예정이면 표시 없음) · [연결도] 버튼입니다. 마우스를 올리면 🔗(링크 복사)가 보입니다.`,{...SC,reveal:'#it-s_scrub>summary'}],
-  ['#it-s_scrub','항목 카드','펼친 항목 전체입니다. 위에서부터 차례로 짚어 내려가겠습니다. 항목에 따라 맨 위에 [배경](처음 보는 사람을 위한 설명)이 있습니다.',{...SC,pic:PIC.card}],
-  ['#it-s_scrub .stbox','진행 상태','담당 팀장·파트장과 회장에게만 보이는 칸입니다. 예정·진행 중·완료·제외를 바로 누르면 "저장 전"으로 표시되고, 아래 막대의 [모두 저장]을 눌러야 팀에 저장됩니다. 저장한 상태는 항목 줄 오른쪽에 표시됩니다.',{...SC}],
-  ['#it-s_scrub .gpath','왜 하나','이 항목이 어떤 목표로 이어지는지 보여 줍니다. 누르면 시작 탭의 그 목표 화면으로 갑니다.',{...SC}],
-  ['#it-s_scrub .actbox','핵심','이 항목에서 정할 것, 즉 설계 결론입니다. 항목을 열면 이것부터 읽으십시오.',{...SC}],
-  ['#it-s_scrub .vrow','값 이름 표시','밑줄 글자는 누르는 버튼이 아니라 값 이름입니다. 진한 밑줄 = 우리 팀이 정할 값, 가는 밑줄 = 앞 값에서 계산되는 값, 점선 = 지켜야 할 제약(규정·조건)입니다.',{...SC}],
-  ['#it-s_scrub .tval','우리 팀 값','위 값들을 팀이 이 시즌에 실제로 정해 기록한 것입니다. 시즌 글자를 누르면 다른 해 값을 봅니다. 담당 팀장·파트장과 회장은 [편집]으로 고칩니다.',{...SC,pic:PIC.edit}],
-  ['#it-s_scrub .concl','참고','핵심을 뒷받침하는 배경 설명입니다. 점선 상자는 "결론이 아니라 읽을거리"라는 뜻입니다.',{...SC}],
-  ['#it-s_scrub details.calc','계산기','예시값(가정값)이 들어 있습니다. 우리 팀 값으로 바꾸면 결과가 바로 다시 계산됩니다. [예시값으로]는 처음 값으로 되돌립니다.',{...SC}],
-  ['#it-s_scrub','질문 펼침','근거는 질문 단위로 접혀 있습니다. 질문을 펼치면 유도·그림·표가 나옵니다. 질문 안에 또 질문이 있으면 한 번 더 펼칩니다.',{...SC,union:':scope details.q:not(details.q details.q)'}],
-  ['#it-s_scrub .tk>.tk-d','논의','팀원끼리 이 항목에 대해 이야기하는 곳입니다. 답글을 달 수 있고, 내 글은 고치거나 지울 수 있습니다. 새 글이 있으면 항목 줄에 글 수가 뜹니다.',{...SC}],
-  ['#crumb','지금 위치','내려 읽는 동안 지금 단계 › 항목을 위에 한 줄로 보여 줍니다. 눌러서 그 머리로 가거나 [이 항목 접기]·[모두 접기]로 닫습니다.',{...SC,sync:true,prep:()=>{ openScrub(); const it=$('#it-s_scrub'); if(it) window.scrollTo({top:it.getBoundingClientRect().top+scrollY+260,behavior:'instant'}); }}],
+  ['#it-s_scrub>summary','항목 줄',`항목 이름 아래에 핵심 한 줄이 있어, 단계를 펼쳐 내려 읽기만 해도 전체 흐름이 보입니다. 오른쪽에 ${B('b-card','상세')} · 확정되는 것 · 팀 진행 상태(<span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span>) · [연결도] 버튼이 있습니다. 줄을 누르면 본문이 그 항목 화면으로 바뀝니다.`,{tab:'steps',vm:'full',fx:'doing',reveal:'#it-s_scrub>summary',prep:()=>{ if(typeof IPAGE!=='undefined' && IPAGE) ipClose(); const st=$('#st-P3-1'); if(st) st.open=true; }}],
+  ['#ipage','항목 화면','항목을 누르면 머리띠 · 목차 · 오른쪽 패널은 그대로 두고 본문만 이 화면으로 바뀝니다. 위에 핵심, 왼쪽에 읽을 설명, 오른쪽에 우리 팀 숫자와 이동이 있습니다. 브라우저 뒤로 가기로 목록에 돌아갑니다.',{...SC,pic:PIC.card}],
+  ['#ipage .ip-path','경로','설계 › 단계 › 항목입니다. [설계]나 단계를 누르면 목록의 그 위치로 돌아갑니다. 왼쪽 목차에는 지금 단계의 항목들이 펼쳐져 있어 바로 옮겨 갈 수 있습니다.',{...SC,also:'#toc .toc-its'}],
+  ['#ipage .stbox','진행 상태','담당 팀장·파트장과 회장에게만 보이는 칸입니다. 예정·진행 중·완료·제외를 바로 누르면 "저장 전"으로 표시되고, 아래 막대의 [모두 저장]을 눌러야 팀에 저장됩니다. 저장한 상태는 목록의 항목 줄 오른쪽에 표시됩니다.',{...SC}],
+  ['#ipage .gpath','왜 하나','이 항목이 어떤 목표로 이어지는지 보여 줍니다. 누르면 시작 탭의 그 목표 화면으로 갑니다.',{...SC}],
+  ['#ipage .actbox','핵심','이 항목에서 정할 것, 즉 설계 결론입니다. 항목을 열면 이것부터 읽으십시오.',{...SC}],
+  ['#ipage .vrow','값 이름 표시','밑줄 글자는 누르는 버튼이 아니라 값 이름입니다. 진한 밑줄 = 우리 팀이 정할 값, 가는 밑줄 = 앞 값에서 계산되는 값, 점선 = 지켜야 할 제약(규정·조건)입니다.',{...SC}],
+  ['#ipage .tval','우리 팀 값','위 값들을 팀이 이 시즌에 실제로 정해 기록한 것입니다. 시즌 글자를 누르면 다른 해 값을 봅니다. 담당 팀장·파트장과 회장은 [편집]으로 고칩니다.',{...SC,pic:PIC.edit}],
+  ['#ipage .concl','참고','핵심을 뒷받침하는 배경 설명입니다. 점선 상자는 "결론이 아니라 읽을거리"라는 뜻입니다.',{...SC}],
+  ['#ipage details.calc','계산기','예시값(가정값)이 들어 있습니다. 우리 팀 값으로 바꾸면 결과가 바로 다시 계산됩니다. [예시값으로]는 처음 값으로 되돌립니다.',{...SC}],
+  ['#ipage .ip-main','질문 펼침','근거는 질문 단위로 접혀 있습니다. 질문을 펼치면 유도·그림·표가 나옵니다. 질문 안에 또 질문이 있으면 한 번 더 펼칩니다.',{...SC,union:':scope details.q:not(details.q details.q)'}],
+  ['#ipage .tk>.tk-d','논의','팀원끼리 이 항목에 대해 이야기하는 곳입니다. 답글을 달 수 있고, 내 글은 고치거나 지울 수 있습니다. 새 글이 있으면 목록의 항목 줄에 글 수가 뜹니다.',{...SC}],
+  ['#ipage .ip-pn','이전 · 다음','설계 순서대로 앞뒤 항목으로 넘어갑니다.',{...SC,prep:()=>{ openScrub(); const n=$('#ipage .ip-pn'); if(n) window.scrollTo({top:n.getBoundingClientRect().top+scrollY-innerHeight/2,behavior:'instant'}); }}],
   ['#partRail','파트 강조','평소에는 접혀 있고 마우스를 올리면 펼쳐집니다(빼면 다시 접힘). 파트를 고르면 그 파트 항목만 진하게 보이고 나머지는 흐려지며, 여러 개 고를 수 있습니다. 머리를 누르면 펼친 채 고정(📌)됩니다.',{...SC,sync:true,prep:()=>{ const r=$('#partRail'); if(r) r.classList.remove('coll'); }}],
   ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너에 마우스를 올리면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다(빼면 닫힘). 배너를 누르면 펼친 채 고정(📌)되고, 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
  ],
@@ -294,7 +294,7 @@ function tgClicks(o){ const c=[]; let vmDone=false;
   if(o.click && (!o.click.need || o.click.need())) c.push({sel:o.click.sel, run:o.click.run});
   return c; }
 /* 복제본이 보여 주는 화면 상태의 요약 (같으면 다시 복제할 필요 없음) */
-const tgSig = o => [TAB, (typeof VMODE!=='undefined'?VMODE:''), (typeof TT!=='undefined'?TT.sub:''), (typeof START!=='undefined'?START.sys:''), o.fx||'', document.querySelectorAll('details[open]').length, (typeof SEL!=='undefined'?SEL:'')].join('|');
+const tgSig = o => [TAB, (typeof VMODE!=='undefined'?VMODE:''), (typeof TT!=='undefined'?TT.sub:''), (typeof START!=='undefined'?START.sys:''), o.fx||'', document.querySelectorAll('details[open]').length, (typeof SEL!=='undefined'?SEL:''), (typeof IPAGE!=='undefined'?IPAGE||'':'')].join('|');   /* IPAGE: 설계 탭 항목 화면 */
 /* 화면에 붙은 창 안쪽 스크롤(예: 작업창 오른쪽): 실제 화면과 복제본을 같이 부드럽게 굴려 대상이 보이게 */
 function tgInner(sel, el){ return new Promise(res=>{ if(!TR) return res();
   const real=[...document.querySelectorAll(sel)].find(x=>!x.closest('#tour')), cl=TR.el.querySelector('.tg-fix '+sel) || TR.el.querySelector(sel);
