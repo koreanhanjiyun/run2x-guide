@@ -3301,6 +3301,27 @@ html[data-vt="prev"]::view-transition-new(root){animation-name:vt-in-l}
 @keyframes vt-in-r{from{opacity:0;transform:translateX(32px)}}
 @keyframes vt-out-r{to{opacity:0;transform:translateX(32px)}}
 @keyframes vt-in-l{from{opacity:0;transform:translateX(-32px)}}
+
+/* ============================================================
+   시작 탭 히어로 (2026-11-22, start.js homePage · docs/DESIGN.md 6절)
+   - 첫 화면 높이를 다 씀: 왼쪽 글(작은 제목 · 첫 문장 32 · 소개 · 주 버튼 하나), 오른쪽 REF4 차 그림
+   - 아래 가운데 '자동차에서 FS까지 ↓' 로 바로 아래 흐름으로 내려감
+   ============================================================ */
+#v-start .st-hero{position:relative;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:center;gap:var(--sp-6);
+  min-height:calc(100vh - var(--tabh) - 48px);margin-bottom:var(--sp-7);padding-bottom:var(--sp-7)}
+#v-start .st-hero .sh-txt{display:flex;flex-direction:column;gap:var(--sp-4)}
+#v-start .st-hero h1{font-size:var(--fs-3xl);font-weight:800;line-height:1.2;margin:0}
+#v-start .st-hero .lede{font-size:var(--fs-m);line-height:1.7;color:var(--ink-2);margin:0;max-width:none}
+#v-start .st-hero .sh-act{margin-top:var(--sp-3)}
+#v-start .st-hero .sh-go{font-size:var(--fs-m);padding:12px 24px;border-radius:var(--r-m)}
+#v-start .st-hero .sh-car{margin:0;position:relative}
+#v-start .st-hero .sh-car img{display:block;width:100%;height:auto}
+#v-start .st-hero .sh-car::after{content:"";position:absolute;left:12%;right:8%;bottom:4%;height:10%;border-radius:50%;background:radial-gradient(closest-side,rgba(30,20,50,.16),rgba(30,20,50,0));z-index:-1}
+#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:var(--sp-1);
+  background:none;border:0;padding:var(--sp-2);font:inherit;font-size:var(--fs-s);color:var(--muted);cursor:pointer}
+#v-start .st-hero .sh-down span{font-size:var(--fs-m);animation:sh-bob 1.6s var(--ease-io) infinite}
+#v-start .st-hero .sh-down:hover{color:var(--ink)}
+@keyframes sh-bob{50%{transform:translateY(4px)}}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -19385,10 +19406,14 @@ function goalCards(){ if(typeof GOALS==='undefined') return '';
     <div class="st-gcards">${GOALS.map((m,mi)=>`<button type="button" class="st-card st-gcard" data-goalgo="${mi}"><span class="st-ch"><span class="st-gn">${mi+1}</span><b>${m.t}</b></span>
       <span class="st-cw">${esc(m.s)}</span><span class="st-cm">세부 목표 ${m.subs.length}개 ›</span></button>`).join('')}</div></section>`; }
 function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
+  /* 히어로 (2026-11-22, docs/DESIGN.md 6절): 첫 화면 높이를 다 씀. 글(왼쪽) + REF4 차 그림(오른쪽) + 주 버튼 하나. 아래로 내리면 지금 시작 탭이 이어짐 */
   return `<header class="top st-hero">
-      <span class="eyebrow">처음 왔다면 여기부터</span>
-      <h1>더 빠른 차를 만드는 일</h1>
-      <p class="lede">${BG_INTRO}</p>
+      <div class="sh-txt"><span class="eyebrow">처음 왔다면 여기부터</span>
+        <h1>더 빠른 차를 만드는 일</h1>
+        <p class="lede">${BG_INTRO}</p>
+        <div class="sh-act"><button type="button" class="btn pri sh-go" data-tabgo="steps">설계 시작</button></div></div>
+      <figure class="sh-car"><img src="img/hero-ref4.webp" alt="Run2X REF4 차량 3D 모델" width="1400" height="968" decoding="async"></figure>
+      <button type="button" class="sh-down" data-shdown="1">자동차에서 FS까지<span aria-hidden="true">↓</span></button>
     </header>
     ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
     ${goalCards()}
@@ -19433,6 +19458,7 @@ ITEM_HOOKS.push((d,b)=>{ const txt=BG_ITEM[d.dataset.item]; if(!txt || b.querySe
 { document.addEventListener('toggle', e=>{ if(e.target.classList && e.target.classList.contains('bgbox')){ SETP('bgopen', e.target.open?'1':'0'); document.querySelectorAll('.bgbox').forEach(o=>{ if(o!==e.target && o.open!==e.target.open) o.open=e.target.open; }); } }, true); }
 
 document.addEventListener('click', e=>{
+  if(e.target.closest('[data-shdown]')){ e.preventDefault(); const n=$('#v-start .st-story'); if(n) smoothScrollTo(()=>n.getBoundingClientRect().top+scrollY-tabH()-24); return; }
   const t=e.target.closest('[data-tabgo]'); if(t){ e.preventDefault(); pushHist(); showTab(t.dataset.tabgo); return; }
   const gg=e.target.closest('[data-goalgo]'); if(gg){ e.preventDefault(); openGoalPage(+gg.dataset.goalgo); return; }
   const fr=e.target.closest('.f1r-b'); if(fr){ e.preventDefault(); const l=fr.parentElement.querySelector('.f1t-row'); const xs=[...l.querySelectorAll('.f1t')].map(c=>c.offsetLeft-l.firstElementChild.offsetLeft); const x=l.scrollLeft, nx=fr.classList.contains('f1r-next'); let t=nx ? xs.find(v=>v>x+4) : [...xs].reverse().find(v=>v<x-4); if(t==null) t = nx ? l.scrollWidth : 0; animScrollLeft(l, t); return; }   // 버튼을 누를 때만 카드 왼쪽에 맞춤 (끌기는 놓은 자리 그대로)
@@ -30476,7 +30502,8 @@ const TOUR = {
   ['.topask','문의','내용 오류·사이트 오류·기능 제안을 사이트 개발자에게 보냅니다(로그인 필요). 누르면 이렇게 문의 칸이 내려옵니다. 종류·위치(탭·단계·항목)를 고르고 내용을 적어 보냅니다. 팀과 무관하게 개발자에게만 갑니다.',{prep:()=>{ showAsk(); }, also:'#fbPanel'}],
  ],
  start: [
-  ['#v-start .st-story','자동차에서 FS까지','자동차가 생기고 레이스카와 F1을 거쳐 Formula Student까지 이어진 흐름입니다. 왜 지금의 모양이 되었는지 먼저 훑습니다.',{tab:'start',home:true,prep:()=>{ hideAsk(); hideSearch(); }}],
+  ['#v-start .st-hero','첫 화면','[설계 시작]을 누르면 설계 탭으로 바로 갑니다. 아래로 내리면 자동차에서 FS까지의 흐름, 목표, 시스템 카드가 이어집니다.',{tab:'start',home:true,prep:()=>{ hideAsk(); hideSearch(); }}],
+  ['#v-start .st-story','자동차에서 FS까지','자동차가 생기고 레이스카와 F1을 거쳐 Formula Student까지 이어진 흐름입니다. 왜 지금의 모양이 되었는지 먼저 훑습니다.',{tab:'start',home:true}],
   ['#v-start .st-goals','목표','레이스카의 목표는 "더 빠른 차" 하나입니다. 다섯 카드(그립·더 큰 힘·가볍게·일관성·끝까지)를 누르면 세부 목표와 판단 기준, 그 목표를 다루는 설계 항목이 나옵니다.',{tab:'start',home:true}],
   ['#v-start .st-sysw','시스템 카드','차를 이루는 시스템들입니다. 카드를 누르면 그 시스템 화면으로 바뀝니다: 왜 생겼나 → F1에서 어떻게 발전했나 → FS에서는 → 구성 부품(그림) → F1이 시도한 기술. 그 화면에서 [이 탭 사용법]을 누르면 시스템 화면 안내가 나옵니다.',{tab:'start',home:true}],
  ],
@@ -30978,7 +31005,7 @@ try{ ipBoot(); }catch(e){ console.error(e); }
   const first = PREF('visited','') !== '1';
   const local = local0;
   if(!hasHash){
-    if(first){ SETP('visited','1'); showTab('start'); setTimeout(()=>{ try{ if(PREF('tourdone','')!=='1') tourStart('all'); }catch(e){} }, 1200); }
+    if(first){ SETP('visited','1'); showTab('start'); }   /* 첫 방문 = 시작 탭 히어로. 사용법 자동 시작은 뺌 (2026-11-22, 머리띠 [이 탭 사용법]으로 엶) */
     else if(local) restore(local);
     else showTab('steps');
   }
