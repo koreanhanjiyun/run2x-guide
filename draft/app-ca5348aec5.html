@@ -1711,7 +1711,7 @@ details.tp-fbsec[open]>summary{margin-bottom:4px}
 #tour .tg-old{transition:opacity var(--t-fade) var(--ease-out);opacity:0}
 #tour .tg-hole{position:absolute;z-index:5;border-radius:8px;box-shadow:0 0 0 9999px rgba(14,10,24,.55);outline:3px solid #ffb454;outline-offset:0;opacity:0;transition:opacity var(--t-fade) var(--ease-out)}
 #tour .tg-hole.on{opacity:1}
-#tour .tg-ptr{position:absolute;z-index:6;width:26px;height:26px;margin:-4px 0 0 -4px;opacity:0;transition:left .5s cubic-bezier(.3,.7,.3,1),top .5s cubic-bezier(.3,.7,.3,1),opacity .2s,transform .12s;transform:scale(1.6);transform-origin:4px 4px}
+#tour .tg-ptr{position:absolute;z-index:6;width:26px;height:26px;margin:-4px 0 0 -4px;opacity:0;transition:left .28s cubic-bezier(.3,.7,.3,1),top .28s cubic-bezier(.3,.7,.3,1),opacity .2s,transform .12s;transform:scale(1.6);transform-origin:4px 4px}
 #tour .tg-ptr.on{opacity:1}
 #tour .tg-ptr.down{transform:scale(1.35)}
 #tour .tg-ptr i{position:absolute;left:-14px;top:-14px;width:36px;height:36px;border-radius:50%;border:3px solid #ffb454;opacity:0}
@@ -30559,7 +30559,7 @@ async function tgPress(sel){ if(!TR) return; const el=tourVis(sel); if(!el) retu
   if(!g.fixed && Math.abs(g.off-TR.off)>2){ tgHole(null); await tgScrollTo(g.off); if(!TR) return; g=tgGeom(el,{}); }
   const p=TR.el.querySelector('.tg-ptr'), cx=g.x+g.w/2, cy=g.y+g.h/2; tgHole(g); tgDim(false);
   if(tgReduced() || TR.fast){ Object.assign(p.style,{left:cx+'px',top:cy+'px'}); return; }
-  const tk=TR; p.classList.add('on'); p.style.left=cx+'px'; p.style.top=cy+'px'; await tgSleep(620); if(TR!==tk) return; p.classList.add('down'); await tgSleep(240); p.classList.remove('down'); await tgSleep(200); if(TR!==tk) return;
+  const tk=TR; p.classList.add('on'); p.style.left=cx+'px'; p.style.top=cy+'px'; await tgSleep(340); if(TR!==tk) return; p.classList.add('down'); await tgSleep(240); p.classList.remove('down'); await tgSleep(200); if(TR!==tk) return;
   p.classList.remove('on'); tgDim(true); tgHole(null); await tgSleep(200); }
 async function tgFind(sel){ for(let k=0;k<20;k++){ const el=tourVis(sel); if(el) return el; await tgSleep(60); } return null; }
 function tgText(i){ const st=TR.steps[i], o=st[3]||{}, card=TR.el.querySelector('.tour-card');
