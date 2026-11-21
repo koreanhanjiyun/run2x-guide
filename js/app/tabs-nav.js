@@ -19,9 +19,10 @@ const navState = () => ({tab:TAB, sys:(typeof START!=='undefined'?START.sys:''),
 function pushHist(){ try{ history.replaceState(navState(), '', location.hash); history.pushState(null, '', location.hash); }catch(e){} }
 /* 화면 전환 (View Transitions, 2026-11-22, docs/DESIGN.md 5절)
    - 머리띠 · 목차 · 파트 패널은 전환 동안 따로 이름을 붙여 제자리에 둠 (style.css html[data-vt]). 나머지 화면(root)만 움직임
-   - kind: open 개요 → 항목 / close 항목 → 개요 / next · prev 이전 · 다음 항목 / fade 탭 바꿈
-   - from · to: 이어 줄 상자 (vt-card). 열 때 = 누른 항목 칸 → 항목 화면 판, 닫을 때 = 그 반대. 둘 다 화면 안에 보일 때만 이음
-     칸이 커지며 흰 판이 되고(테두리 · 그림자), 옛 글은 먼저 사라지고 새 내용은 판이 거의 다 커진 뒤 나타남 (컨테이너 변형)
+   - kind: open 칸 → 화면 (설계 탭 항목 칸 · 시작 탭 카드) / back 화면 → 목록 / next · prev 이전 · 다음 / fade 탭 바꿈
+   - open 의 from · to: 누른 칸 → 새 화면 (vt-card). 칸이 커지며 화면 바탕색 판이 되고 그림자가 생겼다 빠짐. 옛 글이 다 사라진 뒤 새 내용이 나타남.
+     목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
+   - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 700 ms
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
@@ -33,7 +34,7 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', motionMs(40)+'ms');
+  let t2=null; R.style.setProperty('--vt-ms', motionMs(kind==='back'?160:40)+'ms');
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
@@ -43,6 +44,11 @@ function vtGo(kind, fn, from, to){
       R.style.setProperty('--vt-ms', Math.min(700, motionMs(d))+'ms'); } });
   t.finished.catch(()=>{}).then(()=>{ if(t2) t2.style.viewTransitionName=''; if(R.dataset.vt===kind) delete R.dataset.vt; });
 }
+/* 돌아온 칸 강조: 화면 가운데로 옮기고 보라 테두리를 잠깐 (style.css .vt-was) */
+function vtMark(el, center){ if(!el) return; if(center){ const r=el.getBoundingClientRect(); window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); }
+  el.classList.remove('vt-was'); void el.offsetWidth; el.classList.add('vt-was'); setTimeout(()=>el.classList.remove('vt-was'), 1600); }
+/* 시작 탭 하위 화면 열쇠 → 그 화면을 여는 카드 */
+const stCard = k => !k ? null : /^goal:/.test(k) ? $(`#v-start .st-body [data-goalgo="${k.slice(5)}"]`) : $(`#v-start .st-body [data-sysgo="${k}"]`);
 /* 뒤로 · 앞으로 가기: 다른 처리보다 먼저 받아, 같은 이벤트를 전환 안에서 다시 보냄. 스크롤 위치도 그 안에서 바로 되살려 도착 칸을 잴 수 있게 함 */
 window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   if(!h || !h.tab || !document.startViewTransition || (typeof TR!=='undefined' && TR) || (typeof WB!=='undefined' && WB.id)) return;
@@ -50,14 +56,17 @@ window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   if(h.tab===TAB && TAB==='steps'){
     if(cur && h.ip && cur!==h.ip){ const o=ipOrder(); kind = o.indexOf(h.ip)<o.indexOf(cur) ? 'prev' : 'next'; }
     else if(!cur && h.ip){ kind='open'; from=()=>$('#it-'+h.ip); to=()=>$('#ipage'); }
-    else if(cur && !h.ip){ kind='close'; from=()=>$('#ipage'); to=()=>$('#it-'+cur); }
+    else if(cur && !h.ip) kind='back';
     else kind=null; }
+  else if(h.tab===TAB && TAB==='start' && (h.sys||'')!==(START.sys||'')){ const a=START.sys||'', z=h.sys||'';
+    if(!a){ kind='open'; from=()=>stCard(z); to=()=>$('#v-start'); } else if(!z) kind='back'; else kind='fade'; }
   else if(h.tab===TAB) kind=null;
+  const was = kind==='back' ? (TAB==='steps' ? ()=>$('#it-'+cur) : (k=>()=>stCard(k))(START.sys)) : null;
   if(!kind) return;
   e.stopImmediatePropagation();
   vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); window.scrollTo({top:h.y||0, behavior:'instant'});
-    /* 닫을 때 되살린 위치에서 그 항목 칸이 머리 띠 밑이나 화면 끝에 걸리면 가운데로 (판이 줄어들 자리가 보이게) */
-    const row=kind==='close' && $('#it-'+cur); if(row){ const r=row.getBoundingClientRect(); if(r.top<tabH()+80 || r.bottom>innerHeight-40) window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); } }, from, to);
+    /* 목록으로 돌아오면 보던 칸을 가운데에 두고 잠깐 강조 */
+    if(was) vtMark(was(), true); }, from, to);
 });
 window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true); try{ history.replaceState(h, '', location.hash); }catch(_){}   /* showTab 이 지운 이 칸의 상태를 되살림 (앞으로가기에 필요) */
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }

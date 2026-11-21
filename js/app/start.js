@@ -37,16 +37,16 @@ function renderStart(sys){ const v=$('#v-start'); if(!v) return;
   try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy').forEach(x=>annotate(x)); }catch(e){}
   if(key==='_home') heroIntro(v);
 }
-/* 히어로 등장 연출 (2026-11-22, 시작 탭 첫 화면을 열 때마다 · 약 3.4 초)
+/* 히어로 등장 연출 (2026-11-22, 페이지를 열고 시작 탭 첫 화면을 처음 볼 때 한 번 · 약 3.4 초)
    0 ~ 0.9 s 사진 초점이 맞음 → 0.5 s · 0.9 s 왼쪽 어두운 쪽 가운데에 큰 제목이 두 덩이로 올라옴 → 1.6 ~ 2.6 s 제목이 작아지며 제자리(왼쪽)로
    → 2.5 s 작은 제목 · 밑줄이 그어짐 → 2.9 s 소개 문장. [둘러보기 ↓] 는 처음부터 보임.
    누르기 · 휠 · 키 · 스크롤이 있으면 바로 마지막 모습으로 건너뜀. 사용법 진행 중에는 연출하지 않음.
    fill 은 backwards 만: 끝나면 CSS 상태로 돌아가 스크롤에 따른 어두워짐(--hp)이 그대로 적용됨 */
-let HERO_AN=[];
+let HERO_AN=[], HERO_DONE=false;   /* 연출은 페이지를 열 때(접속 · 새로고침) 한 번만. 같은 접속 안에서 다시 오면 끝난 모습 */
 function heroSkip(){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HERO_AN=[]; }
-function heroIntro(v){ heroSkip(); const h=v.querySelector('.st-hero'); if(!h || (typeof TR!=='undefined' && TR)) return;
+function heroIntro(v){ heroSkip(); const h=v.querySelector('.st-hero'); if(!h || HERO_DONE || (typeof TR!=='undefined' && TR)) return;
   const t1=h.querySelector('h1'), ws=[...t1.querySelectorAll('.sh-w')], main=h.querySelector('.sh-main');
-  const hr=h.getBoundingClientRect(), r=t1.getBoundingClientRect(); if(!hr.width || !r.width) return;
+  const hr=h.getBoundingClientRect(), r=t1.getBoundingClientRect(); if(!hr.width || !r.width) return; HERO_DONE=true;
   const S=1.6, dx=(hr.left+hr.width*.3)-(r.left+r.width/2)   /* 큰 제목은 차(오른쪽)와 겹치지 않게 왼쪽 어두운 쪽 가운데(폭의 30 %) */, dy=(hr.top+Math.min(hr.height,innerHeight-hr.top)/2)-(r.top+r.height/2);
   const OUT='cubic-bezier(.16,1,.3,1)', IO='cubic-bezier(.45,0,.25,1)', big=`translate(${dx}px,${dy}px) scale(${S})`;
   const A=(el,k,o)=>{ if(el) HERO_AN.push(el.animate(k,{fill:'backwards',easing:OUT,...o})); };
@@ -115,6 +115,13 @@ function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s)
     ${tech.length?`<section class="sp-tech"><h2>F1이 시도한 ${s.t} 기술 <span class="muted">${tech.length}가지 · 옆으로 넘겨 보십시오</span></h2>${techRail(tech)}</section>`:''}
     <nav class="sp-nav sp-foot"><button type="button" class="btn small" data-sysgo="">← 모든 시스템</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-sysgo="${prev.p}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-sysgo="${next.p}">${next.t} ›</button>`:''}</span></nav>`;
 }
+/* 시작 탭 화면 바꾸기 + 전환 (2026-11-22): 첫 화면 카드 → 그 화면은 카드가 커지며(open), 하위 화면 → 첫 화면은 내려가며 사라지고 보던 카드 강조(back),
+   하위 화면끼리(‹ ›)는 옆으로 밂. 다른 탭에서 바로 여는 경우(openSys · openGoalPage 직접 호출)는 전환 없이 그대로 */
+function stGo(key, src, fn){ const a=(TAB==='start' && START.sys) || '';
+  if(TAB!=='start'){ fn(); return; }
+  if(!a && key){ vtGo('open', fn, ()=>src, ()=>$('#v-start')); return; }
+  if(a && !key){ const was=a; vtGo('back', ()=>{ fn(); vtMark(stCard(was), true); }); return; }
+  vtGo(src && /^\s*‹/.test(src.textContent) ? 'prev' : 'next', fn); }
 function openSys(p, part){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart(p||''); window.scrollTo({top:0, behavior:'instant'});
   if(part) requestAnimationFrame(()=>{ const el=document.getElementById('cp-'+part); if(el){ const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:el.getBoundingClientRect().top+scrollY-tabh-12, behavior:'instant'}); markHere(el); } }); }
 
@@ -127,9 +134,9 @@ ITEM_HOOKS.push((d,b)=>{ const txt=BG_ITEM[d.dataset.item]; if(!txt || b.querySe
 document.addEventListener('click', e=>{
   if(e.target.closest('[data-shdown]')){ e.preventDefault(); heroSkip(); const n=$('#v-start .st-body'); if(n) smoothScrollTo(()=>n.getBoundingClientRect().top+scrollY-tabH()); return; }   /* 연출 기다리지 않고 바로 내려감: 판이 히어로를 덮으며 올라옴 */
   const t=e.target.closest('[data-tabgo]'); if(t){ e.preventDefault(); pushHist(); showTab(t.dataset.tabgo); return; }
-  const gg=e.target.closest('[data-goalgo]'); if(gg){ e.preventDefault(); openGoalPage(+gg.dataset.goalgo); return; }
+  const gg=e.target.closest('[data-goalgo]'); if(gg){ e.preventDefault(); stGo('goal:'+gg.dataset.goalgo, gg, ()=>openGoalPage(+gg.dataset.goalgo)); return; }
   const fr=e.target.closest('.f1r-b'); if(fr){ e.preventDefault(); const l=fr.parentElement.querySelector('.f1t-row'); const xs=[...l.querySelectorAll('.f1t')].map(c=>c.offsetLeft-l.firstElementChild.offsetLeft); const x=l.scrollLeft, nx=fr.classList.contains('f1r-next'); let t=nx ? xs.find(v=>v>x+4) : [...xs].reverse().find(v=>v<x-4); if(t==null) t = nx ? l.scrollWidth : 0; animScrollLeft(l, t); return; }   // 버튼을 누를 때만 카드 왼쪽에 맞춤 (끌기는 놓은 자리 그대로)
-  const y=e.target.closest('[data-sysgo]'); if(y){ e.preventDefault(); const p=y.dataset.sysgo; if(p==='공통' && !compOf('공통').length){ openSys('공통'); return; } openSys(p); return; }
+  const y=e.target.closest('[data-sysgo]'); if(y){ e.preventDefault(); const p=y.dataset.sysgo; stGo(p, y, ()=>openSys(p)); return; }
   const c=e.target.closest('[data-cpgo]'); if(c){ e.preventDefault(); const el=document.getElementById('cp-'+c.dataset.cpgo); if(el){ const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; smoothScrollTo(()=>el.getBoundingClientRect().top+scrollY-tabh-12, ()=>markHere(el)); } return; }
   const s=e.target.closest('[data-stepgo]'); if(s){ e.preventDefault(); openStep(s.dataset.stepgo); return; }
 });

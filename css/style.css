@@ -3258,19 +3258,29 @@ html[data-vt] #partRail{view-transition-name:vt-rail}
 ::view-transition-group(root),::view-transition-new(root){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-out)}
 ::view-transition-old(root){animation-duration:calc(var(--vt-ms,265ms) * .7);animation-timing-function:var(--ease-out)}
 ::view-transition-group(vt-card){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-io);border-radius:var(--r-m);overflow:hidden}
-/* 판 겉면: 칸(옅음) → 가운데에서 흰 판 + 그림자로 짙어짐 → 도착하면 다시 바탕에 녹아듦 (끝에 테두리 · 그림자가 툭 사라지지 않게) */
+/* 판 겉면: 칸(흰색)에서 출발해 화면 바탕색으로 바뀌며 그림자가 생겼다 빠짐. 테두리는 그리지 않음 (도착 화면의 판들과 겹쳐 보이지 않게).
+   도착하면 판 색 = 화면 바탕색이라 끝에 색이 툭 바뀌지 않음 */
 ::view-transition-image-pair(vt-card){isolation:auto;border-radius:var(--r-m);animation:vt-surface var(--vt-ms,265ms) var(--ease-io) both}
-@keyframes vt-surface{0%{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 1px var(--line);}
-  45%,75%{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line-2),0 8px 24px rgba(30,20,50,.18)}
-  100%{background:rgba(255,255,255,0);box-shadow:inset 0 0 0 1px rgba(0,0,0,0),0 8px 24px rgba(30,20,50,0)}}
+@keyframes vt-surface{0%{background:var(--panel);box-shadow:0 0 0 rgba(30,20,50,0)}
+  45%{background:var(--bg);box-shadow:0 12px 32px rgba(30,20,50,.18)}
+  100%{background:var(--bg);box-shadow:0 12px 32px rgba(30,20,50,0)}}
 ::view-transition-old(vt-card),::view-transition-new(vt-card){width:auto;height:auto;mix-blend-mode:normal}   /* 늘이지 않고 원래 크기로 왼쪽 위에 둠 (글자가 찌그러지지 않게) */
-::view-transition-old(vt-card){animation:vt-out calc(var(--vt-ms,265ms) * .25) var(--ease-out) both}
-::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,265ms) * .45) var(--ease-out) calc(var(--vt-ms,265ms) * .55) both}
-html[data-vt="open"]::view-transition-old(root){animation-name:vt-dim}
-html[data-vt="close"]::view-transition-new(root){animation-name:vt-undim}
-@keyframes vt-dim{to{opacity:0;filter:blur(3px)}}
-@keyframes vt-undim{from{opacity:0;filter:blur(3px)}}
-html[data-vt="close"]::view-transition-old(root){animation-name:vt-out}
+::view-transition-old(vt-card){animation:vt-out calc(var(--vt-ms,265ms) * .2) var(--ease-out) both}
+::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,265ms) * .4) var(--ease-out) calc(var(--vt-ms,265ms) * .6) both}
+/* 화면 전체는 겹쳐 더하지 않음 (기본 plus-lighter 는 두 화면이 반씩 겹칠 때 밝게 번쩍임) */
+::view-transition-old(root),::view-transition-new(root){mix-blend-mode:normal}
+/* 열 때: 목록은 판이 덮을 때까지 그대로(살짝 흐리고 어둡게), 새 화면 바탕은 끝에 나타남 → 빈 바탕 깜빡임 없음 */
+html[data-vt="open"]::view-transition-old(root){animation:vt-hold var(--vt-ms,265ms) var(--ease-io) both}
+html[data-vt="open"]::view-transition-new(root){animation:vt-in calc(var(--vt-ms,265ms) * .35) var(--ease-out) calc(var(--vt-ms,265ms) * .65) both}
+@keyframes vt-hold{0%{opacity:1;filter:none}70%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:0;filter:blur(2px) brightness(.9)}}
+/* 목록으로: 화면이 살짝 내려가며 사라지고 목록이 나타남 */
+html[data-vt="back"]::view-transition-old(root){animation:vt-out-down calc(var(--vt-ms,265ms) * .7) var(--ease-out) both;z-index:2}
+html[data-vt="back"]::view-transition-new(root){animation:vt-in var(--vt-ms,265ms) var(--ease-out) both}
+@keyframes vt-out-down{to{opacity:0;transform:translateY(24px)}}
+/* 돌아온 칸 강조 (tabs-nav.js vtMark): 보라 테두리가 잠깐 보였다가 빠짐 */
+.vt-was{position:relative;z-index:1}
+.vt-was::after{content:"";position:absolute;inset:-2px;border-radius:var(--r-m);pointer-events:none;animation:vt-was 1.6s var(--ease-out) both}   /* 칸 자체 그림자는 예전 규칙(!important)이 막아서 겹친 고리로 그림 */
+@keyframes vt-was{0%,40%{box-shadow:0 0 0 2px var(--accent),0 0 0 6px var(--accent-soft)}100%{box-shadow:0 0 0 2px transparent,0 0 0 6px transparent}}
 html[data-vt="next"]::view-transition-old(root){animation-name:vt-out-l}
 html[data-vt="next"]::view-transition-new(root){animation-name:vt-in-r}
 html[data-vt="prev"]::view-transition-old(root){animation-name:vt-out-r}
@@ -3313,10 +3323,10 @@ body{overflow-x:clip}   /* 히어로 바탕이 화면 폭 전체(100vw)라 세�
 #v-start .st-body{position:relative;z-index:1;isolation:isolate;display:flex;flex-direction:column;gap:var(--sp-5);padding-top:var(--sp-7);margin-top:calc(-1 * var(--sp-5))}
 #v-start .st-body::before{content:"";position:absolute;z-index:-1;top:0;bottom:-80px;left:calc(50% - 50vw);width:100vw;background:var(--bg);border-radius:var(--r-m) var(--r-m) 0 0;box-shadow:0 -16px 40px rgba(13,10,20,.35)}
 
-/* 항목 화면 닫기 버튼 (2026-11-22): 오른쪽 위, 내려 읽어도 머리띠 아래에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 닫힘 */
-#ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-end}
-#ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 1px 0 var(--line)}
-#ipage .ip-side{top:calc(var(--tabh) + 60px);max-height:calc(100vh - var(--tabh) - 76px)}   /* 닫기 버튼 아래에서 멈춤 */
+/* 항목 화면 [‹ 목록으로] (2026-11-22): 제목 위 경로 줄 왼쪽 (시선이 머무는 제목 쪽). 내려 읽으면 머리띠 밑 왼쪽에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 돌아감 */
+#ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-start}
+#ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 2px 8px rgba(30,20,50,.12);transform:translateY(-6px)}
+#ipage .ip-top .ip-path{padding-left:112px}
 /* ============================================================
    탭별 글자 네 가지 (2026-11-22, docs/DESIGN.md 3절 '한 화면 안 글자 크기')
    화면 제목 24 · 칸 제목 15 (굵게) · 본문 · 표 · 버튼 · 링크 · 그림 글자 13 · 보조 11.
