@@ -26,7 +26,17 @@ const DASH = (() => {
 /* ---------- 팀 설계값 저장소 (dv) ---------- */
 const DVKEY = 'run2x.dv.v1';
 let DVS = {};   /* 문서 id → {s:{시즌:{v, st, src, by, at}}} */
-try{ DVS = JSON.parse(localStorage.getItem(DVKEY)||'{}') || {}; }catch(e){ DVS = {}; }
+/* CoP 위치 기준 변경 (v2.1.0, 2026-11-08 21:50 KST 배포): v2.0.0 에서는 xcop · xcop_drs = 앞축부터, v2.1.0 부터 = 뒤축부터.
+   그 전에 저장된 값은 읽을 때 L − 값으로 바꿔 씀 (팀 저장소 문서는 건드리지 않음, 다음에 저장할 때 바뀐 값으로 저장됨).
+   같은 시즌 휠베이스 L 이 없으면 바꿀 수 없어 copOld 로 표시만 함 (dvState 에서 ↻) */
+const COP_CUT = '2026-11-08T12:50:53Z';
+function copFix(r){ const se = s => { const L = Object.keys(r).find(id => id.endsWith('__L')); const e = L && r[L].s && r[L].s[s]; return e && typeof e.v==='number' ? e.v : null; };
+  Object.keys(r).forEach(id => { if(!/__xcop(_drs)?$/.test(id) || !r[id] || !r[id].s) return;
+    Object.entries(r[id].s).forEach(([s, e]) => { if(!e || typeof e.v!=='number' || e.copV || !e.at || e.at >= COP_CUT) return;
+      const L = se(s); if(L==null){ e.copOld = true; return; }
+      e.v = Math.round((L - e.v) * 1000) / 1000; e.copV = 2; }); });
+  return r; }
+try{ DVS = copFix(JSON.parse(localStorage.getItem(DVKEY)||'{}') || {}); }catch(e){ DVS = {}; }
 const dvSeason = () => (typeof SEASON!=='undefined' ? String(SEASON) : String(new Date().getFullYear()));
 const dvEntry = (k, se) => { const d = DVS[dvId(k)]; return (d && d.s && d.s[se || dvSeason()]) || null; };
 /* 이 키를 고칠 수 있나: 회장 전부, 팀장·파트장은 담당 파트(또는 묶음)만. 저장소가 없으면 이 브라우저에서 자유롭게 */
@@ -43,18 +53,19 @@ async function dvSave(k, patch){
 }
 /* 팀 저장소 연결: 다른 저장소 구독(onSharedReady) 뒤에 이어 붙임 */
 { const _osr = onSharedReady; onSharedReady = function(db){ _osr(db);
-    db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = r; dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
+    db.collection('dv').onSnapshot(q => { const r = {}; q.docs.forEach(d => { r[d.id] = d.data(); }); DVS = copFix(r); dashPaint(); if(typeof refreshVals==='function') refreshVals(); }, () => {}); }; }
 /* 설계 탭 항목에 붙는 팀 설계값(읽기 전용) */
 /* 대시보드 값 표시 (2026-11-13 관리자 결정, 검토 중 없앰): ● 대시보드 값 · ↻ 다시 계산 필요 · — 비어 있음.
    ↻ = 계산값(kind 'calc')인데, 반영할 때 쓴 대시보드 입력(deps, [대시보드에 반영] 때 저장 — 대시보드와 같던 칸은 값, 다르던 칸은 null)이
    지금 대시보드 값과 다르거나 null 이 있을 때. 그 도구에서 지금 대시보드 값으로 다시 계산해 반영하면 사라짐. deps 가 없는 옛 값은 ↻ 없음 */
 function dvState(k, se){ const e = dvEntry(k, se); if(!e || typeof e.v!=='number') return {c:'none', l:'비어 있음', re:[]};
   const re = [];
+  if(e.copOld) re.push({k:'L', cop:true});
   if(e.kind==='calc' && e.deps && typeof e.deps==='object') Object.entries(e.deps).forEach(([d, v]) => { const c = dvEntry(d, se), now = c && typeof c.v==='number' ? c.v : null;
     if(v==='e'){ if(now!=null) re.push({k:d, from:null, to:now}); } else if(v==null) re.push({k:d, diff:true}); else if(now==null || Math.abs(now - v) > 1e-9*Math.max(1, Math.abs(v))) re.push({k:d, from:v, to:now}); });
   return {c:'in', l:'대시보드 값', re}; }
 const dvKN = k => DK[k] ? String(DK[k].n).replace(/<[^>]+>/g, '') : k;
-function dvStateTip(k, st, e){ return `${st.re.length ? '다시 계산 필요: ' + st.re.map(r => r.diff ? `${dvKN(r.k)} (대시보드와 다른 값으로 계산함)` : `${dvKN(r.k)} ${r.from==null ? '비어 있음' : r.from} → ${r.to==null ? '비어 있음' : r.to}`).join(', ') + ' · ' : ''}${e && e.src ? esc(e.src) : ''}${e && e.by ? '' : ''}${e && e.at ? ' · ' + String(e.at).slice(0, 10) : ''}`; }
+function dvStateTip(k, st, e){ return `${st.re.length ? '다시 계산 필요: ' + st.re.map(r => r.cop ? '예전 기준(앞축부터)으로 저장된 값인데 이번 시즌 휠베이스가 없어 뒤축 기준으로 바꾸지 못함 · 휠베이스를 넣거나 값을 다시 입력' : r.diff ? `${dvKN(r.k)} (대시보드와 다른 값으로 계산함)` : `${dvKN(r.k)} ${r.from==null ? '비어 있음' : r.from} → ${r.to==null ? '비어 있음' : r.to}`).join(', ') + ' · ' : ''}${e && e.src ? esc(e.src) : ''}${e && e.by ? '' : ''}${e && e.at ? ' · ' + String(e.at).slice(0, 10) : ''}`; }
 const dvMark = (k, se, e) => { const q = dvState(k, se); return q.c==='none' ? '<span class="dv-s s-none"></span>' : (q.re.length ? `<span class="dv-s dv-re" title="${dvStateTip(k, q, e)}">↻</span>` : `<span class="dv-s s-in" title="${dvStateTip(k, q, e)}"></span>`); };
 const DK_BY_ITEM = DKEYS.reduce((o, d) => { if(d.it) (o[d.it] = o[d.it] || []).push(d.k); return o; }, {});
 function dvLinkedHTML(id, se){ const ks = DK_BY_ITEM[id]; if(!ks || !ks.length) return '';
