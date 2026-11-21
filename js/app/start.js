@@ -29,13 +29,39 @@ function renderStart(sys){ const v=$('#v-start'); if(!v) return;
   const gm = /^goal:(\d+)$/.exec(START.sys||''); const gi = gm && GOALS[+gm[1]] ? +gm[1] : -1;
   const s = gi<0 && START.sys && BG_SYS.find(x=>x.p===START.sys);
   const key = gi>=0 ? 'goal:'+gi : (s?s.p:'_home');
-  if(v.dataset.done===key) return; v.dataset.done = key;
+  if(v.dataset.done===key){ if(key==='_home') heroIntro(v); return; } v.dataset.done = key;
   v.innerHTML = gi>=0 ? goalPage(gi) : s ? sysPage(s) : homePage();
   if(gi>=0) v.querySelectorAll('.gp-subs > details.item').forEach((d,di)=>{ d.id='g-'+gi+'-'+di; });
   if(s && typeof loadCompFigs==='function' && COMP_FIG_STATE!==2) loadCompFigs(()=>{ if(START.sys===s.p){ const y=scrollY; delete v.dataset.done; renderStart(); window.scrollTo({top:y,behavior:'instant'}); } });
   try{ renderMath(v); }catch(e){}
   try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy').forEach(x=>annotate(x)); }catch(e){}
+  if(key==='_home') heroIntro(v);
 }
+/* 히어로 등장 연출 (2026-11-22, 시작 탭 첫 화면을 열 때마다 · 약 3.4 초)
+   0 ~ 0.9 s 사진 초점이 맞음 → 0.5 s · 0.9 s 왼쪽 어두운 쪽 가운데에 큰 제목이 두 덩이로 올라옴 → 1.6 ~ 2.6 s 제목이 작아지며 제자리(왼쪽)로
+   → 2.5 s 작은 제목 · 밑줄이 그어짐 → 2.9 s 소개 문장. [둘러보기 ↓] 는 처음부터 보임.
+   누르기 · 휠 · 키 · 스크롤이 있으면 바로 마지막 모습으로 건너뜀. 사용법 진행 중에는 연출하지 않음.
+   fill 은 backwards 만: 끝나면 CSS 상태로 돌아가 스크롤에 따른 어두워짐(--hp)이 그대로 적용됨 */
+let HERO_AN=[];
+function heroSkip(){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HERO_AN=[]; }
+function heroIntro(v){ heroSkip(); const h=v.querySelector('.st-hero'); if(!h || (typeof TR!=='undefined' && TR)) return;
+  const t1=h.querySelector('h1'), ws=[...t1.querySelectorAll('.sh-w')], main=h.querySelector('.sh-main');
+  const hr=h.getBoundingClientRect(), r=t1.getBoundingClientRect(); if(!hr.width || !r.width) return;
+  const S=1.6, dx=(hr.left+hr.width*.3)-(r.left+r.width/2)   /* 큰 제목은 차(오른쪽)와 겹치지 않게 왼쪽 어두운 쪽 가운데(폭의 30 %) */, dy=(hr.top+Math.min(hr.height,innerHeight-hr.top)/2)-(r.top+r.height/2);
+  const OUT='cubic-bezier(.16,1,.3,1)', IO='cubic-bezier(.45,0,.25,1)', big=`translate(${dx}px,${dy}px) scale(${S})`;
+  const A=(el,k,o)=>{ if(el) HERO_AN.push(el.animate(k,{fill:'backwards',easing:OUT,...o})); };
+  A(main,[{filter:'blur(14px)',transform:'scale(1.03)'},{filter:'blur(0px)',transform:'scale(1)'}],{duration:900});
+  A(t1,[{transform:big},{transform:big,offset:.6},{transform:'none'}],{duration:2600,easing:IO});
+  ws.forEach((w,i)=>A(w,[{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:600,delay:500+i*400}));
+  A(h.querySelector('.eyebrow'),[{opacity:0},{opacity:1}],{duration:400,delay:2500});
+  A(h.querySelector('.sh-line'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:600,delay:2500,easing:IO});
+  A(h.querySelector('.lede'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:500,delay:2900});
+  Promise.all(HERO_AN.map(a=>a.finished)).then(()=>{ HERO_AN=[]; }).catch(()=>{}); }
+['pointerdown','wheel','keydown','touchstart'].forEach(ev=>window.addEventListener(ev, ()=>{ if(HERO_AN.length) heroSkip(); }, {passive:true, capture:true}));
+/* 스크롤하면 내용 판이 히어로를 덮으며 올라오고, 그만큼 히어로가 어두워짐 (--hp: 0 → 1) */
+{ let q=0; window.addEventListener('scroll', ()=>{ if(q) return; q=requestAnimationFrame(()=>{ q=0; if(typeof TAB==='undefined' || TAB!=='start') return;
+    const h=document.querySelector('#v-start .st-hero'); if(!h) return; if(HERO_AN.length && scrollY>4) heroSkip();
+    h.style.setProperty('--hp', Math.min(1, Math.max(0, scrollY/(h.offsetHeight||1))).toFixed(3)); }); }, {passive:true}); }
 function sysCard(s){ const n=compOf(s.p).length;
   return `<button type="button" class="st-card" data-sysgo="${s.p}"><span class="st-ch"><span class="dot" style="background:${pc(s.p)}"></span><b>${s.t}</b></span>
     <span class="st-cw">${esc(firstSent(s.why))}</span><span class="st-cm">${n?`부품 ${n}개`:'목표와 연결'} ›</span></button>`; }
@@ -44,22 +70,25 @@ function goalCards(){ if(typeof GOALS==='undefined') return '';
     <div class="st-gcards">${GOALS.map((m,mi)=>`<button type="button" class="st-card st-gcard" data-goalgo="${mi}"><span class="st-ch"><span class="st-gn">${mi+1}</span><b>${m.t}</b></span>
       <span class="st-cw">${esc(m.s)}</span><span class="st-cm">세부 목표 ${m.subs.length}개 ›</span></button>`).join('')}</div></section>`; }
 function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
-  /* 히어로 (2026-11-22, docs/DESIGN.md 6절): 첫 화면 높이 · 화면 폭 전체에 REF4 주행 사진(차만 선명, 주변은 흐리게, 운전자 바이저도 흐리게). 왼쪽 어두운 쪽에 흰 글 + 주 버튼 하나. 아래로 내리면 지금 시작 탭이 이어짐 */
+  /* 히어로 (2026-11-22, docs/DESIGN.md 6절): 첫 화면 높이 · 화면 폭 전체에 REF4 주행 사진(차만 선명, 주변 · 운전자 바이저는 흐리게).
+     히어로는 제자리에 붙어 있고(sticky) 아래 내용 판(.st-body)이 덮으며 올라옴. 주 버튼은 [둘러보기 ↓] 하나(처음부터 보임, 누르면 바로 내려감). 등장 연출은 heroIntro */
   return `<header class="top st-hero">
       <div class="sh-bg" aria-hidden="true"><img class="sh-blur" src="img/hero-ref4.webp" alt=""><img class="sh-main" src="img/hero-ref4.webp" alt="" width="2400" height="1600" decoding="async" fetchpriority="high"></div>
       <div class="sh-txt"><span class="eyebrow">처음 왔다면 여기부터</span>
-        <h1>더 빠른 차를 만드는 일</h1>
-        <p class="lede">${BG_INTRO}</p>
-        <div class="sh-act"><button type="button" class="btn pri sh-go" data-tabgo="steps">설계 시작</button></div></div>
-      <button type="button" class="sh-down" data-shdown="1">자동차에서 FS까지<span aria-hidden="true">↓</span></button>
+        <h1><span class="sh-w">더 빠른 차를</span> <span class="sh-w">만드는 일</span></h1>
+        <i class="sh-line" aria-hidden="true"></i>
+        <p class="lede">${BG_INTRO}</p></div>
+      <button type="button" class="btn pri sh-down" data-shdown="1">둘러보기<span aria-hidden="true">↓</span></button>
     </header>
+    <div class="st-body">
     ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
     ${goalCards()}
     <section class="st-sysw"><h2>더 빠르게 하려면?</h2>
       ${typeof BG_ASK!=='undefined' ? BG_ASK.map(g=>`<div class="st-ask"><div class="sa-q"><b>${g.q}</b><span>${g.a}</span></div><div class="st-sys">${g.p.map(sysOf).filter(Boolean).map(sysCard).join('')}</div></div>`).join('')
         : `<div class="st-sys">${BG_SYS.map(sysCard).join('')}</div>`}
       <p class="st-goal">실제로 설계하는 순서는 <button type="button" class="lnk" data-tabgo="steps">설계</button> 탭입니다. 사이트 사용법은 <button type="button" class="lnk" data-tour="all">여기</button>에서 볼 수 있습니다.</p>
-    </section>`;
+    </section>
+    </div>`;
 }
 /* 목표 화면: 예전 목표 탭의 한 갈래 = 세부 목표(목표·근거·판단 기준·관련 설계 항목) */
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
@@ -96,7 +125,7 @@ ITEM_HOOKS.push((d,b)=>{ const txt=BG_ITEM[d.dataset.item]; if(!txt || b.querySe
 { document.addEventListener('toggle', e=>{ if(e.target.classList && e.target.classList.contains('bgbox')){ SETP('bgopen', e.target.open?'1':'0'); document.querySelectorAll('.bgbox').forEach(o=>{ if(o!==e.target && o.open!==e.target.open) o.open=e.target.open; }); } }, true); }
 
 document.addEventListener('click', e=>{
-  if(e.target.closest('[data-shdown]')){ e.preventDefault(); const n=$('#v-start .st-story'); if(n) smoothScrollTo(()=>n.getBoundingClientRect().top+scrollY-tabH()-24); return; }
+  if(e.target.closest('[data-shdown]')){ e.preventDefault(); heroSkip(); const n=$('#v-start .st-body'); if(n) smoothScrollTo(()=>n.getBoundingClientRect().top+scrollY-tabH()); return; }   /* 연출 기다리지 않고 바로 내려감: 판이 히어로를 덮으며 올라옴 */
   const t=e.target.closest('[data-tabgo]'); if(t){ e.preventDefault(); pushHist(); showTab(t.dataset.tabgo); return; }
   const gg=e.target.closest('[data-goalgo]'); if(gg){ e.preventDefault(); openGoalPage(+gg.dataset.goalgo); return; }
   const fr=e.target.closest('.f1r-b'); if(fr){ e.preventDefault(); const l=fr.parentElement.querySelector('.f1t-row'); const xs=[...l.querySelectorAll('.f1t')].map(c=>c.offsetLeft-l.firstElementChild.offsetLeft); const x=l.scrollLeft, nx=fr.classList.contains('f1r-next'); let t=nx ? xs.find(v=>v>x+4) : [...xs].reverse().find(v=>v<x-4); if(t==null) t = nx ? l.scrollWidth : 0; animScrollLeft(l, t); return; }   // 버튼을 누를 때만 카드 왼쪽에 맞춤 (끌기는 놓은 자리 그대로)

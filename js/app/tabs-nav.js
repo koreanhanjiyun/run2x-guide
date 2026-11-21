@@ -20,41 +20,48 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
 /* 화면 전환 (View Transitions, 2026-11-22, docs/DESIGN.md 5절)
    - 머리띠 · 목차 · 파트 패널은 전환 동안 따로 이름을 붙여 제자리에 둠 (style.css html[data-vt]). 나머지 화면(root)만 움직임
    - kind: open 개요 → 항목 / close 항목 → 개요 / next · prev 이전 · 다음 항목 / fade 탭 바꿈
-   - from · to: 이어 줄 요소 (누른 항목 이름 → 항목 제목). 둘 다 화면 안에 보일 때만 이음
-   - 시간 = motionMs(이은 요소의 이동 거리, 없으면 40 px)
+   - from · to: 이어 줄 상자 (vt-card). 열 때 = 누른 항목 칸 → 항목 화면 판, 닫을 때 = 그 반대. 둘 다 화면 안에 보일 때만 이음
+     칸이 커지며 흰 판이 되고(테두리 · 그림자), 옛 글은 먼저 사라지고 새 내용은 판이 거의 다 커진 뒤 나타남 (컨테이너 변형)
+   - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 700 ms
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
-const vtSeen = el => { if(!el) return null; const r=el.getBoundingClientRect(); return (r.width && r.bottom>0 && r.top<innerHeight) ? r : null; };
+/* 화면 안에 보이는 부분의 상자 (긴 항목 화면은 화면 아래 끝까지만) */
+const vtSeen = el => { if(!el) return null; const r=el.getBoundingClientRect(); if(!(r.width && r.bottom>0 && r.top<innerHeight)) return null;
+  return {left:r.left, top:Math.max(r.top,0), width:r.width, height:Math.min(r.bottom,innerHeight)-Math.max(r.top,0)}; };
 function vtGo(kind, fn, from, to){
   const R=document.documentElement;
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
-  const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-title';
+  const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
   let t2=null; R.style.setProperty('--vt-ms', motionMs(40)+'ms');
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
-    /* 도착 요소는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
+    /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
     const e2=fr&&to&&to(), r2=vtSeen(e2);
-    if(r2){ t2=e2; t2.style.viewTransitionName='vt-title'; R.style.setProperty('--vt-ms', Math.min(700, motionMs(Math.hypot(r2.left-fr.left, r2.top-fr.top)))+'ms'); } });
+    if(r2){ t2=e2; t2.style.viewTransitionName='vt-card';
+      const d=Math.max(Math.hypot(r2.left-fr.left, r2.top-fr.top), Math.abs(r2.width-fr.width), Math.abs(r2.height-fr.height));
+      R.style.setProperty('--vt-ms', Math.min(700, motionMs(d))+'ms'); } });
   t.finished.catch(()=>{}).then(()=>{ if(t2) t2.style.viewTransitionName=''; if(R.dataset.vt===kind) delete R.dataset.vt; });
 }
-/* 뒤로 · 앞으로 가기: 다른 처리보다 먼저 받아, 같은 이벤트를 전환 안에서 다시 보냄 */
+/* 뒤로 · 앞으로 가기: 다른 처리보다 먼저 받아, 같은 이벤트를 전환 안에서 다시 보냄. 스크롤 위치도 그 안에서 바로 되살려 도착 칸을 잴 수 있게 함 */
 window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   if(!h || !h.tab || !document.startViewTransition || (typeof TR!=='undefined' && TR) || (typeof WB!=='undefined' && WB.id)) return;
   const cur=(typeof IPAGE!=='undefined')?IPAGE:null; let kind='fade', from=null, to=null;
   if(h.tab===TAB && TAB==='steps'){
     if(cur && h.ip && cur!==h.ip){ const o=ipOrder(); kind = o.indexOf(h.ip)<o.indexOf(cur) ? 'prev' : 'next'; }
-    else if(!cur && h.ip){ kind='open'; from=()=>$(`#it-${h.ip}>summary .iname`); to=()=>$('#ipage .ip-h'); }
-    else if(cur && !h.ip){ kind='close'; from=()=>$('#ipage .ip-h'); to=()=>$(`#it-${cur}>summary .iname`); }
+    else if(!cur && h.ip){ kind='open'; from=()=>$('#it-'+h.ip); to=()=>$('#ipage'); }
+    else if(cur && !h.ip){ kind='close'; from=()=>$('#ipage'); to=()=>$('#it-'+cur); }
     else kind=null; }
   else if(h.tab===TAB) kind=null;
   if(!kind) return;
   e.stopImmediatePropagation();
-  vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); }, from, to);
+  vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); window.scrollTo({top:h.y||0, behavior:'instant'});
+    /* 닫을 때 되살린 위치에서 그 항목 칸이 머리 띠 밑이나 화면 끝에 걸리면 가운데로 (판이 줄어들 자리가 보이게) */
+    const row=kind==='close' && $('#it-'+cur); if(row){ const r=row.getBoundingClientRect(); if(r.top<tabH()+80 || r.bottom>innerHeight-40) window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); } }, from, to);
 });
 window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='start' && typeof renderStart==='function'){ START.sys=h.sys||''; SETP('startsys', START.sys); } showTab(h.tab, true); try{ history.replaceState(h, '', location.hash); }catch(_){}   /* showTab 이 지운 이 칸의 상태를 되살림 (앞으로가기에 필요) */
   if(h.tab==='graph' && h.v){ try{ animateTo(h.v.x,h.v.y,h.v.k,400); if(h.sel) selectItem(h.sel,false); else clearSel(); }catch(_){} }
-  requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
+  if(!e.__vt) requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });   /* 전환 안에서 다시 보낸 이벤트(__vt)는 위 전환 처리가 위치를 바로 맞춤 */
 /* 스크롤이 멈추면 지금 위치를 현재 기록에 덮어써 둠 (앞으로 가기에도 위치 유지) */
 { let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(typeof WB!=='undefined' && WB.id) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
 /* 움직임 시간 규칙 (docs/DESIGN.md 5절, 2026-11-21): 이동 거리 d [px] → 시간 [ms] = 170 + 15·√d.
@@ -90,8 +97,8 @@ function openItem(id){
 }
 document.addEventListener('click',ev=>{
   const tb=ev.target.closest('.tab'); if(tb){ const t=tb.dataset.tab, ip=(typeof IPAGE!=='undefined')&&IPAGE;
-    const kind = t!==TAB ? 'fade' : (t==='steps' && ip ? 'close' : null);
-    vtGo(kind, ()=>{ if(t!==TAB) pushHist(); showTab(t); }, kind==='close'?()=>$('#ipage .ip-h'):null, kind==='close'?()=>$(`#it-${ip}>summary .iname`):null); return; }
+    if(t===TAB && t==='steps' && ip){ ipBackTo(IT[ip].s); return; }   /* 설계 탭을 다시 누름 = 항목 화면 닫기 (판이 그 칸으로 줄어듦) */
+    vtGo(t!==TAB ? 'fade' : null, ()=>{ if(t!==TAB) pushHist(); showTab(t); }); return; }
   const g=ev.target.closest('[data-goto]'); if(g){ ev.preventDefault(); vtItem(g.dataset.goto, g); return; }
   const gr=ev.target.closest('[data-graph]'); if(gr){ ev.preventDefault(); ev.stopPropagation(); pushHist(); showTab('graph'); requestAnimationFrame(()=>selectItem(gr.dataset.graph,true)); return; }
   const op=ev.target.closest('[data-open]'); if(op){ vtItem(op.dataset.open, op); return; }

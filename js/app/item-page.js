@@ -20,7 +20,7 @@ function ipRender(id){ const it=IT[id], st=STEPS[SIDX[it.s]], host=ipHost();
   const ord=ipOrder(), k=ord.indexOf(id), prev=ord[k-1], next=ord[k+1];
   const ins=EDGES.filter(e=>e[1]===id), outs=EDGES.filter(e=>e[0]===id);
   const link = x => `<button type="button" class="lnk" data-goto="${x}">${IT[x].n}</button>`;
-  host.innerHTML = `<div class="ip-top"><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav>
+  host.innerHTML = `<div class="ip-closebar"><button type="button" class="btn small ip-close" data-ipclose="1" title="항목 화면 닫기 (Esc)">✕ 닫기</button></div><div class="ip-top"><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav>
       <h1 class="ip-h">${it.n}</h1><div class="ip-meta">${chip(it.p)}${it.c?'<span class="badge b-card">상세</span>':''}<button class="btn small gbtn" data-graph="${id}">연결도에서 보기</button></div></div>
     <div class="ipage" data-item="${id}"><div class="dbody" data-lazy="1"></div></div>
     <div class="ip-cols"><div class="ip-main"></div><aside class="ip-side"></aside></div>`;
@@ -66,24 +66,32 @@ openItem = function(id){ if(!IT[id]) return; pushHist(); setVM('full'); IPKEEP=t
 let IPKEEP=false;
 /* 설계 탭을 다시 누르거나 다른 탭으로 가면 개요로 (뒤로 가기는 popstate 에서 ip 로 되살림) */
 { const _st=showTab; showTab=function(t, keep){ const r=_st.apply(this, arguments); if(!IPKEEP && IPAGE) ipClose(); return r; }; }
-window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='steps' && h.ip){ if(h.ip!==IPAGE){ ipShow(h.ip); } requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); } else if(IPAGE) ipClose(); });
+window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) return; if(h.tab==='steps' && h.ip){ if(h.ip!==IPAGE){ ipShow(h.ip); } if(!e.__vt) requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); } else if(IPAGE) ipClose(); });
 
 /* 개요 줄 · 목차 단계 · 경로 누름 */
 document.addEventListener('click', e=>{
-  const sm=e.target.closest('#step-list details.item>summary'); if(sm && !e.target.closest('button,a,input,.tk-cnt')){ e.preventDefault(); vtItem(sm.parentElement.dataset.item, sm.querySelector('.iname')); return; }
-  if(e.target.closest('[data-ipback]')){ e.preventDefault(); if(IPAGE) ipBackTo(IT[IPAGE].s); return; }
+  const sm=e.target.closest('#step-list details.item>summary'); if(sm && !e.target.closest('button,a,input,.tk-cnt')){ e.preventDefault(); vtItem(sm.parentElement.dataset.item, sm.parentElement); return; }
+  if(e.target.closest('[data-ipback],[data-ipclose]')){ e.preventDefault(); if(IPAGE) ipBackTo(IT[IPAGE].s); return; }
   const ps=e.target.closest('[data-ipstep]'); if(ps){ e.preventDefault(); ipBackTo(ps.dataset.ipstep); return; }
 }, true);
-/* 항목 화면 → 개요의 그 단계 (경로 · 목차 단계 누름). 보던 항목 줄이 화면에 보이면 제목이 그 줄로 돌아감 */
-function ipBackTo(sid){ const cur=IPAGE;
-  vtGo('close', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(st){ st.open=true; window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } },
-    ()=>$('#ipage .ip-h'), ()=>cur && $(`#it-${cur}>summary .iname`)); }
-/* 항목 열기 + 화면 전환: 항목 화면끼리는 순서대로 밀고(이전 · 다음), 그 밖에서는 누른 이름이 제목으로 이어짐.
+/* 항목 화면 → 개요 (닫기 · Esc · 경로 · 목차 단계 · 설계 탭 다시 누름).
+   같은 단계로 돌아가면 보던 항목 칸을 화면 가운데에 두고, 판이 그 칸으로 줄어듦. 다른 단계면 그 단계 머리로 */
+function ipBackTo(sid){ const cur=IPAGE, same=cur && IT[cur].s===sid;
+  vtGo('close', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(!st) return; st.open=true;
+      const row=same && $('#it-'+cur);
+      if(row){ const r=row.getBoundingClientRect(); window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); markHere(row); }
+      else { window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } },
+    ()=>$('#ipage'), ()=>same && $('#it-'+cur)); }
+document.addEventListener('keydown', e=>{ if(e.key!=='Escape' || !IPAGE || TAB!=='steps' || e.defaultPrevented) return;
+  if((typeof TR!=='undefined' && TR) || document.querySelector('dialog[open]')) return;
+  const a=document.activeElement; if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA' || a.isContentEditable)) return;
+  e.preventDefault(); ipBackTo(IT[IPAGE].s); });
+/* 항목 열기 + 화면 전환: 항목 화면끼리는 순서대로 밀고(이전 · 다음), 그 밖에서는 누른 칸(또는 버튼)이 커져 항목 화면이 됨.
    다른 코드가 부르는 openItem 은 그대로 즉시 (부른 뒤 바로 그 화면을 찾는 곳이 있음: learn.js openQ 등) */
 function vtItem(id, src){ if(!IT[id]) return; const cur=(TAB==='steps')&&IPAGE;
   if(cur===id){ openItem(id); return; }
   if(cur){ const o=ipOrder(); vtGo(o.indexOf(id)<o.indexOf(cur)?'prev':'next', ()=>openItem(id)); return; }
-  vtGo('open', ()=>openItem(id), src?()=>src:null, ()=>$('#ipage .ip-h')); }
+  vtGo('open', ()=>openItem(id), src?()=>src:null, ()=>$('#ipage')); }
 /* 목차 단계 누름: 항목 화면이면 개요로 돌아가 그 단계로 */
 { const _gs=gotoStep; gotoStep=function(sid){ if(IPAGE){ ipBackTo(sid); return; } return _gs.apply(this, arguments); }; }
 /* 스크롤에 따른 목차 강조는 개요에서만 */

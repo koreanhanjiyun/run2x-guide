@@ -3246,7 +3246,7 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
    화면 전환 (View Transitions, 2026-11-22, tabs-nav.js vtGo · docs/DESIGN.md 5절)
    - 머리띠 · 목차 · 파트 패널: 전환 동안만 이름을 붙여 제자리 (예전 모습은 숨기고 새 모습을 그대로)
    - 나머지 화면(root): 개요 → 항목은 살짝 떠오르며, 항목 → 개요는 반대로, 이전 · 다음은 옆으로 밀림, 탭은 겹쳐 바뀜
-   - 항목 이름 → 항목 제목 (vt-title): 자리와 크기가 이어짐
+   - 항목 칸 ↔ 항목 화면 판 (vt-card): 칸이 커지며 흰 판이 됨(컨테이너 변형). 옛 내용은 앞 25 % 안에 사라지고, 새 내용은 뒤 45 % 에 나타남
    - 사라짐은 나타남 시간의 0.7배
    ============================================================ */
 html[data-vt] .tabs{view-transition-name:vt-tabs}
@@ -3257,51 +3257,63 @@ html[data-vt] #partRail{view-transition-name:vt-rail}
 ::view-transition-old(vt-tabs),::view-transition-old(vt-toc),::view-transition-old(vt-rail){display:none}
 ::view-transition-group(root),::view-transition-new(root){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-out)}
 ::view-transition-old(root){animation-duration:calc(var(--vt-ms,265ms) * .7);animation-timing-function:var(--ease-out)}
-::view-transition-group(vt-title){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-io)}
-::view-transition-old(vt-title),::view-transition-new(vt-title){animation:none;height:100%;width:auto}
-/* 이름 → 제목은 같은 글자라 겹쳐 보이지 않게 큰 쪽 하나만 보임 (작은 글자를 키우면 흐려짐): 열 때는 새 제목, 닫을 때는 예전 제목 */
-html[data-vt="open"]::view-transition-old(vt-title),html[data-vt="close"]::view-transition-new(vt-title){display:none}
-#ipage .ip-h{width:fit-content}
-html[data-vt="open"]::view-transition-old(root){animation-name:vt-out}
-html[data-vt="open"]::view-transition-new(root){animation-name:vt-in-up}
-html[data-vt="close"]::view-transition-old(root){animation-name:vt-out-down}
-html[data-vt="close"]::view-transition-new(root){animation-name:vt-in}
+::view-transition-group(vt-card){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-io);border-radius:var(--r-m);overflow:hidden}
+/* 판 겉면: 칸(옅음) → 가운데에서 흰 판 + 그림자로 짙어짐 → 도착하면 다시 바탕에 녹아듦 (끝에 테두리 · 그림자가 툭 사라지지 않게) */
+::view-transition-image-pair(vt-card){isolation:auto;border-radius:var(--r-m);animation:vt-surface var(--vt-ms,265ms) var(--ease-io) both}
+@keyframes vt-surface{0%{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 1px var(--line);}
+  45%,75%{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line-2),0 8px 24px rgba(30,20,50,.18)}
+  100%{background:rgba(255,255,255,0);box-shadow:inset 0 0 0 1px rgba(0,0,0,0),0 8px 24px rgba(30,20,50,0)}}
+::view-transition-old(vt-card),::view-transition-new(vt-card){width:auto;height:auto;mix-blend-mode:normal}   /* 늘이지 않고 원래 크기로 왼쪽 위에 둠 (글자가 찌그러지지 않게) */
+::view-transition-old(vt-card){animation:vt-out calc(var(--vt-ms,265ms) * .25) var(--ease-out) both}
+::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,265ms) * .45) var(--ease-out) calc(var(--vt-ms,265ms) * .55) both}
+html[data-vt="open"]::view-transition-old(root){animation-name:vt-dim}
+html[data-vt="close"]::view-transition-new(root){animation-name:vt-undim}
+@keyframes vt-dim{to{opacity:0;filter:blur(3px)}}
+@keyframes vt-undim{from{opacity:0;filter:blur(3px)}}
+html[data-vt="close"]::view-transition-old(root){animation-name:vt-out}
 html[data-vt="next"]::view-transition-old(root){animation-name:vt-out-l}
 html[data-vt="next"]::view-transition-new(root){animation-name:vt-in-r}
 html[data-vt="prev"]::view-transition-old(root){animation-name:vt-out-r}
 html[data-vt="prev"]::view-transition-new(root){animation-name:vt-in-l}
 @keyframes vt-out{to{opacity:0}}
 @keyframes vt-in{from{opacity:0}}
-@keyframes vt-in-up{from{opacity:0;transform:translateY(16px)}}
-@keyframes vt-out-down{to{opacity:0;transform:translateY(16px)}}
 @keyframes vt-out-l{to{opacity:0;transform:translateX(-32px)}}
 @keyframes vt-in-r{from{opacity:0;transform:translateX(32px)}}
 @keyframes vt-out-r{to{opacity:0;transform:translateX(32px)}}
 @keyframes vt-in-l{from{opacity:0;transform:translateX(-32px)}}
 
 /* ============================================================
-   시작 탭 히어로 (2026-11-22, start.js homePage · docs/DESIGN.md 6절)
-   - 화면 폭 전체(본문 폭 밖까지), 첫 화면 높이. 사진 img/hero-ref4.webp = REF4 주행 사진에서 차만 선명하게 두고 주변 · 운전자 바이저를 흐리게 처리한 것
+   시작 탭 히어로 (2026-11-22, start.js homePage · heroIntro · docs/DESIGN.md 6절)
+   - 화면 폭 전체(본문 폭 밖까지), 첫 화면 높이. 사진 img/hero-ref4.webp = REF4 주행 사진에서 차만 선명하게, 주변 · 운전자 바이저는 흐리게 처리
    - 바탕: 같은 사진을 크게 흐리고 어둡게(.sh-blur, 유리 느낌) → 그 위 오른쪽에 높이에 맞춘 사진(.sh-main), 왼쪽 끝은 바탕으로 흐려 이음
-   - 글은 왼쪽(흰색): 작은 제목 · 첫 문장 32 · 소개 15 · 주 버튼 하나. 아래 가운데 '자동차에서 FS까지 ↓'
+   - 히어로는 머리띠 밑에 붙어 있고(sticky), 아래 내용 판(.st-body)이 둥근 윗모서리로 덮으며 올라옴. 덮이는 만큼(--hp) 히어로가 어두워지고 글이 흐려짐
+   - 글은 왼쪽(흰색): 작은 제목 · 첫 문장 32 · 보라 밑줄 · 소개 15. 주 버튼 [둘러보기 ↓] 는 아래 가운데
    ============================================================ */
 body{overflow-x:clip}   /* 히어로 바탕이 화면 폭 전체(100vw)라 세로 스크롤 막대 폭만큼 넘치는 것을 자름 (clip 은 sticky 를 깨지 않음) */
-#v-start .st-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:520px minmax(0,1fr);align-items:center;
-  min-height:calc(100vh - var(--tabh));margin:-24px 0 var(--sp-6);padding:var(--sp-7) 0;color:#fff}
+#v-start .st-hero{--hp:0;position:sticky;top:var(--tabh);z-index:0;isolation:isolate;display:grid;grid-template-columns:520px minmax(0,1fr);align-items:center;
+  min-height:calc(100vh - var(--tabh));margin:-24px 0 0;padding:var(--sp-7) 0;color:#fff}
 #v-start .st-hero .sh-bg{position:absolute;z-index:-1;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;overflow:hidden;background:#15121c}
 #v-start .st-hero .sh-blur{position:absolute;inset:-48px;width:calc(100% + 96px);height:calc(100% + 96px);object-fit:cover;filter:blur(28px) brightness(.5) saturate(1.2)}
-#v-start .st-hero .sh-main{position:absolute;right:0;top:0;height:100%;width:auto;max-width:none;display:block;
+#v-start .st-hero .sh-main{position:absolute;right:0;top:0;height:100%;width:auto;max-width:none;display:block;transform-origin:70% 60%;
   -webkit-mask-image:linear-gradient(to right,transparent 0,#000 28%);mask-image:linear-gradient(to right,transparent 0,#000 28%)}   /* 높이에 맞춰 오른쪽에 둠 → 차가 글과 겹치지 않음. 왼쪽 끝은 흐린 바탕으로 이음 */
 #v-start .st-hero .sh-bg::after{content:"";position:absolute;inset:0;
   background:linear-gradient(to right,rgba(18,12,28,.55) 0,rgba(18,12,28,.35) 35%,rgba(18,12,28,0) 55%),linear-gradient(to top,rgba(18,12,28,.55) 0,rgba(18,12,28,0) 22%)}
-#v-start .st-hero .sh-txt{grid-column:1;display:flex;flex-direction:column;gap:var(--sp-4)}
+#v-start .st-hero .sh-bg::before{content:"";position:absolute;inset:0;z-index:1;background:#0d0a14;opacity:calc(var(--hp) * .8);pointer-events:none}   /* 덮일수록 어두워짐 */
+#v-start .st-hero .sh-txt{grid-column:1;display:flex;flex-direction:column;gap:var(--sp-4);opacity:calc(1 - var(--hp) * 1.4);transform:translateY(calc(var(--hp) * -48px))}
 #v-start .st-hero .eyebrow{color:#cdb8ec}
-#v-start .st-hero h1{font-size:var(--fs-3xl);font-weight:800;line-height:1.2;margin:0;color:#fff}
+#v-start .st-hero h1{font-size:var(--fs-3xl);font-weight:800;line-height:1.2;margin:0;color:#fff;transform-origin:center;width:fit-content}
+#v-start .st-hero h1 .sh-w{display:inline-block}
+#v-start .st-hero .sh-line{display:block;height:3px;width:96px;background:var(--accent);border-radius:var(--r-pill);transform-origin:left center}
 #v-start .st-hero .lede{font-size:var(--fs-m);line-height:1.7;color:rgba(255,255,255,.86);margin:0;max-width:none}
-#v-start .st-hero .sh-act{margin-top:var(--sp-3)}
-#v-start .st-hero .sh-go{font-size:var(--fs-m);padding:12px 24px;border-radius:var(--r-m)}
-#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:var(--sp-4);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:var(--sp-1);
-  background:none;border:0;padding:var(--sp-2);font:inherit;font-size:var(--fs-s);color:rgba(255,255,255,.8);cursor:pointer}
-#v-start .st-hero .sh-down span{font-size:var(--fs-m);animation:sh-bob 1.6s var(--ease-io) infinite}
-#v-start .st-hero .sh-down:hover{color:#fff}
+#v-start .st-hero .sh-down{position:absolute;left:50%;bottom:var(--sp-6);transform:translateX(-50%);opacity:calc(1 - var(--hp) * 2);
+  display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-m);padding:12px 24px;border-radius:var(--r-pill);box-shadow:0 8px 24px rgba(30,20,50,.18)}
+#v-start .st-hero .sh-down span{display:inline-block;animation:sh-bob 1.6s var(--ease-io) infinite}
 @keyframes sh-bob{50%{transform:translateY(4px)}}
+/* 히어로를 덮으며 올라오는 내용 판: 화면 폭 전체 바탕 + 둥근 윗모서리 + 위로 드리운 그림자 */
+#v-start .st-body{position:relative;z-index:1;isolation:isolate;display:flex;flex-direction:column;gap:var(--sp-5);padding-top:var(--sp-7);margin-top:calc(-1 * var(--sp-5))}
+#v-start .st-body::before{content:"";position:absolute;z-index:-1;top:0;bottom:-80px;left:calc(50% - 50vw);width:100vw;background:var(--bg);border-radius:var(--r-m) var(--r-m) 0 0;box-shadow:0 -16px 40px rgba(13,10,20,.35)}
+
+/* 항목 화면 닫기 버튼 (2026-11-22): 오른쪽 위, 내려 읽어도 머리띠 아래에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 닫힘 */
+#ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-end}
+#ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 1px 0 var(--line)}
+#ipage .ip-side{top:calc(var(--tabh) + 60px);max-height:calc(100vh - var(--tabh) - 76px)}   /* 닫기 버튼 아래에서 멈춤 */
