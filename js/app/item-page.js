@@ -47,7 +47,8 @@ function ipToc(){ const t=$('#toc'); if(!t) return; t.querySelectorAll('.toc-its
   const sid=IT[IPAGE].s, b=t.querySelector(`.toc-s[data-toc="${sid}"]`); if(!b) return; b.classList.add('cur');
   const box=document.createElement('div'); box.className='toc-its';
   box.innerHTML=ipItems(sid).map(i=>`<button type="button" class="toc-it${i.id===IPAGE?' on':''}" data-goto="${i.id}">${i.n}</button>`).join('');
-  b.after(box); requestAnimationFrame(()=>{ box.classList.add('open'); const on=box.querySelector('.on'); if(on){ const r=on.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } }); }
+  b.after(box); const hh=box.scrollHeight; box.style.transitionDuration=motionMs(hh)+'ms';   /* 펼치는 높이에 맞춘 시간 */
+  requestAnimationFrame(()=>{ box.classList.add('open'); const on=box.querySelector('.on'); if(on){ const r=on.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } }); }
 
 /* 열기: 예전 openItem(펼쳐서 스크롤)을 항목 화면으로 */
 openItem = function(id){ if(!IT[id]) return; pushHist(); setVM('full'); IPKEEP=true; showTab('steps', true); IPKEEP=false; ipShow(id); window.scrollTo({top:0, behavior:'instant'}); };

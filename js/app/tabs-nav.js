@@ -22,11 +22,14 @@ window.addEventListener('popstate', e=>{ const h=e.state; if(!h || !h.tab) retur
   requestAnimationFrame(()=>window.scrollTo({top:h.y||0, behavior:'instant'})); });
 /* 스크롤이 멈추면 지금 위치를 현재 기록에 덮어써 둠 (앞으로 가기에도 위치 유지) */
 { let st=0; window.addEventListener('scroll', ()=>{ clearTimeout(st); st=setTimeout(()=>{ if(typeof WB!=='undefined' && WB.id) return; try{ history.replaceState(navState(), '', location.hash); }catch(e){} }, 250); }, {passive:true}); }
+/* 움직임 시간 규칙 (docs/DESIGN.md 5절, 2026-11-21): 이동 거리 d [px] → 시간 [ms] = 170 + 15·√d.
+   관리자가 직접 맞춘 애니메이션에서 뽑음 — 좌표계 창 10 px · 240 ms (식 217), 목차 · 파트 패널 약 150 px · 360 ms (식 354), 스크롤 1000 px · 600 ms (식 644) */
+const motionMs = d => Math.round(170 + 15*Math.sqrt(Math.max(0, d||0)));
 let SCR=null;
 function smoothScrollTo(getY, done){
   if(SCR) cancelAnimationFrame(SCR);
   const y0 = window.scrollY, y1 = Math.max(0, getY()), dist = Math.abs(y1-y0);
-  const dur = Math.min(1300, Math.max(250, 250 + dist*0.35)), t0 = performance.now();
+  const dur = Math.min(1300, motionMs(dist)), t0 = performance.now();
   if(dist<4){ SCR=null; window.__progEnd=performance.now(); if(done) done(); return; }
   const ease = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
   const step = now => { const t = Math.min(1,(now-t0)/dur); const target = Math.max(0, getY());
@@ -35,7 +38,7 @@ function smoothScrollTo(getY, done){
   SCR = requestAnimationFrame(step);
 }
 /* 요소 안 가로 스크롤도 직접 애니메이션 (브라우저 기본 smooth는 OS '애니메이션 줄이기' 설정을 따르므로 쓰지 않음) */
-function animScrollLeft(el, to){ const x0=el.scrollLeft, d=to-x0, dur=Math.min(700, Math.max(220, 220+Math.abs(d)*0.4)), t0=performance.now(), ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function animScrollLeft(el, to){ const x0=el.scrollLeft, d=to-x0, dur=Math.min(900, motionMs(Math.abs(d))), t0=performance.now(), ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const st=now=>{ const t=Math.min(1,(now-t0)/dur); el.scrollLeft=x0+d*ease(t); if(t<1) requestAnimationFrame(st); }; requestAnimationFrame(st); }
 function markHere(el){
   document.querySelectorAll('.here').forEach(x=>x.classList.remove('here'));
