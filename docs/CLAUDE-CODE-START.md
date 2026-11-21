@@ -73,7 +73,7 @@
 
 | 구분 | 위치 | 상태 (2026-11-14) |
 |---|---|---|
-| 실제 사이트 | `main` → https://koreanhanjiyun.github.io/run2x-guide/ | **v2.1.0** (2026-11-08, ~45차). 이후 46 ~ 118차는 아직 반영 안 됨 |
+| 실제 사이트 | `main` → https://koreanhanjiyun.github.io/run2x-guide/ | **v2.2.0** (2026-11-21, 130차, 46 ~ 124차 반영). 새 3D 부품 그림(126 ~ 129차)은 시안에만 |
 | 작업 브랜치 | `redesign-v1` | 118차까지 (마지막 커밋 "118차: 사용법 목차 전환 애니메이션(B'), 펼침 제목 위치 고정, 펼침 부드럽게" + 이전 정리 커밋) |
 | 공개 시안 | `main` 의 `draft/` → https://koreanhanjiyun.github.io/run2x-guide/draft/ | 118차. 더미 팀 · 가짜 저장소, 실제 Firebase 연결 안 함, 검색 제외. 왼쪽 아래 '시안' 버블로 보는 사람(비로그인 · 팀원 · 파트장 · 팀장 · 회장) 바꿈 |
 | 버전 표시 | `index.html` `#verline`, 변경 이력 `js/data/refs.js` | 시안에서는 버전을 올리지 않음. 배포 지시 때만 |
