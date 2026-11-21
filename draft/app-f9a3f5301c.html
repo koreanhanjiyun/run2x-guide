@@ -3340,6 +3340,33 @@ body{overflow-x:clip}   /* 히어로 바탕이 화면 폭 전체(100vw)라 세�
 #ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-end}
 #ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 1px 0 var(--line)}
 #ipage .ip-side{top:calc(var(--tabh) + 60px);max-height:calc(100vh - var(--tabh) - 76px)}   /* 닫기 버튼 아래에서 멈춤 */
+/* ============================================================
+   탭별 글자 네 가지 (2026-11-22, docs/DESIGN.md 3절 '한 화면 안 글자 크기')
+   화면 제목 24 · 칸 제목 15 (굵게) · 본문 · 표 · 버튼 · 링크 · 그림 글자 13 · 보조 11.
+   예외: 시작 탭 첫 화면 큰 문장 32 (히어로), 히어로 소개 문장 · 버튼 15. 아이콘 글자(‹ › 등)는 따지지 않음.
+   예전 규칙들이 크기를 !important 로 박아 둔 곳이 많아 여기서 탭별로 한 번에 덮음
+   ============================================================ */
+/* 시작 탭 첫 화면 (히어로 아래) */
+#v-start .st-body h2{font-size:var(--fs-2xl)!important;font-weight:700!important}
+#v-start .st-body .st-ch b,#v-start .st-body .sa-q b,#v-start .st-body .st-story b{font-size:var(--fs-m)!important;font-weight:700!important}
+#v-start .st-body .st-cw,#v-start .st-body .st-gl,#v-start .st-body .st-story p,#v-start .st-body p.st-goal,#v-start .st-body .sa-q span{font-size:var(--fs-s)!important}
+#v-start .st-body .st-cm,#v-start .st-body .ss-y{font-size:var(--fs-xs)!important}
+/* 시작 탭 시스템 · 목표 화면 */
+#v-start .sp-head h1{font-size:var(--fs-2xl)!important}
+#v-start .sp-head .lede{font-size:var(--fs-m)!important}
+#v-start .sp-sec h2,#v-start .sp-comp h2,#v-start .sp-tech h2,#v-start .sp-fs h2,#v-start .gp-subs+h2,#v-start h2{font-size:var(--fs-m)!important;font-weight:700!important}
+#v-start .sp-sec p,#v-start .sp-sec li,#v-start .sp-sec b,#v-start .gp-why,#v-start .gwhy,#v-start .gwhy b,#v-start .cp-desc,#v-start .cp-desc p,#v-start .cp-b dd,#v-start .cp-what,#v-start .f1t dd,#v-start .f1t p,#v-start .sp-nav .lnk,#v-start .sp-pn .lnk,#v-start button.lnk{font-size:var(--fs-s)!important}
+#v-start .sp-sec b,#v-start .gwhy b{font-weight:700}
+#v-start .f1t .muted,#v-start .f1t-h .muted{font-size:var(--fs-s)!important;font-weight:400!important}
+#v-start .cp-b h3,#v-start .f1t-h,#v-start .f1t b,#v-start .gp-subs .iname{font-size:var(--fs-m)!important;font-weight:700!important}
+/* 시작 탭 부품 그림 라벨: 그림이 칸 폭으로 커져 14 px 로 보이던 것을 13 px 로 */
+#v-start svg.cfig3 text{font-size:11.9px!important}   /* viewBox 480 그림이 칸 폭 526 px 로 그려짐 → 11.9 × 526/480 ≈ 13 px */
+/* 도구 탭 */
+#v-tools h2,#v-tools .tl-sh h2{font-size:var(--fs-m)!important;font-weight:700!important}
+#v-tools .dv-v b,#v-tools .tt-n{font-size:var(--fs-m)!important;font-weight:700!important}
+/* 참고 탭 */
+#v-ref .stitle{font-size:var(--fs-m)!important;font-weight:700!important}
+#v-ref .ssub,#v-ref li.pl,#v-ref .pl,#v-ref .pl i,#v-ref .pl a,#v-ref .pl span,#v-ref .muted{font-size:var(--fs-s)!important}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
