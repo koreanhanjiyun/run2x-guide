@@ -26,7 +26,7 @@ img{max-width:100%}
   color-scheme:light;
   --bg:#f3f1eb; --panel:#ffffff; --panel-2:#faf8f3; --ink:#1a2028; --ink-2:#38424e; --muted:#67717c;
   --line:#ddd8cc; --line-2:#c7c0b0;
-  --accent:#c2410c; --accent-soft:#fdeee4; --in:#1d5f9a; --in-soft:#e7f0f8; --out:#257a47; --out-soft:#e4f3e9;
+  --accent:#c2410c; --accent-soft:#fdeee4; --in:#1d5f9a; --in-soft:#e7f0f8; --out:#1f6e3f; --out-soft:#e4f3e9;
   --assume-fg:#7d5800; --assume-bg:#fff1c4; --verify-fg:#9a1c45; --verify-bg:#fde5ed;
   --rubber:#2b2f35; --rim:#d4d9de; --rim-s:#7c8791; --alu:#b7c4cf; --alu-d:#6a7d8f; --steel:#46535f;
   --frame:#ece3d1; --frame-s:#a9977a; --ground:#8a8376; --brake:#b4493a; --disc:#8b949c;
@@ -1074,7 +1074,7 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 .tk-r .tk-av{width:20px;height:20px;font-size:var(--fs-xs)}
 .tk-r .qa-t,.tk-r .qa-more{margin-left:24px}
 .tk-isnew>.tk-h .tk-who::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#d9730d;margin-left:4px;vertical-align:middle}
-.tk-newtag{font-size:var(--fs-xs);font-weight:700;color:#b45309}
+.tk-newtag{font-size:var(--fs-xs);font-weight:700;color:#a74b06}
 .tk-rfslot:empty{display:none}
 .tk-rfslot{margin-left:32px}
 .tk-rf textarea,.tk-f textarea{min-height:56px}
@@ -1198,7 +1198,7 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 .tt-report{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 24px}
 .tt-report h2{margin:0 0 4px}.tt-report h3{margin:16px 0 4px;font-size:var(--fs-m);color:var(--accent)}
 .tt-rep{width:100%;font-size:var(--fs-s)}.tt-rep td{vertical-align:top}
-.tt-rep td.st-done{color:var(--out);font-weight:600}.tt-rep td.st-doing{color:#b45309;font-weight:600}.tt-rep td.st-skip{color:var(--muted)}
+.tt-rep td.st-done{color:var(--out);font-weight:600}.tt-rep td.st-doing{color:#a74b06;font-weight:600}.tt-rep td.st-skip{color:var(--muted)}
 .tt-rep-q{font-size:var(--fs-s);color:var(--ink-2);margin-top:2px}
 @media print{body.print-report>*:not(#v-team){display:none!important}body.print-report #v-team>*:not([data-ttp=summary]){display:none!important}body.print-report .tt-sumbar{display:none}body.print-report #v-team{max-width:none;padding:0}body.print-report .tt-report{border:0}}
 /* 사용법 튜토리얼 */
@@ -3384,6 +3384,24 @@ html[data-vt="hero"]::view-transition-new(root){animation:vt-hero-in var(--vt-ms
 /* 참고 탭 */
 #v-ref .stitle{font-size:var(--fs-m)!important;font-weight:700!important}
 #v-ref .ssub,#v-ref li.pl,#v-ref .pl,#v-ref .pl i,#v-ref .pl a,#v-ref .pl span,#v-ref .muted{font-size:var(--fs-s)!important}
+
+/* ============================================================
+   점검 수정 (2026-11-24, ux-ui-audit 측정 결과)
+   ============================================================ */
+/* 목차 항목: all:unset 이 포커스 고리를 지웠음 (WCAG 2.4.7) · 높이 23 → 24 px (2.5.8) */
+.toc-it{min-height:24px}
+.toc-it:focus-visible{outline:2px solid var(--focus-ink);outline-offset:1px}
+/* 어두운 바탕 위 버튼의 포커스 고리: 파랑은 2.23:1 이라 흰색으로 (14.9:1, 1.4.11) */
+#partRail :focus-visible,#toc .toc-h :focus-visible{outline:2px solid #fff!important;outline-offset:-3px}
+/* 팀 탭 작은 글자 링크 버튼: 24 × 24 이상 (2.5.8) */
+#v-team button.lnk,#ipage .ip-side button.lnk{min-width:24px;min-height:24px}
+/* 글자 네 가지: 설계 개요 (묶음 20 · 단계 17 → 15 굵게), 팀 탭 (17 → 15), 도구 탭 그림 · 출력 숫자 (17 → 15) */
+.phase-k,.phase-n{font-size:var(--fs-m)!important;font-weight:800}
+#step-list details.step>summary .stitle,#step-list details.step>summary .scode,.stitle,.scode{font-size:var(--fs-m)!important}
+#v-team .tt-card h3,#v-team .tt-sv{font-size:var(--fs-m)!important}
+#v-tools .dc-i output,#v-tools .wb-oc b,#v-tools .wb-oc output{font-size:var(--fs-m)!important}
+/* 화면 읽기용 숨은 제목 */
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -17328,7 +17346,7 @@ function renderQ(q, k){ return `<details class="q"${k!=null?` data-qi="${k}"`:''
 function renderCard(key){ const c = CARD[key]; if(!c) return '';
   const sym = SYM[key] ? `<details class="symbox"><summary>이 카드의 기호 <span class="muted">(${SYM[key].length}개)</span></summary><table class="kvt">${symRows(SYM[key])}</table></details>` : '';
   const M = (typeof CARD_MAIN!=='undefined' && CARD_MAIN[key]) || [];
-  const main = c.L.map((q,k)=>M.includes(k+1) ? `<section class="qsec" data-qi="${k}"><h3 class="qsec-h">${q.h}</h3><div class="qb">${q.b}${q.s.map(s=>renderQ(s)).join('')}</div></section>` : '').join('');
+  const main = c.L.map((q,k)=>M.includes(k+1) ? `<section class="qsec" data-qi="${k}"><h2 class="qsec-h">${q.h}</h2><div class="qb">${q.b}${q.s.map(s=>renderQ(s)).join('')}</div></section>` : '').join('');
   const more = c.L.map((q,k)=>M.includes(k+1) ? '' : renderQ(q,k)).join('');
   return `<div class="concl"><b class="tag">참고</b>${c.c}</div>${sym}${main?`<div class="qmain">${main}</div>`:''}${calcHTML(key)}${more?`<div class="qmore"><div class="qmore-h">더 알아보기</div><div class="stack">${more}</div></div>`:''}`; }
 const chip = p => `<span class="chip"><span class="dot" style="background:${pc(p)}"></span>${p}</span>`;
@@ -17630,7 +17648,7 @@ function renderFlow(){
 }
 function refSrcExtra(){ if(typeof srcList!=='function') return '';
   const g=[['시작 탭 배경 글',typeof BG_SRC!=='undefined'?BG_SRC:null],['F1 기술',typeof F1_TECH_SRC!=='undefined'?F1_TECH_SRC:null],['부품 소개',typeof COMP_SRC!=='undefined'?COMP_SRC:null]].filter(x=>x[1]&&x[1].length);
-  return g.map(([h,a])=>`<h4 class="src-h">${h}</h4><ul class="pl">${srcList(a)}</ul>`).join(''); }
+  return g.map(([h,a])=>`<h4 class="src-h" aria-level="2">${h}</h4><ul class="pl">${srcList(a)}</ul>`).join(''); }
 function renderRefs(){ $('#ref-list').innerHTML = REFS.map(r=>`<details class="step"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?'<h4 class="src-h">설계 탭 본문</h4>'+r.b+refSrcExtra():r.b}</div></details>`).join(''); }
 
 /* ============================================================
@@ -19533,7 +19551,7 @@ function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
         <p class="lede">${BG_INTRO}</p></div>
       <button type="button" class="btn pri sh-down" data-shdown="1"${HERO_DONE?"":" disabled"}>둘러보기<span aria-hidden="true">↓</span></button>
     </header>
-    <div class="st-body">
+    <div class="st-body"><h1 class="sr-only">시작</h1>
     ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
     ${goalCards()}
     <section class="st-sysw"><h2>더 빠르게 하려면?</h2>
@@ -19636,6 +19654,8 @@ let DVS = {};   /* 문서 id → {s:{시즌:{v, st, src, by, at}}} */
    그 전에 저장된 값은 읽을 때 L − 값으로 바꿔 씀 (팀 저장소 문서는 건드리지 않음, 다음에 저장할 때 바뀐 값으로 저장됨).
    같은 시즌 휠베이스 L 이 없으면 바꿀 수 없어 copOld 로 표시만 함 (dvState 에서 ↻) */
 const COP_CUT = '2026-11-08T12:50:53Z';
+/* 숫자 · 글자 끝 받침에 맞춘 을/를 (도구 5를 · 도구 3을) */
+const josa = w => { const c=String(w).trim().slice(-1); const n='0136780'.includes(c)?1:'2459'.includes(c)?0:null; if(n!=null) return n?'을':'를'; const k=c.charCodeAt(0)-0xAC00; return k>=0&&k<11172&&k%28?'을':'를'; };
 function copFix(r){ const se = s => { const L = Object.keys(r).find(id => id.endsWith('__L')); const e = L && r[L].s && r[L].s[s]; return e && typeof e.v==='number' ? e.v : null; };
   Object.keys(r).forEach(id => { if(!/__xcop(_drs)?$/.test(id) || !r[id] || !r[id].s) return;
     Object.entries(r[id].s).forEach(([s, e]) => { if(!e || typeof e.v!=='number' || e.copV || !e.at || e.at >= COP_CUT) return;
@@ -19753,7 +19773,7 @@ function dashBipolar(){ const sl = document.querySelector('#dcond input[data-dc=
   sl.style.background = `linear-gradient(to right, transparent calc(50% - 1px), #4a4458 calc(50% - 1px), #4a4458 calc(50% + 1px), transparent calc(50% + 1px)), linear-gradient(to right, ${tr} 0%, ${tr} ${a}%, ${ac} ${a}%, ${ac} ${b}%, ${tr} ${b}%, ${tr} 100%)`; }
 function dashPartHTML(){ const P = DASH.P, C = DASH.C;
   const tabs = [['frame','질량 · 무게중심',''],['aero','에어로',''],['goal','차량 목표',''],['pt','파워트레인',''],['brake','제동','도구 3'],['susp','서스 기하','도구 5'],['steer','조향','도구 6'],['spring','스프링·ARB','도구 7']];
-  return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+'을 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
+  return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+josa(w)+' 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
     <div class="dp-body">${DASH.part==='frame' && ['L', 'tf', 'tr', 'r_load'].some(dashEx) ? dashNoFig('질량 분포 그림') : DASH.part==='frame' && typeof m1TpPart==='function' ? m1TpPart() : (DASH.part==='goal' || DASH.part==='pt') && dashMissing().length ? dashNoFig('이 파트 그림') : DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : (DASH.part==='goal' || DASH.part==='pt') && typeof t2PartHTML==='function' ? t2PartHTML(DASH.part) : DASH.part==='aero' && dashMissing().length ? dashNoFig('에어로 그림') : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
 }
 function dashFigsHTML(){ const K = dashCalc(), P = DASH.P, C = DASH.C;
@@ -20158,7 +20178,7 @@ function wbOutCards(T, R, cmp){ const out = R.out || {};
     return `<div class="wb-or${diff?' diff':''}"><span class="wb-on">${nm}</span><span class="wb-ov">${d.fmt ? d.fmt(v, out) : `<b>${wbFmt(v, dd)}</b>${u ? ` <i>${wbEsc(u)}</i>` : ''}`}</span>
       ${cmp && d.dk ? `<span class="wb-odb">${db ? `대시보드 ${d.fmt ? d.fmt(db.v, {}).replace(/<[^>]+>/g, '') : wbFmt(db.v, dd)}${db.st==='ex' ? ' (예시값)' : ''}` : '대시보드 값 없음'}</span>` : ''}</div>`; };
   return `<div class="wb-og">${groups.map(G => { const gd = (T.outGroups || {})[G.n] || {};
-    return `<div class="wb-oc${gd.grid ? ' grid' : ''}${gd.wide ? ' wide' : ''}"><h4>${wbEsc(G.n)}${gd.note ? `<span>${wbEsc(gd.note)}</span>` : ''}</h4>${gd.render ? gd.render(out) : `<div class="wb-ol">${G.ds.map(row).join('')}</div>`}</div>`; }).join('')}</div>`; }
+    return `<div class="wb-oc${gd.grid ? ' grid' : ''}${gd.wide ? ' wide' : ''}"><h4 aria-level="3">${wbEsc(G.n)}${gd.note ? `<span>${wbEsc(gd.note)}</span>` : ''}</h4>${gd.render ? gd.render(out) : `<div class="wb-ol">${G.ds.map(row).join('')}</div>`}</div>`; }).join('')}</div>`; }
 function wbXDef(){ const T = wbT(); return {n: (T.x && T.x.n) || 'x', u: (T.x && T.x.u) || ''}; }
 function wbMainHTML(){ const R = WB.R; if(!R) return '';
   return wbT().figure ? wbT().figure(wbInputs(), R) : ''; }
@@ -30248,10 +30268,10 @@ function ttProgress(el){
         <span class="tt-st">${can ? `<span class="stctl" data-stid="${id}">${['todo','doing','done','skip'].map(k=>`<button class="stbtn st-${k}" data-st="${k}" aria-pressed="${v===k}">${ST_LABEL[k]}</button>`).join('')}</span>` : `<span class="ipill${v!=='todo'?' st-'+v:''}">${v==='skip'?'제외':ST_LABEL[v]}</span>`}</span>
         <span class="muted tt-meta">${mt&&mt.at?ttFmt(mt.at):''}</span></div>`; }).join('') || '<p class="adm-empty">해당하는 항목이 없습니다.</p>'}</div>`;
   const qs=Object.entries(QA||{}).filter(([k,q])=>isTalk(q) && !q.removed && IT[q.item]).sort((x,y)=>String(y[1].at).localeCompare(String(x[1].at))).slice(0,8);
-  const box=(t,hint,body,n)=>`<section class="tt-card"><h3>${t}${n!=null?` <span class="adm-n">${n}</span>`:''}</h3>${hint?`<p class="adm-hint">${hint}</p>`:''}${body}</section>`;
+  const box=(t,hint,body,n)=>`<section class="tt-card"><h3 aria-level="2">${t}${n!=null?` <span class="adm-n">${n}</span>`:''}</h3>${hint?`<p class="adm-hint">${hint}</p>`:''}${body}</section>`;
   el.innerHTML = `
     <div class="tt-top">
-      <section class="tt-card tt-sum"><h3>진행 요약 <span class="muted">${tot.d}/${tot.n-tot.k} 완료${tot.g?` · 진행 중 ${tot.g}`:''}${tot.k?` · 제외 ${tot.k}`:''}</span></h3>
+      <section class="tt-card tt-sum"><h3 aria-level="2">진행 요약 <span class="muted">${tot.d}/${tot.n-tot.k} 완료${tot.g?` · 진행 중 ${tot.g}`:''}${tot.k?` · 제외 ${tot.k}`:''}</span></h3>
         <div class="tt-bars"><div class="adm-pr"><span class="adm-pl"><b>전체</b></span>${ttBar(tot)}<span class="adm-pv">${tot.d}/${tot.n-tot.k}</span></div>${parts.map(p=>{ const c=ttCnt(all.filter(id=>IT[id].p===p)); return `<div class="adm-pr"><span class="adm-pl"><span class="dot" style="background:${pc(p)}"></span>${p}</span>${ttBar(c)}<span class="adm-pv">${c.d}/${c.n-c.k}</span></div>`; }).join('')}</div></section>
       <div class="tt-cards">
         ${box('착수 가능','받는 정보가 모두 완료·제외인데 아직 예정인 항목', admList(ready,'없습니다.',12), ready.length)}
@@ -30262,8 +30282,8 @@ function ttProgress(el){
         ${box('우리 팀 값 입력 현황', `입력 ${vids.length-miss.length} / ${vids.length}`, admList(miss,'모두 입력했습니다.',12), miss.length)}
       </div>
     </div>
-    <section class="tt-card"><h3>단계 × 파트 <span class="muted">칸을 누르면 아래 목록이 그 칸의 항목으로 바뀝니다</span></h3>${mat}</section>
-    <section class="tt-card"><h3>항목 ${editor?'· 진행 상태 바꾸기':''} <span class="adm-n">${ids.length}</span></h3>
+    <section class="tt-card"><h3 aria-level="2">단계 × 파트 <span class="muted">칸을 누르면 아래 목록이 그 칸의 항목으로 바뀝니다</span></h3>${mat}</section>
+    <section class="tt-card"><h3 aria-level="2">항목 ${editor?'· 진행 상태 바꾸기':''} <span class="adm-n">${ids.length}</span></h3>
       <div class="tt-filter">${TT.cell?`<span class="tt-chip">${TT.cell.replace('|',' · ')} <button type="button" class="lnk" data-ttclear>전체 보기</button></span>`:`
         <select data-ttf="part" aria-label="파트"><option value="">파트 전체</option>${parts.map(p=>`<option${p===TT.part?' selected':''}>${p}</option>`).join('')}</select>
         <select data-ttf="step" aria-label="단계"><option value="">단계 전체</option>${STEPS.map(s=>`<option value="${s.id}"${s.id===TT.step?' selected':''}>${s.id} ${esc(s.t.replace('★ ',''))}</option>`).join('')}</select>`}
