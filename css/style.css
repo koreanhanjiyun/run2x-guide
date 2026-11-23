@@ -3,7 +3,7 @@
   color-scheme:light;
   --bg:#f3f1eb; --panel:#ffffff; --panel-2:#faf8f3; --ink:#1a2028; --ink-2:#38424e; --muted:#67717c;
   --line:#ddd8cc; --line-2:#c7c0b0;
-  --accent:#c2410c; --accent-soft:#fdeee4; --in:#1d5f9a; --in-soft:#e7f0f8; --out:#257a47; --out-soft:#e4f3e9;
+  --accent:#c2410c; --accent-soft:#fdeee4; --in:#1d5f9a; --in-soft:#e7f0f8; --out:#1f6e3f; --out-soft:#e4f3e9;
   --assume-fg:#7d5800; --assume-bg:#fff1c4; --verify-fg:#9a1c45; --verify-bg:#fde5ed;
   --rubber:#2b2f35; --rim:#d4d9de; --rim-s:#7c8791; --alu:#b7c4cf; --alu-d:#6a7d8f; --steel:#46535f;
   --frame:#ece3d1; --frame-s:#a9977a; --ground:#8a8376; --brake:#b4493a; --disc:#8b949c;
@@ -1051,7 +1051,7 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 .tk-r .tk-av{width:20px;height:20px;font-size:var(--fs-xs)}
 .tk-r .qa-t,.tk-r .qa-more{margin-left:24px}
 .tk-isnew>.tk-h .tk-who::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#d9730d;margin-left:4px;vertical-align:middle}
-.tk-newtag{font-size:var(--fs-xs);font-weight:700;color:#b45309}
+.tk-newtag{font-size:var(--fs-xs);font-weight:700;color:#a74b06}
 .tk-rfslot:empty{display:none}
 .tk-rfslot{margin-left:32px}
 .tk-rf textarea,.tk-f textarea{min-height:56px}
@@ -1175,7 +1175,7 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 .tt-report{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 24px}
 .tt-report h2{margin:0 0 4px}.tt-report h3{margin:16px 0 4px;font-size:var(--fs-m);color:var(--accent)}
 .tt-rep{width:100%;font-size:var(--fs-s)}.tt-rep td{vertical-align:top}
-.tt-rep td.st-done{color:var(--out);font-weight:600}.tt-rep td.st-doing{color:#b45309;font-weight:600}.tt-rep td.st-skip{color:var(--muted)}
+.tt-rep td.st-done{color:var(--out);font-weight:600}.tt-rep td.st-doing{color:#a74b06;font-weight:600}.tt-rep td.st-skip{color:var(--muted)}
 .tt-rep-q{font-size:var(--fs-s);color:var(--ink-2);margin-top:2px}
 @media print{body.print-report>*:not(#v-team){display:none!important}body.print-report #v-team>*:not([data-ttp=summary]){display:none!important}body.print-report .tt-sumbar{display:none}body.print-report #v-team{max-width:none;padding:0}body.print-report .tt-report{border:0}}
 /* 사용법 튜토리얼 */
@@ -3361,3 +3361,21 @@ html[data-vt="hero"]::view-transition-new(root){animation:vt-hero-in var(--vt-ms
 /* 참고 탭 */
 #v-ref .stitle{font-size:var(--fs-m)!important;font-weight:700!important}
 #v-ref .ssub,#v-ref li.pl,#v-ref .pl,#v-ref .pl i,#v-ref .pl a,#v-ref .pl span,#v-ref .muted{font-size:var(--fs-s)!important}
+
+/* ============================================================
+   점검 수정 (2026-11-24, ux-ui-audit 측정 결과)
+   ============================================================ */
+/* 목차 항목: all:unset 이 포커스 고리를 지웠음 (WCAG 2.4.7) · 높이 23 → 24 px (2.5.8) */
+.toc-it{min-height:24px}
+.toc-it:focus-visible{outline:2px solid var(--focus-ink);outline-offset:1px}
+/* 어두운 바탕 위 버튼의 포커스 고리: 파랑은 2.23:1 이라 흰색으로 (14.9:1, 1.4.11) */
+#partRail :focus-visible,#toc .toc-h :focus-visible{outline:2px solid #fff!important;outline-offset:-3px}
+/* 팀 탭 작은 글자 링크 버튼: 24 × 24 이상 (2.5.8) */
+#v-team button.lnk,#ipage .ip-side button.lnk{min-width:24px;min-height:24px}
+/* 글자 네 가지: 설계 개요 (묶음 20 · 단계 17 → 15 굵게), 팀 탭 (17 → 15), 도구 탭 그림 · 출력 숫자 (17 → 15) */
+.phase-k,.phase-n{font-size:var(--fs-m)!important;font-weight:800}
+#step-list details.step>summary .stitle,#step-list details.step>summary .scode,.stitle,.scode{font-size:var(--fs-m)!important}
+#v-team .tt-card h3,#v-team .tt-sv{font-size:var(--fs-m)!important}
+#v-tools .dc-i output,#v-tools .wb-oc b,#v-tools .wb-oc output{font-size:var(--fs-m)!important}
+/* 화면 읽기용 숨은 제목 */
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

@@ -354,7 +354,7 @@ function wbOutCards(T, R, cmp){ const out = R.out || {};
     return `<div class="wb-or${diff?' diff':''}"><span class="wb-on">${nm}</span><span class="wb-ov">${d.fmt ? d.fmt(v, out) : `<b>${wbFmt(v, dd)}</b>${u ? ` <i>${wbEsc(u)}</i>` : ''}`}</span>
       ${cmp && d.dk ? `<span class="wb-odb">${db ? `대시보드 ${d.fmt ? d.fmt(db.v, {}).replace(/<[^>]+>/g, '') : wbFmt(db.v, dd)}${db.st==='ex' ? ' (예시값)' : ''}` : '대시보드 값 없음'}</span>` : ''}</div>`; };
   return `<div class="wb-og">${groups.map(G => { const gd = (T.outGroups || {})[G.n] || {};
-    return `<div class="wb-oc${gd.grid ? ' grid' : ''}${gd.wide ? ' wide' : ''}"><h4>${wbEsc(G.n)}${gd.note ? `<span>${wbEsc(gd.note)}</span>` : ''}</h4>${gd.render ? gd.render(out) : `<div class="wb-ol">${G.ds.map(row).join('')}</div>`}</div>`; }).join('')}</div>`; }
+    return `<div class="wb-oc${gd.grid ? ' grid' : ''}${gd.wide ? ' wide' : ''}"><h4 aria-level="3">${wbEsc(G.n)}${gd.note ? `<span>${wbEsc(gd.note)}</span>` : ''}</h4>${gd.render ? gd.render(out) : `<div class="wb-ol">${G.ds.map(row).join('')}</div>`}</div>`; }).join('')}</div>`; }
 function wbXDef(){ const T = wbT(); return {n: (T.x && T.x.n) || 'x', u: (T.x && T.x.u) || ''}; }
 function wbMainHTML(){ const R = WB.R; if(!R) return '';
   return wbT().figure ? wbT().figure(wbInputs(), R) : ''; }

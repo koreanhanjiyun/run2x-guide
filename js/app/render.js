@@ -53,7 +53,7 @@ function renderQ(q, k){ return `<details class="q"${k!=null?` data-qi="${k}"`:''
 function renderCard(key){ const c = CARD[key]; if(!c) return '';
   const sym = SYM[key] ? `<details class="symbox"><summary>이 카드의 기호 <span class="muted">(${SYM[key].length}개)</span></summary><table class="kvt">${symRows(SYM[key])}</table></details>` : '';
   const M = (typeof CARD_MAIN!=='undefined' && CARD_MAIN[key]) || [];
-  const main = c.L.map((q,k)=>M.includes(k+1) ? `<section class="qsec" data-qi="${k}"><h3 class="qsec-h">${q.h}</h3><div class="qb">${q.b}${q.s.map(s=>renderQ(s)).join('')}</div></section>` : '').join('');
+  const main = c.L.map((q,k)=>M.includes(k+1) ? `<section class="qsec" data-qi="${k}"><h2 class="qsec-h">${q.h}</h2><div class="qb">${q.b}${q.s.map(s=>renderQ(s)).join('')}</div></section>` : '').join('');
   const more = c.L.map((q,k)=>M.includes(k+1) ? '' : renderQ(q,k)).join('');
   return `<div class="concl"><b class="tag">참고</b>${c.c}</div>${sym}${main?`<div class="qmain">${main}</div>`:''}${calcHTML(key)}${more?`<div class="qmore"><div class="qmore-h">더 알아보기</div><div class="stack">${more}</div></div>`:''}`; }
 const chip = p => `<span class="chip"><span class="dot" style="background:${pc(p)}"></span>${p}</span>`;

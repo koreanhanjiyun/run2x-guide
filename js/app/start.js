@@ -93,7 +93,7 @@ function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
         <p class="lede">${BG_INTRO}</p></div>
       <button type="button" class="btn pri sh-down" data-shdown="1"${HERO_DONE?"":" disabled"}>둘러보기<span aria-hidden="true">↓</span></button>
     </header>
-    <div class="st-body">
+    <div class="st-body"><h1 class="sr-only">시작</h1>
     ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
     ${goalCards()}
     <section class="st-sysw"><h2>더 빠르게 하려면?</h2>

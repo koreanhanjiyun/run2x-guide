@@ -31,7 +31,7 @@ function renderFlow(){
 }
 function refSrcExtra(){ if(typeof srcList!=='function') return '';
   const g=[['시작 탭 배경 글',typeof BG_SRC!=='undefined'?BG_SRC:null],['F1 기술',typeof F1_TECH_SRC!=='undefined'?F1_TECH_SRC:null],['부품 소개',typeof COMP_SRC!=='undefined'?COMP_SRC:null]].filter(x=>x[1]&&x[1].length);
-  return g.map(([h,a])=>`<h4 class="src-h">${h}</h4><ul class="pl">${srcList(a)}</ul>`).join(''); }
+  return g.map(([h,a])=>`<h4 class="src-h" aria-level="2">${h}</h4><ul class="pl">${srcList(a)}</ul>`).join(''); }
 function renderRefs(){ $('#ref-list').innerHTML = REFS.map(r=>`<details class="step"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?'<h4 class="src-h">설계 탭 본문</h4>'+r.b+refSrcExtra():r.b}</div></details>`).join(''); }
 
 /* ============================================================

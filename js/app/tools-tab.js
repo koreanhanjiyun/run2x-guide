@@ -30,6 +30,8 @@ let DVS = {};   /* 문서 id → {s:{시즌:{v, st, src, by, at}}} */
    그 전에 저장된 값은 읽을 때 L − 값으로 바꿔 씀 (팀 저장소 문서는 건드리지 않음, 다음에 저장할 때 바뀐 값으로 저장됨).
    같은 시즌 휠베이스 L 이 없으면 바꿀 수 없어 copOld 로 표시만 함 (dvState 에서 ↻) */
 const COP_CUT = '2026-11-08T12:50:53Z';
+/* 숫자 · 글자 끝 받침에 맞춘 을/를 (도구 5를 · 도구 3을) */
+const josa = w => { const c=String(w).trim().slice(-1); const n='0136780'.includes(c)?1:'2459'.includes(c)?0:null; if(n!=null) return n?'을':'를'; const k=c.charCodeAt(0)-0xAC00; return k>=0&&k<11172&&k%28?'을':'를'; };
 function copFix(r){ const se = s => { const L = Object.keys(r).find(id => id.endsWith('__L')); const e = L && r[L].s && r[L].s[s]; return e && typeof e.v==='number' ? e.v : null; };
   Object.keys(r).forEach(id => { if(!/__xcop(_drs)?$/.test(id) || !r[id] || !r[id].s) return;
     Object.entries(r[id].s).forEach(([s, e]) => { if(!e || typeof e.v!=='number' || e.copV || !e.at || e.at >= COP_CUT) return;
@@ -147,7 +149,7 @@ function dashBipolar(){ const sl = document.querySelector('#dcond input[data-dc=
   sl.style.background = `linear-gradient(to right, transparent calc(50% - 1px), #4a4458 calc(50% - 1px), #4a4458 calc(50% + 1px), transparent calc(50% + 1px)), linear-gradient(to right, ${tr} 0%, ${tr} ${a}%, ${ac} ${a}%, ${ac} ${b}%, ${tr} ${b}%, ${tr} 100%)`; }
 function dashPartHTML(){ const P = DASH.P, C = DASH.C;
   const tabs = [['frame','질량 · 무게중심',''],['aero','에어로',''],['goal','차량 목표',''],['pt','파워트레인',''],['brake','제동','도구 3'],['susp','서스 기하','도구 5'],['steer','조향','도구 6'],['spring','스프링·ARB','도구 7']];
-  return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+'을 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
+  return `<div class="dp-tabs" role="tablist">${tabs.map(([k,t,w])=>`<button type="button" role="tab" data-part="${k}" aria-selected="${DASH.part===k}" ${w?'disabled title="'+w+josa(w)+' 만들 때 함께 열립니다"':''}>${t}${w?`<span class="dp-w">${w}</span>`:''}</button>`).join('')}</div>
     <div class="dp-body">${DASH.part==='frame' && ['L', 'tf', 'tr', 'r_load'].some(dashEx) ? dashNoFig('질량 분포 그림') : DASH.part==='frame' && typeof m1TpPart==='function' ? m1TpPart() : (DASH.part==='goal' || DASH.part==='pt') && dashMissing().length ? dashNoFig('이 파트 그림') : DASH.part==='frame' && typeof m1PartHTML==='function' ? m1PartHTML() : (DASH.part==='goal' || DASH.part==='pt') && typeof t2PartHTML==='function' ? t2PartHTML(DASH.part) : DASH.part==='aero' && dashMissing().length ? dashNoFig('에어로 그림') : DASH.part==='aero' ? `<div class="dp-plots">${CARFIG.aero(P, C)}</div><p class="dp-note">직진·일정 속도 기준. 다운포스는 CoP 위치로 앞뒤 축에 나누고, 항력은 CoP 높이에서 뒤축 쪽으로 하중을 옮깁니다. 세로선은 지금 차속입니다.</p>` : ''}</div>`;
 }
 function dashFigsHTML(){ const K = dashCalc(), P = DASH.P, C = DASH.C;
