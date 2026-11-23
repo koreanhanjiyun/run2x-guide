@@ -3289,13 +3289,15 @@ html[data-vt] #partRail{view-transition-name:vt-rail}
   100%{background:var(--bg);box-shadow:0 12px 32px rgba(30,20,50,0)}}
 ::view-transition-old(vt-card),::view-transition-new(vt-card){width:auto;height:auto;mix-blend-mode:normal}   /* 늘이지 않고 원래 크기로 왼쪽 위에 둠 (글자가 찌그러지지 않게) */
 ::view-transition-old(vt-card){animation:vt-out calc(var(--vt-ms,265ms) * .2) var(--ease-out) both}
-::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,265ms) * .4) var(--ease-out) calc(var(--vt-ms,265ms) * .6) both}
+::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,265ms) * .4) var(--ease-out) calc(var(--vt-ms,265ms) * .35) both}
+/* 열 때 판은 빠르게 출발해 천천히 멈춤 (2026-11-24: 느리게 출발하는 곡선이라 큰 화면(700 ms)에서 첫 0.3 초가 멈춘 것처럼 보였음) */
+html[data-vt="open"]::view-transition-group(vt-card),html[data-vt="open"]::view-transition-image-pair(vt-card){animation-timing-function:var(--ease-out)}
 /* 화면 전체는 겹쳐 더하지 않음 (기본 plus-lighter 는 두 화면이 반씩 겹칠 때 밝게 번쩍임) */
 ::view-transition-old(root),::view-transition-new(root){mix-blend-mode:normal}
 /* 열 때: 목록은 판이 덮을 때까지 그대로(살짝 흐리고 어둡게), 새 화면 바탕은 끝에 나타남 → 빈 바탕 깜빡임 없음 */
 html[data-vt="open"]::view-transition-old(root){animation:vt-hold var(--vt-ms,265ms) var(--ease-io) both}
-html[data-vt="open"]::view-transition-new(root){animation:vt-in calc(var(--vt-ms,265ms) * .35) var(--ease-out) calc(var(--vt-ms,265ms) * .65) both}
-@keyframes vt-hold{0%{opacity:1;filter:none}70%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:0;filter:blur(2px) brightness(.9)}}
+html[data-vt="open"]::view-transition-new(root){animation:vt-in calc(var(--vt-ms,265ms) * .4) var(--ease-out) calc(var(--vt-ms,265ms) * .4) both}
+@keyframes vt-hold{0%{opacity:1;filter:none}45%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:0;filter:blur(2px) brightness(.9)}}
 /* 목록으로: 화면이 살짝 내려가며 사라지고 목록이 나타남 */
 html[data-vt="back"]::view-transition-old(root){animation:vt-out-down calc(var(--vt-ms,265ms) * .7) var(--ease-out) both;z-index:2}
 html[data-vt="back"]::view-transition-new(root){animation:vt-in var(--vt-ms,265ms) var(--ease-out) both}
