@@ -18089,7 +18089,7 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
-   - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 300 ms. back 240 ms, hero 300 ms (2026-11-24 PC는 즉각적으로: 700 → 300)
+   - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 300 ms. back 240 ms (2026-11-24 PC는 즉각적으로: 700 → 300). hero 500 ms (한 번 보는 첫 장면이라 예외)
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
 /* 화면 안에 보이는 부분의 상자 (긴 항목 화면은 화면 아래 끝까지만) */
@@ -18100,7 +18100,7 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 300 : (kind==='push'||kind==='pop'||kind==='back') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 500 : (kind==='push'||kind==='pop'||kind==='back') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
@@ -19556,16 +19556,17 @@ function heroIntro(v){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HER
   const OUT='cubic-bezier(.16,1,.3,1)', IO='cubic-bezier(.45,0,.25,1)', big=`translate(${dx}px,${dy}px) scale(${S})`;
   const A=(el,k,o)=>{ if(el) HERO_AN.push(el.animate(k,{fill:'backwards',easing:OUT,...o})); };
   A(main,[{filter:'blur(14px)',transform:'scale(1.03)'},{filter:'blur(0px)',transform:'scale(1)'}],{duration:900});
-  /* 큰 채로 단어가 다 뜨면(1.5 초) 바로 0.5 초 동안 작아짐. 빠르게 출발하는 곡선(OUT): 느리게 출발하면 멈춘 것처럼 길어 보임 (2026-11-24) */
-  A(t1,[{transform:big},{transform:'none'}],{duration:500,delay:1500});
+  /* 단어가 다 뜨고(1.5 초) 0.3 초 머문 뒤 0.8 초 동안 작아짐. 빠르게 출발하는 곡선(OUT): 느리게 출발하면 멈춘 것처럼 길어 보임.
+     2026-11-24: 3.9 초 → 2.6 초(너무 빠름) → 3.3 초 중간값. 히어로는 한 번 보는 첫 장면이라 'PC는 즉각적으로' 규칙에서 뺌 */
+  A(t1,[{transform:big},{transform:'none'}],{duration:800,delay:1800});
   ws.forEach((w,i)=>A(w,[{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:600,delay:500+i*400}));
-  /* 작아짐이 끝날 무렵부터 작은 제목 → 선 → 소개 문장을 0.1 초 간격으로 */
-  A(h.querySelector('.eyebrow'),[{opacity:0},{opacity:1}],{duration:400,delay:1800});
-  A(h.querySelector('.sh-line'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:500,delay:1900});
-  A(h.querySelector('.lede'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:500,delay:2000});
+  /* 작아짐이 끝날 무렵부터 작은 제목 → 선 → 소개 문장을 0.15 초 간격으로 */
+  A(h.querySelector('.eyebrow'),[{opacity:0},{opacity:1}],{duration:400,delay:2400});
+  A(h.querySelector('.sh-line'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:500,delay:2550});
+  A(h.querySelector('.lede'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:500,delay:2700});
   /* [둘러보기]: 연출 끝에 작게 나타나 한 번 튀었다가 제자리 (관리자 요청 2026-11-22: 바운스는 이 버튼만 예외) */
   const dn=h.querySelector('.sh-down'); if(dn){ dn.disabled=true;
-    HERO_AN.push(dn.animate([{opacity:0,transform:'translateX(-50%) scale(.6)'},{opacity:1,transform:'translateX(-50%) scale(1.12)',offset:.6},{opacity:1,transform:'translateX(-50%) scale(.96)',offset:.8},{opacity:1,transform:'translateX(-50%) scale(1)'}],{duration:520,delay:2100,easing:'ease-out',fill:'backwards'})); }
+    HERO_AN.push(dn.animate([{opacity:0,transform:'translateX(-50%) scale(.6)'},{opacity:1,transform:'translateX(-50%) scale(1.12)',offset:.6},{opacity:1,transform:'translateX(-50%) scale(.96)',offset:.8},{opacity:1,transform:'translateX(-50%) scale(1)'}],{duration:520,delay:2800,easing:'ease-out',fill:'backwards'})); }
   Promise.all(HERO_AN.map(a=>a.finished)).then(()=>{ HERO_AN=[]; heroReady(); }).catch(()=>{}); }
 /* 연출 중 누르기 · 키는 바로 끝 모습으로 (휠은 건너뛰지 않음: 히어로에서는 스크롤이 없으므로 실수로 넘기지 않게) */
 ['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev, e=>{ if(HERO_AN.length && !(e.target.closest && e.target.closest('.sh-down'))) heroSkip(); }, {passive:true, capture:true}));
