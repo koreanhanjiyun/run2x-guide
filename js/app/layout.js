@@ -111,9 +111,11 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
     const go = () => { st.keep = st.anims; st.anims = []; snake(true, () => { el.classList.remove('rs-anim'); st.stage = ''; st.open = null; }); };
     if(r && r.length){ st.anims = r; Promise.all(r.map(a => a.finished)).then(go, () => {}); } else go(); } }
 /* 파트 패널 내용: 칩이 위에서부터 차례로 (펼칠 때) · 아래에서부터 차례로 (접을 때). 배너 높이도 같이 */
-const railBIn = (el, hh) => { const ks = [...el.querySelectorAll('.rail-b > :not([hidden])')], full = el.getBoundingClientRect().height, T = 180 + 22*ks.length;
-  return [el.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,0,.2,1)'}),
-    ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-10px)'}, {opacity: 1, transform: 'none'}], {duration: 180, delay: 22*i, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards'}))]; };
+/* 펼침 = 접힘(railBOut)의 정확한 역재생 (2026-11-24): 같은 시간, 곡선은 거울(.5,0,.7,.4 → .3,.6,.5,1 빠른 출발), 칩은 위에서부터.
+   예전(180 + 22n ms, 느린 출발 곡선)은 가로 펼침의 느린 끝과 붙어 멈칫해 보였음 */
+const railBIn = (el, hh) => { const ks = [...el.querySelectorAll('.rail-b > :not([hidden])')], full = el.getBoundingClientRect().height, T = 130 + 16*ks.length;
+  return [el.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,.6,.5,1)'}),
+    ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-10px)'}, {opacity: 1, transform: 'none'}], {duration: 130, delay: 16*i, easing: 'ease-out', fill: 'backwards'}))]; };
 const railBOut = el => { const ks = [...el.querySelectorAll('.rail-b > :not([hidden])')], hd = el.querySelector('.rail-h'), full = el.getBoundingClientRect().height, hh = hd.getBoundingClientRect().height + 2;
   const T = 130 + 16*ks.length;   /* 펼칠 때를 거꾸로: 아래 칩부터 위로 차례로 들어가며 배너 높이도 같이 줄어듦 */
   return [el.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: T, easing: 'cubic-bezier(.5,0,.7,.4)', fill: 'forwards'}),
@@ -129,7 +131,7 @@ function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof T
   const dx = ((B.left + B.width/2) - (P.left + P.width/2))/z, dy = ((B.top + B.height/2) - (P.top + P.height/2))/z, s = Math.max(.04, Math.min(B.width/P.width, B.height/P.height));
   /* 114차: 이동과 커짐이 같은 진행도로 (가운데 키프레임을 없앰: 예전엔 55 % 지점에서 이동 85 % · 크기 60 % 라 먼저 날아온 뒤 커졌음). 불투명도만 앞 25 % 에서 따로 */
   const K = [{transform: `translate(${dx}px,${dy}px) scale(${s})`, opacity: 0}, {opacity: 1, offset: .25}, {transform: 'none', opacity: 1}];
-  const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 340 : 260, easing: open ? 'cubic-bezier(.25,.7,.5,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
+  const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 240 : 200, easing: open ? 'cubic-bezier(.25,.7,.5,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
   el._pop = a; a.onfinish = () => { if(el._pop !== a) return; el._pop = null; if(done) done(); a.cancel(); }; }
 
 /* ---------- 목차 펼침 · 접힘 애니메이션 (2026-11-12, 파트 패널의 거울판): 목차는 왼쪽에 붙고 접힌 막대(왼쪽 0)와 펼친 창(왼쪽 14 px)의 자리가 달라
@@ -166,9 +168,10 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
     ov.style.clipPath = KF[0].clipPath; host.appendChild(ov); S.els.push(ov);
     const A = ov.animate(KF, {duration: D, easing: ease, fill: 'both'}); S.anims.push(A);
     A.onfinish = () => { S.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); S.anims = []; S.els.forEach(e => e.remove()); S.els = []; t.classList.remove('ts-hide'); done(hh); }; };
-  if(open) snake(true, hh => { const full = G(t.getBoundingClientRect()).height, ks = vis(), T = 180 + 12*ks.length;
-      S.anims = [t.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,0,.2,1)'}),
-        ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-8px)'}, {opacity: 1, transform: 'none'}], {duration: 180, delay: 12*i, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards'}))];
+  /* 펼침 = 접힘의 정확한 역재생 (2026-11-24, 파트 패널과 같음) */
+  if(open) snake(true, hh => { const full = G(t.getBoundingClientRect()).height, ks = vis(), T = 130 + 8*ks.length;
+      S.anims = [t.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,.6,.5,1)'}),
+        ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-8px)'}, {opacity: 1, transform: 'none'}], {duration: 130, delay: 8*i, easing: 'ease-out', fill: 'backwards'}))];
       Promise.all(S.anims.map(a => a.finished)).then(() => { if(t._ts === S) t._ts = null; }, () => {}); });
   else { const full = G(t.getBoundingClientRect()).height, ks = vis(), hh = G(hd.getBoundingClientRect()).bottom - G(t.getBoundingClientRect()).top + 1, T = 130 + 8*ks.length;
     S.anims = [t.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: T, easing: 'cubic-bezier(.5,0,.7,.4)', fill: 'forwards'}),
