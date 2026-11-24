@@ -65,6 +65,26 @@ syncTabsA11y(); document.body.classList.add('tab-'+TAB);
 /* ---------- 오른쪽 배너 펼침 애니메이션 (2026-11-12): 머리 글자가 ㄱ자 길(세로 줄 위로 → 모서리에서 왼쪽)을 따라 가로로 눕고,
    배너는 그동안 폭이 넓어지고 높이가 머리 높이로 줄어듦 → 다 펴지면 내용(in)이 이어서 나옴. 닫을 때는 내용(out)을 먼저 거두고 거꾸로 되감음.
    apply(open) = 클래스만 바꾸는 함수. 사용법 중에는 애니메이션 없이 바로 바꿈. 도중에 반대로 바뀌면 그 자리에서 되돌아감 ---------- */
+/* 글자 기차 (2026-11-24): 세로 막대 글자 V[i] ↔ 가로 머리 글자 H[i] 를 ㄱ자 선로 하나로 잇고, 모든 글자가 세로일 때 간격을 지킨 채 같은 속도로 따라가다
+   앞 글자부터 차례로 제자리에 섬(가로 간격이 더 좁아서 자연히 앞부터 멈춤). 예전에는 글자마다 따로 '위로 → 옆으로' 가서 모서리 한 점에 뭉쳤음.
+   q = 0 세로 · 1 가로. 접을 때는 q 를 1 → 0 으로 = 펼침의 정확한 역재생. 반환 (i, q) → {x, y} */
+function trainOf(V, H){ const n = Math.min(V.length, H.length); if(!n) return () => ({x: 0, y: 0});
+  const avg = (A, k) => A.slice(0, n).reduce((a, c) => a + c[k], 0)/n, cx = avg(V, 'x'), cy = avg(H, 'y'), sg = avg(H, 'x') >= cx ? 1 : -1;
+  const T = s => s < 0 ? {x: cx, y: cy - s} : {x: cx + sg*s, y: cy};   /* 선로: s < 0 세로 구간(모서리 아래), s ≥ 0 가로 구간 */
+  const S0 = [], S1 = [], O0 = [], O1 = [];
+  for(let i = 0; i < n; i++){ S0.push(cy - V[i].y); S1.push(sg*(H[i].x - cx)); const a = T(S0[i]), b = T(S1[i]); O0.push({x: V[i].x - a.x, y: V[i].y - a.y}); O1.push({x: H[i].x - b.x, y: H[i].y - b.y}); }
+  const Dm = Math.max(1e-6, ...S0.map((v, i) => S1[i] - v));
+  return (i, q) => { const d = S1[i] - S0[i];
+    if(!(d > 1e-6)) return {x: V[i].x + (H[i].x - V[i].x)*q, y: V[i].y + (H[i].y - V[i].y)*q};
+    const u = Math.min(q*Dm, d), f = u/d, p = T(S0[i] + u); return {x: p.x + O0[i].x*(1 - f) + O1[i].x*f, y: p.y + O0[i].y*(1 - f) + O1[i].y*f}; }; }
+/* 글자 문짝 (2026-11-24, 목차용): 목차는 머리 글자가 세로 막대의 오른쪽으로 펼쳐지는데 글을 왼쪽부터 읽어, 기차(trainOf)로 가면 뒤 글자가 앞 글자를 지나쳐 겹침.
+   그래서 세로줄 전체가 첫 글자를 축으로 문처럼 90° 돌아 눕게 함: 순서 · 간격(세로 간격 → 가로 간격으로 서서히)을 지킴. q = 0 세로 · 1 가로 */
+function swingOf(V, H){ const n = Math.min(V.length, H.length); if(!n) return () => ({x: 0, y: 0});
+  const ang = (a, b) => Math.atan2(b.y - a.y, b.x - a.x), a0 = n > 1 ? ang(V[0], V[n - 1]) : Math.PI/2, a1 = n > 1 ? ang(H[0], H[n - 1]) : 0;
+  let da = a1 - a0; while(da > Math.PI) da -= 2*Math.PI; while(da < -Math.PI) da += 2*Math.PI;
+  return (i, q) => { const px = V[0].x + (H[0].x - V[0].x)*q, py = V[0].y + (H[0].y - V[0].y)*q; if(!i) return {x: px, y: py};
+    const r0 = Math.hypot(V[i].x - V[0].x, V[i].y - V[0].y), r1 = Math.hypot(H[i].x - H[0].x, H[i].y - H[0].y), r = r0 + (r1 - r0)*q, a = a0 + da*q;
+    return {x: px + r*Math.cos(a), y: py + r*Math.sin(a)}; }; }
 function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.rail-h'), sp = hd && hd.querySelector('span');
   const st = el._rs || (el._rs = {open: null, stage: '', anims: [], clones: []});
   const clean = () => { [...st.anims, ...(st.keep||[])].forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; el.classList.remove('rs-anim', 'rs-snake'); el.style.width = el.style.height = el.style.clipPath = ''; st.stage = ''; };
@@ -85,19 +105,21 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
     (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = [];   /* 접을 때: 칩 거두기 높이 고정을 풀어야 세로 막대가 보임 */
     apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), h1 = hd.getBoundingClientRect().height + 2;
     const cs = getComputedStyle(sp), font = cs.font, col = getComputedStyle(hd).color; sp.style.color = 'transparent';
-    const n = Math.min(c0.length, c1.length), paths = [];
+    const n = Math.min(c0.length, c1.length), paths = [], TR_ = trainOf(fromOpen ? c1 : c0, fromOpen ? c0 : c1), Q = p => fromOpen ? 1 - p : p;
     for(let i = 0; i < n; i++){ const V = fromOpen ? c1[i] : c0[i], Hz = fromOpen ? c0[i] : c1[i];   /* V 세로 자리, Hz 가로 자리 */
-      const P = [V, {x: V.x, y: Hz.y}, Hz]; if(fromOpen) P.reverse(); const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y); paths.push({V, Hz, P, k: L1 + L2 ? L1/(L1 + L2) : .5});
+      paths.push({V, Hz});
       const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`; 
-      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(P[0]); document.body.appendChild(d); st.clones.push(d);   /* 애니메이션이 시작되기 전 한 장면도 출발 자리에 */
-      st.anims.push(d.animate([{transform: tf(P[0]), offset: 0}, {transform: tf(P[1]), offset: L1 + L2 ? L1/(L1 + L2) : .5}, {transform: tf(P[2]), offset: 1}], {duration: D, easing: ez, fill: 'both'})); }
+      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(TR_(i, Q(0))); document.body.appendChild(d); st.clones.push(d);   /* 애니메이션이 시작되기 전 한 장면도 출발 자리에 */
+      const KL = []; for(let k = 0; k <= 32; k++) KL.push({transform: tf(TR_(i, Q(k/32))), offset: k/32});
+      st.anims.push(d.animate(KL, {duration: D, easing: ez, fill: 'both'})); }
+    /* 화살표(⟩ ⟨)는 바뀐 자리에 먼저 가 있어 글자와 겹침 → 글자가 움직이는 동안 숨겼다가 끝 무렵(80 %~) 나타남 */
+    try{ st.anims.push(hd.animate([{opacity: 0}, {opacity: 0, offset: .8}, {opacity: .8}], {duration: D, easing: ez, fill: 'both', pseudoElement: '::after'})); }catch(e){}
     /* 배너 모양 = ㄱ자 (위 가로 막대 + 오른쪽 세로 막대): 상자는 두 모양을 다 담는 크기로 두고 clip-path 로 가로 막대는 왼쪽으로 늘고 세로 막대는 위로 줄게 (사각형으로 바뀌어 보이지 않게) */
     const W = fromOpen ? b0.w : b1.w, v = fromOpen ? b1.w : b0.w, Hm = fromOpen ? b1.h : b0.h, hh = fromOpen ? h0 : h1;
     el.style.width = W + 'px'; el.style.height = Math.max(Hm, hh) + 'px';
     const r = 10, shape = (L, B, rh, rb) => `path("M ${L + r} 0 H ${W} V ${B} H ${W - v + rb} A ${rb} ${rb} 0 0 1 ${W - v} ${B - rb} V ${hh} H ${L + rh} A ${rh} ${rh} 0 0 1 ${L} ${hh - rh} V ${r} A ${r} ${r} 0 0 1 ${L + r} 0 Z")`;   /* 왼쪽 모서리는 배너처럼 둥글게 */
     /* 배너 끝을 글자에 붙임 (101차 고침: 글자만 먼저 가던 것): 가로 막대 왼쪽 끝 = 첫 글자, 세로 막대 아래 끝 = 끝 글자 위치에서 구해 장면 24개로 */
-    const at = (q, p) => { const P = q.P, k = q.k, f = p < k ? p/k : (p - k)/(1 - k), a = p < k ? P[0] : P[1], b = p < k ? P[1] : P[2]; return {x: a.x + (b.x - a.x)*f, y: a.y + (b.y - a.y)*f}; };
-    const fr = p => { if(!paths.length) return p; const h = paths[0], t = paths[paths.length - 1], a = at(h, p), z = at(t, p);
+    const fr = p => { if(!paths.length) return p; const h = paths[0], t = paths[paths.length - 1], a = TR_(0, Q(p)), z = TR_(paths.length - 1, Q(p));
       const fl = h.V.x === h.Hz.x ? p : Math.min(1, Math.max(0, (h.V.x - a.x)/(h.V.x - h.Hz.x))), fb = t.V.y === t.Hz.y ? p : Math.min(1, Math.max(0, (t.V.y - z.y)/(t.V.y - t.Hz.y)));
       const L = (W - v)*(1 - fl), B = Hm - (Hm - hh)*fb; return shape(L, B, Math.min(r, W - v - L), Math.min(r, B - hh)); };
     const KF = []; for(let k = 0; k <= 24; k++){ const p = k/24; KF.push({clipPath: fr(p), offset: p}); }   /* fr 은 글자 자리로만 구하므로 펼침 · 접힘 같은 식 */
@@ -154,13 +176,13 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
     const ez = toOpen ? easeOpen : ease;
     const c0 = chars(), r0 = G(t.getBoundingClientRect()), h0 = G(hd.getBoundingClientRect()); apply(toOpen); t.classList.add('ts-hide'); const c1 = chars(), r1 = G(t.getBoundingClientRect()), h1 = G(hd.getBoundingClientRect());
     const Rc = toOpen ? r0 : r1, Ro = toOpen ? r1 : r0, Rh = toOpen ? h1 : h0, hh = Rh.bottom - Ro.top + 1, v = Rc.width, col = getComputedStyle(hd).color, font = getComputedStyle(sp).font;
-    const n = Math.min(c0.length, c1.length), paths = [];
-    for(let i = 0; i < n; i++){ const V = toOpen ? c0[i] : c1[i], Hz = toOpen ? c1[i] : c0[i], P = [V, {x: V.x, y: Hz.y}, Hz]; if(!toOpen) P.reverse();
-      const L1 = Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y), L2 = Math.hypot(P[2].x - P[1].x, P[2].y - P[1].y); paths.push({V, Hz, P, k: L1 + L2 ? L1/(L1 + L2) : .5});
+    const n = Math.min(c0.length, c1.length), paths = [], TR_ = swingOf(toOpen ? c0 : c1, toOpen ? c1 : c0), Q = p => toOpen ? p : 1 - p;   /* 글자 문짝 (swingOf) */
+    for(let i = 0; i < n; i++){ const V = toOpen ? c0[i] : c1[i], Hz = toOpen ? c1[i] : c0[i]; paths.push({V, Hz, i});
       const E = c1[i], d = document.createElement('div'); d.className = 'rs-ch'; d.textContent = c1[i].ch; d.style.cssText = `left:${E.x}px;top:${E.y}px;font:${font};color:${col}`;
-      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(P[0]); host.appendChild(d); S.els.push(d);
-      S.anims.push(d.animate([{transform: tf(P[0]), offset: 0}, {transform: tf(P[1]), offset: paths[i].k}, {transform: tf(P[2]), offset: 1}], {duration: D, easing: ez, fill: 'both'})); }
-    const at = (q, p) => { const P = q.P, k = q.k, f = p < k ? p/k : (p - k)/(1 - k), a = p < k ? P[0] : P[1], b = p < k ? P[1] : P[2]; return {x: a.x + (b.x - a.x)*f, y: a.y + (b.y - a.y)*f}; };
+      const tf = q => `translate(-50%,-50%) translate(${q.x - E.x}px,${q.y - E.y}px)`; d.style.transform = tf(TR_(i, Q(0))); host.appendChild(d); S.els.push(d);
+      const KL = []; for(let k = 0; k <= 32; k++) KL.push({transform: tf(TR_(i, Q(k/32))), offset: k/32});
+      S.anims.push(d.animate(KL, {duration: D, easing: ez, fill: 'both'})); }
+    const at = (q, p) => TR_(q.i, Q(p));
     const lead = paths.reduce((m, q) => !m || Math.abs(q.Hz.x - q.V.x) > Math.abs(m.Hz.x - m.V.x) ? q : m, null), trail = paths.reduce((m, q) => !m || Math.abs(q.Hz.y - q.V.y) > Math.abs(m.Hz.y - m.V.y) ? q : m, null);
     const L = (a, b, f) => a + (b - a)*f, cl = f => Math.min(1, Math.max(0, f));
     const shape = p => { const m = toOpen ? p : 1 - p, a = lead ? at(lead, p) : null, z = trail ? at(trail, p) : null;
@@ -170,7 +192,10 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
     const ov = document.createElement('div'); ov.className = 'ts-ov'; ov.style.background = getComputedStyle(hd).backgroundColor; const KF = []; for(let k = 0; k <= 24; k++) KF.push({clipPath: shape(k/24), offset: k/24});
     ov.style.clipPath = KF[0].clipPath; host.appendChild(ov); S.els.push(ov);
     const A = ov.animate(KF, {duration: D, easing: ez, fill: 'both'}); S.anims.push(A);
-    A.onfinish = () => { S.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); S.anims = []; S.els.forEach(e => e.remove()); S.els = []; t.classList.remove('ts-hide'); done(hh); }; };
+    A.onfinish = () => { S.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); S.anims = []; S.els.forEach(e => e.remove()); S.els = []; t.classList.remove('ts-hide');
+      /* 화살표(⟨ ⟩)는 글자 이동이 끝난 뒤 짧게 나타남 (이동 중에는 목차 전체가 숨은 상태라 보이지 않음) */
+      const fd = t.querySelector('.toc-fold'); if(fd && fd.animate) fd.animate([{opacity: 0}, {opacity: .85}], {duration: 140, easing: 'ease-out'});
+      done(hh); }; };
   /* 펼침 = 접힘의 정확한 역재생 (2026-11-24, 파트 패널과 같음) */
   if(open) snake(true, hh => { const full = G(t.getBoundingClientRect()).height, ks = vis(), T = 130 + 8*ks.length;
       S.anims = [t.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,.6,.5,1)'}),
