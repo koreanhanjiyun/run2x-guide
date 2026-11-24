@@ -3405,6 +3405,34 @@ html[data-vt="hero"]::view-transition-new(root){animation:vt-hero-in var(--vt-ms
 #v-tools .dc-i input[type=range]{height:24px}   /* 주행 조건 막대 높이 16 → 24 px (2.5.8) */
 /* 화면 읽기용 숨은 제목 */
 .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* ============================================================
+   시작 탭 하위 화면 (2026-11-24, docs/DESIGN.md 5절)
+   - 전환: push 새 화면이 오른쪽에서 밀려 들어오고 옛 화면은 왼쪽으로 조금 밀리며 어두워짐 / pop 그 반대 (옛 화면이 오른쪽으로 빠져나감)
+   - [‹ 목록으로]: 설계 탭 항목 화면과 같은 자리 · 모양 (머리띠 밑 왼쪽에 붙어 따라옴). 이전 · 다음은 창 양 끝 세로 가운데에 고정
+   ============================================================ */
+html[data-vt="push"]::view-transition-old(root){animation:vt-push-out var(--vt-ms,240ms) var(--ease-out) both}
+html[data-vt="push"]::view-transition-new(root){animation:vt-push-in var(--vt-ms,240ms) var(--ease-out) both;box-shadow:-12px 0 32px rgba(30,20,50,.16)}
+html[data-vt="pop"]::view-transition-old(root){animation:vt-pop-out var(--vt-ms,240ms) var(--ease-out) both;z-index:2;box-shadow:-12px 0 32px rgba(30,20,50,.16)}
+html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,240ms) var(--ease-out) both}
+@keyframes vt-push-in{from{transform:translateX(100%)}}
+@keyframes vt-push-out{to{transform:translateX(-25%);filter:brightness(.9)}}
+@keyframes vt-pop-out{to{transform:translateX(100%)}}
+@keyframes vt-pop-in{from{transform:translateX(-25%);filter:brightness(.9)}}
+#v-start .sp-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;display:flex;justify-content:flex-start}
+#v-start .sp-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 2px 8px rgba(30,20,50,.12)}
+/* 본문 왼쪽 바깥 여백에 둬서 내려 읽을 때 카드 글자를 가리지 않음 (본문 1240 px + 양쪽 버튼 자리가 남는 창 너비 기준) */
+#v-start .sp-closebar{margin-left:calc(-1 * (72px + var(--sp-4)))}
+#v-start .sp-arw{position:fixed;top:calc(var(--tabh) + (100vh - var(--tabh)) / 2);transform:translateY(-50%);z-index:5;width:120px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border:0;background:none;cursor:pointer;color:var(--muted);font:inherit}
+#v-start .sp-prev{left:12px}
+#v-start .sp-next{right:12px}
+#v-start .sp-arw i{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:24px;line-height:1;color:var(--ink);background:var(--panel);border:1px solid var(--line);box-shadow:0 2px 8px rgba(30,20,50,.10);transition:background var(--t-quick),color var(--t-quick),border-color var(--t-quick)}
+#v-start .sp-arw span{font-size:var(--fs-s);line-height:1.35;text-align:center;word-break:keep-all}
+#v-start .sp-arw:hover i{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+#v-start .sp-arw:hover span{color:var(--ink)}
+#v-start .sp-arw:focus-visible{outline:none}
+#v-start .sp-arw:focus-visible i{outline:3px solid var(--focus-ink);outline-offset:2px}
+/* 창이 좁아 본문 양옆 여백이 버튼+이름 폭(120 px)보다 작으면 이름을 빼고 원 버튼만 (1440 px 창: 여백 약 92 px) */
+@media (max-width:1700px){ #v-start .sp-arw{width:64px} #v-start .sp-arw span{display:none} #v-start .sp-prev{left:8px} #v-start .sp-next{right:8px} }
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -18058,6 +18086,7 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
    - open 의 from · to: 누른 칸 → 새 화면 (vt-card). 칸이 커지며 화면 바탕색 판이 되고 그림자가 생겼다 빠짐. 옛 글이 다 사라진 뒤 새 내용이 나타남.
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
+   - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 700 ms
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
@@ -18069,7 +18098,7 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 700 : motionMs(kind==='back'?160:40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 700 : (kind==='push'||kind==='pop') ? 240 : motionMs(kind==='back'?160:40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
@@ -18084,6 +18113,8 @@ function vtMark(el, center){ if(!el) return; if(center){ const r=el.getBoundingC
   el.classList.remove('vt-was'); void el.offsetWidth; el.classList.add('vt-was'); setTimeout(()=>el.classList.remove('vt-was'), 1600); }
 /* 시작 탭 하위 화면 열쇠 → 그 화면을 여는 카드 */
 const stCard = k => !k ? null : /^goal:/.test(k) ? $(`#v-start .st-body [data-goalgo="${k.slice(5)}"]`) : $(`#v-start .st-body [data-sysgo="${k}"]`);
+/* 시작 탭 하위 화면 순서 (목표 1~5 → 시스템): 앞으로 가면 push, 뒤로 가면 pop */
+const stIdx = k => !k ? -1 : /^goal:/.test(k) ? +k.slice(5) : 100 + BG_SYS.findIndex(s=>s.p===k);
 /* 뒤로 · 앞으로 가기: 다른 처리보다 먼저 받아, 같은 이벤트를 전환 안에서 다시 보냄. 스크롤 위치도 그 안에서 바로 되살려 도착 칸을 잴 수 있게 함 */
 window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   if(!h || !h.tab || !document.startViewTransition || (typeof TR!=='undefined' && TR) || (typeof WB!=='undefined' && WB.id)) return;
@@ -18094,9 +18125,9 @@ window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
     else if(cur && !h.ip) kind='back';
     else kind=null; }
   else if(h.tab===TAB && TAB==='start' && (h.sys||'')!==(START.sys||'')){ const a=START.sys||'', z=h.sys||'';
-    if(!a){ kind='open'; from=()=>stCard(z); to=()=>$('#v-start'); } else if(!z) kind='back'; else kind='fade'; }
+    kind = !a ? 'push' : (!z || stIdx(z)<stIdx(a)) ? 'pop' : 'push'; }
   else if(h.tab===TAB) kind=null;
-  const was = kind==='back' ? (TAB==='steps' ? ()=>$('#it-'+cur) : (k=>()=>stCard(k))(START.sys)) : null;
+  const was = kind==='back' && TAB==='steps' ? ()=>$('#it-'+cur) : (TAB==='start' && START.sys && !h.sys) ? (k=>()=>stCard(k))(START.sys) : null;
   if(!kind) return;
   e.stopImmediatePropagation();
   vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); window.scrollTo({top:h.y||0, behavior:'instant'});
@@ -18149,13 +18180,13 @@ document.addEventListener('click',ev=>{
   const sl=ev.target.closest('[data-sel]'); if(sl){ selectItem(sl.dataset.sel,true); return; }
   if(ev.target.closest('.tabs .logo-mark, .tabs .wordmark')){ ev.preventDefault(); goHome(); }
 });
-/* 로고 → 처음 화면 (설계 단계 탭 맨 위, 주소의 #항목 지움). 뒤로 가기로 돌아올 수 있음 */
+/* 로고 → 시작 탭 첫 화면 (주소의 #항목 지움). 뒤로 가기로 돌아올 수 있음 */
 function goHome(){ const inSub = typeof START!=='undefined' && !!START.sys; if(TAB!=='start' || window.scrollY>10 || inSub) pushHist(); showTab('start', true);
   /* 시작 탭 안의 세부 목표·시스템 화면을 보고 있었으면 시작 탭 첫 화면으로 */
   if(inSub){ try{ renderStart(''); window.scrollTo({top:0, behavior:'instant'}); }catch(e){} }
   try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
   requestAnimationFrame(()=>smoothScrollTo(()=>0)); }
-document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='처음 화면으로'; el.setAttribute('aria-label', el.classList.contains('wordmark') ? 'RUN2X 처음 화면으로' : '처음 화면으로');
+document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='시작 탭으로'; el.setAttribute('aria-label', el.classList.contains('wordmark') ? 'RUN2X 시작 탭으로' : '시작 탭으로');
   el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goHome(); } }); });
 
 /* ---- v24 검색 + 자동완성 ---- */
@@ -19404,7 +19435,7 @@ document.addEventListener('submit',e=>{ if(!connOff() || !e.target.closest('.qa-
     <p>오른쪽 위 <b>[로그인]</b> → 팀 탭 <b>팀원·계정</b> → <b>새 팀 만들기</b>(팀 이름 + 비밀번호). 팀원은 같은 팀 이름과 비밀번호로 가입합니다. 팀 데이터는 팀마다 따로 저장됩니다.</p>
     <p class="muted">코드를 가져가 자기 팀 버전으로 따로 운영하려면 <a href="${REPO}/blob/main/docs/OTHER-TEAMS.md" target="_blank" rel="noopener">운영 안내</a>를 보십시오(자기 Firebase를 만들어 연결).</p></section>
   <section><h4>사용법</h4>
-    <p>버튼 위치와 기능은 오른쪽 위 <b>[이 탭 사용법]</b>(지금 탭 안내)과 시작 탭의 <b>[사이트 사용법]</b>(전체 안내)에서 차례로 보여 줍니다. 회장이 할 일(시즌 넘기기·팀원 역할과 담당 지정·백업·팀 삭제)은 팀 탭에서 [이 탭 사용법]을 누르면 나옵니다.</p></section>
+    <p>버튼 위치와 기능은 화면마다 오른쪽 위 <b>[이 탭 사용법]</b>을 누르면 차례로 보여 줍니다. 회장이 할 일(시즌 넘기기·팀원 역할과 담당 지정·백업·팀 삭제)은 팀 탭에서 [이 탭 사용법]을 누르면 나옵니다.</p></section>
   <section><h4>플랫폼 문의</h4>
     <p>설계 내용 오류·사이트 오류·기능 제안은 팀과 무관하게 사이트 개발자에게 전달됩니다(로그인 필요). 어느 탭·단계·항목인지 골라 보내면 개발자가 처리 상태(접수·검토 중·반영됨·반영 안 함)를 관리합니다. 반복해서 부적절한 문의를 보내는 계정은 문의가 차단될 수 있습니다.</p><button type="button" class="btn small tp-fbopen">플랫폼 문의 쓰기</button></section>`;
   /* G1: 기본 <dialog>로 열어 초점이 창 안에 머물고, 닫으면 연 버튼으로 돌아감 */
@@ -19555,28 +19586,31 @@ function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
       <button type="button" class="btn pri sh-down" data-shdown="1"${HERO_DONE?"":" disabled"}>둘러보기<span aria-hidden="true">↓</span></button>
     </header>
     <div class="st-body"><h1 class="sr-only">시작</h1>
-    ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
+    ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-labelledby="stStoryH"><h2 id="stStoryH">자동차에서 Formula Student까지</h2><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
     ${goalCards()}
     <section class="st-sysw"><h2>더 빠르게 하려면?</h2>
       ${typeof BG_ASK!=='undefined' ? BG_ASK.map(g=>`<div class="st-ask"><div class="sa-q"><b>${g.q}</b><span>${g.a}</span></div><div class="st-sys">${g.p.map(sysOf).filter(Boolean).map(sysCard).join('')}</div></div>`).join('')
         : `<div class="st-sys">${BG_SYS.map(sysCard).join('')}</div>`}
-      <p class="st-goal">실제로 설계하는 순서는 <button type="button" class="lnk" data-tabgo="steps">설계</button> 탭입니다. 사이트 사용법은 <button type="button" class="lnk" data-tour="all">여기</button>에서 볼 수 있습니다.</p>
+      <p class="st-goal">실제로 설계하는 순서는 <button type="button" class="lnk" data-tabgo="steps">설계</button> 탭입니다. 화면마다 사용법은 오른쪽 위 <button type="button" class="lnk" data-tour="where">[이 탭 사용법]</button>에서 볼 수 있습니다.</p>
     </section>
     </div>`;
 }
 /* 목표 화면: 예전 목표 탭의 한 갈래 = 세부 목표(목표·근거·판단 기준·관련 설계 항목) */
+/* 시작 탭 하위 화면 이동 (2026-11-24): 왼쪽 위에 붙어 다니는 [‹ 목록으로] + 창 양 끝 세로 가운데에 고정된 이전 · 다음 버튼 (스크롤 위치와 무관하게 늘 보임) */
+function spNav(attr, prev, pv, next, nv){
+  const arw=(cls, v, t, ch)=>`<button type="button" class="sp-arw ${cls}" ${attr}="${v}" aria-label="${cls==='sp-prev'?'이전':'다음'}: ${esc(t)}"><i aria-hidden="true">${ch}</i><span>${t}</span></button>`;
+  return `<div class="sp-closebar"><button type="button" class="btn small sp-close" data-sysgo="">‹ 목록으로</button></div>
+    <nav class="sp-side" aria-label="이전 · 다음">${prev?arw('sp-prev', pv, prev.t, '‹'):''}${next?arw('sp-next', nv, next.t, '›'):''}</nav>`; }
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
-  const nav=`<nav class="sp-nav"><button type="button" class="btn small" data-sysgo="">← 처음 화면</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-goalgo="${mi-1}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-goalgo="${mi+1}">${next.t} ›</button>`:''}</span></nav>`;
-  return `${nav}
+  return `${spNav('data-goalgo', prev, mi-1, next, mi+1)}
     <header class="top sp-head"><span class="eyebrow"><span class="st-gn">${mi+1}</span> 목표</span><h1>${m.t}</h1><p class="lede">${esc(m.s)}</p></header>
     <section class="sp-sec gp-sec"><p class="gp-why">${m.why}</p></section>
-    <section class="sp-comp"><h2>세부 목표 <span class="muted">${m.subs.length}개 · 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목</span></h2><div class="stack gp-subs">${m.subs.map(goalSubHTML).join('')}</div></section>
-    ${nav.replace('class="sp-nav"','class="sp-nav sp-foot"')}`; }
+    <section class="sp-comp"><h2>세부 목표 <span class="muted">${m.subs.length}개 · 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목</span></h2><div class="stack gp-subs">${m.subs.map(goalSubHTML).join('')}</div></section>`; }
 function openGoalPage(mi, di){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart('goal:'+mi); window.scrollTo({top:0, behavior:'instant'});
   if(di!=null) requestAnimationFrame(()=>{ const d=document.getElementById('g-'+mi+'-'+di); if(!d) return; d.open=true; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:d.getBoundingClientRect().top+scrollY-tabh-16, behavior:'instant'}); try{ markHere(d); }catch(e){} }); }
 function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s), prev=BG_SYS[i-1], next=BG_SYS[i+1];
   const steps=[...new Set(ITEMS.filter(x=>x.p===s.p).map(x=>x.s))].sort((a,b)=>SIDX[a]-SIDX[b]);
-  return `<nav class="sp-nav"><button type="button" class="btn small" data-sysgo="">← 모든 시스템</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-sysgo="${prev.p}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-sysgo="${next.p}">${next.t} ›</button>`:''}</span></nav>
+  return `${spNav('data-sysgo', prev, prev&&prev.p, next, next&&next.p)}
     <header class="top sp-head"><span class="eyebrow"><span class="dot" style="background:${pc(s.p)}"></span> 시스템</span><h1>${s.t}</h1></header>
     <div class="sp-grid">
       <section class="sp-sec"><h2>왜 생겼나</h2><p>${bgMark(s.why)}</p></section>
@@ -19586,16 +19620,15 @@ function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s)
 </section>
     </div>
     ${cs.length?`<section class="sp-comp"><h2>구성 부품 <span class="muted">${cs.length}개 · FS 차량에서 흔한 모양 기준</span></h2><div class="cp-grid cp-one">${cs.map(compHTML).join('')}</div></section>`:''}
-    ${tech.length?`<section class="sp-tech"><h2>F1이 시도한 ${s.t} 기술 <span class="muted">${tech.length}가지 · 옆으로 넘겨 보십시오</span></h2>${techRail(tech)}</section>`:''}
-    <nav class="sp-nav sp-foot"><button type="button" class="btn small" data-sysgo="">← 모든 시스템</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-sysgo="${prev.p}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-sysgo="${next.p}">${next.t} ›</button>`:''}</span></nav>`;
+    ${tech.length?`<section class="sp-tech"><h2>F1이 시도한 ${s.t} 기술 <span class="muted">${tech.length}가지 · 옆으로 넘겨 보십시오</span></h2>${techRail(tech)}</section>`:''}`;
 }
-/* 시작 탭 화면 바꾸기 + 전환 (2026-11-22): 첫 화면 카드 → 그 화면은 카드가 커지며(open), 하위 화면 → 첫 화면은 내려가며 사라지고 보던 카드 강조(back),
-   하위 화면끼리(‹ ›)는 옆으로 밂. 다른 탭에서 바로 여는 경우(openSys · openGoalPage 직접 호출)는 전환 없이 그대로 */
+/* 시작 탭 화면 바꾸기 + 전환 (2026-11-24): 다음 화면으로 넘어가는 느낌 = 새 화면이 오른쪽에서 밀려 들어옴(push).
+   돌아가거나 이전 화면은 반대로 오른쪽으로 빠져나감(pop). 목록으로 돌아오면 보던 카드를 가운데에 두고 잠깐 강조.
+   순서: 목표 1~5 → 시스템 (stIdx). 다른 탭에서 바로 여는 경우(openSys · openGoalPage 직접 호출)는 전환 없이 그대로 */
 function stGo(key, src, fn){ const a=(TAB==='start' && START.sys) || '';
   if(TAB!=='start'){ fn(); return; }
-  if(!a && key){ vtGo('open', fn, ()=>src, ()=>$('#v-start')); return; }
-  if(a && !key){ const was=a; vtGo('back', ()=>{ fn(); vtMark(stCard(was), true); }); return; }
-  vtGo(src && /^\s*‹/.test(src.textContent) ? 'prev' : 'next', fn); }
+  if(a && !key){ const was=a; vtGo('pop', ()=>{ fn(); vtMark(stCard(was), true); }); return; }
+  vtGo(a && stIdx(key)<stIdx(a) ? 'pop' : 'push', fn); }
 function openSys(p, part){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart(p||''); window.scrollTo({top:0, behavior:'instant'});
   if(part) requestAnimationFrame(()=>{ const el=document.getElementById('cp-'+part); if(el){ const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:el.getBoundingClientRect().top+scrollY-tabh-12, behavior:'instant'}); markHere(el); } }); }
 
@@ -30648,6 +30681,8 @@ const openScrub = () => { if(typeof IPAGE!=='undefined' && IPAGE!=='s_scrub'){ c
 /* 로그인 전·팀원에게 숨겨진 '진행 상태'·'우리 팀 값' 칸을 사용법 중에만 보이게 (끝나면 되돌림) */
 function showBits(){ const it=$('#ipage'); if(!it || !TR) return; it.querySelectorAll('.stbox,.tval').forEach(x=>{ if(x.classList.contains('tg-show')) return; x.classList.add('tg-show'); tgUndo(()=>x.classList.remove('tg-show')); }); showStatus(); }
 const SC = { tab:'steps', vm:'full', prep:openScrub, fx:'doing' };
+/* 시작 탭 하위 화면의 [목록으로] · 양 끝 ‹ › 는 창에 붙어 있어, 복제 화면이 스크롤된 상태면 자리가 어긋남 → 맨 위에서 보여 줌 */
+const spTop = () => window.scrollTo({top:0, behavior:'instant'});
 const GRAPH_TOUR = [
   ['#v-graph .gcanvas','연결도','설계 탭의 [연결도] 보기입니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다.',{tab:'graph'}],
   ['#v-graph .gcanvas','항목 고르기','항목 카드를 누르면 받는 정보(파랑)와 넘기는 결과(초록) 선이 강조되고, 오른쪽 칸에 그 항목 내용이 나옵니다. 빈 곳을 누르면 선택이 풀립니다.',{tab:'graph',pic:PIC.graph,press:'#graph .node[data-id=g_mass]',prep:()=>{ try{ selectItem('g_mass',false); }catch(e){} }}],
@@ -30667,7 +30702,8 @@ const TOUR = {
   ['#v-start .st-sysw','시스템 카드','차를 이루는 시스템들입니다. 카드를 누르면 그 시스템 화면으로 바뀝니다: 왜 생겼나 → F1에서 어떻게 발전했나 → FS에서는 → 구성 부품(그림) → F1이 시도한 기술. 그 화면에서 [이 탭 사용법]을 누르면 시스템 화면 안내가 나옵니다.',{tab:'start',home:true}],
  ],
  sys: [
-  ['#v-start .sp-nav','이동','[← 모든 시스템]으로 처음 화면에 돌아가고, 오른쪽 ‹ › 로 앞뒤 시스템으로 넘어갑니다. 같은 막대가 맨 아래에도 있습니다.',{tab:'start'}],
+  ['#v-start .sp-close','목록으로','[‹ 목록으로]를 누르면 시작 탭 카드 목록으로 돌아갑니다. 내려 읽는 동안에도 왼쪽 위에 붙어 따라옵니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw','이전 · 다음','창 양 끝의 ‹ › 로 앞뒤 시스템으로 넘어갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-grid .sp-sec:nth-child(1)','왜 생겼나','이 시스템이 왜 필요한지부터 읽습니다. 밑줄 친 용어에 마우스를 올리면 뜻이 나옵니다.',{tab:'start'}],
   ['#v-start .sp-grid .sp-sec:nth-child(2)','F1에서 어떻게 발전했나','시대별로 무엇이 바뀌었는지입니다.',{tab:'start'}],
   ['#v-start .sp-fs','FS에서는','FS 차에서는 어떻게 쓰는지입니다. 아래 단계 버튼을 누르면 설계 탭의 그 단계로 갑니다.',{tab:'start'}],
@@ -30675,7 +30711,8 @@ const TOUR = {
   ['#v-start .sp-tech','F1이 시도한 기술','옆으로 끌거나 양쪽 ‹ › 버튼으로 넘깁니다. 버튼으로 넘기면 카드 한 장씩 맞춰 멈춥니다.',{tab:'start',union:':scope > *, :scope .f1r-b'}],
  ],
  goalpage: [
-  ['#v-start .sp-nav','이동','[← 처음 화면]으로 돌아가고, 오른쪽 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start'}],
+  ['#v-start .sp-close','목록으로','[‹ 목록으로]를 누르면 시작 탭 카드 목록으로 돌아갑니다. 내려 읽는 동안에도 왼쪽 위에 붙어 따라옵니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw','이전 · 다음','창 양 끝의 ‹ › 로 앞뒤 목표로 넘어갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-head','목표','이 목표가 무엇인지 한 줄로 적었습니다.',{tab:'start'}],
   ['#v-start .gp-sec','왜','이 목표가 왜 빠른 차로 이어지는지입니다.',{tab:'start'}],
   ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
@@ -30752,7 +30789,8 @@ const TOUR = {
   ['#v-team .adm-tm .tp-s-backup','백업 (회장)','시즌이 끝날 때마다 [내보내기]로 파일을 저장해 두십시오. [불러오기]는 고른 시즌만 복구합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-dz','위험 구역 (회장)','시즌 초기화·팀 삭제처럼 되돌릴 수 없는 작업입니다. 두 번 확인한 뒤 실행됩니다.',{tab:'team',sub:'settings'}],
  ],
- end: [['#tourBtn','언제든 다시','이 안내는 오른쪽 위 [이 탭 사용법]으로 언제든 다시 볼 수 있습니다. 지금 보고 있는 탭(시작 탭은 지금 보는 화면)의 안내가 나옵니다.']],
+ /* 시작 탭 문구 속 [이 탭 사용법]: 머리띠의 그 버튼 위치만 알려 줌 (전체 사용법은 2026-11-24 없앰) */
+ where: [['#tourBtn','이 탭 사용법','화면마다 이 버튼을 누르면 그 화면에 맞는 사용법이 나옵니다. 시작 탭의 목표 · 시스템 화면에서도 그 화면 사용법이 따로 나옵니다.']],
 };
 /* 팀 설정 사용법: 팀장·파트장이 없거나 회장 혼자인 팀에서도 칩·내보내기·차단 단계를 보이도록, 표 맨 위에 "사용법 예시" 줄을 잠깐 넣음 (화면에만, 저장 안 됨, 사용법이 끝나면 지움) */
 function tmDemoRow(){ const tb=document.querySelector('#v-team .adm-tm .tp-mtm tbody'); if(!tb || tb.querySelector('tr.tg-demo')) return;
@@ -30770,8 +30808,7 @@ const teamCourse = () => teamNolog() ? [...TOUR.team_nolog] : [...TOUR.team_comm
 /* 팀 설정 화면에서 [이 탭 사용법]을 누르면 팀 설정 사용법만 */
 const teamSettingsOn = () => !!document.querySelector('#v-team [data-ttp=settings]:not([hidden])');
 const startCourse = () => { const s=(typeof START!=='undefined' && START.sys) || ''; return !s ? TOUR.start : s.startsWith('goal:') ? TOUR.goalpage : TOUR.sys; };
-const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.tools, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
-  : name.startsWith('wb:') ? [...((typeof WB_TOOLS!=='undefined' && WB_TOOLS[name.slice(3)] && WB_TOOLS[name.slice(3)].tour) || [])]
+const courseOf = name => name.startsWith('wb:') ? [...((typeof WB_TOOLS!=='undefined' && WB_TOOLS[name.slice(3)] && WB_TOOLS[name.slice(3)].tour) || [])]
   : name==='team' ? (teamSettingsOn() && SH.on && SH.canAdmin ? [...TOUR.team_admin] : teamCourse()) : name==='start' ? [...startCourse()] : (TOUR[name] ? [...TOUR[name]] : [...TOUR.top]);
 
 /* ---------- 엔진 ---------- */
@@ -30897,7 +30934,7 @@ function tgClicks(o){ const c=[]; let vmDone=false;
     if(o.tab==='graph' && TAB==='steps') c.push({sel:'#v-steps [data-vgo="graph"]', run:()=>{ showTab('graph'); }, reset:true});
     else if(o.tab==='steps' && TAB==='graph'){ const vm=o.vm||(typeof VMODE!=='undefined'?VMODE:'full'); vmDone=true; c.push({sel:`#v-graph [data-vmg="${vm}"]`, run:()=>{ if(typeof setVM==='function') setVM(vm); showTab('steps'); }, reset:true}); }
     else c.push({sel:`.tabs .tab[data-tab="${o.tab==='graph'?'steps':o.tab}"]`, run:()=>{ showTab(o.tab); }, reset:true}); }
-  if(o.home && typeof START!=='undefined' && START.sys) c.push({sel:'#v-start .sp-nav [data-sysgo=""]', run:()=>{ renderStart(''); window.scrollTo({top:0,behavior:'instant'}); }, reset:true});
+  if(o.home && typeof START!=='undefined' && START.sys) c.push({sel:'#v-start .sp-close', run:()=>{ renderStart(''); window.scrollTo({top:0,behavior:'instant'}); }, reset:true});
   if(o.sub && typeof TT!=='undefined'){ const vis=document.querySelector(`#v-team [data-ttp="${o.sub}"]:not([hidden])`); if(!vis || (o.tab && TAB!==o.tab)) c.push({sel:`#v-team .tt-nav [data-tts="${o.sub}"]`, run:()=>{ TT.sub=o.sub; TT.picked=1; renderTeamTab(); }}); }
   if(o.vm && !vmDone && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
   if(o.press) c.push({sel:o.press, run:()=>{}});
