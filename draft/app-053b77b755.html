@@ -2553,7 +2553,7 @@ html.wb-lock #tip{z-index:95}
 .t2-cur{fill:#fff;stroke:#232731;stroke-width:2.5}
 
 .t2-grad{display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(to right,hsl(230 75% 45%),hsl(115 75% 45%),hsl(0 75% 45%))}
-.t2-gt td.ok{color:#257a47}.t2-gt .t2-sum td{border-top:2px solid var(--line-2)}
+.t2-gt td.ok{color:var(--out)}.t2-gt .t2-sum td{border-top:2px solid var(--line-2)}
 .t2-part .dp-plots{grid-template-columns:minmax(0,820px)}
 .wb-viz{display:inline-grid;place-items:center;width:20px;height:18px;margin-left:4px;padding:0;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);cursor:pointer;vertical-align:-3px}
 .wb-viz svg{width:13px;height:13px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
@@ -2616,7 +2616,7 @@ html.wb-lock #tip{z-index:95}
 .t2-out .wb-oc{min-width:0}
 
 .t2-sub{grid-column:1 / -1;font-size:var(--fs-xs);text-align:right}
-.t2-dt.ok{color:#257a47}.t2-dt.bad{color:#b42318}.t2-dt em{font-style:normal;color:var(--muted)}
+.t2-dt.ok{color:var(--out)}.t2-dt.bad{color:#b42318}.t2-dt em{font-style:normal;color:var(--muted)}
 /* 도구 2 (2026-11-05 2차): [시뮬레이션 | 맵 편집] · 결과 줄 맞춤 · 구동력 선도 프로브 · 지도 확대 */
 .t2-hr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;flex:1;min-width:0}
 .t2-h{flex-wrap:wrap;gap:8px 16px}
@@ -18086,7 +18086,7 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
-   - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 700 ms
+   - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 300 ms. back 240 ms, hero 300 ms (2026-11-24 PC는 즉각적으로: 700 → 300)
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
 /* 화면 안에 보이는 부분의 상자 (긴 항목 화면은 화면 아래 끝까지만) */
@@ -18097,14 +18097,14 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 700 : (kind==='push'||kind==='pop') ? 240 : motionMs(kind==='back'?160:40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 300 : (kind==='push'||kind==='pop'||kind==='back') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
     const e2=fr&&to&&to(), r2=vtSeen(e2);
     if(r2){ t2=e2; t2.style.viewTransitionName='vt-card';
       const d=Math.max(Math.hypot(r2.left-fr.left, r2.top-fr.top), Math.abs(r2.width-fr.width), Math.abs(r2.height-fr.height));
-      R.style.setProperty('--vt-ms', Math.min(700, motionMs(d))+'ms'); } });
+      R.style.setProperty('--vt-ms', Math.min(300, motionMs(d))+'ms'); } });
   t.finished.catch(()=>{}).then(()=>{ if(t2) t2.style.viewTransitionName=''; if(R.dataset.vt===kind) delete R.dataset.vt; });
 }
 /* 돌아온 칸 강조: 화면 가운데로 옮기고 보라 테두리를 잠깐 (style.css .vt-was) */
