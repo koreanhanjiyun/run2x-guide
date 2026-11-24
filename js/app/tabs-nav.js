@@ -22,11 +22,15 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
    - kind: open 칸 → 화면 (설계 탭 항목 칸 · 시작 탭 카드) / back 화면 → 목록 / next · prev 이전 · 다음 / fade 탭 바꿈
    - open 의 from · to: 누른 칸 → 새 화면 (vt-card). 칸이 커지며 화면 바탕색 판이 되고 그림자가 생겼다 빠짐. 옛 글이 다 사라진 뒤 새 내용이 나타남.
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
+     설계 탭 항목은 to = vtFloor: 판이 본문 너비가 아니라 머리띠 아래 화면 전체(바닥)로 커지며 모서리 · 색이 바닥과 같아지고 사라짐
+     (2026-11-25 관리자: 본문 너비 상자가 커졌다가 끝에 테두리째 사라져 바닥이 드러나는 것이 부자연스러움). 목차 · 파트 패널은 바닥 위에 그대로
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 300 ms. back 240 ms (2026-11-24 PC는 즉각적으로: 700 → 300). hero 500 ms (한 번 보는 첫 장면이라 예외)
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
+/* 전환용 바닥 상자: 머리띠 아래 화면 전체, 비어 있음 (style.css #vtFloor). 전환 동안만 보임 */
+const vtFloor = () => { let e=document.getElementById('vtFloor'); if(!e){ e=document.createElement('div'); e.id='vtFloor'; e.setAttribute('aria-hidden','true'); document.body.prepend(e); } e.hidden=false; return e; };
 /* 화면 안에 보이는 부분의 상자 (긴 항목 화면은 화면 아래 끝까지만) */
 const vtSeen = el => { if(!el) return null; const r=el.getBoundingClientRect(); if(!(r.width && r.bottom>0 && r.top<innerHeight)) return null;
   return {left:r.left, top:Math.max(r.top,0), width:r.width, height:Math.min(r.bottom,innerHeight)-Math.max(r.top,0)}; };
@@ -40,10 +44,10 @@ function vtGo(kind, fn, from, to){
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
     const e2=fr&&to&&to(), r2=vtSeen(e2);
-    if(r2){ t2=e2; t2.style.viewTransitionName='vt-card';
+    if(r2){ t2=e2; t2.style.viewTransitionName='vt-card'; if(e2.id==='vtFloor') R.dataset.vtf='1';
       const d=Math.max(Math.hypot(r2.left-fr.left, r2.top-fr.top), Math.abs(r2.width-fr.width), Math.abs(r2.height-fr.height));
       R.style.setProperty('--vt-ms', Math.min(300, motionMs(d))+'ms'); } });
-  t.finished.catch(()=>{}).then(()=>{ if(t2) t2.style.viewTransitionName=''; if(R.dataset.vt===kind) delete R.dataset.vt; });
+  t.finished.catch(()=>{}).then(()=>{ if(t2){ t2.style.viewTransitionName=''; if(t2.id==='vtFloor') t2.hidden=true; } delete R.dataset.vtf; if(R.dataset.vt===kind) delete R.dataset.vt; });
 }
 /* 돌아온 칸 강조: 화면 가운데로 옮기고 보라 테두리를 잠깐 (style.css .vt-was) */
 function vtMark(el, center){ if(!el) return; if(center){ const r=el.getBoundingClientRect(); window.scrollTo({top:r.top+scrollY-(innerHeight-r.height)/2, behavior:'instant'}); }

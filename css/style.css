@@ -3252,9 +3252,10 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 html[data-vt] .tabs{view-transition-name:vt-tabs}
 html[data-vt] #toc{view-transition-name:vt-toc}
 html[data-vt] #partRail{view-transition-name:vt-rail}
-::view-transition-group(vt-tabs),::view-transition-group(vt-toc),::view-transition-group(vt-rail),
-::view-transition-new(vt-tabs),::view-transition-new(vt-toc),::view-transition-new(vt-rail){animation:none}
-::view-transition-old(vt-tabs),::view-transition-old(vt-toc),::view-transition-old(vt-rail){display:none}
+html[data-vt] #figRail{view-transition-name:vt-fig}   /* 좌표계·거동 배너도 제자리 (2026-11-25: 바닥 판에 가리지 않게) */
+::view-transition-group(vt-tabs),::view-transition-group(vt-toc),::view-transition-group(vt-rail),::view-transition-group(vt-fig),
+::view-transition-new(vt-tabs),::view-transition-new(vt-toc),::view-transition-new(vt-rail),::view-transition-new(vt-fig){animation:none}
+::view-transition-old(vt-tabs),::view-transition-old(vt-toc),::view-transition-old(vt-rail),::view-transition-old(vt-fig){display:none}
 ::view-transition-group(root),::view-transition-new(root){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-out)}
 ::view-transition-old(root){animation-duration:calc(var(--vt-ms,265ms) * .7);animation-timing-function:var(--ease-out)}
 ::view-transition-group(vt-card){animation-duration:var(--vt-ms,265ms);animation-timing-function:var(--ease-io);border-radius:var(--r-m);overflow:hidden}
@@ -3436,3 +3437,11 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 /* 벽에 붙인 목차 안쪽 들여쓰기: 머리 글자 · 목록 글자가 벽에서 16 px (2026-11-24) */
 #toc:not(.coll) .toc-h{padding-left:16px}
 #toc:not(.coll) .toc-in{padding-left:12px}
+
+/* 설계 탭 항목 열기: 판이 바닥이 됨 (2026-11-25). 바닥 상자(#vtFloor)는 머리띠 아래 전체, 목차(z 12) · 파트 패널(z 15) 아래.
+   판: 흰색 · 모서리 8 px → 바닥색 · 모서리 0 (55 %) → 투명 (끝). 새 화면 내용은 판이 투명해지며 드러남 → 끝에 사라지는 테두리 없음 */
+#vtFloor{position:fixed;left:0;right:0;top:var(--tabh);bottom:0;z-index:1;pointer-events:none}
+#vtFloor[hidden]{display:none}
+html[data-vtf]::view-transition-group(vt-card){border-radius:0}
+html[data-vtf]::view-transition-image-pair(vt-card){animation:vt-floor var(--vt-ms,265ms) var(--ease-out) both}
+@keyframes vt-floor{0%{background:var(--panel);border-radius:var(--r-m)}55%{background:var(--bg);border-radius:0}100%{background:rgba(0,0,0,0);border-radius:0}}

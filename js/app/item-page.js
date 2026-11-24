@@ -90,7 +90,7 @@ document.addEventListener('keydown', e=>{ if(e.key!=='Escape' || !IPAGE || TAB!=
 function vtItem(id, src){ if(!IT[id]) return; const cur=(TAB==='steps')&&IPAGE;
   if(cur===id){ openItem(id); return; }
   if(cur){ const o=ipOrder(); vtGo(o.indexOf(id)<o.indexOf(cur)?'prev':'next', ()=>openItem(id)); return; }
-  vtGo('open', ()=>openItem(id), src?()=>src:null, ()=>$('#ipage')); }
+  vtGo('open', ()=>openItem(id), src?()=>src:null, vtFloor); }
 /* 목차 단계 누름: 항목 화면이면 개요로 돌아가 그 단계로 */
 { const _gs=gotoStep; gotoStep=function(sid){ if(IPAGE){ ipBackTo(sid); return; } return _gs.apply(this, arguments); }; }
 /* 스크롤에 따른 목차 강조는 개요에서만 */
