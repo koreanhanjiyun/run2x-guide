@@ -2530,7 +2530,7 @@ html.wb-lock #tip{z-index:95}
 .t2-cur{fill:#fff;stroke:#232731;stroke-width:2.5}
 
 .t2-grad{display:inline-block;width:90px;height:8px;border-radius:4px;background:linear-gradient(to right,hsl(230 75% 45%),hsl(115 75% 45%),hsl(0 75% 45%))}
-.t2-gt td.ok{color:#257a47}.t2-gt .t2-sum td{border-top:2px solid var(--line-2)}
+.t2-gt td.ok{color:var(--out)}.t2-gt .t2-sum td{border-top:2px solid var(--line-2)}
 .t2-part .dp-plots{grid-template-columns:minmax(0,820px)}
 .wb-viz{display:inline-grid;place-items:center;width:20px;height:18px;margin-left:4px;padding:0;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);cursor:pointer;vertical-align:-3px}
 .wb-viz svg{width:13px;height:13px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
@@ -2593,7 +2593,7 @@ html.wb-lock #tip{z-index:95}
 .t2-out .wb-oc{min-width:0}
 
 .t2-sub{grid-column:1 / -1;font-size:var(--fs-xs);text-align:right}
-.t2-dt.ok{color:#257a47}.t2-dt.bad{color:#b42318}.t2-dt em{font-style:normal;color:var(--muted)}
+.t2-dt.ok{color:var(--out)}.t2-dt.bad{color:#b42318}.t2-dt em{font-style:normal;color:var(--muted)}
 /* 도구 2 (2026-11-05 2차): [시뮬레이션 | 맵 편집] · 결과 줄 맞춤 · 구동력 선도 프로브 · 지도 확대 */
 .t2-hr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;flex:1;min-width:0}
 .t2-h{flex-wrap:wrap;gap:8px 16px}
