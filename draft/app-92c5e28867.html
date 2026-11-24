@@ -30538,18 +30538,18 @@ syncTabsA11y(); document.body.classList.add('tab-'+TAB);
 /* ---------- 오른쪽 배너 펼침 애니메이션 (2026-11-12): 머리 글자가 ㄱ자 길(세로 줄 위로 → 모서리에서 왼쪽)을 따라 가로로 눕고,
    배너는 그동안 폭이 넓어지고 높이가 머리 높이로 줄어듦 → 다 펴지면 내용(in)이 이어서 나옴. 닫을 때는 내용(out)을 먼저 거두고 거꾸로 되감음.
    apply(open) = 클래스만 바꾸는 함수. 사용법 중에는 애니메이션 없이 바로 바꿈. 도중에 반대로 바뀌면 그 자리에서 되돌아감 ---------- */
-/* 글자 기차 (2026-11-24): 세로 막대 글자 V[i] ↔ 가로 머리 글자 H[i] 를 ㄱ자 선로 하나로 잇고, 모든 글자가 세로일 때 간격을 지킨 채 같은 속도로 따라가다
-   앞 글자부터 차례로 제자리에 섬(가로 간격이 더 좁아서 자연히 앞부터 멈춤). 예전에는 글자마다 따로 '위로 → 옆으로' 가서 모서리 한 점에 뭉쳤음.
+/* 글자 기차 (2026-11-24): 세로 막대 글자 V[i] ↔ 가로 머리 글자 H[i] 를 ㄱ자 선로 하나로 잇고, 모든 글자가 같은 진행률로 자기 거리를 감
+   (같이 출발 · 같이 도착, 간격은 세로 간격 → 가로 간격으로 이동 내내 고르게 좁아짐). 같은 속도로 가다 앞부터 서게 하면 끝에 하나씩 '차차차작' 멈춰 보였음.
+   예전에는 글자마다 따로 '위로 → 옆으로' 가서 모서리 한 점에 뭉쳤음.
    q = 0 세로 · 1 가로. 접을 때는 q 를 1 → 0 으로 = 펼침의 정확한 역재생. 반환 (i, q) → {x, y} */
 function trainOf(V, H){ const n = Math.min(V.length, H.length); if(!n) return () => ({x: 0, y: 0});
   const avg = (A, k) => A.slice(0, n).reduce((a, c) => a + c[k], 0)/n, cx = avg(V, 'x'), cy = avg(H, 'y'), sg = avg(H, 'x') >= cx ? 1 : -1;
   const T = s => s < 0 ? {x: cx, y: cy - s} : {x: cx + sg*s, y: cy};   /* 선로: s < 0 세로 구간(모서리 아래), s ≥ 0 가로 구간 */
   const S0 = [], S1 = [], O0 = [], O1 = [];
   for(let i = 0; i < n; i++){ S0.push(cy - V[i].y); S1.push(sg*(H[i].x - cx)); const a = T(S0[i]), b = T(S1[i]); O0.push({x: V[i].x - a.x, y: V[i].y - a.y}); O1.push({x: H[i].x - b.x, y: H[i].y - b.y}); }
-  const Dm = Math.max(1e-6, ...S0.map((v, i) => S1[i] - v));
   return (i, q) => { const d = S1[i] - S0[i];
     if(!(d > 1e-6)) return {x: V[i].x + (H[i].x - V[i].x)*q, y: V[i].y + (H[i].y - V[i].y)*q};
-    const u = Math.min(q*Dm, d), f = u/d, p = T(S0[i] + u); return {x: p.x + O0[i].x*(1 - f) + O1[i].x*f, y: p.y + O0[i].y*(1 - f) + O1[i].y*f}; }; }
+    const u = q*d, f = q, p = T(S0[i] + u); return {x: p.x + O0[i].x*(1 - f) + O1[i].x*f, y: p.y + O0[i].y*(1 - f) + O1[i].y*f}; }; }
 /* 글자 문짝 (2026-11-24, 목차용): 목차는 머리 글자가 세로 막대의 오른쪽으로 펼쳐지는데 글을 왼쪽부터 읽어, 기차(trainOf)로 가면 뒤 글자가 앞 글자를 지나쳐 겹침.
    그래서 세로줄 전체가 첫 글자를 축으로 문처럼 90° 돌아 눕게 함: 순서 · 간격(세로 간격 → 가로 간격으로 서서히)을 지킴. q = 0 세로 · 1 가로 */
 function swingOf(V, H){ const n = Math.min(V.length, H.length); if(!n) return () => ({x: 0, y: 0});
