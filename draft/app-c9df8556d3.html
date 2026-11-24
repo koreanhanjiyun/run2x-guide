@@ -3175,7 +3175,7 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 .ip-top .actbox b.tag{color:var(--accent);font-size:var(--fs-s);margin-right:var(--sp-2)}
 .ip-cols{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:var(--sp-6);align-items:start}
 .ip-main{min-width:0;display:grid;gap:var(--sp-4);align-content:start}
-.ip-side{position:sticky;top:calc(var(--tabh) + 16px);display:grid;gap:var(--sp-4);max-height:calc(100vh - var(--tabh) - 32px);overflow:auto;padding:var(--sp-4);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m)}
+.ip-side{position:sticky;top:calc(var(--tabh) + var(--ipbar) + 16px);display:grid;gap:var(--sp-4);max-height:calc(100vh - var(--tabh) - var(--ipbar) - 32px);overflow:auto;padding:var(--sp-4);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m)}
 .ip-side .vrow{display:grid;gap:var(--sp-2)}
 .ip-side .tval,.ip-side .stbox{margin:0}
 .ip-rel .ip-rl{margin:var(--sp-2) 0 0;font-size:var(--fs-s);line-height:1.7}
@@ -3357,9 +3357,6 @@ html[data-vt="hero"]::view-transition-new(root){animation:vt-hero-in var(--vt-ms
 @keyframes vt-hero-in{from{transform:translateY(100%)}}
 
 /* 항목 화면 [‹ 목록으로] (2026-11-22): 제목 위 경로 줄 왼쪽 (시선이 머무는 제목 쪽). 내려 읽으면 머리띠 밑 왼쪽에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 돌아감 */
-#ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-start}
-#ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 2px 8px rgba(30,20,50,.12);transform:translateY(-6px)}
-#ipage .ip-top .ip-path{padding-left:112px}
 /* ============================================================
    탭별 글자 네 가지 (2026-11-22, docs/DESIGN.md 3절 '한 화면 안 글자 크기')
    화면 제목 24 · 칸 제목 15 (굵게) · 본문 · 표 · 버튼 · 링크 · 그림 글자 13 · 보조 11.
@@ -3466,8 +3463,32 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 #vtFloor{position:fixed;left:0;right:0;top:var(--tabh);bottom:0;z-index:1;pointer-events:none}
 #vtFloor[hidden]{display:none}
 html[data-vtf]::view-transition-group(vt-card){border-radius:0}
-html[data-vtf]::view-transition-image-pair(vt-card){animation:vt-floor var(--vt-ms,265ms) var(--ease-out) both}
+html[data-vtf="open"]::view-transition-image-pair(vt-card){animation:vt-floor var(--vt-ms,265ms) var(--ease-out) both}
 @keyframes vt-floor{0%{background:var(--panel);border-radius:var(--r-m)}55%{background:var(--bg);border-radius:0}100%{background:rgba(0,0,0,0);border-radius:0}}
+
+/* 설계 탭 항목 → 목록 (close, 2026-11-25): 열기를 거꾸로. 0~25 %: 바닥 판이 투명 → 바닥색으로 덮으며 항목 내용이 스며듦 (판 크기 그대로)
+   25~100 %: 판이 돌아갈 칸으로 줄며 바닥색 → 흰색 · 모서리 0 → 8 px. 목록은 25 %부터 살짝 흐리고 어두운 채 드러나 끝에 또렷해짐. 칸 글은 끝에 나타남 */
+html[data-vtf="close"]::view-transition-group(vt-card){animation-delay:calc(var(--vt-ms,240ms) * .25);animation-duration:calc(var(--vt-ms,240ms) * .75);animation-fill-mode:both;animation-timing-function:var(--ease-io)}
+html[data-vtf="close"]::view-transition-image-pair(vt-card){animation:vt-floor-close var(--vt-ms,240ms) var(--ease-io) both}
+@keyframes vt-floor-close{0%{background:rgba(0,0,0,0);border-radius:0}25%{background:var(--bg);border-radius:0}100%{background:var(--panel);border-radius:var(--r-m)}}
+html[data-vtf="close"]::view-transition-old(vt-card){animation:none;opacity:0}
+html[data-vtf="close"]::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,240ms) * .35) var(--ease-out) calc(var(--vt-ms,240ms) * .65) both}
+html[data-vt="close"]::view-transition-old(root){animation:vt-gone var(--vt-ms,240ms) linear both}
+html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms,240ms) var(--ease-io) both}
+@keyframes vt-gone{0%,24%{opacity:1}25%,100%{opacity:0}}
+@keyframes vt-unhold{0%,24%{opacity:0;filter:blur(2px) brightness(.9)}25%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:1;filter:none}}
+/* 항목 화면 머리 막대 (2026-11-25): [‹ 목록] + 경로를 한 줄로, 내리면 머리띠 아래에 붙어 따라옴 (버튼이 혼자 떠 있지 않게) */
+:root{--ipbar:44px}
+#ipage .ip-bar{position:sticky;top:var(--tabh);z-index:6;display:flex;align-items:center;gap:var(--sp-3);height:var(--ipbar);margin-top:calc(-1 * var(--sp-5));background:var(--bg);border-bottom:1px solid var(--line)}
+#ipage .ip-bar .ip-close{font-size:var(--fs-s);flex:none}
+#ipage .ip-bar .ip-path{flex-wrap:nowrap;min-width:0;overflow:hidden;white-space:nowrap;padding-left:var(--sp-3);border-left:1px solid var(--line)}
+#ipage .ip-bar .ip-cur{overflow:hidden;text-overflow:ellipsis;color:var(--ink);font-weight:600}
+
+/* 목표 화면 핵심 그림 (2026-11-25): 설명 왼쪽 · 그림 오른쪽. 그림은 판 없이 선만 */
+#v-start .gp-sec.gp-hasfig{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:var(--sp-7);align-items:center}
+#v-start .gp-fig{margin:0}
+#v-start .gp-fig svg{display:block;width:100%;height:auto;overflow:visible}
+#v-start .gp-fig figcaption{margin-top:var(--sp-2);font-size:var(--fs-s);color:var(--muted);text-align:center}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -18122,6 +18143,7 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
      설계 탭 항목은 to = vtFloor: 판이 본문 너비가 아니라 머리띠 아래 화면 전체(바닥)로 커지며 모서리 · 색이 바닥과 같아지고 사라짐
      (2026-11-25 관리자: 본문 너비 상자가 커졌다가 끝에 테두리째 사라져 바닥이 드러나는 것이 부자연스러움). 목차 · 파트 패널은 바닥 위에 그대로
+   - close (설계 탭 항목 → 목록, 2026-11-25): open 을 거꾸로. from = vtFloor, to = 돌아갈 칸. 240 ms
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 300 ms. back 240 ms (2026-11-24 PC는 즉각적으로: 700 → 300). hero 500 ms (한 번 보는 첫 장면이라 예외)
@@ -18137,14 +18159,15 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 500 : (kind==='push'||kind==='pop'||kind==='back') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
-  const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 500 : (kind==='push'||kind==='pop'||kind==='back'||kind==='close') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
+  if(fr && f.id==='vtFloor') R.dataset.vtf='close';
+  const t=document.startViewTransition(()=>{ if(fr){ f.style.viewTransitionName=''; if(f.id==='vtFloor') f.hidden=true; }
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
     const e2=fr&&to&&to(), r2=vtSeen(e2);
-    if(r2){ t2=e2; t2.style.viewTransitionName='vt-card'; if(e2.id==='vtFloor') R.dataset.vtf='1';
+    if(r2){ t2=e2; t2.style.viewTransitionName='vt-card'; if(e2.id==='vtFloor') R.dataset.vtf='open';
       const d=Math.max(Math.hypot(r2.left-fr.left, r2.top-fr.top), Math.abs(r2.width-fr.width), Math.abs(r2.height-fr.height));
-      R.style.setProperty('--vt-ms', Math.min(300, motionMs(d))+'ms'); } });
+      if(kind!=='close') R.style.setProperty('--vt-ms', Math.min(300, motionMs(d))+'ms'); } });
   t.finished.catch(()=>{}).then(()=>{ if(t2){ t2.style.viewTransitionName=''; if(t2.id==='vtFloor') t2.hidden=true; } delete R.dataset.vtf; if(R.dataset.vt===kind) delete R.dataset.vt; });
 }
 /* 돌아온 칸 강조: 화면 가운데로 옮기고 보라 테두리를 잠깐 (style.css .vt-was) */
@@ -18160,13 +18183,13 @@ window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   const cur=(typeof IPAGE!=='undefined')?IPAGE:null; let kind='fade', from=null, to=null;
   if(h.tab===TAB && TAB==='steps'){
     if(cur && h.ip && cur!==h.ip){ const o=ipOrder(); kind = o.indexOf(h.ip)<o.indexOf(cur) ? 'prev' : 'next'; }
-    else if(!cur && h.ip){ kind='open'; from=()=>$('#it-'+h.ip); to=()=>$('#ipage'); }
-    else if(cur && !h.ip) kind='back';
+    else if(!cur && h.ip){ kind='open'; from=()=>$('#it-'+h.ip); to=vtFloor; }
+    else if(cur && !h.ip){ kind='close'; from=vtFloor; to=()=>$('#it-'+cur); }
     else kind=null; }
   else if(h.tab===TAB && TAB==='start' && (h.sys||'')!==(START.sys||'')){ const a=START.sys||'', z=h.sys||'';
     kind = !a ? 'push' : (!z || stIdx(z)<stIdx(a)) ? 'pop' : 'push'; }
   else if(h.tab===TAB) kind=null;
-  const was = kind==='back' && TAB==='steps' ? ()=>$('#it-'+cur) : (TAB==='start' && START.sys && !h.sys) ? (k=>()=>stCard(k))(START.sys) : null;
+  const was = kind==='close' && TAB==='steps' ? ()=>$('#it-'+cur) : (TAB==='start' && START.sys && !h.sys) ? (k=>()=>stCard(k))(START.sys) : null;
   if(!kind) return;
   e.stopImmediatePropagation();
   vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); window.scrollTo({top:h.y||0, behavior:'instant'});
@@ -19647,10 +19670,81 @@ function spNav(attr, prev, pv, next, nv){
   const arw=(cls, v, t, ch)=>`<button type="button" class="sp-arw ${cls}" ${attr}="${v}" aria-label="${cls==='sp-prev'?'이전':'다음'}: ${esc(t)}"><i aria-hidden="true">${ch}</i><span>${t}</span></button>`;
   return `<button type="button" class="sp-arw sp-list" data-sysgo="" aria-label="시작 탭 목록으로"><i aria-hidden="true"><svg viewBox="0 0 20 20" width="20" height="20" fill="currentColor"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg></i><span>목록</span></button>
     <nav class="sp-side" aria-label="이전 · 다음">${prev?arw('sp-prev', pv, prev.t, '‹'):''}${next?arw('sp-next', nv, next.t, '›'):''}</nav>`; }
+/* 목표 화면 핵심 그림 (2026-11-25 관리자: 목표 화면이 글뿐이라 밋밋함 → 목표마다 원리 그림 하나, 설명 오른쪽).
+   개념 도식이라 축에 숫자를 두지 않음 (모양만: 곡선은 식으로 계산해 그림). 색은 사이트 변수, 글자 13 px */
+const GF = (() => {
+  const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" font-size="${o.fs || 13}"${o.a ? ` text-anchor="${o.a}"` : ''} fill="${o.c || 'var(--ink-2)'}"${o.b ? ' font-weight="600"' : ''}>${s}</text>`;
+  const sub = s => `<tspan baseline-shift="sub" font-size="10">${s}</tspan>`;
+  const ax = (x0, y0, x1, y1, xl, yl) => `<path d="M${x0} ${y0} H${x1}" stroke="var(--ink-2)" stroke-width="1.4" marker-end="url(#gfA)"/><path d="M${x0} ${y0} V${y1}" stroke="var(--ink-2)" stroke-width="1.4" marker-end="url(#gfA)"/>`
+    + T(x1, y0 + 20, xl, {a: 'end', c: 'var(--muted)'}) + T(x0 + 10, y1 + 4, yl, {c: 'var(--muted)'});
+  const defs = `<defs><marker id="gfA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink-2)"/></marker>
+    <marker id="gfB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs>`;
+  const cg = (x, y, r = 8) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/><path d="M${x} ${y}L${x - r} ${y}A${r} ${r} 0 0 1 ${x} ${y - r}Z" fill="var(--ink)"/><path d="M${x} ${y}L${x + r} ${y}A${r} ${r} 0 0 1 ${x} ${y + r}Z" fill="var(--ink)"/><path d="M${x - r} ${y}H${x + r}M${x} ${y - r}V${y + r}" stroke="var(--ink)" stroke-width="1.1"/>`;
+  const svg = (body, lab) => `<svg viewBox="0 0 460 270" role="img" aria-label="${lab}">${defs}${body}</svg>`;
+  const pts = (f, a, b, n, X, Y) => Array.from({length: n + 1}, (_, i) => { const v = a + (b - a) * i / n; return `${i ? 'L' : 'M'}${X(v).toFixed(1)} ${Y(f(v)).toFixed(1)}`; }).join('');
+  /* 앞에서 본 차 한 대: 가운데 x, 지면 y, 몸통 롤(도), 바퀴 기울기(도, 왼쪽 · 오른쪽 바퀴 각각 시계 방향 +), 몸통 높이 */
+  const car = (x, g, roll = 0, tilt = [0, 0], h = 52) => { const tw = 150, wh = 46, ww = 16;
+    const wheel = (wx, c) => `<rect x="${wx - ww / 2}" y="${g - wh}" width="${ww}" height="${wh}" rx="4" fill="var(--ink)" transform="rotate(${c} ${wx} ${g})"/>`;
+    return wheel(x - tw / 2, tilt[0]) + wheel(x + tw / 2, tilt[1])
+      + `<g transform="rotate(${roll} ${x} ${g - h})"><path d="M${x - 52} ${g - h}L${x - tw / 2 + 8} ${g - wh / 2}M${x + 52} ${g - h}L${x + tw / 2 - 8} ${g - wh / 2}" stroke="var(--ink-2)" stroke-width="1.4"/>
+         <rect x="${x - 52}" y="${g - h - 16}" width="104" height="30" rx="6" fill="var(--panel)" stroke="var(--ink-2)" stroke-width="1.4"/></g>`; };
+  return [
+  /* 1 그립: 마찰원 (타이어 힘 합의 한계 μ·F_z) + 다운포스로 원이 커짐, 오른쪽 L ∝ v² */
+  () => { const cx = 120, cy = 140, r1 = 78, r2 = 102, th = 38 * Math.PI / 180, ex = cx + r1 * Math.cos(th), ey = cy - r1 * Math.sin(th);
+    const X = v => 300 + v * 130, Y = L => 215 - L * 150;
+    return svg(`<circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="5 4"/>
+      <circle cx="${cx}" cy="${cy}" r="${r1}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.8"/>
+      <path d="M${cx - r2 - 6} ${cy}H${cx + r2 + 6}M${cx} ${cy - r2 - 6}V${cy + r2 + 6}" stroke="var(--line-2)" stroke-width="1"/>
+      <path d="M${ex} ${ey}V${cy}M${ex} ${ey}H${cx}" stroke="var(--muted)" stroke-dasharray="3 3"/>
+      <path d="M${cx} ${cy}L${ex} ${ey}" stroke="var(--ink)" stroke-width="2.4" marker-end="url(#gfA)"/>
+      ${T(cx, cy - r2 - 12, '가속 · 제동 F' + sub('x'), {a: 'middle', c: 'var(--muted)'})}${T(cx + r2 + 6, cy + 4, '선회 F' + sub('y'), {c: 'var(--muted)'})}
+      ${T(cx - 12, cy + 34, '한계 μ·F' + sub('z'), {a: 'end'})}${T(cx - r2 + 2, cy + r2 + 6, '+ 다운포스', {c: 'var(--accent)'})}
+      <rect x="${X(0)}" y="${Y(1)}" width="${X(.45) - X(0)}" height="${Y(0) - Y(1)}" fill="var(--accent)" opacity=".08"/>
+      ${ax(X(0), Y(0), X(1) + 14, Y(1) - 14, '속도 v', '다운포스 L')}
+      <path d="${pts(v => v * v, 0, 1, 40, X, Y)}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+      ${T(X(.6), Y(.75), 'L ∝ v²', {a: 'end', c: 'var(--accent)', b: 1})}${T(X(.225), Y(0) - 12, '저속 코너', {a: 'middle', c: 'var(--muted)', fs: 12})}`,
+      '마찰원과 다운포스: 타이어 힘의 합은 μ·Fz를 넘지 못함. 다운포스는 원을 키우지만 속도 제곱에 비례해 저속에서 작음'); },
+  /* 2 더 큰 힘: 가속도-속도. 낮은 속도는 그립(④)이, 높은 속도는 출력(③, a = P/(m·v))이 한계. 가벼우면 출력 한계 곡선이 위로 */
+  () => { const X = v => 60 + v * 92, Y = a => 222 - a * 150, vm = 4, k = .85;
+    return svg(`${ax(X(0), Y(0), X(vm) + 6, Y(1.25), '속도 v', '가속도 a')}
+      <path d="${pts(v => Math.min(1, 1 / (k * v)), .05, vm, 80, X, Y)}" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <path d="${pts(v => Math.min(1, 1 / v), .05, vm, 80, X, Y)}" fill="none" stroke="var(--ink)" stroke-width="2.4"/>
+      <path d="M${X(1)} ${Y(1) - 6}V${Y(0)}" stroke="var(--line-2)" stroke-dasharray="3 3"/>
+      ${T(X(.5), Y(1) - 12, '④ 그립 한계', {a: 'middle', b: 1})}${T(X(.5), Y(1) + 22, '(구동력 전달)', {a: 'middle', c: 'var(--muted)', fs: 12})}
+      ${T(X(1.6), Y(0) - 24, '③ 출력 한계 a = P / (m·v)', {b: 1})}${T(X(2.7), Y(1 / (k * 2.7)) - 12, '⑤ 가벼우면', {c: 'var(--accent)'})}`,
+      '가속도와 속도: 낮은 속도에서는 그립이, 높은 속도에서는 출력이 가속을 제한함. 가벼우면 출력 한계 곡선이 위로 올라감'); },
+  /* 3 가볍게: 앞에서 본 두 차. CG 가 높을수록 선회 때 바깥 바퀴로 몰리는 하중 ΔF_z = m·a_y·h / t 가 큼 (화살표 길이 ∝ h) */
+  () => { const g = 190, A = 120, B = 340, hA = 96, hB = 60;
+    const one = (x, h, lab) => `<path d="M${x - 100} ${g}H${x + 100}" stroke="var(--ink-2)" stroke-width="1.4"/>` + car(x, g, 0, [0, 0], h - 6) + cg(x, g - h)
+      + `<path d="M${x - 92} ${g}V${g - h}" stroke="var(--muted)" stroke-dasharray="2 3"/>` + T(x - 97, g - h / 2 + 4, 'h', {a: 'end', c: 'var(--muted)'})
+      + `<path d="M${x + 75} ${g + 4 + h * .4}V${g + 4}" stroke="var(--accent)" stroke-width="2.6" marker-end="url(#gfB)"/>` + T(x + 82, g + 4 + h * .4, '+ΔF' + sub('z'), {c: 'var(--accent)'})
+      + T(x, 46, lab, {a: 'middle', b: 1});
+    return svg(one(A, hA, 'CG 높음') + one(B, hB, 'CG 낮음') + `<path d="M205 70H255" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#gfA)"/>` + T(230, 62, '선회 관성', {a: 'middle', c: 'var(--muted)', fs: 12})
+      + T(230, 266, 'ΔF' + sub('z') + ' = m · a' + sub('y') + ' · h / t', {a: 'middle', b: 1}),
+      'CG 높이와 하중 이동: 선회 때 바깥 바퀴로 몰리는 하중은 질량 · 횡가속도 · CG 높이에 비례하고 트레드에 반비례함'); },
+  /* 4 일관성: 자세가 일정하면 캠버 · 차고가 설계대로, 롤이 크면 바깥 바퀴 캠버가 틀어지고 차고가 바뀜 */
+  () => { const g = 185, A = 120, B = 340;
+    return svg(`<path d="M20 ${g}H220M240 ${g}H440" stroke="var(--ink-2)" stroke-width="1.4"/>`
+      + car(A, g, 0, [2, -2]) + car(B, g, 6, [3, 7])
+      + T(A, 50, '자세 일정', {a: 'middle', b: 1}) + T(A, 222, '캠버 · 차고 설계대로', {a: 'middle', c: 'var(--muted)'})
+      + T(B, 50, '롤이 큼', {a: 'middle', b: 1}) + T(B, 222, '바깥 바퀴 캠버 틀어짐', {a: 'middle', c: 'var(--accent)'}) + T(B, 244, '차고 변화 → 다운포스 변화', {a: 'middle', c: 'var(--accent)'})
+      + `<path d="M${B - 30} 92A40 40 0 0 1 ${B + 30} 92" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#gfB)"/>` + T(B + 38, 92, '롤', {c: 'var(--accent)'}),
+      '자세와 캠버: 롤이 작고 일정하면 캠버와 차고가 설계대로 유지됨. 롤이 크면 바깥 바퀴 캠버가 틀어지고 차고가 바뀌어 다운포스도 달라짐'); },
+  /* 5 끝까지: 내구 진행에 따른 낼 수 있는 성능. 열 · 에너지 관리가 부족하면 후반에 출력 제한 */
+  () => { const X = d => 60 + d * 360, Y = p => 215 - p * 150;
+    return svg(`${ax(X(0), Y(0), X(1) + 10, Y(1.15), '내구 진행', '낼 수 있는 성능')}
+      <path d="M${X(0)} ${Y(.9)}H${X(1)}" stroke="var(--ink)" stroke-width="2.4"/>
+      <path d="M${X(0)} ${Y(.9) + 4}H${X(.55)}C${X(.62)} ${Y(.9) + 4} ${X(.62)} ${Y(.5)} ${X(.7)} ${Y(.5)}H${X(.86)}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-dasharray="6 4"/>
+      <path d="M${X(.86) - 7} ${Y(.5) - 7}l14 14m0 -14l-14 14" stroke="var(--accent)" stroke-width="2.4"/>
+      ${T(X(1), Y(.9) - 12, '열 · 에너지 관리됨 → 완주', {a: 'end', b: 1})}${T(X(.68), Y(.5) + 26, '과열 → 출력 제한', {a: 'middle', c: 'var(--accent)'})}${T(X(.86) + 12, Y(.5) + 5, '정지', {c: 'var(--accent)'})}`,
+      '내구 진행과 성능: 발열과 에너지를 관리하면 끝까지 같은 성능, 관리가 부족하면 후반에 출력이 제한되거나 멈춤'); },
+  ];
+})();
+const goalFig = mi => { const f = GF[mi]; if(!f) return ''; const s = f(); const lab = (s.match(/aria-label="([^"]*)"/) || [])[1] || ''; return `<figure class="gp-fig">${s}<figcaption>${lab.split(':')[0]}</figcaption></figure>`; };
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
   return `${spNav('data-goalgo', prev, mi-1, next, mi+1)}
     <header class="top sp-head"><span class="eyebrow"><span class="st-gn">${mi+1}</span> 목표</span><h1>${m.t}</h1><p class="lede">${esc(m.s)}</p></header>
-    <section class="gp-sec"><p class="gp-why">${m.why}</p></section>
+    <section class="gp-sec gp-hasfig"><p class="gp-why">${m.why}</p>${goalFig(mi)}</section>
     <section class="gp-list"><h2>세부 목표 <span class="muted">${m.subs.length}개</span></h2><div class="gp-subs">${m.subs.map(goalSubCard).join('')}</div></section>`; }
 /* 세부 목표 카드 (2026-11-24): 접지 않고 다 보임. 왼쪽 = 목표(핵심 한 줄) · 왜 · 연결, 오른쪽 = 근거 · 판단 기준 · 관련 설계 항목 */
 function goalSubCard(d){ const its=[...d.go].filter(id=>IT[id]).sort((a,b)=>(SIDX[IT[a].s]-SIDX[IT[b].s])||(((ACT[a]||[99])[0])-((ACT[b]||[99])[0])));
@@ -30817,7 +30911,7 @@ const TOUR = {
   ['#st-P3-1>summary','단계 줄','단계를 펼치면 항목 줄이 나오고, 항목 줄을 누르면 항목 화면이 열립니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
   ['#it-s_scrub>summary','항목 줄',`항목 이름 아래에 핵심 한 줄이 있어, 단계를 펼쳐 내려 읽기만 해도 전체 흐름이 보입니다. 오른쪽에 ${B('b-card','상세')} · 확정되는 것 · 팀 진행 상태(<span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span>) · [연결도] 버튼이 있습니다. 줄을 누르면 본문이 그 항목 화면으로 바뀝니다.`,{tab:'steps',vm:'full',fx:'doing',reveal:'#it-s_scrub>summary',prep:()=>{ if(typeof IPAGE!=='undefined' && IPAGE) ipClose(); const st=$('#st-P3-1'); if(st) st.open=true; }}],
   ['#ipage','항목 화면','항목을 누르면 머리띠 · 목차 · 오른쪽 패널은 그대로 두고 본문만 이 화면으로 바뀝니다. 위에 핵심, 왼쪽에 읽을 설명, 오른쪽에 우리 팀 숫자와 이동이 있습니다. 브라우저 뒤로 가기로 목록에 돌아갑니다.',{...SC,pic:PIC.card}],
-  ['#ipage .ip-path','경로','설계 › 단계 › 항목입니다. 왼쪽 [‹ 목록으로]나 Esc 키로 보던 항목 칸으로 돌아가고, [설계]나 단계를 누르면 목록의 그 위치로 갑니다. 왼쪽 목차에는 지금 단계의 항목들이 펼쳐져 있어 바로 옮겨 갈 수 있습니다.',{...SC,also:'#toc .toc-its'}],
+  ['#ipage .ip-bar','목록 · 경로','맨 위 막대는 내려도 따라옵니다. [‹ 목록]이나 Esc 키로 보던 항목 칸으로 돌아가고, 경로의 [설계]나 단계를 누르면 목록의 그 위치로 갑니다. 왼쪽 목차에는 지금 단계의 항목들이 펼쳐져 있어 바로 옮겨 갈 수 있습니다.',{...SC,also:'#toc .toc-its'}],
   ['#ipage .stbox','진행 상태','담당 팀장·파트장과 회장에게만 보이는 칸입니다. 예정·진행 중·완료·제외를 바로 누르면 "저장 전"으로 표시되고, 아래 막대의 [모두 저장]을 눌러야 팀에 저장됩니다. 저장한 상태는 목록의 항목 줄 오른쪽에 표시됩니다.',{...SC}],
   ['#ipage .gpath','왜 하나','이 항목이 어떤 목표로 이어지는지 보여 줍니다. 누르면 시작 탭의 그 목표 화면으로 갑니다.',{...SC}],
   ['#ipage .actbox','핵심','이 항목에서 정할 것, 즉 설계 결론입니다. 항목을 열면 이것부터 읽으십시오.',{...SC}],
@@ -31151,7 +31245,7 @@ function ipRender(id){ const it=IT[id], st=STEPS[SIDX[it.s]], host=ipHost();
   const ord=ipOrder(), k=ord.indexOf(id), prev=ord[k-1], next=ord[k+1];
   const ins=EDGES.filter(e=>e[1]===id), outs=EDGES.filter(e=>e[0]===id);
   const link = x => `<button type="button" class="lnk" data-goto="${x}">${IT[x].n}</button>`;
-  host.innerHTML = `<div class="ip-closebar"><button type="button" class="btn small ip-close" data-ipclose="1" title="목록으로 돌아가기 (Esc)">‹ 목록으로</button></div><div class="ip-top"><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav>
+  host.innerHTML = `<div class="ip-bar"><button type="button" class="btn small ip-close" data-ipclose="1" title="목록으로 돌아가기 (Esc)">‹ 목록</button><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav></div><div class="ip-top">
       <h1 class="ip-h">${it.n}</h1><div class="ip-meta">${chip(it.p)}${it.c?'<span class="badge b-card">상세</span>':''}<button class="btn small gbtn" data-graph="${id}">연결도에서 보기</button></div></div>
     <div class="ipage" data-item="${id}"><div class="dbody" data-lazy="1"></div></div>
     <div class="ip-cols"><div class="ip-main"></div><aside class="ip-side"></aside></div>`;
@@ -31206,12 +31300,13 @@ document.addEventListener('click', e=>{
   const ps=e.target.closest('[data-ipstep]'); if(ps){ e.preventDefault(); ipBackTo(ps.dataset.ipstep); return; }
 }, true);
 /* 항목 화면 → 개요 ([‹ 목록으로] · Esc · 경로 · 목차 단계 · 설계 탭 다시 누름).
-   항목 화면이 살짝 내려가며 사라지고 개요가 나타남. 같은 단계로 돌아가면 보던 항목 칸을 화면 가운데에 두고 잠깐 강조 (vtMark). 다른 단계면 그 단계 머리로 */
-function ipBackTo(sid){ const cur=IPAGE, same=cur && IT[cur].s===sid;
-  vtGo('back', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(!st) return; st.open=true;
+   열 때를 거꾸로 (2026-11-25): 항목 내용이 바닥에 스며들고, 바닥 전체(#vtFloor)가 돌아갈 칸으로 줄어들어 다시 칸이 됨 (tabs-nav.js 'close').
+   같은 단계로 돌아가면 보던 항목 칸을 화면 가운데에 두고 잠깐 강조 (vtMark). 다른 단계면 그 단계 머리로 */
+function ipBackTo(sid){ const cur=IPAGE, same=cur && IT[cur].s===sid; let dst=null;
+  vtGo('close', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(!st) return; st.open=true;
       const row=same && $('#it-'+cur);
-      if(row) vtMark(row, true);
-      else { window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } }); }
+      if(row){ vtMark(row, true); dst=row; }
+      else { window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); dst=st.querySelector(':scope>summary')||st; } }, vtFloor, ()=>dst); }
 document.addEventListener('keydown', e=>{ if(e.key!=='Escape' || !IPAGE || TAB!=='steps' || e.defaultPrevented) return;
   if((typeof TR!=='undefined' && TR) || document.querySelector('dialog[open]')) return;
   const a=document.activeElement; if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA' || a.isContentEditable)) return;
