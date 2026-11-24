@@ -3456,6 +3456,9 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 #v-start .gs-side dd.chips{display:flex;flex-wrap:wrap;gap:6px}
 /* 펼친 목차도 왼쪽 벽에 붙임 (2026-11-24, 오른쪽 벽에 붙은 파트 강조와 거울): 벽 쪽 직각 · 안쪽만 둥글게. 본문 여백(--tocx + 48)은 그대로라 목차와 본문 사이가 14 px 넓어짐 */
 #toc{left:0;border-left:0;border-radius:0 var(--r-m) var(--r-m) 0}
+/* 벽에 붙인 목차 안쪽 들여쓰기: 머리 글자 · 목록 글자가 벽에서 16 px (2026-11-24) */
+#toc:not(.coll) .toc-h{padding-left:16px}
+#toc:not(.coll) .toc-in{padding-left:12px}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
