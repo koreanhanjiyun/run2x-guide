@@ -70,7 +70,7 @@ const TOUR = {
   ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-head','목표','이 목표가 무엇인지 한 줄로 적었습니다.',{tab:'start'}],
   ['#v-start .gp-sec','왜','이 목표가 왜 빠른 차로 이어지는지입니다.',{tab:'start'}],
-  ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
+  ['#v-start .gp-subs','세부 목표','세부 목표마다 왼쪽에 목표와 이유, 오른쪽에 근거 · 판단 기준 · 이 목표를 다루는 설계 항목이 있습니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
  ],
  steps: [
   ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:async()=>{ await tgTocSet(false); window.scrollTo({top:0,behavior:'instant'}); }}],

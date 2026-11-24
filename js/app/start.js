@@ -31,10 +31,10 @@ function renderStart(sys){ const v=$('#v-start'); if(!v) return;
   const key = gi>=0 ? 'goal:'+gi : (s?s.p:'_home');
   if(v.dataset.done===key){ heroSync(); if(key==='_home') heroIntro(v); return; } v.dataset.done = key;
   v.innerHTML = gi>=0 ? goalPage(gi) : s ? sysPage(s) : homePage();
-  if(gi>=0) v.querySelectorAll('.gp-subs > details.item').forEach((d,di)=>{ d.id='g-'+gi+'-'+di; });
+  if(gi>=0) v.querySelectorAll('.gp-subs > .gsub').forEach((d,di)=>{ d.id='g-'+gi+'-'+di; });
   if(s && typeof loadCompFigs==='function' && COMP_FIG_STATE!==2) loadCompFigs(()=>{ if(START.sys===s.p){ const y=scrollY; delete v.dataset.done; renderStart(); window.scrollTo({top:y,behavior:'instant'}); } });
   try{ renderMath(v); }catch(e){}
-  try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy').forEach(x=>annotate(x)); }catch(e){}
+  try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy, .gs-why').forEach(x=>annotate(x)); }catch(e){}
   heroSync(); if(key==='_home') heroIntro(v);
 }
 /* 히어로 등장 연출 (2026-11-22, 페이지를 열고 시작 탭 첫 화면을 처음 볼 때 한 번 · 약 3.4 초)
@@ -119,8 +119,17 @@ function spNav(attr, prev, pv, next, nv){
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
   return `${spNav('data-goalgo', prev, mi-1, next, mi+1)}
     <header class="top sp-head"><span class="eyebrow"><span class="st-gn">${mi+1}</span> 목표</span><h1>${m.t}</h1><p class="lede">${esc(m.s)}</p></header>
-    <section class="sp-sec gp-sec"><p class="gp-why">${m.why}</p></section>
-    <section class="sp-comp"><h2>세부 목표 <span class="muted">${m.subs.length}개 · 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목</span></h2><div class="stack gp-subs">${m.subs.map(goalSubHTML).join('')}</div></section>`; }
+    <section class="gp-sec"><p class="gp-why">${m.why}</p></section>
+    <section class="gp-list"><h2>세부 목표 <span class="muted">${m.subs.length}개</span></h2><div class="gp-subs">${m.subs.map(goalSubCard).join('')}</div></section>`; }
+/* 세부 목표 카드 (2026-11-24): 접지 않고 다 보임. 왼쪽 = 목표(핵심 한 줄) · 왜 · 연결, 오른쪽 = 근거 · 판단 기준 · 관련 설계 항목 */
+function goalSubCard(d){ const its=[...d.go].filter(id=>IT[id]).sort((a,b)=>(SIDX[IT[a].s]-SIDX[IT[b].s])||(((ACT[a]||[99])[0])-((ACT[b]||[99])[0])));
+  return `<article class="gsub"><h3 class="gs-t">${d.t}</h3>
+    <div class="gs-grid"><div class="gs-main">
+        <p class="gs-goal"><span class="gs-k">목표</span>${d.g}</p>
+        <p class="gs-why">${d.why}</p>
+        <p class="gs-rel"><span aria-hidden="true">↳</span> ${d.rel}</p></div>
+      <dl class="gs-side"><div><dt>근거</dt><dd>${d.w}</dd></div><div><dt>판단 기준</dt><dd>${d.j}</dd></div>
+        <div><dt>관련 설계 항목</dt><dd class="chips">${its.map(id=>`<button type="button" class="chip" data-goto="${id}"><span class="dot" style="background:${pc(IT[id].p)}"></span>${IT[id].s} · ${IT[id].n}</button>`).join('')}</dd></div></dl></div></article>`; }
 function openGoalPage(mi, di){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart('goal:'+mi); window.scrollTo({top:0, behavior:'instant'});
   if(di!=null) requestAnimationFrame(()=>{ const d=document.getElementById('g-'+mi+'-'+di); if(!d) return; d.open=true; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:d.getBoundingClientRect().top+scrollY-tabh-16, behavior:'instant'}); try{ markHere(d); }catch(e){} }); }
 function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s), prev=BG_SYS[i-1], next=BG_SYS[i+1];

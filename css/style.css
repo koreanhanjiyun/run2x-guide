@@ -3412,3 +3412,22 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 /* 도구 탭 하중 그림: [0] · [정지] 누름 영역 24 px 이상 (WCAG 2.2 2.5.8, 2026-11-24 점검: 25 × 22 · 23 × 24 px) */
 .d0btn{line-height:22px;min-width:24px}
 .dc-pl button.lnk{min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center}
+/* ============================================================
+   목표 화면 세부 목표 (2026-11-24): 접지 않고 카드로 다 보임. 판 = 흰 바탕 · 1 px 테두리 · 모서리 8 · 안쪽 24.
+   왼쪽(넓게) 목표 한 줄(핵심, 강조는 여기 하나) → 왜 → 연결 / 오른쪽 근거 · 판단 기준 · 관련 설계 항목 (작은 이름 11 + 내용 13)
+   ============================================================ */
+#v-start .gp-sec{margin:0 0 var(--sp-6)}
+#v-start .gp-why{max-width:92ch;line-height:1.8;color:var(--ink-2);margin:0}
+#v-start .gp-list>h2{margin:0 0 var(--sp-3)}
+#v-start .gp-subs{display:flex;flex-direction:column;gap:var(--sp-4)}
+#v-start .gsub{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:var(--sp-5)}
+#v-start .gs-t{margin:0 0 var(--sp-4);font-size:var(--fs-m);font-weight:700;color:var(--ink)}
+#v-start .gs-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:var(--sp-6)}
+#v-start .gs-goal{margin:0 0 var(--sp-3);padding:var(--sp-2) 0 var(--sp-2) var(--sp-3);border-left:3px solid var(--accent);font-size:var(--fs-m);font-weight:600;line-height:1.6;color:var(--ink)}
+#v-start .gs-k{display:block;font-size:var(--fs-xs);font-weight:600;color:var(--accent);margin-bottom:2px}
+#v-start .gs-why{margin:0 0 var(--sp-3);font-size:var(--fs-s);line-height:1.8;color:var(--ink-2)}
+#v-start .gs-rel{margin:0;font-size:var(--fs-s);line-height:1.6;color:var(--muted)}
+#v-start .gs-side{margin:0;display:flex;flex-direction:column;gap:var(--sp-4);padding-left:var(--sp-5);border-left:1px solid var(--line)}
+#v-start .gs-side dt{font-size:var(--fs-xs);font-weight:600;color:var(--muted);margin-bottom:4px}
+#v-start .gs-side dd{margin:0;font-size:var(--fs-s);line-height:1.6;color:var(--ink)}
+#v-start .gs-side dd.chips{display:flex;flex-wrap:wrap;gap:6px}
