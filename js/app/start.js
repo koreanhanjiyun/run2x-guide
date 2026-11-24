@@ -62,16 +62,17 @@ function heroIntro(v){ HERO_AN.forEach(a=>{ try{ a.finish(); }catch(e){} }); HER
   const OUT='cubic-bezier(.16,1,.3,1)', IO='cubic-bezier(.45,0,.25,1)', big=`translate(${dx}px,${dy}px) scale(${S})`;
   const A=(el,k,o)=>{ if(el) HERO_AN.push(el.animate(k,{fill:'backwards',easing:OUT,...o})); };
   A(main,[{filter:'blur(14px)',transform:'scale(1.03)'},{filter:'blur(0px)',transform:'scale(1)'}],{duration:900});
-  /* 큰 채로 단어가 다 뜨면(1.5 초) 바로 0.5 초 동안 작아짐. 빠르게 출발하는 곡선(OUT): 느리게 출발하면 멈춘 것처럼 길어 보임 (2026-11-24) */
-  A(t1,[{transform:big},{transform:'none'}],{duration:500,delay:1500});
+  /* 단어가 다 뜨고(1.5 초) 0.3 초 머문 뒤 0.8 초 동안 작아짐. 빠르게 출발하는 곡선(OUT): 느리게 출발하면 멈춘 것처럼 길어 보임.
+     2026-11-24: 3.9 초 → 2.6 초(너무 빠름) → 3.3 초 중간값. 히어로는 한 번 보는 첫 장면이라 'PC는 즉각적으로' 규칙에서 뺌 */
+  A(t1,[{transform:big},{transform:'none'}],{duration:800,delay:1800});
   ws.forEach((w,i)=>A(w,[{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:600,delay:500+i*400}));
-  /* 작아짐이 끝날 무렵부터 작은 제목 → 선 → 소개 문장을 0.1 초 간격으로 */
-  A(h.querySelector('.eyebrow'),[{opacity:0},{opacity:1}],{duration:400,delay:1800});
-  A(h.querySelector('.sh-line'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:500,delay:1900});
-  A(h.querySelector('.lede'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:500,delay:2000});
+  /* 작아짐이 끝날 무렵부터 작은 제목 → 선 → 소개 문장을 0.15 초 간격으로 */
+  A(h.querySelector('.eyebrow'),[{opacity:0},{opacity:1}],{duration:400,delay:2400});
+  A(h.querySelector('.sh-line'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:500,delay:2550});
+  A(h.querySelector('.lede'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:500,delay:2700});
   /* [둘러보기]: 연출 끝에 작게 나타나 한 번 튀었다가 제자리 (관리자 요청 2026-11-22: 바운스는 이 버튼만 예외) */
   const dn=h.querySelector('.sh-down'); if(dn){ dn.disabled=true;
-    HERO_AN.push(dn.animate([{opacity:0,transform:'translateX(-50%) scale(.6)'},{opacity:1,transform:'translateX(-50%) scale(1.12)',offset:.6},{opacity:1,transform:'translateX(-50%) scale(.96)',offset:.8},{opacity:1,transform:'translateX(-50%) scale(1)'}],{duration:520,delay:2100,easing:'ease-out',fill:'backwards'})); }
+    HERO_AN.push(dn.animate([{opacity:0,transform:'translateX(-50%) scale(.6)'},{opacity:1,transform:'translateX(-50%) scale(1.12)',offset:.6},{opacity:1,transform:'translateX(-50%) scale(.96)',offset:.8},{opacity:1,transform:'translateX(-50%) scale(1)'}],{duration:520,delay:2800,easing:'ease-out',fill:'backwards'})); }
   Promise.all(HERO_AN.map(a=>a.finished)).then(()=>{ HERO_AN=[]; heroReady(); }).catch(()=>{}); }
 /* 연출 중 누르기 · 키는 바로 끝 모습으로 (휠은 건너뛰지 않음: 히어로에서는 스크롤이 없으므로 실수로 넘기지 않게) */
 ['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev, e=>{ if(HERO_AN.length && !(e.target.closest && e.target.closest('.sh-down'))) heroSkip(); }, {passive:true, capture:true}));
