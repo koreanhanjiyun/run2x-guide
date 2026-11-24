@@ -3456,7 +3456,7 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 @keyframes vt-unhold{0%,24%{opacity:0;filter:blur(2px) brightness(.9)}25%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:1;filter:none}}
 /* 항목 화면 머리 막대 (2026-11-25): [‹ 목록] + 경로를 한 줄로, 내리면 머리띠 아래에 붙어 따라옴 (버튼이 혼자 떠 있지 않게) */
 :root{--ipbar:44px}
-#ipage .ip-bar{position:sticky;top:var(--tabh);z-index:6;display:flex;align-items:center;gap:var(--sp-3);height:var(--ipbar);margin-top:calc(-1 * var(--sp-5));background:var(--bg);border-bottom:1px solid var(--line)}
+#ipage .ip-bar{position:sticky;top:var(--tabh);z-index:4;display:flex;align-items:center;gap:var(--sp-3);height:var(--ipbar);margin-top:calc(-1 * var(--sp-5));background:var(--bg);border-bottom:1px solid var(--line)}
 #ipage .ip-bar .ip-close{font-size:var(--fs-s);flex:none}
 #ipage .ip-bar .ip-path{flex-wrap:nowrap;min-width:0;overflow:hidden;white-space:nowrap;padding-left:var(--sp-3);border-left:1px solid var(--line)}
 #ipage .ip-bar .ip-cur{overflow:hidden;text-overflow:ellipsis;color:var(--ink);font-weight:600}
