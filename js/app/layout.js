@@ -41,11 +41,9 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-cr]'); i
   if(k==='close'){ const el = it || st; if(!el) return; el.open=false; requestAnimationFrame(()=>{ toTop(el); markHere(el); }); } });
 
 /* ---------- 파트 패널 머리: 고른 상태를 글로 (B6) ---------- */
-/* 파트 패널 머리: 글자는 늘 '파트 강조' (세로 막대에서 숫자가 눕지 않게). 고른 파트는 접힌 막대에 그 파트 색 점으로 (2026-11-24) */
+/* 파트 패널 머리: 글자는 늘 '파트 강조'. 고른 개수 · 색 표시는 두지 않음 (2026-11-24 관리자 결정: 세로 막대에서 숫자가 눕고 지저분함). 화면 읽기용 이름표만 */
 { const _ap=applyPart; applyPart=function(){ const r=_ap.apply(this,arguments); try{ const hd=document.querySelector('#partRail .rail-h'), sp=hd && hd.querySelector('span'); if(sp){ if(sp.textContent!=='파트 강조') sp.textContent='파트 강조';
-    let dt=hd.querySelector('.rail-dots'); if(!dt){ dt=document.createElement('b'); dt.className='rail-dots'; dt.setAttribute('aria-hidden','true'); sp.after(dt); }
-    const ps=[...PSET]; dt.innerHTML=ps.map(p=>`<i style="background:${pc(p)}"></i>`).join(''); dt.hidden=!ps.length;
-    hd.setAttribute('aria-label', ps.length ? `파트 강조 (${ps.length}개 고름: ${ps.join(', ')})` : '파트 강조'); } }catch(e){} return r; }; }
+    const ps=[...PSET]; hd.setAttribute('aria-label', ps.length ? `파트 강조 (${ps.length}개 고름: ${ps.join(', ')})` : '파트 강조'); } }catch(e){} return r; }; }
 
 /* ---------- 탭 접근성 (J2) ---------- */
 function syncTabsA11y(){ document.querySelectorAll('.tabs .tab').forEach(b=>{ const id='v-'+b.dataset.tab; b.setAttribute('aria-controls', id); b.id = b.id || 'tab-'+b.dataset.tab; b.tabIndex = b.getAttribute('aria-selected')==='true' ? 0 : -1;
