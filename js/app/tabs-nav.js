@@ -24,7 +24,7 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
      설계 탭 항목은 to = vtFloor: 판이 본문 너비가 아니라 머리띠 아래 화면 전체(바닥)로 커지며 모서리 · 색이 바닥과 같아지고 사라짐
      (2026-11-25 관리자: 본문 너비 상자가 커졌다가 끝에 테두리째 사라져 바닥이 드러나는 것이 부자연스러움). 목차 · 파트 패널은 바닥 위에 그대로
-   - close (설계 탭 항목 → 목록, 2026-11-25): open 을 거꾸로. from = vtFloor, to = 돌아갈 칸. 240 ms
+   - close (설계 탭 항목 → 목록, 2026-11-25): open 을 거꾸로. from = vtFloor, to = 돌아갈 칸. 열기와 같은 300 ms (240 ms 에 바닥색 판이라 줄어드는 게 안 보이고 깜빡임처럼 보였음)
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 300 ms. back 240 ms (2026-11-24 PC는 즉각적으로: 700 → 300). hero 500 ms (한 번 보는 첫 장면이라 예외)
@@ -40,7 +40,7 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 500 : (kind==='push'||kind==='pop'||kind==='back'||kind==='close') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 500 : kind==='close' ? 300 : (kind==='push'||kind==='pop'||kind==='back') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
   if(fr && f.id==='vtFloor') R.dataset.vtf='close';
   const t=document.startViewTransition(()=>{ if(fr){ f.style.viewTransitionName=''; if(f.id==='vtFloor') f.hidden=true; }
     try{ fn(); } finally{ VT.busy=false; }

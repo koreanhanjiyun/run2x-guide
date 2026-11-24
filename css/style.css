@@ -3188,8 +3188,16 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 #ipage{font-size:var(--fs-s)}
 #ipage :is(p,li,td,th,dd,dt,span,b,strong,em,i,a,button,label,input,select,textarea,div,code,summary,small,figcaption,h3,h4,section,nav,aside){font-size:var(--fs-s)!important;line-height:1.7}
 #ipage .ip-h{font-size:var(--fs-2xl)!important;line-height:1.3}
-#ipage :is(.qsec-h,.qmore-h,.qmore>.stack>details.q>summary,details.calc>summary,details.symbox>summary,.sec-label,.tk>.tk-d>summary,.actbox),
-#ipage :is(.qsec-h,.qmore-h,.qmore>.stack>details.q>summary,details.calc>summary,details.symbox>summary,.sec-label,.tk>.tk-d>summary,.actbox) :not(sub):not(sup){font-size:var(--fs-m)!important;font-weight:700;letter-spacing:0;color:var(--ink)}
+/* 역할별 위계 (2026-11-25 관리자: 더 알아보기 등이 지들끼리만 큼 → 조화롭게). 크기는 네 가지 그대로, 역할로 나눔
+   - 칸 제목 15 굵게: 절 제목(.qsec-h) · 핵심(.actbox)
+   - 펼침 줄 13 굵게: 질문 n · 직접 계산해 보기 · 논의 · 이 카드의 기호 (칸 안 하위 질문과 같은 모양)
+   - 묶음 이름표 11 굵게 · 흐린 색: 더 알아보기 · 연결된 항목 · 이전 · 다음 항목 (오른쪽 칸 '우리 팀 값' 이름표와 같은 모양) */
+#ipage :is(.qsec-h,.actbox),
+#ipage :is(.qsec-h,.actbox) :not(sub):not(sup){font-size:var(--fs-m)!important;font-weight:700;letter-spacing:0;color:var(--ink)}
+#ipage :is(.qmore>.stack>details.q>summary,details.calc>summary,details.symbox>summary,.tk>.tk-d>summary),
+#ipage :is(.qmore>.stack>details.q>summary,details.calc>summary,details.symbox>summary,.tk>.tk-d>summary) :is(b,strong){font-size:var(--fs-s)!important;font-weight:700;letter-spacing:0;color:var(--ink)}
+#ipage :is(.qmore-h,.sec-label),
+#ipage :is(.qmore-h,.sec-label) :not(sub):not(sup){font-size:var(--fs-xs)!important;font-weight:700;letter-spacing:.04em;color:var(--muted)}
 #ipage :is(.chip,.badge,.vchip,.vlab,.ptag,figcaption,.ip-rl>b,.symh th,.symh td,.gpath-l,.tag,.an-note),
 #ipage :is(.chip,.badge,.vchip,.vlab,figcaption) *{font-size:var(--fs-xs)!important}
 #ipage :is(sub,sup){font-size:80%!important}
@@ -3202,7 +3210,7 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 
 /* 더 알아보기: 판 하나 안에 줄로 나눈 펼침 목록 (판 = 흰 바탕 · 1 px 테두리 · 모서리 8 px) */
 #ipage .qmore{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
-#ipage .qmore-h{padding:var(--sp-3) var(--sp-4);background:var(--panel-2);border-bottom:1px solid var(--line)}
+#ipage .qmore-h{padding:var(--sp-2) var(--sp-4);background:var(--panel-2);border-bottom:1px solid var(--line)}
 #ipage .qmore>.stack{gap:0}
 #ipage .qmore>.stack>details.q{border:0!important;border-radius:0!important;background:transparent!important}
 #ipage .qmore>.stack>details.q+details.q{border-top:1px solid var(--line)!important}
@@ -3443,17 +3451,23 @@ html[data-vtf]::view-transition-group(vt-card){border-radius:0}
 html[data-vtf="open"]::view-transition-image-pair(vt-card){animation:vt-floor var(--vt-ms,265ms) var(--ease-out) both}
 @keyframes vt-floor{0%{background:var(--panel);border-radius:var(--r-m)}55%{background:var(--bg);border-radius:0}100%{background:rgba(0,0,0,0);border-radius:0}}
 
-/* 설계 탭 항목 → 목록 (close, 2026-11-25): 열기를 거꾸로. 0~25 %: 바닥 판이 투명 → 바닥색으로 덮으며 항목 내용이 스며듦 (판 크기 그대로)
-   25~100 %: 판이 돌아갈 칸으로 줄며 바닥색 → 흰색 · 모서리 0 → 8 px. 목록은 25 %부터 살짝 흐리고 어두운 채 드러나 끝에 또렷해짐. 칸 글은 끝에 나타남 */
-html[data-vtf="close"]::view-transition-group(vt-card){animation-delay:calc(var(--vt-ms,240ms) * .25);animation-duration:calc(var(--vt-ms,240ms) * .75);animation-fill-mode:both;animation-timing-function:var(--ease-io)}
-html[data-vtf="close"]::view-transition-image-pair(vt-card){animation:vt-floor-close var(--vt-ms,240ms) var(--ease-io) both}
-@keyframes vt-floor-close{0%{background:rgba(0,0,0,0);border-radius:0}25%{background:var(--bg);border-radius:0}100%{background:var(--panel);border-radius:var(--r-m)}}
+/* 설계 탭 항목 → 목록 (close, 2026-11-25): 열기를 거꾸로. 300 ms
+   0~20 %: 바닥 판이 투명 → 바닥색으로 덮으며 항목 내용이 스며듦 (판 크기 그대로)
+   20~100 %: 판이 흰색이 되고 그림자가 생기며 돌아갈 칸으로 줄어듦 (빨리 출발해 천천히 내려앉음), 끝에 그림자가 빠지고 칸 글이 나타남.
+   목록은 흐리고 어두운 채 드러나 판이 내려앉을 때 또렷해짐 → 흰 판이 어두운 목록 위에서 줄어드는 게 보임 (판이 바닥색이면 안 보여 깜빡임처럼 보였음) */
+html[data-vtf="close"]::view-transition-group(vt-card){overflow:visible;animation-delay:calc(var(--vt-ms,300ms) * .2);animation-duration:calc(var(--vt-ms,300ms) * .8);animation-fill-mode:both;animation-timing-function:var(--ease-out)}
+html[data-vtf="close"]::view-transition-image-pair(vt-card){animation:vt-floor-close var(--vt-ms,300ms) linear both}
+@keyframes vt-floor-close{0%{background:rgba(0,0,0,0);border-radius:0;box-shadow:0 0 0 rgba(30,20,50,0)}
+  20%{background:var(--bg);border-radius:0;box-shadow:0 0 0 rgba(30,20,50,0)}
+  40%{background:var(--panel);box-shadow:0 12px 32px rgba(30,20,50,.18)}
+  85%{background:var(--panel);border-radius:var(--r-m);box-shadow:0 8px 24px rgba(30,20,50,.14)}
+  100%{background:var(--panel);border-radius:var(--r-m);box-shadow:0 0 0 rgba(30,20,50,0)}}
 html[data-vtf="close"]::view-transition-old(vt-card){animation:none;opacity:0}
-html[data-vtf="close"]::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,240ms) * .35) var(--ease-out) calc(var(--vt-ms,240ms) * .65) both}
-html[data-vt="close"]::view-transition-old(root){animation:vt-gone var(--vt-ms,240ms) linear both}
-html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms,240ms) var(--ease-io) both}
-@keyframes vt-gone{0%,24%{opacity:1}25%,100%{opacity:0}}
-@keyframes vt-unhold{0%,24%{opacity:0;filter:blur(2px) brightness(.9)}25%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:1;filter:none}}
+html[data-vtf="close"]::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,300ms) * .3) var(--ease-out) calc(var(--vt-ms,300ms) * .7) both}
+html[data-vt="close"]::view-transition-old(root){animation:vt-gone var(--vt-ms,300ms) linear both}
+html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms,300ms) linear both}
+@keyframes vt-gone{0%,19%{opacity:1}20%,100%{opacity:0}}
+@keyframes vt-unhold{0%,19%{opacity:0;filter:blur(2px) brightness(.88)}20%{opacity:1;filter:blur(2px) brightness(.88)}65%{opacity:1;filter:blur(2px) brightness(.88)}100%{opacity:1;filter:none}}
 /* 항목 화면 머리 막대 (2026-11-25): [‹ 목록] + 경로를 한 줄로, 내리면 머리띠 아래에 붙어 따라옴 (버튼이 혼자 떠 있지 않게) */
 :root{--ipbar:44px}
 #ipage .ip-bar{position:sticky;top:var(--tabh);z-index:4;display:flex;align-items:center;gap:var(--sp-3);height:var(--ipbar);margin-top:calc(-1 * var(--sp-5));background:var(--bg);border-bottom:1px solid var(--line)}
