@@ -36,7 +36,7 @@ const openScrub = () => { if(typeof IPAGE!=='undefined' && IPAGE!=='s_scrub'){ c
 /* 로그인 전·팀원에게 숨겨진 '진행 상태'·'우리 팀 값' 칸을 사용법 중에만 보이게 (끝나면 되돌림) */
 function showBits(){ const it=$('#ipage'); if(!it || !TR) return; it.querySelectorAll('.stbox,.tval').forEach(x=>{ if(x.classList.contains('tg-show')) return; x.classList.add('tg-show'); tgUndo(()=>x.classList.remove('tg-show')); }); showStatus(); }
 const SC = { tab:'steps', vm:'full', prep:openScrub, fx:'doing' };
-/* 시작 탭 하위 화면의 [목록으로] · 양 끝 ‹ › 는 창에 붙어 있어, 복제 화면이 스크롤된 상태면 자리가 어긋남 → 맨 위에서 보여 줌 */
+/* 시작 탭 하위 화면의 [목록] · 양 끝 ‹ › 는 창에 붙어 있어, 복제 화면이 스크롤된 상태면 자리가 어긋남 → 맨 위에서 보여 줌 */
 const spTop = () => window.scrollTo({top:0, behavior:'instant'});
 const GRAPH_TOUR = [
   ['#v-graph .gcanvas','연결도','설계 탭의 [연결도] 보기입니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다.',{tab:'graph'}],
@@ -57,8 +57,8 @@ const TOUR = {
   ['#v-start .st-sysw','시스템 카드','차를 이루는 시스템들입니다. 카드를 누르면 그 시스템 화면으로 바뀝니다: 왜 생겼나 → F1에서 어떻게 발전했나 → FS에서는 → 구성 부품(그림) → F1이 시도한 기술. 그 화면에서 [이 탭 사용법]을 누르면 시스템 화면 안내가 나옵니다.',{tab:'start',home:true}],
  ],
  sys: [
-  ['#v-start .sp-close','목록으로','[‹ 목록으로]를 누르면 시작 탭 카드 목록으로 돌아갑니다. 내려 읽는 동안에도 왼쪽 위에 붙어 따라옵니다.',{tab:'start',prep:spTop}],
-  ['#v-start .sp-arw','이전 · 다음','창 양 끝의 ‹ › 로 앞뒤 시스템으로 넘어갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-list','목록','왼쪽 위 [목록]을 누르면 시작 탭 카드 목록으로 돌아갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 시스템으로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-grid .sp-sec:nth-child(1)','왜 생겼나','이 시스템이 왜 필요한지부터 읽습니다. 밑줄 친 용어에 마우스를 올리면 뜻이 나옵니다.',{tab:'start'}],
   ['#v-start .sp-grid .sp-sec:nth-child(2)','F1에서 어떻게 발전했나','시대별로 무엇이 바뀌었는지입니다.',{tab:'start'}],
   ['#v-start .sp-fs','FS에서는','FS 차에서는 어떻게 쓰는지입니다. 아래 단계 버튼을 누르면 설계 탭의 그 단계로 갑니다.',{tab:'start'}],
@@ -66,8 +66,8 @@ const TOUR = {
   ['#v-start .sp-tech','F1이 시도한 기술','옆으로 끌거나 양쪽 ‹ › 버튼으로 넘깁니다. 버튼으로 넘기면 카드 한 장씩 맞춰 멈춥니다.',{tab:'start',union:':scope > *, :scope .f1r-b'}],
  ],
  goalpage: [
-  ['#v-start .sp-close','목록으로','[‹ 목록으로]를 누르면 시작 탭 카드 목록으로 돌아갑니다. 내려 읽는 동안에도 왼쪽 위에 붙어 따라옵니다.',{tab:'start',prep:spTop}],
-  ['#v-start .sp-arw','이전 · 다음','창 양 끝의 ‹ › 로 앞뒤 목표로 넘어갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-list','목록','왼쪽 위 [목록]을 누르면 시작 탭 카드 목록으로 돌아갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-head','목표','이 목표가 무엇인지 한 줄로 적었습니다.',{tab:'start'}],
   ['#v-start .gp-sec','왜','이 목표가 왜 빠른 차로 이어지는지입니다.',{tab:'start'}],
   ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
@@ -289,7 +289,7 @@ function tgClicks(o){ const c=[]; let vmDone=false;
     if(o.tab==='graph' && TAB==='steps') c.push({sel:'#v-steps [data-vgo="graph"]', run:()=>{ showTab('graph'); }, reset:true});
     else if(o.tab==='steps' && TAB==='graph'){ const vm=o.vm||(typeof VMODE!=='undefined'?VMODE:'full'); vmDone=true; c.push({sel:`#v-graph [data-vmg="${vm}"]`, run:()=>{ if(typeof setVM==='function') setVM(vm); showTab('steps'); }, reset:true}); }
     else c.push({sel:`.tabs .tab[data-tab="${o.tab==='graph'?'steps':o.tab}"]`, run:()=>{ showTab(o.tab); }, reset:true}); }
-  if(o.home && typeof START!=='undefined' && START.sys) c.push({sel:'#v-start .sp-close', run:()=>{ renderStart(''); window.scrollTo({top:0,behavior:'instant'}); }, reset:true});
+  if(o.home && typeof START!=='undefined' && START.sys) c.push({sel:'#v-start .sp-list', run:()=>{ renderStart(''); window.scrollTo({top:0,behavior:'instant'}); }, reset:true});
   if(o.sub && typeof TT!=='undefined'){ const vis=document.querySelector(`#v-team [data-ttp="${o.sub}"]:not([hidden])`); if(!vis || (o.tab && TAB!==o.tab)) c.push({sel:`#v-team .tt-nav [data-tts="${o.sub}"]`, run:()=>{ TT.sub=o.sub; TT.picked=1; renderTeamTab(); }}); }
   if(o.vm && !vmDone && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
   if(o.press) c.push({sel:o.press, run:()=>{}});

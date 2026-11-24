@@ -110,10 +110,10 @@ function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
     </div>`;
 }
 /* 목표 화면: 예전 목표 탭의 한 갈래 = 세부 목표(목표·근거·판단 기준·관련 설계 항목) */
-/* 시작 탭 하위 화면 이동 (2026-11-24): 왼쪽 위에 붙어 다니는 [‹ 목록으로] + 창 양 끝 세로 가운데에 고정된 이전 · 다음 버튼 (스크롤 위치와 무관하게 늘 보임) */
+/* 시작 탭 하위 화면 이동 (2026-11-24): 창 왼쪽 위(로고 밑)에 고정된 [목록] + 창 양 끝 세로 가운데에 고정된 이전 · 다음. 모두 같은 원 버튼 모양, 스크롤 위치와 무관하게 늘 보임 */
 function spNav(attr, prev, pv, next, nv){
   const arw=(cls, v, t, ch)=>`<button type="button" class="sp-arw ${cls}" ${attr}="${v}" aria-label="${cls==='sp-prev'?'이전':'다음'}: ${esc(t)}"><i aria-hidden="true">${ch}</i><span>${t}</span></button>`;
-  return `<div class="sp-closebar"><button type="button" class="btn small sp-close" data-sysgo="">‹ 목록으로</button></div>
+  return `<button type="button" class="sp-arw sp-list" data-sysgo="" aria-label="시작 탭 목록으로"><i aria-hidden="true"><svg viewBox="0 0 20 20" width="20" height="20" fill="currentColor"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg></i><span>목록</span></button>
     <nav class="sp-side" aria-label="이전 · 다음">${prev?arw('sp-prev', pv, prev.t, '‹'):''}${next?arw('sp-next', nv, next.t, '›'):''}</nav>`; }
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
   return `${spNav('data-goalgo', prev, mi-1, next, mi+1)}
