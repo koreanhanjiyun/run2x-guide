@@ -36,6 +36,8 @@ const openScrub = () => { if(typeof IPAGE!=='undefined' && IPAGE!=='s_scrub'){ c
 /* 로그인 전·팀원에게 숨겨진 '진행 상태'·'우리 팀 값' 칸을 사용법 중에만 보이게 (끝나면 되돌림) */
 function showBits(){ const it=$('#ipage'); if(!it || !TR) return; it.querySelectorAll('.stbox,.tval').forEach(x=>{ if(x.classList.contains('tg-show')) return; x.classList.add('tg-show'); tgUndo(()=>x.classList.remove('tg-show')); }); showStatus(); }
 const SC = { tab:'steps', vm:'full', prep:openScrub, fx:'doing' };
+/* 시작 탭 하위 화면의 [목록으로] · 양 끝 ‹ › 는 창에 붙어 있어, 복제 화면이 스크롤된 상태면 자리가 어긋남 → 맨 위에서 보여 줌 */
+const spTop = () => window.scrollTo({top:0, behavior:'instant'});
 const GRAPH_TOUR = [
   ['#v-graph .gcanvas','연결도','설계 탭의 [연결도] 보기입니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다.',{tab:'graph'}],
   ['#v-graph .gcanvas','항목 고르기','항목 카드를 누르면 받는 정보(파랑)와 넘기는 결과(초록) 선이 강조되고, 오른쪽 칸에 그 항목 내용이 나옵니다. 빈 곳을 누르면 선택이 풀립니다.',{tab:'graph',pic:PIC.graph,press:'#graph .node[data-id=g_mass]',prep:()=>{ try{ selectItem('g_mass',false); }catch(e){} }}],
@@ -55,7 +57,8 @@ const TOUR = {
   ['#v-start .st-sysw','시스템 카드','차를 이루는 시스템들입니다. 카드를 누르면 그 시스템 화면으로 바뀝니다: 왜 생겼나 → F1에서 어떻게 발전했나 → FS에서는 → 구성 부품(그림) → F1이 시도한 기술. 그 화면에서 [이 탭 사용법]을 누르면 시스템 화면 안내가 나옵니다.',{tab:'start',home:true}],
  ],
  sys: [
-  ['#v-start .sp-nav','이동','[← 모든 시스템]으로 처음 화면에 돌아가고, 오른쪽 ‹ › 로 앞뒤 시스템으로 넘어갑니다. 같은 막대가 맨 아래에도 있습니다.',{tab:'start'}],
+  ['#v-start .sp-close','목록으로','[‹ 목록으로]를 누르면 시작 탭 카드 목록으로 돌아갑니다. 내려 읽는 동안에도 왼쪽 위에 붙어 따라옵니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw','이전 · 다음','창 양 끝의 ‹ › 로 앞뒤 시스템으로 넘어갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-grid .sp-sec:nth-child(1)','왜 생겼나','이 시스템이 왜 필요한지부터 읽습니다. 밑줄 친 용어에 마우스를 올리면 뜻이 나옵니다.',{tab:'start'}],
   ['#v-start .sp-grid .sp-sec:nth-child(2)','F1에서 어떻게 발전했나','시대별로 무엇이 바뀌었는지입니다.',{tab:'start'}],
   ['#v-start .sp-fs','FS에서는','FS 차에서는 어떻게 쓰는지입니다. 아래 단계 버튼을 누르면 설계 탭의 그 단계로 갑니다.',{tab:'start'}],
@@ -63,7 +66,8 @@ const TOUR = {
   ['#v-start .sp-tech','F1이 시도한 기술','옆으로 끌거나 양쪽 ‹ › 버튼으로 넘깁니다. 버튼으로 넘기면 카드 한 장씩 맞춰 멈춥니다.',{tab:'start',union:':scope > *, :scope .f1r-b'}],
  ],
  goalpage: [
-  ['#v-start .sp-nav','이동','[← 처음 화면]으로 돌아가고, 오른쪽 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start'}],
+  ['#v-start .sp-close','목록으로','[‹ 목록으로]를 누르면 시작 탭 카드 목록으로 돌아갑니다. 내려 읽는 동안에도 왼쪽 위에 붙어 따라옵니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw','이전 · 다음','창 양 끝의 ‹ › 로 앞뒤 목표로 넘어갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-head','목표','이 목표가 무엇인지 한 줄로 적었습니다.',{tab:'start'}],
   ['#v-start .gp-sec','왜','이 목표가 왜 빠른 차로 이어지는지입니다.',{tab:'start'}],
   ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
@@ -140,7 +144,8 @@ const TOUR = {
   ['#v-team .adm-tm .tp-s-backup','백업 (회장)','시즌이 끝날 때마다 [내보내기]로 파일을 저장해 두십시오. [불러오기]는 고른 시즌만 복구합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-dz','위험 구역 (회장)','시즌 초기화·팀 삭제처럼 되돌릴 수 없는 작업입니다. 두 번 확인한 뒤 실행됩니다.',{tab:'team',sub:'settings'}],
  ],
- end: [['#tourBtn','언제든 다시','이 안내는 오른쪽 위 [이 탭 사용법]으로 언제든 다시 볼 수 있습니다. 지금 보고 있는 탭(시작 탭은 지금 보는 화면)의 안내가 나옵니다.']],
+ /* 시작 탭 문구 속 [이 탭 사용법]: 머리띠의 그 버튼 위치만 알려 줌 (전체 사용법은 2026-11-24 없앰) */
+ where: [['#tourBtn','이 탭 사용법','화면마다 이 버튼을 누르면 그 화면에 맞는 사용법이 나옵니다. 시작 탭의 목표 · 시스템 화면에서도 그 화면 사용법이 따로 나옵니다.']],
 };
 /* 팀 설정 사용법: 팀장·파트장이 없거나 회장 혼자인 팀에서도 칩·내보내기·차단 단계를 보이도록, 표 맨 위에 "사용법 예시" 줄을 잠깐 넣음 (화면에만, 저장 안 됨, 사용법이 끝나면 지움) */
 function tmDemoRow(){ const tb=document.querySelector('#v-team .adm-tm .tp-mtm tbody'); if(!tb || tb.querySelector('tr.tg-demo')) return;
@@ -158,8 +163,7 @@ const teamCourse = () => teamNolog() ? [...TOUR.team_nolog] : [...TOUR.team_comm
 /* 팀 설정 화면에서 [이 탭 사용법]을 누르면 팀 설정 사용법만 */
 const teamSettingsOn = () => !!document.querySelector('#v-team [data-ttp=settings]:not([hidden])');
 const startCourse = () => { const s=(typeof START!=='undefined' && START.sys) || ''; return !s ? TOUR.start : s.startsWith('goal:') ? TOUR.goalpage : TOUR.sys; };
-const courseOf = name => name==='all' ? [...TOUR.top, ...TOUR.start, ...TOUR.steps, ...TOUR.tools, ...TOUR.ref, ...teamCourse(), ...TOUR.end]
-  : name.startsWith('wb:') ? [...((typeof WB_TOOLS!=='undefined' && WB_TOOLS[name.slice(3)] && WB_TOOLS[name.slice(3)].tour) || [])]
+const courseOf = name => name.startsWith('wb:') ? [...((typeof WB_TOOLS!=='undefined' && WB_TOOLS[name.slice(3)] && WB_TOOLS[name.slice(3)].tour) || [])]
   : name==='team' ? (teamSettingsOn() && SH.on && SH.canAdmin ? [...TOUR.team_admin] : teamCourse()) : name==='start' ? [...startCourse()] : (TOUR[name] ? [...TOUR[name]] : [...TOUR.top]);
 
 /* ---------- 엔진 ---------- */
@@ -285,7 +289,7 @@ function tgClicks(o){ const c=[]; let vmDone=false;
     if(o.tab==='graph' && TAB==='steps') c.push({sel:'#v-steps [data-vgo="graph"]', run:()=>{ showTab('graph'); }, reset:true});
     else if(o.tab==='steps' && TAB==='graph'){ const vm=o.vm||(typeof VMODE!=='undefined'?VMODE:'full'); vmDone=true; c.push({sel:`#v-graph [data-vmg="${vm}"]`, run:()=>{ if(typeof setVM==='function') setVM(vm); showTab('steps'); }, reset:true}); }
     else c.push({sel:`.tabs .tab[data-tab="${o.tab==='graph'?'steps':o.tab}"]`, run:()=>{ showTab(o.tab); }, reset:true}); }
-  if(o.home && typeof START!=='undefined' && START.sys) c.push({sel:'#v-start .sp-nav [data-sysgo=""]', run:()=>{ renderStart(''); window.scrollTo({top:0,behavior:'instant'}); }, reset:true});
+  if(o.home && typeof START!=='undefined' && START.sys) c.push({sel:'#v-start .sp-close', run:()=>{ renderStart(''); window.scrollTo({top:0,behavior:'instant'}); }, reset:true});
   if(o.sub && typeof TT!=='undefined'){ const vis=document.querySelector(`#v-team [data-ttp="${o.sub}"]:not([hidden])`); if(!vis || (o.tab && TAB!==o.tab)) c.push({sel:`#v-team .tt-nav [data-tts="${o.sub}"]`, run:()=>{ TT.sub=o.sub; TT.picked=1; renderTeamTab(); }}); }
   if(o.vm && !vmDone && typeof VMODE!=='undefined' && VMODE!==o.vm) c.push({sel:`#v-steps [data-vm="${o.vm}"]`, run:()=>setVM(o.vm)});
   if(o.press) c.push({sel:o.press, run:()=>{}});

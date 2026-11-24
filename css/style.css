@@ -3382,3 +3382,31 @@ html[data-vt="hero"]::view-transition-new(root){animation:vt-hero-in var(--vt-ms
 #v-tools .dc-i input[type=range]{height:24px}   /* 주행 조건 막대 높이 16 → 24 px (2.5.8) */
 /* 화면 읽기용 숨은 제목 */
 .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* ============================================================
+   시작 탭 하위 화면 (2026-11-24, docs/DESIGN.md 5절)
+   - 전환: push 새 화면이 오른쪽에서 밀려 들어오고 옛 화면은 왼쪽으로 조금 밀리며 어두워짐 / pop 그 반대 (옛 화면이 오른쪽으로 빠져나감)
+   - [‹ 목록으로]: 설계 탭 항목 화면과 같은 자리 · 모양 (머리띠 밑 왼쪽에 붙어 따라옴). 이전 · 다음은 창 양 끝 세로 가운데에 고정
+   ============================================================ */
+html[data-vt="push"]::view-transition-old(root){animation:vt-push-out var(--vt-ms,240ms) var(--ease-out) both}
+html[data-vt="push"]::view-transition-new(root){animation:vt-push-in var(--vt-ms,240ms) var(--ease-out) both;box-shadow:-12px 0 32px rgba(30,20,50,.16)}
+html[data-vt="pop"]::view-transition-old(root){animation:vt-pop-out var(--vt-ms,240ms) var(--ease-out) both;z-index:2;box-shadow:-12px 0 32px rgba(30,20,50,.16)}
+html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,240ms) var(--ease-out) both}
+@keyframes vt-push-in{from{transform:translateX(100%)}}
+@keyframes vt-push-out{to{transform:translateX(-25%);filter:brightness(.9)}}
+@keyframes vt-pop-out{to{transform:translateX(100%)}}
+@keyframes vt-pop-in{from{transform:translateX(-25%);filter:brightness(.9)}}
+#v-start .sp-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;display:flex;justify-content:flex-start}
+#v-start .sp-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 2px 8px rgba(30,20,50,.12)}
+/* 본문 왼쪽 바깥 여백에 둬서 내려 읽을 때 카드 글자를 가리지 않음 (본문 1240 px + 양쪽 버튼 자리가 남는 창 너비 기준) */
+#v-start .sp-closebar{margin-left:calc(-1 * (72px + var(--sp-4)))}
+#v-start .sp-arw{position:fixed;top:calc(var(--tabh) + (100vh - var(--tabh)) / 2);transform:translateY(-50%);z-index:5;width:120px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border:0;background:none;cursor:pointer;color:var(--muted);font:inherit}
+#v-start .sp-prev{left:12px}
+#v-start .sp-next{right:12px}
+#v-start .sp-arw i{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:24px;line-height:1;color:var(--ink);background:var(--panel);border:1px solid var(--line);box-shadow:0 2px 8px rgba(30,20,50,.10);transition:background var(--t-quick),color var(--t-quick),border-color var(--t-quick)}
+#v-start .sp-arw span{font-size:var(--fs-s);line-height:1.35;text-align:center;word-break:keep-all}
+#v-start .sp-arw:hover i{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+#v-start .sp-arw:hover span{color:var(--ink)}
+#v-start .sp-arw:focus-visible{outline:none}
+#v-start .sp-arw:focus-visible i{outline:3px solid var(--focus-ink);outline-offset:2px}
+/* 창이 좁아 본문 양옆 여백이 버튼+이름 폭(120 px)보다 작으면 이름을 빼고 원 버튼만 (1440 px 창: 여백 약 92 px) */
+@media (max-width:1700px){ #v-start .sp-arw{width:64px} #v-start .sp-arw span{display:none} #v-start .sp-prev{left:8px} #v-start .sp-next{right:8px} }

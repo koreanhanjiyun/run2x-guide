@@ -94,28 +94,31 @@ function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
       <button type="button" class="btn pri sh-down" data-shdown="1"${HERO_DONE?"":" disabled"}>둘러보기<span aria-hidden="true">↓</span></button>
     </header>
     <div class="st-body"><h1 class="sr-only">시작</h1>
-    ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-label="자동차에서 Formula Student까지"><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
+    ${typeof BG_STORY!=='undefined' ? `<section class="st-story" aria-labelledby="stStoryH"><h2 id="stStoryH">자동차에서 Formula Student까지</h2><ol>${BG_STORY.map(x=>`<li><span class="ss-y">${x.y}</span><b>${x.t}</b><p>${x.b}</p></li>`).join('')}</ol></section>` : ''}
     ${goalCards()}
     <section class="st-sysw"><h2>더 빠르게 하려면?</h2>
       ${typeof BG_ASK!=='undefined' ? BG_ASK.map(g=>`<div class="st-ask"><div class="sa-q"><b>${g.q}</b><span>${g.a}</span></div><div class="st-sys">${g.p.map(sysOf).filter(Boolean).map(sysCard).join('')}</div></div>`).join('')
         : `<div class="st-sys">${BG_SYS.map(sysCard).join('')}</div>`}
-      <p class="st-goal">실제로 설계하는 순서는 <button type="button" class="lnk" data-tabgo="steps">설계</button> 탭입니다. 사이트 사용법은 <button type="button" class="lnk" data-tour="all">여기</button>에서 볼 수 있습니다.</p>
+      <p class="st-goal">실제로 설계하는 순서는 <button type="button" class="lnk" data-tabgo="steps">설계</button> 탭입니다. 화면마다 사용법은 오른쪽 위 <button type="button" class="lnk" data-tour="where">[이 탭 사용법]</button>에서 볼 수 있습니다.</p>
     </section>
     </div>`;
 }
 /* 목표 화면: 예전 목표 탭의 한 갈래 = 세부 목표(목표·근거·판단 기준·관련 설계 항목) */
+/* 시작 탭 하위 화면 이동 (2026-11-24): 왼쪽 위에 붙어 다니는 [‹ 목록으로] + 창 양 끝 세로 가운데에 고정된 이전 · 다음 버튼 (스크롤 위치와 무관하게 늘 보임) */
+function spNav(attr, prev, pv, next, nv){
+  const arw=(cls, v, t, ch)=>`<button type="button" class="sp-arw ${cls}" ${attr}="${v}" aria-label="${cls==='sp-prev'?'이전':'다음'}: ${esc(t)}"><i aria-hidden="true">${ch}</i><span>${t}</span></button>`;
+  return `<div class="sp-closebar"><button type="button" class="btn small sp-close" data-sysgo="">‹ 목록으로</button></div>
+    <nav class="sp-side" aria-label="이전 · 다음">${prev?arw('sp-prev', pv, prev.t, '‹'):''}${next?arw('sp-next', nv, next.t, '›'):''}</nav>`; }
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
-  const nav=`<nav class="sp-nav"><button type="button" class="btn small" data-sysgo="">← 처음 화면</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-goalgo="${mi-1}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-goalgo="${mi+1}">${next.t} ›</button>`:''}</span></nav>`;
-  return `${nav}
+  return `${spNav('data-goalgo', prev, mi-1, next, mi+1)}
     <header class="top sp-head"><span class="eyebrow"><span class="st-gn">${mi+1}</span> 목표</span><h1>${m.t}</h1><p class="lede">${esc(m.s)}</p></header>
     <section class="sp-sec gp-sec"><p class="gp-why">${m.why}</p></section>
-    <section class="sp-comp"><h2>세부 목표 <span class="muted">${m.subs.length}개 · 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목</span></h2><div class="stack gp-subs">${m.subs.map(goalSubHTML).join('')}</div></section>
-    ${nav.replace('class="sp-nav"','class="sp-nav sp-foot"')}`; }
+    <section class="sp-comp"><h2>세부 목표 <span class="muted">${m.subs.length}개 · 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목</span></h2><div class="stack gp-subs">${m.subs.map(goalSubHTML).join('')}</div></section>`; }
 function openGoalPage(mi, di){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart('goal:'+mi); window.scrollTo({top:0, behavior:'instant'});
   if(di!=null) requestAnimationFrame(()=>{ const d=document.getElementById('g-'+mi+'-'+di); if(!d) return; d.open=true; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:d.getBoundingClientRect().top+scrollY-tabh-16, behavior:'instant'}); try{ markHere(d); }catch(e){} }); }
 function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s), prev=BG_SYS[i-1], next=BG_SYS[i+1];
   const steps=[...new Set(ITEMS.filter(x=>x.p===s.p).map(x=>x.s))].sort((a,b)=>SIDX[a]-SIDX[b]);
-  return `<nav class="sp-nav"><button type="button" class="btn small" data-sysgo="">← 모든 시스템</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-sysgo="${prev.p}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-sysgo="${next.p}">${next.t} ›</button>`:''}</span></nav>
+  return `${spNav('data-sysgo', prev, prev&&prev.p, next, next&&next.p)}
     <header class="top sp-head"><span class="eyebrow"><span class="dot" style="background:${pc(s.p)}"></span> 시스템</span><h1>${s.t}</h1></header>
     <div class="sp-grid">
       <section class="sp-sec"><h2>왜 생겼나</h2><p>${bgMark(s.why)}</p></section>
@@ -125,16 +128,15 @@ function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s)
 </section>
     </div>
     ${cs.length?`<section class="sp-comp"><h2>구성 부품 <span class="muted">${cs.length}개 · FS 차량에서 흔한 모양 기준</span></h2><div class="cp-grid cp-one">${cs.map(compHTML).join('')}</div></section>`:''}
-    ${tech.length?`<section class="sp-tech"><h2>F1이 시도한 ${s.t} 기술 <span class="muted">${tech.length}가지 · 옆으로 넘겨 보십시오</span></h2>${techRail(tech)}</section>`:''}
-    <nav class="sp-nav sp-foot"><button type="button" class="btn small" data-sysgo="">← 모든 시스템</button><span class="sp-pn">${prev?`<button type="button" class="lnk" data-sysgo="${prev.p}">‹ ${prev.t}</button>`:''}${next?`<button type="button" class="lnk" data-sysgo="${next.p}">${next.t} ›</button>`:''}</span></nav>`;
+    ${tech.length?`<section class="sp-tech"><h2>F1이 시도한 ${s.t} 기술 <span class="muted">${tech.length}가지 · 옆으로 넘겨 보십시오</span></h2>${techRail(tech)}</section>`:''}`;
 }
-/* 시작 탭 화면 바꾸기 + 전환 (2026-11-22): 첫 화면 카드 → 그 화면은 카드가 커지며(open), 하위 화면 → 첫 화면은 내려가며 사라지고 보던 카드 강조(back),
-   하위 화면끼리(‹ ›)는 옆으로 밂. 다른 탭에서 바로 여는 경우(openSys · openGoalPage 직접 호출)는 전환 없이 그대로 */
+/* 시작 탭 화면 바꾸기 + 전환 (2026-11-24): 다음 화면으로 넘어가는 느낌 = 새 화면이 오른쪽에서 밀려 들어옴(push).
+   돌아가거나 이전 화면은 반대로 오른쪽으로 빠져나감(pop). 목록으로 돌아오면 보던 카드를 가운데에 두고 잠깐 강조.
+   순서: 목표 1~5 → 시스템 (stIdx). 다른 탭에서 바로 여는 경우(openSys · openGoalPage 직접 호출)는 전환 없이 그대로 */
 function stGo(key, src, fn){ const a=(TAB==='start' && START.sys) || '';
   if(TAB!=='start'){ fn(); return; }
-  if(!a && key){ vtGo('open', fn, ()=>src, ()=>$('#v-start')); return; }
-  if(a && !key){ const was=a; vtGo('back', ()=>{ fn(); vtMark(stCard(was), true); }); return; }
-  vtGo(src && /^\s*‹/.test(src.textContent) ? 'prev' : 'next', fn); }
+  if(a && !key){ const was=a; vtGo('pop', ()=>{ fn(); vtMark(stCard(was), true); }); return; }
+  vtGo(a && stIdx(key)<stIdx(a) ? 'pop' : 'push', fn); }
 function openSys(p, part){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart(p||''); window.scrollTo({top:0, behavior:'instant'});
   if(part) requestAnimationFrame(()=>{ const el=document.getElementById('cp-'+part); if(el){ const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:el.getBoundingClientRect().top+scrollY-tabh-12, behavior:'instant'}); markHere(el); } }); }
 

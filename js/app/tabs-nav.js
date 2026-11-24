@@ -23,6 +23,7 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
    - open 의 from · to: 누른 칸 → 새 화면 (vt-card). 칸이 커지며 화면 바탕색 판이 되고 그림자가 생겼다 빠짐. 옛 글이 다 사라진 뒤 새 내용이 나타남.
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
+   - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 700 ms
    - 사용법 진행 중에는 쓰지 않음 (사용법이 바뀐 화면을 자체 방식으로 보여 줌) */
 const VT={busy:false};
@@ -34,7 +35,7 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 700 : motionMs(kind==='back'?160:40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 700 : (kind==='push'||kind==='pop') ? 240 : motionMs(kind==='back'?160:40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
   const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
@@ -49,6 +50,8 @@ function vtMark(el, center){ if(!el) return; if(center){ const r=el.getBoundingC
   el.classList.remove('vt-was'); void el.offsetWidth; el.classList.add('vt-was'); setTimeout(()=>el.classList.remove('vt-was'), 1600); }
 /* 시작 탭 하위 화면 열쇠 → 그 화면을 여는 카드 */
 const stCard = k => !k ? null : /^goal:/.test(k) ? $(`#v-start .st-body [data-goalgo="${k.slice(5)}"]`) : $(`#v-start .st-body [data-sysgo="${k}"]`);
+/* 시작 탭 하위 화면 순서 (목표 1~5 → 시스템): 앞으로 가면 push, 뒤로 가면 pop */
+const stIdx = k => !k ? -1 : /^goal:/.test(k) ? +k.slice(5) : 100 + BG_SYS.findIndex(s=>s.p===k);
 /* 뒤로 · 앞으로 가기: 다른 처리보다 먼저 받아, 같은 이벤트를 전환 안에서 다시 보냄. 스크롤 위치도 그 안에서 바로 되살려 도착 칸을 잴 수 있게 함 */
 window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   if(!h || !h.tab || !document.startViewTransition || (typeof TR!=='undefined' && TR) || (typeof WB!=='undefined' && WB.id)) return;
@@ -59,9 +62,9 @@ window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
     else if(cur && !h.ip) kind='back';
     else kind=null; }
   else if(h.tab===TAB && TAB==='start' && (h.sys||'')!==(START.sys||'')){ const a=START.sys||'', z=h.sys||'';
-    if(!a){ kind='open'; from=()=>stCard(z); to=()=>$('#v-start'); } else if(!z) kind='back'; else kind='fade'; }
+    kind = !a ? 'push' : (!z || stIdx(z)<stIdx(a)) ? 'pop' : 'push'; }
   else if(h.tab===TAB) kind=null;
-  const was = kind==='back' ? (TAB==='steps' ? ()=>$('#it-'+cur) : (k=>()=>stCard(k))(START.sys)) : null;
+  const was = kind==='back' && TAB==='steps' ? ()=>$('#it-'+cur) : (TAB==='start' && START.sys && !h.sys) ? (k=>()=>stCard(k))(START.sys) : null;
   if(!kind) return;
   e.stopImmediatePropagation();
   vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); window.scrollTo({top:h.y||0, behavior:'instant'});
@@ -114,13 +117,13 @@ document.addEventListener('click',ev=>{
   const sl=ev.target.closest('[data-sel]'); if(sl){ selectItem(sl.dataset.sel,true); return; }
   if(ev.target.closest('.tabs .logo-mark, .tabs .wordmark')){ ev.preventDefault(); goHome(); }
 });
-/* 로고 → 처음 화면 (설계 단계 탭 맨 위, 주소의 #항목 지움). 뒤로 가기로 돌아올 수 있음 */
+/* 로고 → 시작 탭 첫 화면 (주소의 #항목 지움). 뒤로 가기로 돌아올 수 있음 */
 function goHome(){ const inSub = typeof START!=='undefined' && !!START.sys; if(TAB!=='start' || window.scrollY>10 || inSub) pushHist(); showTab('start', true);
   /* 시작 탭 안의 세부 목표·시스템 화면을 보고 있었으면 시작 탭 첫 화면으로 */
   if(inSub){ try{ renderStart(''); window.scrollTo({top:0, behavior:'instant'}); }catch(e){} }
   try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
   requestAnimationFrame(()=>smoothScrollTo(()=>0)); }
-document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='처음 화면으로'; el.setAttribute('aria-label', el.classList.contains('wordmark') ? 'RUN2X 처음 화면으로' : '처음 화면으로');
+document.querySelectorAll('.tabs .logo-mark, .tabs .wordmark').forEach(el=>{ el.removeAttribute('aria-hidden'); el.setAttribute('role','link'); el.tabIndex=0; el.title='시작 탭으로'; el.setAttribute('aria-label', el.classList.contains('wordmark') ? 'RUN2X 시작 탭으로' : '시작 탭으로');
   el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goHome(); } }); });
 
 /* ---- v24 검색 + 자동완성 ---- */
