@@ -3435,6 +3435,25 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 /* 도구 탭 하중 그림: [0] · [정지] 누름 영역 24 px 이상 (WCAG 2.2 2.5.8, 2026-11-24 점검: 25 × 22 · 23 × 24 px) */
 .d0btn{line-height:22px;min-width:24px}
 .dc-pl button.lnk{min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center}
+/* ============================================================
+   목표 화면 세부 목표 (2026-11-24): 접지 않고 카드로 다 보임. 판 = 흰 바탕 · 1 px 테두리 · 모서리 8 · 안쪽 24.
+   왼쪽(넓게) 목표 한 줄(핵심, 강조는 여기 하나) → 왜 → 연결 / 오른쪽 근거 · 판단 기준 · 관련 설계 항목 (작은 이름 11 + 내용 13)
+   ============================================================ */
+#v-start .gp-sec{margin:0 0 var(--sp-6)}
+#v-start .gp-why{max-width:92ch;line-height:1.8;color:var(--ink-2);margin:0}
+#v-start .gp-list>h2{margin:0 0 var(--sp-3)}
+#v-start .gp-subs{display:flex;flex-direction:column;gap:var(--sp-4)}
+#v-start .gsub{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:var(--sp-5)}
+#v-start .gs-t{margin:0 0 var(--sp-4);font-size:var(--fs-m);font-weight:700;color:var(--ink)}
+#v-start .gs-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:var(--sp-6)}
+#v-start .gs-goal{margin:0 0 var(--sp-3);padding:var(--sp-2) 0 var(--sp-2) var(--sp-3);border-left:3px solid var(--accent);font-size:var(--fs-m);font-weight:600;line-height:1.6;color:var(--ink)}
+#v-start .gs-k{display:block;font-size:var(--fs-xs);font-weight:600;color:var(--accent);margin-bottom:2px}
+#v-start .gs-why{margin:0 0 var(--sp-3);font-size:var(--fs-s);line-height:1.8;color:var(--ink-2)}
+#v-start .gs-rel{margin:0;font-size:var(--fs-s);line-height:1.6;color:var(--muted)}
+#v-start .gs-side{margin:0;display:flex;flex-direction:column;gap:var(--sp-4);padding-left:var(--sp-5);border-left:1px solid var(--line)}
+#v-start .gs-side dt{font-size:var(--fs-xs);font-weight:600;color:var(--muted);margin-bottom:4px}
+#v-start .gs-side dd{margin:0;font-size:var(--fs-s);line-height:1.6;color:var(--ink)}
+#v-start .gs-side dd.chips{display:flex;flex-wrap:wrap;gap:6px}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -19525,10 +19544,10 @@ function renderStart(sys){ const v=$('#v-start'); if(!v) return;
   const key = gi>=0 ? 'goal:'+gi : (s?s.p:'_home');
   if(v.dataset.done===key){ heroSync(); if(key==='_home') heroIntro(v); return; } v.dataset.done = key;
   v.innerHTML = gi>=0 ? goalPage(gi) : s ? sysPage(s) : homePage();
-  if(gi>=0) v.querySelectorAll('.gp-subs > details.item').forEach((d,di)=>{ d.id='g-'+gi+'-'+di; });
+  if(gi>=0) v.querySelectorAll('.gp-subs > .gsub').forEach((d,di)=>{ d.id='g-'+gi+'-'+di; });
   if(s && typeof loadCompFigs==='function' && COMP_FIG_STATE!==2) loadCompFigs(()=>{ if(START.sys===s.p){ const y=scrollY; delete v.dataset.done; renderStart(); window.scrollTo({top:y,behavior:'instant'}); } });
   try{ renderMath(v); }catch(e){}
-  try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy').forEach(x=>annotate(x)); }catch(e){}
+  try{ if(typeof annotate==='function') v.querySelectorAll('.st-card dd, .sp-sec p, .cp-b dd, .cp-what, .cp-desc p, .gp-why, .gwhy, .gs-why').forEach(x=>annotate(x)); }catch(e){}
   heroSync(); if(key==='_home') heroIntro(v);
 }
 /* 히어로 등장 연출 (2026-11-22, 페이지를 열고 시작 탭 첫 화면을 처음 볼 때 한 번 · 약 3.4 초)
@@ -19613,8 +19632,17 @@ function spNav(attr, prev, pv, next, nv){
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
   return `${spNav('data-goalgo', prev, mi-1, next, mi+1)}
     <header class="top sp-head"><span class="eyebrow"><span class="st-gn">${mi+1}</span> 목표</span><h1>${m.t}</h1><p class="lede">${esc(m.s)}</p></header>
-    <section class="sp-sec gp-sec"><p class="gp-why">${m.why}</p></section>
-    <section class="sp-comp"><h2>세부 목표 <span class="muted">${m.subs.length}개 · 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목</span></h2><div class="stack gp-subs">${m.subs.map(goalSubHTML).join('')}</div></section>`; }
+    <section class="gp-sec"><p class="gp-why">${m.why}</p></section>
+    <section class="gp-list"><h2>세부 목표 <span class="muted">${m.subs.length}개</span></h2><div class="gp-subs">${m.subs.map(goalSubCard).join('')}</div></section>`; }
+/* 세부 목표 카드 (2026-11-24): 접지 않고 다 보임. 왼쪽 = 목표(핵심 한 줄) · 왜 · 연결, 오른쪽 = 근거 · 판단 기준 · 관련 설계 항목 */
+function goalSubCard(d){ const its=[...d.go].filter(id=>IT[id]).sort((a,b)=>(SIDX[IT[a].s]-SIDX[IT[b].s])||(((ACT[a]||[99])[0])-((ACT[b]||[99])[0])));
+  return `<article class="gsub"><h3 class="gs-t">${d.t}</h3>
+    <div class="gs-grid"><div class="gs-main">
+        <p class="gs-goal"><span class="gs-k">목표</span>${d.g}</p>
+        <p class="gs-why">${d.why}</p>
+        <p class="gs-rel"><span aria-hidden="true">↳</span> ${d.rel}</p></div>
+      <dl class="gs-side"><div><dt>근거</dt><dd>${d.w}</dd></div><div><dt>판단 기준</dt><dd>${d.j}</dd></div>
+        <div><dt>관련 설계 항목</dt><dd class="chips">${its.map(id=>`<button type="button" class="chip" data-goto="${id}"><span class="dot" style="background:${pc(IT[id].p)}"></span>${IT[id].s} · ${IT[id].n}</button>`).join('')}</dd></div></dl></div></article>`; }
 function openGoalPage(mi, di){ pushHist(); if(TAB!=='start') showTab('start', true); renderStart('goal:'+mi); window.scrollTo({top:0, behavior:'instant'});
   if(di!=null) requestAnimationFrame(()=>{ const d=document.getElementById('g-'+mi+'-'+di); if(!d) return; d.open=true; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; window.scrollTo({top:d.getBoundingClientRect().top+scrollY-tabh-16, behavior:'instant'}); try{ markHere(d); }catch(e){} }); }
 function sysPage(s){ const cs=compOf(s.p), tech=techOf(s.p), i=BG_SYS.indexOf(s), prev=BG_SYS[i-1], next=BG_SYS[i+1];
@@ -30727,7 +30755,7 @@ const TOUR = {
   ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-head','목표','이 목표가 무엇인지 한 줄로 적었습니다.',{tab:'start'}],
   ['#v-start .gp-sec','왜','이 목표가 왜 빠른 차로 이어지는지입니다.',{tab:'start'}],
-  ['#v-start .gp-subs','세부 목표','세부 목표마다 펼치면 근거와 판단 기준, 이 목표를 다루는 설계 항목이 나옵니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
+  ['#v-start .gp-subs','세부 목표','세부 목표마다 왼쪽에 목표와 이유, 오른쪽에 근거 · 판단 기준 · 이 목표를 다루는 설계 항목이 있습니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
  ],
  steps: [
   ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:async()=>{ await tgTocSet(false); window.scrollTo({top:0,behavior:'instant'}); }}],
