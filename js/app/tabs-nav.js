@@ -24,6 +24,7 @@ function pushHist(){ try{ history.replaceState(navState(), '', location.hash); h
      목록은 판이 덮을 때까지 그대로(살짝 어둡게) 두어 빈 바탕이 깜빡이지 않게 함 (컨테이너 변형)
      설계 탭 항목은 to = vtFloor: 판이 본문 너비가 아니라 머리띠 아래 화면 전체(바닥)로 커지며 모서리 · 색이 바닥과 같아지고 사라짐
      (2026-11-25 관리자: 본문 너비 상자가 커졌다가 끝에 테두리째 사라져 바닥이 드러나는 것이 부자연스러움). 목차 · 파트 패널은 바닥 위에 그대로
+   - close (설계 탭 항목 → 목록, 2026-11-25): open 을 거꾸로. from = vtFloor, to = 돌아갈 칸. 240 ms
    - back: 화면이 살짝 내려가며 사라지고 목록이 나타남. 돌아온 칸을 화면 가운데에 두고 vtMark 로 잠깐 강조 (여기서 왔다는 표시)
    - push · pop (시작 탭 하위 화면): 새 화면이 오른쪽에서 밀려 들어옴 / 반대로 오른쪽으로 빠져나감. 240 ms (PC는 즉각적으로: 창 너비를 움직여도 짧게)
    - 시간 = motionMs(상자 위치 · 크기 변화 중 큰 쪽, 없으면 40 px), 최대 300 ms. back 240 ms (2026-11-24 PC는 즉각적으로: 700 → 300). hero 500 ms (한 번 보는 첫 장면이라 예외)
@@ -39,14 +40,15 @@ function vtGo(kind, fn, from, to){
   if(!kind || VT.busy || !document.startViewTransition || (typeof TR!=='undefined' && TR)){ fn(); return; }
   VT.busy=true; R.dataset.vt=kind;
   const f=from&&from(), fr=vtSeen(f); if(fr) f.style.viewTransitionName='vt-card';
-  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 500 : (kind==='push'||kind==='pop'||kind==='back') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
-  const t=document.startViewTransition(()=>{ if(fr) f.style.viewTransitionName='';
+  let t2=null; R.style.setProperty('--vt-ms', (kind==='hero' ? 500 : (kind==='push'||kind==='pop'||kind==='back'||kind==='close') ? 240 : motionMs(40))+'ms');   /* hero: 화면 높이만큼 움직이므로 최대값 */
+  if(fr && f.id==='vtFloor') R.dataset.vtf='close';
+  const t=document.startViewTransition(()=>{ if(fr){ f.style.viewTransitionName=''; if(f.id==='vtFloor') f.hidden=true; }
     try{ fn(); } finally{ VT.busy=false; }
     /* 도착 상자는 바로 여기서 잼 (새 화면은 이 함수가 끝난 직후 찍히고, 그 전에는 rAF 가 돌지 않음 → 스크롤은 fn 안에서 바로 할 것) */
     const e2=fr&&to&&to(), r2=vtSeen(e2);
-    if(r2){ t2=e2; t2.style.viewTransitionName='vt-card'; if(e2.id==='vtFloor') R.dataset.vtf='1';
+    if(r2){ t2=e2; t2.style.viewTransitionName='vt-card'; if(e2.id==='vtFloor') R.dataset.vtf='open';
       const d=Math.max(Math.hypot(r2.left-fr.left, r2.top-fr.top), Math.abs(r2.width-fr.width), Math.abs(r2.height-fr.height));
-      R.style.setProperty('--vt-ms', Math.min(300, motionMs(d))+'ms'); } });
+      if(kind!=='close') R.style.setProperty('--vt-ms', Math.min(300, motionMs(d))+'ms'); } });
   t.finished.catch(()=>{}).then(()=>{ if(t2){ t2.style.viewTransitionName=''; if(t2.id==='vtFloor') t2.hidden=true; } delete R.dataset.vtf; if(R.dataset.vt===kind) delete R.dataset.vt; });
 }
 /* 돌아온 칸 강조: 화면 가운데로 옮기고 보라 테두리를 잠깐 (style.css .vt-was) */
@@ -62,13 +64,13 @@ window.addEventListener('popstate', e=>{ if(e.__vt) return; const h=e.state;
   const cur=(typeof IPAGE!=='undefined')?IPAGE:null; let kind='fade', from=null, to=null;
   if(h.tab===TAB && TAB==='steps'){
     if(cur && h.ip && cur!==h.ip){ const o=ipOrder(); kind = o.indexOf(h.ip)<o.indexOf(cur) ? 'prev' : 'next'; }
-    else if(!cur && h.ip){ kind='open'; from=()=>$('#it-'+h.ip); to=()=>$('#ipage'); }
-    else if(cur && !h.ip) kind='back';
+    else if(!cur && h.ip){ kind='open'; from=()=>$('#it-'+h.ip); to=vtFloor; }
+    else if(cur && !h.ip){ kind='close'; from=vtFloor; to=()=>$('#it-'+cur); }
     else kind=null; }
   else if(h.tab===TAB && TAB==='start' && (h.sys||'')!==(START.sys||'')){ const a=START.sys||'', z=h.sys||'';
     kind = !a ? 'push' : (!z || stIdx(z)<stIdx(a)) ? 'pop' : 'push'; }
   else if(h.tab===TAB) kind=null;
-  const was = kind==='back' && TAB==='steps' ? ()=>$('#it-'+cur) : (TAB==='start' && START.sys && !h.sys) ? (k=>()=>stCard(k))(START.sys) : null;
+  const was = kind==='close' && TAB==='steps' ? ()=>$('#it-'+cur) : (TAB==='start' && START.sys && !h.sys) ? (k=>()=>stCard(k))(START.sys) : null;
   if(!kind) return;
   e.stopImmediatePropagation();
   vtGo(kind, ()=>{ const ev=new PopStateEvent('popstate', {state:h}); ev.__vt=1; window.dispatchEvent(ev); window.scrollTo({top:h.y||0, behavior:'instant'});

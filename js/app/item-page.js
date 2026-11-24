@@ -20,7 +20,7 @@ function ipRender(id){ const it=IT[id], st=STEPS[SIDX[it.s]], host=ipHost();
   const ord=ipOrder(), k=ord.indexOf(id), prev=ord[k-1], next=ord[k+1];
   const ins=EDGES.filter(e=>e[1]===id), outs=EDGES.filter(e=>e[0]===id);
   const link = x => `<button type="button" class="lnk" data-goto="${x}">${IT[x].n}</button>`;
-  host.innerHTML = `<div class="ip-closebar"><button type="button" class="btn small ip-close" data-ipclose="1" title="목록으로 돌아가기 (Esc)">‹ 목록으로</button></div><div class="ip-top"><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav>
+  host.innerHTML = `<div class="ip-bar"><button type="button" class="btn small ip-close" data-ipclose="1" title="목록으로 돌아가기 (Esc)">‹ 목록</button><nav class="ip-path" aria-label="경로"><button type="button" class="lnk" data-ipback="1">설계</button><span>›</span><button type="button" class="lnk" data-ipstep="${st.id}">${st.id} ${plainT(st.t)}</button><span>›</span><span class="ip-cur">${it.n}</span></nav></div><div class="ip-top">
       <h1 class="ip-h">${it.n}</h1><div class="ip-meta">${chip(it.p)}${it.c?'<span class="badge b-card">상세</span>':''}<button class="btn small gbtn" data-graph="${id}">연결도에서 보기</button></div></div>
     <div class="ipage" data-item="${id}"><div class="dbody" data-lazy="1"></div></div>
     <div class="ip-cols"><div class="ip-main"></div><aside class="ip-side"></aside></div>`;
@@ -75,12 +75,13 @@ document.addEventListener('click', e=>{
   const ps=e.target.closest('[data-ipstep]'); if(ps){ e.preventDefault(); ipBackTo(ps.dataset.ipstep); return; }
 }, true);
 /* 항목 화면 → 개요 ([‹ 목록으로] · Esc · 경로 · 목차 단계 · 설계 탭 다시 누름).
-   항목 화면이 살짝 내려가며 사라지고 개요가 나타남. 같은 단계로 돌아가면 보던 항목 칸을 화면 가운데에 두고 잠깐 강조 (vtMark). 다른 단계면 그 단계 머리로 */
-function ipBackTo(sid){ const cur=IPAGE, same=cur && IT[cur].s===sid;
-  vtGo('back', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(!st) return; st.open=true;
+   열 때를 거꾸로 (2026-11-25): 항목 내용이 바닥에 스며들고, 바닥 전체(#vtFloor)가 돌아갈 칸으로 줄어들어 다시 칸이 됨 (tabs-nav.js 'close').
+   같은 단계로 돌아가면 보던 항목 칸을 화면 가운데에 두고 잠깐 강조 (vtMark). 다른 단계면 그 단계 머리로 */
+function ipBackTo(sid){ const cur=IPAGE, same=cur && IT[cur].s===sid; let dst=null;
+  vtGo('close', ()=>{ pushHist(); ipClose(); const st=$('#st-'+sid); if(!st) return; st.open=true;
       const row=same && $('#it-'+cur);
-      if(row) vtMark(row, true);
-      else { window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); } }); }
+      if(row){ vtMark(row, true); dst=row; }
+      else { window.scrollTo({top:st.getBoundingClientRect().top+scrollY-tabH()-60, behavior:'instant'}); markHere(st); dst=st.querySelector(':scope>summary')||st; } }, vtFloor, ()=>dst); }
 document.addEventListener('keydown', e=>{ if(e.key!=='Escape' || !IPAGE || TAB!=='steps' || e.defaultPrevented) return;
   if((typeof TR!=='undefined' && TR) || document.querySelector('dialog[open]')) return;
   const a=document.activeElement; if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA' || a.isContentEditable)) return;

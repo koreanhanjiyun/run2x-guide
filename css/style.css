@@ -3152,7 +3152,7 @@ body.ip-on #v-steps>header.top,body.ip-on #v-steps>.vrow2,body.ip-on #v-steps>.v
 .ip-top .actbox b.tag{color:var(--accent);font-size:var(--fs-s);margin-right:var(--sp-2)}
 .ip-cols{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:var(--sp-6);align-items:start}
 .ip-main{min-width:0;display:grid;gap:var(--sp-4);align-content:start}
-.ip-side{position:sticky;top:calc(var(--tabh) + 16px);display:grid;gap:var(--sp-4);max-height:calc(100vh - var(--tabh) - 32px);overflow:auto;padding:var(--sp-4);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m)}
+.ip-side{position:sticky;top:calc(var(--tabh) + var(--ipbar) + 16px);display:grid;gap:var(--sp-4);max-height:calc(100vh - var(--tabh) - var(--ipbar) - 32px);overflow:auto;padding:var(--sp-4);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m)}
 .ip-side .vrow{display:grid;gap:var(--sp-2)}
 .ip-side .tval,.ip-side .stbox{margin:0}
 .ip-rel .ip-rl{margin:var(--sp-2) 0 0;font-size:var(--fs-s);line-height:1.7}
@@ -3334,9 +3334,6 @@ html[data-vt="hero"]::view-transition-new(root){animation:vt-hero-in var(--vt-ms
 @keyframes vt-hero-in{from{transform:translateY(100%)}}
 
 /* 항목 화면 [‹ 목록으로] (2026-11-22): 제목 위 경로 줄 왼쪽 (시선이 머무는 제목 쪽). 내려 읽으면 머리띠 밑 왼쪽에 붙어 따라옴. 높이 0 줄이라 자리를 차지하지 않음. Esc 로도 돌아감 */
-#ipage .ip-closebar{position:sticky;top:calc(var(--tabh) + 12px);z-index:6;height:0;margin-bottom:calc(-1 * var(--sp-5));display:flex;justify-content:flex-start}
-#ipage .ip-close{font-size:var(--fs-s);background:var(--panel);box-shadow:0 2px 8px rgba(30,20,50,.12);transform:translateY(-6px)}
-#ipage .ip-top .ip-path{padding-left:112px}
 /* ============================================================
    탭별 글자 네 가지 (2026-11-22, docs/DESIGN.md 3절 '한 화면 안 글자 크기')
    화면 제목 24 · 칸 제목 15 (굵게) · 본문 · 표 · 버튼 · 링크 · 그림 글자 13 · 보조 11.
@@ -3443,5 +3440,29 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 #vtFloor{position:fixed;left:0;right:0;top:var(--tabh);bottom:0;z-index:1;pointer-events:none}
 #vtFloor[hidden]{display:none}
 html[data-vtf]::view-transition-group(vt-card){border-radius:0}
-html[data-vtf]::view-transition-image-pair(vt-card){animation:vt-floor var(--vt-ms,265ms) var(--ease-out) both}
+html[data-vtf="open"]::view-transition-image-pair(vt-card){animation:vt-floor var(--vt-ms,265ms) var(--ease-out) both}
 @keyframes vt-floor{0%{background:var(--panel);border-radius:var(--r-m)}55%{background:var(--bg);border-radius:0}100%{background:rgba(0,0,0,0);border-radius:0}}
+
+/* 설계 탭 항목 → 목록 (close, 2026-11-25): 열기를 거꾸로. 0~25 %: 바닥 판이 투명 → 바닥색으로 덮으며 항목 내용이 스며듦 (판 크기 그대로)
+   25~100 %: 판이 돌아갈 칸으로 줄며 바닥색 → 흰색 · 모서리 0 → 8 px. 목록은 25 %부터 살짝 흐리고 어두운 채 드러나 끝에 또렷해짐. 칸 글은 끝에 나타남 */
+html[data-vtf="close"]::view-transition-group(vt-card){animation-delay:calc(var(--vt-ms,240ms) * .25);animation-duration:calc(var(--vt-ms,240ms) * .75);animation-fill-mode:both;animation-timing-function:var(--ease-io)}
+html[data-vtf="close"]::view-transition-image-pair(vt-card){animation:vt-floor-close var(--vt-ms,240ms) var(--ease-io) both}
+@keyframes vt-floor-close{0%{background:rgba(0,0,0,0);border-radius:0}25%{background:var(--bg);border-radius:0}100%{background:var(--panel);border-radius:var(--r-m)}}
+html[data-vtf="close"]::view-transition-old(vt-card){animation:none;opacity:0}
+html[data-vtf="close"]::view-transition-new(vt-card){animation:vt-in calc(var(--vt-ms,240ms) * .35) var(--ease-out) calc(var(--vt-ms,240ms) * .65) both}
+html[data-vt="close"]::view-transition-old(root){animation:vt-gone var(--vt-ms,240ms) linear both}
+html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms,240ms) var(--ease-io) both}
+@keyframes vt-gone{0%,24%{opacity:1}25%,100%{opacity:0}}
+@keyframes vt-unhold{0%,24%{opacity:0;filter:blur(2px) brightness(.9)}25%{opacity:1;filter:blur(2px) brightness(.9)}100%{opacity:1;filter:none}}
+/* 항목 화면 머리 막대 (2026-11-25): [‹ 목록] + 경로를 한 줄로, 내리면 머리띠 아래에 붙어 따라옴 (버튼이 혼자 떠 있지 않게) */
+:root{--ipbar:44px}
+#ipage .ip-bar{position:sticky;top:var(--tabh);z-index:6;display:flex;align-items:center;gap:var(--sp-3);height:var(--ipbar);margin-top:calc(-1 * var(--sp-5));background:var(--bg);border-bottom:1px solid var(--line)}
+#ipage .ip-bar .ip-close{font-size:var(--fs-s);flex:none}
+#ipage .ip-bar .ip-path{flex-wrap:nowrap;min-width:0;overflow:hidden;white-space:nowrap;padding-left:var(--sp-3);border-left:1px solid var(--line)}
+#ipage .ip-bar .ip-cur{overflow:hidden;text-overflow:ellipsis;color:var(--ink);font-weight:600}
+
+/* 목표 화면 핵심 그림 (2026-11-25): 설명 왼쪽 · 그림 오른쪽. 그림은 판 없이 선만 */
+#v-start .gp-sec.gp-hasfig{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:var(--sp-7);align-items:center}
+#v-start .gp-fig{margin:0}
+#v-start .gp-fig svg{display:block;width:100%;height:auto;overflow:visible}
+#v-start .gp-fig figcaption{margin-top:var(--sp-2);font-size:var(--fs-s);color:var(--muted);text-align:center}

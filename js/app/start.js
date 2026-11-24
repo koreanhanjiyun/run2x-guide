@@ -116,10 +116,81 @@ function spNav(attr, prev, pv, next, nv){
   const arw=(cls, v, t, ch)=>`<button type="button" class="sp-arw ${cls}" ${attr}="${v}" aria-label="${cls==='sp-prev'?'이전':'다음'}: ${esc(t)}"><i aria-hidden="true">${ch}</i><span>${t}</span></button>`;
   return `<button type="button" class="sp-arw sp-list" data-sysgo="" aria-label="시작 탭 목록으로"><i aria-hidden="true"><svg viewBox="0 0 20 20" width="20" height="20" fill="currentColor"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg></i><span>목록</span></button>
     <nav class="sp-side" aria-label="이전 · 다음">${prev?arw('sp-prev', pv, prev.t, '‹'):''}${next?arw('sp-next', nv, next.t, '›'):''}</nav>`; }
+/* 목표 화면 핵심 그림 (2026-11-25 관리자: 목표 화면이 글뿐이라 밋밋함 → 목표마다 원리 그림 하나, 설명 오른쪽).
+   개념 도식이라 축에 숫자를 두지 않음 (모양만: 곡선은 식으로 계산해 그림). 색은 사이트 변수, 글자 13 px */
+const GF = (() => {
+  const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" font-size="${o.fs || 13}"${o.a ? ` text-anchor="${o.a}"` : ''} fill="${o.c || 'var(--ink-2)'}"${o.b ? ' font-weight="600"' : ''}>${s}</text>`;
+  const sub = s => `<tspan baseline-shift="sub" font-size="10">${s}</tspan>`;
+  const ax = (x0, y0, x1, y1, xl, yl) => `<path d="M${x0} ${y0} H${x1}" stroke="var(--ink-2)" stroke-width="1.4" marker-end="url(#gfA)"/><path d="M${x0} ${y0} V${y1}" stroke="var(--ink-2)" stroke-width="1.4" marker-end="url(#gfA)"/>`
+    + T(x1, y0 + 20, xl, {a: 'end', c: 'var(--muted)'}) + T(x0 + 10, y1 + 4, yl, {c: 'var(--muted)'});
+  const defs = `<defs><marker id="gfA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink-2)"/></marker>
+    <marker id="gfB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs>`;
+  const cg = (x, y, r = 8) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/><path d="M${x} ${y}L${x - r} ${y}A${r} ${r} 0 0 1 ${x} ${y - r}Z" fill="var(--ink)"/><path d="M${x} ${y}L${x + r} ${y}A${r} ${r} 0 0 1 ${x} ${y + r}Z" fill="var(--ink)"/><path d="M${x - r} ${y}H${x + r}M${x} ${y - r}V${y + r}" stroke="var(--ink)" stroke-width="1.1"/>`;
+  const svg = (body, lab) => `<svg viewBox="0 0 460 270" role="img" aria-label="${lab}">${defs}${body}</svg>`;
+  const pts = (f, a, b, n, X, Y) => Array.from({length: n + 1}, (_, i) => { const v = a + (b - a) * i / n; return `${i ? 'L' : 'M'}${X(v).toFixed(1)} ${Y(f(v)).toFixed(1)}`; }).join('');
+  /* 앞에서 본 차 한 대: 가운데 x, 지면 y, 몸통 롤(도), 바퀴 기울기(도, 왼쪽 · 오른쪽 바퀴 각각 시계 방향 +), 몸통 높이 */
+  const car = (x, g, roll = 0, tilt = [0, 0], h = 52) => { const tw = 150, wh = 46, ww = 16;
+    const wheel = (wx, c) => `<rect x="${wx - ww / 2}" y="${g - wh}" width="${ww}" height="${wh}" rx="4" fill="var(--ink)" transform="rotate(${c} ${wx} ${g})"/>`;
+    return wheel(x - tw / 2, tilt[0]) + wheel(x + tw / 2, tilt[1])
+      + `<g transform="rotate(${roll} ${x} ${g - h})"><path d="M${x - 52} ${g - h}L${x - tw / 2 + 8} ${g - wh / 2}M${x + 52} ${g - h}L${x + tw / 2 - 8} ${g - wh / 2}" stroke="var(--ink-2)" stroke-width="1.4"/>
+         <rect x="${x - 52}" y="${g - h - 16}" width="104" height="30" rx="6" fill="var(--panel)" stroke="var(--ink-2)" stroke-width="1.4"/></g>`; };
+  return [
+  /* 1 그립: 마찰원 (타이어 힘 합의 한계 μ·F_z) + 다운포스로 원이 커짐, 오른쪽 L ∝ v² */
+  () => { const cx = 120, cy = 140, r1 = 78, r2 = 102, th = 38 * Math.PI / 180, ex = cx + r1 * Math.cos(th), ey = cy - r1 * Math.sin(th);
+    const X = v => 300 + v * 130, Y = L => 215 - L * 150;
+    return svg(`<circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="5 4"/>
+      <circle cx="${cx}" cy="${cy}" r="${r1}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.8"/>
+      <path d="M${cx - r2 - 6} ${cy}H${cx + r2 + 6}M${cx} ${cy - r2 - 6}V${cy + r2 + 6}" stroke="var(--line-2)" stroke-width="1"/>
+      <path d="M${ex} ${ey}V${cy}M${ex} ${ey}H${cx}" stroke="var(--muted)" stroke-dasharray="3 3"/>
+      <path d="M${cx} ${cy}L${ex} ${ey}" stroke="var(--ink)" stroke-width="2.4" marker-end="url(#gfA)"/>
+      ${T(cx, cy - r2 - 12, '가속 · 제동 F' + sub('x'), {a: 'middle', c: 'var(--muted)'})}${T(cx + r2 + 6, cy + 4, '선회 F' + sub('y'), {c: 'var(--muted)'})}
+      ${T(cx - 12, cy + 34, '한계 μ·F' + sub('z'), {a: 'end'})}${T(cx - r2 + 2, cy + r2 + 6, '+ 다운포스', {c: 'var(--accent)'})}
+      <rect x="${X(0)}" y="${Y(1)}" width="${X(.45) - X(0)}" height="${Y(0) - Y(1)}" fill="var(--accent)" opacity=".08"/>
+      ${ax(X(0), Y(0), X(1) + 14, Y(1) - 14, '속도 v', '다운포스 L')}
+      <path d="${pts(v => v * v, 0, 1, 40, X, Y)}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+      ${T(X(.6), Y(.75), 'L ∝ v²', {a: 'end', c: 'var(--accent)', b: 1})}${T(X(.225), Y(0) - 12, '저속 코너', {a: 'middle', c: 'var(--muted)', fs: 12})}`,
+      '마찰원과 다운포스: 타이어 힘의 합은 μ·Fz를 넘지 못함. 다운포스는 원을 키우지만 속도 제곱에 비례해 저속에서 작음'); },
+  /* 2 더 큰 힘: 가속도-속도. 낮은 속도는 그립(④)이, 높은 속도는 출력(③, a = P/(m·v))이 한계. 가벼우면 출력 한계 곡선이 위로 */
+  () => { const X = v => 60 + v * 92, Y = a => 222 - a * 150, vm = 4, k = .85;
+    return svg(`${ax(X(0), Y(0), X(vm) + 6, Y(1.25), '속도 v', '가속도 a')}
+      <path d="${pts(v => Math.min(1, 1 / (k * v)), .05, vm, 80, X, Y)}" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <path d="${pts(v => Math.min(1, 1 / v), .05, vm, 80, X, Y)}" fill="none" stroke="var(--ink)" stroke-width="2.4"/>
+      <path d="M${X(1)} ${Y(1) - 6}V${Y(0)}" stroke="var(--line-2)" stroke-dasharray="3 3"/>
+      ${T(X(.5), Y(1) - 12, '④ 그립 한계', {a: 'middle', b: 1})}${T(X(.5), Y(1) + 22, '(구동력 전달)', {a: 'middle', c: 'var(--muted)', fs: 12})}
+      ${T(X(1.6), Y(0) - 24, '③ 출력 한계 a = P / (m·v)', {b: 1})}${T(X(2.7), Y(1 / (k * 2.7)) - 12, '⑤ 가벼우면', {c: 'var(--accent)'})}`,
+      '가속도와 속도: 낮은 속도에서는 그립이, 높은 속도에서는 출력이 가속을 제한함. 가벼우면 출력 한계 곡선이 위로 올라감'); },
+  /* 3 가볍게: 앞에서 본 두 차. CG 가 높을수록 선회 때 바깥 바퀴로 몰리는 하중 ΔF_z = m·a_y·h / t 가 큼 (화살표 길이 ∝ h) */
+  () => { const g = 190, A = 120, B = 340, hA = 96, hB = 60;
+    const one = (x, h, lab) => `<path d="M${x - 100} ${g}H${x + 100}" stroke="var(--ink-2)" stroke-width="1.4"/>` + car(x, g, 0, [0, 0], h - 6) + cg(x, g - h)
+      + `<path d="M${x - 92} ${g}V${g - h}" stroke="var(--muted)" stroke-dasharray="2 3"/>` + T(x - 97, g - h / 2 + 4, 'h', {a: 'end', c: 'var(--muted)'})
+      + `<path d="M${x + 75} ${g + 4 + h * .4}V${g + 4}" stroke="var(--accent)" stroke-width="2.6" marker-end="url(#gfB)"/>` + T(x + 82, g + 4 + h * .4, '+ΔF' + sub('z'), {c: 'var(--accent)'})
+      + T(x, 46, lab, {a: 'middle', b: 1});
+    return svg(one(A, hA, 'CG 높음') + one(B, hB, 'CG 낮음') + `<path d="M205 70H255" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#gfA)"/>` + T(230, 62, '선회 관성', {a: 'middle', c: 'var(--muted)', fs: 12})
+      + T(230, 266, 'ΔF' + sub('z') + ' = m · a' + sub('y') + ' · h / t', {a: 'middle', b: 1}),
+      'CG 높이와 하중 이동: 선회 때 바깥 바퀴로 몰리는 하중은 질량 · 횡가속도 · CG 높이에 비례하고 트레드에 반비례함'); },
+  /* 4 일관성: 자세가 일정하면 캠버 · 차고가 설계대로, 롤이 크면 바깥 바퀴 캠버가 틀어지고 차고가 바뀜 */
+  () => { const g = 185, A = 120, B = 340;
+    return svg(`<path d="M20 ${g}H220M240 ${g}H440" stroke="var(--ink-2)" stroke-width="1.4"/>`
+      + car(A, g, 0, [2, -2]) + car(B, g, 6, [3, 7])
+      + T(A, 50, '자세 일정', {a: 'middle', b: 1}) + T(A, 222, '캠버 · 차고 설계대로', {a: 'middle', c: 'var(--muted)'})
+      + T(B, 50, '롤이 큼', {a: 'middle', b: 1}) + T(B, 222, '바깥 바퀴 캠버 틀어짐', {a: 'middle', c: 'var(--accent)'}) + T(B, 244, '차고 변화 → 다운포스 변화', {a: 'middle', c: 'var(--accent)'})
+      + `<path d="M${B - 30} 92A40 40 0 0 1 ${B + 30} 92" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#gfB)"/>` + T(B + 38, 92, '롤', {c: 'var(--accent)'}),
+      '자세와 캠버: 롤이 작고 일정하면 캠버와 차고가 설계대로 유지됨. 롤이 크면 바깥 바퀴 캠버가 틀어지고 차고가 바뀌어 다운포스도 달라짐'); },
+  /* 5 끝까지: 내구 진행에 따른 낼 수 있는 성능. 열 · 에너지 관리가 부족하면 후반에 출력 제한 */
+  () => { const X = d => 60 + d * 360, Y = p => 215 - p * 150;
+    return svg(`${ax(X(0), Y(0), X(1) + 10, Y(1.15), '내구 진행', '낼 수 있는 성능')}
+      <path d="M${X(0)} ${Y(.9)}H${X(1)}" stroke="var(--ink)" stroke-width="2.4"/>
+      <path d="M${X(0)} ${Y(.9) + 4}H${X(.55)}C${X(.62)} ${Y(.9) + 4} ${X(.62)} ${Y(.5)} ${X(.7)} ${Y(.5)}H${X(.86)}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-dasharray="6 4"/>
+      <path d="M${X(.86) - 7} ${Y(.5) - 7}l14 14m0 -14l-14 14" stroke="var(--accent)" stroke-width="2.4"/>
+      ${T(X(1), Y(.9) - 12, '열 · 에너지 관리됨 → 완주', {a: 'end', b: 1})}${T(X(.68), Y(.5) + 26, '과열 → 출력 제한', {a: 'middle', c: 'var(--accent)'})}${T(X(.86) + 12, Y(.5) + 5, '정지', {c: 'var(--accent)'})}`,
+      '내구 진행과 성능: 발열과 에너지를 관리하면 끝까지 같은 성능, 관리가 부족하면 후반에 출력이 제한되거나 멈춤'); },
+  ];
+})();
+const goalFig = mi => { const f = GF[mi]; if(!f) return ''; const s = f(); const lab = (s.match(/aria-label="([^"]*)"/) || [])[1] || ''; return `<figure class="gp-fig">${s}<figcaption>${lab.split(':')[0]}</figcaption></figure>`; };
 function goalPage(mi){ const m=GOALS[mi], prev=GOALS[mi-1], next=GOALS[mi+1];
   return `${spNav('data-goalgo', prev, mi-1, next, mi+1)}
     <header class="top sp-head"><span class="eyebrow"><span class="st-gn">${mi+1}</span> 목표</span><h1>${m.t}</h1><p class="lede">${esc(m.s)}</p></header>
-    <section class="gp-sec"><p class="gp-why">${m.why}</p></section>
+    <section class="gp-sec gp-hasfig"><p class="gp-why">${m.why}</p>${goalFig(mi)}</section>
     <section class="gp-list"><h2>세부 목표 <span class="muted">${m.subs.length}개</span></h2><div class="gp-subs">${m.subs.map(goalSubCard).join('')}</div></section>`; }
 /* 세부 목표 카드 (2026-11-24): 접지 않고 다 보임. 왼쪽 = 목표(핵심 한 줄) · 왜 · 연결, 오른쪽 = 근거 · 판단 기준 · 관련 설계 항목 */
 function goalSubCard(d){ const its=[...d.go].filter(id=>IT[id]).sort((a,b)=>(SIDX[IT[a].s]-SIDX[IT[b].s])||(((ACT[a]||[99])[0])-((ACT[b]||[99])[0])));
