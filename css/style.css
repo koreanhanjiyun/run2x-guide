@@ -3431,3 +3431,5 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 #v-start .gs-side dt{font-size:var(--fs-xs);font-weight:600;color:var(--muted);margin-bottom:4px}
 #v-start .gs-side dd{margin:0;font-size:var(--fs-s);line-height:1.6;color:var(--ink)}
 #v-start .gs-side dd.chips{display:flex;flex-wrap:wrap;gap:6px}
+/* 펼친 목차도 왼쪽 벽에 붙임 (2026-11-24, 오른쪽 벽에 붙은 파트 강조와 거울): 벽 쪽 직각 · 안쪽만 둥글게. 본문 여백(--tocx + 48)은 그대로라 목차와 본문 사이가 14 px 넓어짐 */
+#toc{left:0;border-left:0;border-radius:0 var(--r-m) var(--r-m) 0}

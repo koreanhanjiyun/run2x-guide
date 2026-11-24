@@ -117,7 +117,9 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
     /* 배너 모양 = ㄱ자 (위 가로 막대 + 오른쪽 세로 막대): 상자는 두 모양을 다 담는 크기로 두고 clip-path 로 가로 막대는 왼쪽으로 늘고 세로 막대는 위로 줄게 (사각형으로 바뀌어 보이지 않게) */
     const W = fromOpen ? b0.w : b1.w, v = fromOpen ? b1.w : b0.w, Hm = fromOpen ? b1.h : b0.h, hh = fromOpen ? h0 : h1;
     el.style.width = W + 'px'; el.style.height = Math.max(Hm, hh) + 'px';
-    const r = 10, shape = (L, B, rh, rb) => `path("M ${L + r} 0 H ${W} V ${B} H ${W - v + rb} A ${rb} ${rb} 0 0 1 ${W - v} ${B - rb} V ${hh} H ${L + rh} A ${rh} ${rh} 0 0 1 ${L} ${hh - rh} V ${r} A ${r} ${r} 0 0 1 ${L + r} 0 Z")`;   /* 왼쪽 모서리는 배너처럼 둥글게 */
+    /* 왼쪽 모서리는 배너처럼 둥글게. 가로 · 세로 막대가 만나는 안쪽(오목) 모서리도 8 px 로 둥글게(남은 막대 길이만큼만) (2026-11-24) */
+    const r = 10, shape = (L, B, rh, rb) => { const ri = Math.max(0, Math.min(8, B - hh - rb, W - v - L - rh));
+      return `path("M ${L + r} 0 H ${W} V ${B} H ${W - v + rb} A ${rb} ${rb} 0 0 1 ${W - v} ${B - rb} V ${hh + ri} A ${ri} ${ri} 0 0 0 ${W - v - ri} ${hh} H ${L + rh} A ${rh} ${rh} 0 0 1 ${L} ${hh - rh} V ${r} A ${r} ${r} 0 0 1 ${L + r} 0 Z")`; };
     /* 배너 끝을 글자에 붙임 (101차 고침: 글자만 먼저 가던 것): 가로 막대 왼쪽 끝 = 첫 글자, 세로 막대 아래 끝 = 끝 글자 위치에서 구해 장면 24개로 */
     const fr = p => { if(!paths.length) return p; const h = paths[0], t = paths[paths.length - 1], a = TR_(0, Q(p)), z = TR_(paths.length - 1, Q(p));
       const fl = h.V.x === h.Hz.x ? p : Math.min(1, Math.max(0, (h.V.x - a.x)/(h.V.x - h.Hz.x))), fb = t.V.y === t.Hz.y ? p : Math.min(1, Math.max(0, (t.V.y - z.y)/(t.V.y - t.Hz.y)));
@@ -187,8 +189,8 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
     const L = (a, b, f) => a + (b - a)*f, cl = f => Math.min(1, Math.max(0, f));
     const shape = p => { const m = toOpen ? p : 1 - p, a = lead ? at(lead, p) : null, z = trail ? at(trail, p) : null;
       const fl = a && lead.Hz.x !== lead.V.x ? cl((a.x - lead.V.x)/(lead.Hz.x - lead.V.x)) : m, fb = z && trail.Hz.y !== trail.V.y ? cl((z.y - trail.V.y)/(trail.Hz.y - trail.V.y)) : m;
-      const xl = L(Rc.left, Ro.left, m), yt = L(Rc.top, Ro.top, m), xr = xl + v + (Ro.width - v)*fl, B = Rc.height - (Rc.height - hh)*fb, rl = 10*m, rr = 10, rh = Math.min(10, xr - xl - v), rb = Math.min(10, B - hh);
-      return `path("M ${xl + rl} ${yt} H ${xr - rr} A ${rr} ${rr} 0 0 1 ${xr} ${yt + rr} V ${yt + hh - rh} A ${rh} ${rh} 0 0 1 ${xr - rh} ${yt + hh} H ${xl + v} V ${yt + B - rb} A ${rb} ${rb} 0 0 1 ${xl + v - rb} ${yt + B} H ${xl + rl} A ${rl} ${rl} 0 0 1 ${xl} ${yt + B - rl} V ${yt + rl} A ${rl} ${rl} 0 0 1 ${xl + rl} ${yt} Z")`; };
+      const xl = L(Rc.left, Ro.left, m), yt = L(Rc.top, Ro.top, m), xr = xl + v + (Ro.width - v)*fl, B = Rc.height - (Rc.height - hh)*fb, rl = 0, rr = 10, rh = Math.min(10, xr - xl - v), rb = Math.min(10, B - hh), ri = Math.max(0, Math.min(8, xr - xl - v - rh, B - hh - rb));   /* 왼쪽은 벽에 붙어 직각(2026-11-24, 펼쳐도 벽에 붙임), 안쪽 오목 모서리 8 px */
+      return `path("M ${xl + rl} ${yt} H ${xr - rr} A ${rr} ${rr} 0 0 1 ${xr} ${yt + rr} V ${yt + hh - rh} A ${rh} ${rh} 0 0 1 ${xr - rh} ${yt + hh} H ${xl + v + ri} A ${ri} ${ri} 0 0 0 ${xl + v} ${yt + hh + ri} V ${yt + B - rb} A ${rb} ${rb} 0 0 1 ${xl + v - rb} ${yt + B} H ${xl + rl} A ${rl} ${rl} 0 0 1 ${xl} ${yt + B - rl} V ${yt + rl} A ${rl} ${rl} 0 0 1 ${xl + rl} ${yt} Z")`; };
     const ov = document.createElement('div'); ov.className = 'ts-ov'; ov.style.background = getComputedStyle(hd).backgroundColor; const KF = []; for(let k = 0; k <= 24; k++) KF.push({clipPath: shape(k/24), offset: k/24});
     ov.style.clipPath = KF[0].clipPath; host.appendChild(ov); S.els.push(ov);
     const A = ov.animate(KF, {duration: D, easing: ez, fill: 'both'}); S.anims.push(A);
