@@ -3436,3 +3436,8 @@ html[data-vt="pop"]::view-transition-new(root){animation:vt-pop-in var(--vt-ms,2
 /* 벽에 붙인 목차 안쪽 들여쓰기: 머리 글자 · 목록 글자가 벽에서 16 px (2026-11-24) */
 #toc:not(.coll) .toc-h{padding-left:16px}
 #toc:not(.coll) .toc-in{padding-left:12px}
+/* 파트 강조 고른 파트 색 점 (접힌 막대에서만, 글자 아래 세로로). 펼치면 칩이 고른 상태를 보여 주므로 숨김. 글자 이동 중에도 숨김 */
+#partRail .rail-dots{display:none}
+#partRail.coll .rail-dots:not([hidden]){display:flex;flex-direction:column;align-items:center;gap:5px;margin:2px 0}
+#partRail .rail-h .rail-dots i{display:block!important;width:8px;height:8px;border:0;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.55)}
+#partRail.rs-snake .rail-dots{display:none!important}
