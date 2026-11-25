@@ -149,14 +149,21 @@ const SIDX_ALL = [
 ];
 let SIDX_MORE = false;
 function searchMore(){ if(SIDX_MORE) return; SIDX_MORE = true;
-  if(typeof COMP!=='undefined') Object.entries(COMP).forEach(([sys,cs])=>cs.forEach(c=>SIDX_ALL.push({k:'comp', id:c.id, sys, name:stripT(c.n), code:sys, part:sys, extra:[['영문',c.en||''],['설명',c.what||(c.desc?String(c.desc[0]).replace(/<[^>]+>/g,''):'')]].filter(x=>x[1])})));
-  const gl=[...document.querySelectorAll('#ref-list tr[id^="gl-"]')]; gl.forEach(tr=>SIDX_ALL.push({k:'term', id:tr.id, name:tr.cells[0].textContent.trim(), code:'용어', extra:[['뜻',tr.cells[1].textContent.trim()]]})); }
-const SKIND = {step:'단계', item:'설계 항목', comp:'부품', term:'용어'}, SORDER = ['item','step','comp','term'];
+  /* 2026-11-25: 시작 탭의 시스템 화면 · 목표 · 세부 목표, 도구 탭의 도구도 찾음. 결과는 가는 곳(탭)별로 묶고 줄 끝에 경로 */
+  const sysName = p => { const s = typeof BG_SYS!=='undefined' && BG_SYS.find(x=>x.p===p); return s ? s.t : p; };
+  if(typeof BG_SYS!=='undefined') BG_SYS.forEach(s=>SIDX_ALL.push({k:'sys', id:s.p, name:stripT(s.t), code:s.p, part:s.p, path:'시작 › 시스템 화면', extra:[['설명',stripT(s.why||'').slice(0,160)]].filter(x=>x[1])}));
+  if(typeof GOALS!=='undefined') GOALS.forEach((m,mi)=>{ SIDX_ALL.push({k:'goal', id:String(mi), name:stripT(m.t), code:'목표 '+(mi+1), path:'시작 › 목표 화면', extra:[['한 줄',m.s||''],['설명',stripT(m.why||'')]].filter(x=>x[1])});
+    (m.subs||[]).forEach((d,di)=>SIDX_ALL.push({k:'goalsub', id:mi+':'+di, name:stripT(d.t).replace(/^[①-⑳]\s*/,''), code:'목표 '+(mi+1), path:'시작 › '+stripT(m.t)+' › 세부 목표', extra:[['목표',stripT(d.g||'')],['판단 기준',stripT(d.j||'')]].filter(x=>x[1])})); });
+  if(typeof TOOL_LIST!=='undefined'){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
+    TOOL_LIST.forEach(r=>{ const no = W[r[0]] && W[r[0]].no ? W[r[0]].no : r[0]; SIDX_ALL.push({k:'tool', id:r[0], ready:!!W[r[0]], name:stripT(r[1]), code:'도구 '+no, path: W[r[0]] ? '도구 › 작업창' : '도구 › 준비 중', extra:[['입력',r[3]],['결과',r[4]]].filter(x=>x[1])}); }); }
+  if(typeof COMP!=='undefined') Object.entries(COMP).forEach(([sys,cs])=>cs.forEach(c=>SIDX_ALL.push({k:'comp', id:c.id, sys, name:stripT(c.n), code:sys, part:sys, path:'시작 › '+sysName(sys)+' › 구성 부품', extra:[['영문',c.en||''],['설명',c.what||(c.desc?String(c.desc[0]).replace(/<[^>]+>/g,''):'')]].filter(x=>x[1])})));
+  const gl=[...document.querySelectorAll('#ref-list tr[id^="gl-"]')]; gl.forEach(tr=>SIDX_ALL.push({k:'term', id:tr.id, name:tr.cells[0].textContent.trim(), code:'용어', path:'참고 › 용어집', extra:[['뜻',tr.cells[1].textContent.trim()]]})); }
+const SKIND = {item:'설계 탭 · 설계 항목', step:'설계 탭 · 단계', goal:'시작 탭 · 목표', goalsub:'시작 탭 · 세부 목표', sys:'시작 탭 · 시스템', comp:'시작 탭 · 구성 부품', tool:'도구 탭 · 도구', term:'참고 탭 · 용어'}, SORDER = ['item','step','goal','goalsub','sys','comp','tool','term'];
 function searchAll(raw){ searchMore(); const q=norm(raw); if(!q) return [];
   const out=[]; for(const e of SIDX_ALL){
     let s=Math.max(mscore(e.name,q,100), mscore(e.code,q,90)), why=null;
     if(s===0){ for(const [lab,t] of e.extra){ const v=mscore(t,q,40); if(v>s){ s=v; why=[lab,stripT(t).slice(0,80)]; } } }
-    if(s>0){ const on = !PSET.size || e.k==='step' || e.k==='term' || PSET.has(e.part); out.push({...e, s:s+(e.k==='item'?2:0), on, why}); } }
+    if(s>0){ const on = !PSET.size || !e.part || PSET.has(e.part); out.push({...e, s:s+(e.k==='item'?2:0), on, why}); } }
   out.sort((a,b)=>(b.on-a.on)||(b.s-a.s));
   const best = {}; out.forEach(r=>{ best[r.k] = Math.max(best[r.k]||0, r.s); });
   const kinds = SORDER.filter(k=>best[k]).sort((a,b)=>best[b]-best[a]);
@@ -203,11 +210,14 @@ function initSearch(){
   const inp=$('#gsearch'), list=$('#gsearch-list');
   makeAC(inp, list, searchAll,
     (r,raw)=> (r.head?`<span class="achead">${r.head}</span>`:'') + (r.k==='step'
-      ? `<span class="accode st">${r.code}</span><span class="acname">${hlName(r.name,raw)}</span>`
-      : r.k==='comp' ? `<span class="accode cp">부품</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span><span class="ackind">${r.sys}</span>`
-      : r.k==='term' ? `<span class="accode tm">용어</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small>${r.why[1]}</small>`:''}</span>`
-      : `<span class="accode">${r.code}</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span>${chip(r.part)}`),
+      ? `<span class="accode st">${r.code}</span><span class="acname">${hlName(r.name,raw)}</span><span class="acpath">설계 › 단계</span>`
+      : ['comp','sys','goal','goalsub','tool','term'].includes(r.k) ? `<span class="accode ${r.k==='comp'||r.k==='sys'?'cp':'tm'}">${r.k==='comp'||r.k==='sys'?'<span class="dot" style="background:'+pc(r.part)+'"></span>':esc(r.k==='term'?'용어':r.code)}</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span><span class="acpath">${r.path}</span>`
+      : `<span class="accode">${r.code}</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span>${chip(r.part)}<span class="acpath">설계 › 항목 화면</span>`),
     r=>{ if(r.k==='step'){ openStep(r.id); return; }
+      if(r.k==='sys'){ openSys(r.id); return; }
+      if(r.k==='goal'){ openGoalPage(+r.id); return; }
+      if(r.k==='goalsub'){ const [mi,di]=r.id.split(':').map(Number); openGoalPage(mi, di); return; }
+      if(r.k==='tool'){ pushHist(); showTab('tools'); if(r.ready && typeof wbOpen==='function') wbOpen(r.id); else requestAnimationFrame(()=>{ const t=document.querySelector('#v-tools .tl-tools'); if(t) smoothScrollTo(()=>t.getBoundingClientRect().top+scrollY-120); }); return; }
       if(r.k==='comp'){ openSys(r.sys, r.id); return; }
       if(r.k==='term'){ pushHist(); showTab('ref'); const tr=document.getElementById(r.id); const d=tr&&tr.closest('details'); if(d) d.open=true; requestAnimationFrame(()=>{ if(tr){ smoothScrollTo(()=>tr.getBoundingClientRect().top+scrollY-innerHeight/3, ()=>markHere(tr)); } }); return; }
       if(TAB==='graph'){ pushHist(); selectItem(r.id,true); } else vtItem(r.id); });

@@ -3494,7 +3494,7 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 .tp-mt tr.tp-mine .tp-nmbtn{font-weight:400}
 
 /* 도움말 안내 창 (2026-11-25): 머리띠 [이 탭 사용법] 아래에 문의 창과 같은 모양으로, 꼭지가 버튼을 가리킴. 그동안 버튼은 테두리 강조 */
-#helpPop{position:fixed;z-index:70;width:340px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 12px 32px rgba(20,24,40,.22);font-size:var(--fs-s);transform-origin:top right}
+#helpPop{position:fixed;z-index:70;width:340px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 12px 32px rgba(20,24,40,.22);font-size:var(--fs-s)}   /* 기준점은 가운데 그대로 (popFrom 이 가운데 기준으로 거리 계산) */
 #helpPop::before{content:"";position:absolute;top:-7px;right:calc(var(--hp-ax,40px) - 7px);width:12px;height:12px;background:var(--panel);border-left:1px solid var(--line-2);border-top:1px solid var(--line-2);transform:rotate(45deg)}
 #helpPop .hpp-h{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--line)}
 #helpPop .fbp-x{border:0;background:none;font-size:var(--fs-xl);line-height:1;cursor:pointer;color:var(--muted)}
@@ -3737,3 +3737,9 @@ ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;bo
 .tv-edit label{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:4px 6px}
 .tv-edit label>.vchip{grid-column:1/-1;justify-self:start}
 .tv-edit input{height:30px}
+
+/* 검색 결과 (2026-11-25): 묶음 = 가는 곳(탭), 줄 끝 = 경로 */
+.aclist .acpath{flex:none;margin-left:auto;font-size:var(--fs-xs);color:var(--muted);white-space:nowrap;padding-left:8px}
+.aclist .accode.cp{background:none;color:inherit;padding:0;text-align:left}
+.aclist .accode.cp .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:4px}
+.aclist .accode.tm{font-size:var(--fs-xs);white-space:nowrap}
