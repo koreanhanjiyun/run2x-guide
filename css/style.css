@@ -3791,3 +3791,11 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 /* 대시보드 파트별 결과 카드: 폭이 제각각이라 줄 끝 · 아래에 빈칸 → 4칸 격자로 한 줄 */
 #dpart .wb-og{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:stretch}   /* 넓은 카드(코너웨이트)는 2칸 → 1·1·2·1 로 한 줄 */
 #dpart .wb-og>*{min-width:0;width:auto!important;max-width:none!important;flex:none!important}
+
+/* 세부 목표 카드 (2차): 위 = 글 | 그림(600 px), 아래 = 근거 · 판단 기준 · 관련 설계 항목 가로 3칸 */
+#v-start .gsub.has-fig .gs-grid{grid-template-columns:minmax(0,1fr) 600px;grid-template-areas:"main fig" "side side";gap:var(--sp-5) var(--sp-6)}
+#v-start .gsub.has-fig .gs-main{grid-area:main}
+#v-start .gsub.has-fig .gs-fig{grid-area:fig;align-self:center}
+#v-start .gsub.has-fig .gs-side{grid-area:side;flex-direction:row;gap:var(--sp-6);padding:var(--sp-4) 0 0;border-left:0;border-top:1px solid var(--line)}
+#v-start .gsub.has-fig .gs-side>div{flex:1;min-width:0}
+#v-start .gsub.has-fig .gs-side>div:last-child{flex:2}
