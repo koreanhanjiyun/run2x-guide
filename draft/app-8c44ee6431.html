@@ -3532,10 +3532,33 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 
 /* 진행 현황 · 시즌 요약 정리 (2026-11-25) */
 /* 누를 수 있는 것은 전부 같은 커서 표시: 옅은 보라 바탕 + 진한 글자 (단계 · 항목 이름 · 카드 목록 · 표 칸) */
-#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it){border-radius:4px;transition:background-color .12s,box-shadow .12s,color .12s}
-#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it):hover{background:#e2d5f1;box-shadow:0 0 0 4px #e2d5f1;color:#3f2560;text-decoration-color:#6A4294;text-decoration-thickness:2px}
+/* 글자 링크(단계 · 항목 이름): 늘 안쪽 여백을 두고(글자와 모서리 사이 6 px), 커서를 올리면 옅은 보라 바탕 + 진한 글자 + 굵은 보라 밑줄 */
+#v-team [data-ttp=progress] :is(.tt-mat th .lnk,.tt-row .tt-name){padding:2px 6px;margin:-2px -6px;border-radius:6px;transition:background-color .12s,color .12s}
+#v-team [data-ttp=progress] :is(.tt-mat th .lnk,.tt-row .tt-name):hover{background:#efe8f8;color:#3f2560;text-decoration-color:#6A4294;text-decoration-thickness:2px}
+/* 카드 목록: 단계 번호 + 제목 + 설명 줄이 한 버튼(한 덩어리). 커서를 올리면 덩어리 전체가 옅은 보라, 제목에 보라 밑줄 */
+#v-team .tt-card .adm-list{gap:2px}
+#v-team .tt-card .adm-list>*{flex:none}
+#v-team .tt-card .adm-it,#v-team .tt-card .adm-it.adm-qa{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:baseline;gap:0 8px;width:100%;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--ink);transition:background-color .12s}
+#v-team .tt-card .adm-it:hover{background:#efe8f8}
+#v-team .tt-card .adm-it .adm-tx{display:flex;flex-direction:column;min-width:0;gap:2px}
+#v-team .tt-card .adm-it .adm-why{display:block;padding:0;font-size:var(--fs-s);color:var(--muted);line-height:1.5}
+#v-team .tt-card .adm-it .adm-nm{text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
+#v-team .tt-card .adm-it:hover .adm-nm,#v-team .tt-card .adm-it:hover .adm-qk{color:#3f2560;text-decoration-color:#6A4294;text-decoration-thickness:2px}
 #v-team .tt-card .adm-it:hover>span:not(.adm-code),#v-team .tt-card .adm-it:hover .adm-qt{text-decoration:none}
-.tt-mat td.tt-c:hover{outline:0;background:#e2d5f1;color:#3f2560;box-shadow:inset 0 0 0 2px #6A4294}
+#v-team .tt-card .adm-it.adm-qa>span:not(.adm-code){grid-column:2}
+.tt-mat :is(td.tt-c,th.tt-ph){cursor:pointer}
+.tt-mat :is(td.tt-c,th.tt-ph):hover{outline:0;background:#efe8f8;color:#3f2560;box-shadow:inset 0 0 0 2px #6A4294}
+.tt-mat th.tt-ph.sel,.tt-mat th.tt-ph.sel:hover{background:var(--accent);color:#fff;box-shadow:none}
+/* 펼침 줄: 누른 줄 바로 아래, 꼭지가 누른 칸을 가리킴 */
+.tt-mat tr.tt-xrow>td{position:relative;padding:10px 8px 12px;border-left:0;border-right:0;background:#f7f4fb;text-align:left;white-space:normal}
+.tt-mat tr.tt-xrow .tt-xp{position:absolute;top:3px;left:calc(var(--xp,40px) - 7px);width:14px;height:14px;background:#fff;border-left:1px solid #cdbde3;border-top:1px solid #cdbde3;transform:rotate(45deg);z-index:1}
+.tt-mat tr.tt-xrow .tt-x{position:relative;overflow:hidden;background:#fff;border:1px solid #cdbde3;border-radius:8px;box-shadow:0 6px 18px rgba(40,20,70,.10)}
+.tt-x .tt-xh{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--line)}
+.tt-x .tt-xh b{font-size:var(--fs-m)}
+.tt-x .tt-xn{margin-left:8px;font-size:var(--fs-s)}
+.tt-x .tt-xx{margin-left:auto;border:0;background:none;font-size:var(--fs-xl);line-height:1;cursor:pointer;color:var(--muted)}
+.tt-x .tt-list{padding:4px 16px 8px;max-height:none}
+.tt-x .tt-row:last-child{border-bottom:0}
 #v-team .tt-row:hover{background:#faf8fd}
 .tt-mat td.sel,.tt-mat td.sel:hover{outline:0;background:var(--accent);color:#fff;box-shadow:none}
 .tt-mat td.sel b,.tt-mat td.sel i{color:#fff}
@@ -18827,15 +18850,16 @@ function admPreds(id){ return [...new Set(EDGES.filter(e=>e[1]===id).map(e=>e[0]
 function admSuccs(id){ return [...new Set(EDGES.filter(e=>e[0]===id).map(e=>e[1]))].filter(x=>IT[x]); }
 const admOk = id => STATUS[id]==='done' || STATUS[id]==='skip';
 const admOrd = (a,b)=>(SIDX[IT[a].s]-SIDX[IT[b].s])||(((ACT[a]||[99])[0])-((ACT[b]||[99])[0]));
-const admLnk = id => `<button class="lnk adm-it" data-goto="${id}"><span class="adm-code">${IT[id].s}</span>${IT[id].n}</button>`;
-function admList(ids, empty, max=60){ if(!ids.length) return `<p class="adm-empty">${empty}</p>`; ids=[...ids].sort(admOrd); return `<div class="adm-list">${ids.slice(0,max).map(admLnk).join('')}</div>`; }
+/* 카드 목록 한 덩어리: 단계 번호 + 제목 + (설명 줄). 설명까지 한 버튼이라 커서·누르기 범위가 같음 (2026-11-25) */
+const admLnk = (id, why) => `<button class="lnk adm-it" data-goto="${id}"><span class="adm-code">${IT[id].s}</span><span class="adm-tx"><span class="adm-nm">${IT[id].n}</span>${why?`<span class="adm-why">${why}</span>`:''}</span></button>`;
+function admList(ids, empty, max=60){ if(!ids.length) return `<p class="adm-empty">${empty}</p>`; ids=[...ids].sort(admOrd); return `<div class="adm-list">${ids.slice(0,max).map(id=>admLnk(id)).join('')}</div>`; }
 async function admRecent(el){ if(!el) return;
   if(!SH.on){ el.innerHTML='<p class="adm-empty">팀 공유 모드에서만 표시됩니다.</p>'; return; }
   const rows=Object.entries(SH.raw||{}).map(([did,d])=>[d&&d.item||did,d]).filter(([id,d])=>d && IT[id] && (d.season||LEGACY_SEASON)===SEASON && (d.season || (d.epoch||0)===SH.epoch) && d.at).sort((a,b)=>String(b[1].at).localeCompare(String(a[1].at))).slice(0,10);
   if(!rows.length){ el.innerHTML='<p class="adm-empty">이번 시즌 변경 기록이 없습니다.</p>'; return; }
   let ps={}; try{ const ids=[...new Set(rows.map(r=>r[1].by).filter(Boolean))]; if(SH.user && ids.length) ps=await SH.user.profiles(ids); }catch(e){}
   el.innerHTML=`<div class="adm-list">${rows.map(([id,d])=>{ const t=new Date(d.at); const who=(d.by&&ps[d.by]&&ps[d.by].name)||'팀원';
-    return admLnk(id)+`<div class="adm-why">${ST_LABEL[d.v]||d.v} · ${who} · ${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}</div>`; }).join('')}</div>`; }
+    return admLnk(id, `${ST_LABEL[d.v]||d.v} · ${who} · ${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`); }).join('')}</div>`; }
 </script>
 <script>
 /* ---------- 0.28.0 연결도 미니맵: 끌기·확대 중에만 표시, 손 떼면 1초 뒤 사라짐 (위에 마우스 있으면 유지) ---------- */
@@ -30517,43 +30541,41 @@ function ttProgress(el){
   const tot=ttCnt(all);
   /* 단계 × 파트 표 */
   const cellIds=(s,p)=>ITEMS.filter(i=>i.s===s && i.p===p).map(i=>i.id);
-  const mat=`<div class="tt-matw"><table class="tt-mat"><thead><tr><th class="tt-sc">단계</th>${parts.map(p=>`<th><span class="dot" style="background:${pc(p)}"></span>${p}</th>`).join('')}<th>전체</th></tr></thead><tbody>
+  const mat=`<div class="tt-matw"><table class="tt-mat"><thead><tr><th class="tt-sc">단계</th>${parts.map(p=>`<th class="tt-ph${TT.cell==='*|'+p?' sel':''}" data-ttcell="*|${p}" title="${p} 항목 모두 보기"><span class="dot" style="background:${pc(p)}"></span>${p}</th>`).join('')}<th>전체</th></tr></thead><tbody>${xrowAt('*')}
     ${STEPS.map(s=>{ const row=ITEMS.filter(i=>i.s===s.id).map(i=>i.id); const rc=ttCnt(row);
       return `<tr><th class="tt-sc"><button type="button" class="lnk" data-stepgo="${s.id}">${s.id}</button> <span class="muted">${esc(s.t.replace('★ ',''))}</span></th>${parts.map(p=>{ const ids=cellIds(s.id,p); if(!ids.length) return '<td class="tt-e"></td>'; const c=ttCnt(ids); const done=(c.n-c.k)>0 && c.d===(c.n-c.k);
         const sel = TT.cell===s.id+'|'+p;
-        return `<td class="tt-c${done?' done':''}${c.g?' doing':''}${sel?' sel':''}" data-ttcell="${s.id}|${p}" title="${s.id} · ${p}: 완료 ${c.d} · 진행 중 ${c.g} · 예정 ${c.t}${c.k?` · 제외 ${c.k}`:''}"><b>${c.d}</b>/${c.n-c.k}${c.k?`<i>-${c.k}</i>`:''}</td>`; }).join('')}<td class="tt-rt${(rc.n-rc.k)>0 && rc.d===(rc.n-rc.k)?' done':''}${rc.g?' doing':''}" title="${s.id} 전체: 완료 ${rc.d} · 진행 중 ${rc.g} · 예정 ${rc.t}${rc.k?` · 제외 ${rc.k}`:''}">${rc.d}/${rc.n-rc.k}</td></tr>`; }).join('')}
+        return `<td class="tt-c${done?' done':''}${c.g?' doing':''}${sel?' sel':''}" data-ttcell="${s.id}|${p}" title="${s.id} · ${p}: 완료 ${c.d} · 진행 중 ${c.g} · 예정 ${c.t}${c.k?` · 제외 ${c.k}`:''}"><b>${c.d}</b>/${c.n-c.k}${c.k?`<i>-${c.k}</i>`:''}</td>`; }).join('')}<td class="tt-c tt-rt${(rc.n-rc.k)>0 && rc.d===(rc.n-rc.k)?' done':''}${rc.g?' doing':''}${TT.cell===s.id+'|*'?' sel':''}" data-ttcell="${s.id}|*" title="${s.id} 전체: 완료 ${rc.d} · 진행 중 ${rc.g} · 예정 ${rc.t}${rc.k?` · 제외 ${rc.k}`:''}">${rc.d}/${rc.n-rc.k}</td></tr>${xrowAt(s.id)}`; }).join('')}
   </tbody></table></div>`;
-  /* 항목 목록 (표 칸·파트·단계로 거름) */
-  let ids=all; if(TT.cell){ const [s,p]=TT.cell.split('|'); ids=cellIds(s,p); } else { if(TT.part) ids=ids.filter(id=>IT[id].p===TT.part); if(TT.step) ids=ids.filter(id=>IT[id].s===TT.step); }
-  ids=[...ids].sort(admOrd);
-  const list=`<div class="tt-list">${ids.map(id=>{ const v=STATUS[id]||'todo', can=canEditItem(id), mt=SH.meta&&SH.meta[id];
+  /* 펼침 줄 (2026-11-25): 칸·파트 머리·전체 칸을 누르면 그 줄 바로 아래에 해당 항목이 펼쳐짐. 예전 맨 아래 목록을 대신함 */
+  function xIds(k){ const [s,p]=k.split('|'); return all.filter(id=>(s==='*'||IT[id].s===s) && (p==='*'||IT[id].p===p)).sort(admOrd); }
+  function xTitle(k){ const [s,p]=k.split('|'), st=STEPS.find(x=>x.id===s); const sn=st?`${st.id} ${esc(st.t.replace('★ ',''))}`:''; return s==='*' ? `${p} 항목 모두` : p==='*' ? `${sn} · 모든 파트` : `${sn} · ${p}`; }
+  function xrowAt(s){ if(!TT.cell || TT.cell.split('|')[0]!==s) return ''; const ids=xIds(TT.cell);
+    const rows=ids.map(id=>{ const v=STATUS[id]||'todo', can=canEditItem(id), mt=SH.meta&&SH.meta[id];
       return `<div class="tt-row"><span class="tt-code">${IT[id].s}</span><button type="button" class="lnk tt-name" data-goto="${id}">${IT[id].n}</button><span class="tt-part"><span class="dot" style="background:${pc(IT[id].p)}"></span>${IT[id].p}</span>
-        <span class="tt-st">${can ? `<span class="stctl" data-stid="${id}">${['todo','doing','done','skip'].map(k=>`<button class="stbtn st-${k}" data-st="${k}" aria-pressed="${v===k}">${ST_LABEL[k]}</button>`).join('')}</span>` : `<span class="ipill${v!=='todo'?' st-'+v:''}">${v==='skip'?'제외':ST_LABEL[v]}</span>`}</span>
-        <span class="muted tt-meta">${mt&&mt.at?ttFmt(mt.at):''}</span></div>`; }).join('') || '<p class="adm-empty">해당하는 항목이 없습니다.</p>'}</div>`;
+        <span class="tt-st">${can ? `<span class="stctl" data-stid="${id}">${['todo','doing','done','skip'].map(k=>`<button class="stbtn st-${k}" data-st="${k}" aria-pressed="${v===k}">${ST_LABEL[k]}</button>`).join('')}</span>` : `<span class="ipill st-${v}">${v==='skip'?'제외':ST_LABEL[v]}</span>`}</span>
+        <span class="muted tt-meta">${mt&&mt.at?ttFmt(mt.at):''}</span></div>`; }).join('');
+    return `<tr class="tt-xrow"><td colspan="${parts.length+2}"><i class="tt-xp" aria-hidden="true"></i><div class="tt-x"><div class="tt-xh"><b>${xTitle(TT.cell)}</b><span class="adm-n">${ids.length}</span>${editor?`<span class="muted tt-xn">바꾼 상태는 아래 막대의 [모두 저장]을 눌러야 팀에 저장됩니다.${isLeadRole(SH.role)&&!SH.canAdmin?' 팀장·파트장은 담당 파트만 바꿀 수 있습니다.':''}</span>`:''}<button type="button" class="tt-xx" data-ttclear aria-label="닫기" title="닫기 (Esc)">×</button></div><div class="tt-list">${rows||'<p class="adm-empty">해당하는 항목이 없습니다.</p>'}</div></div></td></tr>`; }
   const qs=Object.entries(QA||{}).filter(([k,q])=>isTalk(q) && !q.removed && IT[q.item]).sort((x,y)=>String(y[1].at).localeCompare(String(x[1].at))).slice(0,8);
   const box=(t,hint,body,n)=>`<section class="tt-card"><h3 aria-level="2">${t}${n!=null?` <span class="adm-n">${n}</span>`:''}</h3>${hint?`<p class="adm-hint">${hint}</p>`:''}${body}</section>`;
   el.innerHTML = `
+    <section class="tt-card tt-matc"><h3 aria-level="2">단계 × 파트 <span class="muted">칸 · 파트 이름 · 전체 칸을 누르면 그 아래에 항목이 펼쳐집니다</span></h3>${mat}</section>
     <div class="tt-top">
       <section class="tt-card tt-sum"><h3 aria-level="2">진행 요약 <span class="muted">${tot.d}/${tot.n-tot.k} 완료${tot.g?` · 진행 중 ${tot.g}`:''}${tot.k?` · 제외 ${tot.k}`:''}</span></h3>
         <div class="tt-bars"><div class="adm-pr"><span class="adm-pl"><b>전체</b></span>${ttBar(tot)}<span class="adm-pv">${tot.d}/${tot.n-tot.k}</span></div>${parts.map(p=>{ const c=ttCnt(all.filter(id=>IT[id].p===p)); return `<div class="adm-pr"><span class="adm-pl"><span class="dot" style="background:${pc(p)}"></span>${p}</span>${ttBar(c)}<span class="adm-pv">${c.d}/${c.n-c.k}</span></div>`; }).join('')}</div></section>
       <div class="tt-cards">
         ${box('착수 가능','받는 정보가 모두 완료·제외인데 아직 예정인 항목', admList(ready,'없습니다.',12), ready.length)}
-        ${box('선행 미완료 경고','진행 중인데 선행 항목이 아직 끝나지 않은 항목', warn.length?`<div class="adm-list">${[...warn].sort(admOrd).slice(0,12).map(id=>admLnk(id)+`<div class="adm-why">미완료 선행: ${admPreds(id).filter(x=>!admOk(x)).map(x=>IT[x].n).join(', ')}</div>`).join('')}</div>`:'<p class="adm-empty">없습니다.</p>', warn.length)}
-        ${box('제외 영향','제외한 항목과 그 결과를 받는 항목', skips.length?`<div class="adm-list">${[...skips].sort(admOrd).map(id=>{ const s=admSuccs(id).filter(x=>STATUS[x]!=='skip'); return admLnk(id)+`<div class="adm-why">${s.length?'영향: '+s.map(x=>IT[x].n).join(', '):'영향받는 항목 없음'}</div>`; }).join('')}</div>`:'<p class="adm-empty">제외한 항목이 없습니다.</p>', skips.length)}
+        ${box('선행 미완료 경고','진행 중인데 선행 항목이 아직 끝나지 않은 항목', warn.length?`<div class="adm-list">${[...warn].sort(admOrd).slice(0,12).map(id=>admLnk(id, `미완료 선행: ${admPreds(id).filter(x=>!admOk(x)).map(x=>IT[x].n).join(', ')}`)).join('')}</div>`:'<p class="adm-empty">없습니다.</p>', warn.length)}
+        ${box('제외 영향','제외한 항목과 그 결과를 받는 항목', skips.length?`<div class="adm-list">${[...skips].sort(admOrd).map(id=>{ const s=admSuccs(id).filter(x=>STATUS[x]!=='skip'); return admLnk(id, s.length?'영향: '+s.map(x=>IT[x].n).join(', '):'영향받는 항목 없음'); }).join('')}</div>`:'<p class="adm-empty">제외한 항목이 없습니다.</p>', skips.length)}
         ${box('최근 변경','', '<div data-l="recent"></div>')}
         ${box('최근 논의','', qs.length?`<div class="adm-list">${qs.map(([k,q])=>`<button class="lnk adm-it adm-qa" data-tkgo="${q.item}" data-qid="${esc(k)}"><span class="adm-code">${IT[q.item].s}</span><span class="adm-qk">${esc(IT[q.item].n)}</span><span class="adm-qt">${q.parent?'↳ ':''}${esc((q.text||'').slice(0,40))}</span></button>`).join('')}</div>`:'<p class="adm-empty">없습니다.</p>')}
         ${box('우리 팀 값 입력 현황', `입력 ${vids.length-miss.length} / ${vids.length}`, admList(miss,'모두 입력했습니다.',12), miss.length)}
       </div>
     </div>
-    <section class="tt-card"><h3 aria-level="2">단계 × 파트 <span class="muted">칸을 누르면 아래 목록이 그 칸의 항목으로 바뀝니다</span></h3>${mat}</section>
-    <section class="tt-card"><h3 aria-level="2">항목 ${editor?'· 진행 상태 바꾸기':''} <span class="adm-n">${ids.length}</span></h3>
-      <div class="tt-filter">${TT.cell?`<span class="tt-chip">${TT.cell.replace('|',' · ')} <button type="button" class="lnk" data-ttclear>전체 보기</button></span>`:`
-        <select data-ttf="part" aria-label="파트"><option value="">파트 전체</option>${parts.map(p=>`<option${p===TT.part?' selected':''}>${p}</option>`).join('')}</select>
-        <select data-ttf="step" aria-label="단계"><option value="">단계 전체</option>${STEPS.map(s=>`<option value="${s.id}"${s.id===TT.step?' selected':''}>${s.id} ${esc(s.t.replace('★ ',''))}</option>`).join('')}</select>`}
-        ${editor?`<span class="muted">바꾼 상태는 아래 막대의 [모두 저장]을 눌러야 팀에 저장됩니다.${isLeadRole(SH.role)&&!SH.canAdmin?' 팀장·파트장은 담당 파트만 바꿀 수 있습니다.':''}</span>`:''}</div>
-      ${list}</section>`;
+`;
   admRecent(el.querySelector('[data-l="recent"]'));
   try{ refreshStatus(); }catch(e){}
+  if(TT.cell) requestAnimationFrame(()=>{ try{ ttXPoint(); }catch(e){} });
 }
 
 /* ---------- 시즌 요약 (A5) ---------- */
@@ -30600,12 +30622,25 @@ let TTRAF=0; const ttSoon=()=>{ if(TAB!=='team' || TTRAF || window.__ttRendering
 
 document.addEventListener('click', e=>{
   const s=e.target.closest('[data-tts]'); if(s){ e.preventDefault(); TT.sub=s.dataset.tts; TT.picked=1; SETP('ttsub',TT.sub); renderTeamTab(); return; }
-  const c=e.target.closest('[data-ttcell]'); if(c){ e.preventDefault(); TT.cell = TT.cell===c.dataset.ttcell ? null : c.dataset.ttcell; renderTeamTab(true); const l=document.querySelector('#v-team .tt-list'); if(l && TT.cell){ const r=l.getBoundingClientRect(), tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; if(r.top<tabh || r.bottom>innerHeight) smoothScrollTo(()=>l.getBoundingClientRect().top+scrollY-tabh-12); } return; }
-  if(e.target.closest('[data-ttclear]')){ e.preventDefault(); TT.cell=null; renderTeamTab(true); return; }
+  const c=e.target.closest('[data-ttcell]'); if(c){ e.preventDefault(); ttX(c.dataset.ttcell); return; }
+  if(e.target.closest('[data-ttclear]')){ e.preventDefault(); ttX(null); return; }
   const sn=e.target.closest('[data-ttsn]'); if(sn){ e.preventDefault(); const d=+sn.dataset.ttsn; setSeason(String(+SEASON+d), d); return; }
   if(e.target.closest('[data-ttprint]')){ e.preventDefault(); document.body.classList.add('print-report'); try{ window.print(); }finally{ setTimeout(()=>document.body.classList.remove('print-report'), 500); } return; }
 });
-document.addEventListener('change', e=>{ const f=e.target.closest && e.target.closest('[data-ttf]'); if(!f) return; TT[f.dataset.ttf]=f.value; TT.cell=null; renderTeamTab(true); });
+/* 펼침 줄 열기·바꾸기·닫기: 높이가 0에서 커지며 열리고(260 ms), 닫을 때 거꾸로. 꼭지는 누른 칸 가운데를 가리킴. 다 안 보이면 펼침이 보이게 스크롤 */
+function ttXAnim(open){ const x=document.querySelector('#v-team .tt-x'); if(!x || !x.animate) return null; const h=x.offsetHeight;
+  return x.animate(open ? [{height:'0px',opacity:0},{height:h+'px',opacity:1}] : [{height:h+'px',opacity:1},{height:'0px',opacity:0}], {duration:open?260:200, easing:open?'cubic-bezier(.25,.7,.5,1)':'cubic-bezier(.5,0,.75,.3)'}); }
+function ttXPoint(){ const x=document.querySelector('#v-team .tt-x'); if(!x||!TT.cell) return; const c=document.querySelector(`#v-team .tt-mat [data-ttcell="${CSS.escape(TT.cell)}"]`); if(!c) return;
+  const td=x.parentNode, a=c.getBoundingClientRect(), b=td.getBoundingClientRect(); td.style.setProperty('--xp', Math.max(20, Math.min(b.width-20, a.left+a.width/2-b.left))+'px'); }
+function ttX(k){ const cur=TT.cell; if(k===cur) k=null;
+  const go=()=>{ TT.cell=k; renderTeamTab(true); if(!k) return; ttXPoint(); const a=ttXAnim(true);
+    const x=document.querySelector('#v-team .tt-x'); if(!x) return; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50;
+    const end=()=>{ const r=x.getBoundingClientRect(); if(r.bottom>innerHeight-16 || r.top<tabh) smoothScrollTo(()=>Math.min(x.getBoundingClientRect().top+scrollY-tabh-120, x.getBoundingClientRect().bottom+scrollY-innerHeight+24 > 0 ? x.getBoundingClientRect().bottom+scrollY-innerHeight+24 : scrollY)); };
+    if(a) a.onfinish=end; else end(); };
+  if(cur){ const a=ttXAnim(false); if(a){ a.onfinish=go; return; } }
+  go(); }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && TAB==='team' && TT.cell && !(typeof TR!=='undefined' && TR)) ttX(null); });
+addEventListener('resize', ()=>{ if(TAB==='team') ttXPoint(); });
 /* 팀 정보가 준비되면 팀 탭 머리글·메뉴 갱신 */
 if(window.Backend && Backend.kind()==='firebase'){ Backend.Team.ctx().then(c=>{ TT.ctx=c; if(TAB==='team') renderTeamTab(true); }).catch(()=>{}); }
 { const _am=applyModes; applyModes=function(){ const r=_am.apply(this,arguments); try{ if(TAB==='team') renderTeamTab(true); }catch(e){} return r; }; }
@@ -31022,12 +31057,9 @@ const TOUR = {
  team_common: [
   ['#v-team .tt-nav','팀 메뉴',()=>'진행 현황 · 시즌 요약 · 대회 점수 · 팀원·계정'+((SH.on&&SH.canAdmin)?', 회장은 팀 설정까지 있습니다. 팀 설정 사용법은 팀 설정 화면에서 [이 탭 사용법]을 누르면 따로 나옵니다.':'입니다.'),{tab:'team',sub:'progress',union:'button:not([hidden])',pic:PIC.roles}],
   ['#v-team .tt-season','보는 시즌','‹ ›로 지난 시즌을 봅니다. 내 화면만 바뀌고, 진행 현황·시즌 요약·팀원 명단이 모두 그 시즌으로 바뀝니다. 지난 시즌을 보는 동안은 주황 띠가 뜹니다.',{tab:'team',sub:'progress'}],
+  ['#v-team .tt-matc','단계 × 파트',()=>'칸마다 완료/전체 항목 수입니다. 칸 · 파트 이름 · 전체 칸을 누르면 그 줄 아래에 해당 항목이 펼쳐지고, 항목 이름을 누르면 설계 탭의 그 항목으로 갑니다. '+((SH.on && SH.canAdmin) ? '회장은 펼친 곳에서 진행 상태(예정·진행 중·완료·제외)를 바로 바꾸고 아래 막대의 [모두 저장]으로 저장합니다.' : (SH.on && isLeadRole(SH.role)) ? '담당 파트 항목은 펼친 곳에서 진행 상태를 바꾸고 아래 막대의 [모두 저장]으로 저장합니다.' : '진행 상태는 담당 팀장·파트장과 회장이 바꿉니다.'),{tab:'team',sub:'progress'}],
   ['#v-team .tt-sum','진행 요약','파트별 완료 비율입니다.',{tab:'team',sub:'progress'}],
   ['#v-team .tt-cards','바로 볼 것','착수 가능(앞 항목이 끝나 시작해도 되는 것) · 선행 미완료 경고 · 제외 영향 · 최근 변경 · 최근 논의 · 우리 팀 값 입력 현황입니다.',{tab:'team',sub:'progress'}],
-  ['#v-team .tt-card:has(.tt-mat)','단계 × 파트','칸마다 완료/전체 항목 수입니다. 칸을 누르면 아래 목록이 그 칸의 항목으로 바뀝니다.',{tab:'team',sub:'progress'}],
-  ['#v-team .tt-card:has(.tt-list)','항목 목록',()=> (SH.on && SH.canAdmin) ? '항목 이름을 누르면 설계 탭의 그 항목으로 갑니다. 회장은 모든 항목의 진행 상태(예정·진행 중·완료·제외)를 여기서 바로 바꾸고, 아래 막대의 [모두 저장]으로 저장합니다.'
-     : (SH.on && isLeadRole(SH.role)) ? '항목 이름을 누르면 설계 탭의 그 항목으로 갑니다. 담당 파트 항목은 진행 상태(예정·진행 중·완료·제외)를 여기서 바로 바꾸고, 아래 막대의 [모두 저장]으로 저장합니다.'
-     : '항목 이름을 누르면 설계 탭의 그 항목으로 갑니다. 진행 상태는 담당 팀장·파트장과 회장이 바꿉니다.',{tab:'team',sub:'progress'}],
   ['#v-team [data-ttp=summary] .tt-report','시즌 요약','진행 상태·우리 팀 값·논의를 자동으로 모은 읽기 전용 페이지입니다. 인수인계 때 그대로 보여 주면 됩니다.',{tab:'team',sub:'summary'}],
   ['#v-team #fsRec','대회 점수','FS 종목별 배점과 우리 팀의 지난 기록입니다. 고른 시즌을 가운데에 두고 앞뒤 시즌과 비교합니다.',{tab:'team',sub:'score'}],
   ['#v-team #teamPanel .tp-s-me','내 계정','로그인한 구글 계정입니다. 이메일은 기본으로 가려져 있고 [보기]로 잠깐 봅니다. [로그아웃]도 여기 있습니다.',{tab:'team',sub:'account'}],
