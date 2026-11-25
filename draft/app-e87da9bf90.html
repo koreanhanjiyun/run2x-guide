@@ -20173,7 +20173,7 @@ const GS = (() => {
   const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" font-size="${o.fs || 12.5}"${o.a ? ` text-anchor="${o.a}"` : ''} fill="${o.c || 'var(--ink-2)'}"${o.b ? ' font-weight="600"' : ''}>${s}</text>`;
   const sub = s => `<tspan baseline-shift="sub" font-size="9.5">${s}</tspan>`;
   const ACC = 'var(--accent)', ORG = '#c2410c', GRN = '#2b7a30';
-  const defs = `<defs>${[['gsA', 'var(--ink-2)'], ['gsB', ACC], ['gsO', ORG], ['gsG', GRN]].map(([id, c]) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')}<marker id="gsBs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto"><path d="M0 0L10 5L0 10z" fill="${ACC}"/></marker>
+  const defs = `<defs>${[['gsA', 'var(--ink-2)'], ['gsB', ACC], ['gsO', ORG], ['gsG', GRN]].map(([id, c]) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')}<marker id="gsBs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto"><path d="M0 0L10 5L0 10z" fill="${ACC}"/></marker><marker id="gsAs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink)"/></marker>
     <pattern id="gsH" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V6" stroke="#9aa3b5" stroke-width="2"/></pattern></defs>`;
   const svg = (body, lab, w = 400, h = 250) => `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${lab}">${defs}${body}</svg>`;
   const ax = (x0, y0, x1, y1, xl, yl) => `<path d="M${x0} ${y0}H${x1}" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#gsA)"/><path d="M${x0} ${y0}V${y1}" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#gsA)"/>`
@@ -20239,17 +20239,16 @@ const GS = (() => {
   /* 그림 안 글은 짧은 이름표만 (식 · 예시 · 숫자 · 그림 설명 문장 없음). 마찰 타원은 ① ② ④ 에서 같은 모양 */
   const feAx = (cx, cy, k, lab) => { const rx = FE.ay * k, ru = FE.ax * k, rd = FE.br * k;
     return `<path d="M${cx - rx - 12} ${cy}H${cx + rx + 12}M${cx} ${cy - ru - 12}V${cy + rd + 12}" stroke="var(--line-2)"/>`
-      + (lab ? T(cx, cy - ru - 18, '+ 가속', {a: 'middle', c: 'var(--muted)', fs: 11}) + T(cx, cy + rd + 26, '− 제동', {a: 'middle', c: 'var(--muted)', fs: 11}) + T(cx + rx + 16, cy + 4, '선회', {c: 'var(--muted)', fs: 11})
-        + (lab === 2 ? T(8, 18, '세로 = 앞뒤 가속도 [g]', {c: 'var(--muted)', fs: 10.5}) + T(8, 34, '가로 = 옆 가속도 [g]', {c: 'var(--muted)', fs: 10.5}) : '') : ''); };
+      + (lab ? T(cx, cy - ru - 18, '앞뒤 가속도 [g] (+ 가속)', {a: 'middle', c: 'var(--muted)', fs: 11}) + T(cx, cy + rd + 26, '− 제동', {a: 'middle', c: 'var(--muted)', fs: 11}) + T(cx + rx + 16, cy + 4, '옆 가속도 [g]', {c: 'var(--muted)', fs: 11}) : ''); };
   const tireIcon = (x, g, deg, col, w0, w1) => `<g transform="rotate(${deg} ${x} ${g})"><rect x="${x - 16}" y="${g - 76}" width="32" height="76" rx="10" fill="#2a2f38"/><rect x="${x - 14}" y="${g - 56}" width="28" height="36" rx="2" fill="#5b6270"/></g>`
     + `<path d="M${x - 30} ${g}H${x + 30}" stroke="var(--ink-2)" stroke-width="1.3"/><path d="M${x + w0} ${g + 4}H${x + w1}" stroke="${col}" stroke-width="4"/>`;
   return [
   /* ① 기계적 그립: 캠버가 맞으면 접지면 전체 → 큰 타원, 틀어지면 접지면 한쪽 → 작은 타원. 같은 방향으로 낼 수 있는 힘(화살표)도 작아짐. 타이어 그림과 타원은 같은 색 · 선으로 이음 */
   () => { const cx = 190, cy = 140, kA = 56, kB = 40, [ex, ey] = fePt(cx, cy, kA, 36), [fx, fy] = fePt(cx, cy, kB, 36);
-    const tA = [440, 196], tB = [540, 196], [px, py] = fePt(cx, cy, kA, -8), [qx, qy] = fePt(cx, cy, kB, -30);
+    const tA = [440, 196], tB = [540, 196], [px, py] = fePt(cx, cy, kA, -30), [qx, qy] = fePt(cx, cy, kB, -50);
     return svg(feAx(cx, cy, kA, 2) + `<path d="${fePath(cx, cy, kA)}" fill="none" stroke="var(--ink)" stroke-width="2.2"/><path d="${fePath(cx, cy, kB)}" fill="none" stroke="${ORG}" stroke-width="2.2" stroke-dasharray="6 4"/>`
       + arr(cx, cy, ex, ey, 'var(--ink)', 'gsA', 2.4) + arr(cx, cy, fx, fy, ORG, 'gsO', 2.6).replace('/>', ' stroke-dasharray="6 3"/>')
-      + `<path d="M${px} ${py}C${px + 90} ${py + 10} ${tA[0] - 70} ${tA[1] - 120} ${tA[0]} ${tA[1] - 82}" fill="none" stroke="var(--ink)" stroke-width="1.4"/>`
+      + `<path d="M${px} ${py}C${px + 50} ${py + 30} ${tA[0] - 60} ${tA[1] - 30} ${tA[0] - 18} ${tA[1] - 38}" fill="none" stroke="var(--ink)" stroke-width="1.4"/>`
       + `<path d="M${qx} ${qy}C${qx + 120} ${qy + 60} ${tB[0] - 60} ${tB[1] + 60} ${tB[0]} ${tB[1] + 8}" fill="none" stroke="${ORG}" stroke-width="1.4" stroke-dasharray="5 4"/>`
       + tireIcon(tA[0], tA[1], 0, 'var(--ink)', -15, 15) + T(tA[0], tA[1] + 26, '캠버 맞음', {a: 'middle', fs: 11.5, b: 1})
       + tireIcon(tB[0], tB[1], 9, ORG, 2, 16) + T(tB[0], tB[1] + 26, '캠버 틀어짐', {a: 'middle', fs: 11.5, c: ORG, b: 1}),
@@ -20260,7 +20259,6 @@ const GS = (() => {
     let best = 0, bv = -9; for (let i = 0; i <= 200; i++) { const d = i / 200; if (n(d) > bv) { bv = n(d); best = d; } }
     return svg(feAx(cx, cy, 44, true) + `<path d="${fePath(cx, cy, 44)}" fill="none" stroke="${GRN}" stroke-width="1.8" stroke-dasharray="5 4"/><path d="${fePath(cx, cy, 32)}" fill="none" stroke="var(--ink)" stroke-width="1.8"/>`
       + (() => { const [ax1, ay1] = fePt(cx, cy, 44, 36), [ax0, ay0] = fePt(cx, cy, 32, 36); return arr(cx, cy, ax1, ay1, GRN, 'gsG', 2.6).replace('/>', ' stroke-dasharray="6 3"/>') + arr(cx, cy, ax0, ay0, 'var(--ink)', 'gsA', 2.4); })()
-      + T(8, 18, '검정 = 다운포스 없음', {c: 'var(--muted)', fs: 10.5}) + T(8, 34, '초록 = 다운포스로 늘어난 그립', {c: GRN, fs: 10.5})
       + `<path d="M${X(0)} ${Y(0)}H${X(1) + 10}" stroke="var(--ink-2)" stroke-width="1.2" marker-end="url(#gsA)"/><path d="M${X(0)} ${Y(-1.25)}V${Y(1.1)}" stroke="var(--ink-2)" stroke-width="1.2" marker-end="url(#gsA)"/>`
       + T(X(1) + 16, Y(0) + 4, '다운포스', {c: 'var(--muted)', fs: 11}) + T(X(0) + 6, Y(1.1) - 4, '랩타임 이득', {c: 'var(--muted)', fs: 11})
       + `<path d="${pts(g, 0, 1, 60, X, Y)}" fill="none" stroke="${GRN}" stroke-width="2"/><path d="${pts(v => -l(v), 0, 1, 60, X, Y)}" fill="none" stroke="${ORG}" stroke-width="2"/>`
@@ -20284,17 +20282,19 @@ const GS = (() => {
   () => { const kI = 22, kO = 36, fyS = .62, panel = (x0, lab, lsd) => { const ci = [x0 + 62, 108], co = [x0 + 202, 108];
       const lim = k => FE.ax * k * Math.sqrt(1 - fyS * fyS), fyI = fyS * FE.ay * kI, fyO = fyS * FE.ay * kO, dI = lim(kI), dO = lsd ? lim(kO) : dI;
       const wheel = (c, k, fy, d) => `<path d="${fePath(c[0], c[1], k)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6"/><path d="M${c[0] - FE.ay * k - 6} ${c[1]}H${c[0] + FE.ay * k + 6}M${c[0]} ${c[1] - FE.ax * k - 6}V${c[1] + FE.br * k + 6}" stroke="var(--line-2)"/>`
-        + `<path d="M${c[0]} ${c[1]}h${-fy}" stroke="#8a8f99" stroke-width="2" stroke-dasharray="4 3"/>` + arr(c[0] - fy, c[1], c[0] - fy, c[1] - d, ACC, 'gsBs', 3.2) + `<path d="M${c[0]} ${c[1]}L${c[0] - fy} ${c[1] - d}" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="3 3"/>`;
+        + T(c[0] + FE.ay * k + 8, c[1] + 4, 'F' + sub('y'), {fs: 10.5, c: 'var(--muted)'}) + T(c[0] + 4, c[1] - FE.ax * k - 8, 'F' + sub('x'), {fs: 10.5, c: 'var(--muted)'})
+        + `<path d="M${c[0] - fy} ${c[1]}V${c[1] - d}H${c[0]}" fill="none" stroke="var(--line-2)" stroke-dasharray="3 3"/>`
+        + arr(c[0], c[1], c[0] - fy, c[1], '#8a8f99', 'gsAs', 2.2) + arr(c[0], c[1], c[0], c[1] - d, ACC, 'gsBs', 3.2) + arr(c[0], c[1], c[0] - fy, c[1] - d, 'var(--ink)', 'gsAs', 2);
       const g = 200, wI = x0 + 62, wO = x0 + 202;
       return T(x0 + 132, 22, lab, {a: 'middle', b: 1}) + wheel(ci, kI, fyI, dI) + wheel(co, kO, fyO, dO)
-        + (lsd ? '' : (() => { const lo = lim(kO); return `<path d="M${co[0] - fyO} ${co[1] - dI - 2}V${co[1] - lo}" stroke="${ORG}" stroke-width="3"/>` + T(co[0] - fyO + 6, co[1] - lo - 4, '남는 그립', {c: ORG, fs: 11}); })())
+        + (lsd ? '' : (() => { const lo = lim(kO); return `<path d="M${co[0]} ${co[1] - dI - 2}V${co[1] - lo}" stroke="${ORG}" stroke-width="3"/>` + T(co[0] + 6, co[1] - dI - 4, '남는 그립', {c: ORG, fs: 11}); })())
         + `<path d="M${wI} ${g - 26}H${wO}" stroke="var(--ink-2)" stroke-width="2.4"/><rect x="${(wI + wO) / 2 - 13}" y="${g - 38}" width="26" height="24" rx="4" fill="var(--panel)" stroke="var(--ink-2)" stroke-width="1.4"/>`
         + T((wI + wO) / 2, g - 21, lsd ? 'LSD' : '오픈', {a: 'middle', fs: 9.5, b: 1})
         + `<rect x="${wI - 11}" y="${g - 50}" width="22" height="50" rx="7" fill="#2a2f38"/><rect x="${wO - 13}" y="${g - 50}" width="26" height="50" rx="7" fill="#2a2f38"/><path d="M${x0 + 10} ${g}H${x0 + 260}" stroke="var(--ink-2)"/>`
         + T(wI, g + 16, '안쪽', {a: 'middle', fs: 11}) + T(wO, g + 16, '바깥', {a: 'middle', fs: 11})
         + T(x0 + 132, g + 38, lsd ? '바깥에 더 → 두 바퀴 모두 한계까지' : '구동 힘 같음 → 약한 바퀴만큼만', {a: 'middle', fs: 11.5, c: lsd ? GRN : ORG, b: 1}); };
     return svg(panel(14, '오픈 디퍼렌셜', false) + panel(318, 'LSD', true) + `<path d="M300 30V230" stroke="var(--line)"/>`
-      + `<path d="M210 262h18" stroke="#8a8f99" stroke-width="2" stroke-dasharray="4 3"/>` + T(232, 266, '선회 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M290 262h18" stroke="${ACC}" stroke-width="3.2"/>` + T(312, 266, '구동 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M370 262h18" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="3 3"/>` + T(392, 266, '합력', {fs: 10.5, c: 'var(--muted)'}),
+      + `<path d="M210 262h18" stroke="#8a8f99" stroke-width="2.2"/>` + T(232, 266, '선회 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M290 262h18" stroke="${ACC}" stroke-width="3.2"/>` + T(312, 266, '구동 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M370 262h18" stroke="var(--ink)" stroke-width="2"/>` + T(392, 266, '합력', {fs: 10.5, c: 'var(--muted)'}) + T(590, 266, 'F = 바퀴 힘 [N]', {a: 'end', fs: 10.5, c: 'var(--muted)'}),
       '④ 구동력 전달: 코너 탈출에서 안쪽 뒷바퀴는 하중이 적어 마찰 타원이 작음. 오픈 디퍼렌셜은 두 바퀴에 같은 구동 힘만 보내 바깥 바퀴 그립이 남고, LSD는 바깥 바퀴도 한계까지 씀', 600, 276); },
   /* ⑤ 가볍게 · 낮게: 같은 차체, CG 높이만 다름. 높으면 바깥 바퀴로 더 쏠리고 안쪽 바퀴 하중이 크게 줄어듦 (화살표 길이 ∝ 바퀴 하중, 쏠림 비율 = 선회 가속 × CG 높이 / 트레드) */
   () => { const s = .14, ay = 1.0, k = 125, G = 196, one = (x, hcg, lab, note) => { const c = car({x, g: G, s}), dF = ay * hcg / HP.t;
