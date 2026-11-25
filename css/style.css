@@ -3743,3 +3743,20 @@ ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;bo
 .aclist .accode.cp{background:none;color:inherit;padding:0;text-align:left}
 .aclist .accode.cp .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:4px}
 .aclist .accode.tm{font-size:var(--fs-xs);white-space:nowrap}
+
+/* 상단 검색 목록 (2026-11-25): 머리 줄 분리 · 결과는 한 줄 32 px · 위 거르기 칩 · 폭 640 px */
+#gsearch-list{width:640px;max-height:70vh;padding:0 4px 4px}
+#gsearch-list .acfilt{position:sticky;top:0;z-index:1;display:flex;gap:4px;flex-wrap:wrap;padding:8px 4px 6px;background:#fff;border-bottom:1px solid var(--line)}
+#gsearch-list .acfilt button{font:inherit;font-size:var(--fs-xs);font-weight:600;padding:2px 10px;border:1px solid var(--line-2);border-radius:999px;background:#fff;color:var(--ink-2);cursor:pointer}
+#gsearch-list .acfilt button span{color:var(--muted);font-weight:400;margin-left:2px}
+#gsearch-list .acfilt button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+#gsearch-list .acfilt button[aria-pressed=true] span{color:#e9e2f5}
+#gsearch-list .achead2{font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em;padding:10px 8px 2px}
+#gsearch-list .acrow{height:32px;padding:0 8px;gap:8px;border-radius:6px;flex-wrap:nowrap}
+#gsearch-list .acrow .accode{min-width:46px;font-size:var(--fs-xs)}
+#gsearch-list .acname{flex-direction:row;align-items:baseline;gap:8px;white-space:nowrap;overflow:hidden}
+#gsearch-list .acname .acn{display:inline;flex:none;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gsearch-list .acname small{flex:1;min-width:0;font-size:var(--fs-xs)}
+#gsearch-list .acrow .chip{font-size:var(--fs-xs);padding:0 6px;line-height:18px}
+#gsearch-list .acrow.acmore{height:28px;color:#5b3fa0;font-size:var(--fs-xs);font-weight:600}
+#gsearch-list .acrow.acmore .acmore-t{padding-left:54px}

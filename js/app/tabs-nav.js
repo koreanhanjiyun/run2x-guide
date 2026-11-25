@@ -165,10 +165,20 @@ function searchAll(raw){ searchMore(); const q=norm(raw); if(!q) return [];
     if(s===0){ for(const [lab,t] of e.extra){ const v=mscore(t,q,40); if(v>s){ s=v; why=[lab,stripT(t).slice(0,80)]; } } }
     if(s>0){ const on = !PSET.size || !e.part || PSET.has(e.part); out.push({...e, s:s+(e.k==='item'?2:0), on, why}); } }
   out.sort((a,b)=>(b.on-a.on)||(b.s-a.s));
+  /* 2026-11-25 목록 다시 짬: 위 거르기 칩(전체 · 설계 · 시작 · 도구 · 참고, 개수), 전체 보기는 카테고리당 4줄 + [n개 더 보기], 칩으로 고르면 그 탭 전부 */
+  if(raw!==SLASTQ){ SLASTQ=raw; SFILT='all'; SOPEN.clear(); }
+  SCOUNT = {all:out.length}; out.forEach(r=>{ const t=STAB[r.k]; SCOUNT[t]=(SCOUNT[t]||0)+1; });
+  if(SFILT!=='all' && !SCOUNT[SFILT]) SFILT='all';
   const best = {}; out.forEach(r=>{ best[r.k] = Math.max(best[r.k]||0, r.s); });
-  const kinds = SORDER.filter(k=>best[k]).sort((a,b)=>best[b]-best[a]);
-  const res=[]; kinds.forEach(k=>{ out.filter(r=>r.k===k).slice(0, k==='item'?10:6).forEach((r,i)=>res.push({...r, head: i===0 ? SKIND[k] : ''})); });
+  const kinds = SORDER.filter(k=>best[k] && (SFILT==='all' || STAB[k]===SFILT)).sort((a,b)=>best[b]-best[a]);
+  const res=[]; kinds.forEach(k=>{ const g=out.filter(r=>r.k===k), lim = SFILT==='all' && !SOPEN.has(k) ? 4 : 40;
+    g.slice(0, lim).forEach((r,i)=>res.push({...r, head: i===0 ? SKIND[k] : ''}));
+    if(g.length>lim) res.push({k, more:k, keep:true, n:g.length-lim, head:''}); });
   return res; }
+const STAB = {item:'설계', step:'설계', goal:'시작', goalsub:'시작', sys:'시작', comp:'시작', tool:'도구', term:'참고'};
+let SFILT='all', SLASTQ=null, SCOUNT={}; const SOPEN=new Set();
+function searchFilterBar(){ const t=['all','설계','시작','도구','참고'].filter(k=>k==='all' || SCOUNT[k]);
+  return `<div class="acfilt" role="toolbar" aria-label="검색 결과 거르기">${t.map(k=>`<button type="button" data-sf="${k}" aria-pressed="${SFILT===k}">${k==='all'?'전체':k} <span>${SCOUNT[k]||0}</span></button>`).join('')}</div>`; }
 function hlName(name, raw){
   const q=norm(raw); const wrap=h=>`<span class="acn">${h}</span>`; if(!q) return wrap(name);
   const ch=[...name], keep=[]; let n='';
@@ -178,16 +188,19 @@ function hlName(name, raw){
   const on=new Set(keep.slice(at, at+q.length));
   let h='', open=false; ch.forEach((c,k)=>{ const m=on.has(k)||(open && /\s/.test(c) && on.has(k+1)); if(m&&!open){ h+='<mark>'; open=true; } if(!m&&open){ h+='</mark>'; open=false; } h+=c; }); if(open) h+='</mark>';
   return wrap(h); }
-function makeAC(input, list, getRes, rowHTML, onPick, onType){
+function makeAC(input, list, getRes, rowHTML, onPick, onType, opt){ opt = opt || {};
   let res=[], cur=-1;
   const lid = list.id || ('acl'+Math.random().toString(36).slice(2,7)); list.id = lid; list.setAttribute('role','listbox'); input.setAttribute('aria-controls', lid);
   const close=()=>{ list.hidden=true; cur=-1; input.setAttribute('aria-expanded','false'); input.removeAttribute('aria-activedescendant'); };
   const draw=()=>{ res=getRes(input.value); cur=res.length?0:-1;
     if(!input.value.trim()){ close(); return; }
-    list.innerHTML = res.length ? res.map((r,i)=>`<div class="acrow${r.on===false?' off':''}${i===cur?' cur':''}" data-i="${i}" id="${lid}-${i}" role="option" aria-selected="${i===cur}">${rowHTML(r,input.value)}</div>`).join('') : `<div class="acnone">결과 없음 · 초성(예: ㅅㅋㄹ)이나 영문 약어(예: KPI)로도 찾을 수 있습니다.</div>`;
+    /* opt.head: 카테고리 이름을 결과 줄 밖의 머리 줄로 (강조 · 키보드 대상 아님), opt.top: 맨 위 막대 */
+    list.innerHTML = res.length ? (opt.top ? opt.top() : '') + res.map((r,i)=>`${opt.head && r.head ? `<div class="achead2" role="presentation">${r.head}</div>` : ''}<div class="acrow${r.on===false?' off':''}${r.more?' acmore':''}${i===cur?' cur':''}" data-i="${i}" id="${lid}-${i}" role="option" aria-selected="${i===cur}">${rowHTML(r,input.value)}</div>`).join('') : `<div class="acnone">결과 없음 · 초성(예: ㅅㅋㄹ)이나 영문 약어(예: KPI)로도 찾을 수 있습니다.</div>`;
     list.hidden=false; input.setAttribute('aria-expanded','true'); if(cur>=0) input.setAttribute('aria-activedescendant', lid+'-'+cur); };
   const mark=()=>{ list.querySelectorAll('.acrow').forEach((x,i)=>{ x.classList.toggle('cur',i===cur); x.setAttribute('aria-selected', String(i===cur)); if(i===cur) x.scrollIntoView({block:'nearest'}); }); if(cur>=0) input.setAttribute('aria-activedescendant', lid+'-'+cur); };
-  const pick=i=>{ const r=res[i]; if(!r) return; close(); input.value=''; input.blur(); onPick(r); };
+  const pick=i=>{ const r=res[i]; if(!r) return; if(r.keep){ onPick(r); const c=cur; draw(); cur=Math.min(c, res.length-1); mark(); return; } close(); input.value=''; input.blur(); onPick(r); };
+  list.__redraw = () => { draw(); };
+  list.addEventListener('mousedown', e=>{ const f=e.target.closest('[data-sf]'); if(!f) return; e.preventDefault(); if(opt.onFilter) opt.onFilter(f.dataset.sf); draw(); });
   input.addEventListener('input',()=>{ draw(); if(onType) onType(input.value); });
   input.addEventListener('focus',()=>{ if(input.value.trim()) draw(); });
   let pendEnter=false;
@@ -209,18 +222,19 @@ function openStep(sid){ pushHist(); setVM('full'); showTab('steps', true); const
 function initSearch(){
   const inp=$('#gsearch'), list=$('#gsearch-list');
   makeAC(inp, list, searchAll,
-    (r,raw)=> (r.head?`<span class="achead">${r.head}</span>`:'') + (r.k==='step'
+    (r,raw)=> r.more ? `<span class="acmore-t">+ ${r.n}개 더 보기</span>` : (r.k==='step'
       ? `<span class="accode st">${r.code}</span><span class="acname">${hlName(r.name,raw)}</span><span class="acpath">설계 › 단계</span>`
       : ['comp','sys','goal','goalsub','tool','term'].includes(r.k) ? `<span class="accode ${r.k==='comp'||r.k==='sys'?'cp':'tm'}">${r.k==='comp'||r.k==='sys'?'<span class="dot" style="background:'+pc(r.part)+'"></span>':esc(r.k==='term'?'용어':r.code)}</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span><span class="acpath">${r.path}</span>`
       : `<span class="accode">${r.code}</span><span class="acname">${hlName(r.name,raw)}${r.why?`<small><b>${r.why[0]}</b> ${r.why[1]}</small>`:''}</span>${chip(r.part)}<span class="acpath">설계 › 항목 화면</span>`),
-    r=>{ if(r.k==='step'){ openStep(r.id); return; }
+    r=>{ if(r.more){ SOPEN.add(r.more); return; }
+      if(r.k==='step'){ openStep(r.id); return; }
       if(r.k==='sys'){ openSys(r.id); return; }
       if(r.k==='goal'){ openGoalPage(+r.id); return; }
       if(r.k==='goalsub'){ const [mi,di]=r.id.split(':').map(Number); openGoalPage(mi, di); return; }
       if(r.k==='tool'){ pushHist(); showTab('tools'); if(r.ready && typeof wbOpen==='function') wbOpen(r.id); else requestAnimationFrame(()=>{ const t=document.querySelector('#v-tools .tl-tools'); if(t) smoothScrollTo(()=>t.getBoundingClientRect().top+scrollY-120); }); return; }
       if(r.k==='comp'){ openSys(r.sys, r.id); return; }
       if(r.k==='term'){ pushHist(); showTab('ref'); const tr=document.getElementById(r.id); const d=tr&&tr.closest('details'); if(d) d.open=true; requestAnimationFrame(()=>{ if(tr){ smoothScrollTo(()=>tr.getBoundingClientRect().top+scrollY-innerHeight/3, ()=>markHere(tr)); } }); return; }
-      if(TAB==='graph'){ pushHist(); selectItem(r.id,true); } else vtItem(r.id); });
+      if(TAB==='graph'){ pushHist(); selectItem(r.id,true); } else vtItem(r.id); }, null, {head:true, top:searchFilterBar, onFilter:k=>{ SFILT=k; }});
   document.addEventListener('keydown',e=>{ if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey) return; const a=document.activeElement;
     if(a && (a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable)) return; e.preventDefault(); inp.focus(); inp.select(); });
 }
