@@ -120,7 +120,8 @@ function ttSummary(el){ const c=TT.ctx, all=ITEMS.map(i=>i.id), tot=ttCnt(all), 
 /* 논의 칸: '글 n개 · 마지막 날짜 · 첫 줄 40자' 한 줄 + 펼치면 전체(답글 포함). 인쇄할 때는 개수와 최근 글 1개만 */
 function ttTalkCell(t){ const s=[...t].sort((a,b)=>String(a.at).localeCompare(String(b.at))), last=s[s.length-1], cut=(x,n)=>{ x=String(x||'').replace(/\s+/g,' '); return x.length>n?x.slice(0,n)+'…':x; };
   const head=`글 ${t.length}개 · ${ttFmt(last.at).split(' ')[0]||''} · ${esc(cut(last.text,40))}`;
-  return `<details class="tt-rep-q"><summary><span class="tt-rq-h">${head}</span></summary><div class="tt-rep-qa">${s.map(q=>`<div class="${q.parent?'r':''}">${q.parent?'↳ ':''}${esc(cut(q.text,300))} <span class="muted">${ttFmt(q.at)}</span></div>`).join('')}</div></details>`; }
+  /* 인쇄에는 글 개수만 (내용은 화면에서만) */
+  return `<span class="tt-rq-n">글 ${t.length}개</span><details class="tt-rep-q"><summary><span class="tt-rq-h">${head}</span></summary><div class="tt-rep-qa">${s.map(q=>`<div class="${q.parent?'r':''}">${q.parent?'↳ ':''}${esc(cut(q.text,300))} <span class="muted">${ttFmt(q.at)}</span></div>`).join('')}</div></details>`; }
 
 /* ---------- 지난 시즌을 보는 중 배너 (H3·H9: 주의 = 주황) ---------- */
 let SB_LAST='';
