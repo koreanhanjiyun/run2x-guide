@@ -255,7 +255,9 @@ const GS = (() => {
   () => { const s = .14, ay = 1.0, k = 100, G = 196, one = (x, hcg, lab, note) => { const c = car({x, g: G, s}), dF = ay * hcg / HP.t;
       const cgp = [c.X(0), c.Y(hcg)], gL = c.X(-HP.t / 2), gR = c.X(HP.t / 2), fo = .5 + dF, fi = .5 - dF;
       return c.svg + cg(cgp[0], cgp[1]) + arr(cgp[0] + 8, cgp[1], cgp[0] + 40, cgp[1], ORG, 'gsO', 2.6)
-        + farr(gL, G + 4, 0, -1, fi * k, GRN, 'gsG', 2.8) + farr(gR, G + 4, 0, -1, fo * k, GRN, 'gsG', 2.8)
+        + (() => { const y0 = G + 4 + MW.gsG * 2.8 + .5 * k, yi = y0 - dF * k, yo = y0 + dF * k, dash = (x, a, b) => `<path d="M${x} ${a.toFixed(1)}V${b.toFixed(1)}" stroke="${GRN}" stroke-width="2.8" stroke-dasharray="4 3"/>`;
+          return `<path d="M${gL - 26} ${y0.toFixed(1)}H${gR + 26}" stroke="var(--muted)" stroke-width="1"/>` + T(gL - 30, y0 + 4, '정지 하중', {a: 'end', fs: 10.5, c: 'var(--muted)'})
+            + farr(gL, G + 4, 0, -1, fi * k, GRN, 'gsG', 2.8) + dash(gL, yi, y0) + farr(gR, G + 4, 0, -1, .5 * k, GRN, 'gsG', 2.8) + dash(gR, y0, yo); })()
         + T(gL - 14, G + 24, '안쪽', {a: 'end', fs: 11, c: GRN}) + T(gR + 14, G + 24, '바깥', {fs: 11, c: GRN})
         + T(x, 22, lab, {a: 'middle', b: 1}) + T(x, 324, note, {a: 'middle', fs: 11.5}); };
     return svg(one(150, 380, 'CG 높음', '안쪽 바퀴 하중이 크게 줄어듦') + one(450, 240, 'CG 낮음', '네 바퀴를 고르게 씀') + `<path d="M300 40V310" stroke="var(--line)"/>`,
