@@ -3556,3 +3556,9 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 .tt-rep-cnt.done{color:var(--out)}
 .tt-rep-parts td.done{background:var(--out-soft);color:var(--out);font-weight:600}
 .tt-rep-parts td.doing{background:#fff4e2}
+
+/* 시즌 요약 가운데 정렬 (2026-11-25): 파트 표의 이름 · 숫자, 항목 표의 파트 · 상태 칸. 항목 이름 · 우리 팀 값 · 논의는 글이라 왼쪽 */
+.tt-rep-parts th,.tt-rep-parts td{text-align:center}
+.tt-rep :is(th,td):is(:nth-child(2),:nth-child(3)){text-align:center}
+.tt-rep th:nth-child(2),.tt-rep td:nth-child(2){width:110px}
+.tt-rep th:nth-child(3),.tt-rep td:nth-child(3){width:100px}
