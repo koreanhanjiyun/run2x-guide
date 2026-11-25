@@ -94,7 +94,7 @@ const TOOL_LIST = [
   ['T','타이어 모델 (선택)','P1','μ · 하중 감도 · 코너링 강성 (시험 데이터가 없을 때 직접)','슬립각–횡력 곡선, 앞뒤 코너링 강성, 이완 길이']
 ];
 /* 도구 빠른 선택 (2026-11-25, B안): 왼쪽 위 "도구" 버블 하나. 누르면 번호 버블(작업창이 있는 도구)이 버블 아래로 차례로 쭉 펼쳐지고, 다시 누르기 · 바깥 · Esc 로 접힘.
-   번호 버블에 마우스를 올리면(또는 Tab) 그 버블만 오른쪽으로 불룩 늘어나 이름이 나옴. 누르면 작업창을 열고 접힘. 처음에는 늘 접힘.
+   번호 버블에 마우스를 올리면(또는 Tab) 그 버블만 불룩 늘어나 이름이 나옴. 누르면 작업창을 열고, 펼친 상태는 그대로 둠. 처음에는 늘 접힘.
    오른쪽 아래 버블(좌표계 · 파트 강조)과 같은 모양. #v-tools 안에 있어 다른 탭에서는 같이 숨음 */
 function toolTocHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {}, L = TOOL_LIST.filter(r=>W[r[0]]);
   return `<div id="tlDial" class="coll"><button type="button" class="tld-main" aria-expanded="false" aria-controls="tldList" title="도구 빠른 선택"><span>도구</span></button>`
@@ -103,9 +103,12 @@ function tldSet(open){ const d=document.getElementById('tlDial'); if(!d) return;
   d.querySelectorAll('.tld-b').forEach(b=>b.tabIndex = open ? 0 : -1); }
 document.addEventListener('click', e=>{ const t=e.target.closest && e.target;
   if(t && t.closest('#tlDial .tld-main')){ e.preventDefault(); const d=document.getElementById('tlDial'); tldSet(d.classList.contains('coll')); return; }
-  const q=t && t.closest('[data-wbq]'); if(q){ e.preventDefault(); if(q.closest('#tlDial')) tldSet(false); wbOpen(q.dataset.wbq, q); } });
-document.addEventListener('pointerdown', e=>{ const d=document.getElementById('tlDial'); if(d && !d.classList.contains('coll') && !d.contains(e.target)) tldSet(false); }, true);
-document.addEventListener('keydown', e=>{ const d=document.getElementById('tlDial'); if(e.key==='Escape' && d && !d.classList.contains('coll')){ tldSet(false); const m=d.querySelector('.tld-main'); if(m && d.contains(document.activeElement)) m.focus(); } });
+  const q=t && t.closest('[data-wbq]'); if(q){ e.preventDefault(); wbOpen(q.dataset.wbq, q); } });   /* 도구를 골라도 펼친 채 둠 → 작업창을 닫고 돌아오면 그대로 (2026-11-25) */
+document.addEventListener('pointerdown', e=>{ const d=document.getElementById('tlDial'); if(!d || d.classList.contains('coll') || d.contains(e.target)) return;
+  if(e.target.closest && e.target.closest('#wb, .wb, [id^="wb"]')) return;   /* 작업창 안에서 누른 것은 바깥으로 치지 않음 */
+  tldSet(false); }, true);
+let tldWbKey=false; document.addEventListener('keydown', ()=>{ tldWbKey = !!document.querySelector('#wb:not([hidden])'); }, true);   /* Esc 가 작업창을 닫는 것이면 도구 버블은 그대로 */
+document.addEventListener('keydown', e=>{ const d=document.getElementById('tlDial'); if(e.key==='Escape' && !tldWbKey && d && !d.classList.contains('coll')){ tldSet(false); const m=d.querySelector('.tld-main'); if(m && d.contains(document.activeElement)) m.focus(); } });
 /* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
   /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
