@@ -10,8 +10,10 @@ const bgMark = t => String(t||'').replace(/\[확인 필요\]/g,'<span class="bad
 const compOf = p => (typeof COMP!=='undefined' && COMP[p]) || [];
 const techOf = p => { if(typeof F1_TECH==='undefined') return []; const g=F1_TECH.find(x=>x.sys===p); return g ? g.items : []; };
 const firstSent = t => { const s=String(t||'').replace(/<[^>]+>/g,'').replace(/\[확인 필요\]/g,''); const m=s.match(/^.*?[다요]\./); return (m?m[0]:s).slice(0,90); };
+/* 파일 이름(REF4_Assy_07.22.STEP 등)은 <code> 로 감싸 자동 아래첨자(x_cop → x 아래 cop)를 피함 */
+const srcFile = h => String(h).replace(/\b([A-Za-z0-9]+_[A-Za-z0-9_]+(?:\.\d+)*(?:\.(?:STEP|STP|step|stp|dxf|DXF))?)\b/g, '<code>$1</code>');
 function srcList(arr){ return (arr||[]).map(x=>{ if(typeof x==='string'){ const m=x.match(/^(.*?)\s*[—-]\s*(https?:\/\/\S+)$/); return m ? `<li><a href="${esc(m[2])}" target="_blank" rel="noopener">${esc(m[1])}</a></li>` : `<li>${esc(x)}</li>`; }
-  return `<li>${x.u?`<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>`:esc(x.t)}${x.note?` <span class="muted">${esc(x.note)}</span>`:''}</li>`; }).join(''); }
+  return `<li>${x.u?`<a href="${esc(x.u)}" target="_blank" rel="noopener">${srcFile(esc(x.t))}</a>`:srcFile(esc(x.t))}${x.note?` <span class="muted">${srcFile(esc(x.note))}</span>`:''}</li>`; }).join(''); }
 function techRail(items){ return `<div class="f1t-rail"><button type="button" class="f1r-b f1r-prev" aria-label="앞 카드">‹</button>${techHTML(items, ' f1t-row')}<button type="button" class="f1r-b f1r-next" aria-label="다음 카드">›</button></div>`; }
 function techHTML(items, cls=''){ return `<div class="f1t-list${cls}">${items.map(t=>`<article class="f1t"><div class="f1t-h"><span class="f1t-y">${esc(t.y||'')}</span><b>${t.n}</b>${t.en?`<span class="muted">${esc(t.en)}</span>`:''}</div>
   <dl><dt>원리</dt><dd>${bgMark(t.how)}</dd><dt>무엇이 빨라졌나</dt><dd>${bgMark(t.gain)}</dd>${t.end?`<dt>어떻게 끝났나</dt><dd>${bgMark(t.end)}</dd>`:''}</dl></article>`).join('')}</div>`; }

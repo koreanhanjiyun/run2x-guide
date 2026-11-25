@@ -50,6 +50,10 @@ function initChangelog(){
   const sel=document.createElement('div'); sel.className='clsel';
   sel.innerHTML=`<span>버전</span><div class="cldd"><button type="button" class="cldd-b" aria-haspopup="listbox" aria-expanded="false"></button><ul class="cldd-l" role="listbox" hidden>${vers.map((x,i)=>`<li role="option" data-i="${i}">${x.v}${i===0?' <em>최신</em>':''}</li>`).join('')}</ul></div>`;
   vers[0].box.before(sel);
+  /* 참고 탭 구분 (2026-11-25): 버전 규칙(설명 · 표)과 버전별 내용을 각각 판으로 */
+  { const rules=document.createElement('section'); rules.className='cl-box cl-rules'; const list=document.createElement('section'); list.className='cl-box cl-vers';
+    [...body.children].filter(c=>c!==sel && !c.classList.contains('clv') && !c.classList.contains('cl-new')).forEach(c=>rules.append(c));
+    list.append(sel, ...vers.map(v=>v.box)); const nw=body.querySelector(':scope>.cl-new'); body.append(rules, list); if(nw) body.prepend(nw); }
   const btn=sel.querySelector('.cldd-b'), list=sel.querySelector('.cldd-l'); let cur=0;
   const show=i=>{ cur=i; vers.forEach((x,k)=>{ x.box.hidden = k!==i; }); btn.innerHTML=`${vers[i].v}${i===0?' <em>최신</em>':''}`; list.querySelectorAll('li').forEach((li,k)=>li.setAttribute('aria-selected',String(k===i))); };
   const open=o=>{ list.hidden=!o; btn.setAttribute('aria-expanded',String(o)); if(o){ const li=list.querySelector(`li[data-i="${cur}"]`); if(li) li.scrollIntoView({block:'nearest'}); } };
@@ -141,3 +145,8 @@ ITEM_HOOKS.push((d,b)=>{
 
 /* ---------- 참고 탭: 칸을 펼치고 접을 때 문서 높이를 다시 계산 (용어집을 접은 뒤 아래까지 못 내려가는 문제 대비) ---------- */
 document.addEventListener('toggle', e=>{ const d=e.target; if(!(d && d.closest && d.closest('#ref-list'))) return; requestAnimationFrame(()=>{ void document.body.offsetHeight; try{ window.dispatchEvent(new Event('resize')); }catch(_){} }); }, true);
+
+/* ---------- 초점 테두리는 키보드로 움직일 때만 (2026-11-25): 크롬은 선택 상자 · 버튼을 마우스로 눌러도 :focus-visible 로 봐서 진한 테두리가 남음.
+   Tab · 방향키를 누르면 html.kbd 를 켜고(테두리 보임), 마우스를 누르면 끔. 글 입력칸은 어디에 쓰는지 보여야 하므로 그대로 ---------- */
+document.addEventListener('keydown', e=>{ if(e.key==='Tab' || e.key.startsWith('Arrow')) document.documentElement.classList.add('kbd'); }, true);
+document.addEventListener('mousedown', ()=>document.documentElement.classList.remove('kbd'), true);

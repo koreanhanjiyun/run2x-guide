@@ -66,8 +66,8 @@ function srcUnified(designHTML){
     const e = put(key, {html:r.html, url:r.url, cat:srcCat(r.text, r.url)}); e.used.add(r.w); if(r.note && !e.notes.includes(r.note)) e.notes.push(r.note); });
   const all = [...map.values()];
   return `<p class="muted src-lede">가이드 전체에서 쓴 출처 ${all.length}개입니다. 근거 순위대로 묶었고, 줄 끝은 쓰인 곳입니다.</p>` + SRC_CAT.map(([k,lab])=>{ const g=all.filter(e=>e.cat===k); if(!g.length) return '';
-    return `<h4 class="src-h" aria-level="2">${lab} <span class="muted">${g.length}</span></h4><ul class="pl src-ul">${g.map(e=>{ const t = e.url && !/<a /.test(e.html) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${e.html}</a>` : e.html;
-      return `<li><span class="src-t">${t}</span>${[...e.used].map(w=>`<span class="src-w">${SRC_USED[w]}</span>`).join('')}${e.notes.length>1?`<ul class="src-nl">${e.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:e.notes.length?`<span class="src-n">${esc(e.notes[0])}</span>`:''}</li>`; }).join('')}</ul>`; }).join(''); }
+    return `<section class="src-box"><h4 class="src-h" aria-level="2">${lab} <span class="muted">${g.length}</span></h4><ul class="pl src-ul">${g.map(e=>{ const t = e.url && !/<a /.test(e.html) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${e.html}</a>` : e.html;
+      return `<li><span class="src-t">${t}</span>${[...e.used].map(w=>`<span class="src-w">${SRC_USED[w]}</span>`).join('')}${e.notes.length>1?`<ul class="src-nl">${e.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:e.notes.length?`<span class="src-n">${esc(e.notes[0])}</span>`:''}</li>`; }).join('')}</ul></section>`; }).join(''); }
 const REF_KEYS = [['용어집','gloss'],['출처','src'],['변경 이력','log']];
 let REFSUB = null, REFWRAP = false;
 function renderRefs(){ if(REFSUB==null) REFSUB = (typeof PREF==='function' && PREF('refsub','용어집')) || '용어집';

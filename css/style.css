@@ -3767,3 +3767,12 @@ ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;bo
 #v-start .gs-fig svg{display:block;width:100%;height:auto;overflow:visible}
 #v-start .gs-fig figcaption{margin-top:6px;font-size:var(--fs-xs);color:var(--muted);line-height:1.5}
 #v-start .gs-fig figcaption{margin-top:10px;line-height:1.7}
+
+/* 초점 테두리: 마우스로 누른 선택 상자 · 버튼 · 링크에는 안 그림 (키보드 이동 때만, html.kbd). 글 입력칸은 그대로 */
+html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{outline:none!important}
+
+/* 참고 탭 구분 (2026-11-25): 출처 묶음 · 변경 이력(규칙 / 버전)을 판으로. 판 = 흰 바탕 · 옅은 테두리 · 모서리 8 px, 판 사이 20 px */
+#ref-list .src-box,#ref-list .cl-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px;margin:0 0 20px}
+#ref-list .src-box .src-h{margin:0 0 6px!important;padding:0 0 8px;border-top:0!important;border-bottom:1px solid var(--line)}
+#ref-list .src-lede{margin:0 0 14px}
+#ref-list .cl-box > :first-child{margin-top:0}
