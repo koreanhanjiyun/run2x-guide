@@ -44,10 +44,10 @@ const SRC_CANON = [
 const SRC_CAT = [['규정','규정'],['교재','교재'],['논문','논문'],['팀','제조사 · 팀 자료'],['웹','언론 · 웹'],['백과','웹 백과']];
 const SRC_USED = {d:'설계 탭', b:'시작 탭', f:'F1 기술', c:'부품 소개'};
 function srcCat(t, u){ if(/wikipedia/i.test(u||'') || /^Wikipedia/.test(t)) return '백과';
-  if(/규정|Rules/i.test(t)) return '규정';
-  if(/Journal|IEEE|SAE \d{4}-\d{2}-\d{4}|학위논문|TFG|Rešerše/.test(t)) return '논문';
-  if(/Gillespie|Pacejka|Staniforth|Tune to Win|Biomechanics and Motor Control/.test(t)) return '교재';
-  if(/REF4|Run2X|TTX25|EMRAX|Drexler|Balance Motorsport|FIRGELLI|Altair|MUR Motorsports|Formula Student Germany|FSAE\.com|McLaren, 1981|Honda,/.test(t)) return '팀';
+  if(/규정|Rules|Regulations/i.test(t) && !/^Honda,/.test(t)) return '규정';   /* 제조사의 규정 해설(Honda)은 제조사 자료 */
+  if(/Journal|IEEE|SAE \d{4}-\d{2}-\d{4}|학위논문|TFG|Rešerše|Technical Review/.test(t)) return '논문';
+  if(/Gillespie|Pacejka|Staniforth|Tune to Win|Biomechanics and Motor Control|Gieras|Mohan|OpenStax/.test(t)) return '교재';
+  if(/REF4|Run2X|TTX25|EMRAX|Drexler|Balance Motorsport|FIRGELLI|Altair|MUR Motorsports|Formula Student Germany|FSAE\.com|McLaren, 1981|Honda,|Mercedes-Benz,|Renault,|JTEKT/.test(t)) return '팀';
   return '웹'; }
 function srcUnified(designHTML){
   const raw = [];   /* {html, text, url, note, w} */

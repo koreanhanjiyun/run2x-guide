@@ -293,7 +293,7 @@ const COMP = {
   {id:'motor', n:'구동 모터', en:'Traction Motor',
    desc:['전기차는 배터리에 저장한 전기 에너지를 바퀴를 돌리는 힘으로 바꿔야 달릴 수 있습니다. 이 일을 하는 것이 모터이고, 차 무게의 큰 부분을 차지하므로 같은 출력을 얼마나 가볍고 작게 내느냐가 중요합니다.',
     '모터는 자석의 자기장 속에서 코일에 전류를 흘리면 코일이 힘을 받는 원리로 돕니다. 고정된 코일(고정자)에 흐르는 전류의 방향을 회전에 맞춰 바꿔 주면, 자석이 붙은 회전자가 그 자기장을 따라 계속 끌려가며 돌아갑니다. 영구자석 동기 모터는 회전자 자석이 고정자 자기장과 같은 속도로 돌며, 전류의 크기로 토크를, 전류가 바뀌는 빠르기로 회전수를 정합니다.',
-    '그림의 차가 쓰는 EMRAX 228은 축방향 자속형 모터입니다. 원판 모양 고정자 양옆에 자석을 붙인 원판 회전자가 마주 보고 있어, 자기장이 축과 나란한 방향으로 지나갑니다. 같은 지름의 원통형(반경 방향 자속) 모터보다 축 길이가 짧고, 자석이 바깥 지름 쪽에 넓게 있어 지름이 커질수록 토크가 크게 늘어나므로, 납작하고 가벼운 몸체로 큰 토크를 냅니다. 고정자 코일에 전류를 넣는 3상 단자와 냉각 통로는 돌지 않는 고정자 쪽에 붙습니다.'],
+    '그림의 차가 쓰는 EMRAX 228은 축방향 자속형 모터입니다. 원판 모양 고정자 양옆에 자석을 붙인 원판 회전자가 마주 보고 있어, 자기장이 축과 나란한 방향으로 지나갑니다. 같은 지름의 원통형(반경 방향 자속) 모터보다 축 길이가 짧고, 자석과 코일이 지름 바깥쪽에 넓게 놓여 같은 전자기력이라도 토크를 내는 팔(반지름)이 길어지므로(토크 = 힘 × 반지름), 납작하고 가벼운 몸체로 큰 토크를 냅니다. 고정자 코일에 전류를 넣는 3상 단자와 냉각 통로는 돌지 않는 고정자 쪽에 붙습니다.'],
    fs:'모터 1개 FS 차에서는 EMRAX 같은 축방향 자속 모터를 체인으로 디퍼렌셜에 잇는 구성이 흔하고, 바퀴마다 작은 모터를 단 4륜 구동 팀도 있습니다. 규정상 모터 출력은 80 kW 이하이고, 모터는 반드시 모터 제어기를 거쳐 축전지에 연결해야 하며 후진은 금지입니다.',
    con:'모터 온도가 오르면 자석이 약해지고 출력이 제한되므로 냉각과 온도 감시를 함께 설계합니다.',
    go:['p_motor','d_torque','d_derate']},
@@ -593,7 +593,8 @@ const COMP_SRC = [
  {t:'REF4 CAD (Run2X 2024 차량, REF4_Assy_07.22.STEP)', u:'', note:'스프로킷 잇수(11·39), 축간 거리, 체인 링크 수 계산, 디퍼렌셜·모터 공용 마운트 판, 편심 텐셔너, 보호판, 트라이포드 하프 샤프트 형상'},
  {t:'한국자동차공학회, 2026 Formula 차량기술규정 제10조 ⑧항, 제31조 ④항, 제46조 ①·②·⑤·⑥·⑦항', u:'', note:'회생 제동 조건, 모터 출력 80 kW, 모터 제어기 경유·후진 금지, 가속 페달·APPS·비타당성'},
  {t:'EMRAX, EMRAX 228 제품 페이지·데이터시트 v1.7', u:'https://emrax.com/e-motors/emrax-228/', note:'축방향 자속 영구자석 동기 모터, 최대 토크 220 Nm, 최대 출력 5,500 rpm, 리졸버'},
- {t:'Wikipedia, Axial flux motor', u:'https://en.wikipedia.org/wiki/Axial_flux_motor', note:'축방향 자속 구조, 지름에 따른 토크 증가, 짧은 축 길이'},
- {t:'Wikipedia, Power inverter (three-phase inverters)', u:'https://en.wikipedia.org/wiki/Power_inverter', note:'3상 인버터·PWM·가변 주파수 구동'},
- {t:'Wikipedia, Lenz\'s law', u:'https://en.wikipedia.org/wiki/Lenz%27s_law', note:'렌츠의 법칙과 패러데이 법칙의 부호'}
+ {t:'J. F. Gieras, R.-J. Wang, M. J. Kamper, Axial Flux Permanent Magnet Brushless Machines, 2nd ed., Springer, 2008', u:'https://doi.org/10.1007/978-1-4020-8227-6', note:'축방향 자속 구조, 짧은 축 길이'},
+ {t:'Nishanth, Van Verdeghem, Severson, A Review of Axial Flux Permanent Magnet Machine Technology, IEEE Trans. Ind. Appl. 59(4), 2023', u:'https://doi.org/10.1109/TIA.2023.3258933', note:'축방향 자속 모터 구조 · 특성 리뷰'},
+ {t:'N. Mohan, T. M. Undeland, W. P. Robbins, Power Electronics: Converters, Applications and Design, 3rd ed., Wiley, 2003', u:'', note:'3상 인버터 · PWM · 가변 주파수 구동'},
+ {t:'OpenStax, University Physics Volume 2, §13.2 Lenz’s Law', u:'https://openstax.org/books/university-physics-volume-2/pages/13-2-lenzs-law', note:'렌츠의 법칙과 패러데이 법칙의 부호'}
 ];
