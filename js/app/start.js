@@ -131,6 +131,10 @@ const GS = (() => {
     + T(x1, y0 + 18, xl, {a: 'end', c: 'var(--muted)'}) + T(x0 + 8, y1 + 2, yl, {c: 'var(--muted)'});
   const pts = (f, a, b, n, X, Y) => Array.from({length: n + 1}, (_, i) => { const v = a + (b - a) * i / n; return `${i ? 'L' : 'M'}${X(v).toFixed(1)} ${Y(f(v)).toFixed(1)}`; }).join('');
   const arr = (x1, y1, x2, y2, c = 'var(--ink-2)', m = 'gsA', w = 2) => `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${c}" stroke-width="${w}" marker-end="url(#${m})"/>`;
+  /* 힘 크기 화살표: 머리 밑변을 0 으로 보고 꼬리 길이 L 만 힘에 비례. (tx, ty) = 머리 끝이 닿는 점, (ux, uy) = 힘 방향 단위 벡터.
+     머리 길이 h = markerWidth × 선 굵기 (marker viewBox 10, refX 9 → 선 끝에서 0.1h 앞이 머리 끝, 0.9h 뒤가 밑변) */
+  const MW = {gsA: 7, gsB: 7, gsO: 7, gsG: 7, gsBs: 3.2, gsAs: 4};
+  const farr = (tx, ty, ux, uy, L, c, m, w) => { const h = MW[m] * w; return arr(tx - ux * (h + L), ty - uy * (h + L), tx - ux * h * .1, ty - uy * h * .1, c, m, w); };
   const cg = (x, y, r = 7) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.4"/><path d="M${x} ${y}L${x - r} ${y}A${r} ${r} 0 0 1 ${x} ${y - r}Z" fill="var(--ink)"/><path d="M${x} ${y}L${x + r} ${y}A${r} ${r} 0 0 1 ${x} ${y + r}Z" fill="var(--ink)"/><path d="M${x - r} ${y}H${x + r}M${x} ${y - r}V${y + r}" stroke="var(--ink)" stroke-width="1"/>`;
 
   /* ---- FS 정면도 (mm, 차 중심 x = 0, 지면 y = 0, 위 = +). 하드포인트는 일반적인 FS 차 크기의 예시 ---- */
@@ -171,11 +175,11 @@ const GS = (() => {
       + (() => { const a = B(-120, 690), b = B(120, 690); return `<path d="M${a.join(' ')}L${b.join(' ')}" stroke="#2a2f38" stroke-width="3"/>`; })();
     /* 앞날개: 차체에 붙어 롤을 따라 기울어짐. 다운포스 화살표는 날개 끝의 지면 높이가 낮을수록 길게 (개념) */
     const wing = o.wing == null ? '' : (() => { const a = B(-700, 110), b = B(700, 110), a2 = B(-700, 200), b2 = B(700, 200), a3 = B(-700, 70), b3 = B(700, 70);
-      const la = Math.max(10, 24 + (a[1] - B(0, 110)[1]) * 1.6), lb = Math.max(10, 24 + (b[1] - B(0, 110)[1]) * 1.6);
+      const la = Math.max(3, 10 + (a[1] - B(0, 110)[1]) * 1.6), lb = Math.max(3, 10 + (b[1] - B(0, 110)[1]) * 1.6);
       return `<path d="M${a.join(' ')}L${b.join(' ')}" stroke="#0d7a8a" stroke-width="5" stroke-linecap="round"/><path d="M${a2.join(' ')}L${a3.join(' ')}M${b2.join(' ')}L${b3.join(' ')}" stroke="#0d7a8a" stroke-width="3"/>`
-        + arr(a[0] - 10, a[1] - la - 4, a[0] - 10, a[1] - 3, ACC, 'gsB', 2.6) + arr(b[0] + 10, b[1] - lb - 4, b[0] + 10, b[1] - 3, ACC, 'gsB', 2.6); })();
-    const rwing = o.wing == null ? '' : (() => { const a = B(-480, 1060), b = B(480, 1060), a2 = B(-480, 980), a3 = B(-480, 1130), b2 = B(480, 980), b3 = B(480, 1130), m = B(0, 1060), n0 = B(0, 1160), dx = m[0] - n0[0], dy = m[1] - n0[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, ln = 30;
-      const dn = p => arr(p[0] - ux * (ln + 6), p[1] - uy * (ln + 6), p[0] - ux * 4, p[1] - uy * 4, ACC, 'gsB', 2.6);
+        + farr(a[0] - 10, a[1] - 3, 0, 1, la, ACC, 'gsB', 2.6) + farr(b[0] + 10, b[1] - 3, 0, 1, lb, ACC, 'gsB', 2.6); })();
+    const rwing = o.wing == null ? '' : (() => { const a = B(-480, 1060), b = B(480, 1060), a2 = B(-480, 980), a3 = B(-480, 1130), b2 = B(480, 980), b3 = B(480, 1130), m = B(0, 1060), n0 = B(0, 1160), dx = m[0] - n0[0], dy = m[1] - n0[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, ln = 14;
+      const dn = p => farr(p[0] - ux * 4, p[1] - uy * 4, ux, uy, 14, ACC, 'gsB', 2.6);
       const st = [B(-170, 420), B(-170, 1060), B(170, 420), B(170, 1060)];
       return `<path d="M${st[0].join(' ')}L${st[1].join(' ')}M${st[2].join(' ')}L${st[3].join(' ')}" stroke="#8a8f99" stroke-width="2"/><path d="M${a.join(' ')}L${b.join(' ')}" stroke="#0d7a8a" stroke-width="6" stroke-linecap="round"/><path d="M${a2.join(' ')}L${a3.join(' ')}M${b2.join(' ')}L${b3.join(' ')}" stroke="#0d7a8a" stroke-width="3"/>` + dn(B(-330, 1060)) + dn(B(330, 1060)); })();
     let h = `<path d="M${X(-760)} ${o.g}H${X(760)}" stroke="var(--ink-2)" stroke-width="1.3"/>` + side(Lf) + side(R) + body + wing + rwing;
@@ -248,10 +252,10 @@ const GS = (() => {
       + `<path d="M210 262h18" stroke="#8a8f99" stroke-width="2.2"/>` + T(232, 266, '선회 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M290 262h18" stroke="${ACC}" stroke-width="3.2"/>` + T(312, 266, '구동 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M370 262h18" stroke="var(--ink)" stroke-width="2"/>` + T(392, 266, '합력', {fs: 10.5, c: 'var(--muted)'}) + T(590, 266, 'F = 바퀴 힘 [N]', {a: 'end', fs: 10.5, c: 'var(--muted)'}),
       '④ 구동력 전달: 코너 탈출에서 안쪽 뒷바퀴는 하중이 적어 마찰 타원이 작음. 오픈 디퍼렌셜은 두 바퀴에 같은 구동 힘만 보내 바깥 바퀴 그립이 남고, LSD는 바깥 바퀴도 한계까지 씀', 600, 276); },
   /* ⑤ 가볍게 · 낮게: 같은 차체, CG 높이만 다름. 높으면 바깥 바퀴로 더 쏠리고 안쪽 바퀴 하중이 크게 줄어듦 (화살표 길이 ∝ 바퀴 하중, 쏠림 비율 = 선회 가속 × CG 높이 / 트레드) */
-  () => { const s = .14, ay = 1.0, k = 125, G = 196, one = (x, hcg, lab, note) => { const c = car({x, g: G, s}), dF = ay * hcg / HP.t;
+  () => { const s = .14, ay = 1.0, k = 100, G = 196, one = (x, hcg, lab, note) => { const c = car({x, g: G, s}), dF = ay * hcg / HP.t;
       const cgp = [c.X(0), c.Y(hcg)], gL = c.X(-HP.t / 2), gR = c.X(HP.t / 2), fo = .5 + dF, fi = .5 - dF;
       return c.svg + cg(cgp[0], cgp[1]) + arr(cgp[0] + 8, cgp[1], cgp[0] + 40, cgp[1], ORG, 'gsO', 2.6)
-        + arr(gL, G + 4 + fi * k, gL, G + 4, GRN, 'gsG', 2.8) + arr(gR, G + 4 + fo * k, gR, G + 4, GRN, 'gsG', 2.8)
+        + farr(gL, G + 4, 0, -1, fi * k, GRN, 'gsG', 2.8) + farr(gR, G + 4, 0, -1, fo * k, GRN, 'gsG', 2.8)
         + T(gL - 14, G + 24, '안쪽', {a: 'end', fs: 11, c: GRN}) + T(gR + 14, G + 24, '바깥', {fs: 11, c: GRN})
         + T(x, 22, lab, {a: 'middle', b: 1}) + T(x, 324, note, {a: 'middle', fs: 11.5}); };
     return svg(one(150, 380, 'CG 높음', '안쪽 바퀴 하중이 크게 줄어듦') + one(450, 240, 'CG 낮음', '네 바퀴를 고르게 씀') + `<path d="M300 40V310" stroke="var(--line)"/>`,
