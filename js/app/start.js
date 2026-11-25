@@ -106,7 +106,7 @@ function homePage(){ const sysOf=p=>BG_SYS.find(x=>x.p===p);
     <section class="st-sysw"><h2>더 빠르게 하려면?</h2>
       ${typeof BG_ASK!=='undefined' ? BG_ASK.map(g=>`<div class="st-ask"><div class="sa-q"><b>${g.q}</b><span>${g.a}</span></div><div class="st-sys">${g.p.map(sysOf).filter(Boolean).map(sysCard).join('')}</div></div>`).join('')
         : `<div class="st-sys">${BG_SYS.map(sysCard).join('')}</div>`}
-      <p class="st-goal">실제로 설계하는 순서는 <button type="button" class="lnk" data-tabgo="steps">설계</button> 탭입니다. 화면마다 사용법은 오른쪽 위 <button type="button" class="lnk" data-tour="where">[이 탭 사용법]</button>에서 볼 수 있습니다.</p>
+      <p class="st-goal">실제로 설계하는 순서는 <button type="button" class="lnk" data-tabgo="steps">설계</button> 탭입니다. 화면마다 사용법은 오른쪽 위 <button type="button" class="lnk" data-helppop aria-haspopup="dialog">[이 탭 사용법]</button>에서 볼 수 있습니다.</p>
     </section>
     </div>`;
 }

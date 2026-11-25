@@ -124,7 +124,7 @@ const TOUR = {
   ['#v-team [data-ttp=summary] .tt-report','시즌 요약','진행 상태·우리 팀 값·논의를 자동으로 모은 읽기 전용 페이지입니다. 인수인계 때 그대로 보여 주면 됩니다.',{tab:'team',sub:'summary'}],
   ['#v-team #fsRec','대회 점수','FS 종목별 배점과 우리 팀의 지난 기록입니다. 고른 시즌을 가운데에 두고 앞뒤 시즌과 비교합니다.',{tab:'team',sub:'score'}],
   ['#v-team #teamPanel .tp-s-me','내 계정','로그인한 구글 계정입니다. 이메일은 기본으로 가려져 있고 [보기]로 잠깐 봅니다. [로그아웃]도 여기 있습니다.',{tab:'team',sub:'account'}],
-  ['#v-team #teamPanel .tp-s-dname','팀에 보이는 이름','팀원 명단·검토 기록·논의에 보이는 이름입니다. 구글 계정 이름과 따로 정하고(1~20자), 회장도 바꿀 수 있습니다. 서로 알아볼 수 있게 실명을 권장합니다.',{tab:'team',sub:'account'}],
+  ['#v-team #teamPanel .tp-mt tr.tp-mine','내 줄 · 팀에 보이는 이름','명단 맨 위는 늘 내 줄입니다(검색·거르기와 상관없이). [이름 바꾸기]로 팀원 명단·검토 기록·논의에 보이는 이름을 그 자리에서 고칩니다(1~20자, 구글 계정 이름과 따로). 회장도 바꿀 수 있고, 서로 알아볼 수 있게 실명을 권장합니다.',{tab:'team',sub:'account'}],
   ['#v-team #teamPanel .tp-s-teams','내 팀','가입한 팀 목록입니다. [이동]으로 지금 팀을 바꾸고, [나가기]는 한 번 더 눌러 확인합니다. 회장은 나갈 수 없습니다.',{tab:'team',sub:'account'}],
   ['#v-team #teamPanel .tp-s-invite','팀원 초대','사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 비밀번호는 따로 알려 주십시오.',{tab:'team',sub:'account'}],
   ['#v-team #teamPanel .tp-s-join','다른 팀 가입','회장에게 받은 팀 이름(대소문자 무관)과 비밀번호(대소문자 구분)로 가입합니다.',{tab:'team',sub:'account'}],
@@ -144,8 +144,6 @@ const TOUR = {
   ['#v-team .adm-tm .tp-s-backup','백업 (회장)','시즌이 끝날 때마다 [내보내기]로 파일을 저장해 두십시오. [불러오기]는 고른 시즌만 복구합니다.',{tab:'team',sub:'settings'}],
   ['#v-team .adm-tm .tp-dz','위험 구역 (회장)','시즌 초기화·팀 삭제처럼 되돌릴 수 없는 작업입니다. 두 번 확인한 뒤 실행됩니다.',{tab:'team',sub:'settings'}],
  ],
- /* 시작 탭 문구 속 [이 탭 사용법]: 머리띠의 그 버튼 위치만 알려 줌 (전체 사용법은 2026-11-24 없앰) */
- where: [['#tourBtn','이 탭 사용법','화면마다 이 버튼을 누르면 그 화면에 맞는 사용법이 나옵니다. 시작 탭의 목표 · 시스템 화면에서도 그 화면 사용법이 따로 나옵니다.']],
 };
 /* 팀 설정 사용법: 팀장·파트장이 없거나 회장 혼자인 팀에서도 칩·내보내기·차단 단계를 보이도록, 표 맨 위에 "사용법 예시" 줄을 잠깐 넣음 (화면에만, 저장 안 됨, 사용법이 끝나면 지움) */
 function tmDemoRow(){ const tb=document.querySelector('#v-team .adm-tm .tp-mtm tbody'); if(!tb || tb.querySelector('tr.tg-demo')) return;
@@ -377,9 +375,36 @@ function tourStart(name){ tourStop(); const steps=courseOf(name); if(!steps.leng
   TR.inert=[...document.body.children].filter(n=>n!==el && n.id!=='demoBar' && n.id!=='demoDiag' && !n.inert && n.tagName!=='SCRIPT'); TR.inert.forEach(n=>n.inert=true);
   try{ if(document.activeElement && document.activeElement!==document.body) document.activeElement.blur(); }catch(e){}
   addEventListener('resize', tgOnResize); tgRebuild().then(()=>{ tourGo(0,1); const nb=el.querySelector('[data-tour-next]'); if(nb) nb.focus({preventScroll:true}); }); SETP('tourdone','1'); }
+/* ---------- 도움말 안내 창 (2026-11-25): 시작 탭 문구의 [이 탭 사용법]을 누르면 머리띠 버튼을 테두리로 강조하고, 그 아래에 문의 창처럼 설명이 뜸.
+   요점 = 이 버튼은 '지금 보고 있는 화면'의 사용법을 보여 준다. [지금 화면 사용법 보기]로 바로 시작 ---------- */
+const curTourName = () => TAB==='team' ? 'team' : (TAB==='start' ? 'start' : (TOUR[TAB] ? TAB : 'top'));
+function curScreenName(){ const t=(typeof TABS!=='undefined' && TABS.find(x=>x[0]===TAB)) || null, tn=t ? t[1] : '';
+  if(TAB==='start'){ const s=(typeof START!=='undefined' && START.sys) || ''; return !s ? '시작 탭 첫 화면' : s.startsWith('goal:') ? '시작 탭 › 목표 화면' : '시작 탭 › 시스템 화면'; }
+  if(TAB==='team') return '팀 탭 › ' + (teamSettingsOn() ? '팀 설정' : '지금 보는 메뉴');
+  return tn ? tn + ' 탭' : '이 화면'; }
+let HP = null;
+function helpOpen(){ const b=document.getElementById('tourBtn'); if(!b) return;
+  if(!HP){ HP=document.createElement('div'); HP.id='helpPop'; HP.hidden=true; HP.setAttribute('role','dialog'); HP.setAttribute('aria-label','이 탭 사용법 안내'); document.body.appendChild(HP); }
+  HP.innerHTML = `<div class="hpp-h"><b>이 탭 사용법</b><button type="button" class="fbp-x" data-helpx aria-label="닫기" title="닫기 (Esc)">×</button></div>
+    <div class="hpp-b"><p>머리띠의 이 버튼은 <b>지금 보고 있는 화면</b>의 사용법을 보여 줍니다. 같은 버튼이라도 화면이 바뀌면 안내 내용이 바뀝니다.</p>
+    <p class="hpp-now"><span>지금 화면</span><b>${curScreenName()}</b></p>
+    <div class="hpp-a"><button type="button" class="btn small pri" data-helpgo>지금 화면 사용법 보기</button></div></div>`;
+  const r=b.getBoundingClientRect(); HP.style.top=(r.bottom+10)+'px'; HP.style.right=Math.max(16, innerWidth-r.right)+'px';
+  HP.style.setProperty('--hp-ax', Math.max(16, r.right-(r.left+r.width/2))+'px');
+  const was=HP.hidden || HP._closing; HP._closing=false; HP.hidden=false; b.classList.add('hp-on');
+  if(was && typeof popFrom==='function') popFrom(HP, b, true); }
+function helpClose(now){ const b=document.getElementById('tourBtn'); if(b) b.classList.remove('hp-on'); if(!HP || HP.hidden) return;
+  if(now || typeof popFrom!=='function'){ HP.hidden=true; HP._closing=false; return; }
+  HP._closing=true; popFrom(HP, b, false, ()=>{ if(HP._closing){ HP.hidden=true; HP._closing=false; } }); }
+document.addEventListener('click', e=>{ if(e.target.closest('[data-helpx]')){ e.preventDefault(); helpClose(); } });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && HP && !HP.hidden) helpClose(); });
+addEventListener('resize', ()=>{ if(HP && !HP.hidden) helpClose(true); });
 document.addEventListener('click', e=>{
   const s=e.target.closest('[data-tour]'); if(s && !e.target.closest('#tour')){ e.preventDefault(); tourStart(s.dataset.tour); return; }
-  if(e.target.closest('#tourBtn')){ e.preventDefault(); tourStart(TAB==='team' ? 'team' : (TAB==='start' ? 'start' : (TOUR[TAB] ? TAB : 'top'))); return; }
+  const hp=e.target.closest('[data-helppop]'); if(hp){ e.preventDefault(); e.stopPropagation(); HP && !HP.hidden && !HP._closing ? helpClose() : helpOpen(); return; }
+  if(HP && !HP.hidden && !HP._closing && !e.target.closest('#helpPop')) helpClose();
+  if(e.target.closest('[data-helpgo]')){ e.preventDefault(); helpClose(true); tourStart(curTourName()); return; }
+  if(e.target.closest('#tourBtn')){ e.preventDefault(); tourStart(curTourName()); return; }
   if(!TR) return;
   if(e.target.closest('[data-tour-next]')){ e.preventDefault(); if(TR.busy){ tgQueue(1); return; } TR.i>=TR.steps.length-1 ? tourStop() : tourGo(TR.i+1, 1); return; }
   if(e.target.closest('[data-tour-prev]')){ e.preventDefault(); if(TR.busy){ tgQueue(-1); return; } if(TR.i>0) tourGo(TR.i-1, -1); return; }

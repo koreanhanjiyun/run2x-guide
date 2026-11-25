@@ -972,8 +972,12 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 :is(#teamPanel,.adm-tm) .tp-person{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0}
 :is(#teamPanel,.adm-tm) .tp-person .btn{margin-left:4px}
 :is(#teamPanel,.adm-tm) .lnk{border:0;background:transparent;color:#5b3fa0;cursor:pointer;font:inherit;font-size:var(--fs-s);text-decoration:underline;margin-left:4px}
-:is(#teamPanel,.adm-tm) .tp-role{font-size:var(--fs-xs);border:1px solid #cfcbdc;border-radius:999px;padding:0 4px;color:#58616d;margin-left:4px}
-:is(#teamPanel,.adm-tm) .tp-role.a{border-color:#6A4294;color:#6A4294}
+:is(#teamPanel,.adm-tm) .tp-role{display:inline-block;font-size:var(--fs-xs);line-height:18px;border:1px solid transparent;border-radius:999px;padding:0 8px;margin-left:4px;font-weight:600}
+/* 역할 칩 4단계: 같은 보라, 진하기로 위계 (회장 채움 → 팀장 옅은 바탕 → 파트장 테두리 → 팀원 회색 글자) */
+:is(#teamPanel,.adm-tm) .tp-role.r-admin{background:#6A4294;border-color:#6A4294;color:#fff}
+:is(#teamPanel,.adm-tm) .tp-role.r-head{background:#ebe3f5;border-color:#ebe3f5;color:#4f2f72}
+:is(#teamPanel,.adm-tm) .tp-role.r-lead{background:transparent;border-color:#6A4294;color:#6A4294}
+:is(#teamPanel,.adm-tm) .tp-role.r-member{background:transparent;color:#6b7280;font-weight:400;padding:0 2px}
 
 :is(#teamPanel,.adm-tm) .tp-fbrow{padding:4px 0;border-bottom:1px dashed #eee}
 .qa-team .btn{margin-left:4px}
@@ -3480,3 +3484,24 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 #v-start .gp-fig{margin:0}
 #v-start .gp-fig svg{display:block;width:100%;height:auto;overflow:visible}
 #v-start .gp-fig figcaption{margin-top:var(--sp-2);font-size:var(--fs-s);color:var(--muted);text-align:center}
+
+/* 팀원 명단의 내 줄 (2026-11-25): 정렬·검색·거르기와 상관없이 늘 첫 줄, 왼쪽 보라 띠 + [나] 표, 이름 칸에서 바로 이름 바꾸기 */
+.tp-mt tr.tp-mine td{background:#f7f4fb;border-bottom:1px solid #d9cfe8}
+.tp-mt tr.tp-mine td:first-child{box-shadow:inset 3px 0 0 #6A4294}
+.tp-mt tr.tp-mine .tp-mn{color:#3f2560}
+.tp-metag{display:inline-block;font-size:var(--fs-xs);line-height:18px;font-weight:700;color:#fff;background:#6A4294;border-radius:4px;padding:0 6px;margin-right:8px;vertical-align:1px}
+.tp-mt tr.tp-mine .tp-nmbtn{font-weight:400}
+
+/* 도움말 안내 창 (2026-11-25): 머리띠 [이 탭 사용법] 아래에 문의 창과 같은 모양으로, 꼭지가 버튼을 가리킴. 그동안 버튼은 테두리 강조 */
+#helpPop{position:fixed;z-index:70;width:340px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 12px 32px rgba(20,24,40,.22);font-size:var(--fs-s);transform-origin:top right}
+#helpPop::before{content:"";position:absolute;top:-7px;right:calc(var(--hp-ax,40px) - 7px);width:12px;height:12px;background:var(--panel);border-left:1px solid var(--line-2);border-top:1px solid var(--line-2);transform:rotate(45deg)}
+#helpPop .hpp-h{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--line)}
+#helpPop .fbp-x{border:0;background:none;font-size:var(--fs-xl);line-height:1;cursor:pointer;color:var(--muted)}
+#helpPop .hpp-b{padding:12px 16px 16px;display:flex;flex-direction:column;gap:12px}
+#helpPop .hpp-b p{margin:0;line-height:1.6}
+#helpPop .hpp-now{display:flex;align-items:baseline;gap:8px;padding:8px 12px;background:#f5f1fa;border-radius:8px}
+#helpPop .hpp-now span{font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em}
+#helpPop .hpp-now b{color:#4f2f72}
+#helpPop .hpp-a{display:flex;justify-content:flex-end}
+#tourBtn.hp-on{box-shadow:0 0 0 2px #fff,0 0 0 5px rgba(201,168,240,.85);animation:hp-ring 1.4s ease-in-out infinite}
+@keyframes hp-ring{50%{box-shadow:0 0 0 2px #fff,0 0 0 8px rgba(201,168,240,.35)}}

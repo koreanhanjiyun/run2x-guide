@@ -11,6 +11,8 @@
   const T = Backend.Team;
   let C = null;                       // 팀 상태 (불러온 뒤)
   const ROLE = {admin:'회장', head:'팀장', lead:'파트장', member:'팀원'};
+  /* 역할 칩: 같은 보라로 진하기만 4단계 (회장 채움 → 팀장 옅은 바탕 → 파트장 테두리 → 팀원 회색 글자) */
+  const roleChip = (role, tail) => `<span class="tp-role r-${role}">${ROLE[role]||''}${tail||''}</span>`;
   const RL = ['admin','head','lead','member'];
   const say = t => { try{ toast(t); }catch(e){} };
   const fail = (e, t) => { console.error(e); say(t || (Backend.denied(e) ? '권한이 없습니다.' : '처리하지 못했습니다. 잠시 후 다시 시도해 주십시오.')); };
@@ -87,20 +89,27 @@
   function mFilter(box){ if(!box) return; const MF=MFS[box.dataset.kind||'view']; const q=MF.q.trim().toLowerCase(); let n=0, t=0; const blk=MF.scope==='blocked';
     const mt=box.querySelector('table.tp-mt:not(.tp-blt)'), bt=box.querySelector('table.tp-blt'); if(mt) mt.hidden=blk; if(bt) bt.hidden=!blk;
     const rs=box.querySelector('.tp-mrole'); if(rs) rs.disabled=blk;
-    box.querySelectorAll(blk ? 'table.tp-blt tr[data-q]' : 'table.tp-mt:not(.tp-blt) tr[data-q]').forEach(tr=>{ t++; const ok=(!q || tr.dataset.q.includes(q)) && (blk || !MF.role || tr.dataset.r===MF.role) && (blk || MF.scope==='all' || tr.dataset.in==='1'); tr.hidden=!ok; if(ok) n++; });
+    box.querySelectorAll(blk ? 'table.tp-blt tr[data-q]' : 'table.tp-mt:not(.tp-blt) tr[data-q]').forEach(tr=>{ t++; const ok=(!blk && tr.dataset.me==='1') || (!q || tr.dataset.q.includes(q)) && (blk || !MF.role || tr.dataset.r===MF.role) && (blk || MF.scope==='all' || tr.dataset.in==='1'); tr.hidden=!ok; if(ok) n++; });
     const c=box.querySelector('.tp-mcnt'); if(c) c.textContent=`${n}명`; const e=box.querySelector('.tp-mnone'); if(e){ e.hidden=n>0; e.textContent = blk ? '차단한 사람이 없습니다.' : '해당하는 팀원이 없습니다.'; } }
+  /* (나)는 정렬·검색·거르기와 상관없이 늘 맨 위 */
+  const meFirst = f => (a,b) => ((b.uid===C.uid)-(a.uid===C.uid)) || f(a,b);
+  const meTag = '<span class="tp-metag">나</span>';
+  /* 내 줄 이름 칸: [이름 바꾸기] → 그 자리에 입력칸 (팀에 보이는 이름, 바로 저장) */
+  let MYNM = false;
+  const myNameCell = m => MYNM ? `<span class="tp-nmed">${meTag}<input class="tp-nmi tp-myname" maxlength="20" value="${esc(m.name||C.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="myname">저장</button><button type="button" class="lnk" data-tp="mynameclose">취소</button></span>`
+    : `${meTag}${esc(m.name||'(이름 없음)')} <button type="button" class="lnk tp-nmbtn" data-tp="mynameopen" title="팀원 명단·검토 기록·논의에 보이는 이름 (1~20자, 실명 권장)">이름 바꾸기</button>`;
   /* 보기 전용 표 (팀원·계정) */
-  function memberTable(ms, S){ const rows=[...ms].sort(byRoleName(S)).map(m=>{ const r=roleIn(m,S), me=m.uid===C.uid, inS=T.inSeason(m,S);
-      return `<tr data-uid="${esc(m.uid)}" data-r="${r.role}" data-in="${inS?1:0}" data-q="${esc(mKey(m,r))}"><td class="tp-mn">${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''}</td><td><span class="tp-role${r.role!=='member'?' a':''}">${ROLE[r.role]}</span></td><td class="tp-mp">${isLeadRole(r.role)?(r.parts.length?esc(partsShow(r.parts).join(' · ')):'<span class="muted">담당 없음</span>'):'<span class="muted">—</span>'}</td></tr>`; }).join('');
+  function memberTable(ms, S){ const R0=[...ms].sort(meFirst(byRoleName(S))).map(m=>{ const r=roleIn(m,S), me=m.uid===C.uid, inS=T.inSeason(m,S);
+      return `<tr data-uid="${esc(m.uid)}" data-r="${r.role}" data-in="${inS?1:0}" data-q="${esc(mKey(m,r))}"${me?' class="tp-mine" data-me="1"':''}><td class="tp-mn">${me?myNameCell(m):esc(m.name||'(이름 없음)')}</td><td>${roleChip(r.role)}</td><td class="tp-mp">${isLeadRole(r.role)?(r.parts.length?esc(partsShow(r.parts).join(' · ')):'<span class="muted">담당 없음</span>'):'<span class="muted">—</span>'}</td></tr>`; }), rows=R0.join('');
     return `<div class="tp-mtw" data-kind="view">${mBar('view')}<div class="tp-mscroll"><table class="tp-mt"><thead><tr><th>이름</th><th>역할</th><th>담당 파트</th></tr></thead><tbody>${rows}</tbody></table><p class="muted tp-small tp-mnone" hidden>해당하는 팀원이 없습니다.</p></div></div>`; }
   /* 관리 표 (팀 설정): 표에서 바로 명단·역할·담당 파트를 바꿈 → 아래 막대 [모두 저장] */
-  function manageTable(ms, bl){ const rows=[...ms].sort(byRoleName(TEAM_SEASON)).map(m=>{ const e=eff(m), me=m.uid===C.uid, pend=!!MP[m.uid];
-      return `<tr class="tp-card tp-person${pend?' pend':''}" data-uid="${esc(m.uid)}" data-role="${rlOf(m)}" data-r="${e.role}" data-in="${e.active?1:0}" data-q="${esc(mKey(m,e))}">
-        <td class="tp-mn">${NMOPEN[m.uid]?`<span class="tp-nmed"><input class="tp-nmi" maxlength="20" value="${esc(m.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="nameset">저장</button><button type="button" class="lnk" data-tp="nameclose">취소</button></span>`:`${esc(m.name||'(이름 없음)')}${me?' <span class="muted">(나)</span>':''} <button type="button" class="lnk tp-nmbtn" data-tp="nameopen" aria-label="${esc(m.name||'')} 이름 바꾸기">이름</button>`}${pend?' <span class="pend-tag">저장 전</span>':''}</td>
+  function manageTable(ms, bl){ const R0=[...ms].sort(meFirst(byRoleName(TEAM_SEASON))).map(m=>{ const e=eff(m), me=m.uid===C.uid, pend=!!MP[m.uid];
+      return `<tr class="tp-card tp-person${pend?' pend':''}${me?' tp-mine':''}"${me?' data-me="1"':''} data-uid="${esc(m.uid)}" data-role="${rlOf(m)}" data-r="${e.role}" data-in="${e.active?1:0}" data-q="${esc(mKey(m,e))}">
+        <td class="tp-mn">${NMOPEN[m.uid]?`<span class="tp-nmed"><input class="tp-nmi" maxlength="20" value="${esc(m.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="nameset">저장</button><button type="button" class="lnk" data-tp="nameclose">취소</button></span>`:`${me?meTag:''}${esc(m.name||'(이름 없음)')} <button type="button" class="lnk tp-nmbtn" data-tp="nameopen" aria-label="${esc(m.name||'')} 이름 바꾸기">이름</button>`}${pend?' <span class="pend-tag">저장 전</span>':''}</td>
         <td><label class="tp-small"><input type="checkbox" data-tmact${e.active?' checked':''} aria-label="${esc(TEAM_SEASON)} 시즌 명단"> 명단</label></td>
         <td><select data-tmrole aria-label="역할"${e.active?'':' disabled'}>${RL.map(r=>`<option value="${r}"${r===e.role?' selected':''}>${ROLE[r]}</option>`).join('')}</select></td>
         <td class="tp-mp">${isLeadRole(e.role)&&e.active?(CHIPOPEN[m.uid]?`<div class="tp-parts">${chipHtml(e)}<button type="button" class="lnk tp-chipt" data-tmchips>접기</button></div>`:`<div class="tp-parts tp-parts-ro">${e.parts.length?partsShow(e.parts).map(p=>`<span class="tp-pchip on ro${PGROUP[p]?' grp':''}">${esc(p)}</span>`).join(''):'<span class="muted tp-small">담당 없음</span>'}<button type="button" class="lnk tp-chipt" data-tmchips>${e.parts.length?'바꾸기':'고르기'}</button></div>`):'<span class="muted">—</span>'}</td>
-        <td class="tp-mx">${me?'':`<button type="button" class="lnk" data-tp="kick">내보내기</button> <button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button>`}</td></tr>`; }).join('');
+        <td class="tp-mx">${me?'':`<button type="button" class="lnk" data-tp="kick">내보내기</button> <button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button>`}</td></tr>`; }), rows=R0.join('');
     const brows=(bl||[]).slice().sort(byName).map(b=>{ const q=[b.name||'', b.email||''].join(' '); return `<tr class="tp-person" data-uid="${esc(b.uid)}" data-q="${esc((q+' '+(typeof cho==='function'?cho(q):'')).toLowerCase())}"><td class="tp-mn">${esc(b.name||'(이름 없음)')}</td><td>${secretSpan(b.email||'', maskMail(b.email||''))}</td><td class="tp-small muted">${esc((b.at||'').slice(0,10))}</td><td class="tp-mx"><button type="button" class="lnk" data-tp="unblock">차단 해제</button></td></tr>`; }).join('');
     return `<div class="tp-mtw" data-kind="manage">${mBar('manage',(bl||[]).length)}<div class="tp-mscroll"><table class="tp-mt tp-mtm"><thead><tr><th>이름</th><th>${esc(TEAM_SEASON)} 명단</th><th>역할</th><th>담당 파트</th><th></th></tr></thead><tbody>${rows}</tbody></table><table class="tp-mt tp-blt" hidden><thead><tr><th>이름</th><th>이메일</th><th>차단한 날</th><th></th></tr></thead><tbody>${brows}</tbody></table><p class="muted tp-small tp-mnone" hidden>해당하는 팀원이 없습니다.</p></div></div>`; }
   document.addEventListener('input', e=>{ if(!e.target.matches || !e.target.matches('.tp-mq')) return; MFS[e.target.closest('.tp-mtw').dataset.kind].q=e.target.value; mFilter(e.target.closest('.tp-mtw')); });
@@ -176,14 +185,12 @@
     if(mine.length){
       /* 내 팀: 팀마다 [이동]·[나가기] (지금 팀이 아니어도 바로 나감) */
       L += `<div class="tp-sec tp-s-teams"><div class="sec-label">내 팀 (${mine.length})</div>` + mine.map(t=>{ const cur = t.id===c.team && c.state==='member';
-        return `<div class="tp-person tp-myteam" data-tid="${esc(t.id)}"><span>${esc(t.name)}${cur?` <span class="tp-role a">${ROLE[c.role]} · 지금 팀</span>`:''}</span><span class="tp-tacts">${cur?'':`<button type="button" class="btn small" data-tp="switch" data-tid="${esc(t.id)}">이동</button>`}<button type="button" class="btn small tp-leavebtn" data-tp="leaveteam" data-tid="${esc(t.id)}"${cur?' data-cur="1"':''}>나가기</button></span></div>`; }).join('')
+        return `<div class="tp-person tp-myteam" data-tid="${esc(t.id)}"><span>${esc(t.name)}${cur?` ${roleChip(c.role,' · 지금 팀')}`:''}</span><span class="tp-tacts">${cur?'':`<button type="button" class="btn small" data-tp="switch" data-tid="${esc(t.id)}">이동</button>`}<button type="button" class="btn small tp-leavebtn" data-tp="leaveteam" data-tid="${esc(t.id)}"${cur?' data-cur="1"':''}>나가기</button></span></div>`; }).join('')
         + `<p class="muted tp-small">나가기는 한 번 더 눌러 확인합니다. 회장은 나갈 수 없습니다. 팀을 삭제하거나, 다른 사람을 회장으로 지정하고 내 역할을 내린 뒤 나가십시오.</p></div>`;
     }
     let ms=[];
     if(c.state==='member'){
       try{ ms = await T.members(); }catch(e){ console.error(e); }
-      const meM = ms.find(m=>m.uid===c.uid);
-      L += `<div class="tp-sec tp-s-dname"><div class="sec-label">팀에 보이는 이름</div><div class="tp-row"><input class="tp-myname" maxlength="20" value="${esc(meM&&meM.name||c.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="myname">저장</button></div><p class="muted tp-small">팀원 명단·검토 기록·논의에 보이는 이름입니다. 구글 계정 이름과 따로 정하며, 회장도 팀 설정에서 바꿀 수 있습니다. 서로 알아볼 수 있게 실명을 권장합니다.</p></div>`;
       L += `<div class="tp-sec tp-s-invite"><div class="sec-label">팀원 초대</div><div class="tp-row"><button type="button" class="btn small" data-tp="invite">초대 문구 복사</button></div><p class="muted tp-small">사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 톡방에 붙여 넣고, 비밀번호는 따로 알려 주십시오.</p></div>`;
     }
     L += `<div class="tp-sec tp-s-join"><div class="sec-label">${c.state==='member'?'다른 팀 가입':'팀 가입'}</div><p class="muted tp-small">회장에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>${form('join','가입')}</div>`;
@@ -254,8 +261,10 @@
       case 'join': case 'create': { const n=P.querySelector('.tp-n-'+k).value, pw=P.querySelector('.tp-p-'+k).value;
         try{ return k==='join' ? await T.join(n,pw) : await T.create(n,pw); }catch(e){ if(e && e.message && /^[가-힣]/.test(e.message)) return say(e.message); throw e; } }
       case 'switch': return T.choose(el.dataset.tid);
+      case 'mynameopen': MYNM=true; return render().then(()=>{ const i=P.querySelector('.tp-myname'); if(i){ i.focus(); i.select(); } });
+      case 'mynameclose': MYNM=false; return render();
       case 'myname': { const n=cleanName(P.querySelector('.tp-myname').value); if(!n || n.length>20) return say('이름은 1~20자로 입력하십시오.');
-        await T.setName(C.uid, n); say('팀에 보이는 이름을 바꿨습니다.'); return again(); }
+        await T.setName(C.uid, n); MYNM=false; say('팀에 보이는 이름을 바꿨습니다.'); if(TM()) renderTM().catch(()=>{}); return render(); }
       case 'nameopen': NMOPEN[uid]=1; return renderTM().then(()=>{ const i=TM() && TM().querySelector(`tr[data-uid="${CSS.escape(uid)}"] .tp-nmi`); if(i){ i.focus(); i.select(); } });
       case 'nameclose': delete NMOPEN[uid]; return renderTM();
       case 'nameset': { const n=cleanName(row.querySelector('.tp-nmi').value); if(!n || n.length>20) return say('이름은 1~20자로 입력하십시오.');
@@ -333,6 +342,8 @@
     if(b && P.contains(b)){ e.preventDefault(); if(b.dataset.tp==='invite'){ copyText(inviteText(), '초대 문구를 복사했습니다. 비밀번호는 따로 알려 주십시오.'); return; } act(b.dataset.tp, b).catch(err=>fail(err)); return; }
     if(!P.contains(e.target)) close();
   }, true);
+  /* 이름 입력칸에서 Enter = 옆 [저장] */
+  document.addEventListener('keydown', e=>{ if(e.key!=='Enter' || !e.target.matches || !e.target.matches('.tp-nmi')) return; const b=e.target.parentNode.querySelector('[data-tp=myname],[data-tp=nameset]'); if(b){ e.preventDefault(); b.click(); } });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ close(); fbClose(); } if((e.key==='Enter'||e.key===' ') && document.activeElement && document.activeElement.id==='seasonChip' && document.activeElement.classList.contains('sc-team')){ e.preventDefault(); open(); } });
   addEventListener('resize', place);
   document.addEventListener('change', e=>{ if(!e.target.matches || !e.target.matches('.adm-tm .tp-file')) return; const f=e.target.files[0]; if(!f) return; const box=e.target.closest('.adm-tm').querySelector('.tp-imp');
