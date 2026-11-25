@@ -232,25 +232,25 @@ const GS = (() => {
       + `<path d="M${U(.45)} ${V(sb(.45))}V${V(sg(.45))}" stroke="var(--ink)" stroke-width="1.6" marker-end="url(#gsA)"/>` + T(U(.45) + 8, V((sg(.45) + sb(.45)) / 2) + 4, '더 빠름', {b: 1, fs: 11.5})
       + `<path d="M${X(.55)} 222h22" stroke="var(--ink)" stroke-width="2.4"/>` + T(X(.55) + 28, 226, '제한 출력에 빨리 닿는 차', {fs: 11}) + `<path d="M${U(.1)} 222h22" stroke="${ORG}" stroke-width="2.2" stroke-dasharray="6 4"/>` + T(U(.1) + 28, 226, '늦게 닿는 차', {fs: 11, c: ORG}),
       '③ 출력 한계까지 가속: 제한 출력에 빨리 닿는 차가 같은 시간에 더 빠름', 600, 240); },
-  /* ④ 구동력 전달: 왼쪽으로 도는 코너 탈출. 각 뒷바퀴의 마찰 타원(크기 ∝ 하중) 안에서 선회 힘(옆, 회색) + 구동 힘(앞, 보라) = 합력(검정).
-     오픈 디퍼렌셜은 두 바퀴 구동 힘이 같아 안쪽이 한계에 닿으면 바깥은 남음. LSD 는 바깥에 더 보내 두 바퀴 모두 한계까지 */
-  () => { const kI = 22, kO = 36, fyS = .62, panel = (x0, lab, lsd) => { const ci = [x0 + 62, 108], co = [x0 + 202, 108];
-      const lim = k => FE.ax * k * Math.sqrt(1 - fyS * fyS), fyI = fyS * FE.ay * kI, fyO = fyS * FE.ay * kO, dI = lim(kI), dO = lsd ? lim(kO) : dI;
+  /* ④ 구동력 전달: 왼쪽으로 도는 코너 탈출. 축 = 바퀴 힘 ÷ 그 바퀴 하중 [g] → 두 바퀴 마찰 타원 크기 같음. 선회 힘(옆, 회색) + 구동 힘(앞, 보라) = 합력(검정).
+     오픈 디퍼렌셜은 두 바퀴 구동 힘 [N] 이 같으므로 하중이 적은 안쪽은 g 로 더 커 먼저 한계, 바깥은 하중 비(wI/wO)만큼만 → 남는 그립. LSD 는 바깥에 더 보내 두 바퀴 모두 한계 */
+  () => { const k = 26, wLi = 22, wLo = 36, fyS = .62, panel = (x0, lab, lsd) => { const ci = [x0 + 62, 108], co = [x0 + 202, 108];
+      const lim = k => FE.ax * k * Math.sqrt(1 - fyS * fyS), kI = k, kO = k, fyI = fyS * FE.ay * k, fyO = fyI, dI = lim(k), dO = lsd ? lim(k) : dI * wLi / wLo;
       const wheel = (c, k, fy, d) => `<path d="${fePath(c[0], c[1], k)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6"/><path d="M${c[0] - FE.ay * k - 6} ${c[1]}H${c[0] + FE.ay * k + 6}M${c[0]} ${c[1] - FE.ax * k - 6}V${c[1] + FE.br * k + 6}" stroke="var(--line-2)"/>`
-        + T(c[0] + FE.ay * k + 8, c[1] + 4, 'F' + sub('y'), {fs: 10.5, c: 'var(--muted)'}) + T(c[0] + 4, c[1] - FE.ax * k - 8, 'F' + sub('x'), {fs: 10.5, c: 'var(--muted)'})
+        + T(c[0] + FE.ay * k + 8, c[1] + 4, '옆', {fs: 10.5, c: 'var(--muted)'}) + T(c[0] - 4, c[1] - FE.ax * k - 8, '앞뒤 [g]', {a: 'end', fs: 10.5, c: 'var(--muted)'})
         + `<path d="M${c[0] - fy} ${c[1]}V${c[1] - d}H${c[0]}" fill="none" stroke="var(--line-2)" stroke-dasharray="3 3"/>`
         + arr(c[0], c[1], c[0] - fy, c[1], '#8a8f99', 'gsAs', 2.2) + arr(c[0], c[1], c[0], c[1] - d, ACC, 'gsBs', 3.2) + arr(c[0], c[1], c[0] - fy, c[1] - d, 'var(--ink)', 'gsAs', 2);
       const g = 200, wI = x0 + 62, wO = x0 + 202;
       return T(x0 + 132, 22, lab, {a: 'middle', b: 1}) + wheel(ci, kI, fyI, dI) + wheel(co, kO, fyO, dO)
-        + (lsd ? '' : (() => { const lo = lim(kO); return `<path d="M${co[0]} ${co[1] - dI - 2}V${co[1] - lo}" stroke="${ORG}" stroke-width="3"/>` + T(co[0] + 6, co[1] - dI - 4, '남는 그립', {c: ORG, fs: 11}); })())
+        + (lsd ? '' : (() => { const lo = lim(kO); return `<path d="M${co[0]} ${co[1] - dO - 2}V${co[1] - lo}" stroke="${ORG}" stroke-width="3"/>` + T(co[0] + 4, co[1] - FE.ax * k - 8, '남는 그립', {c: ORG, fs: 10.5}); })())
         + `<path d="M${wI} ${g - 26}H${wO}" stroke="var(--ink-2)" stroke-width="2.4"/><rect x="${(wI + wO) / 2 - 13}" y="${g - 38}" width="26" height="24" rx="4" fill="var(--panel)" stroke="var(--ink-2)" stroke-width="1.4"/>`
         + T((wI + wO) / 2, g - 21, lsd ? 'LSD' : '오픈', {a: 'middle', fs: 9.5, b: 1})
         + `<rect x="${wI - 11}" y="${g - 50}" width="22" height="50" rx="7" fill="#2a2f38"/><rect x="${wO - 13}" y="${g - 50}" width="26" height="50" rx="7" fill="#2a2f38"/><path d="M${x0 + 10} ${g}H${x0 + 260}" stroke="var(--ink-2)"/>`
-        + T(wI, g + 16, '안쪽', {a: 'middle', fs: 11}) + T(wO, g + 16, '바깥', {a: 'middle', fs: 11})
+        + T(wI, g + 16, '안쪽 · 하중 작음', {a: 'middle', fs: 11}) + T(wO, g + 16, '바깥 · 하중 큼', {a: 'middle', fs: 11})
         + T(x0 + 132, g + 38, lsd ? '바깥에 더 → 두 바퀴 모두 한계까지' : '구동 힘 같음 → 약한 바퀴만큼만', {a: 'middle', fs: 11.5, c: lsd ? GRN : ORG, b: 1}); };
     return svg(panel(14, '오픈 디퍼렌셜', false) + panel(318, 'LSD', true) + `<path d="M300 30V230" stroke="var(--line)"/>`
-      + `<path d="M210 262h18" stroke="#8a8f99" stroke-width="2.2"/>` + T(232, 266, '선회 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M290 262h18" stroke="${ACC}" stroke-width="3.2"/>` + T(312, 266, '구동 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M370 262h18" stroke="var(--ink)" stroke-width="2"/>` + T(392, 266, '합력', {fs: 10.5, c: 'var(--muted)'}) + T(590, 266, 'F = 바퀴 힘 [N]', {a: 'end', fs: 10.5, c: 'var(--muted)'}),
-      '④ 구동력 전달: 코너 탈출에서 안쪽 뒷바퀴는 하중이 적어 마찰 타원이 작음. 오픈 디퍼렌셜은 두 바퀴에 같은 구동 힘만 보내 바깥 바퀴 그립이 남고, LSD는 바깥 바퀴도 한계까지 씀', 600, 276); },
+      + `<path d="M210 262h18" stroke="#8a8f99" stroke-width="2.2"/>` + T(232, 266, '선회 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M290 262h18" stroke="${ACC}" stroke-width="3.2"/>` + T(312, 266, '구동 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M370 262h18" stroke="var(--ink)" stroke-width="2"/>` + T(392, 266, '합력', {fs: 10.5, c: 'var(--muted)'}),
+      '④ 구동력 전달: 코너 탈출에서 안쪽 뒷바퀴는 하중이 적음. 오픈 디퍼렌셜은 두 바퀴에 같은 구동 힘만 보내 안쪽이 먼저 한계에 닿고 바깥 바퀴 그립이 남음. LSD는 바깥 바퀴도 한계까지 씀', 600, 276); },
   /* ⑤ 가볍게 · 낮게: 같은 차체, CG 높이만 다름. 높으면 바깥 바퀴로 더 쏠리고 안쪽 바퀴 하중이 크게 줄어듦 (화살표 길이 ∝ 바퀴 하중, 쏠림 비율 = 선회 가속 × CG 높이 / 트레드) */
   () => { const s = .14, ay = 1.0, k = 100, G = 196, one = (x, hcg, lab, note) => { const c = car({x, g: G, s}), dF = ay * hcg / HP.t;
       const cgp = [c.X(0), c.Y(hcg)], gL = c.X(-HP.t / 2), gR = c.X(HP.t / 2), fo = .5 + dF, fi = .5 - dF;
