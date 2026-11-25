@@ -3695,6 +3695,35 @@ body:not(:has(#tour)) #v-team .adm-tm .tp-mtm tbody tr:not(:hover):not(:focus-wi
 /* 저장 막대 목록의 팀원 변경 줄 */
 #draftBar .db-row .db-ch{max-width:340px;white-space:normal;color:var(--ink-2)}
 .adm-tm tr.tt-flash>td{animation:ttFlash 1.4s ease}
+
+/* 참고 탭 (2026-11-25): 위쪽 메뉴로 한 칸만, 칸 머리 줄은 숨김 */
+#ref-list .ref-nav{margin:0 0 16px;border-bottom:1px solid var(--line)}
+#ref-list{border-top:0!important}
+#ref-list > details.ref-pane:not([open]){display:none}
+#ref-list > details.ref-pane > summary{display:none}
+#ref-list > details.ref-pane > .dbody{padding:0 0 24px}
+#ref-list .ref-nav button.cl-breathe{background:color-mix(in srgb,#d9730d 12%,transparent)}
+/* 출처 한 목록 */
+.src-lede{margin:0 0 8px;font-size:var(--fs-s)}
+#ref-list .src-h{margin:20px 0 6px;font-size:var(--fs-m);padding-top:8px;border-top:1px solid var(--line)}
+#ref-list .src-h:first-of-type{border-top:0}
+#ref-list ul.src-ul{list-style:none;padding:0;margin:0}
+#ref-list ul.src-ul>li{padding:6px 0;border-bottom:1px solid var(--line);line-height:1.6}
+#ref-list ul.src-ul>li:last-child{border-bottom:0}
+#ref-list .src-w{display:inline-block;margin-left:6px;font-size:var(--fs-xs);font-weight:600;color:var(--ink-2);background:var(--panel-2,#f2f1f5);border-radius:999px;padding:0 8px;vertical-align:1px}
+#ref-list .src-n{display:block;font-size:var(--fs-s);color:var(--muted)}
+/* 용어 → 검색 */
+#ref-list .gl-go{text-align:left;text-decoration:none;color:var(--ink);padding:2px 6px;margin:-2px -6px;border-radius:6px}
+#ref-list .gl-go:hover{background:#efe8f8;color:#3f2560;text-decoration:underline;text-decoration-color:#6A4294;text-decoration-thickness:2px;text-underline-offset:3px}
+/* 변경 이력 묶음 이름표 */
+#ref-list li.cl-grp{list-style:none;margin:12px 0 4px -24px;font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em}
+#ref-list li.cl-grp:first-child{margin-top:4px}
+#ref-list ul.src-nl{margin:2px 0 0;padding-left:18px;font-size:var(--fs-s);color:var(--muted)}
+#ref-list ul.src-nl>li{padding:0;border:0;line-height:1.5}
+#ref-list > details.ref-pane,#ref-list > details.ref-pane[open]{background:none!important;border:0!important;box-shadow:none!important;padding:0;margin:0}
+#ref-list .src-h{margin:16px 0 2px!important}
+#ref-list ul.src-ul{margin:0!important}
+#ref-list > details.ref-pane > .dbody{background:none!important;border:0!important;box-shadow:none!important}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -17620,7 +17649,7 @@ const escH = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt
 function subify(root){
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode:n=>{
     if(!n.nodeValue.includes('_')) return NodeFilter.FILTER_REJECT;
-    const p = n.parentElement; if(!p || p.closest('.eq,script,style,svg')) return NodeFilter.FILTER_REJECT;
+    const p = n.parentElement; if(!p || p.closest('.eq,script,style,svg,code')) return NodeFilter.FILTER_REJECT;   /* code: 파일 이름 등은 아래첨자로 바꾸지 않음 */
     return NodeFilter.FILTER_ACCEPT; }});
   const list=[]; while(w.nextNode()) list.push(w.currentNode);
   list.forEach(n=>{ SUBRE.lastIndex=0; if(!SUBRE.test(n.nodeValue)) return;
@@ -17939,10 +17968,63 @@ function renderFlow(){
         return `<li data-fid="${it.id}"><span class="fnum">${n}</span><div class="fbody"><div class="fhead"><button class="lnk" data-goto="${it.id}">${it.n}</button>${chip(it.p)}</div>
           <div class="fact">${a[1]}${a[5]?' '+V:''}</div>${a[2].length?`<div class="fdec"><span class="vlab dec">우리 팀 값</span>${a[2].map(t=>`<span class="vchip dec">${t}</span>`).join('')}</div>`:''}</div></li>`; }).join('')}</ol></div>`; }).join('')}</section>`).join('');
 }
-function refSrcExtra(){ if(typeof srcList!=='function') return '';
-  const g=[['시작 탭 배경 글',typeof BG_SRC!=='undefined'?BG_SRC:null],['F1 기술',typeof F1_TECH_SRC!=='undefined'?F1_TECH_SRC:null],['부품 소개',typeof COMP_SRC!=='undefined'?COMP_SRC:null]].filter(x=>x[1]&&x[1].length);
-  return g.map(([h,a])=>`<h4 class="src-h" aria-level="2">${h}</h4><ul class="pl">${srcList(a)}</ul>`).join(''); }
-function renderRefs(){ $('#ref-list').innerHTML = REFS.map(r=>`<details class="step"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?'<h4 class="src-h">설계 탭 본문</h4>'+r.b+refSrcExtra():r.b}</div></details>`).join(''); }
+/* ---------- 참고 탭 (2026-11-25): 위쪽 메뉴(용어집 · 출처 · 변경 이력)로 한 번에 한 칸만. 칸은 예전처럼 <details>로 두어
+   다른 코드(검색 → 용어, 도구 1 → 출처, 업데이트 알림 → 변경 이력)가 d.open=true 로 여는 것을 그대로 받음: 열리면 그 메뉴로 바뀜 ---------- */
+/* 출처 한 목록: 설계 탭 본문 · 시작 탭 배경 글 · F1 기술 · 부품 소개의 출처를 합쳐 중복을 없애고 근거 순위(규정 → 교재 → 논문 → 제조사 · 팀 자료 → 언론 · 웹 → 웹 백과)로 묶음.
+   같은 문헌이 표기만 다르게 여러 번 있던 것은 아래 표준 표기로 하나 (저자, 제목, 출판사, 연도) */
+const SRC_CANON = [
+  [/race car vehicle dynamics/i, 'milliken', 'W. F. Milliken, D. L. Milliken, <i>Race Car Vehicle Dynamics</i>, SAE International, 1995', '교재'],
+  [/race car aerodynamics/i, 'katz', 'J. Katz, <i>Race Car Aerodynamics: Designing for Speed</i>, Bentley Publishers, 1995', '교재'],
+  [/formula 1 technology/i, 'wright', 'P. Wright, <i>Formula 1 Technology</i>, SAE International, 2001', '교재'],
+  [/차량기술규정/, 'ksae-tech', '한국자동차공학회, <i>2026 대학생 자작자동차대회 Formula 차량기술규정</i>', '규정'],
+  [/경기진행규정/, 'ksae-event', '한국자동차공학회, <i>2026 대학생 자작자동차대회 Formula 경기진행규정</i>', '규정'],
+  [/REF4.*(STEP|CAD|조립)|REF4_Assy/i, 'ref4', 'Run2X, <i>REF4 조립품 CAD</i> (<code>REF4_Assy_07.22.STEP</code>, 지난 Run2X 차량)', '팀'],
+];
+const SRC_CAT = [['규정','규정'],['교재','교재'],['논문','논문'],['팀','제조사 · 팀 자료'],['웹','언론 · 웹'],['백과','웹 백과']];
+const SRC_USED = {d:'설계 탭', b:'시작 탭', f:'F1 기술', c:'부품 소개'};
+function srcCat(t, u){ if(/wikipedia/i.test(u||'') || /^Wikipedia/.test(t)) return '백과';
+  if(/규정|Rules/i.test(t)) return '규정';
+  if(/Journal|IEEE|SAE \d{4}-\d{2}-\d{4}|학위논문|TFG|Rešerše/.test(t)) return '논문';
+  if(/Gillespie|Pacejka|Staniforth|Tune to Win|Biomechanics and Motor Control/.test(t)) return '교재';
+  if(/REF4|Run2X|TTX25|EMRAX|Drexler|Balance Motorsport|FIRGELLI|Altair|MUR Motorsports|Formula Student Germany|FSAE\.com|McLaren, 1981|Honda,/.test(t)) return '팀';
+  return '웹'; }
+function srcUnified(designHTML){
+  const raw = [];   /* {html, text, url, note, w} */
+  const tmp = document.createElement('div'); tmp.innerHTML = designHTML;
+  tmp.querySelectorAll('li').forEach(li=>{ const a=li.querySelector('a'); raw.push({html:li.innerHTML, text:li.textContent.trim(), url:a?a.href:'', note:'', w:'d'}); });
+  const add = (arr, w) => (arr||[]).forEach(x=>{ if(typeof x==='string'){ const m=x.match(/^(.*?)\s*[—-]\s*(https?:\/\/\S+)$/); raw.push(m ? {html:esc(m[1]), text:m[1], url:m[2], note:'', w} : {html:esc(x), text:x, url:'', note:'', w}); }
+    else raw.push({html:esc(x.t), text:x.t, url:x.u||'', note:x.note||'', w}); });
+  add(typeof BG_SRC!=='undefined'?BG_SRC:null, 'b'); add(typeof F1_TECH_SRC!=='undefined'?F1_TECH_SRC:null, 'f'); add(typeof COMP_SRC!=='undefined'?COMP_SRC:null, 'c');
+  const map = new Map();
+  const put = (key, base) => { if(!map.has(key)) map.set(key, Object.assign({used:new Set(), notes:[]}, base)); return map.get(key); };
+  raw.forEach(r=>{ const hits = SRC_CANON.filter(c=>c[0].test(r.text) && !(c[1]==='ref4' && /설계보고서/.test(r.text)));
+    /* 합친 문헌의 메모: 원래 줄마다 '조항 — 쓴 곳 설명' 한 줄씩 (조항은 원문 그대로) */
+    let clause = (r.text.match(/제\s?\d[\s\S]*$/)||[''])[0].trim(); if((clause.match(/\)/g)||[]).length > (clause.match(/\(/g)||[]).length) clause = clause.replace(/\)\s*$/,'');
+    if(hits.length){ hits.forEach(c=>{ const e=put('c:'+c[1], {html:c[2], url:'', cat:c[3]}); e.used.add(r.w); const n=[hits.length===1?clause:'', r.note].filter(Boolean).join(' — '); if(n && !e.notes.includes(n)) e.notes.push(n); }); return; }
+    const key = r.url ? 'u:'+r.url.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'') : 't:'+r.text.toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
+    const e = put(key, {html:r.html, url:r.url, cat:srcCat(r.text, r.url)}); e.used.add(r.w); if(r.note && !e.notes.includes(r.note)) e.notes.push(r.note); });
+  const all = [...map.values()];
+  return `<p class="muted src-lede">가이드 전체에서 쓴 출처 ${all.length}개입니다. 근거 순위대로 묶었고, 줄 끝은 쓰인 곳입니다.</p>` + SRC_CAT.map(([k,lab])=>{ const g=all.filter(e=>e.cat===k); if(!g.length) return '';
+    return `<h4 class="src-h" aria-level="2">${lab} <span class="muted">${g.length}</span></h4><ul class="pl src-ul">${g.map(e=>{ const t = e.url && !/<a /.test(e.html) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${e.html}</a>` : e.html;
+      return `<li><span class="src-t">${t}</span>${[...e.used].map(w=>`<span class="src-w">${SRC_USED[w]}</span>`).join('')}${e.notes.length>1?`<ul class="src-nl">${e.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:e.notes.length?`<span class="src-n">${esc(e.notes[0])}</span>`:''}</li>`; }).join('')}</ul>`; }).join(''); }
+const REF_KEYS = [['용어집','gloss'],['출처','src'],['변경 이력','log']];
+let REFSUB = null, REFWRAP = false;
+function renderRefs(){ if(REFSUB==null) REFSUB = (typeof PREF==='function' && PREF('refsub','용어집')) || '용어집';
+  /* views.js 는 tabs-nav.js 보다 먼저 읽히므로 showTab 감싸기는 처음 그릴 때(init 이후) */
+  if(!REFWRAP && typeof showTab==='function'){ REFWRAP=true; const _st=showTab; showTab=function(t){ const r=_st.apply(this, arguments); if(t==='ref') requestAnimationFrame(()=>{ if(!refPanes().some(d=>d.open)) refShow(REFSUB, true); else refNav(); }); return r; }; }
+  $('#ref-list').innerHTML = `<nav class="tt-nav ref-nav" role="tablist" aria-label="참고 화면">${REFS.map(r=>`<button type="button" role="tab" data-refsub="${esc(r.t)}" aria-selected="false">${r.t}</button>`).join('')}</nav>`
+    + REFS.map(r=>`<details class="step ref-pane"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?srcUnified(r.b):r.b}</div></details>`).join('');
+  refShow(REFSUB, true); }
+function refPanes(){ return [...document.querySelectorAll('#ref-list > details')]; }
+let REFBUSY = false;
+function refShow(t, quiet){ const ps=refPanes(); if(!ps.length) return; const p=ps.find(d=>d.querySelector(':scope>summary .stitle').textContent.trim()===t) || ps[0];
+  REFBUSY = true; ps.forEach(d=>{ d.open = d===p; }); REFBUSY = false; REFSUB = p.querySelector(':scope>summary .stitle').textContent.trim();
+  if(!quiet && typeof SETP==='function') SETP('refsub', REFSUB); refNav(); }
+function refNav(){ document.querySelectorAll('#ref-list .ref-nav [data-refsub]').forEach(b=>{ const on=b.dataset.refsub===REFSUB; b.setAttribute('aria-selected', String(on));
+  const d=refPanes().find(x=>x.querySelector(':scope>summary .stitle').textContent.trim()===b.dataset.refsub); b.classList.toggle('cl-breathe', !!(d && d.querySelector(':scope>summary.cl-breathe'))); }); }
+document.addEventListener('click', e=>{ const b=e.target.closest('#ref-list [data-refsub]'); if(!b) return; e.preventDefault(); refShow(b.dataset.refsub); });
+/* 다른 코드가 칸을 열면(d.open=true) 그 메뉴로 바꿈. 모두 닫히면(다른 탭으로 갈 때 접기) 돌아왔을 때 보던 메뉴를 다시 엶 */
+document.addEventListener('toggle', e=>{ const d=e.target; if(REFBUSY || !(d && d.matches && d.matches('#ref-list > details'))) return; if(d.open) refShow(d.querySelector(':scope>summary .stitle').textContent.trim()); }, true);
 
 /* ============================================================
    연결도
@@ -18543,6 +18625,8 @@ function initGlossary(){
   const d=[...document.querySelectorAll('#ref-list > details')].find(x=>x.querySelector(':scope>summary .stitle')?.textContent.trim()==='용어집'); if(!d) return;
   const body=d.querySelector('.dbody'), rows=[...body.querySelectorAll('tbody tr')];
   const G=rows.map((tr,i)=>{ tr.id='gl-'+i; return {tr, name:tr.cells[0].textContent.trim(), def:tr.cells[1].textContent.trim()}; });
+  /* 용어를 누르면 위쪽 검색창에 그 용어를 넣어 그 용어가 나오는 항목을 보여 줌 (괄호 속 약자 · '·' 뒤는 뺌) */
+  G.forEach(g=>{ const q=g.name.split(/\s*·\s*/)[0].replace(/\s*\([^)]*\)\s*$/,'').trim(); const c=g.tr.cells[0]; c.innerHTML=`<button type="button" class="lnk gl-go" data-glq="${esc(q)}" title="'${esc(q)}'이(가) 나오는 항목 찾기">${c.innerHTML}</button>`; });
   const box=document.createElement('div'); box.className='gsrch';
   box.innerHTML=`<input type="text" class="gq" placeholder="용어 검색 (초성 가능: ㅅㅋㄹ)" aria-label="용어 검색" autocomplete="off"><div class="aclist" hidden role="listbox"></div>`;
   body.prepend(box);
@@ -18583,6 +18667,9 @@ function graphAlign(){ const st=document.querySelector('#v-steps'), gv=document.
   let raf=0; const upd=()=>{ raf=0; b.hidden = window.scrollY < window.innerHeight; };
   addEventListener('scroll', ()=>{ if(!raf) raf=requestAnimationFrame(upd); }, {passive:true}); addEventListener('resize', ()=>{ if(!raf) raf=requestAnimationFrame(upd); });
   b.addEventListener('click', ()=>smoothScrollTo(()=>0)); }
+
+document.addEventListener('click', e=>{ const b=e.target.closest('[data-glq]'); if(!b) return; e.preventDefault(); const inp=$('#gsearch'); if(!inp) return;
+  inp.value=b.dataset.glq; inp.focus(); inp.dispatchEvent(new Event('input', {bubbles:true})); });
 </script>
 <script>
 /* ============================================================
@@ -18859,12 +18946,19 @@ document.addEventListener('pointerdown',e=>{ const h=e.target.closest('.toc-rs')
   const up=ev=>{ h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up); document.body.classList.remove('toc-drag'); SETP('tocw', String(Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tocw'))))); };
   h.addEventListener('pointermove',mv); h.addEventListener('pointerup',up); });
 
+/* ---------- 변경 이력: 한 버전 안을 설계 내용 → 도구 → 기능 → 화면 순으로 묶고 이름표 (문구는 그대로, 순서만) ---------- */
+function clGroup(ul){ const lis=[...ul.children].filter(x=>x.tagName==='LI'); if(lis.length<4) return;
+  const kind=li=>{ const t=li.textContent.trim(); if(li.querySelector('.cl-fix') || li.dataset.go) return 0; if(/^도구\s?\d|^도구 \d/.test(t) || /^도구/.test(t)) return 1; if(/^화면/.test(t)) return 3; return 2; };
+  const G=[[],[],[],[]]; lis.forEach(li=>G[kind(li)].push(li)); if(G.filter(g=>g.length).length<2) return;
+  const lab=['설계 내용','도구','기능','화면']; ul.innerHTML='';
+  G.forEach((g,i)=>{ if(!g.length) return; const h=document.createElement('li'); h.className='cl-grp'; h.textContent=lab[i]; ul.append(h, ...g); }); }
 /* ---------- 변경 이력: 버전 선택 ---------- */
 function initChangelog(){
   const d=[...document.querySelectorAll('#ref-list > details')].find(x=>x.querySelector(':scope>summary .stitle')?.textContent.trim()==='변경 이력'); if(!d) return;
   const body=d.querySelector('.dbody'); const labs=[...body.querySelectorAll(':scope > .sec-label')].filter(l=>/^\d+\.\d+\.\d+/.test(l.textContent.trim()));
   if(!labs.length) return;
   const vers=labs.map(l=>{ const box=document.createElement('div'); box.className='clv'; l.before(box); box.append(l); l.hidden=true; const ul=box.nextElementSibling; if(ul && ul.matches('ul')) box.append(ul); return {v:l.textContent.trim(), box}; });
+  vers.forEach(x=>{ const ul=x.box.querySelector(':scope>ul'); if(ul) clGroup(ul); });
   const sel=document.createElement('div'); sel.className='clsel';
   sel.innerHTML=`<span>버전</span><div class="cldd"><button type="button" class="cldd-b" aria-haspopup="listbox" aria-expanded="false"></button><ul class="cldd-l" role="listbox" hidden>${vers.map((x,i)=>`<li role="option" data-i="${i}">${x.v}${i===0?' <em>최신</em>':''}</li>`).join('')}</ul></div>`;
   vers[0].box.before(sel);
@@ -31224,7 +31318,7 @@ const TOUR = {
   ['#dpart','파트별','파트별 선도입니다. 전체 범위의 그래프에 지금 조건을 세로 점선으로 표시합니다. 회색 탭은 그 계산 도구를 만들 때 열립니다.',{tab:'tools'}],
   ['#v-tools .tl-tools','도구 모음','설계 단계 순서의 계산 도구 목록입니다. 누르면 전체 화면 작업창으로 열립니다.',{tab:'tools'}]
  ],
- ref: [['#ref-list','참고','용어집(검색 가능)·기준 규정·출처·변경 이력입니다. 줄을 누르면 펼쳐집니다.',{tab:'ref'}]],
+ ref: [['#ref-list .ref-nav','참고','위쪽 메뉴로 용어집 · 출처 · 변경 이력을 바꿔 봅니다. 용어집은 검색할 수 있고, 용어를 누르면 그 용어가 나오는 설계 항목을 위쪽 검색창에 보여 줍니다. 출처는 근거 순위(규정 → 교재 → 논문 → 제조사 · 팀 자료 → 언론 · 웹)로 묶었고, 줄 끝에 쓰인 곳이 있습니다.',{tab:'ref'}]],
  team_nolog: [
   ['#v-team .tt-nav','팀 메뉴','로그인 전에는 [팀원 · 계정]이 먼저 열립니다. 로그인하고 팀에 가입하면 진행 현황·시즌 요약이 보입니다. [대회 점수]는 로그인 없이 볼 수 있습니다.',{tab:'team',sub:'account',union:'button:not([hidden])'}],
   ['#v-team #teamPanel','로그인 · 가입','구글로 로그인한 뒤 회장에게 받은 팀 이름·비밀번호로 가입합니다. 가이드와 계산기는 로그인 없이 쓸 수 있습니다.',{tab:'team',sub:'account'}],
