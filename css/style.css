@@ -3731,3 +3731,9 @@ ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;bo
 .rec-in input:disabled{background:#f2f1f5;color:var(--muted)}
 #draftBar .db-row{grid-template-columns:minmax(230px,1fr) minmax(0,340px) auto}
 #draftBar .db-go{grid-template-columns:48px minmax(90px,1fr) auto}
+
+/* 우리 팀 값 입력칸 (2026-11-25): 항목 화면 오른쪽 칸(약 330 px)에서 이름 200 px 때문에 값 칸이 40 px로 눌렸음 → 이름은 윗줄, 값 · 비고는 아랫줄 전체 폭 */
+.tv-edit{gap:10px}
+.tv-edit label{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:4px 6px}
+.tv-edit label>.vchip{grid-column:1/-1;justify-self:start}
+.tv-edit input{height:30px}
