@@ -34,7 +34,7 @@ const escH = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt
 function subify(root){
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode:n=>{
     if(!n.nodeValue.includes('_')) return NodeFilter.FILTER_REJECT;
-    const p = n.parentElement; if(!p || p.closest('.eq,script,style,svg')) return NodeFilter.FILTER_REJECT;
+    const p = n.parentElement; if(!p || p.closest('.eq,script,style,svg,code')) return NodeFilter.FILTER_REJECT;   /* code: 파일 이름 등은 아래첨자로 바꾸지 않음 */
     return NodeFilter.FILTER_ACCEPT; }});
   const list=[]; while(w.nextNode()) list.push(w.currentNode);
   list.forEach(n=>{ SUBRE.lastIndex=0; if(!SUBRE.test(n.nodeValue)) return;

@@ -3672,3 +3672,32 @@ body:not(:has(#tour)) #v-team .adm-tm .tp-mtm tbody tr:not(:hover):not(:focus-wi
 /* 저장 막대 목록의 팀원 변경 줄 */
 #draftBar .db-row .db-ch{max-width:340px;white-space:normal;color:var(--ink-2)}
 .adm-tm tr.tt-flash>td{animation:ttFlash 1.4s ease}
+
+/* 참고 탭 (2026-11-25): 위쪽 메뉴로 한 칸만, 칸 머리 줄은 숨김 */
+#ref-list .ref-nav{margin:0 0 16px;border-bottom:1px solid var(--line)}
+#ref-list{border-top:0!important}
+#ref-list > details.ref-pane:not([open]){display:none}
+#ref-list > details.ref-pane > summary{display:none}
+#ref-list > details.ref-pane > .dbody{padding:0 0 24px}
+#ref-list .ref-nav button.cl-breathe{background:color-mix(in srgb,#d9730d 12%,transparent)}
+/* 출처 한 목록 */
+.src-lede{margin:0 0 8px;font-size:var(--fs-s)}
+#ref-list .src-h{margin:20px 0 6px;font-size:var(--fs-m);padding-top:8px;border-top:1px solid var(--line)}
+#ref-list .src-h:first-of-type{border-top:0}
+#ref-list ul.src-ul{list-style:none;padding:0;margin:0}
+#ref-list ul.src-ul>li{padding:6px 0;border-bottom:1px solid var(--line);line-height:1.6}
+#ref-list ul.src-ul>li:last-child{border-bottom:0}
+#ref-list .src-w{display:inline-block;margin-left:6px;font-size:var(--fs-xs);font-weight:600;color:var(--ink-2);background:var(--panel-2,#f2f1f5);border-radius:999px;padding:0 8px;vertical-align:1px}
+#ref-list .src-n{display:block;font-size:var(--fs-s);color:var(--muted)}
+/* 용어 → 검색 */
+#ref-list .gl-go{text-align:left;text-decoration:none;color:var(--ink);padding:2px 6px;margin:-2px -6px;border-radius:6px}
+#ref-list .gl-go:hover{background:#efe8f8;color:#3f2560;text-decoration:underline;text-decoration-color:#6A4294;text-decoration-thickness:2px;text-underline-offset:3px}
+/* 변경 이력 묶음 이름표 */
+#ref-list li.cl-grp{list-style:none;margin:12px 0 4px -24px;font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em}
+#ref-list li.cl-grp:first-child{margin-top:4px}
+#ref-list ul.src-nl{margin:2px 0 0;padding-left:18px;font-size:var(--fs-s);color:var(--muted)}
+#ref-list ul.src-nl>li{padding:0;border:0;line-height:1.5}
+#ref-list > details.ref-pane,#ref-list > details.ref-pane[open]{background:none!important;border:0!important;box-shadow:none!important;padding:0;margin:0}
+#ref-list .src-h{margin:16px 0 2px!important}
+#ref-list ul.src-ul{margin:0!important}
+#ref-list > details.ref-pane > .dbody{background:none!important;border:0!important;box-shadow:none!important}

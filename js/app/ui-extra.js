@@ -34,12 +34,19 @@ document.addEventListener('pointerdown',e=>{ const h=e.target.closest('.toc-rs')
   const up=ev=>{ h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up); document.body.classList.remove('toc-drag'); SETP('tocw', String(Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tocw'))))); };
   h.addEventListener('pointermove',mv); h.addEventListener('pointerup',up); });
 
+/* ---------- 변경 이력: 한 버전 안을 설계 내용 → 도구 → 기능 → 화면 순으로 묶고 이름표 (문구는 그대로, 순서만) ---------- */
+function clGroup(ul){ const lis=[...ul.children].filter(x=>x.tagName==='LI'); if(lis.length<4) return;
+  const kind=li=>{ const t=li.textContent.trim(); if(li.querySelector('.cl-fix') || li.dataset.go) return 0; if(/^도구\s?\d|^도구 \d/.test(t) || /^도구/.test(t)) return 1; if(/^화면/.test(t)) return 3; return 2; };
+  const G=[[],[],[],[]]; lis.forEach(li=>G[kind(li)].push(li)); if(G.filter(g=>g.length).length<2) return;
+  const lab=['설계 내용','도구','기능','화면']; ul.innerHTML='';
+  G.forEach((g,i)=>{ if(!g.length) return; const h=document.createElement('li'); h.className='cl-grp'; h.textContent=lab[i]; ul.append(h, ...g); }); }
 /* ---------- 변경 이력: 버전 선택 ---------- */
 function initChangelog(){
   const d=[...document.querySelectorAll('#ref-list > details')].find(x=>x.querySelector(':scope>summary .stitle')?.textContent.trim()==='변경 이력'); if(!d) return;
   const body=d.querySelector('.dbody'); const labs=[...body.querySelectorAll(':scope > .sec-label')].filter(l=>/^\d+\.\d+\.\d+/.test(l.textContent.trim()));
   if(!labs.length) return;
   const vers=labs.map(l=>{ const box=document.createElement('div'); box.className='clv'; l.before(box); box.append(l); l.hidden=true; const ul=box.nextElementSibling; if(ul && ul.matches('ul')) box.append(ul); return {v:l.textContent.trim(), box}; });
+  vers.forEach(x=>{ const ul=x.box.querySelector(':scope>ul'); if(ul) clGroup(ul); });
   const sel=document.createElement('div'); sel.className='clsel';
   sel.innerHTML=`<span>버전</span><div class="cldd"><button type="button" class="cldd-b" aria-haspopup="listbox" aria-expanded="false"></button><ul class="cldd-l" role="listbox" hidden>${vers.map((x,i)=>`<li role="option" data-i="${i}">${x.v}${i===0?' <em>최신</em>':''}</li>`).join('')}</ul></div>`;
   vers[0].box.before(sel);

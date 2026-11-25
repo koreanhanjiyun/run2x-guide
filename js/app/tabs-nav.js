@@ -218,6 +218,8 @@ function initGlossary(){
   const d=[...document.querySelectorAll('#ref-list > details')].find(x=>x.querySelector(':scope>summary .stitle')?.textContent.trim()==='용어집'); if(!d) return;
   const body=d.querySelector('.dbody'), rows=[...body.querySelectorAll('tbody tr')];
   const G=rows.map((tr,i)=>{ tr.id='gl-'+i; return {tr, name:tr.cells[0].textContent.trim(), def:tr.cells[1].textContent.trim()}; });
+  /* 용어를 누르면 위쪽 검색창에 그 용어를 넣어 그 용어가 나오는 항목을 보여 줌 (괄호 속 약자 · '·' 뒤는 뺌) */
+  G.forEach(g=>{ const q=g.name.split(/\s*·\s*/)[0].replace(/\s*\([^)]*\)\s*$/,'').trim(); const c=g.tr.cells[0]; c.innerHTML=`<button type="button" class="lnk gl-go" data-glq="${esc(q)}" title="'${esc(q)}'이(가) 나오는 항목 찾기">${c.innerHTML}</button>`; });
   const box=document.createElement('div'); box.className='gsrch';
   box.innerHTML=`<input type="text" class="gq" placeholder="용어 검색 (초성 가능: ㅅㅋㄹ)" aria-label="용어 검색" autocomplete="off"><div class="aclist" hidden role="listbox"></div>`;
   body.prepend(box);
@@ -258,3 +260,6 @@ function graphAlign(){ const st=document.querySelector('#v-steps'), gv=document.
   let raf=0; const upd=()=>{ raf=0; b.hidden = window.scrollY < window.innerHeight; };
   addEventListener('scroll', ()=>{ if(!raf) raf=requestAnimationFrame(upd); }, {passive:true}); addEventListener('resize', ()=>{ if(!raf) raf=requestAnimationFrame(upd); });
   b.addEventListener('click', ()=>smoothScrollTo(()=>0)); }
+
+document.addEventListener('click', e=>{ const b=e.target.closest('[data-glq]'); if(!b) return; e.preventDefault(); const inp=$('#gsearch'); if(!inp) return;
+  inp.value=b.dataset.glq; inp.focus(); inp.dispatchEvent(new Event('input', {bubbles:true})); });
