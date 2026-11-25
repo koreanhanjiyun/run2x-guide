@@ -66,11 +66,13 @@ function ttProgress(el){
   const tot=ttCnt(all);
   /* 단계 × 파트 표 */
   const cellIds=(s,p)=>ITEMS.filter(i=>i.s===s && i.p===p).map(i=>i.id);
-  const mat=`<div class="tt-matw"><table class="tt-mat"><thead><tr><th class="tt-sc">단계</th>${parts.map(p=>`<th class="tt-ph${TT.cell==='*|'+p?' sel':''}" data-ttcell="*|${p}" title="${p} 항목 모두 보기"><span class="dot" style="background:${pc(p)}"></span>${p}</th>`).join('')}<th>전체</th></tr></thead><tbody>${xrowAt('*')}
+  /* 저장 전 변경이 들어 있는 칸: 주황 점선 + 점 (펼침을 접어도 어디를 바꿨는지 보임) */
+  const hasPend = ids => typeof stPending==='function' && ids.some(stPending);
+  const mat=`<div class="tt-matw"><table class="tt-mat"><thead><tr><th class="tt-sc">단계</th>${parts.map(p=>`<th class="tt-ph${TT.cell==='*|'+p?' sel':''}${hasPend(all.filter(id=>IT[id].p===p))?' pend':''}" data-ttcell="*|${p}" title="${p} 항목 모두 보기"><span class="dot" style="background:${pc(p)}"></span>${p}</th>`).join('')}<th>전체</th></tr></thead><tbody>${xrowAt('*')}
     ${STEPS.map(s=>{ const row=ITEMS.filter(i=>i.s===s.id).map(i=>i.id); const rc=ttCnt(row);
       return `<tr><th class="tt-sc"><button type="button" class="lnk" data-stepgo="${s.id}">${s.id}</button> <span class="muted">${esc(s.t.replace('★ ',''))}</span></th>${parts.map(p=>{ const ids=cellIds(s.id,p); if(!ids.length) return '<td class="tt-e"></td>'; const c=ttCnt(ids); const done=(c.n-c.k)>0 && c.d===(c.n-c.k);
         const sel = TT.cell===s.id+'|'+p;
-        return `<td class="tt-c${done?' done':''}${c.g?' doing':''}${sel?' sel':''}" data-ttcell="${s.id}|${p}" title="${s.id} · ${p}: 완료 ${c.d} · 진행 중 ${c.g} · 예정 ${c.t}${c.k?` · 제외 ${c.k}`:''}"><b>${c.d}</b>/${c.n-c.k}${c.k?`<i>-${c.k}</i>`:''}</td>`; }).join('')}<td class="tt-c tt-rt${(rc.n-rc.k)>0 && rc.d===(rc.n-rc.k)?' done':''}${rc.g?' doing':''}${TT.cell===s.id+'|*'?' sel':''}" data-ttcell="${s.id}|*" title="${s.id} 전체: 완료 ${rc.d} · 진행 중 ${rc.g} · 예정 ${rc.t}${rc.k?` · 제외 ${rc.k}`:''}">${rc.d}/${rc.n-rc.k}</td></tr>${xrowAt(s.id)}`; }).join('')}
+        return `<td class="tt-c${done?' done':''}${c.g?' doing':''}${sel?' sel':''}${hasPend(ids)?' pend':''}" data-ttcell="${s.id}|${p}" title="${s.id} · ${p}: 완료 ${c.d} · 진행 중 ${c.g} · 예정 ${c.t}${c.k?` · 제외 ${c.k}`:''}"><b>${c.d}</b>/${c.n-c.k}${c.k?`<i>-${c.k}</i>`:''}</td>`; }).join('')}<td class="tt-c tt-rt${(rc.n-rc.k)>0 && rc.d===(rc.n-rc.k)?' done':''}${rc.g?' doing':''}${TT.cell===s.id+'|*'?' sel':''}${hasPend(row)?' pend':''}" data-ttcell="${s.id}|*" title="${s.id} 전체: 완료 ${rc.d} · 진행 중 ${rc.g} · 예정 ${rc.t}${rc.k?` · 제외 ${rc.k}`:''}">${rc.d}/${rc.n-rc.k}</td></tr>${xrowAt(s.id)}`; }).join('')}
   </tbody></table></div>`;
   /* 펼침 줄 (2026-11-25): 칸·파트 머리·전체 칸을 누르면 그 줄 바로 아래에 해당 항목이 펼쳐짐. 예전 맨 아래 목록을 대신함 */
   function xIds(k){ const [s,p]=k.split('|'); return all.filter(id=>(s==='*'||IT[id].s===s) && (p==='*'||IT[id].p===p)).sort(admOrd); }
@@ -170,3 +172,14 @@ addEventListener('resize', ()=>{ if(TAB==='team') ttXPoint(); });
 /* 팀 정보가 준비되면 팀 탭 머리글·메뉴 갱신 */
 if(window.Backend && Backend.kind()==='firebase'){ Backend.Team.ctx().then(c=>{ TT.ctx=c; if(TAB==='team') renderTeamTab(true); }).catch(()=>{}); }
 { const _am=applyModes; applyModes=function(){ const r=_am.apply(this,arguments); try{ if(TAB==='team') renderTeamTab(true); }catch(e){} return r; }; }
+
+/* 저장 막대의 '바꾼 항목' 줄을 누르면: 진행 현황 화면이면 그 칸을 펼치고 그 줄로 스크롤 · 깜빡임, 아니면 설계 탭의 그 항목으로 */
+function ttGoPend(id){ if(!IT[id]) return;
+  const onProg = TAB==='team' && !!document.querySelector('#v-team [data-ttp=progress]:not([hidden]) .tt-mat');
+  if(!onProg){ vtItem(id, null); return; }
+  const key=IT[id].s+'|'+IT[id].p;
+  const show=()=>{ const r=document.querySelector(`#v-team .tt-x .stctl[data-stid="${CSS.escape(id)}"]`); const row=r && r.closest('.tt-row'); if(!row) return;
+    const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50;
+    smoothScrollTo(()=>row.getBoundingClientRect().top+scrollY-Math.max(tabh+80, innerHeight/2-40));
+    row.classList.remove('tt-flash'); void row.offsetWidth; row.classList.add('tt-flash'); };
+  if(TT.cell===key) show(); else { ttX(key); setTimeout(show, 320); } }

@@ -3617,3 +3617,36 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 #v-team .fs-more details.item,#v-team .fs-more details.item[open]{background:var(--panel);border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;border-radius:8px!important;box-shadow:none!important}
 #v-team .fs-more details.item>summary,#v-team .fs-more details.item[open]>summary{background:transparent;border-bottom:0;border-radius:8px}
 #v-team .fs-more details.item[open]>summary{border-bottom:1px solid var(--line);border-radius:8px 8px 0 0}
+
+/* 저장 전 변경 표시 (2026-11-25): 칸 안쪽 주황 점선 + 오른쪽 위 주황 점 */
+.tt-mat :is(td,th).pend{position:relative}
+.tt-mat :is(td,th).pend::before{content:"";position:absolute;inset:2px;border:2px dashed #d9730d;border-radius:4px;pointer-events:none}
+.tt-mat :is(td,th).pend::after{content:"";position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:#d9730d;pointer-events:none}
+.tt-row.tt-flash{animation:ttFlash 1.4s ease}
+@keyframes ttFlash{0%,40%{background:#ffe7cc}100%{background:transparent}}
+/* 저장 막대: [진행 상태 n건 ▴] → 바꾼 항목 목록이 막대 위로 */
+#draftBar .db-pl{font:inherit;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:2px 8px;cursor:pointer}
+#draftBar .db-pl:hover{background:rgba(255,255,255,.22)}
+#draftBar .db-list{position:absolute;left:0;bottom:calc(100% + 8px);width:max(100%,560px);max-height:min(50vh,420px);overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--line-2);border-radius:8px;box-shadow:0 12px 32px rgba(20,24,40,.22);padding:4px 0}
+#draftBar .db-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:4px 12px 4px 4px;border-bottom:1px solid var(--line)}
+#draftBar .db-row:last-child{border-bottom:0}
+#draftBar .db-go{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:8px;align-items:center;text-align:left;font:inherit;font-size:var(--fs-s);color:var(--ink);background:none;border:0;border-radius:6px;padding:6px 8px;cursor:pointer}
+#draftBar .db-go:hover{background:#efe8f8}
+#draftBar .db-go:hover .db-n{color:#3f2560;text-decoration:underline;text-decoration-color:#6A4294;text-decoration-thickness:2px;text-underline-offset:3px}
+#draftBar .db-c{font-weight:700;color:var(--ink-2)}
+#draftBar .db-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#draftBar .db-p{color:var(--muted)}
+#draftBar .db-ch{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-s);color:var(--muted)}
+#draftBar .db-rv{font-size:var(--fs-s);color:#5b3fa0}
+/* 팀원 · 계정: 다른 팀 가입 · 새 팀 만들기 접기 */
+#teamPanel details.tp-s-more>summary{cursor:pointer;font-weight:600;font-size:var(--fs-s);color:var(--ink-2);padding:4px 0;list-style:none;display:flex;align-items:center;gap:8px}
+#teamPanel details.tp-s-more>summary::-webkit-details-marker{display:none}
+#teamPanel details.tp-s-more>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+#teamPanel details.tp-s-more[open]>summary::before{transform:rotate(45deg)}
+#teamPanel details.tp-s-more>.tp-sec{border-top:0;padding-left:16px}
+/* 명단 아래에 더 있으면 아래 끝 흐림 */
+.tp-mscroll.more{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
+#v-team #teamPanel details.tp-s-more{background:none;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none;padding:12px 0 0;margin:0}
+#v-team #teamPanel details.tp-s-more>summary{padding:4px 0;background:none}
+/* 왼쪽 칸을 접어도 명단이 짧아지지 않게 */
+#v-team #teamPanel .tp-right{min-height:780px}

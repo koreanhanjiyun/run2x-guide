@@ -90,6 +90,7 @@
     const mt=box.querySelector('table.tp-mt:not(.tp-blt)'), bt=box.querySelector('table.tp-blt'); if(mt) mt.hidden=blk; if(bt) bt.hidden=!blk;
     const rs=box.querySelector('.tp-mrole'); if(rs) rs.disabled=blk;
     box.querySelectorAll(blk ? 'table.tp-blt tr[data-q]' : 'table.tp-mt:not(.tp-blt) tr[data-q]').forEach(tr=>{ t++; const ok=(!blk && tr.dataset.me==='1') || (!q || tr.dataset.q.includes(q)) && (blk || !MF.role || tr.dataset.r===MF.role) && (blk || MF.scope==='all' || tr.dataset.in==='1'); tr.hidden=!ok; if(ok) n++; });
+    tpMore(box.querySelector('.tp-mscroll'));
     const c=box.querySelector('.tp-mcnt'); if(c) c.textContent=`${n}명`; const e=box.querySelector('.tp-mnone'); if(e){ e.hidden=n>0; e.textContent = blk ? '차단한 사람이 없습니다.' : '해당하는 팀원이 없습니다.'; } }
   /* (나)는 정렬·검색·거르기와 상관없이 늘 맨 위 */
   const meFirst = f => (a,b) => ((b.uid===C.uid)-(a.uid===C.uid)) || f(a,b);
@@ -98,6 +99,10 @@
   let MYNM = false;
   const myNameCell = m => MYNM ? `<span class="tp-nmed">${meTag}<input class="tp-nmi tp-myname" maxlength="20" value="${esc(m.name||C.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="myname">저장</button><button type="button" class="lnk" data-tp="mynameclose">취소</button></span>`
     : `${meTag}${esc(m.name||'(이름 없음)')} <button type="button" class="lnk tp-nmbtn" data-tp="mynameopen" title="팀원 명단·검토 기록·논의에 보이는 이름 (1~20자, 실명 권장)">이름 바꾸기</button>`;
+  /* 명단 아래에 더 있으면 아래 끝을 흐리게 (줄 중간에서 잘려 끝처럼 보이는 것 방지) */
+  const tpMore = el => { if(el) el.classList.toggle('more', el.scrollHeight - el.scrollTop - el.clientHeight > 2); };
+  document.addEventListener('scroll', e=>{ if(e.target.classList && e.target.classList.contains('tp-mscroll')) tpMore(e.target); }, true);
+  addEventListener('resize', ()=>document.querySelectorAll('.tp-mscroll').forEach(tpMore));
   /* 보기 전용 표 (팀원·계정) */
   function memberTable(ms, S){ const R0=[...ms].sort(meFirst(byRoleName(S))).map(m=>{ const r=roleIn(m,S), me=m.uid===C.uid, inS=T.inSeason(m,S);
       return `<tr data-uid="${esc(m.uid)}" data-r="${r.role}" data-in="${inS?1:0}" data-q="${esc(mKey(m,r))}"${me?' class="tp-mine" data-me="1"':''}><td class="tp-mn">${me?myNameCell(m):esc(m.name||'(이름 없음)')}</td><td>${roleChip(r.role)}</td><td class="tp-mp">${isLeadRole(r.role)?(r.parts.length?esc(partsShow(r.parts).join(' · ')):'<span class="muted">담당 없음</span>'):'<span class="muted">—</span>'}</td></tr>`; }), rows=R0.join('');
@@ -193,8 +198,10 @@
       try{ ms = await T.members(); }catch(e){ console.error(e); }
       L += `<div class="tp-sec tp-s-invite"><div class="sec-label">팀원 초대</div><div class="tp-row"><button type="button" class="btn small" data-tp="invite">초대 문구 복사</button></div><p class="muted tp-small">사이트 주소·팀 이름·가입 방법이 담긴 문구를 복사합니다. 톡방에 붙여 넣고, 비밀번호는 따로 알려 주십시오.</p></div>`;
     }
-    L += `<div class="tp-sec tp-s-join"><div class="sec-label">${c.state==='member'?'다른 팀 가입':'팀 가입'}</div><p class="muted tp-small">회장에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>${form('join','가입')}</div>`;
-    L += `<div class="tp-sec tp-s-create"><div class="sec-label">새 팀 만들기</div><p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 회장이 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p>${form('create','만들기')}</div>`;
+    let JC = `<div class="tp-sec tp-s-join"><div class="sec-label">${c.state==='member'?'다른 팀 가입':'팀 가입'}</div><p class="muted tp-small">회장에게 받은 팀 이름과 비밀번호로 가입합니다. 팀 이름은 대소문자를 구분하지 않고, 비밀번호는 구분합니다.</p>${form('join','가입')}</div>`;
+    JC += `<div class="tp-sec tp-s-create"><div class="sec-label">새 팀 만들기</div><p class="muted tp-small">팀 이름은 다른 팀과 겹칠 수 없습니다. 만든 사람이 첫 회장이 되고, 비밀번호를 팀원에게 알려 주면 바로 가입합니다.</p>${form('create','만들기')}</div>`;
+    /* 이미 팀이 있으면 다른 팀 가입 · 새 팀 만들기는 접어 둠 (자주 안 씀). 팀이 없으면 펼친 그대로 */
+    L += c.state==='member' ? `<details class="tp-sec tp-s-more"><summary>다른 팀 가입 · 새 팀 만들기</summary>${JC}</details>` : JC;
     if(c.state==='member'){
       const admins = ms.filter(m=>m.role==='admin').length, nIn = ms.filter(m=>T.inSeason(m,SEASON)).length;
       Rt = `<div class="tp-sec tp-fill"><div class="sec-label">팀원 ${ms.length}명 · ${esc(SEASON)} 시즌 명단 ${nIn}명</div>${memberTable(ms, SEASON)}`
