@@ -20173,7 +20173,7 @@ const GS = (() => {
   const T = (x, y, s, o = {}) => `<text x="${x}" y="${y}" font-size="${o.fs || 12.5}"${o.a ? ` text-anchor="${o.a}"` : ''} fill="${o.c || 'var(--ink-2)'}"${o.b ? ' font-weight="600"' : ''}>${s}</text>`;
   const sub = s => `<tspan baseline-shift="sub" font-size="9.5">${s}</tspan>`;
   const ACC = 'var(--accent)', ORG = '#c2410c', GRN = '#2b7a30';
-  const defs = `<defs>${[['gsA', 'var(--ink-2)'], ['gsB', ACC], ['gsO', ORG], ['gsG', GRN]].map(([id, c]) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')}
+  const defs = `<defs>${[['gsA', 'var(--ink-2)'], ['gsB', ACC], ['gsO', ORG], ['gsG', GRN]].map(([id, c]) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')}<marker id="gsBs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto"><path d="M0 0L10 5L0 10z" fill="${ACC}"/></marker>
     <pattern id="gsH" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V6" stroke="#9aa3b5" stroke-width="2"/></pattern></defs>`;
   const svg = (body, lab, w = 400, h = 250) => `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${lab}">${defs}${body}</svg>`;
   const ax = (x0, y0, x1, y1, xl, yl) => `<path d="M${x0} ${y0}H${x1}" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#gsA)"/><path d="M${x0} ${y0}V${y1}" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#gsA)"/>`
@@ -20248,7 +20248,7 @@ const GS = (() => {
   () => { const cx = 190, cy = 140, kA = 56, kB = 40, [ex, ey] = fePt(cx, cy, kA, 36), [fx, fy] = fePt(cx, cy, kB, 36);
     const tA = [440, 196], tB = [540, 196], [px, py] = fePt(cx, cy, kA, -8), [qx, qy] = fePt(cx, cy, kB, -30);
     return svg(feAx(cx, cy, kA, 2) + `<path d="${fePath(cx, cy, kA)}" fill="none" stroke="var(--ink)" stroke-width="2.2"/><path d="${fePath(cx, cy, kB)}" fill="none" stroke="${ORG}" stroke-width="2.2" stroke-dasharray="6 4"/>`
-      + arr(cx, cy, ex, ey, 'var(--ink)', 'gsA', 2.4) + arr(cx, cy, fx, fy, ORG, 'gsO', 2.4)
+      + arr(cx, cy, ex, ey, 'var(--ink)', 'gsA', 2.4) + arr(cx, cy, fx, fy, ORG, 'gsO', 2.6).replace('/>', ' stroke-dasharray="6 3"/>')
       + `<path d="M${px} ${py}C${px + 90} ${py + 10} ${tA[0] - 70} ${tA[1] - 120} ${tA[0]} ${tA[1] - 82}" fill="none" stroke="var(--ink)" stroke-width="1.4"/>`
       + `<path d="M${qx} ${qy}C${qx + 120} ${qy + 60} ${tB[0] - 60} ${tB[1] + 60} ${tB[0]} ${tB[1] + 8}" fill="none" stroke="${ORG}" stroke-width="1.4" stroke-dasharray="5 4"/>`
       + tireIcon(tA[0], tA[1], 0, 'var(--ink)', -15, 15) + T(tA[0], tA[1] + 26, '캠버 맞음', {a: 'middle', fs: 11.5, b: 1})
@@ -20259,7 +20259,8 @@ const GS = (() => {
     const g = d => 1 - Math.exp(-2.6 * d), l = d => 1.15 * d * d, n = d => g(d) - l(d);
     let best = 0, bv = -9; for (let i = 0; i <= 200; i++) { const d = i / 200; if (n(d) > bv) { bv = n(d); best = d; } }
     return svg(feAx(cx, cy, 44, true) + `<path d="${fePath(cx, cy, 44)}" fill="none" stroke="${GRN}" stroke-width="1.8" stroke-dasharray="5 4"/><path d="${fePath(cx, cy, 32)}" fill="none" stroke="var(--ink)" stroke-width="1.8"/>`
-      + [20, 70, 110, 160, 200, 250, 290, 340].map(dg => { const a = fePt(cx, cy, 32.5, dg), b = fePt(cx, cy, 43, dg); return arr(a[0], a[1], b[0], b[1], GRN, 'gsG', 1.4); }).join('')
+      + (() => { const [ax1, ay1] = fePt(cx, cy, 44, 36), [ax0, ay0] = fePt(cx, cy, 32, 36); return arr(cx, cy, ax1, ay1, GRN, 'gsG', 2.6).replace('/>', ' stroke-dasharray="6 3"/>') + arr(cx, cy, ax0, ay0, 'var(--ink)', 'gsA', 2.4); })()
+      + T(8, 18, '검정 = 다운포스 없음', {c: 'var(--muted)', fs: 10.5}) + T(8, 34, '초록 = 다운포스로 늘어난 그립', {c: GRN, fs: 10.5})
       + `<path d="M${X(0)} ${Y(0)}H${X(1) + 10}" stroke="var(--ink-2)" stroke-width="1.2" marker-end="url(#gsA)"/><path d="M${X(0)} ${Y(-1.25)}V${Y(1.1)}" stroke="var(--ink-2)" stroke-width="1.2" marker-end="url(#gsA)"/>`
       + T(X(1) + 16, Y(0) + 4, '다운포스', {c: 'var(--muted)', fs: 11}) + T(X(0) + 6, Y(1.1) - 4, '랩타임 이득', {c: 'var(--muted)', fs: 11})
       + `<path d="${pts(g, 0, 1, 60, X, Y)}" fill="none" stroke="${GRN}" stroke-width="2"/><path d="${pts(v => -l(v), 0, 1, 60, X, Y)}" fill="none" stroke="${ORG}" stroke-width="2"/>`
@@ -20283,7 +20284,7 @@ const GS = (() => {
   () => { const kI = 22, kO = 36, fyS = .62, panel = (x0, lab, lsd) => { const ci = [x0 + 62, 108], co = [x0 + 202, 108];
       const lim = k => FE.ax * k * Math.sqrt(1 - fyS * fyS), fyI = fyS * FE.ay * kI, fyO = fyS * FE.ay * kO, dI = lim(kI), dO = lsd ? lim(kO) : dI;
       const wheel = (c, k, fy, d) => `<path d="${fePath(c[0], c[1], k)}" fill="none" stroke="var(--ink-2)" stroke-width="1.6"/><path d="M${c[0] - FE.ay * k - 6} ${c[1]}H${c[0] + FE.ay * k + 6}M${c[0]} ${c[1] - FE.ax * k - 6}V${c[1] + FE.br * k + 6}" stroke="var(--line-2)"/>`
-        + `<path d="M${c[0]} ${c[1]}h${-fy}" stroke="#8a8f99" stroke-width="2" stroke-dasharray="4 3"/>` + `<path d="M${c[0] - fy} ${c[1]}v${-d}" stroke="${ACC}" stroke-width="2" stroke-dasharray="4 3"/>` + arr(c[0], c[1], c[0] - fy, c[1] - d, 'var(--ink)', 'gsA', 2.4);
+        + `<path d="M${c[0]} ${c[1]}h${-fy}" stroke="#8a8f99" stroke-width="2" stroke-dasharray="4 3"/>` + arr(c[0] - fy, c[1], c[0] - fy, c[1] - d, ACC, 'gsBs', 3.2) + `<path d="M${c[0]} ${c[1]}L${c[0] - fy} ${c[1] - d}" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="3 3"/>`;
       const g = 200, wI = x0 + 62, wO = x0 + 202;
       return T(x0 + 132, 22, lab, {a: 'middle', b: 1}) + wheel(ci, kI, fyI, dI) + wheel(co, kO, fyO, dO)
         + (lsd ? '' : (() => { const lo = lim(kO); return `<path d="M${co[0] - fyO} ${co[1] - dI - 2}V${co[1] - lo}" stroke="${ORG}" stroke-width="3"/>` + T(co[0] - fyO + 6, co[1] - lo - 4, '남는 그립', {c: ORG, fs: 11}); })())
@@ -20291,19 +20292,19 @@ const GS = (() => {
         + T((wI + wO) / 2, g - 21, lsd ? 'LSD' : '오픈', {a: 'middle', fs: 9.5, b: 1})
         + `<rect x="${wI - 11}" y="${g - 50}" width="22" height="50" rx="7" fill="#2a2f38"/><rect x="${wO - 13}" y="${g - 50}" width="26" height="50" rx="7" fill="#2a2f38"/><path d="M${x0 + 10} ${g}H${x0 + 260}" stroke="var(--ink-2)"/>`
         + T(wI, g + 16, '안쪽', {a: 'middle', fs: 11}) + T(wO, g + 16, '바깥', {a: 'middle', fs: 11})
-        + T(x0 + 132, g + 38, lsd ? '두 바퀴 모두 한계까지' : '약한 바퀴만큼만', {a: 'middle', fs: 11.5, c: lsd ? GRN : ORG, b: 1}); };
+        + T(x0 + 132, g + 38, lsd ? '바깥에 더 → 두 바퀴 모두 한계까지' : '구동 힘 같음 → 약한 바퀴만큼만', {a: 'middle', fs: 11.5, c: lsd ? GRN : ORG, b: 1}); };
     return svg(panel(14, '오픈 디퍼렌셜', false) + panel(318, 'LSD', true) + `<path d="M300 30V230" stroke="var(--line)"/>`
-      + `<path d="M210 262h18" stroke="#8a8f99" stroke-width="2" stroke-dasharray="4 3"/>` + T(232, 266, '선회 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M290 262h18" stroke="${ACC}" stroke-width="2" stroke-dasharray="4 3"/>` + T(312, 266, '구동 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M370 262h18" stroke="var(--ink)" stroke-width="2.4"/>` + T(392, 266, '합력', {fs: 10.5, c: 'var(--muted)'}),
+      + `<path d="M210 262h18" stroke="#8a8f99" stroke-width="2" stroke-dasharray="4 3"/>` + T(232, 266, '선회 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M290 262h18" stroke="${ACC}" stroke-width="3.2"/>` + T(312, 266, '구동 힘', {fs: 10.5, c: 'var(--muted)'}) + `<path d="M370 262h18" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="3 3"/>` + T(392, 266, '합력', {fs: 10.5, c: 'var(--muted)'}),
       '④ 구동력 전달: 코너 탈출에서 안쪽 뒷바퀴는 하중이 적어 마찰 타원이 작음. 오픈 디퍼렌셜은 두 바퀴에 같은 구동 힘만 보내 바깥 바퀴 그립이 남고, LSD는 바깥 바퀴도 한계까지 씀', 600, 276); },
   /* ⑤ 가볍게 · 낮게: 같은 차체, CG 높이만 다름. 높으면 바깥 바퀴로 더 쏠리고 안쪽 바퀴 하중이 크게 줄어듦 (화살표 길이 ∝ 바퀴 하중, 쏠림 비율 = 선회 가속 × CG 높이 / 트레드) */
-  () => { const s = .14, ay = 1.0, k = 170, G = 196, one = (x, hcg, lab, note) => { const c = car({x, g: G, s}), dF = ay * hcg / HP.t;
+  () => { const s = .14, ay = 1.0, k = 125, G = 196, one = (x, hcg, lab, note) => { const c = car({x, g: G, s}), dF = ay * hcg / HP.t;
       const cgp = [c.X(0), c.Y(hcg)], gL = c.X(-HP.t / 2), gR = c.X(HP.t / 2), fo = .5 + dF, fi = .5 - dF;
       return c.svg + cg(cgp[0], cgp[1]) + arr(cgp[0] + 8, cgp[1], cgp[0] + 40, cgp[1], ORG, 'gsO', 2.6)
         + arr(gL, G + 4 + fi * k, gL, G + 4, GRN, 'gsG', 2.8) + arr(gR, G + 4 + fo * k, gR, G + 4, GRN, 'gsG', 2.8)
         + T(gL - 14, G + 24, '안쪽', {a: 'end', fs: 11, c: GRN}) + T(gR + 14, G + 24, '바깥', {fs: 11, c: GRN})
-        + T(x, 22, lab, {a: 'middle', b: 1}) + T(x, 372, note, {a: 'middle', fs: 11.5}); };
-    return svg(one(150, 380, 'CG 높음', '안쪽 바퀴 하중이 크게 줄어듦') + one(450, 240, 'CG 낮음', '네 바퀴를 고르게 씀') + `<path d="M300 40V350" stroke="var(--line)"/>`,
-      '⑤ 가볍게 · 낮게: 같은 차체에서 CG 만 높으면 코너에서 바깥 바퀴로 하중이 더 쏠리고 안쪽 바퀴 하중이 크게 줄어듦', 600, 384); },
+        + T(x, 22, lab, {a: 'middle', b: 1}) + T(x, 324, note, {a: 'middle', fs: 11.5}); };
+    return svg(one(150, 380, 'CG 높음', '안쪽 바퀴 하중이 크게 줄어듦') + one(450, 240, 'CG 낮음', '네 바퀴를 고르게 씀') + `<path d="M300 40V310" stroke="var(--line)"/>`,
+      '⑤ 가볍게 · 낮게: 같은 차체에서 CG 만 높으면 코너에서 바깥 바퀴로 하중이 더 쏠리고 안쪽 바퀴 하중이 크게 줄어듦', 600, 334); },
   /* ⑥ 일관되게: 롤이 크면 캠버가 틀어지고, 앞날개 높이가 좌우로 달라져 다운포스도 달라짐 (그림은 보이게 롤을 크게 그림) */
   () => { const s = .13, G = 236, A = car({x: 150, g: G, s, roll: 0, wing: 0}), Bc = car({x: 450, g: G, s, roll: 6, wing: 1});
     const R = Bc.R, gx = Bc.X(R.cx), L = 2 * HP.tireR * s + 6, th = -R.th, tx = gx + L * Math.sin(th), ty = G - L * Math.cos(th);
