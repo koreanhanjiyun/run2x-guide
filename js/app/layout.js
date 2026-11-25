@@ -89,7 +89,7 @@ function swingOf(V, H){ const n = Math.min(V.length, H.length); if(!n) return ()
     return {x: px + r*Math.cos(a), y: py + r*Math.sin(a)}; }; }
 function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.rail-h'), sp = hd && hd.querySelector('span');
   const st = el._rs || (el._rs = {open: null, stage: '', anims: [], clones: []});
-  const clean = () => { [...st.anims, ...(st.keep||[])].forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; el.classList.remove('rs-anim', 'rs-snake'); el.style.width = el.style.height = el.style.clipPath = ''; st.stage = ''; };
+  const clean = () => { [...st.anims, ...(st.keep||[])].forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; el.classList.remove('rs-anim', 'rs-snake', 'wf-hold'); el.style.width = el.style.height = el.style.clipPath = ''; st.stage = ''; };
   const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;
   if(st.open === open && st.stage) return;
   if(st.stage === 'snake' && st.open !== open){ st.open = open; st.anims.forEach(a => a.reverse()); return; }   /* 글자 이동 중 반대로 → 되감기 */
@@ -105,7 +105,7 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
   const snake = (fromOpen, done) => {   /* fromOpen = 지금 펼친 머리(가로)에서 접는 쪽으로 가는지 */
     const ez = fromOpen ? ease : easeOpen; const c0 = chars(), b0 = box(), h0 = hd.getBoundingClientRect().height + 2; st.stage = 'snake';
     (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = [];   /* 접을 때: 칩 거두기 높이 고정을 풀어야 세로 막대가 보임 */
-    apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), h1 = hd.getBoundingClientRect().height + 2;
+    el.classList.add('wf-hold'); apply(!fromOpen); el.classList.add('rs-anim', 'rs-snake'); const c1 = chars(), b1 = box(), h1 = hd.getBoundingClientRect().height + 2;
     const cs = getComputedStyle(sp), font = cs.font, col = getComputedStyle(hd).color; sp.style.color = 'transparent';
     const n = Math.min(c0.length, c1.length), paths = [], TR_ = trainOf(fromOpen ? c1 : c0, fromOpen ? c0 : c1), Q = p => fromOpen ? 1 - p : p;
     for(let i = 0; i < n; i++){ const V = fromOpen ? c1[i] : c0[i], Hz = fromOpen ? c0[i] : c1[i];   /* V 세로 자리, Hz 가로 자리 */
@@ -131,12 +131,12 @@ function railSnake(el, open, o){ const apply = o.apply, hd = el.querySelector('.
     const A = el.animate(KF, {duration: D, easing: ez, fill: 'both'}); st.anims.push(A);
     st.stage = 'snake'; const want = st.open;
     A.onfinish = () => { const rev = A.playbackRate < 0; sp.style.color = ''; (st.keep||[]).forEach(a => { try{ a.cancel(); }catch(e){} }); st.keep = []; st.clones.forEach(c => c.remove()); st.clones = []; st.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); st.anims = []; el.style.width = el.style.height = el.style.clipPath = ''; el.classList.remove('rs-snake');
-      if(rev){ apply(fromOpen); el.classList.remove('rs-anim'); st.stage = ''; if(o.instant) o.instant(fromOpen); const w = st.open; st.open = null; if(w !== fromOpen) railSnake(el, w, o); return; }
+      if(rev){ apply(fromOpen); el.classList.remove('rs-anim', 'wf-hold'); st.stage = ''; if(o.instant) o.instant(fromOpen); const w = st.open; st.open = null; if(w !== fromOpen) railSnake(el, w, o); return; }
       done(hh); }; };
-  if(open){ snake(false, hh => { st.stage = 'in'; const r = o.in ? o.in(hh) : null; const fin = () => { el.classList.remove('rs-anim'); el.style.height = ''; st.stage = ''; st.anims = []; st.open = null; };
+  if(open){ snake(false, hh => { el.classList.remove('wf-hold'); st.stage = 'in'; const r = o.in ? o.in(hh) : null; const fin = () => { el.classList.remove('rs-anim'); el.style.height = ''; st.stage = ''; st.anims = []; st.open = null; };
       if(r && r.length){ st.anims = r; Promise.all(r.map(a => a.finished)).then(fin, () => {}); } else fin(); }); }
-  else { const r = o.out ? o.out() : null; st.stage = 'out'; el.classList.add('rs-anim');
-    const go = () => { st.keep = st.anims; st.anims = []; snake(true, () => { el.classList.remove('rs-anim'); st.stage = ''; st.open = null; }); };
+  else { el.classList.add('wf-hold'); const r = o.out ? o.out() : null; st.stage = 'out'; el.classList.add('rs-anim');
+    const go = () => { st.keep = st.anims; st.anims = []; snake(true, () => { el.classList.remove('rs-anim', 'wf-hold'); st.stage = ''; st.open = null; }); };
     if(r && r.length){ st.anims = r; Promise.all(r.map(a => a.finished)).then(go, () => {}); } else go(); } }
 /* 파트 패널 내용: 칩이 위에서부터 차례로 (펼칠 때) · 아래에서부터 차례로 (접을 때). 배너 높이도 같이 */
 /* 펼침 = 접힘(railBOut)의 정확한 역재생 (2026-11-24): 같은 시간, 곡선은 거울(.5,0,.7,.4 → .3,.6,.5,1 빠른 출발), 칩은 위에서부터.
@@ -172,13 +172,13 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
   if(t._ts) t._ts.kill(); const tourOn = !O && (((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture);
   if(tourOn || !sp || !t.animate || getComputedStyle(t).display === 'none'){ apply(open); return; }
   const S = {anims: [], els: []}; t._ts = S;
-  S.kill = () => { S.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); S.els.forEach(e => e.remove()); t.classList.remove('ts-hide'); t.style.height = ''; sp.style.color = ''; if(t.classList.contains('coll') === open) apply(open); t._ts = null; };
+  S.kill = () => { S.anims.forEach(a => { try{ a.cancel(); }catch(e){} }); S.els.forEach(e => e.remove()); t.classList.remove('ts-hide', 'wf-hold'); t.style.height = ''; sp.style.color = ''; if(t.classList.contains('coll') === open) apply(open); t._ts = null; };
   const chars = () => { const x = sp.firstChild, R = []; if(!x || x.nodeType !== 3) return R; const r = document.createRange();
     for(let i = 0; i < x.length; i++){ const ch = x.data[i]; if(!ch.trim()) continue; r.setStart(x, i); r.setEnd(x, i + 1); const b = G(r.getBoundingClientRect()); R.push({ch, x: b.left + b.width/2, y: b.top + b.height/2}); } return R; };
   const D = 360, ease = 'cubic-bezier(.45,0,.25,1)', easeOpen = 'cubic-bezier(.5,0,.7,.4)', vis = () => { const tb = G(t.getBoundingClientRect()); return [...t.querySelectorAll('.toc-ph, .toc-s')].filter(e => { const b = G(e.getBoundingClientRect()); return b.bottom > tb.top && b.top < tb.bottom; }); };
   const snake = (toOpen, done) => {   /* toOpen = 세로 막대 → 가로 머리. 펼칠 때는 느린 출발 · 빠른 끝(파트 패널과 같음) */
     const ez = toOpen ? easeOpen : ease;
-    const c0 = chars(), r0 = G(t.getBoundingClientRect()), h0 = G(hd.getBoundingClientRect()); apply(toOpen); t.classList.add('ts-hide'); const c1 = chars(), r1 = G(t.getBoundingClientRect()), h1 = G(hd.getBoundingClientRect());
+    const c0 = chars(), r0 = G(t.getBoundingClientRect()), h0 = G(hd.getBoundingClientRect()); if(!O) t.classList.add('wf-hold'); apply(toOpen); t.classList.add('ts-hide'); const c1 = chars(), r1 = G(t.getBoundingClientRect()), h1 = G(hd.getBoundingClientRect());
     const Rc = toOpen ? r0 : r1, Ro = toOpen ? r1 : r0, Rh = toOpen ? h1 : h0, hh = Rh.bottom - Ro.top + 1, v = Rc.width, col = getComputedStyle(hd).color, font = getComputedStyle(sp).font;
     const n = Math.min(c0.length, c1.length), paths = [], TR_ = swingOf(toOpen ? c0 : c1, toOpen ? c1 : c0), Q = p => toOpen ? p : 1 - p;   /* 글자 문짝 (swingOf) */
     for(let i = 0; i < n; i++){ const V = toOpen ? c0[i] : c1[i], Hz = toOpen ? c1[i] : c0[i]; paths.push({V, Hz, i});
@@ -201,14 +201,16 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
       const fd = t.querySelector('.toc-fold'); if(fd && fd.animate) fd.animate([{opacity: 0}, {opacity: .85}], {duration: 140, easing: 'ease-out'});
       done(hh); }; };
   /* 펼침 = 접힘의 정확한 역재생 (2026-11-24, 파트 패널과 같음) */
-  if(open) snake(true, hh => { const full = G(t.getBoundingClientRect()).height, ks = vis(), T = 130 + 8*ks.length;
+  if(open) snake(true, hh => { t.classList.remove('wf-hold');   /* 벽에서 떨어짐: 움직임은 CSS 전환 (옆 패널 벽에서 떨어지기) */
+      const full = G(t.getBoundingClientRect()).height, ks = vis(), T = 130 + 8*ks.length;
       S.anims = [t.animate([{height: hh + 'px'}, {height: full + 'px'}], {duration: T, easing: 'cubic-bezier(.3,.6,.5,1)'}),
         ...ks.map((k, i) => k.animate([{opacity: 0, transform: 'translateY(-8px)'}, {opacity: 1, transform: 'none'}], {duration: 130, delay: 8*i, easing: 'ease-out', fill: 'backwards'}))];
       Promise.all(S.anims.map(a => a.finished)).then(() => { if(t._ts === S) t._ts = null; }, () => {}); });
-  else { const full = G(t.getBoundingClientRect()).height, ks = vis(), hh = G(hd.getBoundingClientRect()).bottom - G(t.getBoundingClientRect()).top + 1, T = 130 + 8*ks.length;
+  else { if(!O) t.classList.add('wf-hold');   /* 접을 때는 먼저 벽에 다시 붙으며 내용이 거둬짐 */
+    const full = G(t.getBoundingClientRect()).height, ks = vis(), hh = G(hd.getBoundingClientRect()).bottom - G(t.getBoundingClientRect()).top + 1, T = 130 + 8*ks.length;
     S.anims = [t.animate([{height: full + 'px'}, {height: hh + 'px'}], {duration: T, easing: 'cubic-bezier(.5,0,.7,.4)', fill: 'forwards'}),
       ...ks.map((k, i) => k.animate([{opacity: 1, transform: 'none'}, {opacity: 0, transform: 'translateY(-8px)'}], {duration: 130, delay: 8*(ks.length - 1 - i), easing: 'ease-in', fill: 'both'}))];
-    Promise.all(S.anims.map(a => a.finished)).then(() => { if(t._ts !== S) return; const keep = S.anims; S.anims = []; keep.forEach(a => a.cancel()); snake(false, () => { if(t._ts === S) t._ts = null; }); }, () => {}); } }
+    Promise.all(S.anims.map(a => a.finished)).then(() => { if(t._ts !== S) return; const keep = S.anims; S.anims = []; keep.forEach(a => a.cancel()); snake(false, () => { t.classList.remove('wf-hold'); if(t._ts === S) t._ts = null; }); }, () => {}); } }
 
 /* ---------- 파트 패널: 마우스를 올리면 펼침, 빼면 접힘, 머리를 누르면 고정 ---------- */
 (()=>{ const rail=$('#partRail'); if(!rail) return; let ti=0, to=0;
@@ -218,14 +220,15 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
     const cur = rail._rs && rail._rs.stage ? rail._rs.open : !rail.classList.contains('coll'); if(cur === open) return;
     if(now) cls(open); else railSnake(rail, open, {apply: cls, isOpen: () => !rail.classList.contains('coll'), in: hh => railBIn(rail, hh), out: () => railBOut(rail)}); };
   setTimeout(()=>set(pin, true), 0);   /* 목록을 처음 그린 뒤(init.js)에 적용 */
+  wallCatch(rail, () => !rail.classList.contains('coll') && !rail.classList.contains('wf-hold'));
   rail.addEventListener('mouseenter', ()=>{ clearTimeout(to); ti=setTimeout(()=>set(true), 150); });
-  rail.addEventListener('mouseleave', ()=>{ clearTimeout(ti); if(!pin) to=setTimeout(()=>set(false), 300); });
+  rail.addEventListener('mouseleave', e=>{ if(rail._catch && e.relatedTarget === rail._catch) return; clearTimeout(ti); if(!pin) to=setTimeout(()=>{ if(!wallHover(rail)) set(false); }, 300); });
   rail.addEventListener('focusin', ()=>{ clearTimeout(to); set(true); });
   rail.addEventListener('focusout', e=>{ if(!pin && !rail.contains(e.relatedTarget)) to=setTimeout(()=>set(false), 300); });
   /* 사용법 등으로 자동으로 펼쳐진 경우에도: 고정이 아니고 마우스·포커스가 없고 사용법이 가리키는 대상이 아니면 잠시 뒤 접음 */
   let idle=0; setInterval(()=>{ const open=!rail.classList.contains('coll'); if(!open || pin){ idle=0; return; }
     const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;   /* 사용법 중에는 건드리지 않음 */
-    if(rail.matches(':hover') || rail.contains(document.activeElement) || tourOn){ idle=0; return; }
+    if(wallHover(rail) || rail.contains(document.activeElement) || tourOn){ idle=0; return; }
     if(++idle>=3){ idle=0; set(false); } }, 500);
   rail.addEventListener('click', e=>{ if(!e.target.closest('#railToggle')) return; e.preventDefault(); e.stopImmediatePropagation(); pin=!pin; SETP('railpin', pin?'1':'0'); set(true); }, true);
 })();
@@ -240,3 +243,14 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
   document.addEventListener('click', ()=>{ if(bar.classList.contains('on')) done(); });
   document.addEventListener('pointerup', ()=>{ if(bar.classList.contains('on')) setTimeout(done, 400); }, true);
 })();
+
+/* ---------- 떨어진 오른쪽 패널과 벽 사이 틈 (2026-11-25): 파트 강조 · 좌표계·거동은 펼치면 벽에서 14 px 떨어짐(CSS).
+   마우스가 벽 쪽(틈)에 있으면 패널 밖이 되어 접혔다 다시 붙으며 펼쳐지기를 되풀이함 → 틈을 덮는 투명 띠(.wf-catch)를 패널의 일부로 침.
+   띠에 들어오면 패널에 mouseenter 를, 띠에서 패널 밖으로 나가면 mouseleave 를 보냄. 패널이 벽에 붙어 있을 때(접힘 · 붙잡기 중)는 띠를 숨김 ---------- */
+function wallCatch(el, floated){ if(!el || el._catch) return; const c = document.createElement('div'); c.className = 'wf-catch'; c.hidden = true; document.body.appendChild(c); el._catch = c;
+  const sync = () => { const on = !el.hidden && getComputedStyle(el).display !== 'none' && floated(); c.hidden = !on; if(!on) return; const r = el.getBoundingClientRect(); c.style.top = r.top + 'px'; c.style.height = r.height + 'px'; c.style.width = Math.max(0, innerWidth - document.documentElement.clientWidth + (document.documentElement.clientWidth - r.right)) + 'px'; };
+  try{ new MutationObserver(sync).observe(el, {attributes: true, attributeFilter: ['class', 'hidden', 'style']}); new ResizeObserver(sync).observe(el); }catch(e){}
+  el.addEventListener('transitionend', sync); addEventListener('resize', sync); setTimeout(sync, 0);
+  c.addEventListener('mouseenter', e => { if(!el.contains(e.relatedTarget)) el.dispatchEvent(new MouseEvent('mouseenter', {relatedTarget: e.relatedTarget})); });
+  c.addEventListener('mouseleave', e => { if(!el.contains(e.relatedTarget)) el.dispatchEvent(new MouseEvent('mouseleave', {relatedTarget: e.relatedTarget})); }); }
+const wallHover = el => !!(el && (el.matches(':hover') || (el._catch && !el._catch.hidden && el._catch.matches(':hover'))));

@@ -97,7 +97,8 @@ const TOOL_LIST = [
    지금 보이는 칸은 강조. #v-tools 안에 있어 다른 탭에서는 같이 숨음 */
 const TL_SECS = [['tls-vals','설계값'],['tls-figs','그림으로 보기'],['tls-part','파트별'],['tls-tools','도구 모음']];
 function toolTocHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
-  return `<nav id="tltoc" aria-label="도구 탭 목차"><div class="tl-toc-h"><span>목차</span></div><div class="tl-toc-in">`
+  const coll = typeof PREF==='function' && PREF('tltocc','0')==='1';
+  return `<nav id="tltoc" class="${coll ? 'coll' : ''}" aria-label="도구 탭 목차"><div class="toc-h"><span>목차</span><button class="toc-fold" title="목차 접기/펼치기" aria-label="목차 접기/펼치기"></button></div><div class="tl-toc-in">`
     + TL_SECS.map(([id, t]) => `<button type="button" class="toc-s" data-tlsec="${id}"><span class="tt">${t}</span></button>`).join('')
     + `<div class="tl-toc-g">도구</div>`
     + TOOL_LIST.filter(r=>W[r[0]]).map(r=>`<button type="button" class="toc-s" data-wbq="${r[0]}" title="${esc(r[1])} · ${esc(r[2])}"><span class="tc">${W[r[0]].no || r[0]}</span><span class="tt">${esc(String(r[1]).replace(/\s*\(.*\)\s*$/,''))}</span></button>`).join('')

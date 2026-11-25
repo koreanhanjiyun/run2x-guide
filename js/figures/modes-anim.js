@@ -90,9 +90,10 @@ function initFigRail(){ if($('#figRail')) return;
   const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
   const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; fr.classList.toggle('on',on); on?showMd():hideMd(); };
   const open=()=>go(true), close=()=>{ pin=false; pinCls(); go(false); };
-  const over=()=>fr.matches(':hover') || !!(md.querySelector('.fm-panel') && md.querySelector('.fm-panel').matches(':hover'));
+  const over=()=>(typeof wallHover==='function' ? wallHover(fr) : fr.matches(':hover')) || !!(md.querySelector('.fm-panel') && md.querySelector('.fm-panel').matches(':hover'));
   const enter=()=>{ clearTimeout(to); to=0; if(!want) ti=setTimeout(open,150); }, leave=()=>{ clearTimeout(ti); if(!pin && !to) to=setTimeout(()=>{ to=0; if(!pin && !over()) go(false); },300); };
-  fr.addEventListener('mouseenter',enter); fr.addEventListener('mouseleave',leave);
+  if(typeof wallCatch==='function') wallCatch(fr, () => fr.classList.contains('on'));   /* 벽과 떨어진 틈도 배너로 침 (layout.js) */
+  fr.addEventListener('mouseenter',enter); fr.addEventListener('mouseleave',e=>{ if(fr._catch && e.relatedTarget === fr._catch) return; leave(); });
   md.addEventListener('mouseover',e=>{ if(e.target.closest('.fm-panel')){ clearTimeout(to); to=0; } else if(!pin && want) leave(); });
   md.addEventListener('mouseout',e=>{ if(e.target.closest('.fm-panel') && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.fm-panel'))) leave(); });
   pinCls();
