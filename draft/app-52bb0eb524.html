@@ -3614,6 +3614,32 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
   body.print-report #v-team .tt-rep :is(th,td):nth-child(4){width:39%}
   body.print-report #v-team .tt-rep :is(th,td):nth-child(5){width:8%;white-space:nowrap;text-align:center}
 }
+
+/* 대회 점수 (2026-11-25) */
+/* 배점 막대를 기록 막대와 같은 격자에: 종목 칸 위치가 위아래로 맞음 */
+#v-team .fs-distrow{margin:12px 0 4px}
+#v-team .fs-dist{height:46px;border:0;border-radius:8px}
+#v-team .fs-dist>span{border-right:2px solid var(--panel);padding:0 8px}
+#v-team .fs-dist>span:last-child{border-right:0}
+#v-team .fs-distrow .rec-sum{font-size:var(--fs-s)}
+/* 숫자 글꼴: 고정폭 대신 본문 글꼴 + 고른 폭 숫자 (진행 현황 · 시즌 요약과 같게) */
+#v-team :is(.fs-bar>span i,.rec-s,.rec-sum,.rec-cats>span i){font-family:inherit;font-variant-numeric:tabular-nums}
+/* 기록 막대 숫자: 칸 오른쪽 끝의 연한 부분에 진한 글자 (진한 바탕 위 진한 글자 대비 2.1~3.1:1 문제). 거의 다 찬 칸(82 % 이상)은 칠한 부분 위 흰 글자 */
+#v-team .rec-bar>span{align-items:flex-end;padding:0 8px}
+#v-team .rec-bar>span>i{color:#1d232a;text-shadow:none;font-weight:700}
+#v-team .rec-bar>span.full>i{color:#fff}
+#v-team .rec-bar>span>i small{font-size:var(--fs-xs);font-weight:600}
+#v-team .rec-bar>span.dnf>i{color:#8a2a1c}
+/* 기록 없는 시즌: 옅은 점선 + [기록 입력]. 보는 시즌이어도 진한 테두리 없음 (누를 수 있어 보이는 착시) */
+#v-team .rec-empty{display:flex;align-items:center;justify-content:center;gap:12px;border:1px dashed var(--line-2);background:transparent}
+#v-team .rec-me .rec-empty{outline-color:transparent}
+/* 편집: 미완주 체크 */
+.rec-dnf{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);color:var(--muted)}
+.rec-dnf input{width:14px;height:14px;margin:0}
+/* 보고서 평가 상자: 설계 탭 항목 카드의 파랑 띠 · 파랑 머리 대신 팀 탭의 기본 판 */
+#v-team .fs-more details.item,#v-team .fs-more details.item[open]{background:var(--panel);border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;border-radius:8px!important;box-shadow:none!important}
+#v-team .fs-more details.item>summary,#v-team .fs-more details.item[open]>summary{background:transparent;border-bottom:0;border-radius:8px}
+#v-team .fs-more details.item[open]>summary{border-bottom:1px solid var(--line);border-radius:8px 8px 0 0}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -17843,9 +17869,9 @@ function renderGoals(){ if(!$('#goal-tree')) return; }   // 목표 탭은 없앰
 /* 팀 탭 '대회 점수': FS 종목별 배점 막대 + 우리 팀 기록 막대(records.js) + 보고서 평가 */
 function fsScoreHTML(){ const tot = FS_SCORE.reduce((a,x)=>a+x[1],0);
   return `<section class="fs-goal"><h2>FS 대회 점수</h2>
-      <p class="gwhy">FS는 '빠른 차'를 여러 종목으로 나눠 점수를 매깁니다. 기록 종목(가속·스키드패드·오토크로스·내구)은 시작 탭의 다섯 가지 목표가 그대로 점수가 되고, 효율과 보고서는 FS가 따로 묻는 것입니다. 내구는 완주하지 못하면 0점이고, 최고 기록의 145%를 넘으면 완주 점수만 받습니다(경기진행규정 제11조).</p>
-      <div class="fs-bar" role="img" aria-label="종목별 배점 ${FS_SCORE.map(x=>x[0]+' '+x[1]+'점').join(', ')}, 합계 ${tot}점">${FS_SCORE.map(([n,v],i)=>`<span class="fsb-${i}" style="flex:${v}"><b>${n}</b><i>${v}</i></span>`).join('')}</div>
-      <p class="muted fs-tot">합계 ${tot.toLocaleString()}점</p>
+      <p class="gwhy">FS는 '빠른 차'를 여러 종목으로 나눠 점수를 매깁니다. 기록 종목(가속·스키드패드·오토크로스·내구)은 시작 탭의 다섯 가지 목표가 그대로 점수가 되고, 효율과 보고서는 FS가 따로 묻는 것입니다. 내구는 완주하지 못하면 0점이고, 최고 기록의 145%를 넘으면 완주 점수만 받습니다.</p>
+      <!-- 배점 막대 = 아래 기록 막대의 열 머리: 같은 3칸 격자(시즌 · 막대 · 합계)에 놓아 종목 칸 위치를 맞춤 -->
+      <div class="rec-row fs-distrow"><span></span><div class="fs-bar fs-dist" role="img" aria-label="종목별 배점 ${FS_SCORE.map(x=>x[0]+' '+x[1]+'점').join(', ')}, 합계 ${tot}점">${FS_SCORE.map(([n,v],i)=>`<span class="fsb-${i}" style="flex:${v}"><b>${n}</b><i>${v}</i></span>`).join('')}</div><span class="rec-sum">합계 <b>${tot.toLocaleString()}</b></span></div>
       <div class="fs-rec" id="fsRec"></div>
       <div class="stack fs-more">${goalSubHTML(Object.assign({}, FS_GOAL, {t:'보고서 평가 · '+FS_GOAL.t}))}</div>
     </section>`; }
@@ -30693,6 +30719,8 @@ try{ REC = JSON.parse(localStorage.getItem('run2x.records.v1')||'{}') || {}; }ca
 const recCan = () => !SH.on || SH.canAdmin;
 function recVisible(){ return !(window.Backend && Backend.kind()==='firebase') || SH.on; }
 /* 오른쪽에는 합계와 등수만: '14위 (내구 미완주)' → '14위' (전체는 마우스를 올리면) */
+/* 미완주 종목: r['미완주'] = ['내구','효율'] (0점이 미완주인지 기록을 안 넣은 것인지 구분) */
+const recDnf = r => Array.isArray(r && r['미완주']) ? r['미완주'] : [];
 const recRank = t => { const m=String(t||'').match(/\d+\s*위/); return m ? m[0].replace(/\s+/g,'') : String(t||''); };
 function renderRecords(){ const el=$('#fsRec'); if(!el) return;
   if(!recVisible()){ el.innerHTML = `<h3>우리 팀 기록</h3><p class="muted">로그인하고 팀에 가입하면 지난 시즌 우리 팀 기록(종목별 점수)이 여기에 보입니다.</p>`; return; }
@@ -30701,7 +30729,7 @@ function renderRecords(){ const el=$('#fsRec'); if(!el) return;
   let h = `<div class="rec-h"><h3>우리 팀 기록</h3>${RECSTAGE && !RECEDIT ? '<span class="pend-tag">저장 전</span>' : ''}<span class="tv-sp"></span>${recCan() ? (RECEDIT ? `<button type="button" class="btn small pri" data-recok>적용</button><button type="button" class="btn small" data-recno>취소</button>` : `<button type="button" class="btn small" data-recedit>편집</button>`) : ''}</div>`;
   if(RECEDIT){ const S = RECY || SEASON, r = (RECSTAGE||REC)[S] || {};
     h += `<p class="muted tp-small"><label>입력할 시즌 <input type="number" class="rec-y" min="2000" max="2100" value="${esc(S)}" aria-label="입력할 시즌"></label> · [적용]은 입력을 닫기만 하고, 팀원에게 보이려면 아래 막대의 [모두 저장]을 누르십시오.</p>
-      <div class="rec-in">${cols.map((c,i)=>`<label><span>${c} <span class="muted">/ ${FS_SCORE[i][1]}</span></span><input type="number" step="0.1" min="0" data-rc="${c}" value="${esc(r[c]??'')}"></label>`).join('')}<label><span>순위·비고</span><input type="text" maxlength="40" data-rc="순위" value="${esc(r['순위']||'')}"></label></div>`;
+      <div class="rec-in">${cols.map((c,i)=>`<label><span>${c} <span class="muted">/ ${FS_SCORE[i][1]}</span></span><input type="number" step="0.1" min="0" max="${FS_SCORE[i][1]}" data-rc="${c}" value="${esc(r[c]??'')}">${c==='보고서'?'':`<span class="rec-dnf"><input type="checkbox" data-rdnf="${c}"${recDnf(r).includes(c)?' checked':''}> 미완주</span>`}</label>`).join('')}<label><span>순위·비고</span><input type="text" maxlength="40" data-rc="순위" value="${esc(r['순위']||'')}"></label></div>`;
   }
   if(!seasons.length && !RECEDIT){ h += `<p class="muted">아직 기록이 없습니다.${recCan() ? ' [편집]을 눌러 지난 대회 결과를 입력하십시오.' : ' 회장이 입력하면 여기에 보입니다.'}</p>`; el.innerHTML=h; return; }
   // 3줄만: 보는 시즌(가운데, 가장 최신이면 첫 줄) + 기록이 있는 가까운 다음·이전 시즌. 칸 너비 = 배점, 진한 부분 = 받은 점수, 연한 부분 = 만점까지 모자란 점수
@@ -30711,21 +30739,21 @@ function renderRecords(){ const el=$('#fsRec'); if(!el) return;
   const head = `<div class="rec-row rec-hd"><span></span><div class="rec-cats">${FS_SCORE.map(([n,v])=>`<span style="flex:${v}"><b>${esc(n)}</b><i>${v}</i></span>`).join('')}</div><span class="rec-sum">합계 / ${tot.toLocaleString()}</span></div>`;
   const row = (Y) => { if(Y==null) return `<div class="rec-row rec-none"><span class="rec-s">—</span><div class="rec-empty">기록 없음</div><span></span></div>`;
     const r = data[String(Y)]; const me = Y===sel ? ' rec-me' : '';
-    if(!r) return `<div class="rec-row rec-none${me}"><span class="rec-s">${Y}</span><div class="rec-empty">${Y} 시즌 기록 없음</div><span></span></div>`;
-    return `<div class="rec-row${me}"><span class="rec-s">${Y}</span><div class="fs-bar rec-bar" role="img" aria-label="${Y} 시즌 종목별 점수 ${cols.map(c=>c+' '+(r[c]??'-')).join(', ')}">${FS_SCORE.map(([n,v],i)=>{ const x=r[n]; const f=x===''||x==null?0:Math.min(100,Math.max(0,(+x||0)/v*100)); return `<span class="fsb-${i}" style="flex:${v};--f:${f}%" title="${esc(n)} ${x??'-'} / ${v}"><i>${x===''||x==null?'—':esc(x)}</i></span>`; }).join('')}</div><span class="rec-sum" title="${esc(sum(r).toLocaleString()+(r['순위']?' · '+r['순위']:''))}"><b>${sum(r).toLocaleString()}</b>${r['순위']?` · ${esc(recRank(r['순위']))}`:''}</span></div>`; };
+    if(!r) return `<div class="rec-row rec-none${me}"><span class="rec-s">${Y}</span><div class="rec-empty"><span>${Y} 시즌 기록 없음</span>${recCan() && !RECEDIT ? `<button type="button" class="btn small" data-recedit data-recy="${Y}">기록 입력</button>` : ''}</div><span></span></div>`;
+    return `<div class="rec-row${me}"><span class="rec-s">${Y}</span><div class="fs-bar rec-bar" role="img" aria-label="${Y} 시즌 종목별 점수 ${cols.map(c=>c+' '+(r[c]??'-')).join(', ')}">${FS_SCORE.map(([n,v],i)=>{ const x=r[n], dnf=recDnf(r).includes(n); const f=x===''||x==null?0:Math.min(100,Math.max(0,(+x||0)/v*100)); return `<span class="fsb-${i}${f>=82?' full':''}${dnf?' dnf':''}" style="flex:${v};--f:${f}%" title="${esc(n)} ${x??'-'} / ${v}${dnf?' · 미완주':''}"><i>${x===''||x==null?'—':esc(x)}${dnf?'<small> · 미완주</small>':''}</i></span>`; }).join('')}</div><span class="rec-sum" title="${esc(sum(r).toLocaleString()+(r['순위']?' · '+r['순위']:''))}"><b>${sum(r).toLocaleString()}</b>${r['순위']?` · ${esc(recRank(r['순위']))}`:''}</span></div>`; };
   h += `<div class="rec-bars">${rows.map(row).join('')}</div><p class="muted tp-small">위의 ‹ ›로 보는 시즌을 바꾸면 그 시즌을 가운데에 두고 앞뒤 시즌과 비교합니다.</p>`;
   el.innerHTML = h; }
-function recRead(){ const o={}; document.querySelectorAll('#fsRec [data-rc]').forEach(i=>{ const v=i.value.trim(); if(v!=='') o[i.dataset.rc] = i.type==='number' ? +v : v; }); return o; }
+function recRead(){ const o={}; document.querySelectorAll('#fsRec [data-rc]').forEach(i=>{ const v=i.value.trim(); if(v!=='') o[i.dataset.rc] = i.type==='number' ? +v : v; }); const d=[...document.querySelectorAll('#fsRec [data-rdnf]:checked')].map(i=>i.dataset.rdnf); if(d.length){ o['미완주']=d; d.forEach(c=>{ if(o[c]==null) o[c]=0; }); } return o; }
 async function recSave(){ if(!RECSTAGE) return; const next = RECSTAGE; RECSTAGE = null;
   if(!SH.on){ REC = next; try{ localStorage.setItem('run2x.records.v1', JSON.stringify(REC)); }catch(e){} renderRecords(); return; }
   await SH.db.doc('meta/records').set(next); REC = next; renderRecords(); }
 DRAFT.add({ n:()=>RECSTAGE?1:0, label:()=>'우리 팀 기록', save: recSave, revert(){ RECSTAGE=null; RECEDIT=false; renderRecords(); } });
 document.addEventListener('click', e=>{
-  if(e.target.closest('[data-recedit]')){ e.preventDefault(); RECEDIT=true; RECY=SEASON; renderRecords(); const i=document.querySelector('#fsRec [data-rc]'); if(i) i.focus(); return; }
+  const re=e.target.closest('[data-recedit]'); if(re){ e.preventDefault(); RECEDIT=true; RECY=re.dataset.recy||SEASON; renderRecords(); const i=document.querySelector('#fsRec [data-rc]'); if(i) i.focus(); return; }
   if(e.target.closest('[data-recok]')){ e.preventDefault(); RECEDIT=false; renderRecords(); return; }
   if(e.target.closest('[data-recno]')){ e.preventDefault(); RECEDIT=false; RECSTAGE=null; renderRecords(); DRAFT.paint(); return; } });
 document.addEventListener('change', e=>{ if(e.target.matches && e.target.matches('#fsRec .rec-y') && /^\d{4}$/.test(e.target.value)){ RECY=e.target.value; renderRecords(); } });
-document.addEventListener('input', e=>{ if(!e.target.closest || !e.target.closest('#fsRec [data-rc]')) return;
+document.addEventListener('input', e=>{ if(!e.target.closest || !e.target.closest('#fsRec [data-rc],#fsRec [data-rdnf]')) return;
   const base = JSON.parse(JSON.stringify(RECSTAGE || REC)), S = RECY || SEASON; const r = recRead(); if(Object.keys(r).length) base[S] = r; else delete base[S];
   RECSTAGE = JSON.stringify(base)===JSON.stringify(REC) ? null : base; DRAFT.paint(); });
 { const _osr=onSharedReady; onSharedReady=function(db){ _osr(db); db.doc('meta/records').onSnapshot(sn=>{ REC = sn.exists ? (sn.data()||{}) : {}; if(!RECEDIT) renderRecords(); }, ()=>{}); }; }
@@ -31097,7 +31125,7 @@ const TOUR = {
   ['#v-team .tt-sum','진행 요약','파트별 완료 비율입니다.',{tab:'team',sub:'progress'}],
   ['#v-team .tt-cards','바로 볼 것','착수 가능(앞 항목이 끝나 시작해도 되는 것) · 선행 미완료 경고 · 제외 영향 · 최근 변경 · 최근 논의 · 우리 팀 값 입력 현황입니다.',{tab:'team',sub:'progress'}],
   ['#v-team [data-ttp=summary] .tt-report','시즌 요약','진행 상태·우리 팀 값·논의를 자동으로 모은 읽기 전용 페이지입니다. 인수인계 때 그대로 보여 주면 됩니다.',{tab:'team',sub:'summary'}],
-  ['#v-team #fsRec','대회 점수','FS 종목별 배점과 우리 팀의 지난 기록입니다. 고른 시즌을 가운데에 두고 앞뒤 시즌과 비교합니다.',{tab:'team',sub:'score'}],
+  ['#v-team #fsRec','대회 점수','우리 팀의 종목별 기록입니다. 칸은 위 배점 막대와 같은 자리이고, 진한 부분이 받은 점수, 연한 부분이 만점까지 모자란 점수입니다. 고른 시즌을 가운데에 두고 앞뒤 시즌과 비교하고, 기록이 없는 시즌은 [기록 입력]으로 바로 넣습니다(회장). 완주하지 못한 종목은 편집에서 [미완주]를 체크합니다.',{tab:'team',sub:'score'}],
   ['#v-team #teamPanel .tp-s-me','내 계정','로그인한 구글 계정입니다. 이메일은 기본으로 가려져 있고 [보기]로 잠깐 봅니다. [로그아웃]도 여기 있습니다.',{tab:'team',sub:'account'}],
   ['#v-team #teamPanel .tp-mt tr.tp-mine','내 줄 · 팀에 보이는 이름','명단 맨 위는 늘 내 줄입니다(검색·거르기와 상관없이). [이름 바꾸기]로 팀원 명단·검토 기록·논의에 보이는 이름을 그 자리에서 고칩니다(1~20자, 구글 계정 이름과 따로). 회장도 바꿀 수 있고, 서로 알아볼 수 있게 실명을 권장합니다.',{tab:'team',sub:'account'}],
   ['#v-team #teamPanel .tp-s-teams','내 팀','가입한 팀 목록입니다. [이동]으로 지금 팀을 바꾸고, [나가기]는 한 번 더 눌러 확인합니다. 회장은 나갈 수 없습니다.',{tab:'team',sub:'account'}],
