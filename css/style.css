@@ -3766,3 +3766,4 @@ ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;bo
 #v-start .gs-fig{margin:0}
 #v-start .gs-fig svg{display:block;width:100%;height:auto;overflow:visible}
 #v-start .gs-fig figcaption{margin-top:6px;font-size:var(--fs-xs);color:var(--muted);line-height:1.5}
+#v-start .gs-fig figcaption{margin-top:10px;line-height:1.7}
