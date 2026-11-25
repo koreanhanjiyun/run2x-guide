@@ -93,23 +93,13 @@ const TOOL_LIST = [
   ['10','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교'],
   ['T','타이어 모델 (선택)','P1','μ · 하중 감도 · 코너링 강성 (시험 데이터가 없을 때 직접)','슬립각–횡력 곡선, 앞뒤 코너링 강성, 이완 길이']
 ];
-/* 도구 탭 목차 (2026-11-25): 설계 탭 목차와 같은 자리 · 모양(왼쪽 고정). 위 = 이 화면의 칸(누르면 스크롤), 아래 = 작업창이 있는 도구(누르면 바로 엶).
-   지금 보이는 칸은 강조. #v-tools 안에 있어 다른 탭에서는 같이 숨음 */
-const TL_SECS = [['tls-vals','설계값'],['tls-figs','그림으로 보기'],['tls-part','파트별'],['tls-tools','도구 모음']];
+/* 도구 빠른 선택 (2026-11-25): 왼쪽에 붙은 막대(설계 탭 목차와 같은 자리 · 모양). 작업창이 있는 도구만, 누르면 바로 엶.
+   처음에는 늘 펼침, 머리를 누르면 접힘(접힘 · 펼침 높이 같음). #v-tools 안에 있어 다른 탭에서는 같이 숨음 */
 function toolTocHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
-  const coll = typeof PREF==='function' && PREF('tltocc','0')==='1';
-  return `<nav id="tltoc" class="${coll ? 'coll' : ''}" aria-label="도구 탭 목차"><div class="toc-h"><span>목차</span><button class="toc-fold" title="목차 접기/펼치기" aria-label="목차 접기/펼치기"></button></div><div class="tl-toc-in">`
-    + TL_SECS.map(([id, t]) => `<button type="button" class="toc-s" data-tlsec="${id}"><span class="tt">${t}</span></button>`).join('')
-    + `<div class="tl-toc-g">도구</div>`
+  return `<nav id="tltoc" aria-label="도구 빠른 선택"><div class="toc-h"><span>도구 빠른 선택</span><button class="toc-fold" title="접기/펼치기" aria-label="도구 빠른 선택 접기/펼치기"></button></div><div class="tl-toc-in">`
     + TOOL_LIST.filter(r=>W[r[0]]).map(r=>`<button type="button" class="toc-s" data-wbq="${r[0]}" title="${esc(r[1])} · ${esc(r[2])}"><span class="tc">${W[r[0]].no || r[0]}</span><span class="tt">${esc(String(r[1]).replace(/\s*\(.*\)\s*$/,''))}</span></button>`).join('')
     + `</div></nav>`; }
-document.addEventListener('click', e=>{ const q=e.target.closest && e.target.closest('[data-wbq]'); if(q){ e.preventDefault(); wbOpen(q.dataset.wbq, q); return; }
-  const sec=e.target.closest && e.target.closest('[data-tlsec]'); if(sec){ e.preventDefault(); const l=document.getElementById(sec.dataset.tlsec); if(l) smoothScrollTo(()=>l.getBoundingClientRect().top+scrollY-110); } });
-function tlTocSpy(){ const t=document.getElementById('tltoc'); if(!t || !t.getClientRects().length) return;   /* position:fixed 라 offsetParent 는 늘 null */ let cur=TL_SECS[0][0];
-  TL_SECS.forEach(([id])=>{ const l=document.getElementById(id); if(l && l.getBoundingClientRect().top < 160) cur=id; });
-  if(innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur=TL_SECS[TL_SECS.length-1][0];
-  t.querySelectorAll('[data-tlsec]').forEach(b=>b.classList.toggle('cur', b.dataset.tlsec===cur)); }
-addEventListener('scroll', tlTocSpy, {passive:true});
+document.addEventListener('click', e=>{ const q=e.target.closest && e.target.closest('[data-wbq]'); if(q){ e.preventDefault(); wbOpen(q.dataset.wbq, q); } });
 /* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
   /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
@@ -181,12 +171,12 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
     v.innerHTML = `<header class="top tl-hero"><span class="eyebrow">우리 팀 설계값</span><h1>팀 대시보드</h1>
 </header>
       ${toolTocHTML()}
-      <section class="tl-sec" id="tls-vals" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span></div><div id="dvals"></div></section>
-      <section class="tl-sec" id="tls-figs" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
-      <section class="tl-sec" id="tls-part" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
-      <section class="tl-sec" id="tls-tools" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
+      <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span></div><div id="dvals"></div></section>
+      <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
+      <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
+      <section class="tl-sec" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
         <ol class="tl-tools">${toolRowsHTML()}</ol></section>`; }
-  dashPaint(); requestAnimationFrame(tlTocSpy); }
+  dashPaint(); }
 function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
   dashSync(); dashClamp(); const ss = $('#dvseason'); if(ss) ss.textContent = dvSeason() + ' 시즌';
   if(all || which.includes('vals')) $('#dvals').innerHTML = dashValuesHTML();

@@ -3797,24 +3797,12 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 /* 도구 탭 목차 (2026-11-25): 설계 탭 #toc 와 같은 자리 · 모양 */
 #tltoc{position:fixed;left:0;top:calc(var(--tabh) + 14px);max-height:calc(100vh - var(--tabh) - 28px);width:var(--tocw);overflow:hidden;z-index:12;background:var(--panel);border:1px solid var(--line-2);border-left:0;border-radius:0 8px 8px 0;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(30,20,50,.07)}
 #tltoc .tl-toc-in{overflow:auto;padding:4px 4px 8px 12px;scrollbar-width:thin}
-#tltoc .tl-toc-g{margin:8px 4px 2px;padding-top:8px;border-top:1px solid var(--line);font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em}
 #tltoc .toc-s .tc{min-width:26px}
 #tltoc:not(.coll) .toc-h{padding-left:16px;min-height:40px;box-sizing:border-box}
-#tltoc.coll{width:auto;top:calc(var(--tabh) + 70px)}
+#tltoc.coll{width:auto}   /* 접혀도 펼친 때와 같은 높이(위치) */
 #tltoc.coll .tl-toc-in{display:none}
 #tltoc.coll .toc-h{flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:8px 4px;height:auto}
 #tltoc.coll .toc-h span{writing-mode:vertical-rl;letter-spacing:.2em}
 #tltoc.coll .toc-fold{padding:0;line-height:1}
 #tltoc.coll .toc-fold::before{content:"⟩"}
 #tltoc.ts-hide{visibility:hidden}
-/* 옆 패널 벽에서 떨어지기 (2026-11-25): 접힘 = 벽에 붙은 막대. 펼치면 기차(글자 · ㄱ자 판)가 끝날 때까지 벽에 붙잡아 두었다가(wf-hold)
-   놓는 순간 14 px 안쪽으로 살짝 지나쳤다 돌아오며(또잉) 떠 있는 카드가 됨. 접을 때는 먼저 벽에 다시 붙고 나서 기차가 되감김.
-   움직임은 translate 전환, JS(layout.js tocSnake · railSnake)는 wf-hold 만 붙였다 뗌 */
-#toc,#tltoc,#partRail,#figRail{transition:translate .38s cubic-bezier(.3,1.8,.45,1),border-radius .2s ease-out}
-#toc:not(.coll),#tltoc:not(.coll){translate:14px 0;border-radius:8px;border-left:1px solid var(--line-2)}
-#partRail:not(.coll),#figRail.on{translate:-14px 0;border-radius:8px;border-right:1px solid var(--line-2)}
-#toc.wf-hold,#tltoc.wf-hold,#partRail.wf-hold{translate:0 0;transition:translate .16s ease-in,border-radius .16s ease-in}
-#toc.wf-hold,#tltoc.wf-hold{border-radius:0 8px 8px 0}
-#partRail.wf-hold{border-radius:8px 0 0 8px}
-.wf-catch{position:fixed;right:0;z-index:41;background:transparent}   /* 떨어진 오른쪽 패널과 벽 사이 틈 (layout.js wallCatch) */
-.wf-catch[hidden]{display:none}
