@@ -162,10 +162,10 @@
     let ms=[], bl=[], pw=''; try{ [ms, bl, pw] = await Promise.all([T.members(), T.blockedList(), T.secretPw()]); }catch(e){ console.error(e); }
     const admins = ms.filter(m=>m.role==='admin').length;
     const namepw = `<div class="tp-sec tp-s-name"><div class="sec-label">팀 이름 · 비밀번호</div><p class="tp-small">지금 이름: <b>${esc(c.teamName)}</b></p>
-      <div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off">${pw?'<button type="button" class="btn small" data-tp="rename">변경</button>':''}</div>`
+      <div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off">${pw?'<button type="button" class="btn small" data-tp="rename">저장</button>':''}</div>`
       + (pw ? `<div class="tp-row tp-pwnow"><span class="tp-small">현재 비밀번호</span>${secretSpan(pw, '••••••', 'tp-pwv')}<button type="button" class="lnk" data-tp="pwcopy">복사</button></div>`
-            : `<div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (저장된 것이 없어 이름 변경 때 한 번 입력)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">변경</button></div>`)
-      + `<div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div>
+            : `<div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (저장된 것이 없어 이름 변경 때 한 번 입력)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">저장</button></div>`)
+      + `<div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">저장</button></div>
       <ul class="hl"><li>기존 팀원은 그대로, 새로 가입할 사람만 바뀐 이름 · 비밀번호로 가입</li><li>비밀번호는 회장 · 사이트 운영자가 볼 수 있음 → 다른 곳에서 쓰는 비밀번호 금지</li></ul></div>`;
     MS = ms; const nNow=ms.filter(m=>eff(m).active).length, nPast=ms.length-nNow;
     if(!SSEL) SSEL = String(+TEAM_SEASON+1);

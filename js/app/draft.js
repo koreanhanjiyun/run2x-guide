@@ -1,7 +1,7 @@
 /* ============================================================
    편집은 "저장해야 반영" (H10·H14·H15)
    - 진행 상태: 예정·진행 중·완료·제외를 바로 누름('저장 전' 표시) → 아래 막대 [모두 저장]으로만 팀에 공유
-   - 우리 팀 값: [편집] → 바꾸기 → [적용](입력 닫음, '저장 전' 표시) → 아래 막대 [모두 저장]
+   - 우리 팀 값 · 우리 팀 기록: [편집] → 입력하면 바로 '저장 전'으로 쌓임 → [닫기] → 아래 막대 [모두 저장] (2026-11-25 [적용]/[취소] 없앰)
      [취소]는 그 칸의 변경만 되돌림. 팀 탭 항목 목록의 상태 버튼은 바로 '저장 전'으로 쌓임
    - 다른 화면(팀원 관리 등)도 DRAFT.add 로 같은 막대에 변경을 올림
    - 저장 안 한 변경이 있으면 시즌 넘기기·팀 전환·로그아웃·페이지 닫기 전에 막고 안내
@@ -54,9 +54,9 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
     if(!BAR){ BAR = document.createElement('div'); BAR.id = 'draftBar'; BAR.setAttribute('role','status'); document.body.appendChild(BAR); }
     const p = nPend(), d = nVal(), show = nAll() > 0;
     BAR.hidden = !show; document.body.classList.toggle('has-draft', show); try{ updSeasonChip(); }catch(e){} if(!show) return;
-    const exN = DRAFT.ext.reduce((a,x)=>a+(x.items && x.n() ? x.n() : 0),0);
+    const exN = DRAFT.ext.reduce((a,x)=>a+(x.items && x.n() ? x.n() : 0),0) + d;
     if(!p && !exN) LIST=false;
-    const parts = []; if(p) parts.push(`<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">진행 상태 ${p}건 <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>`); if(d) parts.push(`우리 팀 값 ${d}항목`);
+    const parts = []; if(p) parts.push(`<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">진행 상태 ${p}건 <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>`); if(d) parts.push(`<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">우리 팀 값 ${d}항목 <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>`);
     DRAFT.ext.forEach(x=>{ const n=x.n(); if(n) parts.push(x.items ? `<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">${x.label(n)} <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>` : x.label(n)); });
     BAR.innerHTML = `<span><b>저장 안 한 변경</b> · ${parts.join(' · ')} <span class="db-sub">[모두 저장]을 눌러야 팀원에게 보입니다${p||d?` (${esc(SEASON)} 시즌)`:''}</span></span>
       <span class="db-acts"><button type="button" class="btn small" data-draft="revert">되돌리기</button><button type="button" class="btn small pri" data-draft="save">모두 저장</button></span>`
@@ -67,7 +67,11 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
   const stl = v => v==='skip' ? '제외' : ST_LABEL[v||'todo'];
   function listHTML(){ const ids = Object.keys(PENDING).filter(id=>IT[id]).sort((a,b)=>typeof admOrd==='function' ? admOrd(a,b) : 0);
     return `<div class="db-list" role="list">${ids.map(id=>{ const a=COMMITTED[id]||'todo', b=PENDING[id]||'todo';
-      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-draftgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">${IT[id].p}</span></button><span class="db-ch"><span class="ipill st-${a}">${stl(a)}</span><span aria-hidden="true">→</span><span class="ipill st-${b}">${stl(b)}</span></span><button type="button" class="lnk db-rv" data-draftrv="${id}">되돌리기</button></div>`; }).join('')}${extRows()}</div>`; }
+      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-draftgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">${IT[id].p}</span></button><span class="db-ch"><span class="ipill st-${a}">${stl(a)}</span><span aria-hidden="true">→</span><span class="ipill st-${b}">${stl(b)}</span></span><button type="button" class="lnk db-rv" data-draftrv="${id}">되돌리기</button></div>`; }).join('')}${tvRows()}${extRows()}</div>`; }
+  /* 우리 팀 값: 바뀐 칸마다 '라벨 이전 → 이후' */
+  function tvRows(){ return Object.keys(TVSTAGE).filter(id=>IT[id]).map(id=>{ const cur=(VAL[id]&&VAL[id].s&&VAL[id].s[SEASON])||{}, nw=TVSTAGE[id]||{}; const labs=[...new Set([...Object.keys(cur),...Object.keys(nw)])];
+      const ch=labs.filter(l=>((cur[l]||{}).v||'')!==((nw[l]||{}).v||'') || ((cur[l]||{}).why||'')!==((nw[l]||{}).why||'')).map(l=>`${l} ${(cur[l]||{}).v||'—'} → ${(nw[l]||{}).v||'—'}`).join(' · ') || '비고 수정';
+      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-drafttvgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">팀 값</span></button><span class="db-ch">${esc(ch)}</span><button type="button" class="lnk db-rv" data-drafttvrv="${id}">되돌리기</button></div>`; }).join(''); }
   /* 다른 화면의 변경(팀원 관리 등): DRAFT.add 의 items() = [{key, c, n, p, change, go(), revert()}] */
   let EXT = [];
   function extRows(){ EXT = DRAFT.ext.flatMap(x=>x.items && x.n() ? x.items() : []);
@@ -75,6 +79,8 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
   document.addEventListener('click', e=>{
     if(e.target.closest('[data-draftlist]')){ e.preventDefault(); LIST=!LIST; paint(); return; }
     const rv=e.target.closest('[data-draftrv]'); if(rv){ e.preventDefault(); stRevertOne(rv.dataset.draftrv); return; }
+    const tg=e.target.closest('[data-drafttvgo]'); if(tg){ e.preventDefault(); LIST=false; paint(); vtItem(tg.dataset.drafttvgo, null); return; }
+    const tr=e.target.closest('[data-drafttvrv]'); if(tr){ e.preventDefault(); const id=tr.dataset.drafttvrv; delete TVSTAGE[id]; document.querySelectorAll(`.tval[data-tv="${CSS.escape(id)}"]`).forEach(b=>{ delete b.dataset.edit; b.classList.remove('tv-dirty'); renderTV(b); }); paint(); return; }
     const xg=e.target.closest('[data-draftext]'); if(xg){ e.preventDefault(); const it=EXT[+xg.dataset.draftext]; LIST=false; paint(); if(it) it.go(); return; }
     const xr=e.target.closest('[data-draftextrv]'); if(xr){ e.preventDefault(); const it=EXT[+xr.dataset.draftextrv]; if(it) it.revert(); return; }
     const go=e.target.closest('[data-draftgo]'); if(go){ e.preventDefault(); LIST=false; paint(); if(typeof ttGoPend==='function') ttGoPend(go.dataset.draftgo); else vtItem(go.dataset.draftgo, null); return; }

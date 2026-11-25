@@ -3720,3 +3720,14 @@ ul.hl .hl-k{display:inline-block;width:10px;height:10px;border-radius:2px;margin
 #v-team .adm-tm details.tp-more>ul.hl{margin:6px 0 0}
 ul.hl.hl-row{display:flex;flex-wrap:wrap;gap:4px 16px;list-style:none;padding-left:0}
 ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;border-radius:0;vertical-align:3px}
+
+/* 저장 전 표시 하나로 (2026-11-25): 칸 · 상자 = 주황 점선 2 px, 줄 = 주황 왼쪽 띠 3 px, 머리에 [저장 전] */
+.tval.tv-dirty{border:2px dashed #d9730d!important;box-shadow:none!important}
+.rec-row.rec-pend .rec-bar{outline:2px dashed #d9730d!important;outline-offset:2px}
+.rec-row.rec-pend .rec-s{box-shadow:inset 3px 0 0 #d9730d}
+/* 대회 점수 입력 검사 */
+.rec-in input.rec-bad{border-color:#c0392b!important;background:#fff4f2}
+.rec-in .rec-err{font-size:var(--fs-xs);color:#c0392b}
+.rec-in input:disabled{background:#f2f1f5;color:var(--muted)}
+#draftBar .db-row{grid-template-columns:minmax(230px,1fr) minmax(0,340px) auto}
+#draftBar .db-go{grid-template-columns:48px minmax(90px,1fr) auto}

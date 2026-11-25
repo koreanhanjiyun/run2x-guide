@@ -150,16 +150,16 @@ async function saveVal(id, vals, msgEl){
 /* 우리 팀 값: 입력칸 읽기 */
 function tvRead(box){ const vals={}; box.querySelectorAll('[data-tl]').forEach(i=>{ const l=i.dataset.tl; vals[l]=vals[l]||{}; vals[l][i.dataset.tk]=i.value.trim(); }); return vals; }
 function tvHTML(id){ const a=ACT[id], dk = typeof DK_BY_ITEM!=='undefined' && DK_BY_ITEM[id]; if(!dk && (!a || !a[2].length)) return ''; return `<div class="tval" data-tv="${id}"></div>`; }
-/* 보기 → [편집] → 입력 → [적용](저장 전 값으로 보임) / [취소] → 아래 막대 [모두 저장] (H15) */
+/* 보기 → [편집] → 입력하면 바로 '저장 전'(아래 막대에 쌓임) → [닫기] → 아래 막대 [모두 저장] · [되돌리기] (2026-11-25: [적용]/[취소] 없앰, 진행 상태와 같은 방식) */
 function renderTV(el){ const id=el.dataset.tv, labs=(ACT[id]&&ACT[id][2])||[], rec=VAL[id]; const can=canEditItem(id) && labs.length>0; const man=can && el.dataset.edit==='1';
   if(!labs.length){ el.innerHTML = typeof dvLinkedHTML==='function' ? dvLinkedHTML(id, el.dataset.view||SEASON) : ''; return; }   /* 글로 적는 값이 없는 항목: 팀 설계값만 */
   const staged = (typeof TVSTAGE!=='undefined' && TVSTAGE[id]) || null; const view = man ? SEASON : (el.dataset.view||SEASON);
   const data = (view===SEASON && staged) ? staged : (rec&&rec.s&&valFilled(rec.s[view]) ? rec.s[view] : null);
-  const btn = man ? `<button type="button" class="btn small pri" data-tvok>적용</button><button type="button" class="btn small" data-tvno>취소</button>` : (can && view===SEASON ? `<button type="button" class="btn small tv-edit" data-tvedit>편집</button>` : '');
-  let h=`<div class="tv-h"><span class="sec-label">우리 팀 값</span>${man?`<span class="tv-s">${SEASON} 시즌 입력 중</span>`:`<span class="tv-yr"><button type="button" class="tv-yb" title="눌러서 연도 입력">${esc(view)} 시즌</button><input type="number" class="tv-yi" min="2000" max="2100" hidden aria-label="볼 시즌 연도"></span>${view!==SEASON?`<span class="muted tv-o">이번 시즌 ${SEASON}</span>`:''}`}${!man&&staged&&view===SEASON?'<span class="pend-tag">저장 전</span>':''}<span class="tv-sp"></span>${btn}</div>`;
+  const btn = man ? `<button type="button" class="btn small" data-tvok>닫기</button>` : (can && view===SEASON ? `<button type="button" class="btn small tv-edit" data-tvedit>편집</button>` : '');
+  let h=`<div class="tv-h"><span class="sec-label">우리 팀 값</span>${man?`<span class="tv-s">${SEASON} 시즌 입력 중</span>`:`<span class="tv-yr"><button type="button" class="tv-yb" title="눌러서 연도 입력">${esc(view)} 시즌</button><input type="number" class="tv-yi" min="2000" max="2100" hidden aria-label="볼 시즌 연도"></span>${view!==SEASON?`<span class="muted tv-o">이번 시즌 ${SEASON}</span>`:''}`}${staged&&view===SEASON?'<span class="pend-tag">저장 전</span>':''}<span class="tv-sp"></span>${btn}</div>`;
   if(man){ const d=staged||(rec&&rec.s&&rec.s[SEASON])||{};
     h+=`<div class="tv-edit">${labs.map(l=>`<label><span class="vchip dec">${l}</span><input type="text" data-tl="${esc(l)}" data-tk="v" placeholder="값 (단위 포함)" aria-label="${esc(l)} 값" value="${esc((d[l]||{}).v||'')}"><input type="text" data-tl="${esc(l)}" data-tk="why" placeholder="비고" aria-label="${esc(l)} 비고" value="${esc((d[l]||{}).why||'')}"></label>`).join('')}
-      <div class="tv-foot"><span class="pmsg muted">[적용]은 입력을 닫기만 합니다. 팀원에게 보이려면 아래 막대의 [모두 저장]을 누르십시오.</span></div></div>`;
+      <div class="tv-foot"><span class="pmsg muted">입력하면 아래 막대에 쌓입니다 → [모두 저장]으로 팀에 반영</span></div></div>`;
   } else if(data && valFilled(data)){ h+=`<table class="kvt tv-t">${labs.map(l=>{ const r=data[l]||{}; return `<tr><th>${l}</th><td>${r.v?`<b>${esc(r.v)}</b>`:'<span class="muted">—</span>'}${r.why?`<span class="tv-why">${esc(r.why)}</span>`:''}</td></tr>`; }).join('')}</table>`;
   } else h+=`<p class="muted tv-empty">${SH.on ? '아직 기록된 팀 값이 없습니다.' + (can ? ' [편집]을 눌러 입력하십시오.' : ' 회장이나 담당 팀장·파트장이 입력하면 여기에 표시됩니다.') : '아직 기록된 팀 값이 없습니다.'}</p>`;
   if(typeof dvLinkedHTML==='function') h = dvLinkedHTML(id, view) + h;   /* 숫자로 정하는 팀 설계값은 위에, 글로 적는 우리 팀 값(이전 기록 포함)은 아래 */
