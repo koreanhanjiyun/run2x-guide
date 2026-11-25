@@ -1181,7 +1181,8 @@ body.no-write :is(.qa-f button[type=submit],.qa-esave,.qa-del){opacity:.4;cursor
 .tt-rep{width:100%;font-size:var(--fs-s)}.tt-rep td{vertical-align:top}
 .tt-rep td.st-done{color:var(--out);font-weight:600}.tt-rep td.st-doing{color:#a74b06;font-weight:600}.tt-rep td.st-skip{color:var(--muted)}
 .tt-rep-q{font-size:var(--fs-s);color:var(--ink-2);margin-top:2px}
-@media print{body.print-report>*:not(#v-team){display:none!important}body.print-report #v-team>*:not([data-ttp=summary]){display:none!important}body.print-report .tt-sumbar{display:none}body.print-report #v-team{max-width:none;padding:0}body.print-report .tt-report{border:0}}
+/* 시즌 요약 인쇄: 요약을 품은 조상과 요약 안쪽만 남기고 모두 숨김 (#v-team은 main 안에 있음, 2026-11-25 빈 쪽 버그 수정) */
+@media print{body.print-report :not(:has([data-ttp=summary])):not([data-ttp=summary]):not([data-ttp=summary] *){display:none!important}body.print-report :has([data-ttp=summary]){margin:0!important;padding:0!important;max-width:none!important;border:0!important;box-shadow:none!important;background:#fff!important}body.print-report .tt-sumbar{display:none}body.print-report #v-team{max-width:none;padding:0}body.print-report .tt-report{border:0}}
 /* 사용법 튜토리얼 */
 #tour{position:fixed;inset:0;z-index:9800}
 
@@ -3505,3 +3506,29 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 #helpPop .hpp-a{display:flex;justify-content:flex-end}
 #tourBtn.hp-on{box-shadow:0 0 0 2px #fff,0 0 0 5px rgba(201,168,240,.85);animation:hp-ring 1.4s ease-in-out infinite}
 @keyframes hp-ring{50%{box-shadow:0 0 0 2px #fff,0 0 0 8px rgba(201,168,240,.35)}}
+
+/* 진행 현황 · 시즌 요약 정리 (2026-11-25) */
+/* 누를 수 있는 것은 전부 같은 커서 표시: 옅은 보라 바탕 + 진한 글자 (단계 · 항목 이름 · 카드 목록 · 표 칸) */
+#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it){border-radius:4px;transition:background-color .12s,box-shadow .12s,color .12s}
+#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it):hover{background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft);color:#3f2560;text-decoration-color:var(--accent)}
+#v-team .tt-card .adm-it:hover>span:not(.adm-code),#v-team .tt-card .adm-it:hover .adm-qt{text-decoration:none}
+.tt-mat td.tt-c:hover{outline:0;background:var(--accent-soft);color:#3f2560;box-shadow:inset 0 0 0 2px var(--accent)}
+.tt-mat td.sel,.tt-mat td.sel:hover{outline:0;background:var(--accent);color:#fff;box-shadow:none}
+.tt-mat td.sel b,.tt-mat td.sel i{color:#fff}
+/* 해당 없는 칸: 회색 바탕 + 또렷한 빗금 */
+.tt-mat td.tt-e{background:#f3f2f6 repeating-linear-gradient(135deg,transparent 0 4px,rgba(60,50,80,.09) 4px 6px)}
+/* 전체 칸도 다른 칸과 같은 상태 색 */
+.tt-mat td.tt-rt.doing{background:#fff4e2}
+.tt-mat td.tt-rt.done{background:var(--out-soft);color:var(--out)}
+/* 항목 목록의 상태 버튼 (전역 숨김 규칙에서 되살림): 바꾼 뒤 아래 막대 [모두 저장] */
+#v-team .tt-row .stctl{display:inline-flex!important}
+.tt-row{grid-template-columns:56px minmax(0,1fr) 120px 300px 80px}
+/* 시즌 요약: 상태 칩 + 단계별 완료 막대 + 파트 표 상태 색 */
+.ipill.st-todo{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line-2)}
+.tt-rep td.st-done,.tt-rep td.st-doing,.tt-rep td.st-skip{font-weight:400}
+.tt-report h3.tt-rep-h{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.tt-rep-cnt{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-s);font-weight:600;color:var(--ink-2)}
+.tt-rep-cnt .pbar2{width:120px;margin:0}
+.tt-rep-cnt.done{color:var(--out)}
+.tt-rep-parts td.done{background:var(--out-soft);color:var(--out);font-weight:600}
+.tt-rep-parts td.doing{background:#fff4e2}

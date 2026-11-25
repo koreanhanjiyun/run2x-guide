@@ -70,7 +70,7 @@ function ttProgress(el){
     ${STEPS.map(s=>{ const row=ITEMS.filter(i=>i.s===s.id).map(i=>i.id); const rc=ttCnt(row);
       return `<tr><th class="tt-sc"><button type="button" class="lnk" data-stepgo="${s.id}">${s.id}</button> <span class="muted">${esc(s.t.replace('★ ',''))}</span></th>${parts.map(p=>{ const ids=cellIds(s.id,p); if(!ids.length) return '<td class="tt-e"></td>'; const c=ttCnt(ids); const done=(c.n-c.k)>0 && c.d===(c.n-c.k);
         const sel = TT.cell===s.id+'|'+p;
-        return `<td class="tt-c${done?' done':''}${c.g?' doing':''}${sel?' sel':''}" data-ttcell="${s.id}|${p}" title="${s.id} · ${p}: 완료 ${c.d} · 진행 중 ${c.g} · 예정 ${c.t}${c.k?` · 제외 ${c.k}`:''}"><b>${c.d}</b>/${c.n-c.k}${c.k?`<i>-${c.k}</i>`:''}</td>`; }).join('')}<td class="tt-rt">${rc.d}/${rc.n-rc.k}</td></tr>`; }).join('')}
+        return `<td class="tt-c${done?' done':''}${c.g?' doing':''}${sel?' sel':''}" data-ttcell="${s.id}|${p}" title="${s.id} · ${p}: 완료 ${c.d} · 진행 중 ${c.g} · 예정 ${c.t}${c.k?` · 제외 ${c.k}`:''}"><b>${c.d}</b>/${c.n-c.k}${c.k?`<i>-${c.k}</i>`:''}</td>`; }).join('')}<td class="tt-rt${(rc.n-rc.k)>0 && rc.d===(rc.n-rc.k)?' done':''}${rc.g?' doing':''}" title="${s.id} 전체: 완료 ${rc.d} · 진행 중 ${rc.g} · 예정 ${rc.t}${rc.k?` · 제외 ${rc.k}`:''}">${rc.d}/${rc.n-rc.k}</td></tr>`; }).join('')}
   </tbody></table></div>`;
   /* 항목 목록 (표 칸·파트·단계로 거름) */
   let ids=all; if(TT.cell){ const [s,p]=TT.cell.split('|'); ids=cellIds(s,p); } else { if(TT.part) ids=ids.filter(id=>IT[id].p===TT.part); if(TT.step) ids=ids.filter(id=>IT[id].s===TT.step); }
@@ -113,10 +113,10 @@ function ttSummary(el){ const c=TT.ctx, all=ITEMS.map(i=>i.id), tot=ttCnt(all), 
     <article class="tt-report">
       <h2>${c&&c.teamName?esc(c.teamName)+' · ':''}${esc(SEASON)} 시즌 요약</h2>
       <p class="muted">만든 날 ${new Date().toLocaleDateString('ko-KR')} · 완료 ${tot.d} / ${tot.n-tot.k}${tot.g?` · 진행 중 ${tot.g}`:''}${tot.k?` · 제외 ${tot.k}`:''}</p>
-      <table class="kvt tt-rep-parts"><tr>${parts.map(p=>`<th>${p}</th>`).join('')}</tr><tr>${parts.map(p=>{ const x=ttCnt(all.filter(id=>IT[id].p===p)); return `<td>${x.d}/${x.n-x.k}</td>`; }).join('')}</tr></table>
+      <table class="kvt tt-rep-parts"><tr>${parts.map(p=>`<th>${p}</th>`).join('')}</tr><tr>${parts.map(p=>{ const x=ttCnt(all.filter(id=>IT[id].p===p)); return `<td class="${(x.n-x.k)>0 && x.d===(x.n-x.k)?'done':''}${x.g?' doing':''}">${x.d}/${x.n-x.k}</td>`; }).join('')}</tr></table>
       ${STEPS.map(s=>{ const its=ITEMS.filter(i=>i.s===s.id).sort((a,b)=>((ACT[a.id]||[99])[0])-((ACT[b.id]||[99])[0])); if(!its.length) return '';
-        return `<h3>${s.id} ${esc(s.t.replace('★ ',''))}</h3><table class="kvt tt-rep"><thead><tr><th>항목</th><th>파트</th><th>상태</th><th>우리 팀 값</th><th>논의</th></tr></thead><tbody>${its.map(i=>{ const v=STATUS[i.id]||'todo', t=talk(i.id);
-          return `<tr><td>${i.n}</td><td>${i.p}</td><td class="st-${v}">${v==='skip'?'제외':ST_LABEL[v]}</td><td>${valTxt(i.id)||'<span class="muted">—</span>'}</td><td class="tt-rep-qc">${t.length?ttTalkCell(t):'<span class="muted">—</span>'}</td></tr>`; }).join('')}</tbody></table>`; }).join('')}
+        const sc=ttCnt(its.map(i=>i.id)); return `<h3 class="tt-rep-h"><span>${s.id} ${esc(s.t.replace('★ ',''))}</span><span class="tt-rep-cnt${(sc.n-sc.k)>0 && sc.d===(sc.n-sc.k)?' done':''}">${ttBar(sc)}완료 ${sc.d}/${sc.n-sc.k}${sc.g?` · 진행 중 ${sc.g}`:''}</span></h3><table class="kvt tt-rep"><thead><tr><th>항목</th><th>파트</th><th>상태</th><th>우리 팀 값</th><th>논의</th></tr></thead><tbody>${its.map(i=>{ const v=STATUS[i.id]||'todo', t=talk(i.id);
+          return `<tr><td>${i.n}</td><td>${i.p}</td><td class="st-${v}"><span class="ipill st-${v}">${v==='skip'?'제외':ST_LABEL[v]}</span></td><td>${valTxt(i.id)||'<span class="muted">—</span>'}</td><td class="tt-rep-qc">${t.length?ttTalkCell(t):'<span class="muted">—</span>'}</td></tr>`; }).join('')}</tbody></table>`; }).join('')}
     </article>`; }
 
 /* 논의 칸: '글 n개 · 마지막 날짜 · 첫 줄 40자' 한 줄 + 펼치면 전체(답글 포함). 인쇄할 때는 개수와 최근 글 1개만 */
