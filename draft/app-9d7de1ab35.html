@@ -3818,17 +3818,6 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #v-start .gsub.has-fig .gs-side>div:last-child{flex:2}
 
 /* 도구 탭 목차 (2026-11-25): 설계 탭 #toc 와 같은 자리 · 모양 */
-#tltoc{position:fixed;left:0;top:calc(var(--tabh) + 14px);max-height:calc(100vh - var(--tabh) - 28px);width:max-content;overflow:hidden;z-index:12;background:var(--panel);border:1px solid var(--line-2);border-left:0;border-radius:0 8px 8px 0;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(30,20,50,.07)}
-#tltoc .tl-toc-in{overflow:auto;padding:4px 4px 8px 12px;scrollbar-width:thin}
-#tltoc .toc-s .tc{min-width:26px}
-#tltoc:not(.coll) .toc-h{padding-left:16px;min-height:40px;box-sizing:border-box}
-#tltoc.coll{width:auto}   /* 접혀도 펼친 때와 같은 높이(위치) */
-#tltoc.coll .tl-toc-in{display:none}
-#tltoc.coll .toc-h{flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:8px 4px;height:auto}
-#tltoc.coll .toc-h span{writing-mode:vertical-rl;letter-spacing:.2em}
-#tltoc.coll .toc-fold{padding:0;line-height:1}
-#tltoc.coll .toc-fold::before{content:"⟩"}
-#tltoc.ts-hide{visibility:hidden}
 /* 오른쪽 버블 (2026-11-25): 좌표계·거동 · 파트 강조를 '맨 위로' 버블과 같은 줄(오른쪽 24 px)에 쌓음. 아래부터 맨 위로(24) · 좌표계(80) · 파트(136) */
 #figRail,#partRail,#partRail.coll{top:auto!important;right:max(24px, env(safe-area-inset-right,0px));width:44px!important;height:44px;border:0;border-radius:50%!important;background:transparent;box-shadow:none!important;overflow:visible!important}
 #figRail{bottom:24px}
@@ -3856,6 +3845,22 @@ body:has(#toTop:not([hidden])) #partRail{bottom:136px}
 /* 좌표계 버블 아이콘: 축마다 좌표계 그림과 같은 색 계열(x 주황 · y 파랑 · z 초록, 방향도 그림과 같게 x 왼쪽 아래 · y 오른쪽 아래 · z 위).
    그림의 원래 색(#c2410c · #1d5f9a · #15803d)은 어두운 버블 위에서 파랑이 잘 안 보여 같은 색상의 밝은 쪽을 씀 */
 #figRail .rail-h::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke='%234fd17f' d='M12 13V3.5M9.4 6.1L12 3.5l2.6 2.6'/%3E%3Cpath stroke='%23fb7d3c' d='M12 13l-7.6 4.4M7.6 19.1l-3.2-1.7.4-3.6'/%3E%3Cpath stroke='%236fb3ef' d='M12 13l7.6 4.4M16.4 19.1l3.2-1.7-.4-3.6'/%3E%3C/svg%3E") center/contain no-repeat!important;-webkit-mask:none!important;mask:none!important}
+/* 도구 빠른 선택 버블 (2026-11-25, B안): 왼쪽 위(왼쪽 24 px, 탭 + 14 px) "도구" 버블 44 px. 펼치면 번호 버블(36 px)이 버블 자리에서 아래로 차례로 미끄러져 나옴
+   (--i 순서로 15 ms 씩 늦게), 접을 때는 아래 것부터 거꾸로. 번호 버블에 올리면 그 버블만 오른쪽으로 알약처럼 늘어나 이름이 보임 */
+#tlDial{position:fixed;left:24px;top:calc(var(--tabh) + 14px);z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#tlDial .tld-main{width:44px;height:44px;border-radius:50%;border:1px solid var(--char);background:var(--char);color:#fff;font:inherit;font-size:var(--fs-xs);font-weight:700;letter-spacing:.02em;cursor:pointer;box-shadow:0 4px 14px rgba(30,20,50,.22);display:grid;place-items:center;padding:0;position:relative;z-index:2;transition:background .2s}
+#tlDial .tld-main:hover{background:#3a3f4a}
+#tlDial:not(.coll) .tld-main{background:var(--accent);border-color:var(--accent)}
+#tlDial .tld-list{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:4px}
+#tlDial .tld-b{display:inline-flex;align-items:center;height:36px;min-width:36px;padding:0;border-radius:18px;border:1px solid var(--char);background:var(--char);color:#fff;font:inherit;font-size:var(--fs-s);cursor:pointer;box-shadow:0 3px 10px rgba(30,20,50,.2);overflow:hidden;white-space:nowrap;
+  transition:transform .3s cubic-bezier(.2,.8,.3,1) calc(var(--i)*15ms),opacity .2s ease-out calc(var(--i)*15ms),background .15s}
+#tlDial .tld-b b{flex:none;width:34px;text-align:center;font-family:var(--f-display);font-size:var(--fs-xs);font-weight:700}
+#tlDial .tld-b span{max-width:0;opacity:0;transition:max-width .22s cubic-bezier(.2,.8,.3,1),opacity .15s,padding .22s;padding-right:0}
+#tlDial .tld-b:hover,#tlDial .tld-b:focus-visible{background:var(--accent);border-color:var(--accent)}
+#tlDial .tld-b:hover span,#tlDial .tld-b:focus-visible span{max-width:260px;opacity:1;padding-right:14px}
+#tlDial.coll .tld-b{opacity:0;pointer-events:none;transform:translateY(calc((var(--i) + 1) * -44px)) scale(.6);
+  transition:transform .22s cubic-bezier(.5,0,.8,.4) calc((var(--n) - 1 - var(--i))*12ms),opacity .18s ease-in calc((var(--n) - 1 - var(--i))*12ms)}
+
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -19097,9 +19102,8 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#z-fs')){ toggleFS(); return; } });
 
 /* ---------- 목차 접기 · 너비 조절 ---------- */
-document.addEventListener('click',e=>{ const f=e.target.closest('.toc-h'); if(!f) return; const t=f.closest('#toc, #tltoc'); if(!t) return; const open=t._dsOpen!=null ? !t._dsOpen : t.classList.contains('coll');
-  const apply = t.id==='tltoc' ? o=>{ t.classList.toggle('coll', !o); }   /* 도구 빠른 선택 (2026-11-25): 접힘을 저장하지 않음 → 다시 열면 펼침 */
-    : o=>{ t.classList.toggle('coll', !o); if(!document.body.classList.contains('toc-narrow')) SETP('tocc', o?'0':'1'); tocFx(); };
+document.addEventListener('click',e=>{ const f=e.target.closest('.toc-h'); if(!f) return; const t=f.closest('#toc'); if(!t) return; const open=t._dsOpen!=null ? !t._dsOpen : t.classList.contains('coll');
+  const apply = o=>{ t.classList.toggle('coll', !o); if(!document.body.classList.contains('toc-narrow')) SETP('tocc', o?'0':'1'); tocFx(); };
   if(typeof drawerSlide==='function') drawerSlide(t, open, apply); else apply(open); });   /* 2026-11-25 서랍 (layout.js drawerSlide) */
 document.addEventListener('pointerdown',e=>{ const h=e.target.closest('.toc-rs'); if(!h) return; e.preventDefault(); const t=$('#toc'); const left=t.getBoundingClientRect().left; h.setPointerCapture(e.pointerId); document.body.classList.add('toc-drag');
   const mv=ev=>{ setTocW(ev.clientX-left); tocFx(); };
@@ -20549,13 +20553,19 @@ const TOOL_LIST = [
   ['10','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교'],
   ['T','타이어 모델 (선택)','P1','μ · 하중 감도 · 코너링 강성 (시험 데이터가 없을 때 직접)','슬립각–횡력 곡선, 앞뒤 코너링 강성, 이완 길이']
 ];
-/* 도구 빠른 선택 (2026-11-25): 왼쪽에 붙은 막대(설계 탭 목차와 같은 자리 · 모양). 작업창이 있는 도구만, 누르면 바로 엶.
-   처음에는 늘 펼침, 머리를 누르면 접힘(접힘 · 펼침 높이 같음). #v-tools 안에 있어 다른 탭에서는 같이 숨음 */
-function toolTocHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
-  return `<nav id="tltoc" aria-label="도구 빠른 선택"><div class="toc-h"><span>도구 빠른 선택</span><button class="toc-fold" title="접기/펼치기" aria-label="도구 빠른 선택 접기/펼치기"></button></div><div class="tl-toc-in">`
-    + TOOL_LIST.filter(r=>W[r[0]]).map(r=>`<button type="button" class="toc-s" data-wbq="${r[0]}" title="${esc(r[1])} · ${esc(r[2])}"><span class="tc">${W[r[0]].no || r[0]}</span><span class="tt">${esc(String(r[1]).replace(/\s*\(.*\)\s*$/,''))}</span></button>`).join('')
-    + `</div></nav>`; }
-document.addEventListener('click', e=>{ const q=e.target.closest && e.target.closest('[data-wbq]'); if(q){ e.preventDefault(); wbOpen(q.dataset.wbq, q); } });
+/* 도구 빠른 선택 (2026-11-25, B안): 왼쪽 위 "도구" 버블 하나. 누르면 번호 버블(작업창이 있는 도구)이 버블 아래로 차례로 쭉 펼쳐지고, 다시 누르기 · 바깥 · Esc 로 접힘.
+   번호 버블에 마우스를 올리면(또는 Tab) 그 버블만 오른쪽으로 불룩 늘어나 이름이 나옴. 누르면 작업창을 열고 접힘. 처음에는 늘 접힘.
+   오른쪽 아래 버블(좌표계 · 파트 강조)과 같은 모양. #v-tools 안에 있어 다른 탭에서는 같이 숨음 */
+function toolTocHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {}, L = TOOL_LIST.filter(r=>W[r[0]]);
+  return `<div id="tlDial" class="coll"><button type="button" class="tld-main" aria-expanded="false" aria-controls="tldList" title="도구 빠른 선택"><span>도구</span></button>`
+    + `<div class="tld-list" id="tldList">${L.map((r, i)=>`<button type="button" class="tld-b" data-wbq="${r[0]}" style="--i:${i};--n:${L.length}" tabindex="-1" aria-label="${esc(r[1])}"><b>${W[r[0]].no || r[0]}</b><span>${esc(String(r[1]).replace(/\s*\(.*\)\s*$/,''))}</span></button>`).join('')}</div></div>`; }
+function tldSet(open){ const d=document.getElementById('tlDial'); if(!d) return; d.classList.toggle('coll', !open); const m=d.querySelector('.tld-main'); if(m) m.setAttribute('aria-expanded', String(open));
+  d.querySelectorAll('.tld-b').forEach(b=>b.tabIndex = open ? 0 : -1); }
+document.addEventListener('click', e=>{ const t=e.target.closest && e.target;
+  if(t && t.closest('#tlDial .tld-main')){ e.preventDefault(); const d=document.getElementById('tlDial'); tldSet(d.classList.contains('coll')); return; }
+  const q=t && t.closest('[data-wbq]'); if(q){ e.preventDefault(); if(q.closest('#tlDial')) tldSet(false); wbOpen(q.dataset.wbq, q); } });
+document.addEventListener('pointerdown', e=>{ const d=document.getElementById('tlDial'); if(d && !d.classList.contains('coll') && !d.contains(e.target)) tldSet(false); }, true);
+document.addEventListener('keydown', e=>{ const d=document.getElementById('tlDial'); if(e.key==='Escape' && d && !d.classList.contains('coll')){ tldSet(false); const m=d.querySelector('.tld-main'); if(m && d.contains(document.activeElement)) m.focus(); } });
 /* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
   /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
@@ -31642,7 +31652,7 @@ const TOUR = {
  graph: GRAPH_TOUR,
  tools: [
   ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
-  ['#tltoc','도구 빠른 선택','왼쪽 막대에서 도구를 누르면 그 계산 도구 작업창이 바로 열립니다. 머리를 누르면 접힙니다.',{tab:'tools'}],
+  ['#tlDial','도구 빠른 선택','왼쪽 위 [도구] 버블을 누르면 도구 번호 버블이 아래로 펼쳐집니다. 번호에 마우스를 올리면 이름이 나오고, 누르면 그 계산 도구 작업창이 바로 열립니다.',{tab:'tools',prep:()=>{ try{ tldSet(true); }catch(e){} }}],
   ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. ↻ 는 계산에 쓴 값이 그 뒤 바뀌어 그 도구에서 다시 계산해야 하는 값입니다. 여기서는 고치지 않고, 각 도구의 [대시보드에 반영]으로만 바뀝니다.',{tab:'tools'}],
   ['#figRail .rail-h','좌표계·거동','오른쪽 아래 좌표계 버블을 누르면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
   ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
