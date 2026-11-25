@@ -3510,9 +3510,10 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 /* 진행 현황 · 시즌 요약 정리 (2026-11-25) */
 /* 누를 수 있는 것은 전부 같은 커서 표시: 옅은 보라 바탕 + 진한 글자 (단계 · 항목 이름 · 카드 목록 · 표 칸) */
 #v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it){border-radius:4px;transition:background-color .12s,box-shadow .12s,color .12s}
-#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it):hover{background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft);color:#3f2560;text-decoration-color:var(--accent)}
+#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it):hover{background:#e2d5f1;box-shadow:0 0 0 4px #e2d5f1;color:#3f2560;text-decoration-color:#6A4294;text-decoration-thickness:2px}
 #v-team .tt-card .adm-it:hover>span:not(.adm-code),#v-team .tt-card .adm-it:hover .adm-qt{text-decoration:none}
-.tt-mat td.tt-c:hover{outline:0;background:var(--accent-soft);color:#3f2560;box-shadow:inset 0 0 0 2px var(--accent)}
+.tt-mat td.tt-c:hover{outline:0;background:#e2d5f1;color:#3f2560;box-shadow:inset 0 0 0 2px #6A4294}
+#v-team .tt-row:hover{background:#faf8fd}
 .tt-mat td.sel,.tt-mat td.sel:hover{outline:0;background:var(--accent);color:#fff;box-shadow:none}
 .tt-mat td.sel b,.tt-mat td.sel i{color:#fff}
 /* 해당 없는 칸: 회색 바탕 + 또렷한 빗금 */
