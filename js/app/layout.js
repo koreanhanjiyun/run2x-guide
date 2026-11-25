@@ -157,9 +157,11 @@ function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof T
   const P = el.getBoundingClientRect(), B = src.getBoundingClientRect(); if(!P.width || !B.width){ if(done) done(); return; }
   const z = parseFloat(getComputedStyle(el).zoom) || 1;   /* 그림 창은 화면 높이에 맞춰 zoom 으로 줄어 있을 수 있음: 옮길 거리는 zoom 전 단위로 */
   const dx = ((B.left + B.width/2) - (P.left + P.width/2))/z, dy = ((B.top + B.height/2) - (P.top + P.height/2))/z, s = Math.max(.04, Math.min(B.width/P.width, B.height/P.height));
-  /* 114차: 이동과 커짐이 같은 진행도로 (가운데 키프레임을 없앰: 예전엔 55 % 지점에서 이동 85 % · 크기 60 % 라 먼저 날아온 뒤 커졌음). 불투명도만 앞 25 % 에서 따로 */
-  const K = [{transform: `translate(${dx}px,${dy}px) scale(${s})`, opacity: 0}, {opacity: 1, offset: .25}, {transform: 'none', opacity: 1}];
-  const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 240 : 200, easing: open ? 'cubic-bezier(.25,.7,.5,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
+  /* 114차: 이동과 커짐이 같은 진행도로 (가운데 키프레임을 없앰: 예전엔 55 % 지점에서 이동 85 % · 크기 60 % 라 먼저 날아온 뒤 커졌음).
+     2026-11-25: 버블에서 나오는 게 보이게 — ① 기준점은 늘 가운데(창의 transform-origin 이 다르면 출발점이 어긋났음: 파트 말풍선이 버블보다 120 px 아래에서 시작)
+     ② 불투명도는 앞 6 % 에서 바로 1 (예전 25 % 동안 투명한 채 빠르게 이동해, 보이기 시작할 때 이미 버블에서 멀었음) ③ 느린 출발 곡선 */
+  const K = [{transform: `translate(${dx}px,${dy}px) scale(${s})`, transformOrigin: '50% 50%', opacity: 0}, {opacity: 1, offset: .06}, {transform: 'none', transformOrigin: '50% 50%', opacity: 1}];
+  const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 280 : 220, easing: open ? 'cubic-bezier(.35,0,.2,1)' : 'cubic-bezier(.6,0,.75,.35)', fill: 'both'});
   el._pop = a; a.onfinish = () => { if(el._pop !== a) return; el._pop = null; if(done) done(); a.cancel(); }; }
 
 /* ---------- 왼쪽 서랍 (2026-11-25): 설계 탭 목차 · 도구 빠른 선택. 접힘 = 벽에 붙은 세로 막대(그대로), 펼치면 펼친 판 전체가 벽 뒤에서 쑥 밀려 나옴,
