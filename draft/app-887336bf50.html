@@ -3805,12 +3805,6 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #wb .wb-inempty{font-size:var(--fs-xs)}
 
 /* 도구 탭 바로가기 줄 */
-#v-tools .tl-quick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
-#v-tools .tl-ql{font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em;margin-right:4px}
-#v-tools .tl-qb{font:inherit;font-size:var(--fs-s);display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line-2);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer}
-#v-tools .tl-qb b{font-size:var(--fs-xs);color:#fff;background:var(--accent);border-radius:4px;padding:0 5px;line-height:16px}
-#v-tools .tl-qb:hover{background:#efe8f8;border-color:#cdbde3}
-#v-tools .tl-qall{margin-left:auto;font-size:var(--fs-s)}
 /* 대시보드 파트별 결과 카드: 폭이 제각각이라 줄 끝 · 아래에 빈칸 → 4칸 격자로 한 줄 */
 #dpart .wb-og{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:stretch}   /* 넓은 카드(코너웨이트)는 2칸 → 1·1·2·1 로 한 줄 */
 #dpart .wb-og>*{min-width:0;width:auto!important;max-width:none!important;flex:none!important}
@@ -3822,6 +3816,13 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #v-start .gsub.has-fig .gs-side{grid-area:side;flex-direction:row;gap:var(--sp-6);padding:var(--sp-4) 0 0;border-left:0;border-top:1px solid var(--line)}
 #v-start .gsub.has-fig .gs-side>div{flex:1;min-width:0}
 #v-start .gsub.has-fig .gs-side>div:last-child{flex:2}
+
+/* 도구 탭 목차 (2026-11-25): 설계 탭 #toc 와 같은 자리 · 모양 */
+#tltoc{position:fixed;left:14px;top:calc(var(--tabh) + 14px);width:var(--tocw);max-height:calc(100vh - var(--tabh) - 28px);overflow:hidden;z-index:12;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(30,20,50,.07)}
+#tltoc .tl-toc-h{background:var(--char);color:#fff;font-size:var(--fs-s);font-weight:700;letter-spacing:.06em;padding:8px 8px;flex:none}
+#tltoc .tl-toc-in{overflow:auto;padding:4px 4px 8px;scrollbar-width:thin}
+#tltoc .tl-toc-g{margin:8px 4px 2px;padding-top:8px;border-top:1px solid var(--line);font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em}
+#tltoc .toc-s .tc{min-width:26px}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -18114,7 +18115,7 @@ function renderRefs(){ if(REFSUB==null) REFSUB = (typeof PREF==='function' && PR
   /* views.js 는 tabs-nav.js 보다 먼저 읽히므로 showTab 감싸기는 처음 그릴 때(init 이후) */
   if(!REFWRAP && typeof showTab==='function'){ REFWRAP=true; const _st=showTab; showTab=function(t){ const r=_st.apply(this, arguments); if(t==='ref') requestAnimationFrame(()=>{ if(!refPanes().some(d=>d.open)) refShow(REFSUB, true); else refNav(); }); return r; }; }
   $('#ref-list').innerHTML = `<nav class="tt-nav ref-nav" role="tablist" aria-label="참고 화면">${REFS.map(r=>`<button type="button" role="tab" data-refsub="${esc(r.t)}" aria-selected="false">${r.t}</button>`).join('')}</nav>`
-    + REFS.map(r=>`<details class="step ref-pane"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?srcUnified(r.b):r.b}</div></details>`).join('');
+    + REFS.map(r=>`<details class="step ref-pane"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?srcUnified(r.b):r.t==='용어집'?`<section class="src-box gl-box">${r.b}</section>`:r.b}</div></details>`).join('');
   refShow(REFSUB, true); }
 function refPanes(){ return [...document.querySelectorAll('#ref-list > details')]; }
 let REFBUSY = false;
@@ -18754,7 +18755,7 @@ function initGlossary(){
   G.forEach(g=>{ const q=g.name.split(/\s*·\s*/)[0].replace(/\s*\([^)]*\)\s*$/,'').trim(); const c=g.tr.cells[0]; c.innerHTML=`<button type="button" class="lnk gl-go" data-glq="${esc(q)}" title="'${esc(q)}'이(가) 나오는 항목 찾기">${c.innerHTML}</button>`; });
   const box=document.createElement('div'); box.className='gsrch';
   box.innerHTML=`<input type="text" class="gq" placeholder="용어 검색 (초성 가능: ㅅㅋㄹ)" aria-label="용어 검색" autocomplete="off"><div class="aclist" hidden role="listbox"></div>`;
-  body.prepend(box);
+  (body.querySelector('.gl-box') || body).prepend(box);
   const inp=box.querySelector('input'), list=box.querySelector('.aclist');
   const res = raw=>{ const q=norm(raw); if(!q) return []; return G.map(g=>({g, s:Math.max(mscore(g.name,q,100), mscore(g.def,q,40))})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,10); };
   const filt = raw=>{ const q=norm(raw); const hit=new Set(res(raw).map(x=>x.g)); G.forEach(g=>{ g.tr.hidden = !!q && !hit.has(g); }); };
@@ -20514,11 +20515,22 @@ const TOOL_LIST = [
   ['10','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교'],
   ['T','타이어 모델 (선택)','P1','μ · 하중 감도 · 코너링 강성 (시험 데이터가 없을 때 직접)','슬립각–횡력 곡선, 앞뒤 코너링 강성, 이완 길이']
 ];
-/* 도구 바로가기 줄 (2026-11-25): 도구 모음이 페이지 맨 아래(약 2,350 px)에 있어 찾기 어려웠음 → 대시보드 위에 작업창이 있는 도구를 한 줄로. 누르면 바로 엶 */
-function toolQuickHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
-  return `<nav class="tl-quick" aria-label="도구 바로가기"><span class="tl-ql">도구</span>${TOOL_LIST.filter(r=>W[r[0]]).map(r=>`<button type="button" class="tl-qb" data-wbq="${r[0]}" title="${esc(r[1])} · ${esc(r[2])}"><b>${W[r[0]].no || r[0]}</b>${esc(String(r[1]).replace(/\s*\(.*\)\s*$/,''))}</button>`).join('')}<a class="lnk tl-qall" href="#" data-wbqall>전체 목록 ↓</a></nav>`; }
+/* 도구 탭 목차 (2026-11-25): 설계 탭 목차와 같은 자리 · 모양(왼쪽 고정). 위 = 이 화면의 칸(누르면 스크롤), 아래 = 작업창이 있는 도구(누르면 바로 엶).
+   지금 보이는 칸은 강조. #v-tools 안에 있어 다른 탭에서는 같이 숨음 */
+const TL_SECS = [['tls-vals','설계값'],['tls-figs','그림으로 보기'],['tls-part','파트별'],['tls-tools','도구 모음']];
+function toolTocHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
+  return `<nav id="tltoc" aria-label="도구 탭 목차"><div class="tl-toc-h"><span>목차</span></div><div class="tl-toc-in">`
+    + TL_SECS.map(([id, t]) => `<button type="button" class="toc-s" data-tlsec="${id}"><span class="tt">${t}</span></button>`).join('')
+    + `<div class="tl-toc-g">도구</div>`
+    + TOOL_LIST.filter(r=>W[r[0]]).map(r=>`<button type="button" class="toc-s" data-wbq="${r[0]}" title="${esc(r[1])} · ${esc(r[2])}"><span class="tc">${W[r[0]].no || r[0]}</span><span class="tt">${esc(String(r[1]).replace(/\s*\(.*\)\s*$/,''))}</span></button>`).join('')
+    + `</div></nav>`; }
 document.addEventListener('click', e=>{ const q=e.target.closest && e.target.closest('[data-wbq]'); if(q){ e.preventDefault(); wbOpen(q.dataset.wbq, q); return; }
-  if(e.target.closest && e.target.closest('[data-wbqall]')){ e.preventDefault(); const l=document.querySelector('#v-tools .tl-tools'); if(l) smoothScrollTo(()=>l.getBoundingClientRect().top+scrollY-120); } });
+  const sec=e.target.closest && e.target.closest('[data-tlsec]'); if(sec){ e.preventDefault(); const l=document.getElementById(sec.dataset.tlsec); if(l) smoothScrollTo(()=>l.getBoundingClientRect().top+scrollY-110); } });
+function tlTocSpy(){ const t=document.getElementById('tltoc'); if(!t || !t.getClientRects().length) return;   /* position:fixed 라 offsetParent 는 늘 null */ let cur=TL_SECS[0][0];
+  TL_SECS.forEach(([id])=>{ const l=document.getElementById(id); if(l && l.getBoundingClientRect().top < 160) cur=id; });
+  if(innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur=TL_SECS[TL_SECS.length-1][0];
+  t.querySelectorAll('[data-tlsec]').forEach(b=>b.classList.toggle('cur', b.dataset.tlsec===cur)); }
+addEventListener('scroll', tlTocSpy, {passive:true});
 /* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
   /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
@@ -20589,13 +20601,13 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
   if(!v.dataset.built){ v.dataset.built = '1';
     v.innerHTML = `<header class="top tl-hero"><span class="eyebrow">우리 팀 설계값</span><h1>팀 대시보드</h1>
 </header>
-      ${toolQuickHTML()}
-      <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span></div><div id="dvals"></div></section>
-      <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
-      <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
-      <section class="tl-sec" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
+      ${toolTocHTML()}
+      <section class="tl-sec" id="tls-vals" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span></div><div id="dvals"></div></section>
+      <section class="tl-sec" id="tls-figs" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
+      <section class="tl-sec" id="tls-part" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>
+      <section class="tl-sec" id="tls-tools" aria-label="도구 모음"><div class="tl-sh"><h2>도구 모음</h2><span class="tl-meta">설계 단계 순 · 누르면 전체 화면 작업창</span></div>
         <ol class="tl-tools">${toolRowsHTML()}</ol></section>`; }
-  dashPaint(); }
+  dashPaint(); requestAnimationFrame(tlTocSpy); }
 function dashPaint(which){ const all = !which; if(!$('#dvals')) return;
   dashSync(); dashClamp(); const ss = $('#dvseason'); if(ss) ss.textContent = dvSeason() + ' 시즌';
   if(all || which.includes('vals')) $('#dvals').innerHTML = dashValuesHTML();
@@ -31597,6 +31609,7 @@ const TOUR = {
  graph: GRAPH_TOUR,
  tools: [
   ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
+  ['#tltoc','목차','왼쪽 목차의 위쪽은 이 화면의 칸으로 이동하고, 아래쪽 [도구]는 누르면 그 계산 도구 작업창이 바로 열립니다.',{tab:'tools'}],
   ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. ↻ 는 계산에 쓴 값이 그 뒤 바뀌어 그 도구에서 다시 계산해야 하는 값입니다. 여기서는 고치지 않고, 각 도구의 [대시보드에 반영]으로만 바뀝니다.',{tab:'tools'}],
   ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]에 마우스를 올리면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
   ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
