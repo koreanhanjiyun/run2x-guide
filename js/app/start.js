@@ -170,27 +170,34 @@ const GS = (() => {
     let h = `<path d="M${X(-760)} ${o.g}H${X(760)}" stroke="var(--ink-2)" stroke-width="1.3"/>` + side(Lf) + side(R) + body;
     return {svg: h, R, Lf, X, Y, B}; }
 
-  const camb = S => -S.th * 180 / Math.PI;   /* 바퀴 위가 바깥(+x 쪽, 오른쪽 바퀴)으로 = 양 캠버 */
+  const camb = S => -S.th * 180 / Math.PI;
+  /* 마찰 타원: 관리자 지정 비율 가속 1.1 : 선회 1.8 : 제동 1.5 (숫자는 그림에 안 씀). 위 반쪽 = 가속, 아래 반쪽 = 제동, 좌우 = 선회 */
+  const FE = {ax: 1.1, ay: 1.8, br: 1.5};
+  const fePath = (cx, cy, k) => { const rx = FE.ay * k, ru = FE.ax * k, rd = FE.br * k;
+    return `M${cx - rx} ${cy}A${rx} ${ru} 0 0 1 ${cx + rx} ${cy}A${rx} ${rd} 0 0 1 ${cx - rx} ${cy}Z`; };
+  const fePt = (cx, cy, k, deg) => { const a = deg * Math.PI / 180, ry = Math.sin(a) >= 0 ? FE.ax : FE.br; return [cx + FE.ay * k * Math.cos(a), cy - ry * k * Math.sin(a)]; };   /* 바퀴 위가 바깥(+x 쪽, 오른쪽 바퀴)으로 = 양 캠버 */
   return [
-  /* ① 기계적 그립: 마찰 타원 + 캠버가 맞으면 접지면 전체가 누름 */
-  () => { const cx = 112, cy = 128, ry = 70, rx = 84, th = 34 * Math.PI / 180, ex = cx + rx * Math.cos(th), ey = cy - ry * Math.sin(th);
+  /* ① 기계적 그립: 마찰 타원(가속 · 선회 · 제동 한계가 다름) + 캠버가 맞으면 접지면 전체가 누름 */
+  () => { const cx = 112, cy = 112, k = 50, [ex, ey] = fePt(cx, cy, k, 36);
     const tire = (x, deg, lab, ok) => { const g = 196; const c = [x, g - 38];
       return `<g transform="rotate(${deg} ${x} ${g})"><rect x="${x - 16}" y="${g - 76}" width="32" height="76" rx="10" fill="#2a2f38"/><rect x="${x - 14}" y="${g - 56}" width="28" height="36" rx="2" fill="#5b6270"/></g>`
         + `<path d="M${x - 30} ${g}H${x + 30}" stroke="var(--ink-2)" stroke-width="1.3"/>` + `<path d="M${ok ? x - 15 : x + 2} ${g + 4}H${ok ? x + 15 : x + 16}" stroke="${ok ? GRN : ORG}" stroke-width="4"/>` + lab.split('|').map((l, k) => T(x, g + 20 + k * 17, l, {a: 'middle', c: ok ? GRN : ORG, fs: 11})).join(''); };
-    return svg(`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.8"/>
-      <path d="M${cx - rx - 10} ${cy}H${cx + rx + 10}M${cx} ${cy - ry - 10}V${cy + ry + 10}" stroke="var(--line-2)"/>
+    const rx = FE.ay * k, ru = FE.ax * k, rd = FE.br * k;
+    return svg(`<path d="${fePath(cx, cy, k)}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.8"/>
+      <path d="M${cx - rx - 10} ${cy}H${cx + rx + 10}M${cx} ${cy - ru - 10}V${cy + rd + 10}" stroke="var(--line-2)"/>
       <path d="M${ex.toFixed(1)} ${ey.toFixed(1)}V${cy}M${ex.toFixed(1)} ${ey.toFixed(1)}H${cx}" stroke="var(--muted)" stroke-dasharray="3 3"/>${arr(cx, cy, ex, ey, 'var(--ink)', 'gsA', 2.4)}
-      ${T(cx, cy - ry - 16, '가속 · 제동 F' + sub('x'), {a: 'middle', c: 'var(--muted)'})}${T(cx + rx + 4, cy + 18, '선회 F' + sub('y'), {c: 'var(--muted)'})}
-      ${T(cx - 8, cy + 30, '한계 μ·F' + sub('z'), {a: 'end'})}${T(cx, cy + ry + 26, '마찰 타원 (비율은 예시)', {a: 'middle', c: 'var(--muted)', fs: 11})}
+      ${T(cx, cy - ru - 16, '가속', {a: 'middle', c: 'var(--muted)'})}${T(cx, cy + rd + 24, '제동', {a: 'middle', c: 'var(--muted)'})}${T(cx + rx + 4, cy + 18, '선회 F' + sub('y'), {c: 'var(--muted)'})}
+      ${T(cx - 8, cy + 30, '한계 μ·F' + sub('z'), {a: 'end'})}${T(cx, cy + rd + 44, '마찰 타원: 선회 > 제동 > 가속', {a: 'middle', c: 'var(--muted)', fs: 11})}
       ${tire(272, 0, '캠버 맞음|전체 접지', true)}${tire(366, 9, '틀어짐|한쪽만', false)}${T(326, 36, '같은 하중, 자세에 따라', {a: 'middle', c: 'var(--muted)', fs: 11.5})}`,
-      '① 기계적 그립: 타이어 힘의 합은 마찰 타원(한계 μ·Fz) 안. 캠버가 맞아 접지면 전체가 누를 때 한계가 큼'); },
+      '① 기계적 그립: 타이어 힘의 합은 마찰 타원(한계 μ·Fz) 안. 캠버가 맞아 접지면 전체가 누를 때 한계가 큼', 400, 270); },
   /* ② 다운포스: L ∝ v², FSK 저속 코너 구간에서는 작음. 다운포스만큼 타원이 커짐 */
   () => { const X = v => 46 + v * 190, Y = L => 206 - L * 150;
     return svg(`<rect x="${X(0)}" y="${Y(1)}" width="${X(.42) - X(0)}" height="${Y(0) - Y(1)}" fill="${ACC}" opacity=".08"/>${ax(X(0), Y(0), X(1) + 12, Y(1) - 12, '속도 v', '다운포스 L')}
       <path d="${pts(v => v * v, 0, 1, 40, X, Y)}" fill="none" stroke="${ACC}" stroke-width="2.4"/>${T(X(.72), Y(.62), 'L ∝ v²', {a: 'end', c: ACC, b: 1})}
       ${T(X(.21), Y(1) + 16, 'FSK 저속 코너', {a: 'middle', c: 'var(--muted)', fs: 11.5})}
-      <ellipse cx="320" cy="112" rx="62" ry="52" fill="none" stroke="${ACC}" stroke-width="1.6" stroke-dasharray="5 4"/><ellipse cx="320" cy="112" rx="48" ry="40" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
-      ${T(320, 116, '무게만', {a: 'middle', fs: 11.5})}${T(320, 188, '+ 다운포스 → 타원 커짐', {a: 'middle', c: ACC, fs: 11.5})}${T(320, 212, '무게 · CG · 항력도 함께 ↑', {a: 'middle', c: ORG, fs: 11.5})}`,
+      <path d="${fePath(320, 108, 36)}" fill="none" stroke="${ACC}" stroke-width="1.6" stroke-dasharray="5 4"/><path d="${fePath(320, 108, 26)}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+      ${[20, 70, 110, 160, 200, 250, 290, 340].map(d => { const a = fePt(320, 108, 26.5, d), b = fePt(320, 108, 35, d); return arr(a[0], a[1], b[0], b[1], ACC, 'gsB', 1.4); }).join('')}
+      ${T(320, 112, '무게만', {a: 'middle', fs: 11.5})}${T(320, 188, '+ 다운포스 → 타원 커짐', {a: 'middle', c: ACC, fs: 11.5})}${T(320, 212, '무게 · CG · 항력도 함께 ↑', {a: 'middle', c: ORG, fs: 11.5})}`,
       '② 다운포스: 속도 제곱에 비례해 FSK 저속 코너에서는 작음. 다운포스만큼 마찰 타원이 커지지만 무게 · CG · 항력도 늘어남'); },
   /* ③ 출력 한계까지 가속: 쓸 수 있는 출력은 그립 한계 P = μ·m·g·v 를 넘지 못함(실선). 런치 · 감속비가 약하면 그 아래(점선)로 늦게 닿고, 사이가 손실 */
   () => { const X = v => 46 + v * 300, Y = p => 206 - p * 150, vg = .26, va = .4;
