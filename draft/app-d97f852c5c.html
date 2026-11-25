@@ -3585,6 +3585,35 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 .tt-rep :is(th,td):is(:nth-child(2),:nth-child(3)){text-align:center}
 .tt-rep th:nth-child(2),.tt-rep td:nth-child(2){width:110px}
 .tt-rep th:nth-child(3),.tt-rep td:nth-child(3){width:100px}
+
+/* 단계 × 파트: 카드 판 없이 바닥에서 바로 (다른 팀 탭 화면과 같은 시작) */
+#v-team .tt-card.tt-matc{background:none;border:0;border-radius:0;padding:0;box-shadow:none}
+#v-team .tt-card.tt-matc>h3{margin:0 0 12px}
+
+/* 시즌 요약 인쇄 (2026-11-25): 논의는 글 개수만, 글자 · 간격을 줄여 한 쪽에 더 많이. 표 머리는 쪽마다 반복, 줄은 쪽 경계에서 안 잘림 */
+.tt-rq-n{display:none}
+@media print{
+  @page{margin:12mm}
+  body.print-report .tt-rq-n{display:inline}
+  body.print-report #v-team details.tt-rep-q{display:none!important}
+  body.print-report #v-team .tt-report{font-size:9pt;line-height:1.35}
+  body.print-report #v-team .tt-report h2{font-size:14pt;margin:0 0 2px}
+  body.print-report #v-team .tt-report>p{margin:0 0 6px;font-size:8.5pt}
+  body.print-report #v-team .tt-report h3,body.print-report #v-team .tt-report h3.tt-rep-h{font-size:10.5pt;margin:10px 0 2px;padding-top:4px;break-after:avoid}
+  body.print-report #v-team .tt-report table{font-size:9pt;margin:0}
+  body.print-report #v-team .tt-report :is(th,td){padding:2px 6px!important;font-size:9pt}
+  body.print-report #v-team .tt-report .ipill{font-size:8pt!important;padding:0 6px}
+  body.print-report #v-team .tt-rep-cnt{font-size:8.5pt}
+  body.print-report #v-team .tt-rep-cnt .pbar2{width:80px;height:5px}
+  body.print-report #v-team .tt-rep thead{display:table-header-group}
+  body.print-report #v-team .tt-rep tr{break-inside:avoid}
+  body.print-report #v-team table.tt-rep{table-layout:fixed;width:100%}
+  body.print-report #v-team .tt-rep :is(th,td):nth-child(1){width:30%}
+  body.print-report #v-team .tt-rep :is(th,td):nth-child(2){width:13%}
+  body.print-report #v-team .tt-rep :is(th,td):nth-child(3){width:10%}
+  body.print-report #v-team .tt-rep :is(th,td):nth-child(4){width:39%}
+  body.print-report #v-team .tt-rep :is(th,td):nth-child(5){width:8%;white-space:nowrap;text-align:center}
+}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -30601,7 +30630,8 @@ function ttSummary(el){ const c=TT.ctx, all=ITEMS.map(i=>i.id), tot=ttCnt(all), 
 /* 논의 칸: '글 n개 · 마지막 날짜 · 첫 줄 40자' 한 줄 + 펼치면 전체(답글 포함). 인쇄할 때는 개수와 최근 글 1개만 */
 function ttTalkCell(t){ const s=[...t].sort((a,b)=>String(a.at).localeCompare(String(b.at))), last=s[s.length-1], cut=(x,n)=>{ x=String(x||'').replace(/\s+/g,' '); return x.length>n?x.slice(0,n)+'…':x; };
   const head=`글 ${t.length}개 · ${ttFmt(last.at).split(' ')[0]||''} · ${esc(cut(last.text,40))}`;
-  return `<details class="tt-rep-q"><summary><span class="tt-rq-h">${head}</span></summary><div class="tt-rep-qa">${s.map(q=>`<div class="${q.parent?'r':''}">${q.parent?'↳ ':''}${esc(cut(q.text,300))} <span class="muted">${ttFmt(q.at)}</span></div>`).join('')}</div></details>`; }
+  /* 인쇄에는 글 개수만 (내용은 화면에서만) */
+  return `<span class="tt-rq-n">글 ${t.length}개</span><details class="tt-rep-q"><summary><span class="tt-rq-h">${head}</span></summary><div class="tt-rep-qa">${s.map(q=>`<div class="${q.parent?'r':''}">${q.parent?'↳ ':''}${esc(cut(q.text,300))} <span class="muted">${ttFmt(q.at)}</span></div>`).join('')}</div></details>`; }
 
 /* ---------- 지난 시즌을 보는 중 배너 (H3·H9: 주의 = 주황) ---------- */
 let SB_LAST='';
