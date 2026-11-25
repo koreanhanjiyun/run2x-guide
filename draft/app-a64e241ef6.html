@@ -3790,6 +3790,15 @@ ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;bo
 #v-start .gs-fig svg{display:block;width:100%;height:auto;overflow:visible}
 #v-start .gs-fig figcaption{margin-top:6px;font-size:var(--fs-xs);color:var(--muted);line-height:1.5}
 #v-start .gs-fig figcaption{margin-top:10px;line-height:1.7}
+
+/* 초점 테두리: 마우스로 누른 선택 상자 · 버튼 · 링크에는 안 그림 (키보드 이동 때만, html.kbd). 글 입력칸은 그대로 */
+html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{outline:none!important}
+
+/* 참고 탭 구분 (2026-11-25): 출처 묶음 · 변경 이력(규칙 / 버전)을 판으로. 판 = 흰 바탕 · 옅은 테두리 · 모서리 8 px, 판 사이 20 px */
+#ref-list .src-box,#ref-list .cl-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px;margin:0 0 20px}
+#ref-list .src-box .src-h{margin:0 0 6px!important;padding:0 0 8px;border-top:0!important;border-bottom:1px solid var(--line)}
+#ref-list .src-lede{margin:0 0 14px}
+#ref-list .cl-box > :first-child{margin-top:0}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -18071,8 +18080,8 @@ function srcUnified(designHTML){
     const e = put(key, {html:r.html, url:r.url, cat:srcCat(r.text, r.url)}); e.used.add(r.w); if(r.note && !e.notes.includes(r.note)) e.notes.push(r.note); });
   const all = [...map.values()];
   return `<p class="muted src-lede">가이드 전체에서 쓴 출처 ${all.length}개입니다. 근거 순위대로 묶었고, 줄 끝은 쓰인 곳입니다.</p>` + SRC_CAT.map(([k,lab])=>{ const g=all.filter(e=>e.cat===k); if(!g.length) return '';
-    return `<h4 class="src-h" aria-level="2">${lab} <span class="muted">${g.length}</span></h4><ul class="pl src-ul">${g.map(e=>{ const t = e.url && !/<a /.test(e.html) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${e.html}</a>` : e.html;
-      return `<li><span class="src-t">${t}</span>${[...e.used].map(w=>`<span class="src-w">${SRC_USED[w]}</span>`).join('')}${e.notes.length>1?`<ul class="src-nl">${e.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:e.notes.length?`<span class="src-n">${esc(e.notes[0])}</span>`:''}</li>`; }).join('')}</ul>`; }).join(''); }
+    return `<section class="src-box"><h4 class="src-h" aria-level="2">${lab} <span class="muted">${g.length}</span></h4><ul class="pl src-ul">${g.map(e=>{ const t = e.url && !/<a /.test(e.html) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${e.html}</a>` : e.html;
+      return `<li><span class="src-t">${t}</span>${[...e.used].map(w=>`<span class="src-w">${SRC_USED[w]}</span>`).join('')}${e.notes.length>1?`<ul class="src-nl">${e.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:e.notes.length?`<span class="src-n">${esc(e.notes[0])}</span>`:''}</li>`; }).join('')}</ul></section>`; }).join(''); }
 const REF_KEYS = [['용어집','gloss'],['출처','src'],['변경 이력','log']];
 let REFSUB = null, REFWRAP = false;
 function renderRefs(){ if(REFSUB==null) REFSUB = (typeof PREF==='function' && PREF('refsub','용어집')) || '용어집';
@@ -19052,6 +19061,10 @@ function initChangelog(){
   const sel=document.createElement('div'); sel.className='clsel';
   sel.innerHTML=`<span>버전</span><div class="cldd"><button type="button" class="cldd-b" aria-haspopup="listbox" aria-expanded="false"></button><ul class="cldd-l" role="listbox" hidden>${vers.map((x,i)=>`<li role="option" data-i="${i}">${x.v}${i===0?' <em>최신</em>':''}</li>`).join('')}</ul></div>`;
   vers[0].box.before(sel);
+  /* 참고 탭 구분 (2026-11-25): 버전 규칙(설명 · 표)과 버전별 내용을 각각 판으로 */
+  { const rules=document.createElement('section'); rules.className='cl-box cl-rules'; const list=document.createElement('section'); list.className='cl-box cl-vers';
+    [...body.children].filter(c=>c!==sel && !c.classList.contains('clv') && !c.classList.contains('cl-new')).forEach(c=>rules.append(c));
+    list.append(sel, ...vers.map(v=>v.box)); const nw=body.querySelector(':scope>.cl-new'); body.append(rules, list); if(nw) body.prepend(nw); }
   const btn=sel.querySelector('.cldd-b'), list=sel.querySelector('.cldd-l'); let cur=0;
   const show=i=>{ cur=i; vers.forEach((x,k)=>{ x.box.hidden = k!==i; }); btn.innerHTML=`${vers[i].v}${i===0?' <em>최신</em>':''}`; list.querySelectorAll('li').forEach((li,k)=>li.setAttribute('aria-selected',String(k===i))); };
   const open=o=>{ list.hidden=!o; btn.setAttribute('aria-expanded',String(o)); if(o){ const li=list.querySelector(`li[data-i="${cur}"]`); if(li) li.scrollIntoView({block:'nearest'}); } };
@@ -19143,6 +19156,11 @@ ITEM_HOOKS.push((d,b)=>{
 
 /* ---------- 참고 탭: 칸을 펼치고 접을 때 문서 높이를 다시 계산 (용어집을 접은 뒤 아래까지 못 내려가는 문제 대비) ---------- */
 document.addEventListener('toggle', e=>{ const d=e.target; if(!(d && d.closest && d.closest('#ref-list'))) return; requestAnimationFrame(()=>{ void document.body.offsetHeight; try{ window.dispatchEvent(new Event('resize')); }catch(_){} }); }, true);
+
+/* ---------- 초점 테두리는 키보드로 움직일 때만 (2026-11-25): 크롬은 선택 상자 · 버튼을 마우스로 눌러도 :focus-visible 로 봐서 진한 테두리가 남음.
+   Tab · 방향키를 누르면 html.kbd 를 켜고(테두리 보임), 마우스를 누르면 끔. 글 입력칸은 어디에 쓰는지 보여야 하므로 그대로 ---------- */
+document.addEventListener('keydown', e=>{ if(e.key==='Tab' || e.key.startsWith('Arrow')) document.documentElement.classList.add('kbd'); }, true);
+document.addEventListener('mousedown', ()=>document.documentElement.classList.remove('kbd'), true);
 </script>
 <script>
 /* ---------- 진행 목록 도우미 (팀 탭이 씀). 예전 관리 창(C11 에서 없앰)의 코드는 2026-11-12 지움 ---------- */
@@ -20015,8 +20033,10 @@ const bgMark = t => String(t||'').replace(/\[확인 필요\]/g,'<span class="bad
 const compOf = p => (typeof COMP!=='undefined' && COMP[p]) || [];
 const techOf = p => { if(typeof F1_TECH==='undefined') return []; const g=F1_TECH.find(x=>x.sys===p); return g ? g.items : []; };
 const firstSent = t => { const s=String(t||'').replace(/<[^>]+>/g,'').replace(/\[확인 필요\]/g,''); const m=s.match(/^.*?[다요]\./); return (m?m[0]:s).slice(0,90); };
+/* 파일 이름(REF4_Assy_07.22.STEP 등)은 <code> 로 감싸 자동 아래첨자(x_cop → x 아래 cop)를 피함 */
+const srcFile = h => String(h).replace(/\b([A-Za-z0-9]+_[A-Za-z0-9_]+(?:\.\d+)*(?:\.(?:STEP|STP|step|stp|dxf|DXF))?)\b/g, '<code>$1</code>');
 function srcList(arr){ return (arr||[]).map(x=>{ if(typeof x==='string'){ const m=x.match(/^(.*?)\s*[—-]\s*(https?:\/\/\S+)$/); return m ? `<li><a href="${esc(m[2])}" target="_blank" rel="noopener">${esc(m[1])}</a></li>` : `<li>${esc(x)}</li>`; }
-  return `<li>${x.u?`<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>`:esc(x.t)}${x.note?` <span class="muted">${esc(x.note)}</span>`:''}</li>`; }).join(''); }
+  return `<li>${x.u?`<a href="${esc(x.u)}" target="_blank" rel="noopener">${srcFile(esc(x.t))}</a>`:srcFile(esc(x.t))}${x.note?` <span class="muted">${srcFile(esc(x.note))}</span>`:''}</li>`; }).join(''); }
 function techRail(items){ return `<div class="f1t-rail"><button type="button" class="f1r-b f1r-prev" aria-label="앞 카드">‹</button>${techHTML(items, ' f1t-row')}<button type="button" class="f1r-b f1r-next" aria-label="다음 카드">›</button></div>`; }
 function techHTML(items, cls=''){ return `<div class="f1t-list${cls}">${items.map(t=>`<article class="f1t"><div class="f1t-h"><span class="f1t-y">${esc(t.y||'')}</span><b>${t.n}</b>${t.en?`<span class="muted">${esc(t.en)}</span>`:''}</div>
   <dl><dt>원리</dt><dd>${bgMark(t.how)}</dd><dt>무엇이 빨라졌나</dt><dd>${bgMark(t.gain)}</dd>${t.end?`<dt>어떻게 끝났나</dt><dd>${bgMark(t.end)}</dd>`:''}</dl></article>`).join('')}</div>`; }
