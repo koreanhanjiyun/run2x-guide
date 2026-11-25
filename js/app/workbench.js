@@ -226,11 +226,9 @@ function wbShellHTML(){ const T = wbT();
       <span class="wb-code-on" id="wbcodeon" hidden>코드 고침 (저장 안 됨)</span>
       <span class="wb-acts">
         ${T.tour ? `<button type="button" class="wb-help" data-tour="wb:${wbEsc(WB.id)}" title="이 작업창의 버튼 위치와 기능을 차례로 안내합니다"><b aria-hidden="true">?</b><span>이 탭 사용법</span></button><i class="wb-sep" aria-hidden="true"></i>` : ''}
-        <button type="button" class="btn small" data-coordopen title="차량 좌표계 (원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)">좌표계</button>
-        ${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}<i class="wb-sep" aria-hidden="true"></i>
-        <button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button><i class="wb-sep" aria-hidden="true"></i>
-        <button type="button" class="btn small" data-wbexp>내보내기 .json</button>
-        <button type="button" class="btn small" data-wbimp>가져오기 .json</button><button type="button" class="btn small" data-wbpre>프리셋 ▾</button><i class="wb-sep" aria-hidden="true"></i>
+        <details class="wb-hpdd wb-viewdd"><summary class="btn small" title="좌표계 · 차 형상 · 코드와 검증표">보기 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-coordopen title="차량 좌표계 (원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)">좌표계</button>${T.shape ? `<button type="button" class="btn small" data-shpopen title="우리 차 측면도 · 윗면도(이미지 또는 DXF)를 그림 바탕으로">차 형상</button>` : ''}<button type="button" class="btn small" data-wbcode title="계산 코드와 검증표(해석해 비교)">코드 · 검증</button></span></details>
+        <details class="wb-hpdd wb-filedd"><summary class="btn small" title="이 도구의 입력을 파일로 내보내거나 가져옴">파일 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbexp>내보내기 .json</button><button type="button" class="btn small" data-wbimp>가져오기 .json</button></span></details><button type="button" class="btn small" data-wbpre>프리셋 ▾</button><i class="wb-sep" aria-hidden="true"></i>
+        <!-- 2026-11-25: 위쪽 버튼 12 ~ 13개 → 보기 · 파일 메뉴로 묶음 -->
         ${T.links || T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wblink title="다른 도구 · 대시보드에서 값 · 표를 가져옴 (무엇이 어디로 들어가는지 목록으로 보고 체크해서)">도구 연결 ▾</button>` : ''}${T.inputs.some(d => d.dk && !d.ui) ? `<button type="button" class="btn small" data-wbdreset title="대시보드 칸과 이어진 입력을 모두 지금 대시보드 값으로 되돌림 (대시보드에 값이 없는 칸은 그대로)">대시보드 값으로 초기화</button>` : ''}${T.links || T.inputs.some(d => d.dk && !d.ui) ? '<i class="wb-sep" aria-hidden="true"></i>' : ''}
         ${T.share==='hp' ? `<details class="wb-hpdd"><summary class="btn small" title="도구 5 · 6 · 7 · 8 이 같은 하드포인트 한 벌을 씁니다 (이 브라우저 안). 어느 도구에서 고쳐도 다른 도구가 열 때 그 값을 씁니다.">하드포인트 ▾</summary><span class="wb-hpmenu"><button type="button" class="btn small" data-wbhp="xlsx">내보내기 .xlsx</button><button type="button" class="btn small" data-wbhp="json">내보내기 .json</button><button type="button" class="btn small" data-wbhp="imp">가져오기 (.xlsx · .csv · .json)</button></span></details><i class="wb-sep" aria-hidden="true"></i>` : ''}
         <button type="button" class="btn small pri" data-wbput>대시보드에 반영</button>
@@ -279,7 +277,8 @@ const WB_INLEG = `<p class="wb-inleg" aria-label="입력 칸 앞 표시의 뜻">
 /* 입력 칸 줄. list = 그릴 입력 (없으면 왼쪽 입력 칸: d.ui 가 'edit' · 'none' 이 아닌 것).
    도구가 입력을 자기 화면(도구 2P 편집 탭)에 그릴 때도 이 함수(wbInRows)를 씀 → 상태 점 · 용어 · 막힘 · 대시보드 비교가 같음 */
 function wbInHTML(){ const T = wbT(), list = T.inPanel === false ? [] : T.inputs.filter(d => !d.ui && d.key);   /* inPanel:false = 입력을 모두 도구 화면에 (도구 2P) · 탭 도구 = 핵심 입력(key:true)만 */
-  if(!list.length) return wbChgNote() + WB_INLEG + (T.inEmpty || '<p class="muted wb-inempty">입력은 위 [편집] 탭에 묶음별로 있습니다. 자주 바꿔 보는 값은 나중에 이곳으로 꺼낼 예정입니다.</p>');
+  if(!list.length){ const m = document.getElementById('wb'); if(m) m.classList.add('wb-noin'); return wbChgNote() + WB_INLEG + '<p class="muted wb-inempty">입력은 [편집] 탭에 있습니다.</p>'; }
+  { const m = document.getElementById('wb'); if(m) m.classList.remove('wb-noin'); }
   if(!list.length && T.inEmpty) return wbChgNote() + WB_INLEG + T.inEmpty;
   return wbChgNote() + WB_INLEG + wbInRows(list); }
 /* 편집 탭 본문: 입력 묶음(d.g)마다 카드 (묶음 이름이 '앞 · ' · '뒤 · ' 로 시작하면 [차 · 공통 | 앞 | 뒤] 로 나눔) */
@@ -494,6 +493,8 @@ async function wbHpImport(file){ const ext = (file.name.split('.').pop() || '').
 function wbOpen(id, ret, mode){ if(!WB_TOOLS[id]) return; const T = WB_TOOLS[id], was = !!WB.id;
   wbModeSet(mode || (WB.id ? WBMODE : 'nf'));   /* 목록에서 고른 모드 · 도구 안에서 넘어가면 지금 모드 그대로 */
   WB.id = id; WB.need = []; WB.ret = ret || null; WB.I = wbLoad(id); WB.R = null; WB.err = ''; WB.xi = 0; WB.slq = '';
+  /* 2026-11-25: 내 파일로 처음 열 때 비어 있는 칸은 대시보드 값으로 채워서 엶 (대시보드에 값이 있는데 빈칸 + '대시보드와 다름'으로 열리던 것). 저장은 고칠 때 */
+  if(!wbEx()) T.inputs.forEach(d => { if(d.dk && !d.ui && !(T.inLock && T.inLock(d.k)) && !isFinite(WB.I[d.k])){ const db = wbDash(d.dk); if(db && isFinite(db.v)){ WB.I[d.k] = db.v; wbBaseSet(d.k, db.v); } } });
   wbSelReset(T.sigOn || (T.sigs || []).slice(0, 3).map(s => s.k)); WB.act = [...WB.sel][0] || ''; WB.xa = ''; WB.sw = null; WB.si = 0; wbSelReset([], true); WB.actO = '';
   WB.tab = wbTabs(T) ? wbTabGet(id) : 'res'; WB.esec = WB.esec || 'c'; wbTourTabs(T);
   WB.needShow = false; if(!wbEx()){ WB.need = wbNeed(); if(WB.need.length){ if(wbTabs(T)) WB.tab = 'edit'; if(T.onNeedOpen) T.onNeedOpen(); } }   /* 내 파일 빈칸: 편집 탭에서 시작 */
@@ -751,7 +752,7 @@ function wb3dClose(){ const S = WB.t3; if(!S) return; S.ro.disconnect(); if(S.of
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click', e => { const t = e.target; if(!t.closest) return;
-  { const dd = document.querySelector('#wb .wb-hpdd[open]'); if(dd && (!t.closest('.wb-hpdd') || t.closest('[data-wbhp]'))) dd.open = false; }
+  document.querySelectorAll('#wb .wb-hpdd[open]').forEach(dd => { if(!dd.contains(t) || t.closest('.wb-hpmenu button')) dd.open = false; });   /* 메뉴 밖을 누르거나 메뉴 안 항목을 누르면 닫음 (보기 · 파일 · 하드포인트) */
   { const mb = t.closest('[data-wbo]'); if(mb){ wbOpen(mb.dataset.wbo, mb.closest('.wb-mpick') || mb, mb.dataset.wbm); return; } }
   if(!WB.id) return;
   if(t.closest('[data-wbmx]') || t.matches('#wbm')){ wbModalClose(); return; }

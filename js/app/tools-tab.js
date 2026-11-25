@@ -93,6 +93,11 @@ const TOOL_LIST = [
   ['10','주행 데이터 분석','P9','로거 데이터','신호 그래프, 시뮬레이션 비교'],
   ['T','타이어 모델 (선택)','P1','μ · 하중 감도 · 코너링 강성 (시험 데이터가 없을 때 직접)','슬립각–횡력 곡선, 앞뒤 코너링 강성, 이완 길이']
 ];
+/* 도구 바로가기 줄 (2026-11-25): 도구 모음이 페이지 맨 아래(약 2,350 px)에 있어 찾기 어려웠음 → 대시보드 위에 작업창이 있는 도구를 한 줄로. 누르면 바로 엶 */
+function toolQuickHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
+  return `<nav class="tl-quick" aria-label="도구 바로가기"><span class="tl-ql">도구</span>${TOOL_LIST.filter(r=>W[r[0]]).map(r=>`<button type="button" class="tl-qb" data-wbq="${r[0]}" title="${esc(r[1])} · ${esc(r[2])}"><b>${W[r[0]].no || r[0]}</b>${esc(String(r[1]).replace(/\s*\(.*\)\s*$/,''))}</button>`).join('')}<a class="lnk tl-qall" href="#" data-wbqall>전체 목록 ↓</a></nav>`; }
+document.addEventListener('click', e=>{ const q=e.target.closest && e.target.closest('[data-wbq]'); if(q){ e.preventDefault(); wbOpen(q.dataset.wbq, q); return; }
+  if(e.target.closest && e.target.closest('[data-wbqall]')){ e.preventDefault(); const l=document.querySelector('#v-tools .tl-tools'); if(l) smoothScrollTo(()=>l.getBoundingClientRect().top+scrollY-120); } });
 /* 도구 모음 줄: 작업창이 있는 도구(WB_TOOLS, js/app/workbench.js)는 누르면 열림 */
 function toolRowsHTML(){ const W = typeof WB_TOOLS!=='undefined' ? WB_TOOLS : {};
   /* 1열 = 작업창 id (WB_TOOLS 키), 화면 번호는 작업창의 no (G → 2 경량, 2 → 2P 정밀) */
@@ -163,6 +168,7 @@ function renderTools(){ const v = $('#v-tools'); if(!v) return;
   if(!v.dataset.built){ v.dataset.built = '1';
     v.innerHTML = `<header class="top tl-hero"><span class="eyebrow">우리 팀 설계값</span><h1>팀 대시보드</h1>
 </header>
+      ${toolQuickHTML()}
       <section class="tl-sec" aria-label="설계값"><div class="tl-sh"><h2>설계값</h2><span class="tl-meta" id="dvseason"></span></div><div id="dvals"></div></section>
       <section class="tl-sec" aria-label="그림으로 보기"><div class="tl-sh"><h2>그림으로 보기</h2><span class="tl-meta">정상 상태 · 롤에 의한 CG 이동 무시 · 타이어 하중 감도 무시</span></div><div class="df-row"><div class="df-figs" id="dfigs"></div><aside class="dc-col" id="dcond" aria-label="주행 조건"></aside></div></section>
       <section class="tl-sec" aria-label="파트별"><div class="tl-sh"><h2>파트별</h2><span class="tl-meta">파트 그림은 그 계산 도구를 만들 때 하나씩 열립니다</span></div><div id="dpart"></div></section>

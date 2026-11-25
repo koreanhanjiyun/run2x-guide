@@ -3776,3 +3776,18 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #ref-list .src-box .src-h{margin:0 0 6px!important;padding:0 0 8px;border-top:0!important;border-bottom:1px solid var(--line)}
 #ref-list .src-lede{margin:0 0 14px}
 #ref-list .cl-box > :first-child{margin-top:0}
+
+/* 작업창 (2026-11-25): 빠른 입력이 없는 도구는 왼쪽 칸을 좁게(범례만), 보기 · 파일 메뉴 */
+#wb.wb-noin .wb-main{grid-template-columns:200px minmax(0,1fr)}
+#wb .wb-inempty{font-size:var(--fs-xs)}
+
+/* 도구 탭 바로가기 줄 */
+#v-tools .tl-quick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+#v-tools .tl-ql{font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em;margin-right:4px}
+#v-tools .tl-qb{font:inherit;font-size:var(--fs-s);display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line-2);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer}
+#v-tools .tl-qb b{font-size:var(--fs-xs);color:#fff;background:var(--accent);border-radius:4px;padding:0 5px;line-height:16px}
+#v-tools .tl-qb:hover{background:#efe8f8;border-color:#cdbde3}
+#v-tools .tl-qall{margin-left:auto;font-size:var(--fs-s)}
+/* 대시보드 파트별 결과 카드: 폭이 제각각이라 줄 끝 · 아래에 빈칸 → 4칸 격자로 한 줄 */
+#dpart .wb-og{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:stretch}   /* 넓은 카드(코너웨이트)는 2칸 → 1·1·2·1 로 한 줄 */
+#dpart .wb-og>*{min-width:0;width:auto!important;max-width:none!important;flex:none!important}
