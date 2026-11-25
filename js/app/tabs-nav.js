@@ -246,7 +246,7 @@ function initGlossary(){
   G.forEach(g=>{ const q=g.name.split(/\s*·\s*/)[0].replace(/\s*\([^)]*\)\s*$/,'').trim(); const c=g.tr.cells[0]; c.innerHTML=`<button type="button" class="lnk gl-go" data-glq="${esc(q)}" title="'${esc(q)}'이(가) 나오는 항목 찾기">${c.innerHTML}</button>`; });
   const box=document.createElement('div'); box.className='gsrch';
   box.innerHTML=`<input type="text" class="gq" placeholder="용어 검색 (초성 가능: ㅅㅋㄹ)" aria-label="용어 검색" autocomplete="off"><div class="aclist" hidden role="listbox"></div>`;
-  body.prepend(box);
+  (body.querySelector('.gl-box') || body).prepend(box);
   const inp=box.querySelector('input'), list=box.querySelector('.aclist');
   const res = raw=>{ const q=norm(raw); if(!q) return []; return G.map(g=>({g, s:Math.max(mscore(g.name,q,100), mscore(g.def,q,40))})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,10); };
   const filt = raw=>{ const q=norm(raw); const hit=new Set(res(raw).map(x=>x.g)); G.forEach(g=>{ g.tr.hidden = !!q && !hit.has(g); }); };

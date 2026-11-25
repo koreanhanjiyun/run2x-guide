@@ -3782,12 +3782,6 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #wb .wb-inempty{font-size:var(--fs-xs)}
 
 /* 도구 탭 바로가기 줄 */
-#v-tools .tl-quick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
-#v-tools .tl-ql{font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em;margin-right:4px}
-#v-tools .tl-qb{font:inherit;font-size:var(--fs-s);display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line-2);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer}
-#v-tools .tl-qb b{font-size:var(--fs-xs);color:#fff;background:var(--accent);border-radius:4px;padding:0 5px;line-height:16px}
-#v-tools .tl-qb:hover{background:#efe8f8;border-color:#cdbde3}
-#v-tools .tl-qall{margin-left:auto;font-size:var(--fs-s)}
 /* 대시보드 파트별 결과 카드: 폭이 제각각이라 줄 끝 · 아래에 빈칸 → 4칸 격자로 한 줄 */
 #dpart .wb-og{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:stretch}   /* 넓은 카드(코너웨이트)는 2칸 → 1·1·2·1 로 한 줄 */
 #dpart .wb-og>*{min-width:0;width:auto!important;max-width:none!important;flex:none!important}
@@ -3799,3 +3793,10 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #v-start .gsub.has-fig .gs-side{grid-area:side;flex-direction:row;gap:var(--sp-6);padding:var(--sp-4) 0 0;border-left:0;border-top:1px solid var(--line)}
 #v-start .gsub.has-fig .gs-side>div{flex:1;min-width:0}
 #v-start .gsub.has-fig .gs-side>div:last-child{flex:2}
+
+/* 도구 탭 목차 (2026-11-25): 설계 탭 #toc 와 같은 자리 · 모양 */
+#tltoc{position:fixed;left:14px;top:calc(var(--tabh) + 14px);width:var(--tocw);max-height:calc(100vh - var(--tabh) - 28px);overflow:hidden;z-index:12;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(30,20,50,.07)}
+#tltoc .tl-toc-h{background:var(--char);color:#fff;font-size:var(--fs-s);font-weight:700;letter-spacing:.06em;padding:8px 8px;flex:none}
+#tltoc .tl-toc-in{overflow:auto;padding:4px 4px 8px;scrollbar-width:thin}
+#tltoc .tl-toc-g{margin:8px 4px 2px;padding-top:8px;border-top:1px solid var(--line);font-size:var(--fs-xs);font-weight:700;color:var(--muted);letter-spacing:.04em}
+#tltoc .toc-s .tc{min-width:26px}

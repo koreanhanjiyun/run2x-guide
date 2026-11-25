@@ -74,7 +74,7 @@ function renderRefs(){ if(REFSUB==null) REFSUB = (typeof PREF==='function' && PR
   /* views.js 는 tabs-nav.js 보다 먼저 읽히므로 showTab 감싸기는 처음 그릴 때(init 이후) */
   if(!REFWRAP && typeof showTab==='function'){ REFWRAP=true; const _st=showTab; showTab=function(t){ const r=_st.apply(this, arguments); if(t==='ref') requestAnimationFrame(()=>{ if(!refPanes().some(d=>d.open)) refShow(REFSUB, true); else refNav(); }); return r; }; }
   $('#ref-list').innerHTML = `<nav class="tt-nav ref-nav" role="tablist" aria-label="참고 화면">${REFS.map(r=>`<button type="button" role="tab" data-refsub="${esc(r.t)}" aria-selected="false">${r.t}</button>`).join('')}</nav>`
-    + REFS.map(r=>`<details class="step ref-pane"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?srcUnified(r.b):r.b}</div></details>`).join('');
+    + REFS.map(r=>`<details class="step ref-pane"><summary><span class="stitle">${r.t}</span><span class="ssub">${r.s}</span></summary><div class="dbody">${r.t==='출처'?srcUnified(r.b):r.t==='용어집'?`<section class="src-box gl-box">${r.b}</section>`:r.b}</div></details>`).join('');
   refShow(REFSUB, true); }
 function refPanes(){ return [...document.querySelectorAll('#ref-list > details')]; }
 let REFBUSY = false;
