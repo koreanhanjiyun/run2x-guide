@@ -3509,10 +3509,33 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 
 /* 진행 현황 · 시즌 요약 정리 (2026-11-25) */
 /* 누를 수 있는 것은 전부 같은 커서 표시: 옅은 보라 바탕 + 진한 글자 (단계 · 항목 이름 · 카드 목록 · 표 칸) */
-#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it){border-radius:4px;transition:background-color .12s,box-shadow .12s,color .12s}
-#v-team :is([data-ttp=progress],[data-ttp=summary]) :is(.tt-mat th .lnk,.tt-row .tt-name,.tt-card .adm-it):hover{background:#e2d5f1;box-shadow:0 0 0 4px #e2d5f1;color:#3f2560;text-decoration-color:#6A4294;text-decoration-thickness:2px}
+/* 글자 링크(단계 · 항목 이름): 늘 안쪽 여백을 두고(글자와 모서리 사이 6 px), 커서를 올리면 옅은 보라 바탕 + 진한 글자 + 굵은 보라 밑줄 */
+#v-team [data-ttp=progress] :is(.tt-mat th .lnk,.tt-row .tt-name){padding:2px 6px;margin:-2px -6px;border-radius:6px;transition:background-color .12s,color .12s}
+#v-team [data-ttp=progress] :is(.tt-mat th .lnk,.tt-row .tt-name):hover{background:#efe8f8;color:#3f2560;text-decoration-color:#6A4294;text-decoration-thickness:2px}
+/* 카드 목록: 단계 번호 + 제목 + 설명 줄이 한 버튼(한 덩어리). 커서를 올리면 덩어리 전체가 옅은 보라, 제목에 보라 밑줄 */
+#v-team .tt-card .adm-list{gap:2px}
+#v-team .tt-card .adm-list>*{flex:none}
+#v-team .tt-card .adm-it,#v-team .tt-card .adm-it.adm-qa{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:baseline;gap:0 8px;width:100%;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--ink);transition:background-color .12s}
+#v-team .tt-card .adm-it:hover{background:#efe8f8}
+#v-team .tt-card .adm-it .adm-tx{display:flex;flex-direction:column;min-width:0;gap:2px}
+#v-team .tt-card .adm-it .adm-why{display:block;padding:0;font-size:var(--fs-s);color:var(--muted);line-height:1.5}
+#v-team .tt-card .adm-it .adm-nm{text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
+#v-team .tt-card .adm-it:hover .adm-nm,#v-team .tt-card .adm-it:hover .adm-qk{color:#3f2560;text-decoration-color:#6A4294;text-decoration-thickness:2px}
 #v-team .tt-card .adm-it:hover>span:not(.adm-code),#v-team .tt-card .adm-it:hover .adm-qt{text-decoration:none}
-.tt-mat td.tt-c:hover{outline:0;background:#e2d5f1;color:#3f2560;box-shadow:inset 0 0 0 2px #6A4294}
+#v-team .tt-card .adm-it.adm-qa>span:not(.adm-code){grid-column:2}
+.tt-mat :is(td.tt-c,th.tt-ph){cursor:pointer}
+.tt-mat :is(td.tt-c,th.tt-ph):hover{outline:0;background:#efe8f8;color:#3f2560;box-shadow:inset 0 0 0 2px #6A4294}
+.tt-mat th.tt-ph.sel,.tt-mat th.tt-ph.sel:hover{background:var(--accent);color:#fff;box-shadow:none}
+/* 펼침 줄: 누른 줄 바로 아래, 꼭지가 누른 칸을 가리킴 */
+.tt-mat tr.tt-xrow>td{position:relative;padding:10px 8px 12px;border-left:0;border-right:0;background:#f7f4fb;text-align:left;white-space:normal}
+.tt-mat tr.tt-xrow .tt-xp{position:absolute;top:3px;left:calc(var(--xp,40px) - 7px);width:14px;height:14px;background:#fff;border-left:1px solid #cdbde3;border-top:1px solid #cdbde3;transform:rotate(45deg);z-index:1}
+.tt-mat tr.tt-xrow .tt-x{position:relative;overflow:hidden;background:#fff;border:1px solid #cdbde3;border-radius:8px;box-shadow:0 6px 18px rgba(40,20,70,.10)}
+.tt-x .tt-xh{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--line)}
+.tt-x .tt-xh b{font-size:var(--fs-m)}
+.tt-x .tt-xn{margin-left:8px;font-size:var(--fs-s)}
+.tt-x .tt-xx{margin-left:auto;border:0;background:none;font-size:var(--fs-xl);line-height:1;cursor:pointer;color:var(--muted)}
+.tt-x .tt-list{padding:4px 16px 8px;max-height:none}
+.tt-x .tt-row:last-child{border-bottom:0}
 #v-team .tt-row:hover{background:#faf8fd}
 .tt-mat td.sel,.tt-mat td.sel:hover{outline:0;background:var(--accent);color:#fff;box-shadow:none}
 .tt-mat td.sel b,.tt-mat td.sel i{color:#fff}
