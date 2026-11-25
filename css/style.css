@@ -3822,19 +3822,23 @@ body:has(#toTop:not([hidden])) #partRail{bottom:136px}
 /* 좌표계 버블 아이콘: 축마다 좌표계 그림과 같은 색 계열(x 주황 · y 파랑 · z 초록, 방향도 그림과 같게 x 왼쪽 아래 · y 오른쪽 아래 · z 위).
    그림의 원래 색(#c2410c · #1d5f9a · #15803d)은 어두운 버블 위에서 파랑이 잘 안 보여 같은 색상의 밝은 쪽을 씀 */
 #figRail .rail-h::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke='%234fd17f' d='M12 13V3.5M9.4 6.1L12 3.5l2.6 2.6'/%3E%3Cpath stroke='%23fb7d3c' d='M12 13l-7.6 4.4M7.6 19.1l-3.2-1.7.4-3.6'/%3E%3Cpath stroke='%236fb3ef' d='M12 13l7.6 4.4M16.4 19.1l3.2-1.7-.4-3.6'/%3E%3C/svg%3E") center/contain no-repeat!important;-webkit-mask:none!important;mask:none!important}
-/* 도구 빠른 선택 버블 (2026-11-25, B안): 왼쪽 위(왼쪽 24 px, 탭 + 14 px) "도구" 버블 44 px. 펼치면 번호 버블(36 px)이 버블 자리에서 아래로 차례로 미끄러져 나옴
-   (--i 순서로 15 ms 씩 늦게), 접을 때는 아래 것부터 거꾸로. 번호 버블에 올리면 그 버블만 오른쪽으로 알약처럼 늘어나 이름이 보임 */
-#tlDial{position:fixed;left:24px;top:calc(var(--tabh) + 14px);z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+/* 도구 빠른 선택 (2026-11-25, B안 캡슐 · 오른쪽 위): 오른쪽 24 px · 탭 + 14 px 에 진한 "도구" 버블(44 px, 오른쪽 아래 버블과 같은 줄 · 같은 색).
+   누르면 그 아래로 흰 세로 캡슐(폭 40 px, 1 px 테두리, 칸 사이 구분선)이 위에서 아래로 펼쳐지며(clip-path) 번호가 차례로 나타남.
+   칸에 올리면 그 칸만 보라 알약으로 왼쪽(본문 쪽)으로 늘어나 이름 표시(row-reverse: 번호는 제자리, 이름은 왼쪽). 접을 때는 거꾸로 */
+#tlDial{position:fixed;right:max(24px, env(safe-area-inset-right,0px));top:calc(var(--tabh) + 14px);z-index:20;display:flex;flex-direction:column;align-items:center;gap:6px}
 #tlDial .tld-main{width:44px;height:44px;border-radius:50%;border:1px solid var(--char);background:var(--char);color:#fff;font:inherit;font-size:var(--fs-xs);font-weight:700;letter-spacing:.02em;cursor:pointer;box-shadow:0 4px 14px rgba(30,20,50,.22);display:grid;place-items:center;padding:0;position:relative;z-index:2;transition:background .2s}
 #tlDial .tld-main:hover{background:#3a3f4a}
 #tlDial:not(.coll) .tld-main{background:var(--accent);border-color:var(--accent)}
-#tlDial .tld-list{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:4px}
-#tlDial .tld-b{display:inline-flex;align-items:center;height:36px;min-width:36px;padding:0;border-radius:18px;border:1px solid var(--char);background:var(--char);color:#fff;font:inherit;font-size:var(--fs-s);cursor:pointer;box-shadow:0 3px 10px rgba(30,20,50,.2);overflow:hidden;white-space:nowrap;
-  transition:transform .3s cubic-bezier(.2,.8,.3,1) calc(var(--i)*15ms),opacity .2s ease-out calc(var(--i)*15ms),background .15s}
-#tlDial .tld-b b{flex:none;width:34px;text-align:center;font-family:var(--f-display);font-size:var(--fs-xs);font-weight:700}
-#tlDial .tld-b span{max-width:0;opacity:0;transition:max-width .22s cubic-bezier(.2,.8,.3,1),opacity .15s,padding .22s;padding-right:0}
-#tlDial .tld-b:hover,#tlDial .tld-b:focus-visible{background:var(--accent);border-color:var(--accent)}
-#tlDial .tld-b:hover span,#tlDial .tld-b:focus-visible span{max-width:260px;opacity:1;padding-right:14px}
-#tlDial.coll .tld-b{opacity:0;pointer-events:none;transform:translateY(calc((var(--i) + 1) * -44px)) scale(.6);
-  transition:transform .22s cubic-bezier(.5,0,.8,.4) calc((var(--n) - 1 - var(--i))*12ms),opacity .18s ease-in calc((var(--n) - 1 - var(--i))*12ms)}
+#tlDial .tld-list{display:flex;flex-direction:column;align-items:flex-end;width:40px;box-sizing:border-box;padding:3px 0;background:var(--panel);border:1px solid var(--line-2);border-radius:20px;box-shadow:0 4px 16px rgba(30,20,50,.14);
+  clip-path:inset(-8px -320px -24px -320px);transition:clip-path .32s cubic-bezier(.2,.8,.3,1),opacity .2s}
+#tlDial .tld-b{position:relative;display:inline-flex;flex-direction:row-reverse;align-items:center;justify-content:flex-start;height:34px;width:38px;flex:none;padding:0;margin:0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);font:inherit;font-size:var(--fs-s);cursor:pointer;white-space:nowrap;
+  transition:opacity .2s ease-out calc(var(--i)*15ms),transform .25s cubic-bezier(.2,.8,.3,1) calc(var(--i)*15ms),background .15s,width .22s cubic-bezier(.2,.8,.3,1),border-radius .15s}
+#tlDial .tld-b:first-child{border-top-color:transparent}
+#tlDial .tld-b b{flex:none;width:38px;text-align:center;font-family:var(--f-display);font-size:var(--fs-xs);font-weight:700}
+#tlDial .tld-b span{max-width:0;opacity:0;overflow:hidden;transition:max-width .22s cubic-bezier(.2,.8,.3,1),opacity .15s,padding .22s;padding-left:0}
+#tlDial .tld-b:hover,#tlDial .tld-b:focus-visible{width:auto;background:var(--accent);color:#fff;border-radius:17px;border-top-color:transparent;z-index:1;box-shadow:0 3px 12px rgba(30,20,50,.25)}
+#tlDial .tld-b:hover + .tld-b,#tlDial .tld-b:focus-visible + .tld-b{border-top-color:transparent}
+#tlDial .tld-b:hover span,#tlDial .tld-b:focus-visible span{max-width:260px;opacity:1;padding-left:14px}
+#tlDial.coll .tld-list{clip-path:inset(-8px -320px 100% -320px);opacity:0;pointer-events:none;transition:clip-path .24s cubic-bezier(.5,0,.8,.4),opacity .2s ease-in .06s}
+#tlDial.coll .tld-b{opacity:0;transform:translateY(-6px);transition:opacity .12s ease-in calc((var(--n) - 1 - var(--i))*10ms),transform .15s ease-in calc((var(--n) - 1 - var(--i))*10ms)}
 
