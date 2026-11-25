@@ -3743,6 +3743,17 @@ ul.hl .hl-k{display:inline-block;width:10px;height:10px;border-radius:2px;margin
 #v-team .adm-tm details.tp-more>ul.hl{margin:6px 0 0}
 ul.hl.hl-row{display:flex;flex-wrap:wrap;gap:4px 16px;list-style:none;padding-left:0}
 ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;border-radius:0;vertical-align:3px}
+
+/* 저장 전 표시 하나로 (2026-11-25): 칸 · 상자 = 주황 점선 2 px, 줄 = 주황 왼쪽 띠 3 px, 머리에 [저장 전] */
+.tval.tv-dirty{border:2px dashed #d9730d!important;box-shadow:none!important}
+.rec-row.rec-pend .rec-bar{outline:2px dashed #d9730d!important;outline-offset:2px}
+.rec-row.rec-pend .rec-s{box-shadow:inset 3px 0 0 #d9730d}
+/* 대회 점수 입력 검사 */
+.rec-in input.rec-bad{border-color:#c0392b!important;background:#fff4f2}
+.rec-in .rec-err{font-size:var(--fs-xs);color:#c0392b}
+.rec-in input:disabled{background:#f2f1f5;color:var(--muted)}
+#draftBar .db-row{grid-template-columns:minmax(230px,1fr) minmax(0,340px) auto}
+#draftBar .db-go{grid-template-columns:48px minmax(90px,1fr) auto}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -18843,16 +18854,16 @@ async function saveVal(id, vals, msgEl){
 /* 우리 팀 값: 입력칸 읽기 */
 function tvRead(box){ const vals={}; box.querySelectorAll('[data-tl]').forEach(i=>{ const l=i.dataset.tl; vals[l]=vals[l]||{}; vals[l][i.dataset.tk]=i.value.trim(); }); return vals; }
 function tvHTML(id){ const a=ACT[id], dk = typeof DK_BY_ITEM!=='undefined' && DK_BY_ITEM[id]; if(!dk && (!a || !a[2].length)) return ''; return `<div class="tval" data-tv="${id}"></div>`; }
-/* 보기 → [편집] → 입력 → [적용](저장 전 값으로 보임) / [취소] → 아래 막대 [모두 저장] (H15) */
+/* 보기 → [편집] → 입력하면 바로 '저장 전'(아래 막대에 쌓임) → [닫기] → 아래 막대 [모두 저장] · [되돌리기] (2026-11-25: [적용]/[취소] 없앰, 진행 상태와 같은 방식) */
 function renderTV(el){ const id=el.dataset.tv, labs=(ACT[id]&&ACT[id][2])||[], rec=VAL[id]; const can=canEditItem(id) && labs.length>0; const man=can && el.dataset.edit==='1';
   if(!labs.length){ el.innerHTML = typeof dvLinkedHTML==='function' ? dvLinkedHTML(id, el.dataset.view||SEASON) : ''; return; }   /* 글로 적는 값이 없는 항목: 팀 설계값만 */
   const staged = (typeof TVSTAGE!=='undefined' && TVSTAGE[id]) || null; const view = man ? SEASON : (el.dataset.view||SEASON);
   const data = (view===SEASON && staged) ? staged : (rec&&rec.s&&valFilled(rec.s[view]) ? rec.s[view] : null);
-  const btn = man ? `<button type="button" class="btn small pri" data-tvok>적용</button><button type="button" class="btn small" data-tvno>취소</button>` : (can && view===SEASON ? `<button type="button" class="btn small tv-edit" data-tvedit>편집</button>` : '');
-  let h=`<div class="tv-h"><span class="sec-label">우리 팀 값</span>${man?`<span class="tv-s">${SEASON} 시즌 입력 중</span>`:`<span class="tv-yr"><button type="button" class="tv-yb" title="눌러서 연도 입력">${esc(view)} 시즌</button><input type="number" class="tv-yi" min="2000" max="2100" hidden aria-label="볼 시즌 연도"></span>${view!==SEASON?`<span class="muted tv-o">이번 시즌 ${SEASON}</span>`:''}`}${!man&&staged&&view===SEASON?'<span class="pend-tag">저장 전</span>':''}<span class="tv-sp"></span>${btn}</div>`;
+  const btn = man ? `<button type="button" class="btn small" data-tvok>닫기</button>` : (can && view===SEASON ? `<button type="button" class="btn small tv-edit" data-tvedit>편집</button>` : '');
+  let h=`<div class="tv-h"><span class="sec-label">우리 팀 값</span>${man?`<span class="tv-s">${SEASON} 시즌 입력 중</span>`:`<span class="tv-yr"><button type="button" class="tv-yb" title="눌러서 연도 입력">${esc(view)} 시즌</button><input type="number" class="tv-yi" min="2000" max="2100" hidden aria-label="볼 시즌 연도"></span>${view!==SEASON?`<span class="muted tv-o">이번 시즌 ${SEASON}</span>`:''}`}${staged&&view===SEASON?'<span class="pend-tag">저장 전</span>':''}<span class="tv-sp"></span>${btn}</div>`;
   if(man){ const d=staged||(rec&&rec.s&&rec.s[SEASON])||{};
     h+=`<div class="tv-edit">${labs.map(l=>`<label><span class="vchip dec">${l}</span><input type="text" data-tl="${esc(l)}" data-tk="v" placeholder="값 (단위 포함)" aria-label="${esc(l)} 값" value="${esc((d[l]||{}).v||'')}"><input type="text" data-tl="${esc(l)}" data-tk="why" placeholder="비고" aria-label="${esc(l)} 비고" value="${esc((d[l]||{}).why||'')}"></label>`).join('')}
-      <div class="tv-foot"><span class="pmsg muted">[적용]은 입력을 닫기만 합니다. 팀원에게 보이려면 아래 막대의 [모두 저장]을 누르십시오.</span></div></div>`;
+      <div class="tv-foot"><span class="pmsg muted">입력하면 아래 막대에 쌓입니다 → [모두 저장]으로 팀에 반영</span></div></div>`;
   } else if(data && valFilled(data)){ h+=`<table class="kvt tv-t">${labs.map(l=>{ const r=data[l]||{}; return `<tr><th>${l}</th><td>${r.v?`<b>${esc(r.v)}</b>`:'<span class="muted">—</span>'}${r.why?`<span class="tv-why">${esc(r.why)}</span>`:''}</td></tr>`; }).join('')}</table>`;
   } else h+=`<p class="muted tv-empty">${SH.on ? '아직 기록된 팀 값이 없습니다.' + (can ? ' [편집]을 눌러 입력하십시오.' : ' 회장이나 담당 팀장·파트장이 입력하면 여기에 표시됩니다.') : '아직 기록된 팀 값이 없습니다.'}</p>`;
   if(typeof dvLinkedHTML==='function') h = dvLinkedHTML(id, view) + h;   /* 숫자로 정하는 팀 설계값은 위에, 글로 적는 우리 팀 값(이전 기록 포함)은 아래 */
@@ -19313,7 +19324,7 @@ document.addEventListener('click',e=>{ const b=e.target.closest('[data-sn]'); if
 /* ============================================================
    편집은 "저장해야 반영" (H10·H14·H15)
    - 진행 상태: 예정·진행 중·완료·제외를 바로 누름('저장 전' 표시) → 아래 막대 [모두 저장]으로만 팀에 공유
-   - 우리 팀 값: [편집] → 바꾸기 → [적용](입력 닫음, '저장 전' 표시) → 아래 막대 [모두 저장]
+   - 우리 팀 값 · 우리 팀 기록: [편집] → 입력하면 바로 '저장 전'으로 쌓임 → [닫기] → 아래 막대 [모두 저장] (2026-11-25 [적용]/[취소] 없앰)
      [취소]는 그 칸의 변경만 되돌림. 팀 탭 항목 목록의 상태 버튼은 바로 '저장 전'으로 쌓임
    - 다른 화면(팀원 관리 등)도 DRAFT.add 로 같은 막대에 변경을 올림
    - 저장 안 한 변경이 있으면 시즌 넘기기·팀 전환·로그아웃·페이지 닫기 전에 막고 안내
@@ -19366,9 +19377,9 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
     if(!BAR){ BAR = document.createElement('div'); BAR.id = 'draftBar'; BAR.setAttribute('role','status'); document.body.appendChild(BAR); }
     const p = nPend(), d = nVal(), show = nAll() > 0;
     BAR.hidden = !show; document.body.classList.toggle('has-draft', show); try{ updSeasonChip(); }catch(e){} if(!show) return;
-    const exN = DRAFT.ext.reduce((a,x)=>a+(x.items && x.n() ? x.n() : 0),0);
+    const exN = DRAFT.ext.reduce((a,x)=>a+(x.items && x.n() ? x.n() : 0),0) + d;
     if(!p && !exN) LIST=false;
-    const parts = []; if(p) parts.push(`<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">진행 상태 ${p}건 <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>`); if(d) parts.push(`우리 팀 값 ${d}항목`);
+    const parts = []; if(p) parts.push(`<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">진행 상태 ${p}건 <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>`); if(d) parts.push(`<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">우리 팀 값 ${d}항목 <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>`);
     DRAFT.ext.forEach(x=>{ const n=x.n(); if(n) parts.push(x.items ? `<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">${x.label(n)} <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>` : x.label(n)); });
     BAR.innerHTML = `<span><b>저장 안 한 변경</b> · ${parts.join(' · ')} <span class="db-sub">[모두 저장]을 눌러야 팀원에게 보입니다${p||d?` (${esc(SEASON)} 시즌)`:''}</span></span>
       <span class="db-acts"><button type="button" class="btn small" data-draft="revert">되돌리기</button><button type="button" class="btn small pri" data-draft="save">모두 저장</button></span>`
@@ -19379,7 +19390,11 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
   const stl = v => v==='skip' ? '제외' : ST_LABEL[v||'todo'];
   function listHTML(){ const ids = Object.keys(PENDING).filter(id=>IT[id]).sort((a,b)=>typeof admOrd==='function' ? admOrd(a,b) : 0);
     return `<div class="db-list" role="list">${ids.map(id=>{ const a=COMMITTED[id]||'todo', b=PENDING[id]||'todo';
-      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-draftgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">${IT[id].p}</span></button><span class="db-ch"><span class="ipill st-${a}">${stl(a)}</span><span aria-hidden="true">→</span><span class="ipill st-${b}">${stl(b)}</span></span><button type="button" class="lnk db-rv" data-draftrv="${id}">되돌리기</button></div>`; }).join('')}${extRows()}</div>`; }
+      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-draftgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">${IT[id].p}</span></button><span class="db-ch"><span class="ipill st-${a}">${stl(a)}</span><span aria-hidden="true">→</span><span class="ipill st-${b}">${stl(b)}</span></span><button type="button" class="lnk db-rv" data-draftrv="${id}">되돌리기</button></div>`; }).join('')}${tvRows()}${extRows()}</div>`; }
+  /* 우리 팀 값: 바뀐 칸마다 '라벨 이전 → 이후' */
+  function tvRows(){ return Object.keys(TVSTAGE).filter(id=>IT[id]).map(id=>{ const cur=(VAL[id]&&VAL[id].s&&VAL[id].s[SEASON])||{}, nw=TVSTAGE[id]||{}; const labs=[...new Set([...Object.keys(cur),...Object.keys(nw)])];
+      const ch=labs.filter(l=>((cur[l]||{}).v||'')!==((nw[l]||{}).v||'') || ((cur[l]||{}).why||'')!==((nw[l]||{}).why||'')).map(l=>`${l} ${(cur[l]||{}).v||'—'} → ${(nw[l]||{}).v||'—'}`).join(' · ') || '비고 수정';
+      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-drafttvgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">팀 값</span></button><span class="db-ch">${esc(ch)}</span><button type="button" class="lnk db-rv" data-drafttvrv="${id}">되돌리기</button></div>`; }).join(''); }
   /* 다른 화면의 변경(팀원 관리 등): DRAFT.add 의 items() = [{key, c, n, p, change, go(), revert()}] */
   let EXT = [];
   function extRows(){ EXT = DRAFT.ext.flatMap(x=>x.items && x.n() ? x.items() : []);
@@ -19387,6 +19402,8 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
   document.addEventListener('click', e=>{
     if(e.target.closest('[data-draftlist]')){ e.preventDefault(); LIST=!LIST; paint(); return; }
     const rv=e.target.closest('[data-draftrv]'); if(rv){ e.preventDefault(); stRevertOne(rv.dataset.draftrv); return; }
+    const tg=e.target.closest('[data-drafttvgo]'); if(tg){ e.preventDefault(); LIST=false; paint(); vtItem(tg.dataset.drafttvgo, null); return; }
+    const tr=e.target.closest('[data-drafttvrv]'); if(tr){ e.preventDefault(); const id=tr.dataset.drafttvrv; delete TVSTAGE[id]; document.querySelectorAll(`.tval[data-tv="${CSS.escape(id)}"]`).forEach(b=>{ delete b.dataset.edit; b.classList.remove('tv-dirty'); renderTV(b); }); paint(); return; }
     const xg=e.target.closest('[data-draftext]'); if(xg){ e.preventDefault(); const it=EXT[+xg.dataset.draftext]; LIST=false; paint(); if(it) it.go(); return; }
     const xr=e.target.closest('[data-draftextrv]'); if(xr){ e.preventDefault(); const it=EXT[+xr.dataset.draftextrv]; if(it) it.revert(); return; }
     const go=e.target.closest('[data-draftgo]'); if(go){ e.preventDefault(); LIST=false; paint(); if(typeof ttGoPend==='function') ttGoPend(go.dataset.draftgo); else vtItem(go.dataset.draftgo, null); return; }
@@ -19607,10 +19624,10 @@ document.addEventListener('submit',e=>{ if(!connOff() || !e.target.closest('.qa-
     let ms=[], bl=[], pw=''; try{ [ms, bl, pw] = await Promise.all([T.members(), T.blockedList(), T.secretPw()]); }catch(e){ console.error(e); }
     const admins = ms.filter(m=>m.role==='admin').length;
     const namepw = `<div class="tp-sec tp-s-name"><div class="sec-label">팀 이름 · 비밀번호</div><p class="tp-small">지금 이름: <b>${esc(c.teamName)}</b></p>
-      <div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off">${pw?'<button type="button" class="btn small" data-tp="rename">변경</button>':''}</div>`
+      <div class="tp-row"><input class="tp-rn" maxlength="40" placeholder="새 팀 이름 (4자 이상)" aria-label="새 팀 이름" autocomplete="off">${pw?'<button type="button" class="btn small" data-tp="rename">저장</button>':''}</div>`
       + (pw ? `<div class="tp-row tp-pwnow"><span class="tp-small">현재 비밀번호</span>${secretSpan(pw, '••••••', 'tp-pwv')}<button type="button" class="lnk" data-tp="pwcopy">복사</button></div>`
-            : `<div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (저장된 것이 없어 이름 변경 때 한 번 입력)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">변경</button></div>`)
-      + `<div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">변경</button></div>
+            : `<div class="tp-row"><input class="tp-rnpw" maxlength="64" placeholder="팀 비밀번호 (저장된 것이 없어 이름 변경 때 한 번 입력)" aria-label="팀 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="rename">저장</button></div>`)
+      + `<div class="tp-row"><input class="tp-pw" maxlength="64" placeholder="새 비밀번호 (영문·숫자 6자 이상)" aria-label="새 비밀번호" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-tp="pw">저장</button></div>
       <ul class="hl"><li>기존 팀원은 그대로, 새로 가입할 사람만 바뀐 이름 · 비밀번호로 가입</li><li>비밀번호는 회장 · 사이트 운영자가 볼 수 있음 → 다른 곳에서 쓰는 비밀번호 금지</li></ul></div>`;
     MS = ms; const nNow=ms.filter(m=>eff(m).active).length, nPast=ms.length-nNow;
     if(!SSEL) SSEL = String(+TEAM_SEASON+1);
@@ -30945,7 +30962,7 @@ function ttGoPend(id){ if(!IT[id]) return;
 /* ============================================================
    팀 탭 '대회 점수': 지난 시즌 우리 팀 기록 (F1)
    - 팀 저장소 meta/records = { "2025": {보고서:점수, 가속:..., 순위:"3위"}, ... }
-   - 팀원은 보기, 회장은 [편집] → [적용] → 아래 막대 [모두 저장]
+   - 팀원은 보기, 회장은 [편집] → 입력하면 바로 '저장 전' → [닫기] → 아래 막대 [모두 저장]
    - 팀 저장소가 없으면 이 브라우저에 저장
    ============================================================ */
 let REC = {}, RECSTAGE = null, RECEDIT = false, RECY = '';
@@ -30960,10 +30977,10 @@ function renderRecords(){ const el=$('#fsRec'); if(!el) return;
   if(!recVisible()){ el.innerHTML = `<h3>우리 팀 기록</h3><p class="muted">로그인하고 팀에 가입하면 지난 시즌 우리 팀 기록(종목별 점수)이 여기에 보입니다.</p>`; return; }
   const cols = FS_SCORE.map(x=>x[0]), data = RECSTAGE || REC, seasons = Object.keys(data).filter(k=>/^\d{4}$/.test(k)).sort().reverse();
   const sum = r => cols.reduce((a,c)=>a+(+r[c]||0),0);
-  let h = `<div class="rec-h"><h3>우리 팀 기록</h3>${RECSTAGE && !RECEDIT ? '<span class="pend-tag">저장 전</span>' : ''}<span class="tv-sp"></span>${recCan() ? (RECEDIT ? `<button type="button" class="btn small pri" data-recok>적용</button><button type="button" class="btn small" data-recno>취소</button>` : `<button type="button" class="btn small" data-recedit>편집</button>`) : ''}</div>`;
+  let h = `<div class="rec-h"><h3>우리 팀 기록</h3>${RECSTAGE ? '<span class="pend-tag">저장 전</span>' : ''}<span class="tv-sp"></span>${recCan() ? (RECEDIT ? `<button type="button" class="btn small" data-recok>닫기</button>` : `<button type="button" class="btn small" data-recedit>편집</button>`) : ''}</div>`;
   if(RECEDIT){ const S = RECY || SEASON, r = (RECSTAGE||REC)[S] || {};
-    h += `<p class="muted tp-small"><label>입력할 시즌 <input type="number" class="rec-y" min="2000" max="2100" value="${esc(S)}" aria-label="입력할 시즌"></label> · [적용]은 입력을 닫기만 하고, 팀원에게 보이려면 아래 막대의 [모두 저장]을 누르십시오.</p>
-      <div class="rec-in">${cols.map((c,i)=>`<label><span>${c} <span class="muted">/ ${FS_SCORE[i][1]}</span></span><input type="number" step="0.1" min="0" max="${FS_SCORE[i][1]}" data-rc="${c}" value="${esc(r[c]??'')}">${c==='보고서'?'':`<span class="rec-dnf"><input type="checkbox" data-rdnf="${c}"${recDnf(r).includes(c)?' checked':''}> 미완주</span>`}</label>`).join('')}<label><span>순위·비고</span><input type="text" maxlength="40" data-rc="순위" value="${esc(r['순위']||'')}"></label></div>`;
+    h += `<p class="muted tp-small"><label>입력할 시즌 <input type="number" class="rec-y" min="2000" max="2100" value="${esc(S)}" aria-label="입력할 시즌"></label> · 입력하면 아래 막대에 쌓입니다 → [모두 저장]</p>
+      <div class="rec-in">${cols.map((c,i)=>`<label><span>${c} <span class="muted">/ ${FS_SCORE[i][1]}</span></span><input type="number" step="0.1" min="0" max="${FS_SCORE[i][1]}" data-rc="${c}" data-max="${FS_SCORE[i][1]}" value="${esc(r[c]??'')}"${recDnf(r).includes(c)?' disabled':''}><span class="rec-err" hidden>0 ~ ${FS_SCORE[i][1]}점</span>${c==='보고서'?'':`<span class="rec-dnf"><input type="checkbox" data-rdnf="${c}"${recDnf(r).includes(c)?' checked':''}> 미완주</span>`}</label>`).join('')}<label><span>순위·비고</span><input type="text" maxlength="40" data-rc="순위" value="${esc(r['순위']||'')}"></label></div>`;
   }
   if(!seasons.length && !RECEDIT){ h += `<p class="muted">아직 기록이 없습니다.${recCan() ? ' [편집]을 눌러 지난 대회 결과를 입력하십시오.' : ' 회장이 입력하면 여기에 보입니다.'}</p>`; el.innerHTML=h; return; }
   // 3줄만: 보는 시즌(가운데, 가장 최신이면 첫 줄) + 기록이 있는 가까운 다음·이전 시즌. 칸 너비 = 배점, 진한 부분 = 받은 점수, 연한 부분 = 만점까지 모자란 점수
@@ -30972,21 +30989,33 @@ function renderRecords(){ const el=$('#fsRec'); if(!el) return;
   const rows = newer!=null ? [newer, sel, older[0]] : [sel, older[0], older[1]];
   const head = `<div class="rec-row rec-hd"><span></span><div class="rec-cats">${FS_SCORE.map(([n,v])=>`<span style="flex:${v}"><b>${esc(n)}</b><i>${v}</i></span>`).join('')}</div><span class="rec-sum">합계 / ${tot.toLocaleString()}</span></div>`;
   const row = (Y) => { if(Y==null) return `<div class="rec-row rec-none"><span class="rec-s">—</span><div class="rec-empty">기록 없음</div><span></span></div>`;
-    const r = data[String(Y)]; const me = Y===sel ? ' rec-me' : '';
+    const r = data[String(Y)]; const pend = RECSTAGE && JSON.stringify(RECSTAGE[String(Y)]||null)!==JSON.stringify(REC[String(Y)]||null); const me = (Y===sel ? ' rec-me' : '') + (pend ? ' rec-pend' : '');
     if(!r) return `<div class="rec-row rec-none${me}"><span class="rec-s">${Y}</span><div class="rec-empty"><span>${Y} 시즌 기록 없음</span>${recCan() && !RECEDIT ? `<button type="button" class="btn small" data-recedit data-recy="${Y}">기록 입력</button>` : ''}</div><span></span></div>`;
     return `<div class="rec-row${me}"><span class="rec-s">${Y}</span><div class="fs-bar rec-bar" role="img" aria-label="${Y} 시즌 종목별 점수 ${cols.map(c=>c+' '+(r[c]??'-')).join(', ')}">${FS_SCORE.map(([n,v],i)=>{ const x=r[n], dnf=recDnf(r).includes(n); const f=x===''||x==null?0:Math.min(100,Math.max(0,(+x||0)/v*100)); return `<span class="fsb-${i}${f>=82?' full':''}${dnf?' dnf':''}" style="flex:${v};--f:${f}%" title="${esc(n)} ${x??'-'} / ${v}${dnf?' · 미완주':''}"><i>${x===''||x==null?'—':esc(x)}${dnf?'<small> · 미완주</small>':''}</i></span>`; }).join('')}</div><span class="rec-sum" title="${esc(sum(r).toLocaleString()+(r['순위']?' · '+r['순위']:''))}"><b>${sum(r).toLocaleString()}</b>${r['순위']?` · ${esc(recRank(r['순위']))}`:''}</span></div>`; };
   h += `<div class="rec-bars">${rows.map(row).join('')}</div><p class="muted tp-small">위의 ‹ ›로 보는 시즌을 바꾸면 그 시즌을 가운데에 두고 앞뒤 시즌과 비교합니다.</p>`;
   el.innerHTML = h; }
-function recRead(){ const o={}; document.querySelectorAll('#fsRec [data-rc]').forEach(i=>{ const v=i.value.trim(); if(v!=='') o[i.dataset.rc] = i.type==='number' ? +v : v; }); const d=[...document.querySelectorAll('#fsRec [data-rdnf]:checked')].map(i=>i.dataset.rdnf); if(d.length){ o['미완주']=d; d.forEach(c=>{ if(o[c]==null) o[c]=0; }); } return o; }
+/* 입력 검사: 배점을 넘거나 음수면 빨간 테두리 + 범위 표시, 그 칸은 쌓지 않음. 미완주 종목은 0으로 잠금 (내구 미완주면 효율도) */
+function recCheck(i){ if(i.type!=='number') return true; const v=i.value.trim(), mx=+i.dataset.max; const bad = v!=='' && (!isFinite(+v) || +v<0 || +v>mx); i.classList.toggle('rec-bad', bad); const e=i.parentElement.querySelector('.rec-err'); if(e) e.hidden=!bad; return !bad; }
+function recRead(){ const o={}; document.querySelectorAll('#fsRec [data-rc]').forEach(i=>{ const v=i.value.trim(); if(!recCheck(i)) return; if(v!=='') o[i.dataset.rc] = i.type==='number' ? +v : v; }); const d=[...document.querySelectorAll('#fsRec [data-rdnf]:checked')].map(i=>i.dataset.rdnf); if(d.length){ o['미완주']=d; d.forEach(c=>{ if(o[c]==null) o[c]=0; }); } return o; }
 async function recSave(){ if(!RECSTAGE) return; const next = RECSTAGE; RECSTAGE = null;
   if(!SH.on){ REC = next; try{ localStorage.setItem('run2x.records.v1', JSON.stringify(REC)); }catch(e){} renderRecords(); return; }
   await SH.db.doc('meta/records').set(next); REC = next; renderRecords(); }
-DRAFT.add({ n:()=>RECSTAGE?1:0, label:()=>'우리 팀 기록', save: recSave, revert(){ RECSTAGE=null; RECEDIT=false; renderRecords(); } });
+/* 저장 막대 목록: 바뀐 시즌마다 '종목 이전 → 이후' */
+function recItems(){ if(!RECSTAGE) return []; const ys=[...new Set([...Object.keys(RECSTAGE),...Object.keys(REC)])].filter(y=>JSON.stringify(RECSTAGE[y]||null)!==JSON.stringify(REC[y]||null));
+  return ys.map(y=>{ const a=REC[y]||{}, b=RECSTAGE[y]||{}; const ks=[...FS_SCORE.map(x=>x[0]),'순위','미완주'].filter(k=>JSON.stringify(a[k]??null)!==JSON.stringify(b[k]??null));
+    const fmt=v=>Array.isArray(v)?(v.join('·')||'없음'):(v??'—');
+    return {key:y, c:'기록', n:`${y} 시즌`, p:'대회 점수', change:ks.map(k=>`${k} ${fmt(a[k])} → ${fmt(b[k])}`).join(' · '),
+      go(){ if(TAB!=='team') showTab('team'); const sb=document.querySelector('#v-team [data-tts=score]'); if(sb) sb.click(); setTimeout(()=>{ const el=document.getElementById('fsRec'); if(el) smoothScrollTo(()=>el.getBoundingClientRect().top+scrollY-120); }, 500); },
+      revert(){ const base=JSON.parse(JSON.stringify(RECSTAGE)); if(REC[y]) base[y]=JSON.parse(JSON.stringify(REC[y])); else delete base[y]; RECSTAGE = JSON.stringify(base)===JSON.stringify(REC) ? null : base; renderRecords(); DRAFT.paint(); } }; }); }
+DRAFT.add({ n:()=>RECSTAGE?1:0, label:()=>'우리 팀 기록', items: recItems, save: recSave, revert(){ RECSTAGE=null; RECEDIT=false; renderRecords(); } });
 document.addEventListener('click', e=>{
   const re=e.target.closest('[data-recedit]'); if(re){ e.preventDefault(); RECEDIT=true; RECY=re.dataset.recy||SEASON; renderRecords(); const i=document.querySelector('#fsRec [data-rc]'); if(i) i.focus(); return; }
   if(e.target.closest('[data-recok]')){ e.preventDefault(); RECEDIT=false; renderRecords(); return; }
   if(e.target.closest('[data-recno]')){ e.preventDefault(); RECEDIT=false; RECSTAGE=null; renderRecords(); DRAFT.paint(); return; } });
 document.addEventListener('change', e=>{ if(e.target.matches && e.target.matches('#fsRec .rec-y') && /^\d{4}$/.test(e.target.value)){ RECY=e.target.value; renderRecords(); } });
+document.addEventListener('change', e=>{ const cb=e.target.closest && e.target.closest('#fsRec [data-rdnf]'); if(!cb) return; const lock=(c,on)=>{ const n=document.querySelector(`#fsRec [data-rc="${c}"]`), k=document.querySelector(`#fsRec [data-rdnf="${c}"]`); if(k) k.checked=on; if(n){ n.disabled=on; if(on){ n.value='0'; recCheck(n); } } };
+  lock(cb.dataset.rdnf, cb.checked); if(cb.dataset.rdnf==='내구' && cb.checked) lock('효율', true);
+  cb.dispatchEvent(new Event('input', {bubbles:true})); }, true);   /* 잠근 0 을 다시 쌓음 (체크칸의 input 은 change 보다 먼저 오므로) */
 document.addEventListener('input', e=>{ if(!e.target.closest || !e.target.closest('#fsRec [data-rc],#fsRec [data-rdnf]')) return;
   const base = JSON.parse(JSON.stringify(RECSTAGE || REC)), S = RECY || SEASON; const r = recRead(); if(Object.keys(r).length) base[S] = r; else delete base[S];
   RECSTAGE = JSON.stringify(base)===JSON.stringify(REC) ? null : base; DRAFT.paint(); });
@@ -31254,7 +31283,7 @@ const PIC = {
     <tr><td>${chipPic('tc-orange','','연결 끊김')}</td><td>주의. 새로고침</td></tr></table>`,
   depth: `<div class="tc-depth"><div><b>단계</b> P3-1 휠 패키징 <span>펼치면 ↓</span></div><div class="d2"><b>항목</b> 스크럽 반경 <span>펼치면 ↓</span></div><div class="d3">배경 · 왜 하나 · <b>핵심</b> · 우리 팀 값 · 참고 · 질문 · 계산기 · 💬 논의</div></div>`,
   card: `<div class="tc-card"><div class="k">핵심 <span>이 항목에서 정할 것 (설계 결론)</span></div><div class="r">참고 <span>배경 설명</span></div><div class="t">우리 팀 값 <span>시즌마다 팀이 기록한 값</span></div><div class="q">질문 ▸ <span>펼쳐서 근거·유도·그림</span></div><div class="c">💬 논의 <span>팀원끼리 댓글</span></div></div>`,
-  edit: `<div class="tc-flow"><span>[편집]</span>→<span>값 입력</span>→<span>[적용]</span>→<span class="pri">아래 막대 [모두 저장]</span></div><p class="tc-n">[적용]은 입력칸을 닫기만 하고, 팀원에게는 [모두 저장]을 눌러야 보입니다.</p>`,
+  edit: `<div class="tc-flow"><span>[편집]</span>→<span>값 입력</span>→<span class="pri">아래 막대 [모두 저장]</span></div><p class="tc-n">입력하면 바로 아래 막대에 쌓이고(주황 점선 · 저장 전), [모두 저장]을 눌러야 팀원에게 보입니다. 취소는 막대의 [되돌리기] 또는 목록의 줄별 [되돌리기].</p>`,
   graph: `<div class="tc-g"><span class="n">받는 항목</span><i class="in"></i><span class="n sel">고른 항목</span><i class="out"></i><span class="n">넘기는 항목</span></div><p class="tc-n">파란 선 = 받는 정보, 초록 선 = 넘기는 결과. 오른쪽 칸에 고른 항목 내용이 나옵니다.</p>`,
   _badges: `<table class="tc-tab"><tr><td><span class="badge b-card">상세</span></td><td>상세 카드(그림·표가 많은 긴 설명)가 있는 항목</td></tr><tr><td><span class="badge b-assume">가정값</span></td><td>설명용 숫자. 팀 실측값으로 바꿀 것</td></tr><tr><td><span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span> <span class="ipill st-skip">이번 시즌 제외</span></td><td>팀 진행 상태. 예정이면 표시 없음</td></tr></table>`,
   roles: `<table class="tc-tab"><tr><th>팀원</th><td>읽기 · 논의 글쓰기</td></tr><tr><th>팀장·파트장</th><td>담당 파트 항목의 진행 상태·우리 팀 값 편집</td></tr><tr><th>회장</th><td>모든 편집 + 시즌 넘기기 · 팀원 역할·담당 지정 · 백업 · 팀 설정</td></tr></table>`,
