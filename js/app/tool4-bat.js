@@ -77,7 +77,7 @@ function t4ExtHTML(){ const w = $('#wb'); if(w) w.classList.remove('t2-edit');
     <div class="t4-bar"><b>구성 방식</b>${t4Seg('data-t4auto', au, [[0, '수동 (직렬 · 병렬 직접)'], [1, '병렬 자동 (세그먼트 직렬 입력)'], [2, '직렬 자동 (병렬 입력)']])}
       <span class="muted" id="t4why">${t4Why()}</span></div>
     <div class="t4-rules" id="t4rules">${t4Rules()}</div>
-    <p class="muted t4-note">계산식은 팀원 Yechan Hyun 의 FSK Battery Calculator 1.0.1 과 같습니다. [대시보드에 반영]은 직렬 · 병렬 수, 팩 공칭 전압 · 에너지 · 내부저항 · 무게, 적용 전류(방전 전류 한계) · 충전 전류 한계, 셀 값을 보내고, 도구 2P 는 이 값을 받아 씁니다.</p></div>`; }
+    <ul class="hl muted t4-note"><li>계산식: 팀원 Yechan Hyun 의 FSK Battery Calculator 1.0.1 과 같음</li><li>[대시보드에 반영]: 직렬 · 병렬 수, 팩 공칭 전압 · 에너지 · 내부저항 · 무게, 방전 · 충전 전류 한계, 셀 값 → 도구 2P 가 받아 씀</li></ul></div>`; }
 function t4Why(){ const R = WB.R; if(!R) return ''; const au = WB.I.auto;
   return au===1 ? `세그먼트 ${R.out.s_seg_o}S 기준 → 병렬 최대 ${R.out.n_p_o}P · ${R.why} 제한` : au===2 ? `병렬 ${R.out.n_p_o}P 기준 → 세그먼트 직렬 최대 ${R.out.s_seg_o}S · ${R.why} 제한` : '직렬과 병렬을 직접 넣습니다.'; }
 function t4Rules(){ const o = WB.R && WB.R.out; if(!o) return '';
@@ -98,7 +98,7 @@ function t4MidHTML(){ const R = WB.R, om = WB.I.o_mode===1 ? 1 : WB.I.o_mode===2
       ${row('단자 출력', t => isFinite(t.power) ? f(t.power, 3) + ' kW' : '성립 불가')}${row('팩 저항 손실', t => f(t.loss, 3) + ' kW')}
       ${row('셀 저항 발열 합', t => f(t.lossCell, 3) + ' kW')}${row('추가 저항 발열', t => f(t.lossX, 3) + ' kW')}
       ${row('최소 셀 전압 판정', t => `<span class="${t.ok ? 'ok' : 'wb-err'}">${t.load <= 0 ? '부하 전압 성립 불가' : t.ok ? '충족' : '최소 셀 전압 미달'}</span>`)}</tbody></table></div>
-    <p class="muted t4-note">단자 출력 = 지정 전류에서 계산한 축전지 단자 전력입니다. 최소 셀 전압 미달 칸의 값은 쓸 수 있는 출력으로 보장되지 않습니다.</p></section>`; }
+    <ul class="hl muted t4-note"><li>단자 출력 = 지정 전류에서 계산한 축전지 단자 전력</li><li>최소 셀 전압 미달 칸의 값은 쓸 수 있는 출력이 아님</li></ul></section>`; }
 document.addEventListener('click', e => { if(WB.id!=='4' || !e.target.closest) return; const t = e.target;
   const au = t.closest('[data-t4auto]'); if(au){ WB.I.auto = +au.dataset.t4auto; wbSave(); wbPaint(['in', 'ext']); wbCalcSoon(); return; }
   const il = t.closest('[data-t4il]'); if(il){ WB.I.il_on = +il.dataset.t4il; wbSave(); wbPaint(['in']); wbCalcSoon(); return; }

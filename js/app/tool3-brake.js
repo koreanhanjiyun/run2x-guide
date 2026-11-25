@@ -20,7 +20,7 @@ function t3Fig(I, R){ if(!R || !R.fig) return ''; const F = R.fig, o = R.out, f 
   s += `<circle cx="${X(F.fmax[0]).toFixed(1)}" cy="${Y(F.fmax[1]).toFixed(1)}" r="4" fill="#c2410c"/><text x="${(X(F.fmax[0]) - 6).toFixed(1)}" y="${(Y(F.fmax[1]) - 8).toFixed(1)}" text-anchor="end" class="t5-tx">네 바퀴 ${f(o.a_max, 2)} g</text>`;
   s += `<text x="${(ox + W - 16) / 2}" y="${H - 6}" text-anchor="middle" class="t5-tx">앞축 제동력 [N]</text><text x="14" y="${(oy + 16) / 2}" transform="rotate(-90 14 ${(oy + 16) / 2})" text-anchor="middle" class="t5-tx">뒤축 제동력 [N]</text></svg>`;
   return `<div class="t5-figs">${`<figure class="t5-fig"><figcaption>이상 · 실제 제동 배분</figcaption>${s}</figure>`}</div>
-    <p class="muted t5-note">주황 = 이상 배분 (두 축이 같은 비율 μ 를 쓰며 감속 0 → μ g), 파랑 = 지금 유압이 주는 배분 (밸런스 바 · 마스터실린더 · 캘리퍼 · 디스크로 정해지는 직선). 파랑이 주황을 처음 만나는 점에서 그 축이 먼저 잠깁니다. 파랑이 주황 아래 (뒤가 적음) 면 앞이, 위면 뒤가 먼저 잠깁니다.</p>`; }
+    <ul class="hl muted t5-note"><li><span class="hl-k" style="background:#c2410c"></span>주황 = 이상 배분 (두 축이 같은 μ, 감속 0 → μ g)</li><li><span class="hl-k" style="background:#1d5f9a"></span>파랑 = 지금 유압의 배분 (밸런스 바 · 마스터실린더 · 캘리퍼 · 디스크로 정해지는 직선)</li><li>파랑이 주황을 처음 만나는 점 = 그 축이 먼저 잠김</li><li>파랑이 주황 아래(뒤가 적음) → 앞이 먼저, 위 → 뒤가 먼저 잠김</li></ul>`; }
 const M3TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
   ['#wb .wb-in', '입력', '차(질량 · 무게중심 · 휠베이스 · 타이어 μ · 하중 반경, 다운포스는 시험 차속에서), 페달(설계 답력 · 페달비 · 밸런스 바), 유압(마스터실린더 · 캘리퍼 피스톤 면적), 마찰(패드 μ · 디스크 · 패드 높이)입니다.'],

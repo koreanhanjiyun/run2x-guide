@@ -44,7 +44,7 @@ function k3dView(G, nm, mode, extra){ const f = (v, d) => isFinite(v) ? wbFmt(v,
 function t5Fig(I, R){ if(!R || !R.geo) return ''; const G = R.geo, o = R.out, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
   const rcm = rc => (pj) => { if(!isFinite(rc)) return ''; const A = pj([0, 0, rc]); return `<circle cx="${A[0].toFixed(1)}" cy="${A[1].toFixed(1)}" r="4.5" fill="#6A4294"/><text x="${(A[0] + 7).toFixed(1)}" y="${(A[1] - 6).toFixed(1)}" class="t5-tx b">롤센터 ${f(rc, 1)}</text>`; };
   return `<div class="t5-figs">${k3dView(G.F, '앞축 정면', 'front', rcm(o.rc_f))}${k3dView(G.R, '뒤축 정면', 'front', rcm(o.rc_r))}${k3dView(G.F, '앞축 측면 (왼쪽 바퀴)', 'side')}${k3dView(G.R, '뒤축 측면 (왼쪽 바퀴)', 'side')}</div>
-    <p class="muted t5-note">파랑 = 아래 팔 (두 다리), 주황 = 위 팔, 초록 = 타이로드 · 토 링크, 회색 점선 = 킹핀축 (지면까지), 보라 점선 = 접지점 → 순간중심 (정면 · 측면, 그림 밖에 있을 수 있음). 같은 축척.</p>`; }
+    <ul class="hl hl-row muted t5-note"><li><span class="hl-k" style="background:#1d5f9a"></span>아래 팔</li><li><span class="hl-k" style="background:#c2410c"></span>위 팔</li><li><span class="hl-k" style="background:#2e7d32"></span>타이로드 · 토 링크</li><li><span class="hl-k hl-dash" style="border-color:#8a8f98"></span>킹핀축</li><li><span class="hl-k hl-dash" style="border-color:#6A4294"></span>접지점 → 순간중심 (그림 밖일 수 있음)</li><li>같은 축척</li></ul>`; }
 const M5TOUR = [
   ['#wb .wb-bar', '작업창', '[← 도구 모음]으로 닫습니다. 코드 · 검증(손계산 비교), 내보내기 · 가져오기, 대시보드에 반영이 있습니다.'],
   ['#wb .wb-in', '입력', '축마다 하드포인트 8 점(아래 · 위 팔 안쪽 앞 · 뒤 · 볼조인트, 타이로드(뒤는 토 링크) 두 끝)을 3D 로 넣습니다. x 는 그 축의 바퀴 중심에서 앞 +, y 는 중심선에서 바깥 +, z 는 지면에서 위 + [mm]. 기본값은 2024 REF4 STEP 의 로드엔드 볼 중심입니다.'],

@@ -119,7 +119,13 @@ function m1MassHTML(){ const gs = m1Groups(), ed = m1CanEdit(), D = WB.R && WB.R
       <div class="m1-ci">${(g.items||[]).map((it, i) => `<div class="m1-ir${m1N(it)===0 ? ' off' : ''}">${ed ? `<input type="text" data-m1if="name" data-m1ii="${i}" value="${wbEsc(it.name||'')}" placeholder="항목" aria-label="항목 이름">${m1Num(it.m, `data-m1if="m" data-m1ii="${i}" aria-label="한 개 질량 [kg]"`)}<i>kg ×</i>${m1Num(it.n==null ? 1 : it.n, `data-m1if="n" data-m1ii="${i}" min="0" step="1" aria-label="개수"`)}<label class="m1-half" title="${wbEsc(HT)}"><input type="checkbox" data-m1if="half" data-m1ii="${i}"${it.half ? ' checked' : ''} aria-label="걸침 (절반은 반대쪽)">½</label><button type="button" class="m1-ix" data-m1idel="${i}" aria-label="항목 지우기" title="항목 지우기">×</button>`
           : `<span>${wbEsc(it.name||'')}</span><b>${wbFmt(it.m, 2)}</b><i>kg × ${m1N(it)}</i><span class="m1-half ro" title="${wbEsc(HT)}">${it.half ? '½' : ''}</span><span></span>`}</div>`).join('')}${ed ? `<button type="button" class="m1-add" data-m1iadd>+ 항목</button>` : ''}</div></div>`; }).join('')}${ed ? slots.join('') : ''}</div>
     ${ed ? `<button type="button" class="m1-gadd" data-m1gadd>+ 어셈블리</button>` : ''}
-    <p class="m1-note">${ed ? '' : '지난 시즌 기록은 회장만 고칠 수 있습니다. '}카드 왼쪽 위 점 손잡이를 끌어 옮깁니다. 카드는 줄마다 왼쪽부터 채워집니다. 다른 카드 위에 놓으면 그 앞에 끼워 넣고(줄이 넘치면 마지막 카드가 바로 아래 새 줄로), 줄 끝 빈칸에 놓으면 그 줄 끝에 붙고, 줄 사이에 놓으면 새 줄이 생깁니다. 드라이버 카드의 몸무게 · 장비는 드라이버 모델과 같은 값입니다. 좌표는 어셈블리 하나의 무게중심 위치입니다. 어셈블리 질량 = 항목 질량 × 개수의 합이고, 개수를 0으로 하면 그 항목은 빠집니다. ½을 체크한 항목(드라이브샤프트 · 링크 · 스프링 · 댐퍼처럼 차체와 업라이트를 잇는 부품)은 질량 절반을 반대쪽(현가상 ↔ 현가하)으로 셉니다. 좌우 대칭 어셈블리는 복사로 만들면 y 부호와 이름의 왼/오른이 바뀝니다.</p>`; }
+    <div class="m1-note">${ed ? '' : '<p>지난 시즌 기록은 회장만 고칠 수 있습니다.</p>'}<ul class="hl">
+      <li>옮기기: 카드 왼쪽 위 점 손잡이를 끌기 (줄마다 왼쪽부터 채움)</li>
+      <li>놓는 곳: 카드 위 = 그 앞에 끼움 · 줄 끝 빈칸 = 그 줄 끝 · 줄 사이 = 새 줄</li>
+      <li>좌표 = 어셈블리 하나의 무게중심, 질량 = 항목 질량 × 개수의 합 (개수 0 = 빠짐)</li>
+      <li>½ 체크: 차체와 업라이트를 잇는 부품(드라이브샤프트 · 링크 · 스프링 · 댐퍼) → 질량 절반을 반대쪽(현가상 ↔ 현가하)으로</li>
+      <li>복사로 만든 좌우 대칭 어셈블리는 y 부호와 이름의 왼/오른이 바뀜</li>
+      <li>드라이버 카드의 몸무게 · 장비 = 드라이버 모델과 같은 값</li></ul></div>`; }
 /* 걸침(½): 체크한 항목은 질량 절반을 반대쪽으로. 현가하 카드 → 현가상. 현가상 카드 → 가장 가까운(3차원 거리) 현가하 카드의 앞 · 뒤
    (현가하 카드가 없으면 계산에서 휠베이스 절반 기준) */
 function m1HalfTo(g, gs){ if((g.cat||'s')!=='s') return {cat:'s'};

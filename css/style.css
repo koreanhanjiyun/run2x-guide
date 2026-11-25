@@ -3701,3 +3701,22 @@ body:not(:has(#tour)) #v-team .adm-tm .tp-mtm tbody tr:not(:hover):not(:focus-wi
 #ref-list .src-h{margin:16px 0 2px!important}
 #ref-list ul.src-ul{margin:0!important}
 #ref-list > details.ref-pane > .dbody{background:none!important;border:0!important;box-shadow:none!important}
+
+/* 팀 설정 줄을 팀원 · 계정 줄에 맞춤 (2026-11-25): 같은 이름 13 px 인데 선택 상자 13 px · 채움 칩 · 줄 38 px 때문에 커 보였음 */
+#v-team .adm-tm .tp-mtm td{padding-top:3px;padding-bottom:3px}
+#v-team .adm-tm .tp-mtm select[data-tmrole]{font-size:var(--fs-xs);height:24px;padding:0 4px;line-height:1}
+#v-team .adm-tm .tp-mtm input[type=checkbox]{width:16px;height:16px}
+#v-team .adm-tm .tp-mtm label{min-height:20px}
+#v-team .adm-tm .tp-mtm .tp-parts-ro .tp-pchip.on{font-size:var(--fs-xs);font-weight:600;line-height:18px;min-height:0;padding:0 8px;background:#ebe3f5;border-color:#ebe3f5;color:#4f2f72}
+#v-team .adm-tm .tp-mtm .tp-parts .tp-pchip{font-size:var(--fs-xs);line-height:18px;min-height:0;padding:1px 8px}
+#v-team .adm-tm .tp-mtm .tp-chipt,#v-team .adm-tm .tp-mtm .tp-nmbtn,#v-team .adm-tm .tp-mtm .tp-mx .lnk{font-size:var(--fs-xs);min-height:0}
+
+/* 안내문은 글머리표 (2026-11-25): 핵심 한 줄 + 한 줄짜리 글머리표. 문장을 길게 잇는 문단 금지 */
+ul.hl{margin:4px 0 0;padding-left:18px;font-size:var(--fs-s);line-height:1.6;color:var(--ink-2)}
+ul.hl.muted,ul.hl.dp-note,ul.hl.df-note{color:var(--muted)}
+ul.hl>li{margin:1px 0;padding-left:2px}
+ul.hl>li::marker{color:var(--muted)}
+ul.hl .hl-k{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+#v-team .adm-tm details.tp-more>ul.hl{margin:6px 0 0}
+ul.hl.hl-row{display:flex;flex-wrap:wrap;gap:4px 16px;list-style:none;padding-left:0}
+ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;border-radius:0;vertical-align:3px}

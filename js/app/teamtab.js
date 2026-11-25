@@ -109,7 +109,7 @@ function ttProgress(el){
 function ttSummary(el){ const c=TT.ctx, all=ITEMS.map(i=>i.id), tot=ttCnt(all), parts=PARTS.map(p=>p[0]).filter(p=>ITEMS.some(i=>i.p===p));
   const talk=id=>Object.values(QA||{}).filter(q=>isTalk(q) && q.item===id && !q.removed);
   const valTxt=id=>{ const r=VAL[id], d=r&&r.s&&r.s[SEASON]; if(!d || !valFilled(d)) return ''; return Object.entries(d).filter(([l,o])=>o&&(o.v||o.why)).map(([l,o])=>`<div><b>${esc(l)}</b> ${esc(o.v||'—')}${o.why?` <span class="muted">(${esc(o.why)})</span>`:''}</div>`).join(''); };
-  el.innerHTML = `<div class="tt-sumbar"><span class="muted">이 시즌의 진행 상태·우리 팀 값·논의를 자동으로 모은 읽기 전용 페이지입니다. 시즌은 위 ‹ ›로 바꿉니다. 논의는 항목마다 한 줄로 줄여 보이고, 눌러서 펼칩니다.</span><button type="button" class="btn small" data-ttprint>인쇄 · PDF 저장</button></div>
+  el.innerHTML = `<div class="tt-sumbar"><span class="muted">이 시즌의 진행 상태 · 우리 팀 값 · 논의를 모은 읽기 전용 요약 (시즌은 위 ‹ ›, 논의는 눌러서 펼침)</span><button type="button" class="btn small" data-ttprint>인쇄 · PDF 저장</button></div>
     <article class="tt-report">
       <h2>${c&&c.teamName?esc(c.teamName)+' · ':''}${esc(SEASON)} 시즌 요약</h2>
       <p class="muted">만든 날 ${new Date().toLocaleDateString('ko-KR')} · 완료 ${tot.d} / ${tot.n-tot.k}${tot.g?` · 진행 중 ${tot.g}`:''}${tot.k?` · 제외 ${tot.k}`:''}</p>

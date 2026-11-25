@@ -303,14 +303,14 @@ function t2SensHTML(){ const S = T2S, f = (v, d) => Number.isFinite(v) ? wbFmt(v
   const cell = (r, k) => { const x = r[k], c = !Number.isFinite(x) ? '' : Math.abs(x) >= 0.5 ? ' class="t2s-hi"' : Math.abs(x) >= 0.1 ? ' class="t2s-md"' : ''; return `<td${c}>${f(x, 3)}</td>`; };
   return `<div class="t2-sens">
     <div class="t2-cq"><b>입력 감도</b>
-      <p class="muted">입력을 하나씩 지금 값의 +${f(+S.rel, 1)} % (온도는 +${f(+S.rel, 1)} °C, 효율처럼 100 % 를 넘게 되면 −${f(+S.rel, 1)} %) 바꾸고 나머지는 그대로 두어, 종목 기록 · 내구 에너지가 몇 % 바뀌는지 셉니다. 표의 숫자 = 기록 변화율 ÷ 입력 변화율 (탄력도: 1 이면 입력 1 % 에 기록 1 %, 음수 = 입력을 키우면 기록이 줄어듦 = 빨라짐). 계산은 입력 훑기와 같은 줄여 셈 · 내 감속비 · 지금 모델 단계이고, 잠긴 칸 · 0 인 값 · 단추로 고르는 값은 건너뜁니다.</p>
+      <ul class="hl muted"><li>방법: 입력 하나만 +${f(+S.rel, 1)} % (온도 +${f(+S.rel, 1)} °C, 100 % 를 넘는 효율은 −${f(+S.rel, 1)} %) 바꾸고 기록 · 내구 에너지 변화를 셈</li><li>표의 숫자 = 기록 변화율 ÷ 입력 변화율 (탄력도)</li><li>읽는 법: 1 = 입력 1 % 에 기록 1 %, 음수 = 입력을 키우면 기록이 줄어듦(빨라짐)</li><li>계산 조건: 입력 훑기와 같은 줄여 셈 · 내 감속비 · 지금 모델 단계</li><li>건너뜀: 잠긴 칸 · 0 인 값 · 단추로 고르는 값</li></ul>
       <div class="t2-cqb"><label class="t2-lapl">바꾸는 양 <input type="number" class="t2s-rel" data-t2srel min="0.5" max="50" step="0.5" value="${S.rel}"> %</label>
         <button type="button" class="btn small pri" data-t2sens="run"${S.run ? ' disabled' : ''}>${S.run ? `계산 중 · ${S.done} / ${S.tot}` : `감도 계산 (입력 ${t2SensKeys().length}개)`}</button>
         ${S.run ? '<button type="button" class="btn small" data-t2sens="stop">멈춤</button>' : ''}${S.at && !S.run ? `<span class="muted">${wbEsc(S.at)} 계산 · 입력을 바꾸면 다시 계산하세요</span>` : ''}</div>
       ${S.err && S.err!=='멈춤' ? `<p class="wb-err">${wbEsc(S.err)}</p>` : S.err ? '<p class="muted">멈췄습니다 (그때까지 계산한 줄만 보임).</p>' : ''}</div>
     ${S.base ? `<p class="muted t2s-base">기준 (지금 입력, 줄여 셈): 가속 ${f(S.base.t_acc_s, 3)} s · 스키드패드 ${f(S.base.t_skid_s, 3)} s · 오토크로스 ${f(S.base.t_ax_s, 2)} s · 내구 ${f(S.base.t_end_s, 0)} s · 내구 에너지 ${f(S.base.e_use, 2)} kWh</p>` : ''}
     ${top.length ? `<div class="t2-cq"><b>핵심 입력 후보 (종합 탄력도 큰 순 10 개)</b><ol class="t2s-top">${top.map(r => `<li><b>${r.n}</b> <span class="muted">${wbEsc(r.g || '')} · 종합 ${f(r.all, 3)}</span></li>`).join('')}</ol>
-      <p class="muted">자주 바꿔 비교할 입력을 고르는 참고입니다. 탄력도는 지금 값 근처에서만 맞고, 입력끼리 함께 바뀔 때(예: 질량과 무게중심)는 따로 봐야 합니다.</p></div>` : ''}
+      <ul class="hl muted"><li>쓰임: 자주 바꿔 비교할 입력 고르기</li><li>한계: 지금 값 근처에서만 맞음 · 함께 바뀌는 입력(예: 질량과 무게중심)은 따로 볼 것</li></ul></div>` : ''}
     ${rows.length ? `<div class="t2s-wrap"><table class="t2s-tab"><thead><tr><th>입력</th><th>지금 값</th><th>바꾼 값</th>${[['all', '종합']].concat(T2SM.map(([k, n]) => [k, n])).map(([k, n]) => `<th><button type="button" class="lnk" data-t2ssort="${k}" aria-pressed="${S.sort===k}">${n}${S.sort===k ? ' ▾' : ''}</button></th>`).join('')}</tr></thead>
       <tbody>${rows.map(r => `<tr><td>${r.n}<span class="muted"> ${wbEsc(r.g || '')}</span></td><td>${f(r.v, r.dd)} ${r.u || ''}</td><td>${f(r.nv, r.dd + 1)}</td>${cell(r, 'all')}${T2SM.map(([k]) => cell(r, k)).join('')}</tr>`).join('')}</tbody></table></div>` : ''}
   </div>`; }
@@ -3703,7 +3703,7 @@ function t2PartRun(){ const I = t2PartInputs(), key = JSON.stringify(I); if(key=
   T2P.w.onmessage = e => { T2P.busy = false; T2P.key = key; if(e.data.ok){ T2P.R = e.data.r; const b = $('#t2part'); if(b) b.innerHTML = t2PartBody(DASH.part, I, T2P.R); } };
   T2P.w.postMessage(I); }
 function t2PartHTML(kind){ setTimeout(t2PartRun, 0);
-  return `<div class="t2-part"><p class="dp-note">대시보드 설계값과 도구 2P의 코스 · 모터 · 효율 표로 계산한 결과입니다. 표를 바꾸려면 <span class="wb-mpick wb-mpi" tabindex="-1"><span class="lnk">도구 2P 랩타임 시뮬레이터</span>${wbModeBtns('2', '도구 2P')}</span>를 엽니다.</p><div id="t2part">${T2P.R ? t2PartBody(kind, t2PartInputs(), T2P.R) : '<p class="muted">계산 중…</p>'}</div></div>`; }
+  return `<div class="t2-part"><p class="dp-note">대시보드 설계값 + 도구 2P의 코스 · 모터 · 효율 표로 계산 (표 바꾸기: <span class="wb-mpick wb-mpi" tabindex="-1"><span class="lnk">도구 2P 랩타임 시뮬레이터</span>${wbModeBtns('2', '도구 2P')}</span>)</p><div id="t2part">${T2P.R ? t2PartBody(kind, t2PartInputs(), T2P.R) : '<p class="muted">계산 중…</p>'}</div></div>`; }
 function t2PartBody(kind, I, R){ const o = R.out, f = (v, d) => isFinite(v) ? wbFmt(v, d) : '—';
   if(kind==='goal'){ const rows = [['가속', I.t_acc, o.t_acc_s, 3], ['스키드패드 (좌우 합)', I.t_skid, o.t_skid_s, 3], ['오토크로스', I.t_ax, o.t_ax_s, 2], ['내구', I.t_end, o.t_end_s, 1]];
     return `<table class="dvi-t t2-gt"><thead><tr><th>종목</th><th>예상 기록</th><th>목표 기록</th><th>차이</th></tr></thead><tbody>${rows.map(([n, g0, t, d]) => { const has = g0 > 0, df = t - g0;
@@ -3711,4 +3711,4 @@ function t2PartBody(kind, I, R){ const o = R.out, f = (v, d) => isFinite(v) ? wb
       <p class="dp-note">대시보드 감속비 ${f(I.gr, 2)}로 계산. 목표 기록은 대시보드 '차량 목표'(공통) 값이고, 차이가 + 면 목표보다 느립니다. 도구 2P의 제안 감속비는 ${f(o.gr_opt, 2)}.</p>`; }
   const F = R.ft; return `<div class="dp-plots">${wbPlot({id:'t2ft', w:640, h:280, x:{d:F.v, n:'차속', u:'km/h'}, ys:[{k:'f_m', d:F.f_m, c:WB_COL[0], n:'모터 구동력', u:'N', dd:0}, {k:'f_x', d:F.f_x, c:WB_COL[3], n:'뒤축 접지 한계', u:'N', dd:0}, {k:'f_res', d:F.f_res, c:WB_COL[2], n:'주행 저항', u:'N', dd:0}], yn:{'N':'바퀴 힘'}, hit:false, label:'구동력 선도'})}</div>
     <div class="wb-leg"><span><i style="background:${WB_COL[0]}"></i>모터 구동력 (바퀴, SOC 100 %)</span><span><i style="background:${WB_COL[3]}"></i>뒤축 접지 한계 (직진 · 일정 속도)</span><span><i style="background:${WB_COL[2]}"></i>주행 저항 (항력 + 구름)</span></div>
-    <p class="dp-note">감속비 ${f(I.gr, 2)} · 회전수 한계 최고속 ${f(o.vmax, 1)} km/h · 단자 출력 상한 ${f(o.p_max, 1)} kW. 모터 구동력이 접지 한계보다 큰 구간은 바퀴가 미끄러지므로 접지 한계가 가속을 정합니다. 제안 감속비 ${f(o.gr_opt, 2)}, 내구 평균 랩 단자 에너지 ${f(o.e_lap, 3)} kWh.</p>`; }
+    <ul class="hl dp-note"><li>감속비 ${f(I.gr, 2)} (제안 ${f(o.gr_opt, 2)}) · 회전수 한계 최고속 ${f(o.vmax, 1)} km/h · 단자 출력 상한 ${f(o.p_max, 1)} kW</li><li>내구 평균 랩 단자 에너지 ${f(o.e_lap, 3)} kWh</li><li>모터 구동력 > 접지 한계인 구간은 바퀴가 미끄러짐 → 접지 한계가 가속을 정함</li></ul>`; }

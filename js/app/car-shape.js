@@ -164,8 +164,12 @@ function shHTML(){ const v = SHP.view, cur = shGet(v), src = SHP.src, ed = shCan
   return `<div class="dvi-h"><b id="shp-t">차 형상 (그림 바탕)</b><button type="button" class="dvi-x" data-shpx aria-label="닫기">×</button></div>
     <div class="shp-top">${tabs}<span class="muted">${shSeason()} 시즌 · ${cur ? `지금: 올린 ${cur.kind==='img' ? '이미지' : 'DXF 도면'}` : '지금: 기본 차 그림'}</span></div>
     <div class="dvi-body shp-body">
-      <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 올리면 질량 계산기의 질량 분포(옆 · 위) · 드라이버 모델 그림의 차 대신 씁니다. 계산에는 쓰지 않습니다.<br>
-        이미지(.png .jpg .webp)는 CAD 정투영 그림이나 정면에서 수평으로 찍은 그림, DXF는 CAD 도면 파일을 올리십시오${v==='side' ? '' : ' (윗면도는 차 길이 방향이 가로가 되게)'}. 올린 뒤 ${v==='side' ? '① 범위 자르기 → ② 앞 바퀴 중심 → ③ 뒤 바퀴 중심(3단계)' : '① 범위 자르기 → ② 앞 차축 중심선 → ③ 뒤 차축 중심선 → ④ 차량 중심선(4단계)'}만 하면 크기 · 방향 · 위치가 자동으로 맞춰집니다. 올리지 않거나 되돌리면 기본 차 그림입니다.</p>
+      <p class="shp-help">우리 차 ${v==='side' ? '측면도' : '윗면도'}를 그림의 기본 차 대신 씁니다 (계산에는 안 씀).</p>
+      <ul class="hl">
+        <li>쓰는 곳: 질량 계산기의 질량 분포(옆 · 위) · 드라이버 모델 그림</li>
+        <li>파일: 이미지(.png .jpg .webp, CAD 정투영 · 수평 촬영) 또는 DXF${v==='side' ? '' : ' · 차 길이 방향이 가로'}</li>
+        <li>올린 뒤: ${v==='side' ? '① 범위 자르기 → ② 앞 바퀴 중심 → ③ 뒤 바퀴 중심' : '① 범위 자르기 → ② 앞 차축 중심선 → ③ 뒤 차축 중심선 → ④ 차량 중심선'} → 크기 · 방향 · 위치 자동 맞춤</li>
+        <li>올리지 않거나 되돌리면 기본 차 그림</li></ul>
       ${ed ? `<label class="btn small shp-file">파일 고르기<input type="file" accept=".png,.jpg,.jpeg,.webp,.dxf" data-shpf hidden></label>` : '<p class="muted">지난 시즌 그림은 회장만 고칠 수 있습니다.</p>'}
       <span class="shp-msg" id="shpmsg">${SHP.busy ? '읽는 중…' : step}</span>${zoomHint}
       ${pv ? `<div class="shp-stage">${pv}${shZoomCtl()}</div>` : ''}${res}</div>
