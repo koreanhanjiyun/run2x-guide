@@ -14,9 +14,9 @@ function renderGoals(){ if(!$('#goal-tree')) return; }   // 목표 탭은 없앰
 /* 팀 탭 '대회 점수': FS 종목별 배점 막대 + 우리 팀 기록 막대(records.js) + 보고서 평가 */
 function fsScoreHTML(){ const tot = FS_SCORE.reduce((a,x)=>a+x[1],0);
   return `<section class="fs-goal"><h2>FS 대회 점수</h2>
-      <p class="gwhy">FS는 '빠른 차'를 여러 종목으로 나눠 점수를 매깁니다. 기록 종목(가속·스키드패드·오토크로스·내구)은 시작 탭의 다섯 가지 목표가 그대로 점수가 되고, 효율과 보고서는 FS가 따로 묻는 것입니다. 내구는 완주하지 못하면 0점이고, 최고 기록의 145%를 넘으면 완주 점수만 받습니다(경기진행규정 제11조).</p>
-      <div class="fs-bar" role="img" aria-label="종목별 배점 ${FS_SCORE.map(x=>x[0]+' '+x[1]+'점').join(', ')}, 합계 ${tot}점">${FS_SCORE.map(([n,v],i)=>`<span class="fsb-${i}" style="flex:${v}"><b>${n}</b><i>${v}</i></span>`).join('')}</div>
-      <p class="muted fs-tot">합계 ${tot.toLocaleString()}점</p>
+      <p class="gwhy">FS는 '빠른 차'를 여러 종목으로 나눠 점수를 매깁니다. 기록 종목(가속·스키드패드·오토크로스·내구)은 시작 탭의 다섯 가지 목표가 그대로 점수가 되고, 효율과 보고서는 FS가 따로 묻는 것입니다. 내구는 완주하지 못하면 0점이고, 최고 기록의 145%를 넘으면 완주 점수만 받습니다.</p>
+      <!-- 배점 막대 = 아래 기록 막대의 열 머리: 같은 3칸 격자(시즌 · 막대 · 합계)에 놓아 종목 칸 위치를 맞춤 -->
+      <div class="rec-row fs-distrow"><span></span><div class="fs-bar fs-dist" role="img" aria-label="종목별 배점 ${FS_SCORE.map(x=>x[0]+' '+x[1]+'점').join(', ')}, 합계 ${tot}점">${FS_SCORE.map(([n,v],i)=>`<span class="fsb-${i}" style="flex:${v}"><b>${n}</b><i>${v}</i></span>`).join('')}</div><span class="rec-sum">합계 <b>${tot.toLocaleString()}</b></span></div>
       <div class="fs-rec" id="fsRec"></div>
       <div class="stack fs-more">${goalSubHTML(Object.assign({}, FS_GOAL, {t:'보고서 평가 · '+FS_GOAL.t}))}</div>
     </section>`; }
