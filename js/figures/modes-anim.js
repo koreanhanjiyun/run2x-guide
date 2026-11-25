@@ -87,16 +87,16 @@ function initFigRail(){ if($('#figRail')) return;
   const showMd=()=>{ loadCoord(()=>{ if(!want) return; build(); const back=!md.hidden && md._out; outStop(); md.hidden=false; try{ window.__modeAnim.start($('#modeAnimFig')); }catch(e){} const pn=md.querySelector('.fm-panel');
     fit(); if(pn && pn.animate && !tourOn()){ if(!back) md.animate([{backgroundColor:'rgba(20,16,32,0)'},{backgroundColor:'rgba(20,16,32,.38)'}],{duration:240});   /* 112차: 배경만 흐려짐 (창 전체 opacity 를 쓰면 날아오는 창까지 안 보였음) */ popFrom(pn, $('#figToggle'), true); }   /* 크기 맞춘 뒤 단추에서 꺼냄 */
     requestAnimationFrame(()=>{ fit(); setTimeout(fit,360); }); }); };
-  const pinCls=()=>{ fr.classList.toggle('pin',pin); const t=fr.querySelector('#figToggle'); if(t) t.title = pin ? '고정 풀기' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; };
+  const pinCls=()=>{ const t=fr.querySelector('#figToggle'); if(t){ t.title = '좌표계·거동'; t.setAttribute('aria-label','좌표계·거동 그림 열기'); } };   /* 2026-11-25 버블: 고정 표시 없음 */
   const go=on=>{ clearTimeout(ti); clearTimeout(to); to=0; if(want===on) return; want=on; fr.classList.toggle('on',on); on?showMd():hideMd(); };
   const open=()=>go(true), close=()=>{ pin=false; pinCls(); go(false); };
   const over=()=>fr.matches(':hover') || !!(md.querySelector('.fm-panel') && md.querySelector('.fm-panel').matches(':hover'));
   const enter=()=>{ clearTimeout(to); to=0; if(!want) ti=setTimeout(open,150); }, leave=()=>{ clearTimeout(ti); if(!pin && !to) to=setTimeout(()=>{ to=0; if(!pin && !over()) go(false); },300); };
-  fr.addEventListener('mouseenter',enter); fr.addEventListener('mouseleave',leave);
+  /* 2026-11-25: 버블은 누를 때만 열림 (마우스 올림 · 뺌으로 열고 닫지 않음) */
   md.addEventListener('mouseover',e=>{ if(e.target.closest('.fm-panel')){ clearTimeout(to); to=0; } else if(!pin && want) leave(); });
   md.addEventListener('mouseout',e=>{ if(e.target.closest('.fm-panel') && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.fm-panel'))) leave(); });
   pinCls();
-  fr.querySelector('#figToggle').addEventListener('click',()=>{ if(!pin){ pin=true; pinCls(); open(); } else { pin=false; pinCls(); if(!over()) go(false); } });
+  fr.querySelector('#figToggle').addEventListener('click',()=>{ if(!want){ pin=true; open(); } else close(); });
   md.addEventListener('click',e=>{ if(e.target===md || e.target.closest('.fm-x')) close(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !md.hidden) close(); });
   const place=()=>{ const r=$('#partRail'); let top; if(r && !r.hidden){ const b=r.getBoundingClientRect(); top=b.bottom+10;

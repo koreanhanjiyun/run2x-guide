@@ -73,7 +73,7 @@ const TOUR = {
   ['#v-start .gp-subs','세부 목표','세부 목표마다 왼쪽에 목표와 이유, 오른쪽에 근거 · 판단 기준 · 이 목표를 다루는 설계 항목이 있습니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
  ],
  steps: [
-  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 접히고(접으면 세로 글자 막대), 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:async()=>{ await tgTocSet(false); window.scrollTo({top:0,behavior:'instant'}); }}],
+  ['#toc','목차','단계 목록입니다. 누르면 그 단계로 갑니다. 머리를 누르면 벽 쪽으로 접히고(세로 글자 막대), 다시 누르면 서랍처럼 나옵니다. 오른쪽 끝을 끌면 너비가 바뀝니다.',{tab:'steps',vm:'full',prep:async()=>{ await tgTocSet(false); window.scrollTo({top:0,behavior:'instant'}); }}],
   ['#v-steps header .legend','표시 배지',`항목 줄과 본문에 붙는 표시입니다. ${B('b-card','상세')} 상세 카드(그림·표가 많은 긴 설명)가 있는 항목, ${B('b-assume','가정값')} 설명용 숫자라 팀 실측값으로 바꿀 것입니다.`,{tab:'steps',vm:'full',union:'span:nth-child(-n+2)'}],
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
   ['#v-graph .gcanvas','연결도 보기','[연결도]를 누르면 같은 설계 항목을 한 장의 그림으로 봅니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다. 왼쪽 목차는 숨고, 오른쪽 파트 강조·좌표계 배너는 그대로 씁니다.',{tab:'graph'}],
@@ -94,15 +94,15 @@ const TOUR = {
   ['#ipage .tk>.tk-d','논의','팀원끼리 이 항목에 대해 이야기하는 곳입니다. 답글을 달 수 있고, 내 글은 고치거나 지울 수 있습니다. 새 글이 있으면 목록의 항목 줄에 글 수가 뜹니다.',{...SC}],
   ['#ipage .ip-pn','이전 · 다음','설계 순서대로 앞뒤 항목으로 넘어갑니다.',{...SC}],
   ['#ipage .ip-side details.symbox','기호','이 항목 설명에 나오는 기호 · 뜻 · 단위입니다. 펼쳐 두면 본문을 읽는 동안 옆에서 찾아볼 수 있습니다.',{...SC}],
-  ['#partRail','파트 강조','평소에는 접혀 있고 마우스를 올리면 펼쳐집니다(빼면 다시 접힘). 파트를 고르면 그 파트 항목만 진하게 보이고 나머지는 흐려지며, 여러 개 고를 수 있습니다. 머리를 누르면 펼친 채 고정(📌)됩니다.',{...SC,sync:true,prep:()=>{ const r=$('#partRail'); if(r) r.classList.remove('coll'); }}],
-  ['#figModal .fm-panel','좌표계·거동','오른쪽 [좌표계·거동] 배너에 마우스를 올리면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다(빼면 닫힘). 배너를 누르면 펼친 채 고정(📌)되고, 바깥을 누르거나 Esc로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
+  ['#partRail','파트 강조','오른쪽 아래 [파트] 버블을 누르면 파트 목록이 열립니다. 파트를 고르면 그 파트 항목만 진하게 보이고 나머지는 흐려지며, 여러 개 고를 수 있습니다. 고른 파트 색은 버블의 점으로 보이고, 버블 · 바깥 · Esc 로 닫습니다.',{...SC,sync:true,prep:()=>{ const r=$('#partRail'); if(r) r.classList.remove('coll'); }}],
+  ['#figModal .fm-panel','좌표계·거동','오른쪽 아래 좌표계 버블을 누르면 이 가이드가 쓰는 좌표계와 차체 움직임 그림이 겹쳐 뜹니다. 버블 · 바깥 · Esc 로 닫습니다.',{...SC,sync:true,reveal:'#figToggle',prep:()=>{ const r=$('#partRail'); if(r) r.classList.add('coll'); openFig(); }}],
  ],
  graph: GRAPH_TOUR,
  tools: [
   ['#v-tools .tl-hero','도구 탭','팀 설계값을 한곳에 모으고, 그 값으로 그림과 계산 도구를 씁니다.',{tab:'tools'}],
   ['#tltoc','도구 빠른 선택','왼쪽 막대에서 도구를 누르면 그 계산 도구 작업창이 바로 열립니다. 머리를 누르면 접힙니다.',{tab:'tools'}],
   ['#dvals','설계값','분야별로 묶은 팀 설계값입니다. ↻ 는 계산에 쓴 값이 그 뒤 바뀌어 그 도구에서 다시 계산해야 하는 값입니다. 여기서는 고치지 않고, 각 도구의 [대시보드에 반영]으로만 바뀝니다.',{tab:'tools'}],
-  ['#figRail .rail-h','좌표계·거동','오른쪽 [좌표계·거동]에 마우스를 올리면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
+  ['#figRail .rail-h','좌표계·거동','오른쪽 아래 좌표계 버블을 누르면 차량 좌표계(원점 = 뒤 차축 중심 · 지면, x 앞 · y 왼쪽 · z 위)와 차체 회전 · 서스 4모드 그림이 열립니다. 설계값과 도구의 좌표는 모두 이 기준입니다.',{tab:'tools'}],
   ['#dfigs','그림으로 보기','설계값으로 옆·위·앞·뒤에서 본 그림입니다. 지금 주행 조건 한 순간의 축하중, 무게중심, 압력 중심, 바퀴별 하중을 보여 줍니다.',{tab:'tools'}],
   ['#dcond','주행 조건','차속·코너 반경·종가속·에어로 포함 여부를 바꾸거나 예시 상황을 누르면 그림과 아래 숫자가 같이 바뀝니다.',{tab:'tools'}],
   ['#dpart','파트별','파트별 선도입니다. 전체 범위의 그래프에 지금 조건을 세로 점선으로 표시합니다. 회색 탭은 그 계산 도구를 만들 때 열립니다.',{tab:'tools'}],
@@ -347,13 +347,13 @@ async function tgRefresh(){ if(!TR || TR.busy) return; const st=TR.steps[TR.i]; 
    진짜 목차 · 본문은 바로 바꿔 두고(복제본은 :root 의 --tocx 를 같이 씀), 처음 단계(아직 무대가 안 뜸) · 빨리 넘기기 중에는 바로. 바뀌면 true */
 async function tgTocSet(want){ const t=$('#toc'); if(!t || t.classList.contains('coll')===want) return false; const tk=TR;
   const sc=TR && TR.el.querySelector('.tg-scale'), tc=sc && [...sc.querySelectorAll('#toc')].pop();
-  if(!TR || !TR.inited || TR.fast || !tc || typeof tocSnake!=='function' || getComputedStyle(t).display==='none'){ t.classList.toggle('coll', want); try{ tocFx(); }catch(e){} await tgFrame(); return true; }
+  if(!TR || !TR.inited || TR.fast || !tc || typeof drawerSlide!=='function' || getComputedStyle(t).display==='none'){ t.classList.toggle('coll', want); try{ tocFx(); }catch(e){} await tgFrame(); return true; }
   const R=sc.getBoundingClientRect(), k=R.width/(sc.offsetWidth||R.width) || 1;
   document.body.classList.add('tg-live');   /* 본문 여백 전환을 켬 (복제본 #v-steps 도 같은 규칙) */
-  tocSnake(tc, !want, o=>{ tc.classList.toggle('coll', !o); t.classList.toggle('coll', !o); try{ tocFx(); }catch(e){}
+  drawerSlide(tc, !want, o=>{ tc.classList.toggle('coll', !o); t.classList.toggle('coll', !o); try{ tocFx(); }catch(e){}
     const r=t.getBoundingClientRect(); Object.assign(tc.style, {left: r.left+'px', top: r.top+'px', width: r.width+'px', height: r.height+'px'}); },   /* 복제본 목차는 크기가 글자로 박혀 있어(tgClone) 진짜 목차의 새 크기를 옮겨 줌 */
     {host: sc, k, ox: R.left, oy: R.top});
-  await tgSleep(60); for(let n=0; n<80 && tc._ts && TR===tk; n++) await tgSleep(30);
+  await tgSleep(60); for(let n=0; n<80 && tc._ds && TR===tk; n++) await tgSleep(30);
   await tgSleep(60); document.body.classList.remove('tg-live'); return true; }
 function tourStop(){ if(!TR) return; document.body.classList.remove('tg-live'); const s=TR.snap; (TR.inert||[]).forEach(n=>n.inert=false); TR.el.remove(); TR=null; removeEventListener('resize', tgOnResize); tgRestore(s); }
 let tgRT=0; function tgOnResize(){ clearTimeout(tgRT); tgRT=setTimeout(tgRefresh, 200); }

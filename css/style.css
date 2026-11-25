@@ -3795,7 +3795,7 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #v-start .gsub.has-fig .gs-side>div:last-child{flex:2}
 
 /* 도구 탭 목차 (2026-11-25): 설계 탭 #toc 와 같은 자리 · 모양 */
-#tltoc{position:fixed;left:0;top:calc(var(--tabh) + 14px);max-height:calc(100vh - var(--tabh) - 28px);width:var(--tocw);overflow:hidden;z-index:12;background:var(--panel);border:1px solid var(--line-2);border-left:0;border-radius:0 8px 8px 0;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(30,20,50,.07)}
+#tltoc{position:fixed;left:0;top:calc(var(--tabh) + 14px);max-height:calc(100vh - var(--tabh) - 28px);width:max-content;overflow:hidden;z-index:12;background:var(--panel);border:1px solid var(--line-2);border-left:0;border-radius:0 8px 8px 0;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(30,20,50,.07)}
 #tltoc .tl-toc-in{overflow:auto;padding:4px 4px 8px 12px;scrollbar-width:thin}
 #tltoc .toc-s .tc{min-width:26px}
 #tltoc:not(.coll) .toc-h{padding-left:16px;min-height:40px;box-sizing:border-box}
@@ -3806,3 +3806,23 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #tltoc.coll .toc-fold{padding:0;line-height:1}
 #tltoc.coll .toc-fold::before{content:"⟩"}
 #tltoc.ts-hide{visibility:hidden}
+/* 오른쪽 버블 (2026-11-25): 좌표계·거동 · 파트 강조를 '맨 위로' 버블과 같은 줄(오른쪽 24 px)에 쌓음. 아래부터 맨 위로(24) · 좌표계(80) · 파트(136) */
+#figRail,#partRail,#partRail.coll{top:auto!important;right:max(24px, env(safe-area-inset-right,0px));width:44px!important;height:44px;border:0;border-radius:50%!important;background:transparent;box-shadow:none!important;overflow:visible!important}
+#figRail{bottom:80px}
+#partRail{bottom:136px}
+#figRail .rail-h,#partRail .rail-h,#partRail.coll .rail-h{position:relative;width:44px;height:44px;padding:0!important;border-radius:50%;display:grid!important;place-items:center;justify-content:center!important;align-content:center!important;background:var(--char);color:#fff;border:1px solid var(--char);box-shadow:0 4px 14px rgba(30,20,50,.22);gap:0}
+#figRail .rail-h:hover,#partRail .rail-h:hover{background:#3a3f4a}
+#figRail .rail-h span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#figRail .rail-h::before{width:20px!important;height:20px!important;margin:0!important}
+#figRail .rail-h::after,#figRail.pin .rail-h::after,#figRail.open .rail-h::after{content:none!important}
+#figRail.on .rail-h{background:var(--accent);border-color:var(--accent)}
+#partRail .rail-h span,#partRail.coll .rail-h span,#partRail:not(.coll) .rail-h span{writing-mode:horizontal-tb!important;letter-spacing:.02em!important;font-size:var(--fs-xs)}
+#partRail .rail-h::after,#partRail.coll .rail-h::after,#partRail.pin .rail-h::before{content:none!important}
+#partRail:not(.coll) .rail-h{background:var(--accent);border-color:var(--accent)}
+#partRail .rail-h i{position:absolute;top:-2px;right:-2px;width:14px;height:14px;border:2px solid #fff}
+#partRail .rail-b{position:absolute;right:calc(100% + 10px);bottom:0;width:max-content;max-height:calc(100vh - var(--tabh) - 160px);overflow:auto;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;padding:10px;box-shadow:0 8px 28px rgba(30,20,50,.2);transform-origin:right bottom}
+#partRail.coll .rail-b{display:none}
+/* 버블 아이콘 (2026-11-25): 글자는 숨기고(title · aria-label 로 이름) 아이콘만. 좌표계 = 세 축 화살표, 파트 강조 = 겹친 판 */
+#figRail .rail-h::before,#partRail .rail-h::before{content:""!important;width:22px!important;height:22px!important;margin:0!important;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 13V3.5M9.4 6.1L12 3.5l2.6 2.6M12 13l7.6 4.4M16.4 19.1l3.2-1.7-.4-3.6M12 13l-7.6 4.4M7.6 19.1l-3.2-1.7.4-3.6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 13V3.5M9.4 6.1L12 3.5l2.6 2.6M12 13l7.6 4.4M16.4 19.1l3.2-1.7-.4-3.6M12 13l-7.6 4.4M7.6 19.1l-3.2-1.7.4-3.6'/%3E%3C/svg%3E") center/contain no-repeat}
+#partRail .rail-h::before,#partRail.pin .rail-h::before{-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l8.5 4.6-8.5 4.6-8.5-4.6z'/%3E%3Cpath d='M3.5 12.4l8.5 4.6 8.5-4.6'/%3E%3Cpath d='M3.5 16.4l8.5 4.6 8.5-4.6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l8.5 4.6-8.5 4.6-8.5-4.6z'/%3E%3Cpath d='M3.5 12.4l8.5 4.6 8.5-4.6'/%3E%3Cpath d='M3.5 16.4l8.5 4.6 8.5-4.6'/%3E%3C/svg%3E") center/contain no-repeat}
+#partRail .rail-h span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

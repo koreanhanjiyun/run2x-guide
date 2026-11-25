@@ -162,6 +162,18 @@ function popFrom(el, src, open, done){ if(!el) return; const tourOn = ((typeof T
   const a = el.animate(open ? K : [...K].reverse().map(k => ({...k, offset: k.offset != null ? 1 - k.offset : undefined})), {duration: open ? 240 : 200, easing: open ? 'cubic-bezier(.25,.7,.5,1)' : 'cubic-bezier(.5,0,.75,.3)', fill: 'both'});
   el._pop = a; a.onfinish = () => { if(el._pop !== a) return; el._pop = null; if(done) done(); a.cancel(); }; }
 
+/* ---------- 왼쪽 서랍 (2026-11-25): 설계 탭 목차 · 도구 빠른 선택. 접힘 = 벽에 붙은 세로 막대(그대로), 펼치면 펼친 판 전체가 벽 뒤에서 쑥 밀려 나옴,
+   접을 때는 벽 쪽으로 밀려 들어간 뒤 세로 막대가 다시 쑥 나옴. 예전 글자 기차(tocSnake)는 이름이 긴 '도구 빠른 선택'에서 어색해 둘 다 서랍으로 통일.
+   apply(open) = 클래스 · 저장 · 본문 여백. t._dsOpen = 움직이는 중 목표 상태(누르기 판정용). O = 사용법 무대(복제본) 안일 때 ---------- */
+function drawerSlide(t, open, apply, O){ if(t._ds){ try{ t._ds.cancel(); }catch(e){} t._ds = null; }
+  const tourOn = !O && (((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture);
+  if(tourOn || !t.animate || getComputedStyle(t).display === 'none'){ t._dsOpen = null; apply(open); return; }
+  const out = () => -(t.offsetWidth + 4) + 'px', run = (K, o, fin) => { const a = t.animate(K, o); t._ds = a; a.onfinish = () => { if(t._ds !== a) return; t._ds = null; fin && fin(a); }; return a; };
+  t._dsOpen = open;
+  if(open){ apply(true); run([{transform: `translateX(${out()})`}, {transform: 'none'}], {duration: 260, easing: 'cubic-bezier(.2,.8,.3,1)'}, () => { t._dsOpen = null; }); }
+  else run([{transform: 'none'}, {transform: `translateX(${out()})`}], {duration: 190, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards'}, a => { apply(false); a.cancel();
+      run([{transform: `translateX(${out()})`}, {transform: 'none'}], {duration: 150, easing: 'cubic-bezier(.2,.8,.3,1)'}, () => { t._dsOpen = null; }); }); }
+
 /* ---------- 목차 펼침 · 접힘 애니메이션 (2026-11-12, 파트 패널의 거울판): 목차는 왼쪽에 붙고 접힌 막대(왼쪽 0)와 펼친 창(왼쪽 14 px)의 자리가 달라
    목차 자체를 자르지 않고 그 위에 머리 색 판(.ts-ov, 화면 좌표 clip-path)을 띄워 ㄱ자(거울) 모양을 그림. 펼친 뒤 단계 목록이 위에서부터 차례로 · 접을 때 아래에서부터 거둠.
    apply(open) = 클래스 · 저장 · 본문 여백(tocFx). 도중에 다시 누르면 애니메이션을 끝내고 바로 그 상태로 ---------- */
@@ -210,24 +222,18 @@ function tocSnake(t, open, apply, O){ const hd = t.querySelector('.toc-h'), sp =
       ...ks.map((k, i) => k.animate([{opacity: 1, transform: 'none'}, {opacity: 0, transform: 'translateY(-8px)'}], {duration: 130, delay: 8*(ks.length - 1 - i), easing: 'ease-in', fill: 'both'}))];
     Promise.all(S.anims.map(a => a.finished)).then(() => { if(t._ts !== S) return; const keep = S.anims; S.anims = []; keep.forEach(a => a.cancel()); snake(false, () => { if(t._ts === S) t._ts = null; }); }, () => {}); } }
 
-/* ---------- 파트 패널: 마우스를 올리면 펼침, 빼면 접힘, 머리를 누르면 고정 ---------- */
-(()=>{ const rail=$('#partRail'); if(!rail) return; let ti=0, to=0;
-  let pin = PREF('railpin','0')==='1';
-  const cls = open => { rail.classList.toggle('coll', !open); try{ applyPart(); }catch(e){} };
-  const set = (open, now) => { rail.classList.toggle('pin', pin); const h=rail.querySelector('.rail-h'); if(h){ h.setAttribute('aria-expanded', String(open)); h.title = pin ? '고정 풀기 (마우스를 빼면 접힘)' : '눌러서 펼친 채 고정 · 마우스를 올리면 잠깐 펼쳐짐'; }
-    const cur = rail._rs && rail._rs.stage ? rail._rs.open : !rail.classList.contains('coll'); if(cur === open) return;
-    if(now) cls(open); else railSnake(rail, open, {apply: cls, isOpen: () => !rail.classList.contains('coll'), in: hh => railBIn(rail, hh), out: () => railBOut(rail)}); };
-  setTimeout(()=>set(pin, true), 0);   /* 목록을 처음 그린 뒤(init.js)에 적용 */
-  rail.addEventListener('mouseenter', ()=>{ clearTimeout(to); ti=setTimeout(()=>set(true), 150); });
-  rail.addEventListener('mouseleave', ()=>{ clearTimeout(ti); if(!pin) to=setTimeout(()=>set(false), 300); });
-  rail.addEventListener('focusin', ()=>{ clearTimeout(to); set(true); });
-  rail.addEventListener('focusout', e=>{ if(!pin && !rail.contains(e.relatedTarget)) to=setTimeout(()=>set(false), 300); });
-  /* 사용법 등으로 자동으로 펼쳐진 경우에도: 고정이 아니고 마우스·포커스가 없고 사용법이 가리키는 대상이 아니면 잠시 뒤 접음 */
-  let idle=0; setInterval(()=>{ const open=!rail.classList.contains('coll'); if(!open || pin){ idle=0; return; }
-    const tourOn = ((typeof TR!=='undefined') && !!TR) || !!window.__tourCapture;   /* 사용법 중에는 건드리지 않음 */
-    if(rail.matches(':hover') || rail.contains(document.activeElement) || tourOn){ idle=0; return; }
-    if(++idle>=3){ idle=0; set(false); } }, 500);
-  rail.addEventListener('click', e=>{ if(!e.target.closest('#railToggle')) return; e.preventDefault(); e.stopImmediatePropagation(); pin=!pin; SETP('railpin', pin?'1':'0'); set(true); }, true);
+/* ---------- 파트 강조 버블 (2026-11-25): 오른쪽 아래 동그란 버블(좌표계·거동 버블 위). 누르면 파트 칩 말풍선이 버블에서 튀어나오고(popFrom),
+   다시 누르기 · 바깥 누르기 · Esc 로 닫힘. 칩을 여러 개 고르는 동안은 열린 채. 마우스를 올리는 것만으로는 열리지 않음(지나가다 열리던 문제). 처음에는 늘 닫힘 ---------- */
+(()=>{ const rail=$('#partRail'); if(!rail) return;
+  const cls = open => { rail.classList.toggle('coll', !open); const h=rail.querySelector('.rail-h'); if(h){ h.setAttribute('aria-expanded', String(open)); h.title='파트 강조'; h.setAttribute('aria-label','파트 강조'); } try{ applyPart(); }catch(e){} };
+  const set = open => { const b=rail.querySelector('.rail-b'), h=rail.querySelector('.rail-h'); if(rail._closing){ rail._closing=false; }
+    if(open){ if(!rail.classList.contains('coll')) return; cls(true); popFrom(b, h, true); }
+    else { if(rail.classList.contains('coll')) return; rail._closing=true; popFrom(b, h, false, ()=>{ if(!rail._closing) return; rail._closing=false; cls(false); }); } };
+  window.partRailSet = set;
+  setTimeout(()=>cls(false), 0);   /* 목록을 처음 그린 뒤(init.js)에 적용 */
+  rail.addEventListener('click', e=>{ if(!e.target.closest('#railToggle')) return; e.preventDefault(); e.stopImmediatePropagation(); set(rail.classList.contains('coll') || rail._closing); }, true);
+  document.addEventListener('pointerdown', e=>{ if(rail.classList.contains('coll') || rail.contains(e.target)) return; if((typeof TR!=='undefined') && TR) return; set(false); }, true);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !rail.classList.contains('coll')) set(false); });
 })();
 
 /* ---------- 진행 막대: 화면을 바꾸는 동작이 0.15초를 넘기면 탭 아래에 얇은 막대를 보임 ---------- */
