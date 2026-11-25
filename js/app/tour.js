@@ -388,10 +388,11 @@ function helpOpen(){ const b=document.getElementById('tourBtn'); if(!b) return;
   const r=b.getBoundingClientRect(); HP.style.top=(r.bottom+10)+'px'; HP.style.right=Math.max(16, innerWidth-r.right)+'px';
   HP.style.setProperty('--hp-ax', Math.max(16, r.right-(r.left+r.width/2))+'px');
   const was=HP.hidden || HP._closing; HP._closing=false; HP.hidden=false; b.classList.add('hp-on');
-  if(was && typeof popFrom==='function') popFrom(HP, b, true); }
+  if(was && HP.animate){ HP.style.transformOrigin = `calc(100% - ${HP.style.getPropertyValue('--hp-ax')}) 0`; HP.animate([{opacity:0, transform:'translateY(-6px) scale(.96)'},{opacity:1, transform:'none'}], {duration:180, easing:'cubic-bezier(.25,.7,.5,1)'}); } }   /* 버튼 바로 아래(꼭지 자리)에서 아래로 펼쳐짐 */
 function helpClose(now){ const b=document.getElementById('tourBtn'); if(b) b.classList.remove('hp-on'); if(!HP || HP.hidden) return;
   if(now || typeof popFrom!=='function'){ HP.hidden=true; HP._closing=false; return; }
-  HP._closing=true; popFrom(HP, b, false, ()=>{ if(HP._closing){ HP.hidden=true; HP._closing=false; } }); }
+  HP._closing=true; const a = HP.animate ? HP.animate([{opacity:1, transform:'none'},{opacity:0, transform:'translateY(-6px) scale(.96)'}], {duration:140, easing:'ease-in'}) : null;
+  const end=()=>{ if(HP._closing){ HP.hidden=true; HP._closing=false; } }; if(a) a.onfinish=end; else end(); }
 document.addEventListener('click', e=>{ if(e.target.closest('[data-helpx]')){ e.preventDefault(); helpClose(); } });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && HP && !HP.hidden) helpClose(); });
 addEventListener('resize', ()=>{ if(HP && !HP.hidden) helpClose(true); });

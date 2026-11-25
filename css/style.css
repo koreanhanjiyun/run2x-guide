@@ -3661,7 +3661,7 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 #v-team .adm-tm table.tp-mtm td{overflow:hidden}
 #v-team .adm-tm table.tp-mtm td.tp-mn{white-space:normal}
 /* 줄마다 반복되는 [이름] · [내보내기] · [차단]: 커서를 올린 줄 · 키보드로 고른 줄 · 확인 대기 줄에만. 사용법 중에는 모두 보임 */
-body:not(:has(#tour)) #v-team .adm-tm .tp-mtm tbody tr:not(:hover):not(:focus-within):not([data-confirm]):not(.tg-demo) :is(.tp-nmbtn,.tp-mx button){visibility:hidden}
+body:not(:has(#tour)) #v-team .adm-tm .tp-mtm tbody tr:not(:hover):not(:has(.tp-nmbtn:focus-visible,.tp-mx button:focus-visible)):not([data-confirm]):not(.tg-demo) :is(.tp-nmbtn,.tp-mx button){opacity:0;pointer-events:none}   /* 숨겨도 Tab 으로는 닿음(opacity), 그 버튼에 초점이 오면 보임. 역할 상자를 마우스로 눌러도 남지 않음 */
 /* 설명 [자세히] */
 #v-team .adm-tm details.tp-more{background:none;border:0;padding:0;margin:0;box-shadow:none}
 #v-team .adm-tm details.tp-more>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--fs-s);color:#5b3fa0;list-style:none;padding:0;background:none}
@@ -3760,3 +3760,9 @@ ul.hl .hl-k.hl-dash{background:none;height:0;width:14px;border-top:2px dashed;bo
 #gsearch-list .acrow .chip{font-size:var(--fs-xs);padding:0 6px;line-height:18px}
 #gsearch-list .acrow.acmore{height:28px;color:#5b3fa0;font-size:var(--fs-xs);font-weight:600}
 #gsearch-list .acrow.acmore .acmore-t{padding-left:54px}
+
+/* 세부 목표 그림 (2026-11-25): 그림은 그 세부 목표 글 바로 옆 (글 | 그림 | 근거 · 판단 기준 · 관련 항목) */
+#v-start .gsub.has-fig .gs-grid{grid-template-columns:minmax(0,1.15fr) 400px minmax(0,.85fr);align-items:start}
+#v-start .gs-fig{margin:0}
+#v-start .gs-fig svg{display:block;width:100%;height:auto;overflow:visible}
+#v-start .gs-fig figcaption{margin-top:6px;font-size:var(--fs-xs);color:var(--muted);line-height:1.5}
