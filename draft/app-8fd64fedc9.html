@@ -16762,18 +16762,19 @@ const BG_SRC = [
  'P. Wright, Formula 1 Technology, SAE International, 2001',
  'J. Katz, Race Car Aerodynamics: Designing for Speed, Bentley Publishers, 1995',
  '한국자동차공학회, Formula 차량기술규정 2026 (제8·9·10·12~18·31·47·56·59·60·62~66·68·73조)',
- 'Mercedes-Benz W25 — https://en.wikipedia.org/wiki/Mercedes-Benz_W25',
- 'Lotus 72 — https://en.wikipedia.org/wiki/Lotus_72',
+ 'Mercedes-Benz, Silver Arrows milestones — https://www.mercedes-benz.com/en/innovation/milestones/mercedes-benz-silver-arrows/',
+ 'Motor Sport, How the Lotus 72 drove a wedge between the field (2020-08)',
  'McLaren, 1981 Formula 1 McLaren MP4/1 — https://www.mclaren.com/racing/heritage/cars/1981-formula-1-mclaren-mp4-1/',
- 'Brabham BT46 — https://en.wikipedia.org/wiki/Brabham_BT46',
+ 'Motor Sport, 1978 Brabham BT46B fan car (2025-02)',
  'Motor Sport, Carbon/carbon brakes (1999-06) — https://www.motorsportmagazine.com/archive/article/june-1999/112/carbon-carbon-brakes/',
  'Formula1.com, Technical analysis: brake-by-wire systems explained (2014) — https://www.formula1.com/en/latest/article/technical-analysis-brake-by-wire-systems-explained.1XQiBCFqA6WYZwLmb3JLxi',
- 'Kinetic energy recovery system — https://en.wikipedia.org/wiki/Kinetic_energy_recovery_system',
+ 'FIA, 2009 Formula One Technical Regulations (2008-07-11)',
+ 'Honda R&D Technical Review, Development of Hybrid System for Formula One — https://global.honda/en/technical-review/papers/10003670/',
  'Honda, 2026 Formula 1 Regulations Overview — https://global.honda/en/F1/features/2026_Commentary/regulations/',
  'The rise and fall of F1\'s high wings — https://onmotorsport.substack.com/p/the-rise-and-fall-of-f1s-high-wings',
  'Motor Sport, Five classic Formula 1 ground effect cars — https://motorsportmagazine.com/articles/single-seaters/f1/five-classic-formula-1-ground-effect-cars',
  'Autosport, Banned: the ingenious twin-chassis Lotus F1 car — https://www.autosport.com/f1/news/banned-the-ingenious-twin-chassis-lotus-f1-car-4983190/4983190/',
- 'Williams FW15C — https://en.wikipedia.org/wiki/Williams_FW15C',
+ 'Motor Sport, Williams FW15C: Nobody’s done it better (2023-11)',
  'Motor Sport, 1993 F1 season: grid reaches a tech zenith — https://motorsportmagazine.com/archive/article/january-2025/60/1993-f1-season-grid-reaches-a-tech-zenith-as-williams-wipes-the-floor',
  '4WD Racing Cars (Ferguson P99) — https://allisons.org/ll/4/Racing/4WD/',
 ];
@@ -17090,7 +17091,7 @@ const COMP = {
   {id:'motor', n:'구동 모터', en:'Traction Motor',
    desc:['전기차는 배터리에 저장한 전기 에너지를 바퀴를 돌리는 힘으로 바꿔야 달릴 수 있습니다. 이 일을 하는 것이 모터이고, 차 무게의 큰 부분을 차지하므로 같은 출력을 얼마나 가볍고 작게 내느냐가 중요합니다.',
     '모터는 자석의 자기장 속에서 코일에 전류를 흘리면 코일이 힘을 받는 원리로 돕니다. 고정된 코일(고정자)에 흐르는 전류의 방향을 회전에 맞춰 바꿔 주면, 자석이 붙은 회전자가 그 자기장을 따라 계속 끌려가며 돌아갑니다. 영구자석 동기 모터는 회전자 자석이 고정자 자기장과 같은 속도로 돌며, 전류의 크기로 토크를, 전류가 바뀌는 빠르기로 회전수를 정합니다.',
-    '그림의 차가 쓰는 EMRAX 228은 축방향 자속형 모터입니다. 원판 모양 고정자 양옆에 자석을 붙인 원판 회전자가 마주 보고 있어, 자기장이 축과 나란한 방향으로 지나갑니다. 같은 지름의 원통형(반경 방향 자속) 모터보다 축 길이가 짧고, 자석이 바깥 지름 쪽에 넓게 있어 지름이 커질수록 토크가 크게 늘어나므로, 납작하고 가벼운 몸체로 큰 토크를 냅니다. 고정자 코일에 전류를 넣는 3상 단자와 냉각 통로는 돌지 않는 고정자 쪽에 붙습니다.'],
+    '그림의 차가 쓰는 EMRAX 228은 축방향 자속형 모터입니다. 원판 모양 고정자 양옆에 자석을 붙인 원판 회전자가 마주 보고 있어, 자기장이 축과 나란한 방향으로 지나갑니다. 같은 지름의 원통형(반경 방향 자속) 모터보다 축 길이가 짧고, 자석과 코일이 지름 바깥쪽에 넓게 놓여 같은 전자기력이라도 토크를 내는 팔(반지름)이 길어지므로(토크 = 힘 × 반지름), 납작하고 가벼운 몸체로 큰 토크를 냅니다. 고정자 코일에 전류를 넣는 3상 단자와 냉각 통로는 돌지 않는 고정자 쪽에 붙습니다.'],
    fs:'모터 1개 FS 차에서는 EMRAX 같은 축방향 자속 모터를 체인으로 디퍼렌셜에 잇는 구성이 흔하고, 바퀴마다 작은 모터를 단 4륜 구동 팀도 있습니다. 규정상 모터 출력은 80 kW 이하이고, 모터는 반드시 모터 제어기를 거쳐 축전지에 연결해야 하며 후진은 금지입니다.',
    con:'모터 온도가 오르면 자석이 약해지고 출력이 제한되므로 냉각과 온도 감시를 함께 설계합니다.',
    go:['p_motor','d_torque','d_derate']},
@@ -17390,9 +17391,10 @@ const COMP_SRC = [
  {t:'REF4 CAD (Run2X 2024 차량, REF4_Assy_07.22.STEP)', u:'', note:'스프로킷 잇수(11·39), 축간 거리, 체인 링크 수 계산, 디퍼렌셜·모터 공용 마운트 판, 편심 텐셔너, 보호판, 트라이포드 하프 샤프트 형상'},
  {t:'한국자동차공학회, 2026 Formula 차량기술규정 제10조 ⑧항, 제31조 ④항, 제46조 ①·②·⑤·⑥·⑦항', u:'', note:'회생 제동 조건, 모터 출력 80 kW, 모터 제어기 경유·후진 금지, 가속 페달·APPS·비타당성'},
  {t:'EMRAX, EMRAX 228 제품 페이지·데이터시트 v1.7', u:'https://emrax.com/e-motors/emrax-228/', note:'축방향 자속 영구자석 동기 모터, 최대 토크 220 Nm, 최대 출력 5,500 rpm, 리졸버'},
- {t:'Wikipedia, Axial flux motor', u:'https://en.wikipedia.org/wiki/Axial_flux_motor', note:'축방향 자속 구조, 지름에 따른 토크 증가, 짧은 축 길이'},
- {t:'Wikipedia, Power inverter (three-phase inverters)', u:'https://en.wikipedia.org/wiki/Power_inverter', note:'3상 인버터·PWM·가변 주파수 구동'},
- {t:'Wikipedia, Lenz\'s law', u:'https://en.wikipedia.org/wiki/Lenz%27s_law', note:'렌츠의 법칙과 패러데이 법칙의 부호'}
+ {t:'J. F. Gieras, R.-J. Wang, M. J. Kamper, Axial Flux Permanent Magnet Brushless Machines, 2nd ed., Springer, 2008', u:'https://doi.org/10.1007/978-1-4020-8227-6', note:'축방향 자속 구조, 짧은 축 길이'},
+ {t:'Nishanth, Van Verdeghem, Severson, A Review of Axial Flux Permanent Magnet Machine Technology, IEEE Trans. Ind. Appl. 59(4), 2023', u:'https://doi.org/10.1109/TIA.2023.3258933', note:'축방향 자속 모터 구조 · 특성 리뷰'},
+ {t:'N. Mohan, T. M. Undeland, W. P. Robbins, Power Electronics: Converters, Applications and Design, 3rd ed., Wiley, 2003', u:'', note:'3상 인버터 · PWM · 가변 주파수 구동'},
+ {t:'OpenStax, University Physics Volume 2, §13.2 Lenz’s Law', u:'https://openstax.org/books/university-physics-volume-2/pages/13-2-lenzs-law', note:'렌츠의 법칙과 패러데이 법칙의 부호'}
 ];
 </script>
 <script>
@@ -17437,7 +17439,7 @@ const F1_TECH = [
   {y:'1978', n:'팬 카', en:'Fan car (Brabham BT46B)',
    how:'차 뒤에 큰 팬을 달아 밀폐된 차 밑 공기를 강제로 빨아냈습니다. 브라밤은 엔진 냉각용 팬이라고 주장했고, 같은 발상은 1970년 캔암의 샤파랄 2J가 먼저 썼습니다.',
    gain:'속도와 상관없이 큰 다운포스를 만들어, 유일한 출전인 1978년 스웨덴 GP에서 라우다가 우승했습니다.',
-   end:'다른 팀의 거센 반발 속에 브라밤이 한 경기 만에 스스로 철수했고, 이후 팬 카는 금지되었습니다.'},
+   end:'다른 팀의 거센 반발 속에 브라밤이 한 경기 만에 스스로 철수했고, 이후 F1에서 다시 쓰이지 않았습니다.'},
   {y:'1981', n:'이중 차체', en:'Twin chassis (Lotus 88)',
    how:'드라이버·기계 하중을 받는 안쪽 차체와 공력 하중을 받는 바깥 차체를 따로 스프링으로 달았습니다.',
    gain:'스커트가 금지된 뒤에도 바깥 차체만 노면 가까이 눌러 그라운드 이펙트 다운포스를 되찾으려 했습니다.',
@@ -17553,29 +17555,30 @@ const F1_TECH = [
 const F1_TECH_SRC = [
  'P. Wright, Formula 1 Technology, SAE International, 2001',
  'Motor Sport, Active suspension (2001-12) — https://www.motorsportmagazine.com/archive/article/december-2001/69/active-suspension',
- 'Williams FW15C — https://en.wikipedia.org/wiki/Williams_FW15C',
+ 'Motor Sport, Williams FW15C: Nobody’s done it better (2023-11)',
  'Motor Sport, 1993 F1 season: grid reaches a tech zenith — https://motorsportmagazine.com/archive/article/january-2025/60/1993-f1-season-grid-reaches-a-tech-zenith-as-williams-wipes-the-floor',
  'Autosport, Banned F1 tech: Renault\'s mass damper — https://www.autosport.com/f1/news/149299/banned-the-renault-r26-mass-damper',
  'GrandPrix247, Tech Draft: Farewell to the Jounce damper (2022) — https://www.grandprix247.com/2022/01/18/tech-draft-2022-2-farewell-to-the-jounce-damper/',
  'Autosport, F1 set to ban FRIC suspension systems (2014) — https://www.autosport.com/f1/news/114881/f1-set-to-ban-fric-suspension-systems',
  'The rise and fall of F1\'s high wings — https://onmotorsport.substack.com/p/the-rise-and-fall-of-f1s-high-wings',
  'Motor Sport, Five classic Formula 1 ground effect cars — https://motorsportmagazine.com/articles/single-seaters/f1/five-classic-formula-1-ground-effect-cars',
- 'Brabham BT46 — https://en.wikipedia.org/wiki/Brabham_BT46',
+ 'Motor Sport, 1978 Brabham BT46B fan car (2025-02)',
  'Autosport, Banned: the ingenious twin-chassis Lotus F1 car — https://www.autosport.com/f1/news/banned-the-ingenious-twin-chassis-lotus-f1-car-4983190/4983190/',
  'Formula1.com, From a six-wheeled car to the flip-flop wing: 8 of the wildest tech innovations — https://www.formula1.com/en/latest/article/from-a-six-wheeled-car-to-the-flip-flop-wing-8-of-the-wildest-tech.1GRhOeOV4saRcrbvxWYMtG',
  'Autosport, Banned: the F1 2010 season F-duct — https://www.autosport.com/f1/news/149090/banned-the-f1-2010-season-fduct',
  'Autosport, Banned: when exhaust blown diffusers reigned supreme — https://www.autosport.com/f1/news/banned-when-exhaust-blown-diffusers-reigned-supreme-4982364/4982364/',
  'Honda, 2026 Formula 1 Regulations Overview — https://global.honda/en/F1/features/2026_Commentary/regulations/',
- 'Launch control (automotive) — https://en.wikipedia.org/wiki/Launch_control_(automotive)',
+ 'Autosport, FIA delays driver aids ban until 2004 (2003) — https://www.autosport.com/f1/news/fia-delays-driver-aids-ban-until-2004-5030123/',
  'Jalopnik, This 1993 CVT F1 car was banned before it could compete — https://jalopnik.com/1953049/williams-cvt-f1-car-history/',
  '4WD Racing Cars (Ferguson P99, 1969 4WD cars) — https://allisons.org/ll/4/Racing/4WD/',
  'Motor Sport, Carbon/carbon brakes (1999-06) — https://www.motorsportmagazine.com/archive/article/june-1999/112/carbon-carbon-brakes/',
  'Formula1.com, Technical analysis: brake-by-wire systems explained (2014) — https://www.formula1.com/en/latest/article/technical-analysis-brake-by-wire-systems-explained.1XQiBCFqA6WYZwLmb3JLxi',
  'Motorsport.com, Banned: F1\'s oddball steering solutions — https://au.motorsport.com/f1/news/banned-tech-oddball-steering-solutions/4810206/',
  'PlanetF1, \'Fiddle brake\' banned: McLaren braking system — https://www.planetf1.com/news/mclaren-fiddle-brake-system-1998-banned-fia',
- 'Kinetic energy recovery system — https://en.wikipedia.org/wiki/Kinetic_energy_recovery_system',
- 'Racing slick — https://en.wikipedia.org/wiki/Racing_slick',
- 'Renault RS01 — https://en.wikipedia.org/wiki/Renault_RS01',
+ 'FIA, 2009 Formula One Technical Regulations (2008-07-11)',
+ 'Honda R&D Technical Review, Development of Hybrid System for Formula One — https://global.honda/en/technical-review/papers/10003670/',
+ 'W. F. Milliken, D. L. Milliken, Race Car Vehicle Dynamics, SAE International, 1995 (2장 타이어)',
+ 'Renault, The yellow teapot (RS01) — https://theoriginals.renault.com/en/f1-rs-01',
  'Motor Sport, The practical joke that won a GP — and the other six-wheeled cars F1 banned — https://www.motorsportmagazine.com/articles/single-seaters/f1/the-practical-joke-that-won-a-gp-and-the-other-six-wheeled-cars-that-f1-banned/',
  'McLaren, 1981 Formula 1 McLaren MP4/1 — https://www.mclaren.com/racing/heritage/cars/1981-formula-1-mclaren-mp4-1/',
 ];
@@ -17631,7 +17634,7 @@ const REFS = [
   ['BMS','셀 전압·온도·전류를 감시하고 한계를 넘으면 차단하는 장치 (제62조 ⑦)'],
   ['SOC','축전지 잔여 충전량 비율'],
   ['QSS','준정적 랩 시뮬레이션. 코스 각 지점의 한계 가감속으로 속도를 적분']])},
- {t:"출처", s:"본문 근거", b:`<ul class="pl"><li>Milliken &amp; Milliken, <i>Race Car Vehicle Dynamics</i>, SAE, 1995</li><li>Gillespie, <i>Fundamentals of Vehicle Dynamics</i>, SAE, 1992</li><li>Pacejka, <i>Tire and Vehicle Dynamics</i></li><li>Katz, <i>Race Car Aerodynamics</i></li><li>M.C. Smith, "Synthesis of Mechanical Networks: The Inerter", IEEE TAC, 2002</li><li>FEUP 학위논문(2026), Comillas TFG(2024): FS 롤 구배 사례</li><li>Carroll Smith, <i>Tune to Win</i>, Aero Publishers, 1978: 튜닝 경향</li><li>Altair MotionView 문서, Anti-Lift/Squat: 가속 안티 식</li><li>Wikipedia, "Torsen": 토크 바이어스비</li><li>P. de Leva, "Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters", <i>Journal of Biomechanics</i> 29(9), 1996: 드라이버 체절 길이 · 질량 비율 · 무게중심 위치 (도구 1)</li><li>D.A. Winter, <i>Biomechanics and Motor Control of Human Movement</i>, 4th ed., Wiley, 2009, 그림 4.1 (Drillis &amp; Contini 1966 체절 길이 비율): 발목 높이 · 발 길이 (도구 1)</li><li>2026 대학생 자작자동차대회 Formula 규정집 (차량기술규정·경기진행규정)</li><li>2026 대학생 자작자동차대회 Formula 경기진행규정 제8 ~ 12조 · 별표 1: 종목별 점수식, 스키드패드 코스 치수, 오토크로스 · 내구 구간 기준, 드라이버 교체, 에너지 CO₂ 환산 (도구 2)</li></ul>`},
+ {t:"출처", s:"본문 근거", b:`<ul class="pl"><li>Milliken &amp; Milliken, <i>Race Car Vehicle Dynamics</i>, SAE, 1995</li><li>Gillespie, <i>Fundamentals of Vehicle Dynamics</i>, SAE, 1992</li><li>Pacejka, <i>Tire and Vehicle Dynamics</i></li><li>Katz, <i>Race Car Aerodynamics</i></li><li>M.C. Smith, "Synthesis of Mechanical Networks: The Inerter", IEEE TAC, 2002</li><li>FEUP 학위논문(2026), Comillas TFG(2024): FS 롤 구배 사례</li><li>Carroll Smith, <i>Tune to Win</i>, Aero Publishers, 1978: 튜닝 경향</li><li>Altair MotionView 문서, Anti-Lift/Squat: 가속 안티 식</li><li>JTEKT, Torsen "How it works" (torsen.com): 토크 바이어스비</li><li>SAE 2002-01-1046, "An Evaluation of Torque Bias and Efficiency of Torsen Differential": 토크 바이어스비</li><li>P. de Leva, "Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters", <i>Journal of Biomechanics</i> 29(9), 1996: 드라이버 체절 길이 · 질량 비율 · 무게중심 위치 (도구 1)</li><li>D.A. Winter, <i>Biomechanics and Motor Control of Human Movement</i>, 4th ed., Wiley, 2009, 그림 4.1 (Drillis &amp; Contini 1966 체절 길이 비율): 발목 높이 · 발 길이 (도구 1)</li><li>2026 대학생 자작자동차대회 Formula 규정집 (차량기술규정·경기진행규정)</li><li>2026 대학생 자작자동차대회 Formula 경기진행규정 제8 ~ 12조 · 별표 1: 종목별 점수식, 스키드패드 코스 치수, 오토크로스 · 내구 구간 기준, 드라이버 교체, 에너지 CO₂ 환산 (도구 2)</li></ul>`},
  {t:"변경 이력", s:"버전 규칙 · 버전별 바뀐 점", b:`<p class="muted" style="font-size:var(--fs-s)">버전은 <b>주.부.수</b> 세 자리로 표기합니다 (유의적 버전, semver.org 기준을 이 가이드에 맞게 적용). 1.0.0이 팀 첫 공유 버전입니다.</p>${T(['자리','올리는 경우','예'],[
   ['주','설계 흐름 자체가 바뀜 (단계 번호·순서가 달라짐), 또는 새 상단 탭 같은 큰 기능이 생김','단계 추가·삭제·재배치, 동결 기준 변경, 시즌 개편, 도구 탭 신설(2.0.0)'],
   ['부','내용·기능이 늘어남','새 항목·상세 카드·그림 추가, 새 기능'],
@@ -18073,10 +18076,10 @@ const SRC_CANON = [
 const SRC_CAT = [['규정','규정'],['교재','교재'],['논문','논문'],['팀','제조사 · 팀 자료'],['웹','언론 · 웹'],['백과','웹 백과']];
 const SRC_USED = {d:'설계 탭', b:'시작 탭', f:'F1 기술', c:'부품 소개'};
 function srcCat(t, u){ if(/wikipedia/i.test(u||'') || /^Wikipedia/.test(t)) return '백과';
-  if(/규정|Rules/i.test(t)) return '규정';
-  if(/Journal|IEEE|SAE \d{4}-\d{2}-\d{4}|학위논문|TFG|Rešerše/.test(t)) return '논문';
-  if(/Gillespie|Pacejka|Staniforth|Tune to Win|Biomechanics and Motor Control/.test(t)) return '교재';
-  if(/REF4|Run2X|TTX25|EMRAX|Drexler|Balance Motorsport|FIRGELLI|Altair|MUR Motorsports|Formula Student Germany|FSAE\.com|McLaren, 1981|Honda,/.test(t)) return '팀';
+  if(/규정|Rules|Regulations/i.test(t) && !/^Honda,/.test(t)) return '규정';   /* 제조사의 규정 해설(Honda)은 제조사 자료 */
+  if(/Journal|IEEE|SAE \d{4}-\d{2}-\d{4}|학위논문|TFG|Rešerše|Technical Review/.test(t)) return '논문';
+  if(/Gillespie|Pacejka|Staniforth|Tune to Win|Biomechanics and Motor Control|Gieras|Mohan|OpenStax/.test(t)) return '교재';
+  if(/REF4|Run2X|TTX25|EMRAX|Drexler|Balance Motorsport|FIRGELLI|Altair|MUR Motorsports|Formula Student Germany|FSAE\.com|McLaren, 1981|Honda,|Mercedes-Benz,|Renault,|JTEKT/.test(t)) return '팀';
   return '웹'; }
 function srcUnified(designHTML){
   const raw = [];   /* {html, text, url, note, w} */
