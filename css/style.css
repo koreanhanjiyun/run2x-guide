@@ -3650,3 +3650,25 @@ html[data-vt="close"]::view-transition-new(root){animation:vt-unhold var(--vt-ms
 #v-team #teamPanel details.tp-s-more>summary{padding:4px 0;background:none}
 /* 왼쪽 칸을 접어도 명단이 짧아지지 않게 */
 #v-team #teamPanel .tp-right{min-height:780px}
+
+/* 팀 설정 (2026-11-25) */
+/* 열 너비 고정: 칩을 펼쳐도 열이 움직이지 않음. 칩은 담당 칸 안에서 줄바꿈 */
+#v-team .adm-tm table.tp-mtm{table-layout:fixed;width:100%}
+#v-team .adm-tm table.tp-mtm th:nth-child(1){width:26%}
+#v-team .adm-tm table.tp-mtm th:nth-child(2){width:84px}
+#v-team .adm-tm table.tp-mtm th:nth-child(3){width:116px}
+#v-team .adm-tm table.tp-mtm th:nth-child(5){width:150px}
+#v-team .adm-tm table.tp-mtm td{overflow:hidden}
+#v-team .adm-tm table.tp-mtm td.tp-mn{white-space:normal}
+/* 줄마다 반복되는 [이름] · [내보내기] · [차단]: 커서를 올린 줄 · 키보드로 고른 줄 · 확인 대기 줄에만. 사용법 중에는 모두 보임 */
+body:not(:has(#tour)) #v-team .adm-tm .tp-mtm tbody tr:not(:hover):not(:focus-within):not([data-confirm]):not(.tg-demo) :is(.tp-nmbtn,.tp-mx button){visibility:hidden}
+/* 설명 [자세히] */
+#v-team .adm-tm details.tp-more{background:none;border:0;padding:0;margin:0;box-shadow:none}
+#v-team .adm-tm details.tp-more>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:var(--fs-s);color:#5b3fa0;list-style:none;padding:0;background:none}
+#v-team .adm-tm details.tp-more>summary::-webkit-details-marker{display:none}
+#v-team .adm-tm details.tp-more>summary::before{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+#v-team .adm-tm details.tp-more[open]>summary::before{transform:rotate(45deg)}
+#v-team .adm-tm details.tp-more>p{margin:6px 0 0}
+/* 저장 막대 목록의 팀원 변경 줄 */
+#draftBar .db-row .db-ch{max-width:340px;white-space:normal;color:var(--ink-2)}
+.adm-tm tr.tt-flash>td{animation:ttFlash 1.4s ease}

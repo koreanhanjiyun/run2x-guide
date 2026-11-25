@@ -54,22 +54,29 @@ const DRAFT = { ext: [], add(x){ this.ext.push(x); }, paint(){} };
     if(!BAR){ BAR = document.createElement('div'); BAR.id = 'draftBar'; BAR.setAttribute('role','status'); document.body.appendChild(BAR); }
     const p = nPend(), d = nVal(), show = nAll() > 0;
     BAR.hidden = !show; document.body.classList.toggle('has-draft', show); try{ updSeasonChip(); }catch(e){} if(!show) return;
-    if(!p) LIST=false;
+    const exN = DRAFT.ext.reduce((a,x)=>a+(x.items && x.n() ? x.n() : 0),0);
+    if(!p && !exN) LIST=false;
     const parts = []; if(p) parts.push(`<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">진행 상태 ${p}건 <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>`); if(d) parts.push(`우리 팀 값 ${d}항목`);
-    DRAFT.ext.forEach(x=>{ const n=x.n(); if(n) parts.push(x.label(n)); });
+    DRAFT.ext.forEach(x=>{ const n=x.n(); if(n) parts.push(x.items ? `<button type="button" class="db-pl" data-draftlist aria-expanded="${LIST}" title="바꾼 항목 보기">${x.label(n)} <span aria-hidden="true">${LIST?'▾':'▴'}</span></button>` : x.label(n)); });
     BAR.innerHTML = `<span><b>저장 안 한 변경</b> · ${parts.join(' · ')} <span class="db-sub">[모두 저장]을 눌러야 팀원에게 보입니다${p||d?` (${esc(SEASON)} 시즌)`:''}</span></span>
       <span class="db-acts"><button type="button" class="btn small" data-draft="revert">되돌리기</button><button type="button" class="btn small pri" data-draft="save">모두 저장</button></span>`
-      + (LIST && p ? listHTML() : '');
+      + (LIST && (p || exN) ? listHTML() : '');
   }
   /* 바꾼 항목 목록 (2026-11-25): 막대 위로 펼침. 줄 = 단계 · 이름 · 파트 · 이전 → 이후 · [되돌리기], 줄을 누르면 그 항목 자리로 */
   let LIST = false;
   const stl = v => v==='skip' ? '제외' : ST_LABEL[v||'todo'];
   function listHTML(){ const ids = Object.keys(PENDING).filter(id=>IT[id]).sort((a,b)=>typeof admOrd==='function' ? admOrd(a,b) : 0);
     return `<div class="db-list" role="list">${ids.map(id=>{ const a=COMMITTED[id]||'todo', b=PENDING[id]||'todo';
-      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-draftgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">${IT[id].p}</span></button><span class="db-ch"><span class="ipill st-${a}">${stl(a)}</span><span aria-hidden="true">→</span><span class="ipill st-${b}">${stl(b)}</span></span><button type="button" class="lnk db-rv" data-draftrv="${id}">되돌리기</button></div>`; }).join('')}</div>`; }
+      return `<div class="db-row" role="listitem"><button type="button" class="db-go" data-draftgo="${id}"><span class="db-c">${IT[id].s}</span><span class="db-n">${IT[id].n}</span><span class="db-p">${IT[id].p}</span></button><span class="db-ch"><span class="ipill st-${a}">${stl(a)}</span><span aria-hidden="true">→</span><span class="ipill st-${b}">${stl(b)}</span></span><button type="button" class="lnk db-rv" data-draftrv="${id}">되돌리기</button></div>`; }).join('')}${extRows()}</div>`; }
+  /* 다른 화면의 변경(팀원 관리 등): DRAFT.add 의 items() = [{key, c, n, p, change, go(), revert()}] */
+  let EXT = [];
+  function extRows(){ EXT = DRAFT.ext.flatMap(x=>x.items && x.n() ? x.items() : []);
+    return EXT.map((it,i)=>`<div class="db-row" role="listitem"><button type="button" class="db-go" data-draftext="${i}"><span class="db-c">${esc(it.c)}</span><span class="db-n">${esc(it.n)}</span><span class="db-p">${esc(it.p||'')}</span></button><span class="db-ch">${esc(it.change||'')}</span><button type="button" class="lnk db-rv" data-draftextrv="${i}">되돌리기</button></div>`).join(''); }
   document.addEventListener('click', e=>{
     if(e.target.closest('[data-draftlist]')){ e.preventDefault(); LIST=!LIST; paint(); return; }
     const rv=e.target.closest('[data-draftrv]'); if(rv){ e.preventDefault(); stRevertOne(rv.dataset.draftrv); return; }
+    const xg=e.target.closest('[data-draftext]'); if(xg){ e.preventDefault(); const it=EXT[+xg.dataset.draftext]; LIST=false; paint(); if(it) it.go(); return; }
+    const xr=e.target.closest('[data-draftextrv]'); if(xr){ e.preventDefault(); const it=EXT[+xr.dataset.draftextrv]; if(it) it.revert(); return; }
     const go=e.target.closest('[data-draftgo]'); if(go){ e.preventDefault(); LIST=false; paint(); if(typeof ttGoPend==='function') ttGoPend(go.dataset.draftgo); else vtItem(go.dataset.draftgo, null); return; }
     if(LIST && BAR && !BAR.contains(e.target)){ LIST=false; paint(); } });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape' && LIST){ LIST=false; paint(); } });

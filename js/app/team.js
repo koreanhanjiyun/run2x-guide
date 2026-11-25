@@ -111,7 +111,7 @@
   function manageTable(ms, bl){ const R0=[...ms].sort(meFirst(byRoleName(TEAM_SEASON))).map(m=>{ const e=eff(m), me=m.uid===C.uid, pend=!!MP[m.uid];
       return `<tr class="tp-card tp-person${pend?' pend':''}${me?' tp-mine':''}"${me?' data-me="1"':''} data-uid="${esc(m.uid)}" data-role="${rlOf(m)}" data-r="${e.role}" data-in="${e.active?1:0}" data-q="${esc(mKey(m,e))}">
         <td class="tp-mn">${NMOPEN[m.uid]?`<span class="tp-nmed"><input class="tp-nmi" maxlength="20" value="${esc(m.name||'')}" aria-label="팀에 보이는 이름" autocomplete="off"><button type="button" class="btn small" data-tp="nameset">저장</button><button type="button" class="lnk" data-tp="nameclose">취소</button></span>`:`${me?meTag:''}${esc(m.name||'(이름 없음)')} <button type="button" class="lnk tp-nmbtn" data-tp="nameopen" aria-label="${esc(m.name||'')} 이름 바꾸기">이름</button>`}${pend?' <span class="pend-tag">저장 전</span>':''}</td>
-        <td><label class="tp-small"><input type="checkbox" data-tmact${e.active?' checked':''} aria-label="${esc(TEAM_SEASON)} 시즌 명단"> 명단</label></td>
+        <td><label class="tp-small"><input type="checkbox" data-tmact${e.active?' checked':''} aria-label="${esc(TEAM_SEASON)} 시즌 명단"></label></td>
         <td><select data-tmrole aria-label="역할"${e.active?'':' disabled'}>${RL.map(r=>`<option value="${r}"${r===e.role?' selected':''}>${ROLE[r]}</option>`).join('')}</select></td>
         <td class="tp-mp">${isLeadRole(e.role)&&e.active?(CHIPOPEN[m.uid]?`<div class="tp-parts">${chipHtml(e)}<button type="button" class="lnk tp-chipt" data-tmchips>접기</button></div>`:`<div class="tp-parts tp-parts-ro">${e.parts.length?partsShow(e.parts).map(p=>`<span class="tp-pchip on ro${PGROUP[p]?' grp':''}">${esc(p)}</span>`).join(''):'<span class="muted tp-small">담당 없음</span>'}<button type="button" class="lnk tp-chipt" data-tmchips>${e.parts.length?'바꾸기':'고르기'}</button></div>`):'<span class="muted">—</span>'}</td>
         <td class="tp-mx">${me?'':`<button type="button" class="lnk" data-tp="kick">내보내기</button> <button type="button" class="lnk tp-warnlnk" data-tp="block" title="내보내고 다시 가입하지 못하게 합니다">차단</button>`}</td></tr>`; }), rows=R0.join('');
@@ -129,7 +129,20 @@
   function stage(uid, patch){ const m=MS.find(x=>x.uid===uid); if(!m) return; const n={...eff(m), ...patch}; if(!isLeadRole(n.role)) n.parts=[]; else n.parts=n.parts.filter(p=>p!=='공통' && (n.role==='head' || !PGROUP[p]));   /* 묶음 칩은 팀장만. 공통은 저장하지 않음(팀장 판정에서 처리) */
     if(sameP(n, cur(m))) delete MP[uid]; else MP[uid]=n; DRAFT.paint(); }
   function adminsAfter(){ return MS.filter(m=>{ const e=eff(m); return e.role==='admin' && e.active; }).length; }
-  DRAFT.add({ n:()=>Object.keys(MP).length, label:n=>`팀원 ${n}명`,
+  /* 저장 막대 목록용: 바뀐 팀원마다 무엇이 바뀌었는지 (명단 · 역할 · 담당 파트, 이전 → 이후) */
+  const partsTxt = ps => ps && ps.length ? partsShow(ps).join('·') : '없음';
+  function mpItems(){ return Object.entries(MP).map(([uid,n])=>{ const m=MS.find(x=>x.uid===uid); if(!m) return null; const o=cur(m), ch=[];
+      if(o.active!==n.active) ch.push(`명단 ${o.active?'들어감':'빠짐'} → ${n.active?'들어감':'빠짐'}`);
+      if(o.role!==n.role) ch.push(`역할 ${ROLE[o.role]} → ${ROLE[n.role]}`);
+      if([...o.parts].sort().join()!==[...n.parts].sort().join()) ch.push(`담당 ${partsTxt(o.parts)} → ${partsTxt(n.parts)}`);
+      return {key:uid, c:'팀원', n:m.name||'(이름 없음)', p:'', change:ch.join(' · '),
+        go(){ const show=()=>{ const tr=document.querySelector(`#v-team .adm-tm tr[data-uid="${CSS.escape(uid)}"]`); if(!tr) return; const sc=tr.closest('.tp-mscroll');
+            if(sc) sc.scrollTop = tr.offsetTop - sc.clientHeight/2 + tr.offsetHeight/2;
+            const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; if(sc) smoothScrollTo(()=>sc.getBoundingClientRect().top+scrollY-tabh-60);
+            tr.classList.remove('tt-flash'); void tr.offsetWidth; tr.classList.add('tt-flash'); };
+          if(TAB!=='team') showTab('team'); const sb=document.querySelector('#v-team [data-tts=settings]'); if(sb && !document.querySelector('#v-team [data-ttp=settings]:not([hidden]) .adm-tm tr')) { sb.click(); setTimeout(show, 700); } else show(); },
+        revert(){ delete MP[uid]; renderTM().catch(()=>{}); DRAFT.paint(); } }; }).filter(Boolean); }
+  DRAFT.add({ n:()=>Object.keys(MP).length, label:n=>`팀원 ${n}명`, items: mpItems,
     revert(){ Object.keys(MP).forEach(k=>delete MP[k]); renderTM().catch(()=>{}); },
     async save(){ if(adminsAfter()<1){ toast('회장이 한 명도 남지 않습니다. 저장하지 않았습니다.'); throw new Error('no admin'); }
       const meDemoted = MP[C.uid] && (MP[C.uid].role!=='admin' || !MP[C.uid].active);
@@ -159,8 +172,9 @@
     const same = SSEL===String(TEAM_SEASON);
     const season = `<div class="tp-sec tp-s-season"><div class="sec-label">팀의 이번 시즌</div><p class="tp-small">지금 팀의 이번 시즌: <b>${esc(TEAM_SEASON)}</b></p>
       <div class="tp-row"><span class="sn-nav"><button type="button" class="tt-sn" data-tss="-1" aria-label="이전 해">${SN_SVG[0]}</button><b class="tt-sv">${esc(SSEL)}</b><button type="button" class="tt-sn" data-tss="1" aria-label="다음 해">${SN_SVG[1]}</button></span>
-      <button type="button" class="btn small pri" data-tsset${same?' disabled':''}>${esc(SSEL)} 시즌을 이번 시즌으로 정하기</button></div>
-      <p class="muted tp-small">${same?'고른 해가 지금 이번 시즌과 같습니다. ‹ ›로 바꿀 해를 고르십시오.':'두 번 눌러 확인하면 팀 전체의 이번 시즌이 바뀝니다. 지난 시즌 기록은 그대로 남습니다. 새 시즌 명단에는 회장만 들어가므로, 이어 가는 팀원은 오른쪽 전체 팀원 표에서 [명단]을 체크하고 저장하십시오. 넘긴 뒤에는 이전 시즌 기록을 회장만 고칠 수 있으니, 팀장·파트장이 마무리할 값은 넘기기 전에 정리하십시오.'} 여기의 ‹ ›는 위쪽 "보는 시즌"과 따로 움직입니다.</p></div>`;
+      <button type="button" class="btn small" data-tsset${same?' disabled':''}>${esc(SSEL)} 시즌을 이번 시즌으로 정하기</button></div>
+      <p class="muted tp-small">${same?'고른 해가 지금 이번 시즌과 같습니다. ‹ ›로 바꿀 해를 고르십시오.':'두 번 눌러 확인하면 팀 전체의 이번 시즌이 바뀝니다.'}</p>
+      <details class="tp-more"><summary>자세히</summary><p class="muted tp-small">지난 시즌 기록은 그대로 남습니다. 새 시즌 명단에는 회장만 들어가므로, 이어 가는 팀원은 오른쪽 전체 팀원 표에서 명단 칸을 체크하고 저장하십시오. 넘긴 뒤에는 이전 시즌 기록을 회장만 고칠 수 있으니, 팀장·파트장이 마무리할 값은 넘기기 전에 정리하십시오. 여기의 ‹ ›는 위쪽 "보는 시즌"과 따로 움직입니다.</p></details></div>`;
     const backup = `<div class="tp-sec tp-s-backup"><div class="sec-label">백업</div><div class="tp-row"><button type="button" class="btn small" data-tp="export">내보내기</button><button type="button" class="btn small" data-tp="importpick">불러오기</button><input type="file" class="tp-file" accept=".json,application/json" hidden></div><p class="muted tp-small">내보내기: 모든 시즌의 진행 상태·우리 팀 값과 논의를 파일로 저장(시즌이 끝날 때마다 권장).<br>불러오기: <b>고른 시즌만</b> 그 시즌 자리에 덮어쓰고, 논의는 지금 없는 글만 되살립니다.</p><div class="tp-imp" hidden></div></div>`;
     const danger = `<div class="tp-sec tp-dz"><div class="sec-label">위험 구역 <span class="muted">되돌릴 수 없는 작업입니다. 모두 두 번 확인한 뒤 실행됩니다.</span></div>
       <div class="tp-dzg"><div class="tp-dzi"><button type="button" class="btn small tp-dzbtn" data-tp="seasonreset">${esc(SEASON)} 시즌 초기화</button><span class="muted tp-small">이 시즌의 진행 상태·우리 팀 값을 지웁니다. 논의는 남습니다.</span></div>
@@ -169,7 +183,8 @@
 
     const h = `<div class="tp-2col"><div class="tp-left">${season}${namepw}${backup}</div>
       <div class="tp-right"><div class="tp-sec tp-fill"><div class="sec-label">팀원 ${ms.length}명 · ${esc(TEAM_SEASON)} 시즌 명단 ${nNow}명</div>
-        <p class="muted tp-small">표에서 바로 명단·역할·담당 파트를 바꿉니다. 이름 옆 [이름]으로 팀에 보이는 이름을 고치면 바로 저장됩니다. 팀장은 샤시·전기 칩 하나로 그 묶음의 모든 파트와 공통 항목을 편집합니다. 파트장을 겸하면 그 파트 칩을 더 켜 두면 담당 칸에 함께 보입니다. 바꾼 내용은 아래 막대의 [모두 저장]을 눌러야 반영됩니다. 내보내기·차단은 한 번 더 눌러 확인하면 바로 실행됩니다. 차단한 사람은 비밀번호를 알아도 다시 가입할 수 없고, 명단 선택의 [차단한 사람]에서 보고 [차단 해제]합니다.${viewingOther()?` <b>지금 ${esc(SEASON)} 시즌을 보는 중이어도 여기서는 팀의 이번 시즌(${esc(TEAM_SEASON)}) 명단을 관리합니다.</b>`:''}</p>
+        <p class="muted tp-small">표에서 바로 명단·역할·담당 파트를 바꾸고, 아래 막대의 [모두 저장]으로 반영합니다. [이름] · [내보내기] · [차단]은 줄에 커서를 올리면 보입니다.${viewingOther()?` <b>지금 ${esc(SEASON)} 시즌을 보는 중이어도 여기서는 팀의 이번 시즌(${esc(TEAM_SEASON)}) 명단을 관리합니다.</b>`:''}</p>
+        <details class="tp-more"><summary>자세히</summary><p class="muted tp-small">[이름]으로 팀에 보이는 이름을 고치면 바로 저장됩니다. 팀장은 샤시·전기 칩 하나로 그 묶음의 모든 파트와 공통 항목을 편집합니다. 파트장을 겸하면 그 파트 칩을 더 켜 두면 담당 칸에 함께 보입니다. 내보내기·차단은 한 번 더 눌러 확인하면 바로 실행됩니다. 차단한 사람은 비밀번호를 알아도 다시 가입할 수 없고, 명단 선택의 [차단한 사람]에서 보고 [차단 해제]합니다.</p></details>
         ${manageTable(ms, bl)}</div></div></div>${danger}`;
     /* 다시 그려도 팀원 표·설정 칸의 스크롤 위치 유지 */
     const keep = ['.tp-mscroll', '.tp-mtw', '.tp-fill', '.tp-left'].map(s=>{ const n=R.querySelector(s); return [s, n ? n.scrollTop : 0]; });
