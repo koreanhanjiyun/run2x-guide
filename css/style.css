@@ -3881,3 +3881,5 @@ details.acc-now::details-content{transition:none!important}
 #toc .toc-fold{color:var(--ink-2)}
 #toc .toc-h:hover .toc-fold{color:var(--accent)}
 #toc .toc-h :focus-visible{outline:2px solid var(--accent)!important}
+/* 목차 스크롤 분리 (2026-11-26): 목차 끝에 닿아도 페이지로 넘어가지 않음 */
+#toc .toc-in{overscroll-behavior:contain}

@@ -58,7 +58,7 @@ function ipToc(){ const t=$('#toc'); if(!t) return;
   if(!IPAGE){ t.querySelectorAll('.toc-its').forEach(x=>x.remove()); t.querySelectorAll('.toc-s').forEach(b=>b.classList.remove('cur')); try{ spyToc(); }catch(e){} tocMarkFor(300); return; }
   const sid=IT[IPAGE].s, b=t.querySelector(`.toc-s[data-toc="${sid}"]`); if(!b) return;
   t.querySelectorAll('.toc-s').forEach(x=>x.classList.toggle('cur', x===b));
-  const keep=on=>{ if(!on) return; const r=on.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; };
+  const keep=on=>tocKeep(on);   /* 스크롤 칸은 .toc-in */
   /* 같은 단계 안에서 항목만 옮길 때는 목록을 다시 만들지 않음 (깜빡임 방지, 2026-11-26): 표시만 옮기고 띠가 미끄러짐 */
   const old=t.querySelector('.toc-its'); if(old && old.dataset.sid===sid){ old.querySelectorAll('.toc-it').forEach(x=>x.classList.toggle('on', x.dataset.goto===IPAGE)); keep(old.querySelector('.on')); tocMark(); return; }
   t.querySelectorAll('.toc-its').forEach(x=>x.remove());

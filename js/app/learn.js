@@ -209,7 +209,18 @@ function spyToc(){ if(TOCRAF) return; TOCRAF=requestAnimationFrame(()=>{ TOCRAF=
   els.forEach(el=>{ if(el.getBoundingClientRect().top < line) cur = el.dataset.fs || el.dataset.step; });
   if(TOCLOCK) cur = TOCLOCK;   /* 목차로 이동하는 동안은 누른 단계 */
   document.querySelectorAll('#toc .toc-s').forEach(b=>b.classList.toggle('cur', b.dataset.toc===cur));
-  const cb=document.querySelector('#toc .toc-s.cur'); if(cb){ const t=$('#toc'), r=cb.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } tocMark(); }); }
+  if(!TOCHOV) tocKeep(document.querySelector('#toc .toc-s.cur')); tocMark(); }); }
+/* 목차 따라가기 (2026-11-26): 스크롤 칸은 .toc-in (#toc 는 overflow:hidden 이라 예전 t.scrollTop 은 안 움직였음).
+   강조가 목차 칸 위 · 아래 1/4 밖으로 나가면 가운데로 부드럽게 옮김. 마우스가 목차 위에 있는 동안은 옮기지 않음 */
+let TOCHOV=false, TOCANI=0;
+function tocKeep(el){ const inn=document.querySelector('#toc .toc-in'); if(!el || !inn || !el.offsetParent) return; const r=el.getBoundingClientRect(), tr=inn.getBoundingClientRect(), q=tr.height/4;
+  if(r.top>=tr.top+q && r.bottom<=tr.bottom-q) return;
+  const to=Math.max(0, Math.min(inn.scrollHeight-inn.clientHeight, inn.scrollTop + r.top-tr.top-(tr.height-r.height)/2)), from=inn.scrollTop, t0=performance.now(), d=280; if(Math.abs(to-from)<1) return;
+  cancelAnimationFrame(TOCANI); const f=now=>{ const k=Math.min(1,(now-t0)/d), e=1-Math.pow(1-k,3); inn.scrollTop=from+(to-from)*e; tocMark(); if(k<1) TOCANI=requestAnimationFrame(f); }; TOCANI=requestAnimationFrame(f); }
+/* 목차 위 휠은 페이지로 넘기지 않음: 목차가 짧거나 끝에 닿아도 (끝은 CSS overscroll-behavior 로도 막음) */
+document.addEventListener('pointerover', e=>{ TOCHOV=!!(e.target.closest && e.target.closest('#toc')); }, {passive:true});
+document.addEventListener('wheel', e=>{ const t=e.target.closest && e.target.closest('#toc'); if(!t || t.classList.contains('coll')) return; const inn=t.querySelector('.toc-in');
+  if(!inn || !inn.contains(e.target) || inn.scrollHeight<=inn.clientHeight+1 || (e.deltaY<0 && inn.scrollTop<=0) || (e.deltaY>0 && inn.scrollTop>=inn.scrollHeight-inn.clientHeight-1)) e.preventDefault(); }, {passive:false});
 let TOCLOCK=null;   /* 목차로 간 단계: 사용자가 직접 스크롤(휠 · 터치 · 키 · 스크롤바)할 때까지 강조 고정 (맨 위 · 맨 아래라 가운데로 못 오는 단계도 맞게) */
 ['wheel','touchstart','keydown'].forEach(k=>addEventListener(k, ()=>{ if(TOCLOCK){ TOCLOCK=null; spyToc(); } }, {passive:true}));
 addEventListener('pointerdown', e=>{ if(TOCLOCK && (e.clientX>=document.documentElement.clientWidth || !(e.target.closest && e.target.closest('#toc')))){ TOCLOCK=null; spyToc(); } }, {passive:true});   /* 스크롤바 · 본문을 누르면 풂 */
