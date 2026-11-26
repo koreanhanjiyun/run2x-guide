@@ -3852,5 +3852,3 @@ body.tt-on #partRail{bottom:136px}
 /* 도구 버블 선 (2026-11-26): 목록 뒤 긴 선 하나 대신, 번호 버블마다 바로 위 버블(첫째는 "도구" 버블)까지 잇는 짧은 선(간격 8 px)을 붙여 버블과 함께 나오고 들어감.
    선은 번호 쪽 중심(오른쪽 17 px)에 고정 → 이름이 왼쪽으로 늘어나도 선은 제자리 */
 #tlDial .tld-b::before{content:"";position:absolute;right:17px;bottom:100%;width:2px;height:8px;margin-bottom:1px;background:#b9b1c9;pointer-events:none}
-/* 참고 탭은 사용법 없음 (2026-11-26) */
-body.tab-ref #tourBtn{display:none}

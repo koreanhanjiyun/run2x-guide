@@ -400,8 +400,8 @@ document.addEventListener('click', e=>{
   const s=e.target.closest('[data-tour]'); if(s && !e.target.closest('#tour')){ e.preventDefault(); tourStart(s.dataset.tour); return; }
   const hp=e.target.closest('[data-helppop]'); if(hp){ e.preventDefault(); e.stopPropagation(); HP && !HP.hidden && !HP._closing ? helpClose() : helpOpen(); return; }
   if(HP && !HP.hidden && !HP._closing && !e.target.closest('#helpPop')) helpClose();
-  if(e.target.closest('[data-helpgo]')){ e.preventDefault(); helpClose(true); tourStart(curTourName()); return; }
-  if(e.target.closest('#tourBtn')){ e.preventDefault(); tourStart(curTourName()); return; }
+  if(e.target.closest('[data-helpgo]')){ e.preventDefault(); helpClose(true); if(TAB==='ref'){ toast('참고 탭에는 사용법이 없습니다.', 2200); return; } tourStart(curTourName()); return; }
+  if(e.target.closest('#tourBtn')){ e.preventDefault(); if(TAB==='ref'){ toast('참고 탭에는 사용법이 없습니다.', 2200); return; } tourStart(curTourName()); return; }   /* 참고 탭: 버튼은 그대로 두고 스낵바만 (2026-11-26) */
   if(!TR) return;
   if(e.target.closest('[data-tour-next]')){ e.preventDefault(); if(TR.busy){ tgQueue(1); return; } TR.i>=TR.steps.length-1 ? tourStop() : tourGo(TR.i+1, 1); return; }
   if(e.target.closest('[data-tour-prev]')){ e.preventDefault(); if(TR.busy){ tgQueue(-1); return; } if(TR.i>0) tourGo(TR.i-1, -1); return; }
