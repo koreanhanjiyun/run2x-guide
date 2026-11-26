@@ -514,8 +514,8 @@ details.q.flash>summary{animation:flGS 2.6s ease-in-out}
 details.step.flash>summary{animation:flPS 2.6s ease-in-out}
 @keyframes flPS{10%,58%{background:#e2d4f3}}
 tr.flash{animation:none}
-tr.flash>td{animation:flRow 2.6s ease-in-out}
-@keyframes flRow{10%,58%{background:#e2d4f3}}
+tr.flash>td{animation:flRow 1.3s ease-in-out}   /* 용어집 검색 뒤 행 강조: 2.6 → 1.3 s (2026-11-26) */
+@keyframes flRow{12%,40%{background:#e2d4f3}}
 #graph .node.gflash rect.nb{animation:flNode 2.2s ease-in-out}
 @keyframes flNode{10%,60%{stroke:var(--gc);stroke-width:5}}
 
