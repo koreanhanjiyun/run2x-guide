@@ -103,6 +103,10 @@ function animScrollLeft(el, to){ const x0=el.scrollLeft, d=to-x0, dur=Math.min(9
 function markHere(el){
   document.querySelectorAll('.here').forEach(x=>x.classList.remove('here'));
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash','here');
+  /* 강조는 한 번만 (2026-11-26): 끝나면 flash 를 떼어, 다시 보이거나 다른 검색을 할 때 예전 강조가 되살아나지 않게 */
+  clearTimeout(el._flT); el._flT = setTimeout(()=>el.classList.remove('flash'), 6000);
+  const end = e=>{ if(/^(flash|flash2|flRow)$/.test(e.animationName)){ el.classList.remove('flash'); el.removeEventListener('animationend', end); } };
+  el.addEventListener('animationend', end);
 }
 function stickyOffset(){ const cs=getComputedStyle(document.documentElement); return parseFloat(cs.getPropertyValue('--tabh'))+parseFloat(cs.getPropertyValue('--sth'))+14; }
 function openItem(id){
