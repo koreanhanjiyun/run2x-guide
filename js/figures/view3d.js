@@ -26,8 +26,12 @@ const V3D = (() => {
     cv.addEventListener('pointerup', pu); cv.addEventListener('pointercancel', pu); cv.addEventListener('wheel', wh, {passive:false});
     return () => { cv.removeEventListener('mousedown', md); cv.removeEventListener('pointerdown', pd); cv.removeEventListener('pointermove', pm);
       cv.removeEventListener('pointerup', pu); cv.removeEventListener('pointercancel', pu); cv.removeEventListener('wheel', wh); }; }
-  /* 차량 좌표(X 앞 · Y 위 · Z 왼쪽, m) 시점: 3D(원근) · 앞 · 옆 · 위(정투영). 옆과 위는 2D 그림처럼 차 앞이 왼쪽 */
-  function orbit(T, ren, o){ o = o || {};
+  /* 차량 좌표(X 앞 · Y 위 · Z 왼쪽, m) = 왼손 좌표계. three.js(오른손)로 그대로 그리면 좌우 거울상이 되므로,
+     mirror(장면)으로 장면을 Z 로 한 번 뒤집어 실제 차 모습으로 그린다 (2026-11-26). 이때 orbit 에 real:true 를 주면
+     목표점 z · 처음 방위각 th 를 뒤집어 같은 쪽에서 보게 함. 장면 안 좌표는 계속 차량 좌표(Z 왼쪽) 그대로 쓰면 됨 */
+  function mirror(sc){ sc.scale.set(1, 1, -1); sc.updateMatrixWorld(true); return sc; }
+  /* 시점: 3D(원근) · 앞 · 옆 · 위(정투영). 앞 = 차 앞에서 본 모습(차 왼쪽이 화면 오른쪽), 옆 = 왼쪽 면(차 앞이 화면 왼쪽), 위 = 차 앞이 왼쪽 */
+  function orbit(T, ren, o){ o = Object.assign({}, o || {}); if(o.real){ if(o.target) o.target = o.target.clone().setZ(-o.target.z); o.th = -(o.th != null ? o.th : 0.75); }
     const pc = new T.PerspectiveCamera(32, 1, 0.05, 200), oc = new T.OrthographicCamera(-1, 1, 1, -1, 0.05, 200);
     const st = {th:o.th != null ? o.th : 0.75, ph:o.ph != null ? o.ph : 1.05, r:o.r || 6, half:o.half || 1.6, zoom:1, mode:'iso'};
     const tgt = (o.target || new T.Vector3()).clone(), pan = new T.Vector3();
@@ -38,7 +42,7 @@ const V3D = (() => {
       const [d, up] = VIEWS[st.mode], hh = st.half*st.zoom; oc.left = -hh*asp; oc.right = hh*asp; oc.top = hh; oc.bottom = -hh; oc.updateProjectionMatrix();
       oc.up.copy(up); oc.position.copy(t.clone().add(d.clone().multiplyScalar(50))); oc.lookAt(t); return oc; }
     return { st, cam, set(v){ st.mode = v; pan.set(0, 0, 0); if(v==='iso'){ st.th = o.th != null ? o.th : 0.75; st.ph = o.ph != null ? o.ph : 1.05; st.r = o.r || 6; } else st.zoom = 1; },
-      target(v){ tgt.copy(v); },
+      target(v){ tgt.copy(v); if(o.real) tgt.z = -tgt.z; },
       rot(dx, dy){ if(st.mode!=='iso'){ /* 정투영에서 끌면 3D 시점으로: 지금 보는 방향에서 시작 */
           const d = VIEWS[st.mode][0]; st.th = Math.atan2(d.z, d.x); st.ph = Math.min(Math.PI-0.02, Math.max(0.02, Math.acos(Math.max(-1, Math.min(1, d.y))))); st.mode = 'iso'; }
         st.th += dx*0.008; st.ph = Math.min(Math.PI-0.02, Math.max(0.02, st.ph - dy*0.008)); },
@@ -64,5 +68,5 @@ const V3D = (() => {
     g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 10; g.strokeText(text, 12, c.height/2); g.fillStyle = color; g.fillText(text, 12, c.height/2);
     const sp = new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c), depthTest:false, transparent:true})); sp.scale.set(h*w/c.height, h, 1); sp.renderOrder = 31; return sp; }
   const asset = p => p + tag();   /* 같은 버전 꼬리표로 파일 주소 (캐시 무효화) */
-  return { three, gltf, controls, orbit, viewBtns, marker, label, asset, HELP };
+  return { three, gltf, controls, orbit, mirror, viewBtns, marker, label, asset, HELP };
 })();

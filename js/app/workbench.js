@@ -737,7 +737,8 @@ function wb3dOpen(){ const T = wbT(), box = $('#wb3d'); if(!box) return;
     const sc = new THREE.Scene(); sc.background = new THREE.Color(0xf8f7fb);
     sc.add(new THREE.HemisphereLight(0xffffff, 0xb8b2c8, 0.85)); const dl = new THREE.DirectionalLight(0xffffff, 0.6); dl.position.set(3, 5, 2); sc.add(dl);
     const grid = new THREE.GridHelper(10, 40, 0xc4bfd2, 0xe2dfea); sc.add(grid);
-    const orb = V3D.orbit(THREE, rd, {target:new THREE.Vector3(.8, .35, 0), r:5.6, half:1.45});
+    V3D.mirror(sc);   /* 차량 좌표(Z 왼쪽)를 실제 모습으로 (2026-11-26) */
+    const orb = V3D.orbit(THREE, rd, {target:new THREE.Vector3(.8, .35, 0), r:5.6, half:1.45, real:true});
     const S = WB.t3 = {rd, sc, orb, box, grid};
     S.render = () => rd.render(sc, orb.cam());
     S.off = V3D.controls(rd.domElement, { rot:(dx, dy) => { orb.rot(dx, dy); wb3dViews(); S.render(); }, pan:(dx, dy) => { orb.pan(dx, dy); S.render(); }, zoom:f => { orb.zoom(f); S.render(); } });

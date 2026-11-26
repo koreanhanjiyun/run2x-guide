@@ -3875,11 +3875,12 @@ body.tt-on #partRail{bottom:136px}
 /* 단계 하나만 열기: 위쪽 단계는 바로 닫음 (2026-11-26) */
 details.acc-now::details-content{transition:none!important}
 #toc .toc-it.on:hover,#toc .toc-s.cur:hover{background:transparent}   /* 강조 띠를 호버 배경이 덮지 않게 */
-/* 목차 머리 ↔ 상단바 구분 (2026-11-26, A안): 머리 = 밝은 패널색 + 진한 글자 + 아래 1 px 선. 목차를 상단바 보라 선(2 px) 아래에서 시작해 선이 목차 위까지 이어짐 */
+/* 목차 머리 ↔ 상단바 구분 (2026-11-26, A안): 펼쳤을 때만 머리 = 밝은 패널색 + 진한 글자 + 아래 1 px 선. 목차를 상단바 보라 선(2 px) 아래에서 시작해 선이 목차 위까지 이어짐.
+   접힌 세로 막대는 다른 떠 있는 버튼들과 같은 원래 색 그대로 */
 #toc:not(.coll){top:calc(var(--tabh) + 2px)!important}
-#toc .toc-h{background:var(--panel);color:var(--ink);border-bottom:1px solid var(--line-2)}
-#toc .toc-fold{color:var(--ink-2)}
-#toc .toc-h:hover .toc-fold{color:var(--accent)}
+#toc:not(.coll) .toc-h{background:var(--panel);color:var(--ink);border-bottom:1px solid var(--line-2)}
+#toc:not(.coll) .toc-fold{color:var(--ink-2)}
+#toc:not(.coll) .toc-h:hover .toc-fold{color:var(--accent)}
 #toc .toc-h :focus-visible{outline:2px solid var(--accent)!important}
 /* 목차 스크롤 분리 (2026-11-26): 목차 끝에 닿아도 페이지로 넘어가지 않음 */
 #toc .toc-in{overscroll-behavior:contain}

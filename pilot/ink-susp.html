@@ -69,8 +69,8 @@ h1{font-size:20px;margin:0 0 4px}
 <script>
 (() => {
   const cv = document.getElementById('cv'), fig = document.getElementById('fig');
-  const kit = INK3D.makeKit(cv), T = THREE, mech = SUSP_BUILD(kit);
-  const orb = V3D.orbit(T, kit.renderer, { target:new T.Vector3(0.0, 0.35, 0.27), th:-0.78, ph:1.08, r:1.42, half:0.36 });
+  const kit = INK3D.makeKit(cv), T = THREE; V3D.mirror(kit.scene); const mech = SUSP_BUILD(kit);
+  const orb = V3D.orbit(T, kit.renderer, { target:new T.Vector3(0.0, 0.35, 0.27), th:-0.78, ph:1.08, r:1.42, half:0.36, real:true });
   const labs = new INK3D.Labels(document.getElementById('labs'), cv, {margin:20});
   mech.callouts.forEach(c => labs.add(mech.root, c.name, {at:c.at}));
   labs.add(mech.arrow, '범프 · 리바운드', {legend:true, dx:14, color:'#d6336c'});
