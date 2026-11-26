@@ -69,7 +69,7 @@ const INK3D = (() => {
         this.svg.append(it.halo, it.line, it.dot); }
       this.items.push(it); return it; }
     update(cam){ const W = this.canvas.clientWidth, H = this.canvas.clientHeight, mid = W/2, v = new THREE.Vector3(), shown = [];
-      for(const it of this.items){ if(it.at) it.at(v); else { v.copy(it.anchor); it.obj.localToWorld(v); } v.project(cam);
+      for(const it of this.items){ if(it.at){ it.at(v); v.applyMatrix4(it.obj.matrixWorld); } else { v.copy(it.anchor); it.obj.localToWorld(v); } v.project(cam);
         const vis = it.obj.visible !== false && v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
         it.el.style.display = vis ? '' : 'none'; if(it.line){ [it.halo, it.line, it.dot].forEach(e => e.style.display = vis ? '' : 'none'); } if(!vis) continue;
         it.sx = (v.x*0.5 + 0.5)*W; it.sy = (-v.y*0.5 + 0.5)*H; it.h = it.el.offsetHeight || 18; it.w = it.el.offsetWidth || 60;
