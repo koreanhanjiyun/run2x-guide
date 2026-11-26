@@ -54,13 +54,18 @@ function ipClose(){ if(!IPAGE) return; IPAGE=null; document.body.classList.remov
   try{ if(TAB==='steps') history.replaceState(navState(), '', '#steps'); }catch(e){} ipToc(); setTitle(); }
 
 /* 목차: 항목 화면이면 그 단계 아래에 항목 이름들 (지금 단계 하나만) */
-function ipToc(){ const t=$('#toc'); if(!t) return; t.querySelectorAll('.toc-its').forEach(x=>x.remove()); t.querySelectorAll('.toc-s').forEach(b=>b.classList.remove('cur'));
-  if(!IPAGE) { try{ spyToc(); }catch(e){} return; }
-  const sid=IT[IPAGE].s, b=t.querySelector(`.toc-s[data-toc="${sid}"]`); if(!b) return; b.classList.add('cur');
-  const box=document.createElement('div'); box.className='toc-its';
+function ipToc(){ const t=$('#toc'); if(!t) return;
+  if(!IPAGE){ t.querySelectorAll('.toc-its').forEach(x=>x.remove()); t.querySelectorAll('.toc-s').forEach(b=>b.classList.remove('cur')); try{ spyToc(); }catch(e){} tocMarkFor(300); return; }
+  const sid=IT[IPAGE].s, b=t.querySelector(`.toc-s[data-toc="${sid}"]`); if(!b) return;
+  t.querySelectorAll('.toc-s').forEach(x=>x.classList.toggle('cur', x===b));
+  const keep=on=>{ if(!on) return; const r=on.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; };
+  /* 같은 단계 안에서 항목만 옮길 때는 목록을 다시 만들지 않음 (깜빡임 방지, 2026-11-26): 표시만 옮기고 띠가 미끄러짐 */
+  const old=t.querySelector('.toc-its'); if(old && old.dataset.sid===sid){ old.querySelectorAll('.toc-it').forEach(x=>x.classList.toggle('on', x.dataset.goto===IPAGE)); keep(old.querySelector('.on')); tocMark(); return; }
+  t.querySelectorAll('.toc-its').forEach(x=>x.remove());
+  const box=document.createElement('div'); box.className='toc-its'; box.dataset.sid=sid;
   box.innerHTML=ipItems(sid).map(i=>`<button type="button" class="toc-it${i.id===IPAGE?' on':''}" data-goto="${i.id}">${i.n}</button>`).join('');
-  b.after(box); const hh=box.scrollHeight; box.style.transitionDuration=motionMs(hh)+'ms';   /* 펼치는 높이에 맞춘 시간 */
-  requestAnimationFrame(()=>{ box.classList.add('open'); const on=box.querySelector('.on'); if(on){ const r=on.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } }); }
+  b.after(box); const hh=box.scrollHeight, ms=motionMs(hh); box.style.transitionDuration=ms+'ms';   /* 펼치는 높이에 맞춘 시간 */
+  requestAnimationFrame(()=>{ box.classList.add('open'); keep(box.querySelector('.on')); tocMarkFor(ms+150); }); }
 
 /* 열기: 예전 openItem(펼쳐서 스크롤)을 항목 화면으로 */
 openItem = function(id){ if(!IT[id]) return; pushHist(); setVM('full'); IPKEEP=true; showTab('steps', true); IPKEEP=false; ipShow(id); window.scrollTo({top:0, behavior:'instant'}); };

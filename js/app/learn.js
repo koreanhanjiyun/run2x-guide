@@ -200,23 +200,39 @@ function tocFx(){ const t=$('#toc'); document.documentElement.style.setProperty(
 function updateToc(){
   document.querySelectorAll('#toc .toc-s').forEach(b=>{ const done=stepDone(b.dataset.toc), sk=stepSkip(b.dataset.toc); const m=b.querySelector('.tm'); m.className='tm'+(done?' done':''); m.textContent=done?'✓':''; b.classList.toggle('st-allskip',sk); b.title=sk?'이번 시즌 제외':''; }); }
 let TOCRAF=0;
-function spyToc(){ if(TOCRAF) return; TOCRAF=requestAnimationFrame(()=>{ TOCRAF=0; if(TAB!=='steps') return;
+function spyToc(){ if(TOCRAF) return; TOCRAF=requestAnimationFrame(()=>{ TOCRAF=0; if(TAB!=='steps') return; if(typeof IPAGE!=='undefined' && IPAGE) return;   /* 항목 화면에서는 ipToc 가 정함 */
   const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; let cur=null;
   const els = VMODE==='flow' ? document.querySelectorAll('#flow-list .flow-step[data-fs]') : document.querySelectorAll('#step-list details.step[data-step]');
   /* C13: 페이지 끝에 가까워지면 기준선을 화면 아래로 내려, 마지막 단계들도 현재 위치로 잡힘 */
-  const rem=document.documentElement.scrollHeight-(scrollY+innerHeight), half=innerHeight/2, base=tabh+140;
-  const line = rem<half ? base + (innerHeight-60-base)*(1-rem/half) : base;
+  const rem=document.documentElement.scrollHeight-(scrollY+innerHeight), half=innerHeight/2, base=(innerHeight+tabh)/2;   /* 판정선 = 화면 가운데 (목차 이동도 제목을 가운데로 보냄, 2026-11-26) */
+  const top0=tabh+60, line = rem<half ? base + (innerHeight-60-base)*(1-rem/half) : scrollY<half ? top0 + (base-top0)*(scrollY/half) : base;   /* 맨 위 근처는 판정선을 위로 (첫 단계가 현재) */
   els.forEach(el=>{ if(el.getBoundingClientRect().top < line) cur = el.dataset.fs || el.dataset.step; });
+  if(TOCLOCK) cur = TOCLOCK;   /* 목차로 이동하는 동안은 누른 단계 */
   document.querySelectorAll('#toc .toc-s').forEach(b=>b.classList.toggle('cur', b.dataset.toc===cur));
-  const cb=document.querySelector('#toc .toc-s.cur'); if(cb){ const t=$('#toc'), r=cb.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } }); }
+  const cb=document.querySelector('#toc .toc-s.cur'); if(cb){ const t=$('#toc'), r=cb.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } tocMark(); }); }
+let TOCLOCK=null;   /* 목차로 간 단계: 사용자가 직접 스크롤(휠 · 터치 · 키 · 스크롤바)할 때까지 강조 고정 (맨 위 · 맨 아래라 가운데로 못 오는 단계도 맞게) */
+['wheel','touchstart','keydown'].forEach(k=>addEventListener(k, ()=>{ if(TOCLOCK){ TOCLOCK=null; spyToc(); } }, {passive:true}));
+addEventListener('pointerdown', e=>{ if(TOCLOCK && (e.clientX>=document.documentElement.clientWidth || !(e.target.closest && e.target.closest('#toc')))){ TOCLOCK=null; spyToc(); } }, {passive:true});   /* 스크롤바 · 본문을 누르면 풂 */
+/* 목차 강조 띠 (2026-11-26): 단계 · 항목 강조를 띠 하나로 그려, 바뀔 때 미끄러져 이동 (항목 화면에서는 항목, 목록에서는 단계) */
+function tocMark(){ const t=$('#toc'), inn=t && t.querySelector('.toc-in'); if(!inn) return; let m=inn.querySelector(':scope>.toc-mk');
+  if(!m){ m=document.createElement('i'); m.className='toc-mk'; m.setAttribute('aria-hidden','true'); inn.prepend(m); }
+  const tg=TAB==='steps' ? (inn.querySelector('.toc-its .toc-it.on') || inn.querySelector('.toc-s.cur')) : null;
+  if(!tg || !tg.offsetParent){ m.classList.remove('on'); return; }
+  const a=tg.getBoundingClientRect(), b=inn.getBoundingClientRect(), first=!m.classList.contains('on');
+  if(first) m.style.transition='none';
+  m.style.transform=`translate(${a.left-b.left+inn.scrollLeft}px,${a.top-b.top+inn.scrollTop}px)`; m.style.width=a.width+'px'; m.style.height=a.height+'px'; m.classList.add('on');
+  if(first){ void m.offsetWidth; m.style.transition=''; } }
+function tocMarkFor(ms){ const end=performance.now()+(ms||450); const f=()=>{ tocMark(); if(performance.now()<end) requestAnimationFrame(f); }; requestAnimationFrame(f); }
+addEventListener('resize', ()=>tocMark());
 function gotoStep(sid){
   /* 목차 이동: 펼치지 않고(이미 펼친 카드는 그대로) 카드 제목줄을 화면 가운데로 */
   const cs=getComputedStyle(document.documentElement), tabh=parseFloat(cs.getPropertyValue('--tabh'))||50;
   const midOff=(el,hd)=>Math.max(tabh+8, (window.innerHeight + tabh - (hd?hd.offsetHeight:0))/2);
   if(VMODE==='flow'){ if(TAB!=='steps') showTab('steps', true); const fs=document.querySelector(`#flow-list .flow-step[data-fs="${sid}"]`); if(!fs) return; const hd=fs.firstElementChild;
-    requestAnimationFrame(()=>smoothScrollTo(()=>fs.getBoundingClientRect().top+window.scrollY-midOff(fs,hd), ()=>markHere(fs))); return; }
+    TOCLOCK=sid; spyToc(); requestAnimationFrame(()=>smoothScrollTo(()=>fs.getBoundingClientRect().top+window.scrollY-midOff(fs,hd), ()=>{ markHere(fs); spyToc(); })); return; }
   pushHist(); setVM('full'); showTab('steps', true); const st=$('#st-'+sid); if(!st) return; const hd=st.querySelector(':scope>summary');
-  requestAnimationFrame(()=>smoothScrollTo(()=>st.getBoundingClientRect().top+window.scrollY-midOff(st,hd), ()=>markHere(st))); }
+  TOCLOCK=sid; spyToc();
+  requestAnimationFrame(()=>smoothScrollTo(()=>st.getBoundingClientRect().top+window.scrollY-midOff(st,hd), ()=>{ markHere(st); spyToc(); })); }
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click',e=>{
@@ -234,3 +250,12 @@ document.addEventListener('input',e=>{ const c=e.target.closest('details.calc');
   if(e.target.classList.contains('season-in')){ const v=e.target.value.trim(); if(/^\d{4}$/.test(v)){ SEASON=v; SETP('season',v); document.querySelectorAll('.season-in').forEach(x=>{ if(x!==e.target) x.value=v; }); refreshValsExcept(e.target); } } });
 window.addEventListener('scroll', spyToc, {passive:true});
 function afterStatus(){ updateToc(); }
+/* 설계 탭: 단계는 하나만 열림 (2026-11-26). 새 단계를 열면 다른 단계는 닫고, 위쪽이 닫혀 밀린 만큼 스크롤을 되돌려 방금 연 단계 제목을 제자리에 둠 */
+document.addEventListener('toggle', e=>{ const d=e.target; if(!(d && d.matches && d.matches('#step-list details.step')) || !d.open) return;
+  const others=[...document.querySelectorAll('#step-list details.step[open]')].filter(x=>x!==d); if(!others.length) return;
+  const sm=d.querySelector(':scope>summary'), y0=sm.getBoundingClientRect().top;
+  /* 방금 연 단계보다 위에 있는 단계는 애니메이션 없이 바로 닫고 밀린 만큼 한 번에 스크롤을 되돌림 (화면 밖이라 안 보임) · 아래 단계는 평소처럼 부드럽게 닫힘 */
+  const up=others.filter(x=>x.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING);
+  up.forEach(x=>x.classList.add('acc-now')); others.forEach(x=>{ x.open=false; });
+  const dy=sm.getBoundingClientRect().top-y0; if(Math.abs(dy)>0.5) window.scrollTo({top:window.scrollY+dy, behavior:'instant'});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>up.forEach(x=>x.classList.remove('acc-now')))); }, true);

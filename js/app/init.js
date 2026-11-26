@@ -18,7 +18,7 @@ document.addEventListener('click', e=>{
   requestAnimationFrame(()=>requestAnimationFrame(()=>smoothScrollTo(()=>d.getBoundingClientRect().top + window.scrollY - off, ()=>{ d.classList.remove('cflash'); void d.offsetWidth; d.classList.add('cflash'); setTimeout(()=>d.classList.remove('cflash'),1700); })));
 }, true);
 document.addEventListener('toggle', e=>{ const d=e.target; if(d.tagName==='DETAILS' && !d.open) d.querySelectorAll('details[open]').forEach(x=>{ x.open=false; }); }, true);
-$('#collapse-all').addEventListener('click', ()=>{ const v=$('#v-'+TAB); v.querySelectorAll('details[open]').forEach(d=>d.open=false); document.querySelectorAll('.here').forEach(x=>x.classList.remove('here')); smoothScrollTo(()=>0); });
+/* 모두 접기 · 경로 줄은 뺌 (2026-11-26): 단계는 하나만 열림 */
 (()=>{ const r=document.documentElement; const tb=$('.tabs'); const setH=()=>{ const h=tb.offsetHeight; if(h>0) r.style.setProperty('--tabh', h+'px'); }; setH(); try{ new ResizeObserver(setH).observe(tb); }catch(e){} window.addEventListener('resize',setH); document.addEventListener('visibilitychange',setH); window.addEventListener('focus',setH);
   const s=document.querySelector('details.step>summary'); r.style.setProperty('--sth', (s?s.offsetHeight:58)+'px'); })();
 (()=>{ const h=(location.hash||'').slice(1); if(['start','steps','tools','graph','goals','ref','team'].includes(h)) showTab(h); else if(h==='parts') showTab('start'); })();

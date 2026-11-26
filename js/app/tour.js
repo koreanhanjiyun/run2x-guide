@@ -58,7 +58,7 @@ const TOUR = {
  ],
  sys: [
   ['#v-start .sp-list','목록','왼쪽 위 [목록]을 누르면 시작 탭 카드 목록으로 돌아갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
-  ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 시스템으로 넘어갑니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw:not(.sp-list)','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 시스템으로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-grid .sp-sec:nth-child(1)','왜 생겼나','이 시스템이 왜 필요한지부터 읽습니다. 밑줄 친 용어에 마우스를 올리면 뜻이 나옵니다.',{tab:'start'}],
   ['#v-start .sp-grid .sp-sec:nth-child(2)','F1에서 어떻게 발전했나','시대별로 무엇이 바뀌었는지입니다.',{tab:'start'}],
   ['#v-start .sp-fs','FS에서는','FS 차에서는 어떻게 쓰는지입니다. 아래 단계 버튼을 누르면 설계 탭의 그 단계로 갑니다.',{tab:'start'}],
@@ -67,7 +67,7 @@ const TOUR = {
  ],
  goalpage: [
   ['#v-start .sp-list','목록','왼쪽 위 [목록]을 누르면 시작 탭 카드 목록으로 돌아갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
-  ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw:not(.sp-list)','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-head','목표','이 목표가 무엇인지 한 줄로 적었습니다.',{tab:'start'}],
   ['#v-start .gp-sec','왜','이 목표가 왜 빠른 차로 이어지는지입니다.',{tab:'start'}],
   ['#v-start .gp-subs','세부 목표','세부 목표마다 왼쪽에 목표와 이유, 오른쪽에 근거 · 판단 기준 · 이 목표를 다루는 설계 항목이 있습니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
@@ -78,8 +78,7 @@ const TOUR = {
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
   ['#v-graph .gcanvas','연결도 보기','[연결도]를 누르면 같은 설계 항목을 한 장의 그림으로 봅니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다. 왼쪽 목차는 숨고, 오른쪽 파트 강조·좌표계 배너는 그대로 씁니다.',{tab:'graph'}],
   ...GRAPH_TOUR.slice(1),
-  ['#collapse-all','모두 접기','펼친 단계·항목을 한 번에 닫습니다. 내려 읽는 중에는 위에 뜨는 경로 줄에도 같은 버튼이 있습니다.',{tab:'steps',vm:'full'}],
-  ['#st-P3-1>summary','단계 줄','단계를 펼치면 항목 줄이 나오고, 항목 줄을 누르면 항목 화면이 열립니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
+  ['#st-P3-1>summary','단계 줄','단계를 펼치면 항목 줄이 나오고(단계는 한 번에 하나만 펼쳐집니다), 항목 줄을 누르면 항목 화면이 열립니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
   ['#it-s_scrub>summary','항목 줄',`항목 이름 아래에 핵심 한 줄이 있어, 단계를 펼쳐 내려 읽기만 해도 전체 흐름이 보입니다. 오른쪽에 ${B('b-card','상세')} · 확정되는 것 · 팀 진행 상태(<span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span>) · [연결도] 버튼이 있습니다. 줄을 누르면 본문이 그 항목 화면으로 바뀝니다.`,{tab:'steps',vm:'full',fx:'doing',reveal:'#it-s_scrub>summary',prep:()=>{ if(typeof IPAGE!=='undefined' && IPAGE) ipClose(); const st=$('#st-P3-1'); if(st) st.open=true; }}],
   ['#ipage','항목 화면','항목을 누르면 머리띠 · 목차 · 오른쪽 패널은 그대로 두고 본문만 이 화면으로 바뀝니다. 위에 핵심, 왼쪽에 읽을 설명, 오른쪽에 우리 팀 숫자와 이동이 있습니다. 브라우저 뒤로 가기로 목록에 돌아갑니다.',{...SC,pic:PIC.card}],
   ['#ipage .ip-bar','목록 · 경로','맨 위 막대는 내려도 따라옵니다. [‹ 목록]이나 Esc 키로 보던 항목 칸으로 돌아가고, 경로의 [설계]나 단계를 누르면 목록의 그 위치로 갑니다. 왼쪽 목차에는 지금 단계의 항목들이 펼쳐져 있어 바로 옮겨 갈 수 있습니다.',{...SC,also:'#toc .toc-its'}],
@@ -168,7 +167,19 @@ const tgFrame = () => new Promise(r=>requestAnimationFrame(()=>requestAnimationF
 const tourTabH = () => { try{ return tabH(); }catch(e){ return 50; } };
 function tourVis(sel){ return [...document.querySelectorAll(sel)].find(x=>{ if(x.closest('#tour')) return false; const r=x.getBoundingClientRect(); return r.width>0 && r.height>0 && !x.closest('[hidden]'); }) || null; }
 function tourRect(el, o){ const r0=tourRect0(el,o); const a=o && o.also && tourVis(o.also); if(!a) return r0; const q=a.getBoundingClientRect(); const L=Math.min(r0.left,q.left), T=Math.min(r0.top,q.top), R=Math.max(r0.right,q.right), Bt=Math.max(r0.bottom,q.bottom); return {left:L, top:T, right:R, bottom:Bt, width:R-L, height:Bt-T}; }
-function tourRect0(el, o){ if(o && o.union){ const ks=[...el.querySelectorAll(o.union)].map(x=>x.getBoundingClientRect()).filter(r=>r.width&&r.height); if(ks.length){ const L=Math.min(...ks.map(r=>r.left)), T=Math.min(...ks.map(r=>r.top)), R=Math.max(...ks.map(r=>r.right)), Bt=Math.max(...ks.map(r=>r.bottom)); return {left:L, top:T, right:R, bottom:Bt, width:R-L, height:Bt-T}; } } return el.getBoundingClientRect(); }
+/* 강조 범위 = 눈에 보이는 내용 (2026-11-26): 제목처럼 폭 전체를 차지하는 블록도 실제 글자 · 그림 · 버튼 · 판(배경 · 테두리가 있는 상자)까지만.
+   대상 자체가 판이면 판 크기 그대로. 단계 옵션 box:true 면 예전처럼 요소 상자 그대로 */
+function tgVisBox(e){ const cs=getComputedStyle(e); const bg=cs.backgroundColor; return (bg && bg!=='transparent' && !/rgba\([^)]*,\s*0\)$/.test(bg)) || cs.backgroundImage!=='none' || cs.boxShadow!=='none'
+  || ['Top','Right','Bottom','Left'].some(k=>parseFloat(cs['border'+k+'Width'])>0 && cs['border'+k+'Style']!=='none'); }
+function tgContentRect(el){ const R=el.getBoundingClientRect(); if(tgVisBox(el)) return R;
+  let L=1e9, T=1e9, Rt=-1e9, B=-1e9; const add=r=>{ if(!(r.width>0.5 && r.height>0.5)) return; L=Math.min(L,r.left); T=Math.min(T,r.top); Rt=Math.max(Rt,r.right); B=Math.max(B,r.bottom); };
+  const walk=n=>{ for(const c of n.childNodes){
+    if(c.nodeType===3){ if(c.textContent.trim()){ const rg=document.createRange(); rg.selectNodeContents(c); [...rg.getClientRects()].forEach(add); } }
+    else if(c.nodeType===1){ const cs=getComputedStyle(c); if(cs.display==='none' || cs.visibility==='hidden' || +cs.opacity===0) continue;
+      if(/^(IMG|SVG|CANVAS|VIDEO|INPUT|SELECT|TEXTAREA|BUTTON|IFRAME|svg)$/.test(c.tagName) || tgVisBox(c)) add(c.getBoundingClientRect()); else walk(c); } } };
+  walk(el); if(Rt<=L || B<=T) return R;
+  L=Math.max(L,R.left); T=Math.max(T,R.top); Rt=Math.min(Rt,R.right); B=Math.min(B,R.bottom); return {left:L, top:T, right:Rt, bottom:B, width:Rt-L, height:B-T}; }
+function tourRect0(el, o){ if(o && o.union){ const ks=[...el.querySelectorAll(o.union)].map(x=>x.getBoundingClientRect()).filter(r=>r.width&&r.height); if(ks.length){ const L=Math.min(...ks.map(r=>r.left)), T=Math.min(...ks.map(r=>r.top)), R=Math.max(...ks.map(r=>r.right)), Bt=Math.max(...ks.map(r=>r.bottom)); return {left:L, top:T, right:R, bottom:Bt, width:R-L, height:Bt-T}; } } return (o && o.box) ? el.getBoundingClientRect() : tgContentRect(el); }
 /* 화면에 붙어 있는 것(탭 막대·목차·패널·경로 줄)인지 */
 function tgFixed(el){ let t=el; while(t && t.parentElement!==document.body) t=t.parentElement; if(!t) return false; const p=getComputedStyle(t).position; return p==='fixed' || p==='sticky'; }
 

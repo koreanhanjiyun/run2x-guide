@@ -3864,3 +3864,14 @@ body.tt-on #partRail{bottom:136px}
 #toc .toc-p + .toc-p{border-top:1px solid var(--line)}
 #toc .toc-ph{margin:0 -4px 4px -12px;padding:7px 8px 7px 16px;background:var(--bg);font-weight:700;color:var(--ink-2)}
 #toc .toc-p > .toc-s{margin-left:10px;width:calc(100% - 10px)}
+/* 목차 강조 띠 (2026-11-26): .toc-s.cur · .toc-it.on 의 배경 대신 띠 하나(.toc-mk)가 미끄러져 이동 */
+#toc .toc-in{position:relative}
+#toc .toc-mk{position:absolute;left:0;top:0;z-index:0;border-radius:4px;background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);pointer-events:none;opacity:0;transition:transform .3s cubic-bezier(.2,.8,.3,1),width .3s cubic-bezier(.2,.8,.3,1),height .3s cubic-bezier(.2,.8,.3,1),opacity .15s}
+#toc .toc-mk.on{opacity:1}
+#toc .toc-s,#toc .toc-it,#toc .toc-ph{position:relative;z-index:1}
+#toc .toc-s.cur{background:transparent!important;box-shadow:none!important}
+#toc .toc-it.on{color:var(--ink);font-weight:700}
+#toc .toc-it.on::before{background:var(--accent)}
+/* 단계 하나만 열기: 위쪽 단계는 바로 닫음 (2026-11-26) */
+details.acc-now::details-content{transition:none!important}
+#toc .toc-it.on:hover,#toc .toc-s.cur:hover{background:transparent}   /* 강조 띠를 호버 배경이 덮지 않게 */
