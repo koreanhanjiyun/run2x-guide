@@ -400,8 +400,8 @@ document.addEventListener('click', e=>{
   const s=e.target.closest('[data-tour]'); if(s && !e.target.closest('#tour')){ e.preventDefault(); tourStart(s.dataset.tour); return; }
   const hp=e.target.closest('[data-helppop]'); if(hp){ e.preventDefault(); e.stopPropagation(); HP && !HP.hidden && !HP._closing ? helpClose() : helpOpen(); return; }
   if(HP && !HP.hidden && !HP._closing && !e.target.closest('#helpPop')) helpClose();
-  if(e.target.closest('[data-helpgo]')){ e.preventDefault(); helpClose(true); if(TAB==='ref'){ toast('참고 탭에는 사용법이 없습니다.', 2200); return; } tourStart(curTourName()); return; }
-  if(e.target.closest('#tourBtn')){ e.preventDefault(); if(TAB==='ref'){ toast('참고 탭에는 사용법이 없습니다.', 2200); return; } tourStart(curTourName()); return; }   /* 참고 탭: 버튼은 그대로 두고 스낵바만 (2026-11-26) */
+  if(e.target.closest('[data-helpgo]')){ e.preventDefault(); helpClose(true); if(TAB==='ref'){ helpTip('참고 탭에는 사용법이 없습니다.'); return; } tourStart(curTourName()); return; }
+  if(e.target.closest('#tourBtn')){ e.preventDefault(); if(TAB==='ref'){ helpTip('참고 탭에는 사용법이 없습니다.'); return; } tourStart(curTourName()); return; }   /* 참고 탭: 버튼은 그대로 두고 스낵바만 (2026-11-26) */
   if(!TR) return;
   if(e.target.closest('[data-tour-next]')){ e.preventDefault(); if(TR.busy){ tgQueue(1); return; } TR.i>=TR.steps.length-1 ? tourStop() : tourGo(TR.i+1, 1); return; }
   if(e.target.closest('[data-tour-prev]')){ e.preventDefault(); if(TR.busy){ tgQueue(-1); return; } if(TR.i>0) tourGo(TR.i-1, -1); return; }
@@ -414,3 +414,12 @@ document.addEventListener('keydown', e=>{ if(!TR) return; if(e.key==='Escape') t
 addEventListener('wheel', e=>{ if(TR) e.preventDefault(); }, {passive:false, capture:true});
 addEventListener('touchmove', e=>{ if(TR) e.preventDefault(); }, {passive:false, capture:true});
 addEventListener('keydown', e=>{ if(TR && [' ','PageDown','PageUp','Home','End','ArrowDown','ArrowUp'].includes(e.key) && !(e.target.closest && e.target.closest('.tour-card button'))) e.preventDefault(); }, true);
+/* 사용법 버튼 바로 아래 말풍선 (2026-11-26, A안): 버튼에서 8 px 아래, 위쪽 꼬리가 버튼을 가리킴. 2.2 s 뒤 사라짐. 다른 스낵바(toast)는 그대로 */
+function helpTip(msg){ const b=document.getElementById('tourBtn'); if(!b) return; let t=document.getElementById('helpTip');
+  if(!t){ t=document.createElement('div'); t.id='helpTip'; t.setAttribute('role','status'); t.setAttribute('aria-live','polite'); document.body.appendChild(t); }
+  const r=b.getBoundingClientRect(); t.textContent=msg; t.hidden=false; t.style.top=(r.bottom+8)+'px';
+  const w=t.offsetWidth, cx=r.left+r.width/2, L=Math.max(8, Math.min(document.documentElement.clientWidth-w-8, cx-w/2));
+  t.style.left=L+'px'; t.style.setProperty('--ax', (cx-L)+'px');
+  t.getAnimations().forEach(a=>a.cancel()); clearTimeout(t._k);
+  t.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:160,easing:'ease-out',fill:'forwards'});
+  t._k=setTimeout(()=>{ const a=t.animate([{opacity:1},{opacity:0}],{duration:180,easing:'ease-in',fill:'forwards'}); a.onfinish=()=>{ t.hidden=true; }; }, 2200); }

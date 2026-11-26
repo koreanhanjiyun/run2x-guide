@@ -3853,3 +3853,14 @@ body.tt-on #partRail{bottom:136px}
    선은 번호 쪽 중심(오른쪽 17 px)에 고정 → 이름이 왼쪽으로 늘어나도 선은 제자리 */
 #tlDial .tld-b::before{content:"";position:absolute;right:17px;bottom:100%;width:2px;height:8px;margin-bottom:1px;background:#b9b1c9;pointer-events:none}
 /* 파트 강조 팝업 (2026-11-26): 오른쪽 벽에 더 가깝게 — 팝업 오른쪽 끝이 벽에서 24 → 10 px (버블은 제자리) */
+/* 사용법 버튼 아래 말풍선 (2026-11-26) */
+#helpTip{position:fixed;z-index:60;background:var(--char);color:#fff;font-size:var(--fs-s);line-height:1.4;padding:7px 12px;border-radius:8px;box-shadow:0 6px 18px rgba(30,20,50,.22);white-space:nowrap;pointer-events:none}
+#helpTip[hidden]{display:none}
+#helpTip::before{content:"";position:absolute;top:-5px;left:var(--ax,50%);margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom:6px solid var(--char);width:0;height:0}
+/* 설계 탭 목차 = 사이드 패널 (2026-11-26): 머리띠 바로 아래부터 바닥까지 꽉 채움, 모서리 없음. 접힌 목차(.coll)는 그대로 */
+#toc:not(.coll){top:var(--tabh)!important;bottom:0!important;border-radius:0!important;border-top:0;border-bottom:0;box-shadow:2px 0 10px rgba(30,20,50,.06)}
+/* 목차 묶음(① ② ③ …) 구분: 묶음 머리 = 옅은 띠(패널 폭 전체), 묶음 사이 = 1 px 선. P 줄은 묶음 머리보다 10 px 들여씀 */
+#toc .toc-p{margin:0 -4px 0 -12px;padding:0 4px 6px 12px}
+#toc .toc-p + .toc-p{border-top:1px solid var(--line)}
+#toc .toc-ph{margin:0 -4px 4px -12px;padding:7px 8px 7px 16px;background:var(--bg);font-weight:700;color:var(--ink-2)}
+#toc .toc-p > .toc-s{margin-left:10px;width:calc(100% - 10px)}
