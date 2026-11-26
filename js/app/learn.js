@@ -237,8 +237,9 @@ function gotoStep(sid){
   pushHist(); setVM('full'); showTab('steps', true); const st=$('#st-'+sid); if(!st) return; const hd=st.querySelector(':scope>summary');
   /* 2026-11-26: 목차로 가면 그 단계를 펼치고, 제목을 상단바 아래로 (펼친 내용이 보이게). 다른 단계는 접히는 동안 목표 위치를 매 프레임 다시 잼 */
   const gy=()=>st.getBoundingClientRect().top+window.scrollY-(tabh+12);
-  if(!st.open){ ACCGO=true; st.open=true; }
-  requestAnimationFrame(()=>smoothScrollTo(gy, ()=>{ ACCGO=false; if(Math.abs(gy()-window.scrollY)>2) smoothScrollTo(gy, ()=>markHere(st)); else markHere(st); })); }
+  /* 2026-11-26: 도착한 뒤에 펼침 (펼쳐지는 모습이 보이게). 펼칠 때 위쪽 단계는 접히며 제목 고정 → 접힘이 끝나고 제목이 목표에서 벗어났으면(페이지 끝 등) 한 번 더 맞춤 */
+  const fit=()=>{ if(document.querySelector('#step-list details.acc-js')) return requestAnimationFrame(fit); if(Math.abs(gy()-window.scrollY)>4) smoothScrollTo(gy, ()=>markHere(st)); else markHere(st); };
+  requestAnimationFrame(()=>smoothScrollTo(gy, ()=>{ if(!st.open){ st.open=true; setTimeout(()=>requestAnimationFrame(fit), 60); } else fit(); })); }
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click',e=>{
