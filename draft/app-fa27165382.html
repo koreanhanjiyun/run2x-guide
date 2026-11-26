@@ -3856,7 +3856,6 @@ body.tt-on #partRail{bottom:136px}
 #tlDial .tld-main:hover{background:#3a3f4a}
 #tlDial:not(.coll) .tld-main{background:var(--accent);border-color:var(--accent)}
 #tlDial .tld-list{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:8px;width:36px}
-#tlDial .tld-list::before{content:"";position:absolute;left:50%;top:-10px;bottom:18px;width:2px;margin-left:-1px;background:#b9b1c9;border-radius:1px;transform-origin:top;transition:transform .46s cubic-bezier(.35,.35,.35,1)}   /* 마지막 번호 버블(.3 s + 10 × 15 ms)과 같이 도착 */
 #tlDial .tld-b{position:relative;z-index:1;display:inline-flex;flex-direction:row-reverse;align-items:center;height:36px;min-width:36px;flex:none;padding:0;border-radius:18px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);font:inherit;font-size:var(--fs-s);cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(30,20,50,.12);
   transition:transform .3s cubic-bezier(.2,.8,.3,1) calc(var(--i)*15ms),opacity .2s ease-out calc(var(--i)*15ms),background .15s}
 #tlDial .tld-b b{flex:none;width:34px;text-align:center;font-family:var(--f-display);font-size:var(--fs-xs);font-weight:700}
@@ -3864,7 +3863,6 @@ body.tt-on #partRail{bottom:136px}
 #tlDial .tld-b:hover,#tlDial .tld-b:focus-visible{background:var(--accent);border-color:var(--accent);color:#fff}   /* 번호 버블은 밝은 색, 올린 것만 보라 */
 #tlDial .tld-b:hover span,#tlDial .tld-b:focus-visible span{max-width:260px;opacity:1;padding-left:14px}
 #tlDial.coll .tld-list{pointer-events:none}
-#tlDial.coll .tld-list::before{transform:scaleY(0);transition:transform .22s cubic-bezier(.5,0,.8,.4) .08s}
 #tlDial.coll .tld-b{opacity:0;transform:translateY(calc((var(--i) + 1) * -44px)) scale(.6);
   transition:transform .22s cubic-bezier(.5,0,.8,.4) calc((var(--n) - 1 - var(--i))*12ms),opacity .18s ease-in calc((var(--n) - 1 - var(--i))*12ms)}
 /* 출처 분류 전환 (2026-11-26): 카드 머리 = 분류 버튼 줄(고른 것 = 진한 글자 + 보라 밑줄), 아래 목록만 바뀌고 높이는 JS 로 부드럽게 맞춤 */
@@ -3874,6 +3872,11 @@ body.tt-on #partRail{bottom:136px}
 #ref-list .src-tab[aria-selected="true"]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
 #ref-list .src-tab .src-c{font-weight:400;color:var(--muted);margin-left:2px}
 #ref-list .src-stage{overflow:hidden}
+/* 도구 버블 선 (2026-11-26): 목록 뒤 긴 선 하나 대신, 번호 버블마다 바로 위 버블(첫째는 "도구" 버블)까지 잇는 짧은 선(간격 8 px)을 붙여 버블과 함께 나오고 들어감.
+   선은 번호 쪽 중심(오른쪽 17 px)에 고정 → 이름이 왼쪽으로 늘어나도 선은 제자리 */
+#tlDial .tld-b::before{content:"";position:absolute;right:17px;bottom:100%;width:2px;height:8px;margin-bottom:1px;background:#b9b1c9;pointer-events:none}
+/* 참고 탭은 사용법 없음 (2026-11-26) */
+body.tab-ref #tourBtn{display:none}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -18683,6 +18686,10 @@ function animScrollLeft(el, to){ const x0=el.scrollLeft, d=to-x0, dur=Math.min(9
 function markHere(el){
   document.querySelectorAll('.here').forEach(x=>x.classList.remove('here'));
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash','here');
+  /* 강조는 한 번만 (2026-11-26): 끝나면 flash 를 떼어, 다시 보이거나 다른 검색을 할 때 예전 강조가 되살아나지 않게 */
+  clearTimeout(el._flT); el._flT = setTimeout(()=>el.classList.remove('flash'), 6000);
+  const end = e=>{ if(/^(flash|flash2|flRow)$/.test(e.animationName)){ el.classList.remove('flash'); el.removeEventListener('animationend', end); } };
+  el.addEventListener('animationend', end);
 }
 function stickyOffset(){ const cs=getComputedStyle(document.documentElement); return parseFloat(cs.getPropertyValue('--tabh'))+parseFloat(cs.getPropertyValue('--sth'))+14; }
 function openItem(id){
@@ -31705,7 +31712,6 @@ const TOUR = {
   ['#dpart','파트별','파트별 선도입니다. 전체 범위의 그래프에 지금 조건을 세로 점선으로 표시합니다. 회색 탭은 그 계산 도구를 만들 때 열립니다.',{tab:'tools'}],
   ['#v-tools .tl-tools','도구 모음','설계 단계 순서의 계산 도구 목록입니다. 누르면 전체 화면 작업창으로 열립니다.',{tab:'tools'}]
  ],
- ref: [['#ref-list .ref-nav','참고','위쪽 메뉴로 용어집 · 출처 · 변경 이력을 바꿔 봅니다. 용어집은 검색할 수 있고, 용어를 누르면 그 용어가 나오는 설계 항목을 위쪽 검색창에 보여 줍니다. 출처는 근거 순위(규정 → 교재 → 논문 → 제조사 · 팀 자료 → 언론 · 웹)로 묶었고, 줄 끝에 쓰인 곳이 있습니다.',{tab:'ref'}]],
  team_nolog: [
   ['#v-team .tt-nav','팀 메뉴','로그인 전에는 [팀원 · 계정]이 먼저 열립니다. 로그인하고 팀에 가입하면 진행 현황·시즌 요약이 보입니다. [대회 점수]는 로그인 없이 볼 수 있습니다.',{tab:'team',sub:'account',union:'button:not([hidden])'}],
   ['#v-team #teamPanel','로그인 · 가입','구글로 로그인한 뒤 회장에게 받은 팀 이름·비밀번호로 가입합니다. 가이드와 계산기는 로그인 없이 쓸 수 있습니다.',{tab:'team',sub:'account'}],
