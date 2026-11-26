@@ -21,7 +21,7 @@ const INK3D = (() => {
     const ramp = new T.DataTexture(new Uint8Array([150,150,150,255, 205,205,205,255, 255,255,255,255]), 3, 1);
     ramp.minFilter = ramp.magFilter = T.NearestFilter; ramp.needsUpdate = true;
     const toon = (hex, x) => new T.MeshToonMaterial(Object.assign({color:hex, gradientMap:ramp, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1}, x || {}));
-    const M = { steel:toon(0xc3ccd8), alloy:toon(0xeef1f5), dark:toon(0xa4afbe), rubber:toon(0x9aa2b0), hero:toon(0xb99be6), hero2:toon(0xf0c98e) };
+    const M = { steel:toon(0xc3ccd8), alloy:toon(0xeef1f5), dark:toon(0xa4afbe), rubber:toon(0x9aa2b0), hero:toon(0xa57be6), hero2:toon(0xf0c98e) };
     const lineMat = new T.LineBasicMaterial({color:INK, transparent:true, opacity:0.85});
     const ghostLine = new T.LineDashedMaterial({color:INK, transparent:true, opacity:0.4, dashSize:0.012, gapSize:0.009});
     const ghostFill = new T.MeshBasicMaterial({color:0x6b8ab0, transparent:true, opacity:0.035, depthWrite:false, side:T.DoubleSide});
@@ -64,7 +64,7 @@ const INK3D = (() => {
     constructor(box, canvas, o){ o = o || {}; this.box = box; this.canvas = canvas; this.margin = o.margin || 18; this.gap = o.gap || 8; this.items = [];
       this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); this.svg.setAttribute('class', 'ink-lead'); box.appendChild(this.svg); }
     add(obj, text, o){ o = o || {}; const el = document.createElement('div'); el.className = 'ink-lab' + (o.legend ? ' lg' : ''); el.textContent = text; if(o.color) el.style.color = o.color; this.box.appendChild(el);
-      const it = { obj, el, anchor:new THREE.Vector3(...(o.anchor || [0, 0, 0])), at:o.at || null, legend:!!o.legend, dx:o.dx || 0, dy:o.dy || 0 };
+      const it = { obj, el, anchor:new THREE.Vector3(...(o.anchor || [0, 0, 0])), at:o.at || null, legend:!!o.legend, dx:o.dx || 0, dy:o.dy || 0, side:o.side || null };
       if(!it.legend){ const NS = 'http://www.w3.org/2000/svg'; it.halo = document.createElementNS(NS, 'path'); it.halo.setAttribute('class', 'h'); it.line = document.createElementNS(NS, 'path'); it.dot = document.createElementNS(NS, 'circle'); it.dot.setAttribute('r', '3');
         this.svg.append(it.halo, it.line, it.dot); }
       this.items.push(it); return it; }
@@ -75,12 +75,45 @@ const INK3D = (() => {
         it.sx = (v.x*0.5 + 0.5)*W; it.sy = (-v.y*0.5 + 0.5)*H; it.h = it.el.offsetHeight || 18; it.w = it.el.offsetWidth || 60;
         if(it.legend){ it.el.style.transform = `translate(${Math.round(it.sx + it.dx)}px, ${Math.round(it.sy + it.dy - it.h/2)}px)`; continue; }
         shown.push(it); }
-      for(const left of [true, false]){ const col = shown.filter(it => (it.sx < mid) === left).sort((a, b) => a.sy - b.sy); let y = this.margin;
+      /* 위 · 아래 줄(side 'T' · 'B'): 글자를 위 · 아래 가장자리에 두고 기준점까지 곧은 선. 겹치면 오른쪽으로 밀고, 넘치면 왼쪽으로 당김 */
+      for(const sd of ['T', 'B']){ const row = shown.filter(it => it.side === sd).sort((a, b) => a.sx - b.sx); let x = this.margin;
+        for(const it of row){ it.lx = Math.max(it.sx - it.w/2, x); x = it.lx + it.w + 14; }
+        const over = x - 14 - (W - this.margin); if(over > 0) row.forEach(it => it.lx -= over);
+        for(const it of row){ const y = sd === 'T' ? this.margin : H - this.margin - it.h; it.el.style.transform = `translate(${Math.round(it.lx)}px, ${Math.round(y)}px)`; it.el.style.textAlign = 'center';
+          const ex = Math.min(Math.max(it.sx, it.lx + 8), it.lx + it.w - 8), ey = sd === 'T' ? y + it.h + 3 : y - 3, d = `M${ex.toFixed(1)},${ey.toFixed(1)} L${it.sx.toFixed(1)},${it.sy.toFixed(1)}`;
+          it.halo.setAttribute('d', d); it.line.setAttribute('d', d); it.dot.setAttribute('cx', it.sx.toFixed(1)); it.dot.setAttribute('cy', it.sy.toFixed(1)); } }
+      for(const left of [true, false]){ const col = shown.filter(it => it.side !== 'T' && it.side !== 'B' && (it.side ? it.side === 'L' : it.sx < mid) === left).sort((a, b) => a.sy - b.sy); let y = this.margin;
         for(const it of col){ it.ly = Math.max(it.sy - it.h/2, y); y = it.ly + it.h + this.gap; }
         const over = y - this.gap - (H - this.margin); if(over > 0) col.forEach(it => it.ly -= over);
         for(const it of col){ const x = left ? this.margin : W - this.margin - it.w; it.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(it.ly)}px)`; it.el.style.textAlign = left ? 'left' : 'right';
           const ex = left ? x + it.w + 6 : x - 6, ey = it.ly + it.h/2, bend = left ? ex + 16 : ex - 16, d = `M${ex.toFixed(1)},${ey.toFixed(1)} L${bend.toFixed(1)},${ey.toFixed(1)} L${it.sx.toFixed(1)},${it.sy.toFixed(1)}`;
           it.halo.setAttribute('d', d); it.line.setAttribute('d', d); it.dot.setAttribute('cx', it.sx.toFixed(1)); it.dot.setAttribute('cy', it.sy.toFixed(1)); } } }
   }
-  return { makeKit, Labels };
+  /* 그림 하나 띄우기: box 안에 캔버스 · 라벨 · 조작 줄.
+     o = { build(kit) → {root, callouts:[{name, at(v) | anchor, side}], legends:[{obj, text, color, dx, dy}], pose(u)},
+           view:{target, th, ph, r, half, mode}, anim:{period}, real, px } */
+  function mount(box, o){ const fig = document.createElement('div'); fig.className = 'ink-fig'; const cv = document.createElement('canvas'), lb = document.createElement('div'); lb.className = 'labs'; fig.append(cv, lb); box.appendChild(fig);
+    const kit = makeKit(cv), T = THREE; if(o.real !== false) V3D.mirror(kit.scene); const m = o.build(kit);
+    const orb = V3D.orbit(T, kit.renderer, Object.assign({real:o.real !== false}, o.view)); if(o.view && o.view.mode) orb.set(o.view.mode);
+    const labs = new Labels(lb, cv, {margin:o.margin || 12, gap:6}); (m.callouts || []).forEach(c => labs.add(m.root, c.name, {at:c.at, anchor:c.anchor, side:c.side}));
+    (m.legends || []).forEach(l => labs.add(l.obj, l.text, {legend:true, color:l.color, dx:l.dx, dy:l.dy, anchor:l.anchor}));
+    let dirty = true, play = !!o.anim, t = 0, last = performance.now(), u = 0;
+    const ctl = document.createElement('div'); ctl.className = 'ink-ctl'; box.appendChild(ctl);
+    ctl.innerHTML = (o.anim ? '<button type="button" data-k="play" aria-pressed="true">❚❚ 멈춤</button>' : '') + V3D.viewBtns(orb.st.mode).replace(/^<div[^>]*>|<\/div>$/g, '') + '<button type="button" data-k="cam">시점 값</button><code class="ink-cam"></code>';
+    const sync = () => ctl.querySelectorAll('[data-v3v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v3v === orb.st.mode)));
+    const camTxt = ctl.querySelector('.ink-cam'); camTxt.hidden = true;
+    ctl.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+      if(b.dataset.v3v){ orb.set(b.dataset.v3v); sync(); dirty = true; }
+      else if(b.dataset.k === 'play'){ play = !play; b.setAttribute('aria-pressed', String(play)); b.textContent = play ? '❚❚ 멈춤' : '▶ 움직임'; }
+      else if(b.dataset.k === 'cam'){ camTxt.hidden = !camTxt.hidden; dirty = true; } });
+    V3D.controls(cv, { rot:(dx, dy) => { orb.rot(dx, dy); sync(); dirty = true; }, pan:(dx, dy) => { orb.pan(dx, dy); dirty = true; }, zoom:f => { orb.zoom(f); dirty = true; } });
+    const size = () => { kit.renderer.setSize(fig.clientWidth, fig.clientHeight, false); dirty = true; }; addEventListener('resize', size); size();
+    function frame(now){ const dt = Math.min(0.05, (now - last)/1000); last = now;
+      if(play){ t += dt; u = (t % o.anim.period)/o.anim.period; dirty = true; }
+      if(dirty){ dirty = false; if(m.pose) m.pose(u); const cam = orb.cam(); kit.outlinePx(cam, o.px || 1.2); kit.renderer.render(kit.scene, cam); labs.update(cam);
+        if(!camTxt.hidden){ const st = orb.st; camTxt.textContent = `${st.mode} th ${st.th.toFixed(2)} ph ${st.ph.toFixed(2)} r ${st.r.toFixed(2)}`; } }
+      requestAnimationFrame(frame); }
+    requestAnimationFrame(frame);
+    return { kit, orb, m, set(v){ play = false; u = v; dirty = true; } }; }
+  return { makeKit, Labels, mount };
 })();

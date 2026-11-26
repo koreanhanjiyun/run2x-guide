@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>시범: 강관 스페이스 프레임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="ink.css">
+</head>
+<body>
+<main>
+  <p class="crumb">시작 › 프레임 › <b>강관 스페이스 프레임</b></p>
+  <h1>시범: 강관 스페이스 프레임 (그림 2장)</h1>
+  <p class="sub">실제 카드 그림 크기(526 × 329 px)로 띄웠습니다. 끌면 회전, 휠 굴리면 확대 · 「시점 값」을 누르면 지금 각도가 숫자로 나옵니다.</p>
+  <div class="pair">
+    <section class="card"><h2>그림 1 · 차체 전체</h2><div id="f1"></div></section>
+    <section class="card"><h2>그림 2 · 사각형 칸과 삼각형 칸</h2><div id="f2"></div></section>
+  </div>
+  <p class="note">일반 FS 배치로 만든 그림입니다(REF4 아님).</p>
+</main>
+<script src="../vendor/three/three.min.js"></script>
+<script src="../js/figures/view3d.js"></script>
+<script src="ink3d.js"></script>
+<script src="frame-figs.js"></script>
+<script>
+  window.__f1 = INK3D.mount(document.getElementById('f1'), { build:FRAME_BUILD, view:{ target:new THREE.Vector3(1.0, 0.36, 0), th:0.72, ph:1.02, r:3.75 }, margin:10, px:0.75 });
+  window.__f2 = INK3D.mount(document.getElementById('f2'), { build:CELL_BUILD, view:{ target:new THREE.Vector3(-1.35, 0.45, 0), half:0.98, mode:'side' }, anim:{ period:3 }, margin:10 });
+</script>
+</body>
+</html>
