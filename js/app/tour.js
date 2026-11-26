@@ -215,7 +215,8 @@ function tgClone(fx){ const W=tgW(), H=innerHeight; if(TR){ const t=$('#toc'); T
     const sc=[...el.querySelectorAll('*')].filter(x=>x.scrollTop||x.scrollLeft), dc=sc.map(x=>{ const path=[]; let n=x; while(n && n!==el){ path.unshift([...n.parentNode.children].indexOf(n)); n=n.parentNode; } return path; });
     if(cs.position==='fixed' || cs.position==='sticky'){ const r=el.getBoundingClientRect();
       if(cs.position==='sticky'){ const ph=el.cloneNode(true); ph.style.visibility='hidden'; page.appendChild(ph); }
-      Object.assign(c.style,{position:'absolute', left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px', right:'auto', bottom:'auto', margin:'0', transform:'none', maxHeight:'none'});
+      /* !important 로 넣음 (2026-11-26): 버블 CSS 의 top:auto!important 등이 위치를 이겨 복제본이 화면 맨 위(y 0)에 그려지던 문제 */
+      Object.entries({position:'absolute', left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px', right:'auto', bottom:'auto', margin:'0', transform:'none', 'max-height':'none'}).forEach(([k,v])=>c.style.setProperty(k, v, 'important'));
       fix.appendChild(c); }
     else page.appendChild(c);
     /* 안쪽 스크롤 위치(표·목차 등)도 그대로 */
