@@ -281,7 +281,16 @@ function graphAlign(){ const st=document.querySelector('#v-steps'), gv=document.
 { const b = document.createElement('button'); b.type='button'; b.id='toTop'; b.hidden=true; b.setAttribute('aria-label','맨 위로'); b.title='맨 위로';
   b.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   document.body.appendChild(b);
-  let raf=0; const upd=()=>{ raf=0; b.hidden = window.scrollY < window.innerHeight; };
+  /* 2026-11-26: 생길 때는 body.tt-on 으로 위 버블을 먼저 밀어 올리고 130 ms 뒤(좌표계 버블이 비켜난 뒤) 작게 시작해 출렁이며 커짐.
+     사라질 때는 먼저 줄어들어 사라진 뒤 tt-on 을 떼어 버블이 내려옴 → 둘이 겹치는 순간 없음 */
+  let want=false, tk=0;
+  const set=on=>{ if(on===want) return; want=on; clearTimeout(tk); b.getAnimations().forEach(a=>a.cancel());
+    if(on){ document.body.classList.add('tt-on');
+      tk=setTimeout(()=>{ if(!want) return; b.hidden=false; b.animate([{transform:'scale(.3)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:520,easing:getComputedStyle(document.documentElement).getPropertyValue('--tt-spring').trim()||'ease-out'}); }, 130); }
+    else { if(b.hidden){ document.body.classList.remove('tt-on'); return; }
+      const a=b.animate([{transform:'scale(1)',opacity:1},{transform:'scale(.3)',opacity:0}],{duration:150,easing:'cubic-bezier(.5,0,.8,.4)'});
+      a.onfinish=()=>{ if(want) return; b.hidden=true; document.body.classList.remove('tt-on'); }; } };
+  let raf=0; const upd=()=>{ raf=0; set(window.scrollY >= window.innerHeight); };
   addEventListener('scroll', ()=>{ if(!raf) raf=requestAnimationFrame(upd); }, {passive:true}); addEventListener('resize', ()=>{ if(!raf) raf=requestAnimationFrame(upd); });
   b.addEventListener('click', ()=>smoothScrollTo(()=>0)); }
 
