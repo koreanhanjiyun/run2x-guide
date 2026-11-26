@@ -3898,6 +3898,12 @@ body.tt-on #partRail{bottom:136px}
 /* 단계 하나만 열기: 위쪽 단계는 바로 닫음 (2026-11-26) */
 details.acc-now::details-content{transition:none!important}
 #toc .toc-it.on:hover,#toc .toc-s.cur:hover{background:transparent}   /* 강조 띠를 호버 배경이 덮지 않게 */
+/* 목차 머리 ↔ 상단바 구분 (2026-11-26, A안): 머리 = 밝은 패널색 + 진한 글자 + 아래 1 px 선. 목차를 상단바 보라 선(2 px) 아래에서 시작해 선이 목차 위까지 이어짐 */
+#toc:not(.coll){top:calc(var(--tabh) + 2px)!important}
+#toc .toc-h{background:var(--panel);color:var(--ink);border-bottom:1px solid var(--line-2)}
+#toc .toc-fold{color:var(--ink-2)}
+#toc .toc-h:hover .toc-fold{color:var(--accent)}
+#toc .toc-h :focus-visible{outline:2px solid var(--accent)!important}
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -31864,7 +31870,8 @@ function tgClone(fx){ const W=tgW(), H=innerHeight; if(TR){ const t=$('#toc'); T
     const sc=[...el.querySelectorAll('*')].filter(x=>x.scrollTop||x.scrollLeft), dc=sc.map(x=>{ const path=[]; let n=x; while(n && n!==el){ path.unshift([...n.parentNode.children].indexOf(n)); n=n.parentNode; } return path; });
     if(cs.position==='fixed' || cs.position==='sticky'){ const r=el.getBoundingClientRect();
       if(cs.position==='sticky'){ const ph=el.cloneNode(true); ph.style.visibility='hidden'; page.appendChild(ph); }
-      Object.assign(c.style,{position:'absolute', left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px', right:'auto', bottom:'auto', margin:'0', transform:'none', maxHeight:'none'});
+      /* !important 로 넣음 (2026-11-26): 버블 CSS 의 top:auto!important 등이 위치를 이겨 복제본이 화면 맨 위(y 0)에 그려지던 문제 */
+      Object.entries({position:'absolute', left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px', right:'auto', bottom:'auto', margin:'0', transform:'none', 'max-height':'none'}).forEach(([k,v])=>c.style.setProperty(k, v, 'important'));
       fix.appendChild(c); }
     else page.appendChild(c);
     /* 안쪽 스크롤 위치(표·목차 등)도 그대로 */
