@@ -238,6 +238,7 @@ function gotoStep(sid){
   /* 2026-11-26: 목차로 가면 그 단계를 펼치고 제목을 상단바 아래(+12 px)로. 목차 강조는 누르는 순간 옮김(TOCGO).
      스크롤 값이 아니라 '제목의 화면 위치'를 매 프레임 목표 곡선에 맞춰 움직임 → 이동 60 % 지점에서 펼치기 시작해 도착과 펼침이 겹치고,
      위쪽 단계가 접히거나 페이지 끝에 막혀도 제목은 같은 곡선을 따라감. 휠 · 터치 · 키를 쓰면 멈추고 바로 펼침 */
+  if(GOFIN) GOFIN();   /* 이동 중에 다른 단계를 누르면 앞 이동을 마무리(펼침 높이 고정 해제) — 안 하면 앞 단계가 빈 높이로 남음 */
   TOCGO=sid; spyToc(); cancelAnimationFrame(GORAF); if(SCR){ cancelAnimationFrame(SCR); SCR=null; }
   /* 펼칠 높이 H 를 미리 잼(같은 작업 안에서 열었다 닫음 → 화면에 안 그려지고 toggle 도 '닫힘'으로 합쳐짐). 펼침 시간 = motionMs(H) */
   let H=0; if(!st.open){ st.classList.add('acc-now'); st.open=true; H=st.getBoundingClientRect().height-hd.getBoundingClientRect().height; st.open=false; void st.offsetHeight; requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(!st.classList.contains('acc-js')) st.classList.remove('acc-now'); })); }   /* acc-now 를 바로 떼면 닫힘이 전환으로 그려짐(473→45 깜빡임) */
@@ -248,7 +249,8 @@ function gotoStep(sid){
   const grow=k=>{ if(!H) return; if(!opened){ opened=true; st.classList.add('acc-js'); st.style.setProperty('--accH','0px'); ACCGO=true; st.open=true; setTimeout(()=>{ ACCGO=false; }, 0); }
     st.style.setProperty('--accH', (H*ease(Math.max(0,Math.min(1,k))))+'px'); };
   const done=()=>{ if(H){ st.classList.add('acc-now'); st.classList.remove('acc-js'); st.style.removeProperty('--accH'); requestAnimationFrame(()=>requestAnimationFrame(()=>st.classList.remove('acc-now'))); } };
-  const end=()=>{ ['wheel','touchstart','keydown'].forEach(k=>removeEventListener(k, quit)); if(H && !opened) grow(1); grow(1); done(); TOCGO=null; spyToc(); window.__progEnd=performance.now(); };
+  GOFIN=()=>{ GOFIN=null; cancelAnimationFrame(GORAF); ['wheel','touchstart','keydown'].forEach(k=>removeEventListener(k, quit)); if(opened) done(); };
+  const end=()=>{ GOFIN=null; ['wheel','touchstart','keydown'].forEach(k=>removeEventListener(k, quit)); if(H && !opened) grow(1); grow(1); done(); TOCGO=null; spyToc(); window.__progEnd=performance.now(); };
   const tail=Math.max(0, 300-openMs)+60;   /* 다른 단계 접힘(CSS 0.3 s)이 늦게 끝나면 그동안 제목을 붙잡아 둠 */
   const f=now=>{ if(stop) return end(); const e=now-t0, t=Math.min(1,e/dur), want=y0+(goal-y0)*ease(t);
     if(e>=tOpen) grow((e-tOpen)/openMs);
@@ -256,7 +258,7 @@ function gotoStep(sid){
     if(t>=1 && !marked){ marked=true; done(); TOCGO=null; spyToc(); }
     if(e<dur+tail) GORAF=requestAnimationFrame(f); else end(); };
   GORAF=requestAnimationFrame(f); }
-let TOCGO=null, GORAF=0;
+let TOCGO=null, GORAF=0, GOFIN=null;
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click',e=>{
