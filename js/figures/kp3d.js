@@ -9,7 +9,7 @@ const loadThree = () => V3D.three();
 function initKP3D(el){
   if(el.dataset.ready) return; el.dataset.ready='1'; const nu0 = el.dataset.nu!=null ? +el.dataset.nu : 6, pre0 = nu0===0 ? 'kpi' : nu0===6 ? 'both' : '';
   el.innerHTML = `<div class="kp3d-wrap"><div class="kp3d-view"><canvas></canvas>
-    <div class="kp3d-cam"><button data-cam="iso" aria-pressed="true">3D</button><button data-cam="front">차체 정면</button><button data-cam="side">차체 측면</button><button data-cam="top">위</button><span class="sep"></span><button data-cam="tfront">타이어 정면</button><button data-cam="tside">타이어 측면</button></div>
+    <div class="kp3d-cam"><button data-cam="iso">3D</button><button data-cam="front">차체 정면</button><button data-cam="side">차체 측면</button><button data-cam="top">위</button><span class="sep"></span><button data-cam="tfront" aria-pressed="true">타이어 정면</button><button data-cam="tside">타이어 측면</button></div>
     <div class="kp3d-tip">${V3D.HELP} · 보라 실선·면 = 타이어 중심선·중심면, 점선 = 지면 수직선, 보라 점선 = 회전 반지름(조향축 → 바퀴 축 끝)</div></div>
     <div class="kp3d-ctl">
     <div class="kp3d-hud"><div><b style="color:var(--s-gam)">캠버 변화 Δγ</b></div><div class="kp3d-big">0.00°</div><div class="kp3d-sub"></div></div>
@@ -22,7 +22,7 @@ function initKP3D(el){
   const T = THREE, cv = el.querySelector('canvas'), view = el.querySelector('.kp3d-view');
   const ren = new T.WebGLRenderer({canvas:cv, antialias:true}); ren.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
   const scene = new T.Scene(); scene.background = new T.Color(0xf6f5fa);
-  const pcam = new T.PerspectiveCamera(32, 1, 0.01, 50); const ocam = new T.OrthographicCamera(-1,1,1,-1,0.01,50); let cam = pcam, mode='iso';
+  const pcam = new T.PerspectiveCamera(32, 1, 0.01, 50); const ocam = new T.OrthographicCamera(-1,1,1,-1,0.01,50); let cam = pcam, mode='tfront';   /* 처음 보기 = 타이어 정면 (2026-11-26) */
   scene.add(new T.HemisphereLight(0xffffff, 0xb9b3c9, 0.9)); const dl = new T.DirectionalLight(0xffffff, 0.6); dl.position.set(-1.5,2.5,1.8); scene.add(dl);
   const ground = new T.Mesh(new T.PlaneGeometry(8,8), new T.MeshLambertMaterial({color:0xe7e4ee,transparent:true,opacity:0.55,side:T.DoubleSide,depthWrite:false})); ground.rotation.x=-Math.PI/2; scene.add(ground);
   const grid = new T.GridHelper(8, 80, 0xc9c3d8, 0xd9d4e4); grid.position.y=0.001; scene.add(grid);
@@ -47,7 +47,7 @@ function initKP3D(el){
   const traceMat = new T.LineBasicMaterial({color:0x6a4294}); let trace = new T.Line(new T.BufferGeometry(), traceMat); scene.add(trace);
   const endDot = new T.Mesh(new T.SphereGeometry(0.014,16,12), new T.MeshLambertMaterial({color:0x6a4294})); scene.add(endDot);
   const hBar = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({color:0x15803d,depthTest:false})); hBar.renderOrder=13; scene.add(hBar);
-  const st = {d:20, nu:nu0, sg:8, th:-0.55, ph:0.98, r:1.7};
+  const st = {d:20, nu:nu0, sg:8, th:0, ph:Math.PI/2, r:1.9};
   const pan = new T.Vector3();
   /* 선·축·점은 반투명 타이어 위에 항상 보이도록 투명 패스 맨 뒤에 그림 */
   [[vref,20],[tline,21],[axisMesh,22],[arcLine,23],[hBar,23],[radLine,24],[radFoot,24],[endDot,25],[trace,19]].forEach(([o,r])=>{ o.material.transparent=true; o.material.depthTest=false; o.renderOrder=r; });

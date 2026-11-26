@@ -65,9 +65,22 @@ function srcUnified(designHTML){
     const key = r.url ? 'u:'+r.url.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'') : 't:'+r.text.toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
     const e = put(key, {html:r.html, url:r.url, cat:srcCat(r.text, r.url)}); e.used.add(r.w); if(r.note && !e.notes.includes(r.note)) e.notes.push(r.note); });
   const all = [...map.values()];
-  return `<p class="muted src-lede">가이드 전체에서 쓴 출처 ${all.length}개입니다. 근거 순위대로 묶었고, 줄 끝은 쓰인 곳입니다.</p>` + SRC_CAT.map(([k,lab])=>{ const g=all.filter(e=>e.cat===k); if(!g.length) return '';
-    return `<section class="src-box"><h4 class="src-h" aria-level="2">${lab} <span class="muted">${g.length}</span></h4><ul class="pl src-ul">${g.map(e=>{ const t = e.url && !/<a /.test(e.html) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${e.html}</a>` : e.html;
-      return `<li><span class="src-t">${t}</span>${[...e.used].map(w=>`<span class="src-w">${SRC_USED[w]}</span>`).join('')}${e.notes.length>1?`<ul class="src-nl">${e.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:e.notes.length?`<span class="src-n">${esc(e.notes[0])}</span>`:''}</li>`; }).join('')}</ul></section>`; }).join(''); }
+  return `<p class="muted src-lede">가이드 전체에서 쓴 출처 ${all.length}개입니다. 근거 순위대로 묶었고, 줄 끝은 쓰인 곳입니다.</p>` /* 출처 분류 전환 (2026-11-26): 카드 하나 머리에 분류(규정 · 교재 · 논문 …)를 나란히 두고, 누르면 아래 목록만 바뀜. 카드 높이는 목록에 맞춰 늘고 줆 */
+    + (()=>{ const gs = SRC_CAT.map(([k,lab])=>[k,lab,all.filter(e=>e.cat===k)]).filter(x=>x[2].length); if(!gs.length) return '';
+      if(!gs.some(x=>x[0]===SRCCAT)) SRCCAT = gs[0][0];
+      const li = e=>{ const t = e.url && !/<a /.test(e.html) ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${e.html}</a>` : e.html;
+        return `<li><span class="src-t">${t}</span>${[...e.used].map(w=>`<span class="src-w">${SRC_USED[w]}</span>`).join('')}${e.notes.length>1?`<ul class="src-nl">${e.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:e.notes.length?`<span class="src-n">${esc(e.notes[0])}</span>`:''}</li>`; };
+      return `<section class="src-box src-sw"><div class="src-tabs" role="tablist" aria-label="출처 분류">${gs.map(([k,lab,g])=>`<button type="button" role="tab" class="src-tab" data-srccat="${k}" aria-selected="${k===SRCCAT}">${lab} <span class="src-c">${g.length}</span></button>`).join('')}</div>`
+        + `<div class="src-stage">${gs.map(([k,lab,g])=>`<ul class="pl src-ul" role="tabpanel" aria-label="${lab}" data-srcpane="${k}"${k===SRCCAT?'':' hidden'}>${g.map(li).join('')}</ul>`).join('')}</div></section>`; })(); }
+let SRCCAT = '규정';
+document.addEventListener('click', e=>{ const b=e.target.closest && e.target.closest('#ref-list .src-tab'); if(!b) return; e.preventDefault(); if(b.getAttribute('aria-selected')==='true') return;
+  const box=b.closest('.src-sw'), st=box.querySelector('.src-stage'), k=b.dataset.srccat; SRCCAT=k;
+  st.getAnimations().forEach(a=>a.cancel()); const h0=st.offsetHeight;
+  box.querySelectorAll('.src-tab').forEach(x=>x.setAttribute('aria-selected', String(x===b)));
+  st.querySelectorAll('[data-srcpane]').forEach(p=>{ p.hidden = p.dataset.srcpane!==k; });
+  const h1=st.offsetHeight, np=st.querySelector(`[data-srcpane="${k}"]`);
+  st.animate([{height:h0+'px'},{height:h1+'px'}], {duration:320, easing:'cubic-bezier(.2,.8,.3,1)'});
+  if(np) np.animate([{opacity:0, transform:'translateY(6px)'},{opacity:1, transform:'none'}], {duration:240, easing:'ease-out'}); });
 const REF_KEYS = [['용어집','gloss'],['출처','src'],['변경 이력','log']];
 let REFSUB = null, REFWRAP = false;
 function renderRefs(){ if(REFSUB==null) REFSUB = (typeof PREF==='function' && PREF('refsub','용어집')) || '용어집';
