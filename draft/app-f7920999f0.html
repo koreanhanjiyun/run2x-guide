@@ -3887,6 +3887,17 @@ body.tt-on #partRail{bottom:136px}
 #toc .toc-p + .toc-p{border-top:1px solid var(--line)}
 #toc .toc-ph{margin:0 -4px 4px -12px;padding:7px 8px 7px 16px;background:var(--bg);font-weight:700;color:var(--ink-2)}
 #toc .toc-p > .toc-s{margin-left:10px;width:calc(100% - 10px)}
+/* 목차 강조 띠 (2026-11-26): .toc-s.cur · .toc-it.on 의 배경 대신 띠 하나(.toc-mk)가 미끄러져 이동 */
+#toc .toc-in{position:relative}
+#toc .toc-mk{position:absolute;left:0;top:0;z-index:0;border-radius:4px;background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);pointer-events:none;opacity:0;transition:transform .3s cubic-bezier(.2,.8,.3,1),width .3s cubic-bezier(.2,.8,.3,1),height .3s cubic-bezier(.2,.8,.3,1),opacity .15s}
+#toc .toc-mk.on{opacity:1}
+#toc .toc-s,#toc .toc-it,#toc .toc-ph{position:relative;z-index:1}
+#toc .toc-s.cur{background:transparent!important;box-shadow:none!important}
+#toc .toc-it.on{color:var(--ink);font-weight:700}
+#toc .toc-it.on::before{background:var(--accent)}
+/* 단계 하나만 열기: 위쪽 단계는 바로 닫음 (2026-11-26) */
+details.acc-now::details-content{transition:none!important}
+#toc .toc-it.on:hover,#toc .toc-s.cur:hover{background:transparent}   /* 강조 띠를 호버 배경이 덮지 않게 */
 </style>
 
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -3905,7 +3916,6 @@ body.tt-on #partRail{bottom:136px}
 
 <aside id="partRail" aria-label="파트 강조"></aside>
 <nav id="toc" aria-label="단계 목차"></nav>
-<div id="crumb" hidden aria-hidden="true"></div>
 <main id="main" tabindex="-1">
 <div class="wrap" id="v-start" hidden></div>
 <div class="wrap wide" id="v-team" hidden></div>
@@ -3919,7 +3929,7 @@ body.tt-on #partRail{bottom:136px}
       <span><b class="lg-fz">★F1</b> 동결 단계 (이후 원칙적으로 변경 금지)</span>
     </div>
   </header>
-  <div class="vrow2"><div class="vtabs" role="tablist" aria-label="읽는 깊이"><button role="tab" data-vm="full">전체 보기</button><button role="tab" data-vgo="graph" aria-selected="false" title="설계 항목끼리 주고받는 정보를 그림으로 봅니다">연결도</button></div><button class="btn small" id="collapse-all" type="button" title="펼친 단계·항목을 모두 닫습니다">모두 접기</button></div>
+  <div class="vrow2"><div class="vtabs" role="tablist" aria-label="읽는 깊이"><button role="tab" data-vm="full">전체 보기</button><button role="tab" data-vgo="graph" aria-selected="false" title="설계 항목끼리 주고받는 정보를 그림으로 봅니다">연결도</button></div></div>
   <div class="vpanel"><div id="step-list" class="stack"></div>
   <div id="flow-list" class="stack" hidden></div></div>
 </div>
@@ -19097,23 +19107,39 @@ function tocFx(){ const t=$('#toc'); document.documentElement.style.setProperty(
 function updateToc(){
   document.querySelectorAll('#toc .toc-s').forEach(b=>{ const done=stepDone(b.dataset.toc), sk=stepSkip(b.dataset.toc); const m=b.querySelector('.tm'); m.className='tm'+(done?' done':''); m.textContent=done?'✓':''; b.classList.toggle('st-allskip',sk); b.title=sk?'이번 시즌 제외':''; }); }
 let TOCRAF=0;
-function spyToc(){ if(TOCRAF) return; TOCRAF=requestAnimationFrame(()=>{ TOCRAF=0; if(TAB!=='steps') return;
+function spyToc(){ if(TOCRAF) return; TOCRAF=requestAnimationFrame(()=>{ TOCRAF=0; if(TAB!=='steps') return; if(typeof IPAGE!=='undefined' && IPAGE) return;   /* 항목 화면에서는 ipToc 가 정함 */
   const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; let cur=null;
   const els = VMODE==='flow' ? document.querySelectorAll('#flow-list .flow-step[data-fs]') : document.querySelectorAll('#step-list details.step[data-step]');
   /* C13: 페이지 끝에 가까워지면 기준선을 화면 아래로 내려, 마지막 단계들도 현재 위치로 잡힘 */
-  const rem=document.documentElement.scrollHeight-(scrollY+innerHeight), half=innerHeight/2, base=tabh+140;
-  const line = rem<half ? base + (innerHeight-60-base)*(1-rem/half) : base;
+  const rem=document.documentElement.scrollHeight-(scrollY+innerHeight), half=innerHeight/2, base=(innerHeight+tabh)/2;   /* 판정선 = 화면 가운데 (목차 이동도 제목을 가운데로 보냄, 2026-11-26) */
+  const top0=tabh+60, line = rem<half ? base + (innerHeight-60-base)*(1-rem/half) : scrollY<half ? top0 + (base-top0)*(scrollY/half) : base;   /* 맨 위 근처는 판정선을 위로 (첫 단계가 현재) */
   els.forEach(el=>{ if(el.getBoundingClientRect().top < line) cur = el.dataset.fs || el.dataset.step; });
+  if(TOCLOCK) cur = TOCLOCK;   /* 목차로 이동하는 동안은 누른 단계 */
   document.querySelectorAll('#toc .toc-s').forEach(b=>b.classList.toggle('cur', b.dataset.toc===cur));
-  const cb=document.querySelector('#toc .toc-s.cur'); if(cb){ const t=$('#toc'), r=cb.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } }); }
+  const cb=document.querySelector('#toc .toc-s.cur'); if(cb){ const t=$('#toc'), r=cb.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } tocMark(); }); }
+let TOCLOCK=null;   /* 목차로 간 단계: 사용자가 직접 스크롤(휠 · 터치 · 키 · 스크롤바)할 때까지 강조 고정 (맨 위 · 맨 아래라 가운데로 못 오는 단계도 맞게) */
+['wheel','touchstart','keydown'].forEach(k=>addEventListener(k, ()=>{ if(TOCLOCK){ TOCLOCK=null; spyToc(); } }, {passive:true}));
+addEventListener('pointerdown', e=>{ if(TOCLOCK && (e.clientX>=document.documentElement.clientWidth || !(e.target.closest && e.target.closest('#toc')))){ TOCLOCK=null; spyToc(); } }, {passive:true});   /* 스크롤바 · 본문을 누르면 풂 */
+/* 목차 강조 띠 (2026-11-26): 단계 · 항목 강조를 띠 하나로 그려, 바뀔 때 미끄러져 이동 (항목 화면에서는 항목, 목록에서는 단계) */
+function tocMark(){ const t=$('#toc'), inn=t && t.querySelector('.toc-in'); if(!inn) return; let m=inn.querySelector(':scope>.toc-mk');
+  if(!m){ m=document.createElement('i'); m.className='toc-mk'; m.setAttribute('aria-hidden','true'); inn.prepend(m); }
+  const tg=TAB==='steps' ? (inn.querySelector('.toc-its .toc-it.on') || inn.querySelector('.toc-s.cur')) : null;
+  if(!tg || !tg.offsetParent){ m.classList.remove('on'); return; }
+  const a=tg.getBoundingClientRect(), b=inn.getBoundingClientRect(), first=!m.classList.contains('on');
+  if(first) m.style.transition='none';
+  m.style.transform=`translate(${a.left-b.left+inn.scrollLeft}px,${a.top-b.top+inn.scrollTop}px)`; m.style.width=a.width+'px'; m.style.height=a.height+'px'; m.classList.add('on');
+  if(first){ void m.offsetWidth; m.style.transition=''; } }
+function tocMarkFor(ms){ const end=performance.now()+(ms||450); const f=()=>{ tocMark(); if(performance.now()<end) requestAnimationFrame(f); }; requestAnimationFrame(f); }
+addEventListener('resize', ()=>tocMark());
 function gotoStep(sid){
   /* 목차 이동: 펼치지 않고(이미 펼친 카드는 그대로) 카드 제목줄을 화면 가운데로 */
   const cs=getComputedStyle(document.documentElement), tabh=parseFloat(cs.getPropertyValue('--tabh'))||50;
   const midOff=(el,hd)=>Math.max(tabh+8, (window.innerHeight + tabh - (hd?hd.offsetHeight:0))/2);
   if(VMODE==='flow'){ if(TAB!=='steps') showTab('steps', true); const fs=document.querySelector(`#flow-list .flow-step[data-fs="${sid}"]`); if(!fs) return; const hd=fs.firstElementChild;
-    requestAnimationFrame(()=>smoothScrollTo(()=>fs.getBoundingClientRect().top+window.scrollY-midOff(fs,hd), ()=>markHere(fs))); return; }
+    TOCLOCK=sid; spyToc(); requestAnimationFrame(()=>smoothScrollTo(()=>fs.getBoundingClientRect().top+window.scrollY-midOff(fs,hd), ()=>{ markHere(fs); spyToc(); })); return; }
   pushHist(); setVM('full'); showTab('steps', true); const st=$('#st-'+sid); if(!st) return; const hd=st.querySelector(':scope>summary');
-  requestAnimationFrame(()=>smoothScrollTo(()=>st.getBoundingClientRect().top+window.scrollY-midOff(st,hd), ()=>markHere(st))); }
+  TOCLOCK=sid; spyToc();
+  requestAnimationFrame(()=>smoothScrollTo(()=>st.getBoundingClientRect().top+window.scrollY-midOff(st,hd), ()=>{ markHere(st); spyToc(); })); }
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('click',e=>{
@@ -19131,6 +19157,15 @@ document.addEventListener('input',e=>{ const c=e.target.closest('details.calc');
   if(e.target.classList.contains('season-in')){ const v=e.target.value.trim(); if(/^\d{4}$/.test(v)){ SEASON=v; SETP('season',v); document.querySelectorAll('.season-in').forEach(x=>{ if(x!==e.target) x.value=v; }); refreshValsExcept(e.target); } } });
 window.addEventListener('scroll', spyToc, {passive:true});
 function afterStatus(){ updateToc(); }
+/* 설계 탭: 단계는 하나만 열림 (2026-11-26). 새 단계를 열면 다른 단계는 닫고, 위쪽이 닫혀 밀린 만큼 스크롤을 되돌려 방금 연 단계 제목을 제자리에 둠 */
+document.addEventListener('toggle', e=>{ const d=e.target; if(!(d && d.matches && d.matches('#step-list details.step')) || !d.open) return;
+  const others=[...document.querySelectorAll('#step-list details.step[open]')].filter(x=>x!==d); if(!others.length) return;
+  const sm=d.querySelector(':scope>summary'), y0=sm.getBoundingClientRect().top;
+  /* 방금 연 단계보다 위에 있는 단계는 애니메이션 없이 바로 닫고 밀린 만큼 한 번에 스크롤을 되돌림 (화면 밖이라 안 보임) · 아래 단계는 평소처럼 부드럽게 닫힘 */
+  const up=others.filter(x=>x.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING);
+  up.forEach(x=>x.classList.add('acc-now')); others.forEach(x=>{ x.open=false; });
+  const dy=sm.getBoundingClientRect().top-y0; if(Math.abs(dy)>0.5) window.scrollTo({top:window.scrollY+dy, behavior:'instant'});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>up.forEach(x=>x.classList.remove('acc-now')))); }, true);
 </script>
 <script>
 function initNext(){
@@ -31672,7 +31707,7 @@ const TOUR = {
  ],
  sys: [
   ['#v-start .sp-list','목록','왼쪽 위 [목록]을 누르면 시작 탭 카드 목록으로 돌아갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
-  ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 시스템으로 넘어갑니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw:not(.sp-list)','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 시스템으로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-grid .sp-sec:nth-child(1)','왜 생겼나','이 시스템이 왜 필요한지부터 읽습니다. 밑줄 친 용어에 마우스를 올리면 뜻이 나옵니다.',{tab:'start'}],
   ['#v-start .sp-grid .sp-sec:nth-child(2)','F1에서 어떻게 발전했나','시대별로 무엇이 바뀌었는지입니다.',{tab:'start'}],
   ['#v-start .sp-fs','FS에서는','FS 차에서는 어떻게 쓰는지입니다. 아래 단계 버튼을 누르면 설계 탭의 그 단계로 갑니다.',{tab:'start'}],
@@ -31681,7 +31716,7 @@ const TOUR = {
  ],
  goalpage: [
   ['#v-start .sp-list','목록','왼쪽 위 [목록]을 누르면 시작 탭 카드 목록으로 돌아갑니다. 스크롤 위치와 상관없이 늘 같은 자리에 있습니다.',{tab:'start',prep:spTop}],
-  ['#v-start .sp-arw','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start',prep:spTop}],
+  ['#v-start .sp-arw:not(.sp-list)','이전 · 다음','창 양 끝 가운데의 ‹ › 로 앞뒤 목표로 넘어갑니다.',{tab:'start',prep:spTop}],
   ['#v-start .sp-head','목표','이 목표가 무엇인지 한 줄로 적었습니다.',{tab:'start'}],
   ['#v-start .gp-sec','왜','이 목표가 왜 빠른 차로 이어지는지입니다.',{tab:'start'}],
   ['#v-start .gp-subs','세부 목표','세부 목표마다 왼쪽에 목표와 이유, 오른쪽에 근거 · 판단 기준 · 이 목표를 다루는 설계 항목이 있습니다. 항목을 누르면 설계 탭의 그 항목으로 갑니다.',{tab:'start'}],
@@ -31692,8 +31727,7 @@ const TOUR = {
   ['#v-steps [data-vm=full]','전체 보기','단계와 항목을 펼쳐 깊게 읽는 보기입니다. 처음에는 이 보기로 시작합니다.',{tab:'steps',vm:'full'}],
   ['#v-graph .gcanvas','연결도 보기','[연결도]를 누르면 같은 설계 항목을 한 장의 그림으로 봅니다. 가로는 설계 단계, 세로는 파트입니다. 빈 곳을 끌어 이동하고 휠로 확대·축소합니다. 왼쪽 목차는 숨고, 오른쪽 파트 강조·좌표계 배너는 그대로 씁니다.',{tab:'graph'}],
   ...GRAPH_TOUR.slice(1),
-  ['#collapse-all','모두 접기','펼친 단계·항목을 한 번에 닫습니다. 내려 읽는 중에는 위에 뜨는 경로 줄에도 같은 버튼이 있습니다.',{tab:'steps',vm:'full'}],
-  ['#st-P3-1>summary','단계 줄','단계를 펼치면 항목 줄이 나오고, 항목 줄을 누르면 항목 화면이 열립니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
+  ['#st-P3-1>summary','단계 줄','단계를 펼치면 항목 줄이 나오고(단계는 한 번에 하나만 펼쳐집니다), 항목 줄을 누르면 항목 화면이 열립니다. 단계 줄에는 항목 수·진행 막대가 있고, 오른쪽 칩은 이 단계에 나오는 파트입니다.',{tab:'steps',vm:'full',fx:'doing',reveal:'#st-P3-1>summary',prep:()=>{ const st=$('#st-P3-1'); if(st) st.open=true; }, pic:PIC.depth}],
   ['#it-s_scrub>summary','항목 줄',`항목 이름 아래에 핵심 한 줄이 있어, 단계를 펼쳐 내려 읽기만 해도 전체 흐름이 보입니다. 오른쪽에 ${B('b-card','상세')} · 확정되는 것 · 팀 진행 상태(<span class="ipill st-doing">진행 중</span> <span class="ipill st-done">완료</span>) · [연결도] 버튼이 있습니다. 줄을 누르면 본문이 그 항목 화면으로 바뀝니다.`,{tab:'steps',vm:'full',fx:'doing',reveal:'#it-s_scrub>summary',prep:()=>{ if(typeof IPAGE!=='undefined' && IPAGE) ipClose(); const st=$('#st-P3-1'); if(st) st.open=true; }}],
   ['#ipage','항목 화면','항목을 누르면 머리띠 · 목차 · 오른쪽 패널은 그대로 두고 본문만 이 화면으로 바뀝니다. 위에 핵심, 왼쪽에 읽을 설명, 오른쪽에 우리 팀 숫자와 이동이 있습니다. 브라우저 뒤로 가기로 목록에 돌아갑니다.',{...SC,pic:PIC.card}],
   ['#ipage .ip-bar','목록 · 경로','맨 위 막대는 내려도 따라옵니다. [‹ 목록]이나 Esc 키로 보던 항목 칸으로 돌아가고, 경로의 [설계]나 단계를 누르면 목록의 그 위치로 갑니다. 왼쪽 목차에는 지금 단계의 항목들이 펼쳐져 있어 바로 옮겨 갈 수 있습니다.',{...SC,also:'#toc .toc-its'}],
@@ -31782,7 +31816,19 @@ const tgFrame = () => new Promise(r=>requestAnimationFrame(()=>requestAnimationF
 const tourTabH = () => { try{ return tabH(); }catch(e){ return 50; } };
 function tourVis(sel){ return [...document.querySelectorAll(sel)].find(x=>{ if(x.closest('#tour')) return false; const r=x.getBoundingClientRect(); return r.width>0 && r.height>0 && !x.closest('[hidden]'); }) || null; }
 function tourRect(el, o){ const r0=tourRect0(el,o); const a=o && o.also && tourVis(o.also); if(!a) return r0; const q=a.getBoundingClientRect(); const L=Math.min(r0.left,q.left), T=Math.min(r0.top,q.top), R=Math.max(r0.right,q.right), Bt=Math.max(r0.bottom,q.bottom); return {left:L, top:T, right:R, bottom:Bt, width:R-L, height:Bt-T}; }
-function tourRect0(el, o){ if(o && o.union){ const ks=[...el.querySelectorAll(o.union)].map(x=>x.getBoundingClientRect()).filter(r=>r.width&&r.height); if(ks.length){ const L=Math.min(...ks.map(r=>r.left)), T=Math.min(...ks.map(r=>r.top)), R=Math.max(...ks.map(r=>r.right)), Bt=Math.max(...ks.map(r=>r.bottom)); return {left:L, top:T, right:R, bottom:Bt, width:R-L, height:Bt-T}; } } return el.getBoundingClientRect(); }
+/* 강조 범위 = 눈에 보이는 내용 (2026-11-26): 제목처럼 폭 전체를 차지하는 블록도 실제 글자 · 그림 · 버튼 · 판(배경 · 테두리가 있는 상자)까지만.
+   대상 자체가 판이면 판 크기 그대로. 단계 옵션 box:true 면 예전처럼 요소 상자 그대로 */
+function tgVisBox(e){ const cs=getComputedStyle(e); const bg=cs.backgroundColor; return (bg && bg!=='transparent' && !/rgba\([^)]*,\s*0\)$/.test(bg)) || cs.backgroundImage!=='none' || cs.boxShadow!=='none'
+  || ['Top','Right','Bottom','Left'].some(k=>parseFloat(cs['border'+k+'Width'])>0 && cs['border'+k+'Style']!=='none'); }
+function tgContentRect(el){ const R=el.getBoundingClientRect(); if(tgVisBox(el)) return R;
+  let L=1e9, T=1e9, Rt=-1e9, B=-1e9; const add=r=>{ if(!(r.width>0.5 && r.height>0.5)) return; L=Math.min(L,r.left); T=Math.min(T,r.top); Rt=Math.max(Rt,r.right); B=Math.max(B,r.bottom); };
+  const walk=n=>{ for(const c of n.childNodes){
+    if(c.nodeType===3){ if(c.textContent.trim()){ const rg=document.createRange(); rg.selectNodeContents(c); [...rg.getClientRects()].forEach(add); } }
+    else if(c.nodeType===1){ const cs=getComputedStyle(c); if(cs.display==='none' || cs.visibility==='hidden' || +cs.opacity===0) continue;
+      if(/^(IMG|SVG|CANVAS|VIDEO|INPUT|SELECT|TEXTAREA|BUTTON|IFRAME|svg)$/.test(c.tagName) || tgVisBox(c)) add(c.getBoundingClientRect()); else walk(c); } } };
+  walk(el); if(Rt<=L || B<=T) return R;
+  L=Math.max(L,R.left); T=Math.max(T,R.top); Rt=Math.min(Rt,R.right); B=Math.min(B,R.bottom); return {left:L, top:T, right:Rt, bottom:B, width:Rt-L, height:B-T}; }
+function tourRect0(el, o){ if(o && o.union){ const ks=[...el.querySelectorAll(o.union)].map(x=>x.getBoundingClientRect()).filter(r=>r.width&&r.height); if(ks.length){ const L=Math.min(...ks.map(r=>r.left)), T=Math.min(...ks.map(r=>r.top)), R=Math.max(...ks.map(r=>r.right)), Bt=Math.max(...ks.map(r=>r.bottom)); return {left:L, top:T, right:R, bottom:Bt, width:R-L, height:Bt-T}; } } return (o && o.box) ? el.getBoundingClientRect() : tgContentRect(el); }
 /* 화면에 붙어 있는 것(탭 막대·목차·패널·경로 줄)인지 */
 function tgFixed(el){ let t=el; while(t && t.parentElement!==document.body) t=t.parentElement; if(!t) return false; const p=getComputedStyle(t).position; return p==='fixed' || p==='sticky'; }
 
@@ -32095,13 +32141,18 @@ function ipClose(){ if(!IPAGE) return; IPAGE=null; document.body.classList.remov
   try{ if(TAB==='steps') history.replaceState(navState(), '', '#steps'); }catch(e){} ipToc(); setTitle(); }
 
 /* 목차: 항목 화면이면 그 단계 아래에 항목 이름들 (지금 단계 하나만) */
-function ipToc(){ const t=$('#toc'); if(!t) return; t.querySelectorAll('.toc-its').forEach(x=>x.remove()); t.querySelectorAll('.toc-s').forEach(b=>b.classList.remove('cur'));
-  if(!IPAGE) { try{ spyToc(); }catch(e){} return; }
-  const sid=IT[IPAGE].s, b=t.querySelector(`.toc-s[data-toc="${sid}"]`); if(!b) return; b.classList.add('cur');
-  const box=document.createElement('div'); box.className='toc-its';
+function ipToc(){ const t=$('#toc'); if(!t) return;
+  if(!IPAGE){ t.querySelectorAll('.toc-its').forEach(x=>x.remove()); t.querySelectorAll('.toc-s').forEach(b=>b.classList.remove('cur')); try{ spyToc(); }catch(e){} tocMarkFor(300); return; }
+  const sid=IT[IPAGE].s, b=t.querySelector(`.toc-s[data-toc="${sid}"]`); if(!b) return;
+  t.querySelectorAll('.toc-s').forEach(x=>x.classList.toggle('cur', x===b));
+  const keep=on=>{ if(!on) return; const r=on.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; };
+  /* 같은 단계 안에서 항목만 옮길 때는 목록을 다시 만들지 않음 (깜빡임 방지, 2026-11-26): 표시만 옮기고 띠가 미끄러짐 */
+  const old=t.querySelector('.toc-its'); if(old && old.dataset.sid===sid){ old.querySelectorAll('.toc-it').forEach(x=>x.classList.toggle('on', x.dataset.goto===IPAGE)); keep(old.querySelector('.on')); tocMark(); return; }
+  t.querySelectorAll('.toc-its').forEach(x=>x.remove());
+  const box=document.createElement('div'); box.className='toc-its'; box.dataset.sid=sid;
   box.innerHTML=ipItems(sid).map(i=>`<button type="button" class="toc-it${i.id===IPAGE?' on':''}" data-goto="${i.id}">${i.n}</button>`).join('');
-  b.after(box); const hh=box.scrollHeight; box.style.transitionDuration=motionMs(hh)+'ms';   /* 펼치는 높이에 맞춘 시간 */
-  requestAnimationFrame(()=>{ box.classList.add('open'); const on=box.querySelector('.on'); if(on){ const r=on.getBoundingClientRect(), tr=t.getBoundingClientRect(); if(r.top<tr.top+40||r.bottom>tr.bottom-10) t.scrollTop += r.top-tr.top-tr.height/2; } }); }
+  b.after(box); const hh=box.scrollHeight, ms=motionMs(hh); box.style.transitionDuration=ms+'ms';   /* 펼치는 높이에 맞춘 시간 */
+  requestAnimationFrame(()=>{ box.classList.add('open'); keep(box.querySelector('.on')); tocMarkFor(ms+150); }); }
 
 /* 열기: 예전 openItem(펼쳐서 스크롤)을 항목 화면으로 */
 openItem = function(id){ if(!IT[id]) return; pushHist(); setVM('full'); IPKEEP=true; showTab('steps', true); IPKEEP=false; ipShow(id); window.scrollTo({top:0, behavior:'instant'}); };
@@ -32168,7 +32219,7 @@ document.addEventListener('click', e=>{
   requestAnimationFrame(()=>requestAnimationFrame(()=>smoothScrollTo(()=>d.getBoundingClientRect().top + window.scrollY - off, ()=>{ d.classList.remove('cflash'); void d.offsetWidth; d.classList.add('cflash'); setTimeout(()=>d.classList.remove('cflash'),1700); })));
 }, true);
 document.addEventListener('toggle', e=>{ const d=e.target; if(d.tagName==='DETAILS' && !d.open) d.querySelectorAll('details[open]').forEach(x=>{ x.open=false; }); }, true);
-$('#collapse-all').addEventListener('click', ()=>{ const v=$('#v-'+TAB); v.querySelectorAll('details[open]').forEach(d=>d.open=false); document.querySelectorAll('.here').forEach(x=>x.classList.remove('here')); smoothScrollTo(()=>0); });
+/* 모두 접기 · 경로 줄은 뺌 (2026-11-26): 단계는 하나만 열림 */
 (()=>{ const r=document.documentElement; const tb=$('.tabs'); const setH=()=>{ const h=tb.offsetHeight; if(h>0) r.style.setProperty('--tabh', h+'px'); }; setH(); try{ new ResizeObserver(setH).observe(tb); }catch(e){} window.addEventListener('resize',setH); document.addEventListener('visibilitychange',setH); window.addEventListener('focus',setH);
   const s=document.querySelector('details.step>summary'); r.style.setProperty('--sth', (s?s.offsetHeight:58)+'px'); })();
 (()=>{ const h=(location.hash||'').slice(1); if(['start','steps','tools','graph','goals','ref','team'].includes(h)) showTab(h); else if(h==='parts') showTab('start'); })();
