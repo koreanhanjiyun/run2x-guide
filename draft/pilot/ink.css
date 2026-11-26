@@ -1,0 +1,23 @@
+:root{--ink:#1d232a;--ink-2:#5b6270;--line:#e3e0ea;--accent:#6a4294;--bg:#f4f3f7;--panel:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans KR","Malgun Gothic",sans-serif}
+main{max-width:1240px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:14px;margin:0 0 10px;color:var(--ink-2);font-weight:600}
+.crumb{font-size:13px;color:var(--ink-2);margin:0 0 6px}
+.sub{color:var(--ink-2);margin:0 0 16px;font-size:14px}
+.pair{display:flex;flex-wrap:wrap;gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+.ink-fig{position:relative;width:526px;height:329px;background:#fff;overflow:hidden}
+.ink-fig canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.labs{position:absolute;inset:0;pointer-events:none}
+.ink-lead{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ink-lead path{fill:none;stroke:#e8590c;stroke-width:1.2}
+.ink-lead path.h{stroke:#fff;stroke-width:3;stroke-linecap:round}
+.ink-lead circle{fill:#e8590c;stroke:#fff;stroke-width:1.4}
+.ink-lab{position:absolute;left:0;top:0;white-space:nowrap;font-weight:600;font-size:13px;color:var(--ink);text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.ink-lab.lg{font-style:italic}
+.ink-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.ink-ctl button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 10px;cursor:pointer}
+.ink-ctl button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.ink-cam{font:12px "IBM Plex Mono",monospace;color:var(--ink-2)}
+.note{margin-top:14px;font-size:13px;color:var(--ink-2)}
