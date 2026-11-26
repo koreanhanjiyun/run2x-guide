@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>잉크 선 3D 시범</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink:#1d232a;--ink-2:#5b6270;--line:#e3e0ea;--accent:#6a4294;--bg:#f4f3f7;--panel:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans KR","Malgun Gothic",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:var(--ink-2);margin:0 0 16px;font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+.fig{position:relative;height:600px;border-radius:6px;background:#f8f9fb;background-image:linear-gradient(#eceaf2 1px,transparent 1px),linear-gradient(90deg,#eceaf2 1px,transparent 1px);background-size:24px 24px;overflow:hidden}
+.fig canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.labs{position:absolute;inset:0;pointer-events:none}
+.ink-lead{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ink-lead path{fill:none;stroke:#e8590c;stroke-width:1.3}
+.ink-lead path.h{stroke:#fff;stroke-width:3.4;stroke-linecap:round}
+.ink-lead circle{fill:#e8590c;stroke:#fff;stroke-width:1.5}
+.ink-lab{position:absolute;left:0;top:0;white-space:nowrap;font-weight:600;font-size:13.5px;color:var(--ink);text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.ink-lab.lg{color:#d6336c;font-weight:600;font-size:13px}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-top:12px}
+.ctl button{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 12px;cursor:pointer}
+.ctl button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.ctl label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+.ctl input[type=range]{width:220px;accent-color:var(--accent)}
+.v3d-views{display:flex;gap:4px}
+.ro{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:14px;border-top:2px solid var(--ink)}
+.ro div{padding:8px 12px;border-right:1px solid var(--line)}
+.ro div:last-child{border-right:0}
+.ro b{display:block;font:500 20px "IBM Plex Mono",monospace}
+.ro span{font-size:12.5px;color:var(--ink-2)}
+.note{margin-top:14px;font-size:13px;color:var(--ink-2)}
+.note li{margin:2px 0}
+</style>
+</head>
+<body>
+<main>
+  <h1>시범: 잉크 선 3D — 푸시로드 서스펜션</h1>
+  <p class="sub">바퀴가 오르내리면 아래 위시본 → 푸시로드 → 벨크랭크 → 댐퍼 순서로 힘이 전달됩니다. 끌면 회전, 휠 굴리면 확대됩니다.</p>
+  <div class="card">
+    <div class="fig" id="fig"><canvas id="cv"></canvas><div class="labs" id="labs"></div></div>
+    <div class="ctl">
+      <button type="button" id="play" aria-pressed="true">❚❚ 멈춤</button>
+      <label>바퀴 높이 <input type="range" id="bump" min="-30" max="30" step="0.5" value="0"> <span id="bv">0 mm</span></label>
+      <div class="v3d-views" id="views"></div>
+      <button type="button" id="ghost" aria-pressed="true">차체 보기</button>
+    </div>
+    <div class="ro">
+      <div><b id="r1">0.0</b><span>바퀴 이동 (mm, + 범프)</span></div>
+      <div><b id="r2">0.0</b><span>댐퍼 눌림 (mm)</span></div>
+      <div><b id="r3">0.00</b><span>레버비 (댐퍼 ÷ 바퀴)</span></div>
+      <div><b id="r4">0.0</b><span>벨크랭크 회전 (°)</span></div>
+    </div>
+    <ul class="note">
+      <li>REF4 가 아닌 일반 FS 치수(가정)로 만든 그림입니다. 모든 피벗 축이 차 앞뒤 방향과 나란한 평면 기구로 풀었습니다.</li>
+    </ul>
+  </div>
+</main>
+<script src="../vendor/three/three.min.js"></script>
+<script src="../js/figures/view3d.js"></script>
+<script src="ink3d.js"></script>
+<script src="susp-push.js"></script>
+<script>
+(() => {
+  const cv = document.getElementById('cv'), fig = document.getElementById('fig');
+  const kit = INK3D.makeKit(cv), T = THREE, mech = SUSP_BUILD(kit);
+  const orb = V3D.orbit(T, kit.renderer, { target:new T.Vector3(0.0, 0.35, 0.27), th:-0.78, ph:1.08, r:1.42, half:0.36 });
+  const labs = new INK3D.Labels(document.getElementById('labs'), cv, {margin:20});
+  mech.callouts.forEach(c => labs.add(mech.root, c.name, {at:c.at}));
+  labs.add(mech.arrow, '범프 · 리바운드', {legend:true, dx:14, color:'#d6336c'});
+  let dirty = true;
+  V3D.controls(cv, { rot:(dx, dy) => { orb.rot(dx, dy); dirty = true; syncViews(); }, pan:(dx, dy) => { orb.pan(dx, dy); dirty = true; }, zoom:f => { orb.zoom(f); dirty = true; } });
+  const vw = document.getElementById('views'); vw.innerHTML = V3D.viewBtns('iso').replace(/^<div[^>]*>|<\/div>$/g, '');
+  function syncViews(){ vw.querySelectorAll('[data-v3v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v3v === orb.st.mode))); }
+  vw.addEventListener('click', e => { const b = e.target.closest('[data-v3v]'); if(!b) return; orb.set(b.dataset.v3v); syncViews(); dirty = true; });
+  const gb = document.getElementById('ghost'); gb.addEventListener('click', () => { const on = gb.getAttribute('aria-pressed') !== 'true'; gb.setAttribute('aria-pressed', String(on)); mech.root.children[0].visible = on; dirty = true; });
+  function size(){ const w = fig.clientWidth, h = fig.clientHeight; kit.renderer.setSize(w, h, false); dirty = true; }
+  addEventListener('resize', size); size();
+  let play = true, t = 0, b = 0, last = performance.now();
+  const pb = document.getElementById('play'), sl = document.getElementById('bump'), bv = document.getElementById('bv');
+  pb.addEventListener('click', () => { play = !play; pb.setAttribute('aria-pressed', String(play)); pb.textContent = play ? '❚❚ 멈춤' : '▶ 움직임'; if(play) t = Math.asin(Math.max(-1, Math.min(1, b/0.03)))/(2*Math.PI)*2.6; });
+  sl.addEventListener('input', () => { play = false; pb.setAttribute('aria-pressed', 'false'); pb.textContent = '▶ 움직임'; b = sl.value/1000; dirty = true; });
+  const $ = id => document.getElementById(id);
+  function frame(now){ const dt = Math.min(0.05, (now - last)/1000); last = now;
+    if(play){ t += dt; b = 0.03*Math.sin(2*Math.PI*t/2.6); sl.value = (b*1000).toFixed(1); dirty = true; }
+    if(dirty){ dirty = false; const s = mech.pose(b), cam = orb.cam(); kit.outlinePx(cam, 1.4); kit.renderer.render(kit.scene, cam); labs.update(cam);
+      const sp = SUSP_K.state(b + 0.0005), sm = SUSP_K.state(b - 0.0005), mr = (sm.L - sp.L)/0.001;
+      bv.textContent = `${(b*1000).toFixed(1)} mm`; $('r1').textContent = (b*1000).toFixed(1); $('r2').textContent = ((SUSP_K.L0 - s.L)*1000).toFixed(1);
+      $('r3').textContent = mr.toFixed(2); $('r4').textContent = (s.bc*180/Math.PI).toFixed(1); }
+    requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+  window.__ink = { orb, mech, kit, setB:v => { play = false; b = v; dirty = true; } };
+})();
+</script>
+</body>
+</html>

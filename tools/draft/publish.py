@@ -45,4 +45,8 @@ W(os.path.join(d, 'index.html')).write(
     '.catch(() => { document.body.textContent = "시안을 불러오지 못했습니다. 새로고침해 주십시오."; });</script>\n'
     '</head>\n<body>시안 여는 중…</body>\n</html>\n')
 for f in ['three.min.js', 'GLTFLoader.js', 'LICENSE']: shutil.copy(os.path.join(ROOT, 'vendor', 'three', f), os.path.join(d, 'vendor', 'three', f))
+# 시범 페이지(pilot/): draft/pilot/ 로 그대로 복사, 함께 쓰는 view3d.js 는 draft/js/figures/ 에 (2026-11-26)
+if os.path.isdir(os.path.join(ROOT, 'pilot')):
+    shutil.copytree(os.path.join(ROOT, 'pilot'), os.path.join(d, 'pilot'), dirs_exist_ok=True)
+    os.makedirs(os.path.join(d, 'js', 'figures'), exist_ok=True); shutil.copy(os.path.join(ROOT, 'js', 'figures', 'view3d.js'), os.path.join(d, 'js', 'figures', 'view3d.js'))
 print(name, os.path.getsize(os.path.join(d, name)))

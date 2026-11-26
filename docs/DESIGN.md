@@ -327,3 +327,4 @@ CSS 에 직접 쓴 px 간격(padding · margin · gap)도 이 단계 값만 쓴�
 - 2026-11-26 목차 이동 맞춤: 펼칠 높이 H 를 미리 재 펼침 시간 = motionMs(H), 도착 openMs 전에 펼치기 시작(높이는 JS) → 다 펼쳐짐 = 도착. 카드 강조(markHere)는 도착 순간.
 - 2026-11-26 목차 이동: 카드 강조(markHere)는 누르는 순간 시작.
 - 2026-11-26 목차 연속 클릭: 앞 이동을 마무리(GOFIN, 펼침 높이 고정 해제 — 빈 높이로 남던 버그). markHere 는 다른 곳의 flash 를 바로 끔.
+- 2026-11-26 시범: 잉크 선 3D (pilot/ink3d.js · susp-push.js · ink-susp.html). Inkworks kit(MIT) 툰 재질 · 잉크 모서리 · 외곽선 · 고스트를 r147 로 옮김, open-3d-skills Labels(MIT) 두 줄 라벨. 일반 FS 푸시로드 서스(REF4 아님, 평면 기구, 입력 = 바퀴 높이). 범프 ±30 mm 에서 댐퍼 +28.3 / −25.7 mm, 간섭 최소 여유 20.5 mm(푸시로드–스프링). draft/pilot/ 로 게시(publish.py).
