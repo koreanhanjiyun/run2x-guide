@@ -425,7 +425,7 @@ document.addEventListener('keydown', e=>{ if(!TR) return; if(e.key==='Escape') t
 addEventListener('wheel', e=>{ if(TR) e.preventDefault(); }, {passive:false, capture:true});
 addEventListener('touchmove', e=>{ if(TR) e.preventDefault(); }, {passive:false, capture:true});
 addEventListener('keydown', e=>{ if(TR && [' ','PageDown','PageUp','Home','End','ArrowDown','ArrowUp'].includes(e.key) && !(e.target.closest && e.target.closest('.tour-card button'))) e.preventDefault(); }, true);
-/* 사용법 버튼 바로 아래 말풍선 (2026-11-26, A안): 버튼에서 8 px 아래, 위쪽 꼬리가 버튼을 가리킴. 2.2 s 뒤 사라짐. 다른 스낵바(toast)는 그대로 */
+/* 사용법 버튼 바로 아래 말풍선 (2026-11-26, A안): 버튼에서 8 px 아래, 위쪽 꼬리가 버튼을 가리킴. 2.2 s 뒤 사라짐(머무름 1.5 s). 다른 스낵바(toast)는 그대로 */
 function helpTip(msg){ const b=document.getElementById('tourBtn'); if(!b) return; let t=document.getElementById('helpTip');
   if(!t){ t=document.createElement('div'); t.id='helpTip'; t.setAttribute('role','status'); t.setAttribute('aria-live','polite'); document.body.appendChild(t); }
   const r=b.getBoundingClientRect(); t.textContent=msg; t.hidden=false; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; t.style.top=Math.max(r.bottom+8, tabh+12)+'px';   /* 상단바 아래 12 px (2026-11-26) */
@@ -433,4 +433,4 @@ function helpTip(msg){ const b=document.getElementById('tourBtn'); if(!b) return
   t.style.left=L+'px'; t.style.setProperty('--ax', (cx-L)+'px');
   t.getAnimations().forEach(a=>a.cancel()); clearTimeout(t._k);
   t.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:160,easing:'ease-out',fill:'forwards'});
-  t._k=setTimeout(()=>{ const a=t.animate([{opacity:1},{opacity:0}],{duration:180,easing:'ease-in',fill:'forwards'}); a.onfinish=()=>{ t.hidden=true; }; }, 2200); }
+  t._k=setTimeout(()=>{ const a=t.animate([{opacity:1},{opacity:0}],{duration:180,easing:'ease-in',fill:'forwards'}); a.onfinish=()=>{ t.hidden=true; }; }, 1500); }   /* 머무름 1.5 s (2026-11-26) */
