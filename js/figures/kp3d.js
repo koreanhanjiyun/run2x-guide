@@ -114,10 +114,17 @@ function initKP3D(el){
   try{ new ResizeObserver(()=>{ size(); render(); }).observe(el.querySelector('.kp3d-ctl')); }catch(e){}
   size(); update();
 }
+/* 2026-11-26: 항목 화면(item-page.js)은 접지 않는 본문 칸에 그려 펼침(toggle) 이벤트가 없음 → ipShow 에서도 부름.
+   지금 안 보이는 장면은 IntersectionObserver 로 보이게 될 때 시작 (예전에는 그냥 건너뛰어 '불러오는 중'에 멈춤) */
+let KP3D_IO = null;
+function kp3dStart(el){ if(el.dataset.ready || el.dataset.loading) return; el.dataset.loading='1';
+  loadThree().then(()=>{ delete el.dataset.loading; initKP3D(el); }).catch(()=>{ delete el.dataset.loading; el.innerHTML='<div class="kp3d-ph">3D 라이브러리(three.js)를 불러오지 못했습니다.</div>'; }); }
 function tryInit3D(root){
   root.querySelectorAll('.kp3d[data-kp3d]:not([data-ready])').forEach(el=>{
-    if(!el.offsetParent) return;
-    loadThree().then(()=>initKP3D(el)).catch(()=>{ el.innerHTML='<div class="kp3d-ph">3D 라이브러리(three.js)를 불러오지 못했습니다.</div>'; });
+    if(el.offsetParent) return kp3dStart(el);
+    if(!('IntersectionObserver' in window)) return;
+    if(!KP3D_IO) KP3D_IO = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting && e.target.offsetParent){ KP3D_IO.unobserve(e.target); kp3dStart(e.target); } }), {rootMargin:'200px'});
+    KP3D_IO.observe(el);
   });
 }
 document.addEventListener('toggle', e=>{ const d=e.target; if(d.tagName==='DETAILS' && d.open) requestAnimationFrame(()=>tryInit3D(d)); }, true);

@@ -47,6 +47,7 @@ function ipFitFigs(root){ root.querySelectorAll('.fig figure>svg').forEach(svg=>
 
 function ipShow(id){ if(!IT[id]) return; IPAGE=id; ipRender(id);
   document.body.classList.add('ip-on'); ipHost().hidden=false;
+  try{ requestAnimationFrame(()=>tryInit3D(ipHost())); }catch(e){}   /* 3D 장면(KPI · 캐스터): 펼침 이벤트가 없으므로 여기서 시작 */
   try{ history.replaceState(navState(), '', '#it-'+id); }catch(e){}
   ipToc(); CRUMB={step:null,item:null}; paintCrumb(); setTitle(); }
 function ipClose(){ if(!IPAGE) return; IPAGE=null; document.body.classList.remove('ip-on'); const h=$('#ipage'); if(h){ h.hidden=true; h.innerHTML=''; }
