@@ -3799,14 +3799,14 @@ html:not(.kbd) :is(select,button,summary,a,[role=tab],[tabindex]):focus-visible{
 #figRail,#partRail,#partRail.coll{top:auto!important;right:max(24px, env(safe-area-inset-right,0px));width:44px!important;height:44px;border:0;border-radius:50%!important;background:transparent;box-shadow:none!important;overflow:visible!important}
 #figRail{bottom:24px}
 #partRail{bottom:80px}
-/* '맨 위로' 버블 밀어내기 (2026-11-26): body.tt-on 이면 한 칸(56 px) 위로. 좌표계 버블이 먼저, 파트 버블은 20 ms 늦게(밀려서 따라가는 느낌)
+/* '맨 위로' 버블 밀어내기 (2026-11-26): body.tt-on 이면 한 칸(56 px) 위로. 좌표계 버블이 먼저, 파트 버블은 13 ms 늦게(시간 0.45 s, 지연 비율은 그대로)(밀려서 따라가는 느낌)
    감쇠 진동 이징: 좌표계 감쇠비 0.58(첫 넘침 6 px), 파트 0.53(8 px, 조금 더 출렁임). 지연 · 감쇠비는 두 버블 간격이 늘 4 px 이상 남도록 계산해 고름. 순서(버블 먼저 → 맨 위로 나타남 / 맨 위로 사라짐 → 버블 내려옴)는 tabs-nav.js */
 :root{--tt-spring:linear(0,0.0168,0.0622,0.1289,0.2107,0.3019,0.3976,0.4939,0.5875,0.676,0.7574,0.8306,0.8947,0.9496,0.9952,1.0319,1.0603,1.0812,1.0953,1.1035,1.1067,1.1058,1.1017,1.095,1.0867,1.0771,1.067,1.0567,1.0466,1.037,1.0281,1.02,1.0129,1.0068,1.0017,0.9975,0.9943,0.9918,0.9902,0.9891,0.9887,0.9886,0.989,0.9896,0.9905,0.9915,0.9926,0.9937,1)}
 :root{--tt-spring2:linear(0,0.0201,0.0743,0.1536,0.2501,0.3565,0.4669,0.576,0.68,0.7758,0.8613,0.9352,0.9971,1.0467,1.0847,1.1119,1.1294,1.1384,1.1402,1.1363,1.1278,1.116,1.1021,1.087,1.0715,1.0563,1.0419,1.0287,1.0171,1.0071,0.9988,0.9921,0.9872,0.9836,0.9815,0.9804,0.9804,0.9811,0.9824,0.9841,0.9861,0.9883,0.9904,0.9926,0.9945,0.9963,0.9979,0.9993,1)}
 body.tt-on #figRail{bottom:80px}
 body.tt-on #partRail{bottom:136px}
-#figRail{transition:bottom .7s var(--tt-spring)}
-#partRail{transition:bottom .7s var(--tt-spring2) 20ms}
+#figRail{transition:bottom .45s var(--tt-spring)}
+#partRail{transition:bottom .45s var(--tt-spring2) 13ms}
 #figRail .rail-h,#partRail .rail-h,#partRail.coll .rail-h{position:relative;width:44px;height:44px;padding:0!important;border-radius:50%;display:grid!important;place-items:center;justify-content:center!important;align-content:center!important;background:var(--char);color:#fff;border:1px solid var(--char);box-shadow:0 4px 14px rgba(30,20,50,.22);gap:0}
 #figRail .rail-h:hover,#partRail .rail-h:hover{background:#3a3f4a}
 #figRail .rail-h span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
