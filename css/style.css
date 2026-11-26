@@ -624,7 +624,7 @@ details.symbox>table{margin:0 12px 8px;width:calc(100% - 28px)}
 .seg button:disabled{opacity:.38;cursor:not-allowed}
 
 /* 목차: 최대 높이 · 접기 · 너비 */
-:root{--tocw:178px;--tocx:178px}
+:root{--tocw:210px;--tocx:210px}
 @media (min-width:1400px){
   #toc{width:var(--tocw);max-height:none;bottom:14px;padding:0;display:none;flex-direction:column;overflow:hidden}
   body.tab-steps #toc{display:flex}

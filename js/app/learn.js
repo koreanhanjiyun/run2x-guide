@@ -194,8 +194,8 @@ function renderToc(){ const t=$('#toc');
   t.innerHTML=`<div class="toc-h"><span>목차</span><button class="toc-fold" title="목차 접기/펼치기" aria-label="목차 접기/펼치기"></button></div><div class="toc-in">`+
   PHASES.map(ph=>`<div class="toc-p"><div class="toc-ph">${ph.k} ${ph.n.replace(/\s*\(P\d\)\s*/,' ').replace(/→.*/,'').trim()}</div>${ph.s.map(sid=>{ const s=STEPS[SIDX[sid]];
     return `<button class="toc-s${s.fz?' fz':''}" data-toc="${sid}"><span class="tc">${s.fz?'★':''}${sid}</span><span class="tt">${s.t.replace('★ ','')}</span><span class="tm"></span></button>`; }).join('')}</div>`).join('')+`</div><div class="toc-rs" title="끌어서 너비 조절"></div>`;
-  t.classList.remove('coll'); setTocW(+PREF('tocw','178')); }   /* 2026-11-25: 처음에는 늘 펼침 (접힘 저장값은 쓰지 않음) */
-function setTocW(w){ w=Math.max(150,Math.min(360,w||178)); document.documentElement.style.setProperty('--tocw', w+'px'); return w; }
+  t.classList.remove('coll'); setTocW(+PREF('tocw','210')); }   /* 2026-11-25: 처음에는 늘 펼침 (접힘 저장값은 쓰지 않음) */
+function setTocW(w){ w=Math.max(150,Math.min(360,w||210)); document.documentElement.style.setProperty('--tocw', w+'px'); return w; }
 function tocFx(){ const t=$('#toc'); document.documentElement.style.setProperty('--tocx', (t.classList.contains('coll')?34:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tocw'))||178)+'px'); }
 function updateToc(){
   document.querySelectorAll('#toc .toc-s').forEach(b=>{ const done=stepDone(b.dataset.toc), sk=stepSkip(b.dataset.toc); const m=b.querySelector('.tm'); m.className='tm'+(done?' done':''); m.textContent=done?'✓':''; b.classList.toggle('st-allskip',sk); b.title=sk?'이번 시즌 제외':''; }); }

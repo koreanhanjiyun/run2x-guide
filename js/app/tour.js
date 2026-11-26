@@ -417,7 +417,7 @@ addEventListener('keydown', e=>{ if(TR && [' ','PageDown','PageUp','Home','End',
 /* 사용법 버튼 바로 아래 말풍선 (2026-11-26, A안): 버튼에서 8 px 아래, 위쪽 꼬리가 버튼을 가리킴. 2.2 s 뒤 사라짐. 다른 스낵바(toast)는 그대로 */
 function helpTip(msg){ const b=document.getElementById('tourBtn'); if(!b) return; let t=document.getElementById('helpTip');
   if(!t){ t=document.createElement('div'); t.id='helpTip'; t.setAttribute('role','status'); t.setAttribute('aria-live','polite'); document.body.appendChild(t); }
-  const r=b.getBoundingClientRect(); t.textContent=msg; t.hidden=false; t.style.top=(r.bottom+8)+'px';
+  const r=b.getBoundingClientRect(); t.textContent=msg; t.hidden=false; const tabh=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tabh'))||50; t.style.top=Math.max(r.bottom+8, tabh+12)+'px';   /* 상단바 아래 12 px (2026-11-26) */
   const w=t.offsetWidth, cx=r.left+r.width/2, L=Math.max(8, Math.min(document.documentElement.clientWidth-w-8, cx-w/2));
   t.style.left=L+'px'; t.style.setProperty('--ax', (cx-L)+'px');
   t.getAnimations().forEach(a=>a.cancel()); clearTimeout(t._k);
