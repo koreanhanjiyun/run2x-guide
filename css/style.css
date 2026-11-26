@@ -3883,3 +3883,5 @@ details.acc-now::details-content{transition:none!important}
 #toc .toc-h :focus-visible{outline:2px solid var(--accent)!important}
 /* 목차 스크롤 분리 (2026-11-26): 목차 끝에 닿아도 페이지로 넘어가지 않음 */
 #toc .toc-in{overscroll-behavior:contain}
+/* 위쪽 단계 접기 (2026-11-26): 높이를 JS 가 줄이고 같은 프레임에 스크롤 보정 */
+details.acc-js::details-content{transition:none!important;block-size:var(--accH)!important}
