@@ -2,20 +2,21 @@
    3D 킹핀축·조향 캠버 장면 (three.js r147 저장소본, 펼칠 때만 로드)
    좌표(three): X = 차량 왼쪽, Y = 위, Z = 차량 앞. 우측 앞바퀴, 바퀴 바깥 = −X
    ============================================================ */
-const KP3D = () => `<div class="kp3d" data-kp3d="1"><div class="kp3d-ph">3D 장면을 불러오는 중입니다…</div></div>`;
+/* KP3D({nu:0}): 시작 캐스터 각을 카드마다 지정 (KPI 카드는 0° → 'KPI만' 보기로 시작) */
+const KP3D = (o={}) => `<div class="kp3d" data-kp3d="1"${o.nu!=null?` data-nu="${o.nu}"`:''}><div class="kp3d-ph">3D 장면을 불러오는 중입니다…</div></div>`;
 /* three.js 는 저장소 vendor/three (r147), 조작은 공통 V3D.controls (js/figures/view3d.js) */
 const loadThree = () => V3D.three();
 function initKP3D(el){
-  if(el.dataset.ready) return; el.dataset.ready='1';
+  if(el.dataset.ready) return; el.dataset.ready='1'; const nu0 = el.dataset.nu!=null ? +el.dataset.nu : 6, pre0 = nu0===0 ? 'kpi' : nu0===6 ? 'both' : '';
   el.innerHTML = `<div class="kp3d-wrap"><div class="kp3d-view"><canvas></canvas>
     <div class="kp3d-cam"><button data-cam="iso" aria-pressed="true">3D</button><button data-cam="front">차체 정면</button><button data-cam="side">차체 측면</button><button data-cam="top">위</button><span class="sep"></span><button data-cam="tfront">타이어 정면</button><button data-cam="tside">타이어 측면</button></div>
     <div class="kp3d-tip">${V3D.HELP} · 보라 실선·면 = 타이어 중심선·중심면, 점선 = 지면 수직선, 보라 점선 = 회전 반지름(조향축 → 바퀴 축 끝)</div></div>
     <div class="kp3d-ctl">
     <div class="kp3d-hud"><div><b style="color:var(--s-gam)">캠버 변화 Δγ</b></div><div class="kp3d-big">0.00°</div><div class="kp3d-sub"></div></div>
       <label>조향각 δ <span data-v="d">20°</span><button type="button" class="d0btn" data-d0="1" title="조향각을 0°로">0°</button><input type="range" min="-35" max="35" step="0.5" value="20" data-k="d" class="bipolar"><em class="kp3d-hint">+ 좌회전 (이 우측 바퀴가 바깥) · − 우회전 (안쪽)</em></label>
-      <label><span class="k3s" style="color:var(--s-kpi)">캐스터 ν</span> <span data-v="nu">6°</span><input type="range" min="0" max="12" step="0.5" value="6" data-k="nu"></label>
+      <label><span class="k3s" style="color:var(--s-kpi)">캐스터 ν</span> <span data-v="nu">${nu0}°</span><input type="range" min="0" max="12" step="0.5" value="${nu0}" data-k="nu"></label>
       <label><span class="k3s" style="color:var(--s-kpi)">KPI σ</span> <span data-v="sg">8°</span><input type="range" min="0" max="16" step="0.5" value="8" data-k="sg"></label>
-      <div class="kp3d-btns"><span>보기</span><button data-pre="cas">캐스터만</button><button data-pre="kpi">KPI만</button><button data-pre="both" aria-pressed="true">둘 다</button></div>
+      <div class="kp3d-btns"><span>보기</span><button data-pre="cas">캐스터만</button><button data-pre="kpi" aria-pressed="${pre0==='kpi'}">KPI만</button><button data-pre="both" aria-pressed="${pre0==='both'}">둘 다</button></div>
       <p class="kp3d-note">정면·측면·위는 원근 없는 정투영입니다. 끌면 3D 시점으로 바뀌고, 지면 아래로도 돌릴 수 있습니다. 빨강 막대 = 조향축(킹핀축, 정면 기울기 σ · 측면 기울기 ν), 보라 고리 = 바퀴 축 끝이 조향하며 그리는 궤적(원뿔의 밑면), 보라 점의 높이 변화(초록 막대)가 곧 캠버 변화입니다.</p>
     </div></div>`;
   const T = THREE, cv = el.querySelector('canvas'), view = el.querySelector('.kp3d-view');
@@ -46,7 +47,7 @@ function initKP3D(el){
   const traceMat = new T.LineBasicMaterial({color:0x6a4294}); let trace = new T.Line(new T.BufferGeometry(), traceMat); scene.add(trace);
   const endDot = new T.Mesh(new T.SphereGeometry(0.014,16,12), new T.MeshLambertMaterial({color:0x6a4294})); scene.add(endDot);
   const hBar = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({color:0x15803d,depthTest:false})); hBar.renderOrder=13; scene.add(hBar);
-  const st = {d:20, nu:6, sg:8, th:-0.55, ph:0.98, r:1.7};
+  const st = {d:20, nu:nu0, sg:8, th:-0.55, ph:0.98, r:1.7};
   const pan = new T.Vector3();
   /* 선·축·점은 반투명 타이어 위에 항상 보이도록 투명 패스 맨 뒤에 그림 */
   [[vref,20],[tline,21],[axisMesh,22],[arcLine,23],[hBar,23],[radLine,24],[radFoot,24],[endDot,25],[trace,19]].forEach(([o,r])=>{ o.material.transparent=true; o.material.depthTest=false; o.renderOrder=r; });
